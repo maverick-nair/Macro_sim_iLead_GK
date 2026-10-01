@@ -1,0 +1,26 @@
+{
+  "$description": "Member card meanings. The portrait is always light art under a dark shade, so these keep one value in both modes.",
+  "color": {
+    "member": {
+      "on-portrait": { "light": "{color.white}", "dark": "{color.white}", "$description": "Text and icons on the portrait shade" },
+      "portrait-shade": { "light": { "ref": "color.portrait.shade", "alpha": 0.75 }, "dark": { "ref": "color.portrait.shade", "alpha": 0.75 }, "$description": "Bottom of the portrait overlay" },
+      "pill": { "light": { "ref": "color.portrait.shade", "alpha": 0.78 }, "dark": { "ref": "color.portrait.shade", "alpha": 0.78 }, "$description": "Mood pill on the portrait" },
+      "ring-fill": { "light": { "ref": "color.portrait.shade", "alpha": 0.8 }, "dark": { "ref": "color.portrait.shade", "alpha": 0.8 }, "$description": "Inside of the trust ring" },
+      "ring-track": { "light": { "ref": "color.white", "alpha": 0.2 }, "dark": { "ref": "color.white", "alpha": 0.2 }, "$description": "Empty part of the trust ring" },
+      "ring-ok": { "light": "{color.brand.mint-green}", "dark": "{color.brand.mint-green}", "$description": "Trust ring at 30 and above" },
+      "ring-low": { "light": "{color.amber.840}", "dark": "{color.amber.840}", "$description": "Trust ring under 30" },
+      "signal": { "light": "{color.white}", "dark": "{color.white}", "$description": "Unread and promise chips on the portrait" },
+      "signal-fg": { "light": "{color.brand.deep-space}", "dark": "{color.brand.deep-space}" },
+      "shadow-rest": { "light": { "ref": "color.member-elevation.ink", "alpha": 0.18 }, "dark": { "ref": "color.member-elevation.ink", "alpha": 0.18 } },
+      "shadow-raised": { "light": { "ref": "color.member-elevation.ink", "alpha": 0.35 }, "dark": { "ref": "color.member-elevation.ink", "alpha": 0.35 }, "$description": "Floating layers over cards, such as the style tooltip" },
+      "glow": { "light": { "ref": "color.member-elevation.glow", "alpha": 0.35 }, "dark": { "ref": "color.member-elevation.glow", "alpha": 0.35 } },
+      "mood": {
+        "happy": { "light": "{color.brand.mint-green}", "dark": "{color.brand.mint-green}" },
+        "neutral": { "light": "{color.portrait.sky-100}", "dark": "{color.portrait.sky-100}" },
+        "thinking": { "light": "{color.brand.cyber-cyan}", "dark": "{color.brand.cyber-cyan}" },
+        "concerned": { "light": "{color.amber.840}", "dark": "{color.amber.840}" },
+        "frustrated": { "light": "{color.coral.780}", "dark": "{color.coral.780}" }
+      }
+    }
+  }
+}

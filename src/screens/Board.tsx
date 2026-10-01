@@ -1,10 +1,10 @@
-import { useEffect, useRef, type ChangeEvent, type KeyboardEvent, type MouseEvent, type SyntheticEvent } from 'react';
+import { useEffect, useRef, type ChangeEvent, type KeyboardEvent } from 'react';
 import type { ScreenProps, MemberView } from '../app/types';
 import type { EventType, MemberAction, MetricKey, StyleKey, TeamAction } from '../data/types';
-import { css, cx, pseudo } from '../lib/css';
+import { css, pseudo } from '../lib/css';
 import { Button, NoWrapButton } from '../ds/Button';
 import { useMergeState } from './board/useMergeState';
-import { MetricBar } from '../components/metric/MetricBar';
+import { MemberCard, type MemberCardProps } from '../components/member/MemberCard';
 import { KpiTile, type KpiTrend } from '../components/metric/KpiTile';
 import { ReasonChip } from '../components/reason/ReasonChip';
 import { ReasonDetail } from '../components/reason/ReasonDetail';
@@ -220,25 +220,18 @@ export function Board(props: BoardProps) {
   const members: MemberView[] = app.members.map(m => (outcome && m.id === 'kent' ? { ...m, mood: 'neutral', unread: false } : m));
   const f = s.flow, picking = !!(f && f.a.select && !f.member);
 
-  const card = (m: MemberView) => {
-    const mood = D.moods[m.mood], el = eligible(m), on = picking && f ? f.picks.includes(m.id) : s.sel === m.id, cur = m.style;
-    const segs = D.styles.map((st, i) => ({ k: st.k, name: st.n, desc: st.d, on: cur === st.k, aria: `${st.n}. ${st.d}`, tip: s.tip === m.id + ':' + st.k,
-      tipLeft: i < 2 ? '0' : '100%', tipShift: i < 2 ? '0' : '-100%',
-      bg: cur === st.k ? 'var(--grad-brand)' : 'transparent', color: cur === st.k ? '#0A081B' : 'var(--ik-text-2)',
-      tipOn: () => setState({ tip: m.id + ':' + st.k }), tipOff: () => setState(x => (x.tip === m.id + ':' + st.k ? { tip: null } : null)),
-      pick: (e?: SyntheticEvent) => { if (e) e.stopPropagation(); if (cur !== st.k) { act.setStyle(m.id, st.k as StyleKey); act.say(`You'll lead ${first(m.name)} with ${st.n} this week.`); } } }));
-    const trustC = m.trust < 30 ? 'oklch(0.84 0.14 78)' : '#00F2AD', circ = 2 * Math.PI * 16;
-    return { id: m.id, name: m.name, title: m.title, img: m.img, backdrop: backdrop(m), filter: m.away ? 'grayscale(1)' : 'none',
-      moodN: m.away ? 'In training' : mood.n, moodC: mood.c, unread: !!m.unread, promise: !!m.promise, promiseT: m.promise || '',
-      trust: m.trust, trustC, trustDash: `${(m.trust / 100 * circ).toFixed(1)} ${circ.toFixed(1)}`,
-      tags: m.tags || [], hasTags: !!(m.tags && m.tags.length),
-      bars: (['skill', 'morale', 'result'] as const).map(k => ({ metric: k, value: m[k] })),
-      seg: segs, styleAria: `Leadership style for ${m.name}`, on,
-      border: on ? 'var(--ik-acc-2)' : 'var(--ik-line)', glow: on ? '0 0 0 1px var(--ik-acc-2), 0 12px 36px oklch(0.75 0.14 220 / 0.35)' : '0 6px 20px oklch(0.05 0.03 280 / 0.18)',
-      op: picking && !el.ok ? 0.4 : 1, z: s.tip && s.tip.startsWith(m.id + ':') ? 20 : 1, dimWhy: picking && !el.ok ? el.why : '', cursor: picking && !el.ok ? 'not-allowed' : 'pointer',
-      aria: `${m.name}, ${m.title}. ${mood.n}. Skill ${m.skill}, Morale ${m.morale}, Result ${m.result}, Trust ${m.trust}.${picking && !el.ok ? ' Not available: ' + el.why : ''}`,
-      click: () => clickCard(m), key: (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); clickCard(m); } },
-      profile: (e: MouseEvent) => { e.stopPropagation(); act.openProfile(m.id); setState({ profile: m.id, sel: m.id, flow: null }); } };
+  /** Props for MemberCard. The tooltip key stays `memberId:style` so the gallery can open one. */
+  const card = (m: MemberView): MemberCardProps & { id: string } => {
+    const el = eligible(m), tipOwn = s.tip && s.tip.startsWith(m.id + ':') ? (s.tip.slice(m.id.length + 1) as StyleKey) : null;
+    return { id: m.id, name: m.name, title: m.title, img: m.img, mood: m.mood, away: !!m.away,
+      skill: m.skill, morale: m.morale, result: m.result, trust: m.trust, style: m.style, tags: m.tags, unread: !!m.unread, promise: m.promise,
+      selected: picking && f ? f.picks.includes(m.id) : s.sel === m.id,
+      unavailableReason: picking && !el.ok ? el.why : undefined,
+      onSelect: () => clickCard(m),
+      onOpenProfile: () => { act.openProfile(m.id); setState({ profile: m.id, sel: m.id, flow: null }); },
+      onStyleChange: k => { act.setStyle(m.id, k); act.say(`You'll lead ${first(m.name)} with ${D.styles.find(x => x.k === k)?.n ?? k} this week.`); },
+      styleTooltip: tipOwn,
+      onStyleTooltipChange: k => setState(x => (k ? { tip: m.id + ':' + k } : x.tip && x.tip.startsWith(m.id + ':') ? { tip: null } : null)) };
   };
 
   const worst = D.stages.reduce((b, st, i) => (st.count / st.ideal < D.stages[b].count / D.stages[b].ideal ? i : b), 0);
@@ -501,46 +494,7 @@ export function Board(props: BoardProps) {
                       <div style={css('display:flex; justify-content:space-between; gap:6px; align-items:baseline')}><b style={css('font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis')}>{col.n}</b><b style={css('font-size:15px')}>{col.count}</b></div>
                       <span style={css(`font-size:12px; color:${col.subC}; font-weight:${col.subW}`)}>{col.sub}</span>
                     </div>
-                    {col.cards.map(m => (
-                      <div key={m.id} data-mid={m.id} role="button" tabIndex={0} aria-pressed={m.on} aria-label={m.aria} onClick={m.click} onKeyDown={m.key} title={m.dimWhy} style={css(`position:relative; border-radius:18px; background:var(--ik-card); backdrop-filter:blur(12px); border:2px solid ${m.border}; box-shadow:${m.glow}; opacity:${m.op}; z-index:${m.z}; display:flex; flex-direction:column; cursor:${m.cursor}; outline-offset:3px; transition:transform 200ms cubic-bezier(.2,.9,.3,1.08), box-shadow 200ms ease, opacity 200ms ease`)} className={cx(pseudo('hover', 'transform:translateY(-3px)'), pseudo('focus', 'outline:2px solid var(--ik-acc-2)'))}>
-                        <div style={css(`position:relative; height:118px; border-radius:16px 16px 0 0; overflow:hidden; background:${m.backdrop}`)}>
-                          <img src={m.img} alt="" style={css(`position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 12%; mix-blend-mode:multiply; filter:${m.filter}`)} />
-                          <div style={css('position:absolute; inset:0; background:linear-gradient(180deg, transparent 50%, oklch(0.13 0.03 285 / 0.75) 100%)')}></div>
-                          {m.on && <span aria-hidden="true" style={css('position:absolute; top:8px; left:8px; width:24px; height:24px; border-radius:50%; background:var(--grad-brand); color:#0A081B; display:flex; align-items:center; justify-content:center')}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span>}
-                          <div style={css('position:absolute; top:8px; right:8px; display:flex; gap:4px')}>
-                            {m.unread && <span title="Unread message" style={css('width:24px; height:24px; border-radius:50%; background:#fff; color:#0A081B; display:flex; align-items:center; justify-content:center')}><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>}
-                            {m.promise && <span title={m.promiseT} style={css('width:24px; height:24px; border-radius:50%; background:#fff; color:#0A081B; display:flex; align-items:center; justify-content:center')}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>}
-                          </div>
-                          <span style={css('position:absolute; left:8px; bottom:8px; display:flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:999px; background:oklch(0.13 0.03 285 / 0.78); color:#fff; font-size:12px; font-weight:700')}><span style={css(`width:7px; height:7px; border-radius:50%; background:${m.moodC}`)}></span>{m.moodN}</span>
-                          <div title={`Trust ${m.trust}`} aria-label={`Trust ${m.trust}`} style={css('position:absolute; right:6px; bottom:6px; width:38px; height:38px')}>
-                            <svg width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="16" fill="oklch(0.13 0.03 285 / 0.8)" stroke="oklch(1 0 0 / 0.2)" strokeWidth="3"></circle><circle cx="19" cy="19" r="16" fill="none" stroke={m.trustC} strokeWidth="3" strokeLinecap="round" strokeDasharray={m.trustDash} transform="rotate(-90 19 19)"></circle></svg>
-                            <span style={css('position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:700')}>{m.trust}</span>
-                          </div>
-                        </div>
-                        <div style={css('padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px')}>
-                          <div style={css('display:flex; justify-content:space-between; align-items:flex-start; gap:6px')}>
-                            <div style={css('display:flex; flex-direction:column; min-width:0')}><b style={css('font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis')}>{m.name}</b><span style={css('font-size:12px; color:var(--ik-text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis')}>{m.title}</span></div>
-                            <button onClick={m.profile} aria-label={`Open profile for ${m.name}`} style={css('flex:none; width:28px; height:28px; border-radius:50%; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text-2); cursor:pointer; display:flex; align-items:center; justify-content:center')} className={pseudo('hover', 'color:var(--ik-text)')}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></button>
-                          </div>
-                          {m.hasTags && <div style={css('display:flex; gap:4px; flex-wrap:wrap')}>{m.tags.map((tg, i) => <span key={i} style={css('height:20px; padding:0 8px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line); font-size:12px; font-weight:600; display:flex; align-items:center; white-space:nowrap')}>{tg}</span>)}</div>}
-                          <div style={css('display:flex; flex-direction:column; gap:5px')}>
-                            {m.bars.map(b => <MetricBar key={b.metric} {...b} />)}
-                          </div>
-                          <div role="radiogroup" aria-label={m.styleAria} style={css('display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:2px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)')}>
-                            {m.seg.map(sg => (
-                              <div key={sg.k} style={css('position:relative')}>
-                                <button role="radio" aria-checked={sg.on} aria-label={sg.aria} onClick={sg.pick} onMouseEnter={sg.tipOn} onMouseLeave={sg.tipOff} onFocus={sg.tipOn} onBlur={sg.tipOff} style={css(`width:100%; height:26px; border:0; border-radius:999px; cursor:pointer; font-size:12px; font-weight:700; background:${sg.bg}; color:${sg.color}; transition:background 160ms ease`)}>{sg.k}</button>
-                                {sg.tip && (
-                                  <div role="tooltip" style={css(`position:absolute; bottom:calc(100% + 10px); left:${sg.tipLeft}; transform:translateX(${sg.tipShift}); width:210px; padding:10px 12px; border-radius:12px; background:var(--ik-text); color:light-dark(#fff, #0A081B); z-index:45; display:flex; flex-direction:column; gap:2px; pointer-events:none; box-shadow:0 10px 30px oklch(0.05 0.03 280 / 0.35)`)}>
-                                    <b style={css('font-size:13px')}>{sg.name}</b><span style={css('font-size:12px; line-height:1.4')}>{sg.desc}</span>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                    {col.cards.map(({ id, ...m }) => <MemberCard key={id} {...m} />)}
                   </div>
                 ))}
               </div>

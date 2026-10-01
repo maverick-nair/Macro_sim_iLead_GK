@@ -1,0 +1,18 @@
+{
+  "$description": "Raw colors of the member card. Portrait backdrops sit behind multiplied NPC art; the shade darkens the bottom of the portrait so white chips stay legible in every theme.",
+  "color": {
+    "portrait": {
+      "sky-100": { "$value": "#DEE9FF", "$description": "Calm backdrop, top" },
+      "sky-300": { "$value": "#9FDCEB", "$description": "Calm backdrop, bottom" },
+      "sand-100": { "$value": "#FFE7C2", "$description": "Strained backdrop, top" },
+      "sand-300": { "$value": "#F7C17E", "$description": "Strained backdrop, bottom" },
+      "fog-100": { "$value": "#E4E6F0", "$description": "Away backdrop, top" },
+      "fog-300": { "$value": "#C9CEDF", "$description": "Away backdrop, bottom" },
+      "shade": { "$value": "oklch(0.13 0.03 285)", "$description": "Portrait overlay and chips on the portrait" }
+    },
+    "member-elevation": {
+      "ink": { "$value": "oklch(0.05 0.03 280)", "$description": "Card and tooltip drop shadows" },
+      "glow": { "$value": "oklch(0.75 0.14 220)", "$description": "Selected card glow" }
+    }
+  }
+}

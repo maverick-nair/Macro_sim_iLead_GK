@@ -1,5 +1,7 @@
 import { useState, type ChangeEvent } from 'react';
 import type { ScreenProps } from '../app/types';
+import type { StyleKey } from '../data/types';
+import { STYLE_KEYS, StyleControl, StyleRadio } from '../components/style/StyleControl';
 import { NoWrapButton } from '../ds/Button';
 import { css } from '../lib/css';
 
@@ -70,27 +72,12 @@ export function StyleSetting({ d: D, app, act, view }: StyleSettingProps) {
       lastWord: pos ? 'reacted well' : 'reacted badly',
       curN: cur.n,
       note: m.away ? 'Applies when he is back from training.' : cur.d,
-      aria: `Style for ${m.name}`,
+      style: m.style,
       radioName: 'st-' + m.id,
-      seg: D.styles.map((st, i) => {
-        const tipKey = m.id + ':' + st.k;
-        const on = m.style === st.k;
-        return {
-          k: st.k,
-          name: st.n,
-          desc: st.d,
-          on,
-          aria: `${st.n} for ${m.name}`,
-          tip: s.tip === tipKey,
-          tipLeft: i < 2 ? '0' : '100%',
-          tipShift: i < 2 ? '0' : '-100%',
-          bg: on ? 'var(--grad-brand)' : 'transparent',
-          color: on ? '#0A081B' : 'var(--ik-text-2)',
-          tipOn: () => setState({ tip: tipKey }),
-          tipOff: () => setState(x => (x.tip === tipKey ? { tip: null } : null)),
-          pick: () => act.setStyle(m.id, st.k)
-        };
-      }),
+      /** Open tooltip for this member's control. The state key stays `memberId:style`. */
+      tip: s.tip && s.tip.startsWith(m.id + ':') ? (s.tip.slice(m.id.length + 1) as StyleKey) : null,
+      setTip: (k: StyleKey | null) => setState(x => (k ? { tip: m.id + ':' + k } : x.tip && x.tip.startsWith(m.id + ':') ? { tip: null } : null)),
+      pick: (k: StyleKey) => act.setStyle(m.id, k),
       noting: s.noting === m.id,
       rationale: note || '',
       rationaleShow: note || 'No note',
@@ -171,31 +158,7 @@ export function StyleSetting({ d: D, app, act, view }: StyleSettingProps) {
                 <span style={css(`align-self:flex-start; display:flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:999px; background:${m.lastBg}; font-size:12px; font-weight:600`)}>
                   <span style={css(`color:${m.lastC}`)}>{m.lastArrow}</span>Last week: <span>{m.lastN}</span>
                 </span>
-                <div role="radiogroup" aria-label={m.aria} style={css('display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:2px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)')}>
-                  {m.seg.map(sg => (
-                    <div key={sg.k} style={css('position:relative')}>
-                      <button
-                        role="radio"
-                        aria-checked={sg.on}
-                        aria-label={sg.aria}
-                        onClick={sg.pick}
-                        onMouseEnter={sg.tipOn}
-                        onMouseLeave={sg.tipOff}
-                        onFocus={sg.tipOn}
-                        onBlur={sg.tipOff}
-                        style={css(`width:100%; height:30px; border:0; border-radius:999px; cursor:pointer; font-size:13px; font-weight:700; background:${sg.bg}; color:${sg.color}; transition:background 160ms ease`)}
-                      >
-                        {sg.k}
-                      </button>
-                      {sg.tip && (
-                        <div role="tooltip" style={css(`position:absolute; bottom:calc(100% + 10px); left:${sg.tipLeft}; transform:translateX(${sg.tipShift}); width:200px; padding:10px 12px; border-radius:12px; background:var(--ik-text); color:light-dark(#fff, #0A081B); z-index:45; pointer-events:none; display:flex; flex-direction:column; gap:2px`)}>
-                          <b style={css('font-size:13px')}>{sg.name}</b>
-                          <span style={css('font-size:12px; line-height:1.4')}>{sg.desc}</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <StyleControl size="md" value={m.style} onChange={m.pick} memberName={m.name} tooltip={m.tip} onTooltipChange={m.setTip} />
                 <span style={css('font-size:12px; color:var(--ik-text-2); min-height:34px; text-wrap:pretty')}>
                   <b style={css('color:var(--ik-text)')}>{m.curN}.</b> {m.note}
                 </span>
@@ -248,11 +211,7 @@ export function StyleSetting({ d: D, app, act, view }: StyleSettingProps) {
               <span style={css('font-size:13px')}>
                 <span style={css(`color:${m.lastC}`)}>{m.lastArrow}</span> {m.lastN}, {m.lastWord}
               </span>
-              {m.seg.map(sg => (
-                <label key={sg.k} style={css('display:flex; justify-content:center; cursor:pointer')}>
-                  <input type="radio" name={m.radioName} checked={sg.on} onChange={sg.pick} aria-label={sg.aria} style={css('width:20px; height:20px; accent-color:#249DFF; cursor:pointer')} />
-                </label>
-              ))}
+              {STYLE_KEYS.map(k => <StyleRadio key={k} style={k} memberName={m.name} name={m.radioName} checked={m.style === k} onSelect={m.pick} />)}
               <span style={css('font-size:13px; color:var(--ik-text-2)')}>{m.rationaleShow}</span>
             </div>
           ))}
