@@ -1,7 +1,11 @@
+/**
+ * Compares computed styles of matching elements in a prototype frame and the app frame.
+ *   npx tsx tests/visual/probe.ts <frameId> '<css selector inside the frame>' [extra css properties]
+ */
 // tsx probe.ts <frameId> <css selector inside frame> : compares computed styles proto vs app
 import fs from 'node:fs'; import path from 'node:path'; import http from 'node:http';
 import { chromium } from '@playwright/test'; import { createServer } from 'vite';
-const root = '/home/claude/repo', deps = path.join(root, '.visual-cache/deps/node_modules');
+const root = path.resolve(import.meta.dirname, '../..'), deps = path.join(root, '.visual-cache/deps/node_modules');
 const [id, sel, ...props] = process.argv.slice(2);
 const srv = http.createServer((q, r) => { const f = path.join(root, 'project', decodeURIComponent(new URL(q.url!, 'http://x').pathname)); fs.existsSync(f) && fs.statSync(f).isFile() ? r.writeHead(200, { 'Content-Type': f.endsWith('.html') ? 'text/html' : f.endsWith('.js') ? 'text/javascript' : f.endsWith('.css') ? 'text/css' : '' }).end(fs.readFileSync(f)) : r.writeHead(404).end(); }).listen(8011);
 const vite = await createServer({ root, server: { port: 8012 }, logLevel: 'error' }); await vite.listen();

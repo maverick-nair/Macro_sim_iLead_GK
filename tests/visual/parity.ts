@@ -59,13 +59,25 @@ function serveStatic(dir: string): Promise<http.Server & { port: number }> {
 async function shoot(page: Page, url: string, outDir: string, ids: string[] | null): Promise<string[]> {
   await page.goto(url, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2500);
+  // Stop every animation before the first capture. Playwright's per screenshot option only
+  // settles them at capture time, which can reflow the page between two frames of one run.
+  await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
+  await page.waitForTimeout(100);
   fs.mkdirSync(outDir, { recursive: true });
   const all = ids ?? (await page.$$eval('.dv-opt', els => els.map(e => e.id)));
   for (const id of all) {
     const el = await page.$(`[id="${id}"] .dv-card`);
     if (!el) continue;
-    await el.scrollIntoViewIfNeeded();
-    await page.waitForTimeout(150);
+    await el.evaluate(e => { e.scrollIntoView({ block: 'start' }); const y = e.getBoundingClientRect().y; window.scrollBy(0, y - Math.round(y) + (y < 0 ? -1 : 0)); });
+    // Frames above this one (the live prototype p1) can still reflow; capture only once this
+    // frame's box has held still, or the clip lands a few pixels off.
+    let prev = '';
+    for (let i = 0; i < 20; i++) {
+      await page.waitForTimeout(100);
+      const box = JSON.stringify(await el.boundingBox());
+      if (box === prev) break;
+      prev = box;
+    }
     await el.screenshot({ path: path.join(outDir, `${id}.png`), animations: 'disabled' });
   }
   return all;
@@ -113,7 +125,8 @@ async function main() {
   }
   const appUrl = vite.resolvedUrls!.local[0].replace(/\/$/, '');
   const browser: Browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  // Tall enough for the tallest frame, so no frame is captured beyond the viewport from a fractional scroll position.
+  const ctx = await browser.newContext({ viewport: { width: 1600, height: 3400 } });
   await ctx.route('https://unpkg.com/**', r => {
     const u = r.request().url();
     const f = u.includes('react-dom') ? 'react-dom/umd/react-dom.production.min.js' : u.includes('babel') ? '@babel/standalone/babel.min.js' : 'react/umd/react.production.min.js';
