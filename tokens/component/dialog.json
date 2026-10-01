@@ -1,0 +1,13 @@
+{
+  "dialog": {
+    "radius": {
+      "value": "{radius.24}"
+    },
+    "bg": {
+      "value": "{color.surface.material}"
+    },
+    "border": {
+      "value": "{color.line.strong}"
+    }
+  }
+}

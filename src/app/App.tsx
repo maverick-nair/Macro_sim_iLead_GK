@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useApi } from '../api';
+import { I18nProvider } from '../i18n';
 import type { LiveVariant, MetricKey, Outcome, Scenario, StyleKey, EventType } from '../data/types';
 import { NoWrapButton } from '../ds/Button';
 import { Switch } from '../ds/Switch';
@@ -239,6 +240,7 @@ export function App(p: AppProps) {
   const closeOverlay = () => set({ overlay: null });
 
   return (
+    <I18nProvider>
     <div style={rootVars} className={s.settings.reduced ? 'il-reduced-motion' : undefined}>
       <div className="il-theme" style={THEME_ROOT}>
         {isLoading && (
@@ -372,6 +374,7 @@ export function App(p: AppProps) {
         )}
       </div>
     </div>
+    </I18nProvider>
   );
 }
 

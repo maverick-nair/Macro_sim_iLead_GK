@@ -1,0 +1,10 @@
+{
+  "metric.name": "{metric, select, skill {Skill} morale {Morale} result {Result} trust {Trust} other {}}",
+  "metric.nameLower": "{metric, select, skill {skill} morale {morale} result {result} trust {trust} other {}}",
+  "metric.bar.aria": "{metric} {value}{low, select, true {, low} other {}}",
+  "metric.team": "Team {metric}",
+  "metric.team.aria": "Team {metric} {value}",
+  "metric.trend.rising": "▲ rising",
+  "metric.trend.easing": "▼ easing",
+  "metric.trend.steady": "● steady"
+}

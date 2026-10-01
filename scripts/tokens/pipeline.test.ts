@@ -2,10 +2,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { build, cssVar, leaves, TokenError, type TokenSources } from './pipeline';
+import { loadSources, mergeTrees } from './sources';
 
 const root = path.resolve(import.meta.dirname, '../..');
-const read = (f: string) => JSON.parse(fs.readFileSync(path.join(root, 'tokens', f), 'utf8'));
-const real = (): TokenSources => ({ primitive: read('primitive.json'), semantic: read('semantic.json'), component: read('component.json'), legacy: read('legacy.json') });
+const real = (): TokenSources => loadSources(root);
 
 const tiny = (over: Partial<TokenSources> = {}): TokenSources => ({
   primitive: { color: { ink: { '200': { $value: 'oklch(0.2 0.03 280)' } }, white: { $value: 'oklch(1 0 0)' } } },
@@ -60,6 +60,12 @@ describe('token pipeline', () => {
     const res = build(src).contrast;
     expect(res.filter(r => r.token === 'color.fg').every(r => r.pass)).toBe(true);
     expect(res.filter(r => r.token === 'color.faint').every(r => !r.pass && r.ratio === 1)).toBe(true);
+  });
+
+  it('merges per component files and rejects a path defined twice', () => {
+    const merged = mergeTrees([{ file: 'a.json', tree: { button: { h: { value: '1' } } } }, { file: 'b.json', tree: { button: { w: { value: '2' } } } }]);
+    expect(Object.keys(merged.button as object)).toEqual(['h', 'w']);
+    expect(() => mergeTrees([{ file: 'a.json', tree: { x: { value: '1' } } }, { file: 'b.json', tree: { x: { value: '2' } } }])).toThrow(/a.json and b.json/);
   });
 
   it('exposes only tokens to Tailwind', () => {

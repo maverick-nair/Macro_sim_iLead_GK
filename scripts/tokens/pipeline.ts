@@ -166,9 +166,9 @@ ${alias(src.legacy.theme, 'theme').join('\n')}
 `;
 
   // Tailwind exposes tokens only: every default color, size, radius and shadow is reset.
-  const tw: string[] = ['  --color-*: initial;', '  --text-*: initial;', '  --radius-*: initial;', '  --shadow-*: initial;', '  --font-*: initial;', '  --ease-*: initial;'];
+  const tw: string[] = ['  --color-*: initial;', '  --text-*: initial;', '  --radius-*: initial;', '  --shadow-*: initial;', '  --font-*: initial;', '  --ease-*: initial;', '  --blur-*: initial;'];
   for (const { path } of sem) if (path.startsWith('color.')) tw.push(`  --color-${path.slice(6).replace(/\./g, '-')}: var(${cssVar(path)});`);
-  for (const { path } of sem) if (path.startsWith('fill.')) tw.push(`  --fill-${path.slice(5).replace(/\./g, '-')}: var(${cssVar(path)});`);
+  for (const { path } of sem) if (path.startsWith('fill.')) tw.push(`  --background-image-${path.slice(5).replace(/\./g, '-')}: var(${cssVar(path)});`);
   for (const { path } of prim) {
     if (path.startsWith('color.brand.')) tw.push(`  --color-brand-${path.slice(12)}: var(${cssVar(path)});`);
     else if (path.startsWith('font.size.')) tw.push(`  --text-${path.slice(10)}: var(${cssVar(path)});`);
@@ -177,6 +177,7 @@ ${alias(src.legacy.theme, 'theme').join('\n')}
     else if (path.startsWith('radius.')) tw.push(`  --radius-${path.slice(7)}: var(${cssVar(path)});`);
     else if (path.startsWith('shadow.')) tw.push(`  --shadow-${path.slice(7)}: var(${cssVar(path)});`);
     else if (path.startsWith('easing.')) tw.push(`  --ease-${path.slice(7)}: var(${cssVar(path)});`);
+    else if (path.startsWith('blur.')) tw.push(`  --blur-${path.slice(5)}: var(${cssVar(path)});`);
     else if (path === 'space.unit') tw.push(`  --spacing: var(${cssVar(path)});`);
   }
   const tailwindCss = `${header}@theme inline {\n${tw.join('\n')}\n}\n`;

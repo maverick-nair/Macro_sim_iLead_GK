@@ -4,6 +4,10 @@ import type { EventType, MemberAction, MetricKey, StyleKey, TeamAction } from '.
 import { css, cx, pseudo } from '../lib/css';
 import { Button, NoWrapButton } from '../ds/Button';
 import { useMergeState } from './board/useMergeState';
+import { MetricBar } from '../components/metric/MetricBar';
+import { KpiTile, type KpiTrend } from '../components/metric/KpiTile';
+import { ReasonChip } from '../components/reason/ReasonChip';
+import { ReasonDetail } from '../components/reason/ReasonDetail';
 
 /**
  * Main board: HUD, metrics strip, team board with stage columns, inbox rail,
@@ -228,8 +232,7 @@ export function Board(props: BoardProps) {
       moodN: m.away ? 'In training' : mood.n, moodC: mood.c, unread: !!m.unread, promise: !!m.promise, promiseT: m.promise || '',
       trust: m.trust, trustC, trustDash: `${(m.trust / 100 * circ).toFixed(1)} ${circ.toFixed(1)}`,
       tags: m.tags || [], hasTags: !!(m.tags && m.tags.length),
-      bars: (['skill', 'morale', 'result'] as const).map(k => { const v = m[k], lo = v < 30; return { n: cap1(k), v, w: v + '%', aria: `${k} ${v}${lo ? ', low' : ''}`,
-        bg: lo ? 'var(--ik-warn)' : 'linear-gradient(90deg, var(--ik-acc), var(--ik-acc-2))', c: lo ? 'var(--ik-warn)' : 'var(--ik-text)' }; }),
+      bars: (['skill', 'morale', 'result'] as const).map(k => ({ metric: k, value: m[k] })),
       seg: segs, styleAria: `Leadership style for ${m.name}`, on,
       border: on ? 'var(--ik-acc-2)' : 'var(--ik-line)', glow: on ? '0 0 0 1px var(--ik-acc-2), 0 12px 36px oklch(0.75 0.14 220 / 0.35)' : '0 6px 20px oklch(0.05 0.03 280 / 0.18)',
       op: picking && !el.ok ? 0.4 : 1, z: s.tip && s.tip.startsWith(m.id + ':') ? 20 : 1, dimWhy: picking && !el.ok ? el.why : '', cursor: picking && !el.ok ? 'not-allowed' : 'pointer',
@@ -244,9 +247,10 @@ export function Board(props: BoardProps) {
     cards: members.filter(m => m.stage === i).map(card) }));
   const avg = (k: MetricKey) => Math.round(members.reduce((a, m) => a + m[k], 0) / members.length);
   const kd: Record<MetricKey, number> = outcome ? { skill: 0, morale: 0.6, result: 0, trust: 0.6 } : { skill: 0.3, morale: 0, result: 0.6, trust: -0.3 };
-  const kpis = METRICS.map(k => { const v = avg(k), dd = kd[k];
-    return { n: 'Team ' + k, v, w: v + '%', trend: s.fresh && dd ? (dd > 0 ? '+' : '−') + Math.abs(dd).toFixed(1) : dd > 0 ? '▲ rising' : dd < 0 ? '▼ easing' : '● steady',
-      c: dd > 0 ? 'var(--ik-pos)' : dd < 0 ? 'var(--ik-neg)' : 'var(--ik-text-2)', aria: `Team ${k} ${v}` }; });
+  // TODO(M2): the engine supplies KPI values and trends; these are the prototype's fixed numbers.
+  const kpis = METRICS.map(k => { const dd = kd[k];
+    const trend: KpiTrend = s.fresh && dd ? { kind: 'delta', delta: dd } : { kind: 'direction', direction: dd > 0 ? 'up' : dd < 0 ? 'down' : 'flat' };
+    return { metric: k, value: avg(k), trend }; });
   const pos = members.filter(m => m.mood === 'happy').length, neu = members.filter(m => m.mood === 'neutral' || m.mood === 'thinking').length, neg = members.length - pos - neu;
   const pulse = [{ n: pos, label: 'upbeat', c: '#00F2AD' }, { n: neu, label: 'steady', c: '#DEE9FF' }, { n: neg, label: 'struggling', c: 'oklch(0.84 0.14 78)' }].filter(x => x.n);
   const sm = members.find(m => m.id === s.sel);
@@ -323,9 +327,7 @@ export function Board(props: BoardProps) {
   const dismissOutcome = () => act.clearOutcome();
   const affected = oc.affected.map(id => { const m = memberById(members, id); return { id, img: m.img, aria: `${m.name}. Show reaction`, ring: s.reveal === id ? 'var(--ik-acc-2)' : 'var(--ik-line-strong)', tap: () => setState(x => ({ reveal: x.reveal === id ? null : id })) }; });
   const reaction = s.reveal ? { name: first(memberById(members, s.reveal).name), t: oc.reactions[s.reveal] } : null;
-  const moves = oc.moves.map(mv => { const m = memberById(members, mv.id); const k = cap1(mv.k);
-    return { text: s.nums ? `${first(m.name)} ${k} ${mv.d > 0 ? '+' : '−'}${Math.abs(mv.d)}` : `${first(m.name)} ${k.toLowerCase()} ${mv.d > 0 ? 'up' : 'down'}`, arrow: mv.d > 0 ? '▲' : '▼', c: mv.d > 0 ? 'var(--ik-pos)' : 'var(--ik-neg)', bg: mv.d > 0 ? 'var(--ik-pos-soft)' : 'var(--ik-neg-soft)' }; });
-  const toggleNums = () => setState(x => ({ nums: !x.nums }));
+  const moves = oc.moves.map(mv => ({ name: first(memberById(members, mv.id).name), metric: mv.k, delta: mv.d, showNumbers: s.nums, onToggle: () => setState(x => ({ nums: !x.nums })) }));
   const toggleInbox = () => setState(x => ({ inbox: !x.inbox }));
   const unread = unreadItems.length;
   const inboxRail = unreadItems.map(it => ({ ...sender(it), id: it.id, aria: it.title, ring: it.urgent ? 'oklch(0.84 0.14 78)' : 'var(--ik-line)', open: () => openItem(it) }));
@@ -400,13 +402,7 @@ export function Board(props: BoardProps) {
           )}
 
           <section aria-label="Team status" style={css('display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,1fr); gap:10px; padding:0 24px 14px')}>
-            {kpis.map(k => (
-              <div key={k.n} aria-label={k.aria} style={css('padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px')}>
-                <span style={css('font-size:12px; color:var(--ik-text-2)')}>{k.n}</span>
-                <div style={css('display:flex; align-items:baseline; gap:8px')}><b style={css('font-size:22px')}>{k.v}</b><span style={css(`font-size:12px; font-weight:700; color:${k.c}`)}>{k.trend}</span></div>
-                <div style={css('height:5px; border-radius:3px; background:var(--ik-track)')}><div style={css(`height:100%; width:${k.w}; border-radius:3px; background:linear-gradient(90deg, var(--ik-acc), var(--ik-acc-2)); transition:width 300ms cubic-bezier(.34,1.4,.64,1)`)}></div></div>
-              </div>
-            ))}
+            {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
             <div aria-label={`Team pulse: ${pos} upbeat, ${neu} steady, ${neg} struggling`} style={css('padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px')}>
               <span style={css('font-size:12px; color:var(--ik-text-2)')}>Team Pulse</span>
               <div style={css('display:flex; height:10px; border-radius:5px; overflow:hidden; gap:2px')}>
@@ -446,13 +442,7 @@ export function Board(props: BoardProps) {
                   <button onClick={replay} aria-label="Replay Kent's reply" style={css('flex:none; width:32px; height:32px; border-radius:50%; border:0; background:var(--grad-brand); color:#0A081B; cursor:pointer; display:flex; align-items:center; justify-content:center')}><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
                   <span style={css('font-size:14px; text-wrap:pretty')}>“{oc.reply}”</span>
                 </div>
-                {s.whyOpen && (
-                  <div style={css('display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px')}>
-                    <div style={css('display:flex; flex-direction:column; gap:2px')}><b style={css('font-size:12px; color:var(--ik-text-2)')}>What happened</b><span>{oc.why.cause}</span></div>
-                    <div style={css('display:flex; flex-direction:column; gap:2px')}><b style={css('font-size:12px; color:var(--ik-text-2)')}>The rule</b><span>{oc.why.rule}</span></div>
-                    <div style={css('display:flex; flex-direction:column; gap:2px')}><b style={css('font-size:12px; color:var(--ik-text-2)')}>Your words</b><span>“{oc.why.ev}”</span><span style={css('font-size:12px; color:var(--ik-text-2); display:flex; gap:4px; align-items:center')}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ik-acc-2)" strokeWidth="2" strokeLinejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path></svg>Read by AI, consequence set by the rule</span></div>
-                  </div>
-                )}
+                {s.whyOpen && <ReasonDetail cause={oc.why.cause} rule={oc.why.rule} evidence={oc.why.ev} judgedByAI />}
               </div>
               <div style={css('display:flex; flex-direction:column; gap:10px; min-width:0')}>
                 <div style={css('display:flex; gap:8px')}>
@@ -462,7 +452,7 @@ export function Board(props: BoardProps) {
                 </div>
                 {reaction && <span style={css('font-size:13px; padding:8px 10px; border-radius:12px; background:var(--ik-raised)')}><b>{reaction.name}:</b> {reaction.t}</span>}
                 <div style={css('display:flex; flex-wrap:wrap; gap:6px')}>
-                  {moves.map((mv, i) => <button key={i} onClick={toggleNums} style={css(`height:26px; padding:0 10px; border-radius:999px; border:1px solid var(--ik-line); background:${mv.bg}; color:var(--ik-text); font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap`)}><span style={css(`color:${mv.c}`)}>{mv.arrow}</span> {mv.text}</button>)}
+                  {moves.map((mv, i) => <ReasonChip key={i} {...mv} />)}
                 </div>
                 <span style={css('font-size:13px; color:var(--ik-text-2)')}>{oc.ripple}</span>
                 {oc.changed.map((ch, i) => <span key={i} style={css('font-size:13px')}>{ch}</span>)}
@@ -534,9 +524,7 @@ export function Board(props: BoardProps) {
                           </div>
                           {m.hasTags && <div style={css('display:flex; gap:4px; flex-wrap:wrap')}>{m.tags.map((tg, i) => <span key={i} style={css('height:20px; padding:0 8px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line); font-size:12px; font-weight:600; display:flex; align-items:center; white-space:nowrap')}>{tg}</span>)}</div>}
                           <div style={css('display:flex; flex-direction:column; gap:5px')}>
-                            {m.bars.map(b => (
-                              <div key={b.n} aria-label={b.aria} style={css('display:grid; grid-template-columns:46px minmax(0,1fr) 22px; gap:6px; align-items:center; font-size:12px')}><span style={css('color:var(--ik-text-2)')}>{b.n}</span><div style={css('height:5px; border-radius:3px; background:var(--ik-track)')}><div style={css(`height:100%; width:${b.w}; border-radius:3px; background:${b.bg}; transition:width 300ms cubic-bezier(.34,1.4,.64,1)`)}></div></div><b style={css(`text-align:right; color:${b.c}`)}>{b.v}</b></div>
-                            ))}
+                            {m.bars.map(b => <MetricBar key={b.metric} {...b} />)}
                           </div>
                           <div role="radiogroup" aria-label={m.styleAria} style={css('display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:2px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)')}>
                             {m.seg.map(sg => (
@@ -681,10 +669,10 @@ export function Board(props: BoardProps) {
           <section aria-label="Outcome" style={css('padding:18px; border-radius:22px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); display:flex; flex-direction:column; gap:12px; animation:ilIn 320ms ease')}>
             <div style={css('display:flex; gap:12px; align-items:center')}><div style={css('width:64px; height:64px; flex:none; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); box-shadow:0 0 0 3px var(--ik-pos)')}><img src="/assets/npc/kent.png" alt="Kent" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} /></div><div style={css('display:flex; flex-direction:column')}><span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)')}>How it landed</span><b style={css('font-size:18px; line-height:1.25')}>{oc.headline}</b></div></div>
             <div style={css('display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:14px; background:var(--ik-raised)')}><button onClick={replay} aria-label="Replay" style={css('flex:none; width:32px; height:32px; border-radius:50%; border:0; background:var(--grad-brand); color:#0A081B')}>▶</button><span style={css('font-size:14px')}>“{oc.reply}”</span></div>
-            <div style={css('display:flex; flex-wrap:wrap; gap:6px')}>{moves.map((mv, i) => <button key={i} onClick={toggleNums} style={css(`height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:${mv.bg}; color:var(--ik-text); font-size:13px; font-weight:700; white-space:nowrap`)}><span style={css(`color:${mv.c}`)}>{mv.arrow}</span> {mv.text}</button>)}</div>
+            <div style={css('display:flex; flex-wrap:wrap; gap:6px')}>{moves.map((mv, i) => <ReasonChip key={i} {...mv} size="md" />)}</div>
             <span style={css('font-size:13px; color:var(--ik-text-2)')}>{oc.ripple}</span>
             {oc.changed.map((ch, i) => <span key={i} style={css('font-size:14px')}>{ch}</span>)}
-            {s.whyOpen && <div style={css('display:flex; flex-direction:column; gap:8px; padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px')}><span><b>What happened.</b> {oc.why.cause}</span><span><b>The rule.</b> {oc.why.rule}</span><span><b>Your words.</b> “{oc.why.ev}”</span></div>}
+            {s.whyOpen && <ReasonDetail cause={oc.why.cause} rule={oc.why.rule} evidence={oc.why.ev} judgedByAI layout="stack" />}
             {/* The design passes style={flex:1} to the primary Button, but the runtime drops non position/size props, so it does not grow. */}
             <div style={css('display:flex; gap:8px')}><NoWrapButton variant="secondary" size="lg" onClick={toggleWhy}>{whyLabel}</NoWrapButton><Button variant="primary" size="lg" onClick={dismissOutcome}>Back to my team</Button></div>
           </section>

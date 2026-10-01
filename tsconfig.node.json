@@ -3,7 +3,8 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
     "target": "ES2022",
     "lib": [
-      "ES2023"
+      "ES2023",
+      "DOM"
     ],
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -17,6 +18,7 @@
   "include": [
     "vite.config.ts",
     "vitest.config.ts",
-    "scripts"
+    "scripts",
+    "tests"
   ]
 }

@@ -1,0 +1,12 @@
+{
+  "reason.chip.words": "{name} {metric} {direction, select, up {up} other {down}}",
+  "reason.chip.numbers": "{name} {metric} {delta}",
+  "reason.chip.aria": "{name} {metric} {delta}. {reason}",
+  "reason.why.cause": "What happened",
+  "reason.why.rule": "The rule",
+  "reason.why.evidence": "Your words",
+  "reason.why.causeInline": "What happened.",
+  "reason.why.ruleInline": "The rule.",
+  "reason.why.evidenceInline": "Your words.",
+  "reason.why.ai": "Read by AI, consequence set by the rule"
+}

@@ -6,6 +6,7 @@
   --shadow-*: initial;
   --font-*: initial;
   --ease-*: initial;
+  --blur-*: initial;
   --color-fg-primary: var(--il-color-fg-primary);
   --color-fg-secondary: var(--il-color-fg-secondary);
   --color-fg-on-accent: var(--il-color-fg-on-accent);
@@ -26,9 +27,10 @@
   --color-status-gain-soft: var(--il-color-status-gain-soft);
   --color-status-decline: var(--il-color-status-decline);
   --color-status-decline-soft: var(--il-color-status-decline-soft);
-  --fill-brand: var(--il-fill-brand);
-  --fill-product: var(--il-fill-product);
-  --fill-spectrum: var(--il-fill-spectrum);
+  --background-image-brand: var(--il-fill-brand);
+  --background-image-product: var(--il-fill-product);
+  --background-image-spectrum: var(--il-fill-spectrum);
+  --background-image-meter: var(--il-fill-meter);
   --color-brand-electric-blue: var(--il-color-brand-electric-blue);
   --color-brand-cyber-cyan: var(--il-color-brand-cyber-cyan);
   --color-brand-mint-green: var(--il-color-brand-mint-green);
@@ -90,4 +92,8 @@
   --ease-spring: var(--il-easing-spring);
   --ease-settle: var(--il-easing-settle);
   --shadow-glow: var(--il-shadow-glow);
+  --blur-12: var(--il-blur-12);
+  --blur-14: var(--il-blur-14);
+  --blur-20: var(--il-blur-20);
+  --blur-24: var(--il-blur-24);
 }

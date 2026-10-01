@@ -4,11 +4,11 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { build, type TokenSources } from './pipeline';
+import { build } from './pipeline';
+import { loadSources } from './sources';
 
 const root = path.resolve(import.meta.dirname, '../..');
-const read = (f: string) => JSON.parse(fs.readFileSync(path.join(root, 'tokens', f), 'utf8'));
-const src: TokenSources = { primitive: read('primitive.json'), semantic: read('semantic.json'), component: read('component.json'), legacy: read('legacy.json') };
+const src = loadSources(root);
 
 const out = build(src);
 const files: Record<string, string> = {

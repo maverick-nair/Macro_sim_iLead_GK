@@ -1,0 +1,10 @@
+{
+  "toast": {
+    "bg": {
+      "value": "{color.fg.primary}"
+    },
+    "fg": {
+      "value": "light-dark(#fff, #0A081B)"
+    }
+  }
+}

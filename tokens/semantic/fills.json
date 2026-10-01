@@ -1,0 +1,5 @@
+{
+  "fill": {
+    "meter": { "value": "linear-gradient(90deg, {color.accent.default}, {color.accent.secondary})", "$description": "Metric bars and progress" }
+  }
+}

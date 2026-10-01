@@ -1,4 +1,5 @@
 import type { Decorator, Preview } from '@storybook/react-vite';
+import { I18nProvider } from '../src/i18n';
 import '../src/styles/global.css';
 
 const CLIENT: Record<string, string> = {
@@ -14,7 +15,9 @@ const withTheme: Decorator = (Story, ctx) => {
   return (
     <div style={{ colorScheme: theme === 'light' ? 'light' : 'dark', ...(theme === 'client' ? CLIENT : null) }}>
       <div className="il-theme" style={{ minHeight: '100vh', padding: 24, background: theme === 'light' ? 'oklch(0.97 0.012 270)' : 'var(--il-color-brand-deep-space)', color: 'var(--il-color-fg-primary)', fontFamily: 'var(--il-font-family-sans)', fontSize: 14 }}>
-        <Story />
+        <I18nProvider>
+          <Story />
+        </I18nProvider>
       </div>
     </div>
   );

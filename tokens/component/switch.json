@@ -1,0 +1,16 @@
+{
+  "switch": {
+    "track-on": {
+      "value": "{fill.brand}"
+    },
+    "track-off": {
+      "value": "rgba(255,255,255,.12)"
+    },
+    "thumb-on": {
+      "value": "{color.brand.deep-space}"
+    },
+    "thumb-off": {
+      "value": "{color.brand.pale-lavender}"
+    }
+  }
+}

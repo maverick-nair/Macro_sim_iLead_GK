@@ -92,7 +92,11 @@ export const tokens = {
     "easing.brand": "cubic-bezier(.4,0,.2,1)",
     "easing.spring": "cubic-bezier(.34,1.4,.64,1)",
     "easing.settle": "cubic-bezier(.2,.9,.3,1.08)",
-    "shadow.glow": "0 0 24px rgba(36,157,255,.25)"
+    "shadow.glow": "0 0 24px rgba(36,157,255,.25)",
+    "blur.12": "12px",
+    "blur.14": "14px",
+    "blur.20": "20px",
+    "blur.24": "24px"
   },
   "semantic": [
     "color.fg.primary",
@@ -117,7 +121,8 @@ export const tokens = {
     "color.status.decline-soft",
     "fill.brand",
     "fill.product",
-    "fill.spectrum"
+    "fill.spectrum",
+    "fill.meter"
   ],
   "component": [
     "button.radius",
@@ -138,13 +143,17 @@ export const tokens = {
     "button.secondary.border",
     "button.ghost.fg",
     "button.ghost.fg-hover",
+    "dialog.radius",
+    "dialog.bg",
+    "dialog.border",
+    "metric.bar.columns",
+    "metric.bar.fill",
+    "metric.bar.fill-low",
+    "metric.bar.transition",
     "switch.track-on",
     "switch.track-off",
     "switch.thumb-on",
     "switch.thumb-off",
-    "dialog.radius",
-    "dialog.bg",
-    "dialog.border",
     "toast.bg",
     "toast.fg"
   ]

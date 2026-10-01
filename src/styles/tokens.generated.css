@@ -94,6 +94,10 @@
   --il-easing-spring: cubic-bezier(.34,1.4,.64,1);
   --il-easing-settle: cubic-bezier(.2,.9,.3,1.08);
   --il-shadow-glow: 0 0 24px rgba(36,157,255,.25);
+  --il-blur-12: 12px;
+  --il-blur-14: 14px;
+  --il-blur-20: 20px;
+  --il-blur-24: 24px;
   --font-sans: var(--il-font-family-sans);
   --type-body: var(--il-font-weight-400) var(--il-font-size-15)/1.65 var(--il-font-family-sans);
   --grad-brand: var(--il-gradient-brand);
@@ -138,6 +142,7 @@
   --il-fill-brand: var(--client-grad, var(--il-gradient-brand));
   --il-fill-product: var(--il-gradient-product);
   --il-fill-spectrum: var(--il-gradient-spectrum);
+  --il-fill-meter: linear-gradient(90deg, var(--il-color-accent-default), var(--il-color-accent-secondary));
   --il-button-radius: var(--il-radius-pill);
   --il-button-font-weight: var(--il-font-weight-700);
   --il-button-sm-height: 32px;
@@ -156,13 +161,17 @@
   --il-button-secondary-border: var(--il-color-line-strong);
   --il-button-ghost-fg: var(--il-color-brand-electric-blue);
   --il-button-ghost-fg-hover: var(--il-color-brand-cyber-cyan);
+  --il-dialog-radius: var(--il-radius-24);
+  --il-dialog-bg: var(--il-color-surface-material);
+  --il-dialog-border: var(--il-color-line-strong);
+  --il-metric-bar-columns: 46px minmax(0,1fr) 22px;
+  --il-metric-bar-fill: var(--il-fill-meter);
+  --il-metric-bar-fill-low: var(--il-color-status-attention);
+  --il-metric-bar-transition: width var(--il-duration-slow) var(--il-easing-spring);
   --il-switch-track-on: var(--il-fill-brand);
   --il-switch-track-off: rgba(255,255,255,.12);
   --il-switch-thumb-on: var(--il-color-brand-deep-space);
   --il-switch-thumb-off: var(--il-color-brand-pale-lavender);
-  --il-dialog-radius: var(--il-radius-24);
-  --il-dialog-bg: var(--il-color-surface-material);
-  --il-dialog-border: var(--il-color-line-strong);
   --il-toast-bg: var(--il-color-fg-primary);
   --il-toast-fg: light-dark(#fff, #0A081B);
   /* Migration aliases, removed as screens move to utilities. */
