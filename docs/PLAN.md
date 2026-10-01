@@ -61,6 +61,14 @@
 - The board route stays under 200 KB gzipped by code splitting the live, week end, report and gallery routes.
 - The current single bundle is 119 KB gzipped with every screen.
 
+## Status
+
+| Milestone | Status |
+|---|---|
+| M0 | Done |
+| M1 | Done, awaiting approval |
+| M2 to M8 | Not started |
+
 ## Milestones
 
 Each one ends with a demo, a summary and a stop for approval.

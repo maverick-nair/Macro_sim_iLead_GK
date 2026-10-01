@@ -108,6 +108,43 @@ Proposal:
 
 Each is fixed when its milestone rebuilds the component: Space as a push to talk shortcut is required by the spec's keyboard play, and the rest follow it.
 
+## M1
+
+**D20. Parity is measured, not eyeballed.** Decided.
+`npm run parity` renders every frame of the prototype and of the app and diffs them.
+- A pixel counts as different only when no pixel within 1px in the other image matches it. That absorbs subpixel compositing under `backdrop-filter`, but not a 2px shift.
+- A frame fails above 0.05% of its pixels, which is less than one short label.
+- p1 (live clock), z5 and z14 (random waveform) and x2 (blurred board behind a dialog) allow 0.4%.
+- `--prod` checks the production bundle.
+
+I confirmed it catches a 2px wider chip and a 2px smaller font.
+
+**D21. Production builds keep `light-dark()` native.** Decided.
+The CSS minifier lowered `light-dark()` into variables that only resolve when `color-scheme` is set in a stylesheet. The app sets it at runtime, so every color broke in production and in the static Storybook.
+- `build.cssTarget` is now Chrome 123, Edge 123, Firefox 120 and Safari 17.5, the first versions with native `light-dark()`.
+- Older browsers are not supported.
+
+**D22. Style tooltip is hand built; the toggle group is Radix.** Decided.
+The Radix tooltip closes on any ancestor scroll and on pointer down, but the design keeps the tooltip open when you click a letter.
+- Arrow keys move focus within D, G, P and E, and Enter or Space picks. That's the Radix toggle group behavior. Selecting on every arrow press would fire a toast per key.
+
+**D23. Command palette uses a non-modal Radix dialog.** Proposed.
+Modal mode sets `pointer-events: none` on the body, which changes the board's gradient pills behind the scrim by up to 28/255.
+- Focus is still trapped (Tab loops inside), Escape closes, and focus returns to whatever opened it.
+- But the page behind is not hidden from screen readers.
+
+In M8 I'll make the board behind `inert` while the palette is open, which keeps the pixels and restores the modal semantics.
+
+**D24. Motion durations snapped to tokens.** Decided. Durations of 160, 200 and 320ms became 150, 220 and 300ms (`duration.fast`, `base` and `slow`), inside the brief's 150 to 300ms range. No frame changes.
+
+**D25. Copy duplicated until M2.** Decided. Style names and descriptions, and mood names, are now in the catalog. The legend, profile, style setting definitions and some toasts still read the scenario data until the engine takes over in M2.
+
+**D26. End screen badges disagree with the data.** Open.
+The design marks the first 4 badges as earned on the End screen, but the scenario has 2 earned. "Pipeline builder" and "Steady hand" show as earned with a "Hint:" detail. Kept as designed; the engine decides in M5.
+
+**D27. AI labels.** Decided.
+NPC transcript turns carry the design's visible "AI persona" label. Captions in the 1:1, meeting and sponsor screens have no visible label in the design, so they carry a visually hidden "AI persona voice" note. Adding a visible label to captions would be a design change; I'll raise it in M4.
+
 ## Blocked on missing docs
 
 **D19.** These are needed from the Teardown, the Simulation Design and the GenieKreator Configuration Spec:

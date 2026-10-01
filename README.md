@@ -10,8 +10,12 @@ npm install
 npm run dev              # http://localhost:5173 (regenerates tokens first)
 npm run storybook        # http://localhost:6006
 npm test                 # Vitest
-npm run build            # token check, typecheck, production build to dist/
+npm run build            # token check, copy lint, typecheck, production build to dist/
+npm run parity           # every frame vs the Claude Design prototype (add --prod for the build)
+npm run storybook:smoke  # every story in dark, light and client theme, fails on render errors
 ```
+
+Component rules: `docs/COMPONENTS.md`.
 
 Plan and status: `docs/PLAN.md`. Design and spec conflicts: `docs/DECISIONS.md`.
 
