@@ -5,6 +5,7 @@
  *   npm run parity                 all frames on both pages
  *   npm run parity -- b1 b4 l1     only these frames
  *   npm run parity -- --refresh    re-render the prototype baselines
+ *   npm run parity -- --prod       check the production build (vite build + preview) instead of dev
  *
  * Baselines are cached in .visual-cache/ (git ignored). Diff images for failing frames land in
  * .visual-cache/diff/. A pixel differs when any channel is off by more than 40/255 and no pixel
@@ -16,7 +17,7 @@ import http from 'node:http';
 import path from 'node:path';
 import { chromium, type Browser, type Page } from '@playwright/test';
 import { PNG } from 'pngjs';
-import { createServer } from 'vite';
+import { build, createServer, preview } from 'vite';
 
 const root = path.resolve(import.meta.dirname, '../..');
 const cache = path.join(root, '.visual-cache');
@@ -35,6 +36,7 @@ const DYNAMIC: Record<string, number> = { p1: 0.004, z5: 0.004, z14: 0.004, x2: 
 
 const args = process.argv.slice(2);
 const refresh = args.includes('--refresh');
+const prod = args.includes('--prod');
 const only = new Set(args.filter(a => !a.startsWith('--')));
 
 /** The prototype runtime loads React 18 and Babel from unpkg; serve local copies instead. */
@@ -100,8 +102,15 @@ function diff(a: string, b: string, out: string, limit: number): { frac: number;
 async function main() {
   ensureDeps();
   const proto = await serveStatic(path.join(root, 'project'));
-  const vite = await createServer({ root, server: { port: 0 }, logLevel: 'error' });
-  await vite.listen();
+  let vite: { close: () => Promise<void>; resolvedUrls: { local: string[] } | null };
+  if (prod) {
+    await build({ root, logLevel: 'error' });
+    vite = await preview({ root, preview: { port: 0 }, logLevel: 'error' });
+  } else {
+    const dev = await createServer({ root, server: { port: 0 }, logLevel: 'error' });
+    await dev.listen();
+    vite = dev;
+  }
   const appUrl = vite.resolvedUrls!.local[0].replace(/\/$/, '');
   const browser: Browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
