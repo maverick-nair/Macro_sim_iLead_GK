@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+</helmet>
+<div style="flex:1; min-height:{{ app.minH }}; display:flex; flex-direction:column; padding:20px 32px 32px; gap:22px; position:relative">
+  <div aria-hidden="true" style="position:absolute; left:50%; top:0; width:900px; height:500px; transform:translateX(-50%); background:radial-gradient(ellipse at center, oklch(0.75 0.14 200 / 0.3), transparent 65%); pointer-events:none"></div>
+  <header style="position:relative; display:flex; align-items:center; gap:16px"><span style="font-size:22px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span><span style="font-size:13px; color:var(--ik-text-2)">Simulation complete</span></header>
+
+  <section style="position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; gap:32px; align-items:end">
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">Eight weeks, ten people, one team</span>
+      <h1 style="margin:0; font-size:60px; line-height:1; font-weight:700; letter-spacing:-0.03em">You finished at <span style="background:var(--grad-spectrum); -webkit-background-clip:text; background-clip:text; color:transparent">Gold</span>.</h1>
+      <p style="margin:0; font-size:17px; color:var(--ik-text-2); max-width:640px; text-wrap:pretty">Take a moment before the report. What you notice now is what you will use on Monday.</p>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px; padding:16px 22px; border-radius:24px; background:var(--ik-card); border:1px solid var(--ik-line)">
+      <div aria-label="Tier: Gold. Bronze, Silver, Gold, Platinum" style="display:flex; gap:6px"><sc-for list="{{ tiers }}" as="t" hint-placeholder-count="4"><span title="{{ t.n }}" style="width:14px; height:{{ t.h }}; border-radius:4px; background:{{ t.bg }}; align-self:flex-end"></span></sc-for></div>
+      <div style="display:flex; flex-direction:column"><span style="font-size:12px; color:var(--ik-text-2)">Leadership Score</span><b style="font-size:34px; letter-spacing:-0.02em">4,860</b></div>
+    </div>
+  </section>
+
+  <section aria-label="Results" style="position:relative; display:grid; grid-template-columns:minmax(0,1.6fr) repeat(5,minmax(0,1fr)); gap:12px">
+    <div style="padding:16px; border-radius:20px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:8px"><span style="font-size:12px; color:var(--ik-text-2)">Target achieved</span><b style="font-size:24px">$226,400 <span style="font-size:13px; color:var(--ik-text-2); font-weight:600">of $240,000</span></b><div style="height:8px; border-radius:4px; background:var(--ik-track)"><div style="height:100%; width:94%; border-radius:4px; background:linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))"></div></div></div>
+    <sc-for list="{{ results }}" as="r" hint-placeholder-count="5"><div style="padding:16px; border-radius:20px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:4px"><span style="font-size:12px; color:var(--ik-text-2)">{{ r.n }}</span><b style="font-size:24px">{{ r.v }}</b><span style="font-size:12px; color:var(--ik-pos); font-weight:700">{{ r.d }}</span></div></sc-for>
+  </section>
+
+  <section style="position:relative; display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:20px">
+    <div style="display:flex; flex-direction:column; gap:12px">
+      <h2 style="margin:0; font-size:20px; font-weight:700">Moments from your eight weeks</h2>
+      <sc-for list="{{ moments }}" as="m" hint-placeholder-count="4">
+        <div style="display:grid; grid-template-columns:52px minmax(0,1fr) auto; gap:14px; align-items:center; padding:12px 14px; border-radius:18px; background:var(--ik-card); border:1px solid {{ m.border }}">
+          <span style="width:52px; height:52px; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB)"><img src="{{ m.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></span>
+          <span style="display:flex; flex-direction:column"><b style="font-size:14px">{{ m.t }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ m.w }}</span></span>
+          <span style="height:24px; padding:0 10px; border-radius:999px; background:{{ m.tagBg }}; font-size:12px; font-weight:700; display:flex; align-items:center">{{ m.tag }}</span>
+        </div>
+      </sc-for>
+      <div style="display:flex; flex-direction:column; gap:8px; padding-top:6px"><h2 style="margin:0; font-size:16px; font-weight:700">Badges</h2><div style="display:flex; gap:10px; flex-wrap:wrap"><sc-for list="{{ badges }}" as="b" hint-placeholder-count="6"><span title="{{ b.d }}" style="display:flex; align-items:center; gap:8px; height:36px; padding:0 14px 0 4px; border-radius:999px; background:var(--ik-card); border:1px solid var(--ik-line); font-size:13px; font-weight:700; color:{{ b.c }}"><span style="width:28px; height:28px; border-radius:50%; background:{{ b.bg }}"></span>{{ b.n }}</span></sc-for></div></div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:14px; padding:20px; border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong)">
+      <h2 style="margin:0; font-size:20px; font-weight:700">Reflect, two questions</h2>
+      <span style="font-size:13px; color:var(--ik-text-2)">Optional. Answer by voice or text. Your answers shape your development plan.</span>
+      <sc-for list="{{ qs }}" as="q" hint-placeholder-count="2">
+        <div style="display:flex; flex-direction:column; gap:6px">
+          <b style="font-size:14px">{{ q.q }}</b>
+          <div style="display:flex; gap:8px; align-items:flex-start"><textarea value="{{ q.v }}" onChange="{{ q.on }}" rows="3" aria-label="{{ q.q }}" placeholder="A sentence or two is plenty" style="flex:1; padding:10px 12px; border-radius:14px; border:1px solid var(--ik-line-strong); background:var(--ik-raised); color:var(--ik-text); font-size:14px; resize:none"></textarea><button onClick="{{ q.mic }}" aria-label="Answer by voice" style="width:44px; height:44px; flex:none; border-radius:50%; border:0; background:var(--grad-brand); color:#0A081B; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg></button></div>
+        </div>
+      </sc-for>
+      <div style="display:flex; flex-direction:column; gap:6px; padding-top:4px; border-top:1px solid var(--ik-line)">
+        <b style="font-size:14px; padding-top:10px">How was the experience?</b>
+        <div role="radiogroup" aria-label="Rating, 1 to 5" style="display:flex; gap:6px"><sc-for list="{{ rating }}" as="r" hint-placeholder-count="5"><button role="radio" aria-checked="{{ r.on }}" aria-label="{{ r.aria }}" onClick="{{ r.pick }}" style="width:44px; height:44px; border-radius:50%; border:1.5px solid {{ r.border }}; background:{{ r.bg }}; color:{{ r.color }}; font-weight:700; cursor:pointer">{{ r.n }}</button></sc-for></div>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:6px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ toReport }}" hint-size="170px,48px">View my report</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="lg" onClick="{{ pdf }}" hint-size="150px,48px">Download PDF</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="ghost" size="lg" onClick="{{ email }}" hint-size="130px,48px">Email to me</x-import></span></div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { a: ['Kent taught me that the loudest problem is not always the real one. Asking first changed everything.', ''], rating: 4 };
+  renderVals() {
+    const { d: D, act } = this.props, s = this.state;
+    if (!D) return {};
+    return {
+      tiers: [['Bronze', '20px'], ['Silver', '30px'], ['Gold', '40px'], ['Platinum', '50px']].map(([n, h], i) => ({ n, h, bg: i <= 2 ? 'var(--grad-spectrum)' : 'var(--ik-track)' })),
+      results: [['Conversions', '27', '+9 on week 1 pace'], ['Team skill', '71', '+14'], ['Team morale', '68', '+11'], ['Team result', '74', '+15'], ['Team trust', '70', '+14']].map(([n, v, d]) => ({ n, v, d })),
+      moments: [
+        { img: 'assets/npc/kent.png', t: 'Kent opened up about the territory split', w: 'Week 2 · Best moment', tag: 'Best', tagBg: 'var(--ik-pos-soft)', border: 'var(--ik-line)' },
+        { img: 'assets/npc/peter.png', t: 'Peter qualified his first $10,000 lead', w: 'Week 5 · Best moment', tag: 'Best', tagBg: 'var(--ik-pos-soft)', border: 'var(--ik-line)' },
+        { img: 'assets/npc/jack.png', t: 'Jack and Green held price on Ashcroft', w: 'Week 3 · Best moment', tag: 'Best', tagBg: 'var(--ik-pos-soft)', border: 'var(--ik-line)' },
+        { img: 'assets/npc/lowe.png', t: 'Feedback to Lowe landed in front of the team', w: 'Week 2 · Worth revisiting', tag: 'Revisit', tagBg: 'var(--ik-warn-soft)', border: 'var(--ik-warn)' }
+      ],
+      badges: D.badges.map((b, i) => ({ n: b.n, d: b.d, c: i < 4 ? 'var(--ik-text)' : 'var(--ik-text-2)', bg: i < 4 ? 'var(--grad-spectrum)' : 'var(--ik-track)' })),
+      qs: ['What did you learn about adapting your style to each person?', 'What will you do differently with your real team next week?'].map((q, i) => ({ q, v: s.a[i],
+        on: e => { const v = e.target.value; this.setState(x => { const a = [...x.a]; a[i] = v; return { a }; }); }, mic: () => act.say('Listening. Your words will appear in the box to edit.') })),
+      rating: [1, 2, 3, 4, 5].map(n => ({ n, on: s.rating === n, aria: `${n} of 5`, border: s.rating === n ? 'transparent' : 'var(--ik-line-strong)', bg: s.rating === n ? 'var(--grad-brand)' : 'transparent', color: s.rating === n ? '#0A081B' : 'var(--ik-text)', pick: () => this.setState({ rating: n }) })),
+      toReport: () => act.go('report'), pdf: () => act.say('Your PDF report is downloading.'), email: () => act.say('Report sent to your work email.')
+    };
+  }
+}
+</script>
+</body>
+</html>

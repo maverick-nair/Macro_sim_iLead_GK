@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/colors.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/typography.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/shape.css">
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+<script src="ilead-data.js"></script>
+<style>body{margin:0;background:#0A081B}*{box-sizing:border-box}button,input,textarea,select{font:inherit}a{color:#249DFF}a:hover{color:#43D6E8}@keyframes ilPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.08);opacity:.75}}@keyframes ilRing{0%{transform:scale(.9);opacity:.9}100%{transform:scale(1.5);opacity:0}}@keyframes ilDot{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}@keyframes ilIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes ilShimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style>
+</helmet>
+<div style="{{ rootVars }}">
+<div style="--ik-text:light-dark(oklch(0.2 0.03 280), oklch(0.94 0.03 265)); --ik-text-2:light-dark(oklch(0.45 0.025 278), oklch(0.78 0.03 268)); --ik-card:light-dark(oklch(1 0 0), oklch(0.17 0.035 283 / 0.82)); --ik-solid:light-dark(oklch(1 0 0), oklch(0.17 0.035 283)); --ik-raised:light-dark(oklch(0.955 0.01 270), oklch(1 0 0 / 0.06)); --ik-line:light-dark(oklch(0.9 0.012 270), oklch(1 0 0 / 0.1)); --ik-line-strong:light-dark(oklch(0.82 0.015 270), oklch(1 0 0 / 0.2)); --ik-track:light-dark(oklch(0.92 0.01 270), oklch(1 0 0 / 0.1)); --ik-acc:var(--client-acc, light-dark(oklch(0.53 0.17 252), #249DFF)); --ik-acc-2:var(--client-acc-2, light-dark(oklch(0.6 0.12 205), #43D6E8)); --ik-acc-soft:var(--client-acc-soft, light-dark(oklch(0.95 0.03 250), oklch(0.62 0.17 250 / 0.18))); --ik-on-acc:light-dark(oklch(1 0 0), #0A081B); --ik-warn:light-dark(oklch(0.55 0.13 62), oklch(0.84 0.14 78)); --ik-warn-soft:light-dark(oklch(0.96 0.04 80), oklch(0.84 0.14 78 / 0.14)); --ik-pos:light-dark(oklch(0.5 0.11 165), #00F2AD); --ik-pos-soft:light-dark(oklch(0.95 0.04 165), oklch(0.86 0.17 165 / 0.14)); --ik-neg:light-dark(oklch(0.53 0.17 25), oklch(0.78 0.13 25)); --ik-neg-soft:light-dark(oklch(0.96 0.025 25), oklch(0.78 0.13 25 / 0.14)); --ik-mat:light-dark(oklch(1 0 0 / 0.93), oklch(0.16 0.035 284 / 0.93)); --ik-scrim:light-dark(oklch(0.2 0.03 280 / 0.35), oklch(0.05 0.02 285 / 0.66)); --text-body:var(--ik-text); --surface-2:var(--ik-raised); --surface-border-strong:var(--ik-line-strong); --grad-brand:var(--client-grad, linear-gradient(135deg,#249DFF,#43D6E8)); color:var(--ik-text); font-family:'Manrope', system-ui, sans-serif; font-size:14px; line-height:1.5; font-variant-numeric:tabular-nums; position:relative; min-height:inherit; overflow:hidden; display:flex; flex-direction:column">
+
+<sc-if value="{{ isLoading }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1; min-height:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px">
+    <span style="font-size:28px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span>
+    <div style="width:220px; height:6px; border-radius:3px; background:linear-gradient(90deg, var(--ik-track) 0%, var(--ik-acc-soft) 50%, var(--ik-track) 100%); background-size:400px 6px; animation:ilShimmer 1.4s linear infinite"></div>
+    <span style="font-size:13px; color:var(--ik-text-2)">Setting up your office</span>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isOnboarding }}"><dc-import name="ilOnboarding" d="{{ d }}" app="{{ app }}" act="{{ act }}" step="{{ step }}" ui-state="{{ uiState }}" hint-size="100%,900px"></dc-import></sc-if>
+<sc-if value="{{ isStyle }}"><dc-import name="ilStyle" d="{{ d }}" app="{{ app }}" act="{{ act }}" view="{{ step }}" hint-size="100%,900px"></dc-import></sc-if>
+<sc-if value="{{ isBoard }}"><dc-import name="ilBoard" d="{{ d }}" app="{{ app }}" act="{{ act }}" ui-state="{{ uiState }}" event-type="{{ eventType }}" mobile="{{ mobile }}" hint-size="100%,900px"></dc-import></sc-if>
+<sc-if value="{{ isLive }}"><dc-import name="ilLive" d="{{ d }}" app="{{ app }}" act="{{ act }}" variant="{{ variant }}" ui-state="{{ uiState }}" mobile="{{ mobile }}" hint-size="100%,900px"></dc-import></sc-if>
+<sc-if value="{{ isWeekend }}"><dc-import name="ilWeekEnd" d="{{ d }}" app="{{ app }}" act="{{ act }}" step="{{ step }}" hint-size="100%,900px"></dc-import></sc-if>
+<sc-if value="{{ isEnd }}"><dc-import name="ilEnd" d="{{ d }}" app="{{ app }}" act="{{ act }}" hint-size="100%,900px"></dc-import></sc-if>
+<sc-if value="{{ isReport }}"><dc-import name="ilReport" d="{{ d }}" app="{{ app }}" act="{{ act }}" print="{{ print }}" mobile="{{ mobile }}" hint-size="100%,1200px"></dc-import></sc-if>
+
+<sc-if value="{{ isReacting }}">
+  <div role="status" aria-live="polite" style="flex:1; min-height:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding:32px; text-align:center">
+    <div style="display:flex; gap:20px">
+      <sc-for list="{{ reactFaces }}" as="f" hint-placeholder-count="3">
+        <div style="position:relative; width:{{ f.size }}; height:{{ f.size }}">
+          <div style="position:absolute; inset:-6px; border-radius:50%; border:2px solid var(--ik-acc-2); animation:ilRing 1.6s ease-out infinite; animation-delay:{{ f.delay }}"></div>
+          <div style="width:100%; height:100%; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); border:2px solid var(--ik-line-strong)"><img src="{{ f.img }}" alt="{{ f.name }}" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:6px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">The team is reacting</h2>
+      <span style="font-size:15px; color:var(--ik-text-2)">Kent, Beth and Jack are taking in what you said.</span>
+    </div>
+    <sc-if value="{{ isSlow }}">
+      <div style="display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px 20px; border-radius:16px; background:var(--ik-card); border:1px solid var(--ik-line)">
+        <span style="font-size:13px; color:var(--ik-text-2)">This is taking longer than usual. Your conversation is saved.</span>
+        <div style="display:flex; gap:8px">
+          <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="sm" onClick="{{ toBoardOutcome }}" hint-size="110px,32px">Keep waiting</x-import></span>
+          <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="sm" onClick="{{ toBoardOutcome }}" hint-size="80px,32px">Retry</x-import></span>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasOverlay }}">
+  <div style="position:absolute; inset:0; z-index:50; background:var(--ik-scrim); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px">
+    <sc-if value="{{ isSettings }}">
+      <div role="dialog" aria-label="Settings and accessibility" style="width:560px; max-width:100%; max-height:100%; overflow-y:auto; overflow-x:hidden; border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); padding:28px; display:flex; flex-direction:column; gap:22px; animation:ilIn 240ms ease">
+        <div style="display:flex; justify-content:space-between; align-items:center"><h2 style="margin:0; font-size:22px; font-weight:700">Settings</h2><button onClick="{{ closeOverlay }}" aria-label="Close settings" style="width:36px; height:36px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer">✕</button></div>
+        <sc-for list="{{ settingRows }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <div style="display:flex; justify-content:space-between; gap:12px"><span style="font-weight:700">{{ r.label }}</span><span style="font-size:12px; color:var(--ik-text-2)">{{ r.hint }}</span></div>
+            <div role="radiogroup" aria-label="{{ r.label }}" style="display:flex; gap:2px; padding:3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)">
+              <sc-for list="{{ r.opts }}" as="o" hint-placeholder-count="3"><button role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="flex:1; height:34px; border:0; border-radius:999px; cursor:pointer; font-size:13px; font-weight:700; background:{{ o.bg }}; color:{{ o.color }}">{{ o.n }}</button></sc-for>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display:flex; flex-direction:column; gap:14px; padding-top:4px">
+          <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Switch" label="Captions on every NPC voice line" checked="{{ setCaptions }}" onChange="{{ toggleCaptions }}" hint-size="100%,24px"></x-import>
+          <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Switch" label="Reduce motion and celebrations" checked="{{ setReduced }}" onChange="{{ toggleReduced }}" hint-size="100%,24px"></x-import>
+          <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Switch" label="Show the session clock" checked="{{ setClock }}" onChange="{{ toggleClock }}" hint-size="100%,24px"></x-import>
+        </div>
+        <p style="margin:0; font-size:12px; color:var(--ik-text-2)">Changes save automatically. Voice is never required. You can finish every interaction in text.</p>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isPaused }}">
+      <div role="dialog" aria-label="Paused" style="width:440px; max-width:100%; border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); padding:32px; display:flex; flex-direction:column; gap:16px; align-items:center; text-align:center; animation:ilIn 240ms ease">
+        <div style="width:64px; height:64px; border-radius:50%; background:var(--grad-brand); display:flex; align-items:center; justify-content:center; gap:6px"><span style="width:6px; height:22px; border-radius:2px; background:#0A081B"></span><span style="width:6px; height:22px; border-radius:2px; background:#0A081B"></span></div>
+        <h2 style="margin:0; font-size:24px; font-weight:700">You are paused</h2>
+        <p style="margin:0; color:var(--ik-text-2); text-wrap:pretty">The clock has stopped and your team will wait. Everything is saved, so you can also close this tab and resume on any device.</p>
+        <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ resume }}" hint-size="140px,48px">Resume</x-import></span>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isResume }}">
+      <div role="dialog" aria-label="Welcome back" style="width:520px; max-width:100%; border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); padding:28px; display:flex; flex-direction:column; gap:18px; animation:ilIn 240ms ease">
+        <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">Welcome back</span>
+        <h2 style="margin:0; font-size:24px; font-weight:700">You are in week 2, day 3</h2>
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <span style="font-size:13px; font-weight:700">Last 3 outcomes</span>
+          <sc-for list="{{ recap }}" as="r" hint-placeholder-count="3"><div style="display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:12px; background:var(--ik-raised)"><img src="{{ r.img }}" alt="" style="width:32px; height:32px; border-radius:50%; object-fit:cover; object-position:center top; background:#DEE9FF"><span style="flex:1; font-size:13px">{{ r.t }}</span><span style="font-size:12px; font-weight:700; color:{{ r.c }}">{{ r.d }}</span></div></sc-for>
+        </div>
+        <span style="font-size:13px; color:var(--ik-text-2)">2 open messages are waiting: Kent and Priya.</span>
+        <div style="display:flex; justify-content:flex-end"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ closeOverlay }}" hint-size="150px,40px">Back to my team</x-import></span></div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ isExpired }}">
+      <div role="dialog" aria-label="Session ended" style="width:440px; max-width:100%; border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); padding:32px; display:flex; flex-direction:column; gap:14px; text-align:center; align-items:center; animation:ilIn 240ms ease">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ik-acc-2)" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <h2 style="margin:0; font-size:22px; font-weight:700">Your session timed out</h2>
+        <p style="margin:0; color:var(--ik-text-2); text-wrap:pretty">You were away for a while, so we signed you out to keep your work safe. Every action and draft is saved. Sign in to pick up exactly where you left off.</p>
+        <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ toResume }}" hint-size="150px,40px">Sign in again</x-import></span>
+      </div>
+    </sc-if>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}">
+  <div role="status" aria-live="polite" style="position:absolute; left:50%; bottom:24px; transform:translateX(-50%); padding:12px 18px; border-radius:999px; background:var(--ik-text); color:light-dark(#fff, #0A081B); font-size:13px; font-weight:600; z-index:60; max-width:90%; text-align:center; animation:ilIn 200ms ease">{{ toast }}</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;},&quot;clientTheme&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;onboarding&quot;,&quot;style&quot;,&quot;board&quot;,&quot;live&quot;,&quot;reacting&quot;,&quot;weekend&quot;,&quot;end&quot;,&quot;report&quot;],&quot;default&quot;:&quot;onboarding&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { ready: false, screen: null, styles: {}, stats: {}, capacity: 2.5, outcome: false, applied: false, variant: 'roleplay', who: 'kent', overlay: null, step: null,
+    settings: { text: 100, captions: true, reduced: false, input: 'ptt', clock: true }, toast: null, opened: [], week: 2, day: 3, secs: 2292, planned: [] };
+  componentDidMount() {
+    const go = () => { if (window.ILEAD) { clearInterval(this.poll); this.init(); } };
+    this.poll = setInterval(go, 40); go();
+    this.tick = setInterval(() => { const s = this.state; if (this.props.frozen) return; if (s.screen === 'board' && !s.overlay) this.setState({ secs: Math.max(0, s.secs - 1) }); }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.poll); clearInterval(this.tick); clearTimeout(this.rt); clearTimeout(this.tt); }
+  init() {
+    const D = window.ILEAD, p = this.props;
+    const stats = Object.fromEntries(D.members.map(m => [m.id, { skill: m.skill, morale: m.morale, result: m.result, trust: m.trust }]));
+    const st = { ready: true, styles: Object.fromEntries(D.members.map(m => [m.id, m.style])), stats, screen: p.screen ?? 'onboarding', variant: p.variant ?? 'roleplay', step: p.step ?? null, overlay: p.overlay ?? null, outcome: !!p.outcome };
+    if (p.outcome) { D.outcome.moves.forEach(mv => stats[mv.id][mv.k] += mv.d); st.applied = true; }
+    if (p.capacity !== undefined) st.capacity = p.capacity;
+    this.setState(st);
+    if (st.screen === 'reacting' && p.uiState !== 'slow' && !p.frozen) this.rt = setTimeout(() => this.toBoard(), 3200);
+  }
+  say(t) { clearTimeout(this.tt); this.setState({ toast: t }); this.tt = setTimeout(() => this.setState({ toast: null }), 3400); }
+  toBoard() {
+    const D = window.ILEAD;
+    this.setState(s => {
+      if (s.applied) return { screen: 'board', outcome: true };
+      const stats = JSON.parse(JSON.stringify(s.stats)); D.outcome.moves.forEach(mv => stats[mv.id][mv.k] += mv.d);
+      return { screen: 'board', outcome: true, applied: true, stats };
+    });
+  }
+  go(screen, extra = {}) {
+    clearTimeout(this.rt);
+    this.setState({ screen, step: null, ...extra });
+    if (screen === 'reacting') this.rt = setTimeout(() => this.toBoard(), 3200);
+  }
+  renderVals() {
+    const s = this.state, p = this.props, D = window.ILEAD;
+    const dark = (p.theme ?? 'dark') === 'dark', mobile = !!p.mobile;
+    const rootVars = { colorScheme: dark ? 'dark' : 'light', minHeight: mobile ? '844px' : (p.minHeight ?? '900px'), zoom: s.settings.text / 100,
+      background: dark ? '#0A081B url(assets/bg-1.png) center / cover no-repeat' : 'radial-gradient(1200px 600px at 85% 100%, oklch(0.9 0.06 230), transparent 70%), oklch(0.97 0.012 270)' };
+    if (p.clientTheme) Object.assign(rootVars, { '--client-acc': 'light-dark(oklch(0.5 0.17 0), oklch(0.72 0.17 0))', '--client-acc-2': 'light-dark(oklch(0.58 0.15 30), oklch(0.8 0.12 30))',
+      '--client-acc-soft': 'light-dark(oklch(0.95 0.025 0), oklch(0.6 0.18 0 / 0.18))', '--client-grad': 'linear-gradient(135deg, oklch(0.66 0.19 2), oklch(0.78 0.13 30))' });
+    const app = !s.ready ? {} : {
+      members: D.members.map(m => ({ ...m, ...s.stats[m.id], style: s.styles[m.id], img: `assets/npc/${m.id}.png` })),
+      capacity: s.capacity, week: s.week, day: s.day, outcome: s.outcome, who: s.who, opened: s.opened, planned: s.planned, settings: s.settings,
+      frozen: !!p.frozen, minH: mobile ? '844px' : (p.minHeight ?? '900px'), clock: `${Math.floor(s.secs / 60)}:${String(s.secs % 60).padStart(2, '0')}`, showClock: s.settings.clock, client: !!p.clientTheme, dark
+    };
+    const act = {
+      go: (sc, ex) => this.go(sc, ex), say: t => this.say(t),
+      setStyle: (id, k) => this.setState(st => ({ styles: { ...st.styles, [id]: k } })),
+      spend: (c, item) => this.setState(st => ({ capacity: Math.max(0, st.capacity - c), planned: item ? [...st.planned, item] : st.planned })),
+      live: (variant, who) => this.go('live', { variant, who: who || 'kent' }),
+      openProfile: id => this.setState(st => st.opened.includes(id) ? null : { opened: [...st.opened, id] }),
+      clearOutcome: () => this.setState({ outcome: false }),
+      overlay: o => this.setState({ overlay: o })
+    };
+    const opt = (key, list) => list.map(([v, n]) => ({ n, on: s.settings[key] === v, bg: s.settings[key] === v ? 'var(--grad-brand)' : 'transparent', color: s.settings[key] === v ? '#0A081B' : 'var(--ik-text-2)',
+      pick: () => this.setState(st => ({ settings: { ...st.settings, [key]: v } })) }));
+    const scr = s.ready ? s.screen : null;
+    return {
+      rootVars, d: D, app, act, step: s.step ?? p.step ?? '', uiState: p.uiState ?? 'default', eventType: p.eventType ?? '', variant: s.variant, mobile, print: !!p.print,
+      isLoading: !s.ready || p.uiState === 'loading', isOnboarding: scr === 'onboarding' && p.uiState !== 'loading', isStyle: scr === 'style', isBoard: scr === 'board' && p.uiState !== 'loading', isLive: scr === 'live',
+      isWeekend: scr === 'weekend', isEnd: scr === 'end', isReport: scr === 'report', isReacting: scr === 'reacting', isSlow: p.uiState === 'slow',
+      reactFaces: ['kent', 'beth', 'jack'].map((id, i) => ({ img: `assets/npc/${id}.png`, name: id, size: i === 0 ? '120px' : '88px', delay: i * 0.3 + 's' })),
+      toBoardOutcome: () => this.toBoard(),
+      hasOverlay: !!s.overlay, isSettings: s.overlay === 'settings', isPaused: s.overlay === 'paused', isResume: s.overlay === 'resume', isExpired: s.overlay === 'expired',
+      closeOverlay: () => this.setState({ overlay: null }), resume: () => this.setState({ overlay: null }), toResume: () => this.setState({ overlay: 'resume' }),
+      settingRows: [
+        { label: 'Text size', hint: 'Up to 200% without losing content', opts: opt('text', [[100, '100%'], [125, '125%'], [150, '150%'], [200, '200%']]) },
+        { label: 'How you respond', hint: 'Switch any time, even mid conversation', opts: opt('input', [['text', 'Text'], ['ptt', 'Push to talk'], ['open', 'Hands free']]) }
+      ],
+      setCaptions: s.settings.captions, setReduced: s.settings.reduced, setClock: s.settings.clock,
+      toggleCaptions: v => this.setState(st => ({ settings: { ...st.settings, captions: v } })),
+      toggleReduced: v => this.setState(st => ({ settings: { ...st.settings, reduced: v } })),
+      toggleClock: v => this.setState(st => ({ settings: { ...st.settings, clock: v } })),
+      recap: [
+        { img: 'assets/npc/beth.png', t: '1:1 with Beth went well', d: 'Morale +6', c: 'var(--ik-pos)' },
+        { img: 'assets/npc/lowe.png', t: 'Feedback to Lowe felt public', d: 'Trust −3', c: 'var(--ik-neg)' },
+        { img: 'assets/npc/green.png', t: 'Ashcroft moved to proposal', d: 'Result +4', c: 'var(--ik-pos)' }
+      ],
+      hasToast: !!s.toast, toast: s.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

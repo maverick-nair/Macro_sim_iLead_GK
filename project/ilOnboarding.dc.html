@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+</helmet>
+<div style="flex:1; min-height:{{ app.minH }}; display:flex; flex-direction:column; padding:20px 32px 32px; gap:20px">
+  <header style="display:flex; align-items:center; gap:20px">
+    <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span>
+    <span style="font-size:13px; color:var(--ik-text-2)">a Business Simulation</span>
+    <span style="flex:1"></span>
+    <div aria-label="{{ progressAria }}" style="display:flex; gap:6px"><sc-for list="{{ dots }}" as="dt" hint-placeholder-count="6"><span style="width:{{ dt.w }}; height:6px; border-radius:3px; background:{{ dt.bg }}; transition:width 240ms ease"></span></sc-for></div>
+    <span style="font-size:12px; color:var(--ik-text-2)">The clock starts after onboarding</span>
+  </header>
+
+  <sc-if value="{{ isLang }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1; display:flex; align-items:center; justify-content:center">
+      <div style="width:640px; max-width:100%; display:flex; flex-direction:column; gap:24px; animation:ilIn 300ms ease">
+        <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">Welcome aboard</span>
+        <h1 style="margin:0; font-size:48px; line-height:1.05; font-weight:700; letter-spacing:-0.03em">Lead a sales team of ten, for eight weeks.</h1>
+        <p style="margin:0; font-size:17px; color:var(--ik-text-2); text-wrap:pretty">About 100 minutes in total. You can pause at any time and resume on any device.</p>
+        <div role="radiogroup" aria-label="Language" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px">
+          <sc-for list="{{ langs }}" as="l" hint-placeholder-count="3"><button role="radio" aria-checked="{{ l.on }}" onClick="{{ l.pick }}" style="padding:14px; border-radius:16px; border:1.5px solid {{ l.border }}; background:{{ l.bg }}; color:var(--ik-text); text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:2px"><b>{{ l.n }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ l.d }}</span></button></sc-for>
+        </div>
+        <div><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ next }}" hint-size="140px,48px">Let's begin</x-import></span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isSponsor }}">
+    <div style="flex:1; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.1fr); gap:40px; align-items:center; animation:ilIn 300ms ease">
+      <div style="position:relative; aspect-ratio:4 / 5; max-height:640px; border-radius:28px; overflow:hidden; background:linear-gradient(160deg,#249DFF,#43D6E8 60%,#00F2AD); display:flex; align-items:center; justify-content:center">
+        <span style="font-size:120px; font-weight:700; color:#0A081B; opacity:.85">PN</span>
+        <span style="position:absolute; top:16px; left:16px; font-size:12px; font-weight:700; color:#0A081B">Sponsor avatar video from GenieKreator config</span>
+        <div style="position:absolute; left:16px; right:16px; bottom:16px; padding:12px 14px; border-radius:16px; background:oklch(0.13 0.03 285 / 0.82); color:#fff; display:flex; gap:12px; align-items:center">
+          <button onClick="{{ playVideo }}" aria-label="Play welcome video" style="width:40px; height:40px; flex:none; border-radius:50%; border:0; background:#fff; color:#0A081B; cursor:pointer">▶</button>
+          <span style="font-size:13px">“{{ caption }}”</span>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div style="display:flex; flex-direction:column; gap:4px"><span style="font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">A message from your sponsor</span><h1 style="margin:0; font-size:40px; font-weight:700; letter-spacing:-0.03em">Priya Nair</h1><span style="color:var(--ik-text-2)">Regional Sales Director, Northwind Software</span></div>
+        <div role="tablist" style="display:flex; gap:2px; padding:3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line); align-self:flex-start">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3"><button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="height:34px; padding:0 16px; border:0; border-radius:999px; font-size:13px; font-weight:700; white-space:nowrap; cursor:pointer; background:{{ t.bg }}; color:{{ t.color }}">{{ t.n }}</button></sc-for>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:12px; min-height:200px">
+          <sc-for list="{{ tabBody }}" as="p" hint-placeholder-count="3"><p style="margin:0; font-size:16px; line-height:1.65; text-wrap:pretty">{{ p }}</p></sc-for>
+        </div>
+        <div style="display:flex; align-items:center; gap:14px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" disabled="{{ waitLock }}" onClick="{{ next }}" hint-size="120px,48px">Next</x-import></span><span style="font-size:13px; color:var(--ik-text-2)">{{ waitText }}</span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isConsent }}">
+    <div style="flex:1; display:flex; align-items:center; justify-content:center">
+      <div style="width:720px; max-width:100%; padding:32px; border-radius:28px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:20px; animation:ilIn 300ms ease">
+        <h1 style="margin:0; font-size:32px; font-weight:700; letter-spacing:-0.02em">Before you start, here is what we record</h1>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <sc-for list="{{ consent }}" as="c" hint-placeholder-count="4"><div style="padding:14px; border-radius:16px; background:var(--ik-raised); display:flex; flex-direction:column; gap:4px"><b>{{ c.t }}</b><span style="font-size:13px; color:var(--ik-text-2); text-wrap:pretty">{{ c.d }}</span></div></sc-for>
+        </div>
+        <span style="font-size:13px; color:var(--ik-text-2)">If you choose text only, you can play the whole simulation and turn voice on later in Settings.</span>
+        <div style="display:flex; gap:10px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ next }}" hint-size="190px,48px">Accept and use voice</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="lg" onClick="{{ textOnly }}" hint-size="190px,48px">Continue with text only</x-import></span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isVoice }}">
+    <div style="flex:1; display:flex; align-items:center; justify-content:center">
+      <div style="width:720px; max-width:100%; display:flex; flex-direction:column; gap:20px; align-items:center; text-align:center; animation:ilIn 300ms ease">
+        <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">Voice setup · about 30 seconds</span>
+        <h1 style="margin:0; font-size:36px; font-weight:700; letter-spacing:-0.02em">{{ vTitle }}</h1>
+        <sc-if value="{{ micDenied }}">
+          <div role="alert" style="width:100%; padding:16px; border-radius:18px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; flex-direction:column; gap:6px; text-align:left"><b>Your browser blocked the microphone</b><span style="font-size:13px">Click the lock icon in the address bar, set Microphone to Allow, then try again. Or carry on in text, nothing is lost.</span></div>
+        </sc-if>
+        <button onClick="{{ toggleMic }}" aria-label="{{ micAria }}" aria-pressed="{{ listening }}" style="position:relative; width:120px; height:120px; border-radius:50%; border:0; background:{{ micBg }}; color:#0A081B; cursor:pointer; box-shadow:{{ micGlow }}; display:flex; align-items:center; justify-content:center">
+          <sc-if value="{{ listening }}"><span style="position:absolute; inset:-10px; border-radius:50%; border:2px solid var(--ik-acc-2); animation:ilRing 1.4s ease-out infinite"></span></sc-if>
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg>
+        </button>
+        <div style="display:flex; gap:3px; align-items:center; height:40px" aria-hidden="true"><sc-for list="{{ wave }}" as="w" hint-placeholder-count="28"><span style="width:4px; height:{{ w }}; border-radius:2px; background:var(--ik-acc-2); transition:height 90ms linear"></span></sc-for></div>
+        <div style="padding:14px 18px; border-radius:16px; background:var(--ik-card); border:1px solid var(--ik-line); min-width:420px; font-size:18px"><span style="color:var(--ik-text-2)">Say: </span>“<b>{{ heard }}</b><span style="color:var(--ik-text-2)">{{ rest }}</span>”</div>
+        <div style="display:flex; gap:10px; align-items:center"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="md" onClick="{{ playSample }}" hint-size="190px,40px">Play a sample voice</x-import></span><span style="font-size:13px; color:var(--ik-text-2)">Kent, with captions</span></div>
+        <div style="display:flex; gap:10px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" disabled="{{ voiceLock }}" onClick="{{ next }}" hint-size="140px,48px">Sounds good</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="ghost" size="lg" onClick="{{ textOnly }}" hint-size="170px,48px">Skip, use text only</x-import></span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHow }}">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:24px; animation:ilIn 300ms ease">
+      <h1 style="margin:0; font-size:36px; font-weight:700; letter-spacing:-0.02em; text-align:center">How to play</h1>
+      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px">
+        <sc-for list="{{ how }}" as="h" hint-placeholder-count="4">
+          <div style="padding:20px; border-radius:24px; background:var(--ik-card); backdrop-filter:blur(14px); border:1.5px solid {{ h.border }}; display:flex; flex-direction:column; gap:12px; transform:{{ h.lift }}; transition:transform 240ms ease, border-color 240ms ease">
+            <div style="height:120px; border-radius:16px; background:{{ h.art }}; display:flex; align-items:flex-end; padding:12px"><span style="font-size:44px; font-weight:700; color:#0A081B; line-height:1">{{ h.n }}</span></div>
+            <b style="font-size:18px">{{ h.t }}</b>
+            <span style="font-size:14px; color:var(--ik-text-2); text-wrap:pretty">{{ h.d }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex; justify-content:center"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ next }}" hint-size="160px,48px">Meet your team</x-import></span></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isTeam }}">
+    <div style="flex:1; display:grid; grid-template-columns:minmax(0,1fr) 380px; gap:24px; animation:ilIn 300ms ease">
+      <div style="display:flex; flex-direction:column; gap:16px">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px">
+          <div style="display:flex; flex-direction:column; gap:4px"><h1 style="margin:0; font-size:32px; font-weight:700; letter-spacing:-0.02em">Meet your team</h1><span style="color:var(--ik-text-2)">Open at least 3 profiles. Stats appear once you have read someone's profile.</span></div>
+          <div style="display:flex; align-items:center; gap:14px"><span aria-live="polite" style="font-weight:700">{{ readText }}</span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" disabled="{{ teamLock }}" onClick="{{ startWeek }}" hint-size="150px,48px">Start week 1</x-import></span></div>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px">
+          <sc-for list="{{ team }}" as="m" hint-placeholder-count="10">
+            <button onClick="{{ m.open }}" aria-label="{{ m.aria }}" style="padding:0; border-radius:20px; overflow:hidden; border:2px solid {{ m.border }}; background:var(--ik-card); color:var(--ik-text); cursor:pointer; text-align:left; display:flex; flex-direction:column; transition:transform 200ms ease" style-hover="transform:translateY(-3px)">
+              <div style="position:relative; height:150px; width:100%; background:linear-gradient(160deg,#DEE9FF,#9FDCEB)"><img src="{{ m.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center 12%; mix-blend-mode:multiply"><sc-if value="{{ m.read }}"><span style="position:absolute; top:8px; right:8px; height:22px; padding:0 8px; border-radius:999px; background:#00F2AD; color:#0A081B; font-size:12px; font-weight:700; display:flex; align-items:center">Read</span></sc-if></div>
+              <div style="padding:10px 12px; display:flex; flex-direction:column"><b style="font-size:14px">{{ m.name }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ m.stage }}</span><span style="font-size:12px; color:var(--ik-text-2); padding-top:4px">{{ m.statsLine }}</span></div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <aside aria-label="Profile" style="border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); overflow:hidden; display:flex; flex-direction:column">
+        <sc-if value="{{ hasOpen }}">
+          <div style="display:flex; align-items:center; gap:16px; padding:22px 20px 4px"><div style="width:112px; height:112px; flex:none; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); box-shadow:0 0 0 3px var(--ik-line-strong)"><img src="{{ op.img }}" alt="{{ op.name }}" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></div><div style="display:flex; flex-direction:column"><b style="font-size:22px">{{ op.name }}</b><span style="font-size:13px; color:var(--ik-text-2)">{{ op.title }}</span></div></div>
+          <div style="padding:18px 20px; display:flex; flex-direction:column; gap:12px; animation:ilIn 240ms ease">
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"><sc-for list="{{ op.stats }}" as="st" hint-placeholder-count="4"><div style="padding:8px; border-radius:12px; background:var(--ik-raised); display:flex; flex-direction:column"><span style="font-size:12px; color:var(--ik-text-2)">{{ st.n }}</span><b style="font-size:18px">{{ st.v }}</b></div></sc-for></div>
+            <sc-for list="{{ op.facts }}" as="fa" hint-placeholder-count="5"><div style="display:grid; grid-template-columns:100px 1fr; gap:10px; font-size:13px"><span style="color:var(--ik-text-2)">{{ fa.k }}</span><span>{{ fa.v }}</span></div></sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ noOpen }}"><div style="flex:1; display:flex; align-items:center; justify-content:center; padding:32px; text-align:center; color:var(--ik-text-2)">Pick someone to read their profile.</div></sc-if>
+      </aside>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  STEPS = ['lang', 'sponsor', 'consent', 'voice', 'how', 'team'];
+  state = { step: 'lang', lang: 0, tab: 0, wait: 4, listening: false, heardN: 0, voiceOk: false, wave: Array(28).fill(4), open: null, read: [], micDenied: false };
+  componentDidMount() {
+    const p = this.props, st = {};
+    if (p.step && this.STEPS.includes(p.step)) st.step = p.step;
+    if (p.uiState === 'micDenied') st.micDenied = true;
+    if (p.uiState === 'heard') { st.heardN = 5; st.voiceOk = true; }
+    if (st.step === 'team' && p.uiState === 'read') { st.open = 'kent'; st.read = ['kent', 'beth', 'green']; }
+    this.setState(st);
+    this.wt = setInterval(() => this.setState(s => s.step === 'sponsor' && s.wait > 0 ? { wait: s.wait - 1 } : null), 1000);
+  }
+  componentWillUnmount() { clearInterval(this.wt); clearInterval(this.lt); }
+  next() { const i = this.STEPS.indexOf(this.state.step); if (i < this.STEPS.length - 1) this.setState({ step: this.STEPS[i + 1] }); }
+  toggleMic() {
+    if (this.state.micDenied) return;
+    if (this.state.listening) { clearInterval(this.lt); this.setState({ listening: false, wave: Array(28).fill(4) }); return; }
+    this.setState({ listening: true, heardN: 0 });
+    let t = 0;
+    this.lt = setInterval(() => {
+      t++;
+      this.setState(s => ({ wave: s.wave.map(() => 6 + Math.round(Math.random() * 30)), heardN: Math.min(5, Math.floor(t / 4)) }));
+      if (t > 22) { clearInterval(this.lt); this.setState({ listening: false, voiceOk: true, wave: Array(28).fill(4) }); }
+    }, 100);
+  }
+  renderVals() {
+    const { d: D, act } = this.props, s = this.state;
+    if (!D) return {};
+    const i = this.STEPS.indexOf(s.step);
+    const words = ["I'm", 'ready', 'to', 'lead', 'my team.'];
+    const tabsBody = [
+      ['Welcome to Northwind. I am glad you are here.', 'You are taking over a team of ten across our sales funnel, from first call to signed deal. Some are thriving, some are new, and one or two are struggling.', 'I care about two things: the number, and whether the team is stronger when you leave than when you arrived.'],
+      ['Northwind sells workflow software to mid size companies. A typical deal is about $8,000 and takes four to six weeks to close.', 'Deals move through five stages: lead generation, qualification, solution demo, proposal and closing.'],
+      ['Reach $240,000 in revenue over eight weeks.', 'Keep Team Morale and Trust healthy. A burned out team will not hold the number next quarter.', 'You have five days of your own time each week. Spend them well.']
+    ];
+    const D_ = D.members;
+    const op = D_.find(m => m.id === s.open);
+    return {
+      dots: this.STEPS.map((x, j) => ({ w: j === i ? '28px' : '10px', bg: j <= i ? 'var(--grad-brand)' : 'var(--ik-track)' })), progressAria: `Step ${i + 1} of 6`,
+      isLang: s.step === 'lang', isSponsor: s.step === 'sponsor', isConsent: s.step === 'consent', isVoice: s.step === 'voice', isHow: s.step === 'how', isTeam: s.step === 'team',
+      next: () => this.next(), textOnly: () => { act.say('Text only it is. You can turn voice on any time in Settings.'); this.setState({ step: 'how' }); },
+      langs: [['English', 'Voice and captions'], ['Español', 'Voz y subtítulos'], ['Bahasa Indonesia', 'Suara dan teks']].map(([n, d], j) => ({ n, d, on: s.lang === j, border: s.lang === j ? 'var(--ik-acc-2)' : 'var(--ik-line)', bg: s.lang === j ? 'var(--ik-acc-soft)' : 'var(--ik-card)', pick: () => this.setState({ lang: j }) })),
+      caption: 'Welcome to Northwind. I am glad you are here.', playVideo: () => act.say('Playing Priya’s welcome with captions.'),
+      tabs: ['Welcome', 'About the product', 'Your targets'].map((n, j) => ({ n, on: s.tab === j, bg: s.tab === j ? 'var(--grad-brand)' : 'transparent', color: s.tab === j ? '#0A081B' : 'var(--ik-text-2)', pick: () => this.setState({ tab: j }) })),
+      tabBody: tabsBody[s.tab], waitLock: s.wait > 0, waitText: s.wait > 0 ? `Next unlocks in ${s.wait}s, or when the video ends` : '',
+      consent: [{ t: 'What we record', d: 'Your typed replies and, if you use voice, transcripts of what you say. Audio itself is not kept.' }, { t: 'Why', d: 'AI reads your words to decide how each person reacts, and to write your development report.' }, { t: 'How long', d: 'Kept for 12 months, then deleted. You can ask for deletion sooner.' }, { t: 'Who sees the report', d: 'You, and your program manager at Northwind. Never your real colleagues.' }],
+      micDenied: s.micDenied, listening: s.listening, toggleMic: () => this.toggleMic(),
+      vTitle: s.micDenied ? 'We could not reach your mic' : s.voiceOk ? 'We heard you clearly' : 'Let us check we can hear you',
+      micAria: s.listening ? 'Stop listening' : 'Start mic test', micBg: s.micDenied ? 'var(--ik-track)' : 'var(--grad-brand)', micGlow: s.listening ? '0 0 50px oklch(0.75 0.14 220 / 0.7)' : '0 0 24px oklch(0.75 0.14 220 / 0.35)',
+      wave: s.wave.map(w => w + 'px'), heard: words.slice(0, s.heardN).join(' '), rest: (s.heardN ? ' ' : '') + words.slice(s.heardN).join(' '),
+      playSample: () => act.say('Kent: “Hi, good to meet you.” Captions on.'), voiceLock: !s.voiceOk,
+      how: [
+        { n: '1', t: 'The weekly loop', d: 'Each week, set a style for each person, spend your 5 days on actions, then see how the team responds.', art: 'linear-gradient(135deg,#249DFF,#43D6E8)' },
+        { n: '2', t: 'Quick or live', d: 'Some actions are instant decisions. Live ones open a real conversation you have by voice or text.', art: 'linear-gradient(135deg,#43D6E8,#00F2AD)' },
+        { n: '3', t: 'The clock', d: 'The clock is there to help you pace yourself. It pauses during conversations and whenever you pause.', art: 'linear-gradient(135deg,#DEE9FF,#9FDCEB)' },
+        { n: '4', t: 'How you are evaluated', d: 'Results matter, and so does how you got there. Your report shows what you did well and what to try next.', art: 'linear-gradient(135deg,#249DFF 0%,#43D6E8 50%,#00F2AD 100%)' }
+      ].map((h, j) => ({ ...h, border: j === 0 ? 'var(--ik-acc-2)' : 'var(--ik-line)', lift: j === 0 ? 'translateY(-6px)' : 'none' })),
+      team: D_.map(m => { const r = s.read.includes(m.id); return { name: m.name, img: `assets/npc/${m.id}.png`, stage: D.stages[m.stage].n, read: r, border: s.open === m.id ? 'var(--ik-acc-2)' : 'var(--ik-line)',
+        statsLine: r ? `Skill ${m.skill} · Morale ${m.morale} · Result ${m.result}` : 'Open to see stats', aria: `${m.name}, ${D.stages[m.stage].n}${r ? ', read' : ''}`,
+        open: () => this.setState(x => ({ open: m.id, read: x.read.includes(m.id) ? x.read : [...x.read, m.id] })) }; }),
+      readText: `${Math.min(3, s.read.length)} of 3 profiles read`, teamLock: s.read.length < 3, startWeek: () => act.go('style'),
+      hasOpen: !!op, noOpen: !op,
+      op: op ? { name: op.name, title: op.title, img: `assets/npc/${op.id}.png`, stats: [['Skill', op.skill], ['Morale', op.morale], ['Result', op.result], ['Trust', op.trust]].map(([n, v]) => ({ n, v })),
+        facts: [{ k: 'Previous', v: op.prev }, { k: 'Tenure', v: op.tenure }, { k: 'Experience', v: op.exp }, { k: 'Skills', v: op.skills }, { k: 'Remarks', v: op.remarks }] } : {}
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+body{background:var(--bg-app);color:var(--text-body);font:var(--type-body);margin:0;-webkit-font-smoothing:antialiased}
+a{color:var(--electric-blue);text-decoration:none}
+a:hover{color:var(--cyber-cyan)}
+::selection{background:rgba(36,157,255,.3)}

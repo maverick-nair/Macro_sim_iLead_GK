@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/colors.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/typography.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/shape.css">
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+<style>body{margin:0;background:#ecebf0;font-family:'Manrope',system-ui,sans-serif}*{box-sizing:border-box}a{color:oklch(0.53 0.17 252)}a:hover{color:oklch(0.45 0.17 252)}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55)}.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}</style>
+</helmet>
+<section class="dv-turn" id="t3"><div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">Full interface, built from the Participant Interface Spec</span></div><p style="margin:0; font-size:15px; color:#1a1a1a">Every screen and state now lives in <a href="iLead Screens.dc.html">iLead Screens</a> and <a href="iLead States.dc.html">iLead States</a>. The playable prototype is <a href="iLeadApp.dc.html">iLeadApp</a>.</p></section>
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Game first board: portraits lead, less text, same tokens and explainable chips as <a class="dv-oid" href="#1c">1c</a></span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="2a"><div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Dark, starfield, KNOLSKAPE theme · 1440</div>
+<div class="dv-card" style="width:1440px"><dc-import name="iLeadBoardV2" theme="dark" hint-size="1440px,1000px"></dc-import></div></div>
+<div class="dv-opt" id="2b"><div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Light · 1440</div>
+<div class="dv-card" style="width:1440px"><dc-import name="iLeadBoardV2" theme="light" hint-size="1440px,1000px"></dc-import></div></div>
+<div class="dv-opt" id="2c"><div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Halden Group client theme, dark · 1280</div>
+<div class="dv-card" style="width:1280px"><dc-import name="iLeadBoardV2" theme="dark" client-theme="{{ true }}" hint-size="1280px,960px"></dc-import></div></div>
+</div>
+<p class="dv-next">Click any portrait to open the drawer, or a ▲ ▼ chip to see why it changed. Try next: "bigger portraits, drop Trust from the card" · "add a speech bubble on cards that need you" · "approve <a class="dv-oid" href="#2a">2a</a>, start the remaining screens"</p>
+</section>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Foundations and the redesigned main board, light and dark</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Read me: assumptions, and before vs after</div>
+<div class="dv-card" style="width:1440px; padding:56px 64px; color:oklch(0.2 0.03 280); display:flex; flex-direction:column; gap:40px">
+  <div style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:64px">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <span style="font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:oklch(0.45 0.025 278)">iLead, a Business Simulation · Participant interface · Round 1</span>
+      <h1 style="margin:0; font-size:44px; line-height:1.08; font-weight:700; letter-spacing:-0.03em; text-wrap:balance">A calm board that shows who needs you, and why every number moved.</h1>
+      <p style="margin:0; font-size:17px; line-height:1.6; color:oklch(0.45 0.025 278); text-wrap:pretty">This round covers foundations (<a href="#1b">1b</a>) and the main board in light (<a href="#1c">1c</a>), dark (<a href="#1d">1d</a>) and a sample client theme at 1280 (<a href="#1e">1e</a>). The boards are live: select a member, open a reason chip, change a style, plan an action, sort the team, or press Cmd K.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px; font-size:14px; line-height:1.55">
+      <span style="font-size:12px; font-weight:600; letter-spacing:0.08em; text-transform:uppercase; color:oklch(0.45 0.025 278)">Assumptions to confirm</span>
+      <p style="margin:0"><b>Source docs.</b> The Interface Spec, Simulation Design, GenieKreator Config Spec and Teardown were not attached, only the screenshot. Member names and Skill, Morale, Result values come from the screenshot. Trust values, funnel roles, day costs, events and quotes are my placeholders until I see the Teardown.</p>
+      <p style="margin:0"><b>Typeface.</b> The Genie system mandates Manrope, a variable sans in the same class as Inter and Geist. I kept it and capped weights at 400, 600 and 700.</p>
+      <p style="margin:0"><b>Light mode.</b> Genie is dark first. Light mode is a new, equal theme built from the same hues in OKLCH. Brand gradient survives on the wordmark and primary button only.</p>
+      <p style="margin:0"><b>Capacity.</b> Each week has 5 days of your time. Actions spend half days or full days. The session clock is information, never a penalty.</p>
+      <p style="margin:0"><b>Style is not graded live.</b> The board never hints at the right style. You learn from reason chips after the day resolves.</p>
+    </div>
+  </div>
+  <div style="display:grid; grid-template-columns:420px minmax(0,1fr); gap:48px; align-items:start">
+    <figure style="margin:0; display:flex; flex-direction:column; gap:8px">
+      <img src="assets/before-board.png" alt="The current iLead board with 30 circular dials" style="width:100%; border-radius:8px; border:1px solid oklch(0.915 0.008 275)">
+      <figcaption style="font-size:12px; color:oklch(0.45 0.025 278)">Before: the current board</figcaption>
+    </figure>
+    <div style="display:flex; flex-direction:column; gap:0">
+      <sc-for list="{{ fixes }}" as="f" hint-placeholder-count="5">
+        <div style="display:grid; grid-template-columns:32px minmax(0,1fr) minmax(0,1.2fr); gap:24px; padding:16px 0; border-top:1px solid oklch(0.915 0.008 275)">
+          <span style="font-size:20px; font-weight:700; color:oklch(0.53 0.17 252)">{{ f.n }}</span>
+          <div style="display:flex; flex-direction:column; gap:4px"><span style="font-size:12px; font-weight:600; color:oklch(0.45 0.025 278)">Before</span><span style="font-size:14px; text-wrap:pretty">{{ f.before }}</span></div>
+          <div style="display:flex; flex-direction:column; gap:4px"><span style="font-size:12px; font-weight:600; color:oklch(0.5 0.11 165)">After</span><span style="font-size:14px; text-wrap:pretty">{{ f.after }}</span></div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div></div>
+
+<div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Foundations: tokens for color, type, space, shape, elevation, motion, icons, data viz</div>
+<div class="dv-card" style="width:1440px; padding:56px 64px; color:oklch(0.2 0.03 280); display:flex; flex-direction:column; gap:56px">
+
+  <section style="display:flex; flex-direction:column; gap:20px">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:24px"><h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Color primitives</h2><span style="font-size:13px; color:oklch(0.45 0.025 278)">OKLCH ramps. Blue, cyan and mint are anchored to Genie brand values. Amber and coral are additions for status, tuned to the same lightness steps.</span></div>
+    <div style="display:flex; flex-direction:column; gap:10px">
+      <sc-for list="{{ ramps }}" as="r" hint-placeholder-count="6">
+        <div style="display:grid; grid-template-columns:150px minmax(0,1fr); gap:16px; align-items:center">
+          <div style="display:flex; flex-direction:column"><span style="font-size:14px; font-weight:600">{{ r.name }}</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">{{ r.note }}</span></div>
+          <div style="display:grid; grid-template-columns:repeat(11,minmax(0,1fr)); gap:4px">
+            <sc-for list="{{ r.steps }}" as="s" hint-placeholder-count="11">
+              <div title="{{ s.css }}" style="height:56px; border-radius:8px; background:{{ s.css }}; color:{{ s.ink }}; padding:6px 8px; display:flex; flex-direction:column; justify-content:space-between; font-size:11px; box-shadow:{{ s.ring }}"><span style="font-weight:600">{{ s.label }}</span><span style="opacity:.85">{{ s.l }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex; flex-direction:column; gap:20px">
+    <div style="display:flex; align-items:baseline; justify-content:space-between; gap:24px"><h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Semantic tokens, light and dark</h2><span style="font-size:13px; color:oklch(0.45 0.025 278)">Contrast is calculated live from the OKLCH values: WCAG 2.2 ratio, then APCA Lc.</span></div>
+    <div style="display:grid; grid-template-columns:200px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr); gap:0; font-size:13px">
+      <span style="padding:8px 0; font-size:12px; font-weight:600; color:oklch(0.45 0.025 278)">Token</span><span style="padding:8px 0; font-size:12px; font-weight:600; color:oklch(0.45 0.025 278)">Used for</span><span style="padding:8px 0; font-size:12px; font-weight:600; color:oklch(0.45 0.025 278)">Light</span><span style="padding:8px 0; font-size:12px; font-weight:600; color:oklch(0.45 0.025 278)">Dark</span>
+      <sc-for list="{{ sem }}" as="t" hint-placeholder-count="13">
+        <span style="padding:10px 0; border-top:1px solid oklch(0.915 0.008 275); font-family:ui-monospace,Menlo,monospace; font-size:12px">{{ t.name }}</span>
+        <span style="padding:10px 16px 10px 0; border-top:1px solid oklch(0.915 0.008 275); color:oklch(0.45 0.025 278)">{{ t.use }}</span>
+        <div style="padding:6px 16px 6px 0; border-top:1px solid oklch(0.915 0.008 275); display:flex; align-items:center; gap:12px">
+          <div style="width:72px; height:32px; border-radius:6px; flex:none; background:{{ t.lBg }}; color:{{ t.lFg }}; border:1px solid oklch(0.9 0.008 275); display:flex; align-items:center; justify-content:center; font-weight:600">{{ t.sample }}</div>
+          <span style="display:flex; flex-direction:column"><span style="font-variant-numeric:tabular-nums">{{ t.lC }}</span><span style="font-size:12px; font-weight:600; color:{{ t.lPassColor }}">{{ t.lPass }}</span></span>
+        </div>
+        <div style="padding:6px 16px 6px 0; border-top:1px solid oklch(0.915 0.008 275); display:flex; align-items:center; gap:12px">
+          <div style="width:72px; height:32px; border-radius:6px; flex:none; background:{{ t.dBg }}; color:{{ t.dFg }}; display:flex; align-items:center; justify-content:center; font-weight:600">{{ t.sample }}</div>
+          <span style="display:flex; flex-direction:column"><span style="font-variant-numeric:tabular-nums">{{ t.dC }}</span><span style="font-size:12px; font-weight:600; color:{{ t.dPassColor }}">{{ t.dPass }}</span></span>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:0; font-size:13px; color:oklch(0.45 0.025 278)">Three tiers: primitive (ink.900) to semantic (text.primary) to component (memberRow.value). Components never read primitives. Status is never color alone: attention adds a warning icon and written reason, gains and declines add ▲ ▼ and a signed number.</p>
+  </section>
+
+  <section style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:48px">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Client theme</h2>
+      <p style="margin:0; font-size:14px; color:oklch(0.45 0.025 278); text-wrap:pretty">GenieKreator config supplies one brand color, a logo, avatars, voice labels and strings. The brand color maps to accent tokens only. Lightness is auto corrected per mode until text clears 4.5:1 on surface. Sample: Halden Group, brand #C2185B. See <a href="#1e">1e</a>.</p>
+      <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px">
+        <sc-for list="{{ client }}" as="c" hint-placeholder-count="3">
+          <div style="border-radius:10px; overflow:hidden; border:1px solid oklch(0.915 0.008 275)">
+            <div style="height:64px; background:{{ c.css }}"></div>
+            <div style="padding:10px 12px; display:flex; flex-direction:column; gap:2px; font-size:12px"><span style="font-weight:600; font-size:13px">{{ c.name }}</span><span style="font-family:ui-monospace,Menlo,monospace">{{ c.val }}</span><span style="color:oklch(0.45 0.025 278)">{{ c.c }}</span></div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Leadership styles</h2>
+      <p style="margin:0; font-size:14px; color:oklch(0.45 0.025 278); text-wrap:pretty">Styles are choices, not ratings, so they share one neutral treatment and never get status colors. Identified by letter and name, with the full name in the peek panel and on hover.</p>
+      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px">
+        <sc-for list="{{ styles }}" as="s" hint-placeholder-count="4">
+          <div style="padding:14px; border-radius:12px; border:1px solid oklch(0.915 0.008 275); display:flex; flex-direction:column; gap:6px"><span style="width:32px; height:32px; border-radius:8px; background:oklch(0.53 0.17 252); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:600">{{ s.k }}</span><span style="font-weight:600">{{ s.n }}</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">{{ s.d }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:48px">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <div style="display:flex; align-items:baseline; justify-content:space-between"><h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Type</h2><span style="font-size:13px; color:oklch(0.45 0.025 278)">Manrope variable · 400, 600, 700 · tabular numbers on every metric</span></div>
+      <div style="display:grid; grid-template-columns:160px minmax(0,1fr) 190px; align-items:baseline; gap:12px 16px">
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.display</span><span style="font-size:44px; font-weight:700; letter-spacing:-0.03em; line-height:1.1">You led week 2</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">clamp(36, 2.2vw+20, 54) / 700</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.h1</span><span style="font-size:32px; font-weight:700; letter-spacing:-0.02em; line-height:1.15">Meet your team</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">clamp(28, 1.4vw+18, 36) / 700</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.h2</span><span style="font-size:24px; font-weight:700; letter-spacing:-0.015em">Why Morale changed</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">clamp(22, 0.8vw+16, 28) / 700</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.h3</span><span style="font-size:20px; font-weight:700; letter-spacing:-0.01em">Your team</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">clamp(18, 0.3vw+16, 20) / 700</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.metric</span><span style="font-size:24px; font-weight:600; font-variant-numeric:tabular-nums">57 · 1,240 · $41,200</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">24 / 600 / tnum</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.body</span><span style="font-size:15px; line-height:1.6">Kent asked for 15 minutes on Day 2 and did not hear back.</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">15 / 400 / 1.6</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.ui</span><span style="font-size:14px; font-weight:600">Meet face to face</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">14 / 600 / 1.5</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.small</span><span style="font-size:13px">Week 2 pace is $60,000.</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">13 / 400</span>
+        <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">type.caption</span><span style="font-size:12px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase">Style this week</span><span style="font-size:12px; color:oklch(0.45 0.025 278)">12 / 600 / +0.04em. Floor size.</span>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Space and shape</h2>
+      <div style="display:flex; flex-direction:column; gap:8px">
+        <sc-for list="{{ space }}" as="s" hint-placeholder-count="8">
+          <div style="display:grid; grid-template-columns:96px 48px minmax(0,1fr); gap:12px; align-items:center; font-size:12px"><span style="font-family:ui-monospace,Menlo,monospace">{{ s.n }}</span><span style="font-variant-numeric:tabular-nums">{{ s.v }}px</span><div style="height:12px; width:{{ s.w }}; border-radius:2px; background:oklch(0.82 0.08 250)"></div></div>
+        </sc-for>
+      </div>
+      <div style="display:flex; gap:12px; flex-wrap:wrap">
+        <sc-for list="{{ radii }}" as="r" hint-placeholder-count="5">
+          <div style="display:flex; flex-direction:column; gap:6px; align-items:center; font-size:12px"><div style="width:64px; height:48px; border:1.5px solid oklch(0.53 0.17 252); border-radius:{{ r.v }}; background:oklch(0.955 0.025 250)"></div><span style="font-family:ui-monospace,Menlo,monospace">{{ r.n }}</span><span style="color:oklch(0.45 0.025 278)">{{ r.use }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:48px">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Elevation and material</h2>
+      <div style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; padding:24px; border-radius:14px; background:oklch(0.975 0.005 275)">
+        <div style="height:96px; border-radius:12px; background:#fff; border:1px solid oklch(0.915 0.008 275); padding:10px; font-size:12px; display:flex; flex-direction:column; justify-content:space-between"><b>elev.0</b><span>Surface + 1px line. Cards, rows.</span></div>
+        <div style="height:96px; border-radius:12px; background:oklch(0.965 0.007 275); border:1px solid oklch(0.915 0.008 275); padding:10px; font-size:12px; display:flex; flex-direction:column; justify-content:space-between"><b>elev.1</b><span>Raised tint. Hover, inset panels.</span></div>
+        <div style="height:96px; border-radius:12px; background:oklch(1 0 0 / 0.9); border:1px solid oklch(0.84 0.012 275); box-shadow:0 8px 24px oklch(0.2 0.03 280 / 0.12); padding:10px; font-size:12px; display:flex; flex-direction:column; justify-content:space-between"><b>elev.2</b><span>Material 90%, blur 16. Drawers, confirm bars.</span></div>
+        <div style="height:96px; border-radius:12px; background:oklch(1 0 0 / 0.9); border:1px solid oklch(0.84 0.012 275); box-shadow:0 24px 64px oklch(0.1 0.03 280 / 0.3); padding:10px; font-size:12px; display:flex; flex-direction:column; justify-content:space-between"><b>elev.3</b><span>Material + scrim, blur 24. Palette, dialogs.</span></div>
+      </div>
+      <p style="margin:0; font-size:13px; color:oklch(0.45 0.025 278); text-wrap:pretty">Translucency only on overlays. Material is 90% opaque, so text contrast holds even where backdrop blur is unsupported or reduced transparency is on: the fallback is the same color at 100%.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Motion</h2>
+      <div style="display:grid; grid-template-columns:150px 110px minmax(0,1fr); gap:10px 16px; font-size:13px; align-items:baseline">
+        <sc-for list="{{ motion }}" as="m" hint-placeholder-count="6">
+          <span style="font-family:ui-monospace,Menlo,monospace; font-size:12px">{{ m.n }}</span><span style="font-variant-numeric:tabular-nums">{{ m.v }}</span><span style="color:oklch(0.45 0.025 278)">{{ m.use }}</span>
+        </sc-for>
+      </div>
+      <div style="display:flex; align-items:center; gap:16px; padding:16px; border-radius:12px; background:oklch(0.975 0.005 275)">
+        <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="sm" onClick="{{ playMotion }}" hint-size="120px,32px">Play value change</x-import>
+        <div style="flex:1; display:flex; flex-direction:column; gap:6px"><span style="font-size:13px; font-weight:600; font-variant-numeric:tabular-nums">Morale {{ demoV }}</span><div style="position:relative; height:6px; border-radius:3px; background:oklch(0.925 0.008 275)"><div style="position:absolute; left:0; top:0; bottom:0; width:{{ demoW }}; border-radius:3px; background:oklch(0.53 0.17 252); transition:width 260ms cubic-bezier(.34,1.4,.64,1)"></div></div></div>
+      </div>
+      <p style="margin:0; font-size:13px; color:oklch(0.45 0.025 278)">Motion only explains change: values tween to their new number, rows reorder, panels slide in. With reduced motion, everything resolves instantly and the reason chip still appears.</p>
+    </div>
+  </section>
+
+  <section style="display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); gap:48px">
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Iconography</h2>
+      <p style="margin:0; font-size:14px; color:oklch(0.45 0.025 278); text-wrap:pretty">Genie ships no icon set, so this uses Lucide (flagged substitute) at 1.75 stroke, 16 and 18px, always paired with a text label or aria label. Icons never carry meaning alone.</p>
+      <div style="display:flex; gap:16px; color:oklch(0.2 0.03 280)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path></svg>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>
+      </div>
+      <p style="margin:0; font-size:12px; color:oklch(0.45 0.025 278)">Search · Session clock · Email · Chat · Event · Attention · AI judgement · Settings</p>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:16px">
+      <h2 style="margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em">Data viz rules</h2>
+      <div style="display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:24px; align-items:start">
+        <ol style="margin:0; padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:13px; line-height:1.5">
+          <li>Every metric is a horizontal bullet bar on one shared 0 to 100 scale, so any two people compare at a glance.</li>
+          <li>Values are labelled directly, never only in a tooltip.</li>
+          <li>One accent hue for all bars. Status uses the risk zone, an icon and words, never hue alone.</li>
+          <li>A thin tick marks the value before today. The signed delta sits next to the number.</li>
+          <li>Sparklines show trend only: no axes, same 0 to 100 scale in profiles, local scale in the team strip.</li>
+          <li>Team view is small multiples: ten rows, four aligned columns.</li>
+        </ol>
+        <div style="display:flex; flex-direction:column; gap:10px; padding:16px; border-radius:12px; border:1px solid oklch(0.915 0.008 275)">
+          <span style="font-size:12px; font-weight:600; color:oklch(0.45 0.025 278)">Anatomy</span>
+          <div style="display:flex; align-items:center; gap:6px; font-size:12px"><span style="font-size:15px; font-weight:600; color:oklch(0.52 0.12 62)">9</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="oklch(0.52 0.12 62)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path><path d="M12 9v4"></path><path d="M12 17h.01"></path></svg><span style="font-weight:600; color:oklch(0.53 0.17 25)">▼ 6</span></div>
+          <div style="position:relative; height:6px; border-radius:3px; background:oklch(0.925 0.008 275)"><div style="position:absolute; left:0; top:0; bottom:0; width:30%; border-radius:3px 0 0 3px; background:oklch(0.89 0.035 75)"></div><div style="position:absolute; left:0; top:0; bottom:0; width:9%; border-radius:3px; background:oklch(0.52 0.12 62)"></div><div style="position:absolute; left:15%; top:-3px; bottom:-3px; width:2px; background:oklch(0.2 0.03 280)"></div></div>
+          <span style="font-size:12px; color:oklch(0.45 0.025 278)">Value, icon, delta · bar · risk zone under 30 · tick at yesterday's 15</span>
+          <span style="display:inline-flex; align-self:flex-start; align-items:center; gap:6px; height:26px; padding:0 10px; border-radius:999px; border:1px solid oklch(0.915 0.008 275); background:oklch(0.96 0.025 25); font-size:12px; font-weight:600"><span style="color:oklch(0.53 0.17 25)">▼</span>Morale −6, request went unanswered</span>
+          <span style="font-size:12px; color:oklch(0.45 0.025 278)">Reason chip. Opens cause, rule and evidence.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+</div></div>
+
+<div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Main board · KNOLSKAPE theme · light · 1440</div>
+<div class="dv-card" style="width:1440px"><dc-import name="iLeadBoard" theme="light" hint-size="1440px,1180px"></dc-import></div></div>
+
+<div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Main board · KNOLSKAPE theme · dark · 1440</div>
+<div class="dv-card" style="width:1440px"><dc-import name="iLeadBoard" theme="dark" hint-size="1440px,1180px"></dc-import></div></div>
+
+<div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Main board · Halden Group client theme · light · 1280</div>
+<div class="dv-card" style="width:1280px"><dc-import name="iLeadBoard" theme="light" client-theme="{{ true }}" hint-size="1280px,1180px"></dc-import></div></div>
+
+</div>
+<p class="dv-next">Try next: "approve, start the remaining screens" · "make the team board a card grid instead of rows" · "show <a class="dv-oid" href="#1e">1e</a> in dark"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { demo: 15 };
+  lin(L, C, H) {
+    const h = H * Math.PI / 180, a = C * Math.cos(h), b = C * Math.sin(h);
+    const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+    return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s].map(x => Math.min(1, Math.max(0, x)));
+  }
+  Y(c) { const [r, g, b] = this.lin(...c); return 0.2126 * r + 0.7152 * g + 0.0722 * b; }
+  wcag(f, b) { const a = this.Y(f), c = this.Y(b); return (Math.max(a, c) + 0.05) / (Math.min(a, c) + 0.05); }
+  apca(f, b) {
+    const enc = x => x <= 0.0031308 ? 12.92 * x : 1.055 * x ** (1 / 2.4) - 0.055;
+    const ys = c => { const [r, g, bb] = this.lin(...c).map(enc); return 0.2126729 * r ** 2.4 + 0.7151522 * g ** 2.4 + 0.072175 * bb ** 2.4; };
+    const cl = y => y > 0.022 ? y : y + (0.022 - y) ** 1.414;
+    const t = cl(ys(f)), g = cl(ys(b));
+    let S = g > t ? (g ** 0.56 - t ** 0.57) * 1.14 : (g ** 0.65 - t ** 0.62) * 1.14;
+    const Lc = Math.abs(S) < 0.1 ? 0 : (S > 0 ? S - 0.027 : S + 0.027) * 100;
+    return Math.abs(Math.round(Lc));
+  }
+  css(c) { return `oklch(${c[0]} ${c[1]} ${c[2]})`; }
+  pass(r, large) { return r >= 4.5 ? 'AA pass' : r >= 3 ? (large ? 'AA pass, large or UI' : 'AA large only') : 'Below AA'; }
+  renderVals() {
+    const surfL = [1, 0, 0], surfD = [0.172, 0.03, 283], accL = [0.53, 0.17, 252], accD = [0.72, 0.15, 245];
+    const S = [
+      ['text.primary', 'Names, values, headings', [0.2, 0.03, 280], [0.93, 0.03, 265]],
+      ['text.secondary', 'Labels, metadata, descriptions', [0.45, 0.025, 278], [0.77, 0.03, 268]],
+      ['text.tertiary', 'Non essential hints only', [0.54, 0.02, 278], [0.67, 0.03, 270]],
+      ['accent.default', 'Bars, selected state, links', accL, accD],
+      ['accent.on', 'Text on accent fills', [1, 0, 0], [0.135, 0.032, 285], accL, accD],
+      ['status.attention', 'Under 30, needs attention', [0.52, 0.12, 62], [0.83, 0.13, 78]],
+      ['status.gain', 'Positive delta', [0.5, 0.11, 165], [0.85, 0.16, 165]],
+      ['status.decline', 'Negative delta', [0.53, 0.17, 25], [0.77, 0.13, 25]],
+      ['text on attention.soft', 'Text inside attention chips', [0.2, 0.03, 280], [0.93, 0.03, 265], [0.965, 0.035, 80], [0.26, 0.05, 70]],
+      ['text on decline.soft', 'Text inside reason chips', [0.2, 0.03, 280], [0.93, 0.03, 265], [0.96, 0.025, 25], [0.26, 0.05, 25]],
+      ['line.default vs surface', 'Hairlines, decorative only', [0.915, 0.008, 275], [0.265, 0.028, 280]]
+    ];
+    const sem = S.map(([name, use, l, d, lb, db]) => {
+      lb = lb || surfL; db = db || surfD;
+      const lr = this.wcag(l, lb), dr = this.wcag(d, db), dec = name.startsWith('line');
+      const lp = dec ? 'Decorative, exempt' : this.pass(lr, name.startsWith('accent.default')), dp = dec ? 'Decorative, exempt' : this.pass(dr, name.startsWith('accent.default'));
+      const col = p => p.startsWith('AA pass') || p.startsWith('Decor') ? 'oklch(0.5 0.11 165)' : 'oklch(0.52 0.12 62)';
+      const fill = name.startsWith('line') || name.startsWith('accent.default');
+      return { name, use, sample: fill ? '' : 'Aa',
+        lBg: fill ? this.css(l) : this.css(lb), lFg: this.css(l), dBg: fill ? this.css(d) : this.css(db), dFg: this.css(d),
+        lC: `${lr.toFixed(1)}:1 · Lc ${this.apca(l, lb)}`, dC: `${dr.toFixed(1)}:1 · Lc ${this.apca(d, db)}`,
+        lPass: lp, dPass: dp, lPassColor: col(lp), dPassColor: col(dp) };
+    });
+    const Ls = [0.98, 0.95, 0.9, 0.82, 0.72, 0.62, 0.52, 0.42, 0.32, 0.22, 0.135], labels = ['50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '950'];
+    const R = [['Ink', 275, 0.03, 'Neutrals, text, lines', -1], ['Electric blue', 250, 0.17, 'Accent. #249DFF ≈ 400', 4], ['Cyber cyan', 205, 0.12, 'Gradient partner', 3], ['Mint', 165, 0.17, 'Gains. #00F2AD ≈ 200', 2], ['Amber', 75, 0.13, 'Attention. Added', -1], ['Coral', 25, 0.16, 'Declines. Added', -1]];
+    const ramps = R.map(([name, h, c, note, anchor]) => ({ name, note, steps: Ls.map((L, i) => {
+      const cc = Math.max(0.006, +(c * (1 - Math.abs(L - 0.6) * 1.15)).toFixed(3));
+      return { label: labels[i], l: L.toFixed(2), css: `oklch(${L} ${cc} ${h})`, ink: L > 0.62 ? 'oklch(0.2 0.03 280)' : '#fff', ring: i === anchor ? 'inset 0 0 0 2px oklch(0.2 0.03 280)' : 'none' };
+    }) }));
+    const cl = [[0.5, 0.17, 0], [0.76, 0.13, 0]];
+    const client = [
+      { name: 'Brand input', val: '#C2185B', css: '#C2185B', c: 'From GenieKreator config' },
+      { name: 'accent, light', val: 'oklch(0.50 0.17 0)', css: this.css(cl[0]), c: `${this.wcag(cl[0], [1, 0, 0]).toFixed(1)}:1 on surface · Lc ${this.apca(cl[0], [1, 0, 0])}` },
+      { name: 'accent, dark', val: 'oklch(0.76 0.13 0)', css: this.css(cl[1]), c: `${this.wcag(cl[1], [0.172, 0.03, 283]).toFixed(1)}:1 on surface · Lc ${this.apca(cl[1], [0.172, 0.03, 283])}` }
+    ];
+    return {
+      fixes: [
+        { n: '1', before: 'Thirty circular dials, three per card, impossible to compare across ten people or spot who needs help.', after: 'Ten aligned rows with four bullet bars on one shared scale. Sorted by need by default, with a risk zone under 30 and a written flag such as "Morale 9 is low".' },
+        { n: '2', before: 'Heavy dark HUD chrome, saturated blue and amber, small low contrast text, no hierarchy between status, team and actions.', after: 'Three calm layers: a slim HUD, one metrics strip, then the team. One accent hue, 12px floor, every text pair checked against WCAG 2.2 AA and APCA in both modes.' },
+        { n: '3', before: 'Style hidden in tiny dropdowns. The Actions panel floats on its own, disconnected from the person it affects.', after: 'A four part segmented control on every row. Selecting a person opens a peek panel where their actions live, with day cost, cooldown and a confirm bar.' },
+        { n: '4', before: 'Numbers change with no explanation, so cause and effect is invisible.', after: 'Every change carries a reason chip, a delta and a tick at yesterday\'s value. Opening it shows what happened, the authored rule, the evidence quote and whether AI judged it.' },
+        { n: '5', before: 'The end state is a generic congratulations banner.', after: 'A dedicated reflection screen and development report, designed next round once you approve this direction.' }
+      ],
+      ramps, sem, client,
+      styles: [{ k: 'D', n: 'Directing', d: 'You set the task and check in closely.' }, { k: 'G', n: 'Guiding', d: 'You explain the why and coach as they practise.' }, { k: 'P', n: 'Partnering', d: 'You decide together and share ownership.' }, { k: 'E', n: 'Entrusting', d: 'You hand over the goal and step back.' }],
+      space: [['space.0.5', 4], ['space.1', 8], ['space.1.5', 12], ['space.2', 16], ['space.3', 24], ['space.4', 32], ['space.6', 48], ['space.8', 64]].map(([n, v]) => ({ n, v, w: v * 4 + 'px' })),
+      radii: [['radius.xs', '3px', 'Bars'], ['radius.sm', '8px', 'Segments'], ['radius.md', '12px', 'Rows, tiles'], ['radius.lg', '16px', 'Dialogs'], ['radius.pill', '999px', 'Chips']].map(([n, v, use]) => ({ n, v, use })),
+      motion: [['motion.fast', '150 ms', 'Hover, press, segment switch'], ['motion.base', '220 ms', 'Panels, chips appearing, capacity'], ['motion.slow', '300 ms', 'Drawers, row reorder'], ['ease.spring', 'cubic-bezier(.34,1.4,.64,1)', 'Metric values settling'], ['ease.settle', 'cubic-bezier(.2,.9,.3,1.08)', 'Reorder and slide'], ['motion.reduced', '0 ms', 'Instant, opacity only']].map(([n, v, use]) => ({ n, v, use })),
+      demoV: this.state.demo, demoW: this.state.demo + '%',
+      playMotion: () => this.setState(s => ({ demo: s.demo === 15 ? 63 : 15 }))
+    };
+  }
+}
+</script>
+</body>
+</html>

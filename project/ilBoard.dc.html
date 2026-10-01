@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+</helmet>
+<div ref="{{ rootRef }}" onMouseEnter="{{ hotOn }}" onMouseLeave="{{ hotOff }}" style="flex:1; display:flex; flex-direction:column; min-height:{{ app.minH }}; position:relative">
+
+<sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+<header style="display:flex; align-items:center; gap:14px; padding:14px 24px; white-space:nowrap; min-width:0">
+  <div style="display:flex; align-items:center; gap:10px">
+    <sc-if value="{{ isClient }}"><div style="height:28px; padding:0 10px; border:1px dashed var(--ik-line-strong); border-radius:6px; display:flex; align-items:center; font-size:12px; color:var(--ik-text-2)">Halden Group logo</div></sc-if>
+    <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span>
+  </div>
+  <nav aria-label="Game menu" style="display:flex; gap:0; flex:0 1 auto; min-width:0; overflow:hidden">
+    <sc-for list="{{ nav }}" as="n" hint-placeholder-count="6"><button onClick="{{ n.go }}" style="flex:none; height:32px; padding:0 8px; border:0; border-radius:999px; background:transparent; color:var(--ik-text-2); font-size:13px; font-weight:600; cursor:pointer" style-hover="background:var(--ik-raised); color:var(--ik-text)">{{ n.n }}</button></sc-for>
+  </nav>
+  <div style="flex:1 1 0; min-width:0"></div>
+  <span style="flex:none; font-size:13px; color:var(--ik-text-2)"><b style="color:var(--ik-text)">Week {{ app.week }}</b> · Day {{ app.day }}</span>
+  <div aria-label="{{ capAria }}" style="display:flex; align-items:center; gap:8px">
+    <div style="display:flex; gap:1px; animation:{{ capPulse }}">
+      <sc-for list="{{ capSlots }}" as="c" hint-placeholder-count="5"><svg width="16" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" fill="{{ c.fill }}" stroke="{{ c.stroke }}" stroke-width="1.5" stroke-linejoin="round"></path></svg></sc-for>
+    </div>
+    <span style="font-size:13px; color:var(--ik-text-2)"><b style="color:var(--ik-text)">{{ capText }}</b> left</span>
+  </div>
+  <sc-if value="{{ app.showClock }}">
+    <button onClick="{{ pause }}" aria-label="Pause the simulation" style="display:flex; align-items:center; gap:6px; height:32px; padding:0 10px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text); font-size:13px; font-weight:700; cursor:pointer">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"></rect><rect x="14" y="4" width="5" height="16" rx="1"></rect></svg>{{ app.clock }}
+    </button>
+  </sc-if>
+  <div style="position:relative" onMouseEnter="{{ scoreOn }}" onMouseLeave="{{ scoreOff }}">
+    <button aria-label="Leadership score 1,240. Show breakdown" onFocus="{{ scoreOn }}" onBlur="{{ scoreOff }}" style="display:flex; align-items:center; gap:6px; height:32px; padding:0 10px; border:0; border-radius:999px; background:transparent; color:var(--ik-text); font-size:15px; font-weight:700; cursor:pointer">
+      <svg width="18" height="18" viewBox="0 0 24 24"><defs><linearGradient id="sgb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#249DFF"></stop><stop offset="1" stop-color="#00F2AD"></stop></linearGradient></defs><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3" fill="url(#sgb)"></polygon></svg>1,240
+    </button>
+    <sc-if value="{{ scoreTip }}">
+      <div role="tooltip" style="position:absolute; top:calc(100% + 8px); right:0; width:260px; padding:14px; border-radius:16px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 16px 40px oklch(0.05 0.03 280 / 0.35); z-index:40; white-space:normal; display:flex; flex-direction:column; gap:8px">
+        <b>Leadership Score</b><span style="font-size:12px; color:var(--ik-text-2)">Built from three parts. Every point is earned, nothing is taken away for being slow.</span>
+        <sc-for list="{{ scoreParts }}" as="sp" hint-placeholder-count="3"><div style="display:grid; grid-template-columns:80px 1fr 40px; gap:8px; align-items:center; font-size:12px"><span>{{ sp.n }}</span><div style="height:6px; border-radius:3px; background:var(--ik-track)"><div style="height:100%; width:{{ sp.w }}; border-radius:3px; background:var(--grad-brand)"></div></div><b style="text-align:right">{{ sp.v }}</b></div></sc-for>
+      </div>
+    </sc-if>
+  </div>
+  <span aria-label="3 week streak" title="3 day streak. 2 more for a bonus" style="display:flex; align-items:center; gap:4px; font-size:15px; font-weight:700"><svg width="16" height="16" viewBox="0 0 24 24" fill="oklch(0.8 0.15 60)" stroke="oklch(0.8 0.15 60)" stroke-width="1.5" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>3</span>
+  <button onClick="{{ openPal }}" aria-label="Search members and actions" style="height:32px; padding:0 10px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text-2); font-size:12px; font-weight:700; cursor:pointer">⌘K</button>
+  <button onClick="{{ openSettings }}" aria-label="Settings" style="width:32px; height:32px; border-radius:50%; border:0; background:transparent; color:var(--ik-text-2); cursor:pointer; display:flex; align-items:center; justify-content:center" style-hover="background:var(--ik-raised)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg></button>
+  <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="{{ endVariant }}" size="md" onClick="{{ endWeek }}" hint-size="110px,40px">End week {{ app.week }}</x-import></span>
+</header>
+
+<sc-if value="{{ isOffline }}"><div role="alert" style="margin:0 24px 12px; padding:10px 16px; border-radius:14px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; align-items:center; gap:10px; font-size:13px"><b>Connection lost.</b><span>Your clock is paused and actions will queue and send when you are back online.</span><span style="flex:1"></span><span style="color:var(--ik-text-2)">Retrying in 4s</span></div></sc-if>
+<sc-if value="{{ hasCall }}">
+  <div role="alert" style="margin:0 24px 12px; padding:10px 12px 10px 10px; border-radius:18px; background:var(--ik-mat); border:1px solid var(--ik-acc); box-shadow:0 0 30px oklch(0.62 0.17 250 / 0.35); display:flex; align-items:center; gap:14px; animation:ilIn 300ms ease">
+    <div style="position:relative; width:44px; height:44px"><div style="position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--ik-acc); animation:ilRing 1.4s ease-out infinite"></div><div style="width:44px; height:44px; border-radius:50%; background:var(--grad-brand); color:#0A081B; font-weight:700; display:flex; align-items:center; justify-content:center">PN</div></div>
+    <div style="display:flex; flex-direction:column"><b>Priya Nair is calling</b><span style="font-size:12px; color:var(--ik-text-2)">Regional Sales Director. About the Ashcroft discount.</span></div>
+    <span style="flex:1"></span>
+    <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="sm" onClick="{{ scheduleCall }}" hint-size="190px,32px">Call back within 1 day</x-import></span>
+    <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="sm" onClick="{{ takeCall }}" hint-size="100px,32px">Take the call</x-import></span>
+  </div>
+</sc-if>
+
+<section aria-label="Team status" style="display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,1fr); gap:10px; padding:0 24px 14px">
+  <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+    <div aria-label="{{ k.aria }}" style="padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px">
+      <span style="font-size:12px; color:var(--ik-text-2)">{{ k.n }}</span>
+      <div style="display:flex; align-items:baseline; gap:8px"><b style="font-size:22px">{{ k.v }}</b><span style="font-size:12px; font-weight:700; color:{{ k.c }}">{{ k.trend }}</span></div>
+      <div style="height:5px; border-radius:3px; background:var(--ik-track)"><div style="height:100%; width:{{ k.w }}; border-radius:3px; background:linear-gradient(90deg, var(--ik-acc), var(--ik-acc-2)); transition:width 300ms cubic-bezier(.34,1.4,.64,1)"></div></div>
+    </div>
+  </sc-for>
+  <div aria-label="{{ pulseAria }}" style="padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px">
+    <span style="font-size:12px; color:var(--ik-text-2)">Team Pulse</span>
+    <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; gap:2px">
+      <sc-for list="{{ pulse }}" as="pp" hint-placeholder-count="3"><div style="flex:{{ pp.n }}; background:{{ pp.c }}"></div></sc-for>
+    </div>
+    <div style="display:flex; gap:10px; font-size:12px; color:var(--ik-text-2)"><sc-for list="{{ pulse }}" as="pp" hint-placeholder-count="3"><span><b style="color:var(--ik-text)">{{ pp.n }}</b> {{ pp.label }}</span></sc-for></div>
+  </div>
+  <div aria-label="Target. $41,200 of $240,000" style="padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px">
+    <span style="font-size:12px; color:var(--ik-text-2)">Quarter target</span>
+    <div style="display:flex; align-items:baseline; gap:6px"><b style="font-size:20px">$41,200</b><span style="font-size:12px; color:var(--ik-text-2)">of $240,000</span></div>
+    <div style="position:relative; height:6px; border-radius:3px; background:var(--ik-track)"><div style="position:absolute; left:0; top:0; bottom:0; width:17.2%; border-radius:3px; background:linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))"></div><div title="Week 2 pace" style="position:absolute; left:25%; top:-3px; bottom:-3px; width:2px; background:var(--ik-text)"></div></div>
+  </div>
+  <div style="position:relative">
+    <button onClick="{{ toggleSponsor }}" aria-expanded="{{ sponsorOpen }}" style="width:100%; height:100%; text-align:left; padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); color:var(--ik-text); cursor:pointer; display:flex; flex-direction:column; gap:6px">
+      <span style="font-size:12px; color:var(--ik-text-2)">Sponsor confidence</span>
+      <b style="font-size:16px">Steady</b>
+      <div style="display:flex; gap:3px; width:100%"><sc-for list="{{ sponsorBars }}" as="sb" hint-placeholder-count="5"><div style="flex:1; height:6px; border-radius:3px; background:{{ sb.bg }}"></div></sc-for></div>
+    </button>
+    <sc-if value="{{ sponsorOpen }}">
+      <div style="position:absolute; top:calc(100% + 8px); right:0; width:280px; padding:14px; border-radius:16px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); z-index:40; display:flex; flex-direction:column; gap:8px; font-size:13px; box-shadow:0 16px 40px oklch(0.05 0.03 280 / 0.35)">
+        <b>Recent causes</b>
+        <span><span style="color:var(--ik-pos)">▲</span> Ashcroft moved to proposal</span>
+        <span><span style="color:var(--ik-neg)">▼</span> Revenue is behind week 2 pace</span>
+        <span><span style="color:var(--ik-neg)">▼</span> No reply yet to Priya's email</span>
+      </div>
+    </sc-if>
+  </div>
+</section>
+
+<sc-if value="{{ hasOutcome }}">
+  <section aria-label="Outcome" style="margin:0 24px 14px; padding:16px 20px; border-radius:22px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 0 0 1px oklch(0.75 0.14 220 / 0.25), 0 16px 48px oklch(0.05 0.03 280 / 0.35); display:grid; grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) auto; gap:24px; align-items:start; animation:ilIn 320ms cubic-bezier(.2,.9,.3,1.08)">
+    <div style="width:84px; height:84px; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); box-shadow:0 0 0 3px var(--ik-pos)"><img src="assets/npc/kent.png" alt="Kent Goldberg" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></div>
+    <div style="display:flex; flex-direction:column; gap:8px; min-width:0">
+      <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">How it landed · 1:1 with Kent</span>
+      <h3 style="margin:0; font-size:20px; font-weight:700; letter-spacing:-0.01em">{{ oc.headline }}</h3>
+      <div style="display:flex; gap:10px; align-items:flex-start">
+        <button onClick="{{ replay }}" aria-label="Replay Kent's reply" style="flex:none; width:32px; height:32px; border-radius:50%; border:0; background:var(--grad-brand); color:#0A081B; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
+        <span style="font-size:14px; text-wrap:pretty">“{{ oc.reply }}”</span>
+      </div>
+      <sc-if value="{{ whyOpen }}">
+        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px">
+          <div style="display:flex; flex-direction:column; gap:2px"><b style="font-size:12px; color:var(--ik-text-2)">What happened</b><span>{{ oc.why.cause }}</span></div>
+          <div style="display:flex; flex-direction:column; gap:2px"><b style="font-size:12px; color:var(--ik-text-2)">The rule</b><span>{{ oc.why.rule }}</span></div>
+          <div style="display:flex; flex-direction:column; gap:2px"><b style="font-size:12px; color:var(--ik-text-2)">Your words</b><span>“{{ oc.why.ev }}”</span><span style="font-size:12px; color:var(--ik-text-2); display:flex; gap:4px; align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ik-acc-2)" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path></svg>Read by AI, consequence set by the rule</span></div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:10px; min-width:0">
+      <div style="display:flex; gap:8px">
+        <sc-for list="{{ affected }}" as="af" hint-placeholder-count="3">
+          <button onClick="{{ af.tap }}" aria-label="{{ af.aria }}" style="position:relative; width:44px; height:44px; padding:0; border-radius:50%; overflow:hidden; border:2px solid {{ af.ring }}; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); cursor:pointer"><img src="{{ af.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></button>
+        </sc-for>
+      </div>
+      <sc-if value="{{ hasReaction }}"><span style="font-size:13px; padding:8px 10px; border-radius:12px; background:var(--ik-raised)"><b>{{ reaction.name }}:</b> {{ reaction.t }}</span></sc-if>
+      <div style="display:flex; flex-wrap:wrap; gap:6px">
+        <sc-for list="{{ moves }}" as="mv" hint-placeholder-count="3"><button onClick="{{ toggleNums }}" style="height:26px; padding:0 10px; border-radius:999px; border:1px solid var(--ik-line); background:{{ mv.bg }}; color:var(--ik-text); font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap"><span style="color:{{ mv.c }}">{{ mv.arrow }}</span> {{ mv.text }}</button></sc-for>
+      </div>
+      <span style="font-size:13px; color:var(--ik-text-2)">{{ oc.ripple }}</span>
+      <sc-for list="{{ oc.changed }}" as="ch" hint-placeholder-count="2"><span style="font-size:13px">{{ ch }}</span></sc-for>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:8px; align-items:flex-end">
+      <button onClick="{{ dismissOutcome }}" aria-label="Dismiss outcome" style="width:32px; height:32px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer">✕</button>
+      <button onClick="{{ toggleWhy }}" style="border:0; background:transparent; color:var(--ik-acc-2); font-size:13px; font-weight:700; cursor:pointer">{{ whyLabel }}</button>
+      <button onClick="{{ toHistory }}" style="border:0; background:transparent; color:var(--ik-text-2); font-size:13px; font-weight:600; cursor:pointer">Open in History</button>
+    </div>
+  </section>
+</sc-if>
+
+<div style="flex:1; display:grid; grid-template-columns:64px minmax(0,1fr) 330px; gap:0; position:relative; min-height:0">
+  <aside aria-label="Inbox" style="display:flex; flex-direction:column; align-items:center; gap:10px; padding:4px 0 24px 16px">
+    <button onClick="{{ toggleInbox }}" aria-label="{{ inboxAria }}" style="position:relative; width:44px; height:44px; border-radius:14px; border:1px solid var(--ik-line); background:var(--ik-card); color:var(--ik-text); cursor:pointer; display:flex; align-items:center; justify-content:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
+      <sc-if value="{{ hasUnread }}"><span style="position:absolute; top:-6px; right:-6px; min-width:20px; height:20px; padding:0 5px; border-radius:10px; background:var(--grad-brand); color:#0A081B; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center">{{ unread }}</span></sc-if>
+    </button>
+    <sc-for list="{{ inboxRail }}" as="ir" hint-placeholder-count="4">
+      <button onClick="{{ ir.open }}" aria-label="{{ ir.aria }}" style="position:relative; width:40px; height:40px; padding:0; border-radius:50%; overflow:hidden; border:2px solid {{ ir.ring }}; background:{{ ir.bg }}; color:#0A081B; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center">
+        <sc-if value="{{ ir.hasImg }}"><img src="{{ ir.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></sc-if>{{ ir.label }}
+      </button>
+    </sc-for>
+  </aside>
+
+  <section aria-label="Your team" style="padding:4px 20px 24px; display:flex; flex-direction:column; gap:12px; min-width:0">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px">
+      <div style="display:flex; align-items:baseline; gap:12px"><h2 style="margin:0; font-size:20px; font-weight:700; letter-spacing:-0.02em">Your team</h2><span style="font-size:13px; color:var(--ik-text-2)">{{ boardHint }}</span></div>
+      <div style="position:relative">
+        <button onClick="{{ toggleLegend }}" aria-expanded="{{ legend }}" style="display:flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-card); color:var(--ik-text); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>What do D, G, P and E mean?</button>
+        <sc-if value="{{ legend }}">
+          <div role="dialog" aria-label="Leadership styles" style="position:absolute; top:calc(100% + 8px); right:0; width:360px; padding:16px; border-radius:18px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 16px 40px oklch(0.05 0.03 280 / 0.35); z-index:40; display:flex; flex-direction:column; gap:12px; animation:ilIn 200ms ease">
+            <span style="font-size:13px; color:var(--ik-text-2)">Each week you choose how you lead each person. The four styles go from more support to more freedom.</span>
+            <sc-for list="{{ legendRows }}" as="lg" hint-placeholder-count="4">
+              <div style="display:grid; grid-template-columns:32px 1fr; gap:12px; align-items:start"><span style="width:32px; height:32px; border-radius:50%; background:var(--grad-brand); color:#0A081B; font-weight:700; display:flex; align-items:center; justify-content:center">{{ lg.k }}</span><span style="display:flex; flex-direction:column"><b>{{ lg.n }}</b><span style="font-size:13px; color:var(--ik-text-2)">{{ lg.d }}</span></span></div>
+            </sc-for>
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--ik-text-2); padding-top:4px; border-top:1px solid var(--ik-line)"><span>More support</span><span>More freedom</span></div>
+          </div>
+        </sc-if>
+      </div>
+    </div>
+    <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px">
+      <sc-for list="{{ columns }}" as="col" hint-placeholder-count="5">
+        <div style="display:flex; flex-direction:column; gap:10px; min-width:0">
+          <div style="padding:8px 12px; border-radius:12px; background:{{ col.hBg }}; border:1px solid {{ col.hBorder }}; display:flex; flex-direction:column; gap:2px">
+            <div style="display:flex; justify-content:space-between; gap:6px; align-items:baseline"><b style="font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ col.n }}</b><b style="font-size:15px">{{ col.count }}</b></div>
+            <span style="font-size:12px; color:{{ col.subC }}; font-weight:{{ col.subW }}">{{ col.sub }}</span>
+          </div>
+          <sc-for list="{{ col.cards }}" as="m" hint-placeholder-count="2">
+            <div data-mid="{{ m.id }}" role="button" tabIndex="0" aria-pressed="{{ m.on }}" aria-label="{{ m.aria }}" onClick="{{ m.click }}" onKeyDown="{{ m.key }}" title="{{ m.dimWhy }}" style="position:relative; border-radius:18px; background:var(--ik-card); backdrop-filter:blur(12px); border:2px solid {{ m.border }}; box-shadow:{{ m.glow }}; opacity:{{ m.op }}; z-index:{{ m.z }}; display:flex; flex-direction:column; cursor:{{ m.cursor }}; outline-offset:3px; transition:transform 200ms cubic-bezier(.2,.9,.3,1.08), box-shadow 200ms ease, opacity 200ms ease" style-hover="transform:translateY(-3px)" style-focus="outline:2px solid var(--ik-acc-2)">
+              <div style="position:relative; height:118px; border-radius:16px 16px 0 0; overflow:hidden; background:{{ m.backdrop }}">
+                <img src="{{ m.img }}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 12%; mix-blend-mode:multiply; filter:{{ m.filter }}">
+                <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 50%, oklch(0.13 0.03 285 / 0.75) 100%)"></div>
+                <sc-if value="{{ m.on }}"><span aria-hidden="true" style="position:absolute; top:8px; left:8px; width:24px; height:24px; border-radius:50%; background:var(--grad-brand); color:#0A081B; display:flex; align-items:center; justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span></sc-if>
+                <div style="position:absolute; top:8px; right:8px; display:flex; gap:4px">
+                  <sc-if value="{{ m.unread }}"><span title="Unread message" style="width:24px; height:24px; border-radius:50%; background:#fff; color:#0A081B; display:flex; align-items:center; justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span></sc-if>
+                  <sc-if value="{{ m.promise }}"><span title="{{ m.promiseT }}" style="width:24px; height:24px; border-radius:50%; background:#fff; color:#0A081B; display:flex; align-items:center; justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span></sc-if>
+                </div>
+                <span style="position:absolute; left:8px; bottom:8px; display:flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:999px; background:oklch(0.13 0.03 285 / 0.78); color:#fff; font-size:12px; font-weight:700"><span style="width:7px; height:7px; border-radius:50%; background:{{ m.moodC }}"></span>{{ m.moodN }}</span>
+                <div title="Trust {{ m.trust }}" aria-label="Trust {{ m.trust }}" style="position:absolute; right:6px; bottom:6px; width:38px; height:38px">
+                  <svg width="38" height="38" viewBox="0 0 38 38"><circle cx="19" cy="19" r="16" fill="oklch(0.13 0.03 285 / 0.8)" stroke="oklch(1 0 0 / 0.2)" stroke-width="3"></circle><circle cx="19" cy="19" r="16" fill="none" stroke="{{ m.trustC }}" stroke-width="3" stroke-linecap="round" stroke-dasharray="{{ m.trustDash }}" transform="rotate(-90 19 19)"></circle></svg>
+                  <span style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:700">{{ m.trust }}</span>
+                </div>
+              </div>
+              <div style="padding:10px 12px 12px; display:flex; flex-direction:column; gap:8px">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:6px">
+                  <div style="display:flex; flex-direction:column; min-width:0"><b style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ m.name }}</b><span style="font-size:12px; color:var(--ik-text-2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ m.title }}</span></div>
+                  <button onClick="{{ m.profile }}" aria-label="Open profile for {{ m.name }}" style="flex:none; width:28px; height:28px; border-radius:50%; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text-2); cursor:pointer; display:flex; align-items:center; justify-content:center" style-hover="color:var(--ik-text)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 3h6v6"></path><path d="M10 14 21 3"></path><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path></svg></button>
+                </div>
+                <sc-if value="{{ m.hasTags }}"><div style="display:flex; gap:4px; flex-wrap:wrap"><sc-for list="{{ m.tags }}" as="tg" hint-placeholder-count="1"><span style="height:20px; padding:0 8px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line); font-size:12px; font-weight:600; display:flex; align-items:center; white-space:nowrap">{{ tg }}</span></sc-for></div></sc-if>
+                <div style="display:flex; flex-direction:column; gap:5px">
+                  <sc-for list="{{ m.bars }}" as="b" hint-placeholder-count="3">
+                    <div aria-label="{{ b.aria }}" style="display:grid; grid-template-columns:46px minmax(0,1fr) 22px; gap:6px; align-items:center; font-size:12px"><span style="color:var(--ik-text-2)">{{ b.n }}</span><div style="height:5px; border-radius:3px; background:var(--ik-track)"><div style="height:100%; width:{{ b.w }}; border-radius:3px; background:{{ b.bg }}; transition:width 300ms cubic-bezier(.34,1.4,.64,1)"></div></div><b style="text-align:right; color:{{ b.c }}">{{ b.v }}</b></div>
+                  </sc-for>
+                </div>
+                <div role="radiogroup" aria-label="{{ m.styleAria }}" style="display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:2px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)">
+                  <sc-for list="{{ m.seg }}" as="s" hint-placeholder-count="4">
+                    <div style="position:relative">
+                      <button role="radio" aria-checked="{{ s.on }}" aria-label="{{ s.aria }}" onClick="{{ s.pick }}" onMouseEnter="{{ s.tipOn }}" onMouseLeave="{{ s.tipOff }}" onFocus="{{ s.tipOn }}" onBlur="{{ s.tipOff }}" style="width:100%; height:26px; border:0; border-radius:999px; cursor:pointer; font-size:12px; font-weight:700; background:{{ s.bg }}; color:{{ s.color }}; transition:background 160ms ease">{{ s.k }}</button>
+                      <sc-if value="{{ s.tip }}">
+                        <div role="tooltip" style="position:absolute; bottom:calc(100% + 10px); left:{{ s.tipLeft }}; transform:translateX({{ s.tipShift }}); width:210px; padding:10px 12px; border-radius:12px; background:var(--ik-text); color:light-dark(#fff, #0A081B); z-index:45; display:flex; flex-direction:column; gap:2px; pointer-events:none; box-shadow:0 10px 30px oklch(0.05 0.03 280 / 0.35)">
+                          <b style="font-size:13px">{{ s.name }}</b><span style="font-size:12px; line-height:1.4">{{ s.desc }}</span>
+                        </div>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <aside aria-label="Actions" style="padding:4px 24px 24px 0; display:flex; flex-direction:column; min-height:0">
+    <div style="flex:1; border-radius:22px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); display:flex; flex-direction:column; overflow:hidden">
+      <sc-if value="{{ noFlow }}" hint-placeholder-val="{{ true }}">
+        <div style="padding:16px 18px; display:flex; flex-direction:column; gap:14px; flex:1">
+          <div style="display:flex; justify-content:space-between; align-items:baseline"><h2 style="margin:0; font-size:18px; font-weight:700">Actions</h2><span style="font-size:12px; color:var(--ik-text-2)">{{ capText }} left</span></div>
+          <sc-if value="{{ outOfDays }}"><div style="padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px; display:flex; flex-direction:column; gap:4px"><b>You have used all 5 days</b><span style="color:var(--ik-text-2)">Actions are locked until next week. Reply to messages any time, they cost no days.</span></div></sc-if>
+          <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">Team</span>
+          <div style="display:flex; flex-direction:column; gap:6px">
+            <sc-for list="{{ teamTiles }}" as="a" hint-placeholder-count="6">
+              <button onClick="{{ a.pick }}" disabled="{{ a.disabled }}" title="{{ a.why }}" style="display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:10px; align-items:center; padding:9px 10px; border-radius:14px; border:1px solid var(--ik-line); background:var(--ik-raised); color:{{ a.color }}; cursor:{{ a.cursor }}; text-align:left" style-hover="border-color:var(--ik-line-strong)">
+                <span style="width:30px; height:30px; border-radius:10px; background:{{ a.iconBg }}; color:{{ a.iconC }}; display:flex; align-items:center; justify-content:center">
+                  <sc-if value="{{ a.isLive }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg></sc-if>
+                  <sc-if value="{{ a.isStatic }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg></sc-if>
+                  <sc-if value="{{ a.isLock }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="16" height="10" x="4" y="11" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>
+                </span>
+                <span style="display:flex; flex-direction:column; min-width:0"><b style="font-size:13px">{{ a.n }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ a.sub }}</span></span>
+                <span style="font-size:12px; font-weight:700; color:var(--ik-text-2)">{{ a.cost }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2); padding-top:4px">{{ indivTitle }}</span>
+          <sc-if value="{{ noSel }}"><p style="margin:0; font-size:13px; color:var(--ik-text-2)">Select a person on the board to see what you can do with them.</p></sc-if>
+          <sc-if value="{{ hasSel }}">
+            <div style="display:flex; flex-direction:column; gap:6px">
+              <sc-for list="{{ indivTiles }}" as="a" hint-placeholder-count="7">
+                <button onClick="{{ a.pick }}" disabled="{{ a.disabled }}" title="{{ a.why }}" style="display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:10px; align-items:center; padding:9px 10px; border-radius:14px; border:1px solid var(--ik-line); background:var(--ik-raised); color:{{ a.color }}; cursor:{{ a.cursor }}; text-align:left" style-hover="border-color:var(--ik-line-strong)">
+                  <span style="width:30px; height:30px; border-radius:10px; background:{{ a.iconBg }}; color:{{ a.iconC }}; display:flex; align-items:center; justify-content:center">
+                    <sc-if value="{{ a.isLive }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg></sc-if>
+                    <sc-if value="{{ a.isStatic }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg></sc-if>
+                    <sc-if value="{{ a.isLock }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="16" height="10" x="4" y="11" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></sc-if>
+                  </span>
+                  <span style="display:flex; flex-direction:column; min-width:0"><b style="font-size:13px">{{ a.n }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ a.sub }}</span></span>
+                  <span style="font-size:12px; font-weight:700; color:var(--ik-text-2)">{{ a.cost }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex; gap:12px; font-size:12px; color:var(--ik-text-2); padding-top:6px; margin-top:auto; flex-wrap:wrap">
+            <span style="display:flex; gap:4px; align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>Live, voice or text</span>
+            <span style="display:flex; gap:4px; align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>Instant decision</span>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ hasFlow }}">
+        <div style="padding:16px 18px; display:flex; flex-direction:column; gap:14px; flex:1; overflow:auto; animation:ilIn 240ms ease">
+          <button onClick="{{ closeFlow }}" style="align-self:flex-start; border:0; background:transparent; padding:0; color:var(--ik-text-2); font-size:13px; font-weight:600; cursor:pointer">← All actions</button>
+          <div style="display:flex; flex-direction:column; gap:6px">
+            <div style="display:flex; gap:6px"><span style="height:22px; padding:0 8px; border-radius:999px; background:var(--ik-acc-soft); font-size:12px; font-weight:700; display:flex; align-items:center">{{ fl.kind }}</span><span style="height:22px; padding:0 8px; border-radius:999px; background:var(--ik-raised); font-size:12px; font-weight:700; display:flex; align-items:center">{{ fl.cost }}</span></div>
+            <h2 style="margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em">{{ fl.n }}</h2>
+            <span style="font-size:13px; color:var(--ik-text-2); text-wrap:pretty">{{ fl.desc }}</span>
+          </div>
+          <sc-if value="{{ fl.hasOpts }}">
+            <div role="radiogroup" aria-label="Choose an option" style="display:flex; flex-direction:column; gap:8px">
+              <sc-for list="{{ fl.opts }}" as="o" hint-placeholder-count="2">
+                <button role="radio" aria-checked="{{ o.on }}" onClick="{{ o.pick }}" style="display:flex; gap:10px; align-items:flex-start; text-align:left; padding:12px; border-radius:14px; border:1.5px solid {{ o.border }}; background:{{ o.bg }}; color:var(--ik-text); cursor:pointer">
+                  <span style="flex:none; width:18px; height:18px; margin-top:1px; border-radius:50%; border:2px solid {{ o.border }}; display:flex; align-items:center; justify-content:center"><span style="width:8px; height:8px; border-radius:50%; background:{{ o.dot }}"></span></span>
+                  <span style="display:flex; flex-direction:column"><b style="font-size:13px">{{ o.n }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ o.d }}</span></span>
+                </button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex; flex-direction:column; gap:8px">
+            <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">{{ fl.whoTitle }}</span>
+            <sc-if value="{{ fl.picking }}"><span style="font-size:13px; color:var(--ik-text-2)">{{ fl.limit }}. Click people on the board.</span></sc-if>
+            <div style="display:flex; flex-wrap:wrap; gap:6px">
+              <sc-for list="{{ fl.picks }}" as="pk" hint-placeholder-count="0"><span style="display:flex; align-items:center; gap:6px; height:30px; padding:0 10px 0 3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line); font-size:13px; font-weight:600; white-space:nowrap"><img src="{{ pk.img }}" alt="" style="width:24px; height:24px; border-radius:50%; object-fit:cover; object-position:center top; background:#DEE9FF">{{ pk.n }}</span></sc-for>
+            </div>
+          </div>
+          <sc-if value="{{ fl.nudge }}">
+            <div role="note" style="padding:12px; border-radius:14px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; flex-direction:column; gap:8px; font-size:13px">
+              <span style="text-wrap:pretty">{{ fl.nudgeText }}</span>
+              <div style="display:flex; gap:8px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="sm" onClick="{{ assessFirst }}" hint-size="120px,32px">Assess first</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="ghost" size="sm" onClick="{{ dismissNudge }}" hint-size="100px,32px">Continue</x-import></span></div>
+            </div>
+          </sc-if>
+          <div style="margin-top:auto; padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px; text-wrap:pretty">{{ fl.summary }}</div>
+          <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" disabled="{{ fl.invalid }}" onClick="{{ confirmFlow }}" hint-size="100%,48px" style="{{ fullW }}">{{ fl.cta }}</x-import>
+        </div>
+      </sc-if>
+    </div>
+  </aside>
+
+  <sc-if value="{{ inbox }}">
+    <div role="dialog" aria-label="Inbox" style="position:absolute; top:0; left:72px; bottom:24px; width:360px; border-radius:22px; background:var(--ik-mat); backdrop-filter:blur(20px); border:1px solid var(--ik-line-strong); box-shadow:0 24px 64px oklch(0.05 0.03 280 / 0.45); z-index:30; display:flex; flex-direction:column; overflow:hidden; animation:ilIn 240ms ease">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--ik-line)"><h2 style="margin:0; font-size:18px; font-weight:700">Inbox</h2><button onClick="{{ toggleInbox }}" aria-label="Close inbox" style="width:32px; height:32px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer">✕</button></div>
+      <sc-if value="{{ inboxEmpty }}"><div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:32px; text-align:center"><b>All caught up</b><span style="font-size:13px; color:var(--ik-text-2)">New messages from your team and Priya will slide in here.</span></div></sc-if>
+      <div style="flex:1; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px">
+        <sc-for list="{{ inboxItems }}" as="it" hint-placeholder-count="4">
+          <div style="padding:12px; border-radius:16px; background:var(--ik-raised); border:1px solid {{ it.border }}; display:flex; flex-direction:column; gap:10px">
+            <div style="display:flex; gap:10px">
+              <span style="flex:none; width:40px; height:40px; border-radius:50%; overflow:hidden; background:{{ it.bg }}; color:#0A081B; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center"><sc-if value="{{ it.hasImg }}"><img src="{{ it.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></sc-if>{{ it.label }}</span>
+              <span style="display:flex; flex-direction:column; min-width:0; flex:1"><span style="display:flex; justify-content:space-between; gap:6px; font-size:12px; color:var(--ik-text-2)"><b>{{ it.tag }}</b><span>{{ it.meta }}</span></span><b style="font-size:14px">{{ it.title }}</b><span style="font-size:13px; color:var(--ik-text-2)">{{ it.preview }}</span></span>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center"><sc-if value="{{ it.urgent }}"><span style="font-size:12px; font-weight:700; color:var(--ik-warn)">Pinned · {{ it.due }}</span></sc-if><span style="flex:1"></span><button onClick="{{ it.later }}" style="height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:transparent; color:var(--ik-text); font-size:12px; font-weight:700; cursor:pointer">Later</button><button onClick="{{ it.open }}" style="height:30px; padding:0 12px; border-radius:999px; border:0; background:var(--grad-brand); color:#0A081B; font-size:12px; font-weight:700; cursor:pointer">{{ it.cta }}</button></div>
+          </div>
+        </sc-for>
+      </div>
+      <span style="padding:10px 18px; font-size:12px; color:var(--ik-text-2); border-top:1px solid var(--ik-line)">Replying costs no days, and still counts with that person.</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasProfile }}">
+    <div role="dialog" aria-label="{{ pf.aria }}" style="position:absolute; top:0; left:16px; right:24px; bottom:24px; border-radius:24px; background:var(--ik-mat); backdrop-filter:blur(24px); border:1px solid var(--ik-line-strong); box-shadow:0 24px 64px oklch(0.05 0.03 280 / 0.5); z-index:35; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr); overflow:hidden; animation:ilIn 260ms ease">
+      <div style="display:flex; flex-direction:column; overflow:auto; border-right:1px solid var(--ik-line)">
+        <div style="display:flex; align-items:center; gap:18px; padding:22px 20px 6px"><div style="width:120px; height:120px; flex:none; border-radius:50%; overflow:hidden; background:{{ pf.backdrop }}; box-shadow:0 0 0 3px var(--ik-line-strong)"><img src="{{ pf.img }}" alt="{{ pf.name }}" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></div><div style="display:flex; flex-direction:column; gap:2px"><b style="font-size:24px; letter-spacing:-0.02em">{{ pf.name }}</b><span style="font-size:13px; color:var(--ik-text-2)">{{ pf.title }}</span><span style="font-size:13px; font-weight:700">{{ pf.moodN }}</span></div></div>
+        <div style="padding:18px 20px; display:flex; flex-direction:column; gap:14px">
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px"><sc-for list="{{ pf.stats }}" as="st" hint-placeholder-count="4"><div style="padding:10px; border-radius:12px; background:var(--ik-raised); display:flex; flex-direction:column"><span style="font-size:12px; color:var(--ik-text-2)">{{ st.n }}</span><b style="font-size:20px; color:{{ st.c }}">{{ st.v }}</b></div></sc-for></div>
+          <sc-if value="{{ pf.hasShared }}"><div style="padding:10px 12px; border-radius:12px; background:var(--ik-acc-soft); font-size:13px"><b>Shared:</b> {{ pf.shared }}</div></sc-if>
+          <sc-for list="{{ pf.facts }}" as="fa" hint-placeholder-count="6"><div style="display:grid; grid-template-columns:110px 1fr; gap:10px; font-size:13px"><span style="color:var(--ik-text-2)">{{ fa.k }}</span><span>{{ fa.v }}</span></div></sc-for>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; overflow:auto; padding:20px; gap:12px; border-right:1px solid var(--ik-line)">
+        <h3 style="margin:0; font-size:18px; font-weight:700">Your interactions</h3>
+        <sc-for list="{{ pf.timeline }}" as="tl" hint-placeholder-count="4">
+          <div style="display:grid; grid-template-columns:12px 1fr; gap:12px">
+            <div style="display:flex; flex-direction:column; align-items:center"><span style="width:10px; height:10px; border-radius:50%; background:{{ tl.dot }}; margin-top:5px"></span><span style="flex:1; width:2px; background:var(--ik-line)"></span></div>
+            <div style="display:flex; flex-direction:column; gap:4px; padding-bottom:12px">
+              <span style="font-size:12px; color:var(--ik-text-2)">{{ tl.when }}</span><b style="font-size:14px">{{ tl.t }}</b>
+              <sc-if value="{{ tl.hasQuote }}"><span style="font-size:13px; padding:8px 10px; border-radius:10px; background:var(--ik-raised)">“{{ tl.quote }}”</span></sc-if>
+              <span style="font-size:12px; font-weight:700; color:{{ tl.dc }}">{{ tl.delta }}</span>
+            </div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ pf.hasPromise }}"><div style="padding:10px 12px; border-radius:12px; border:1px dashed var(--ik-line-strong); font-size:13px"><b>Open promise:</b> {{ pf.promise }}</div></sc-if>
+      </div>
+      <div style="display:flex; flex-direction:column; overflow:auto; padding:20px; gap:10px">
+        <div style="display:flex; justify-content:space-between; align-items:center"><h3 style="margin:0; font-size:18px; font-weight:700">Take an action</h3><button onClick="{{ closeProfile }}" aria-label="Close profile" style="width:32px; height:32px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer">✕</button></div>
+        <sc-for list="{{ pf.actions }}" as="a" hint-placeholder-count="7">
+          <button onClick="{{ a.pick }}" disabled="{{ a.disabled }}" style="display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:12px; border-radius:14px; border:1px solid var(--ik-line); background:var(--ik-raised); color:{{ a.color }}; cursor:{{ a.cursor }}; text-align:left"><span style="display:flex; flex-direction:column"><b style="font-size:13px">{{ a.n }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ a.sub }}</span></span><span style="font-size:12px; font-weight:700; color:var(--ik-text-2)">{{ a.cost }}</span></button>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}">
+  <div style="flex:1; display:flex; flex-direction:column; gap:12px; padding:12px 16px 24px">
+    <div style="display:flex; align-items:center; gap:10px"><span style="font-size:20px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span><span style="flex:1"></span><span style="font-size:12px; color:var(--ik-text-2); white-space:nowrap"><b style="color:var(--ik-text)">Week 2</b> · Day 3 · {{ capText }} left</span></div>
+    <section aria-label="Outcome" style="padding:18px; border-radius:22px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); display:flex; flex-direction:column; gap:12px; animation:ilIn 320ms ease">
+      <div style="display:flex; gap:12px; align-items:center"><div style="width:64px; height:64px; flex:none; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); box-shadow:0 0 0 3px var(--ik-pos)"><img src="assets/npc/kent.png" alt="Kent" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></div><div style="display:flex; flex-direction:column"><span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">How it landed</span><b style="font-size:18px; line-height:1.25">{{ oc.headline }}</b></div></div>
+      <div style="display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:14px; background:var(--ik-raised)"><button onClick="{{ replay }}" aria-label="Replay" style="flex:none; width:32px; height:32px; border-radius:50%; border:0; background:var(--grad-brand); color:#0A081B">▶</button><span style="font-size:14px">“{{ oc.reply }}”</span></div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px"><sc-for list="{{ moves }}" as="mv" hint-placeholder-count="3"><button onClick="{{ toggleNums }}" style="height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:{{ mv.bg }}; color:var(--ik-text); font-size:13px; font-weight:700; white-space:nowrap"><span style="color:{{ mv.c }}">{{ mv.arrow }}</span> {{ mv.text }}</button></sc-for></div>
+      <span style="font-size:13px; color:var(--ik-text-2)">{{ oc.ripple }}</span>
+      <sc-for list="{{ oc.changed }}" as="ch" hint-placeholder-count="2"><span style="font-size:14px">{{ ch }}</span></sc-for>
+      <sc-if value="{{ whyOpen }}"><div style="display:flex; flex-direction:column; gap:8px; padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px"><span><b>What happened.</b> {{ oc.why.cause }}</span><span><b>The rule.</b> {{ oc.why.rule }}</span><span><b>Your words.</b> “{{ oc.why.ev }}”</span></div></sc-if>
+      <div style="display:flex; gap:8px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="lg" onClick="{{ toggleWhy }}" hint-size="140px,48px">{{ whyLabel }}</x-import></span><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ dismissOutcome }}" hint-size="140px,48px" style="{{ grow }}">Back to my team</x-import></div>
+    </section>
+    <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2); padding-top:4px">Your team</span>
+    <sc-for list="{{ mobileList }}" as="m" hint-placeholder-count="6">
+      <div style="display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:16px; background:var(--ik-card); border:1px solid var(--ik-line); min-height:56px">
+        <div style="width:44px; height:44px; flex:none; border-radius:50%; overflow:hidden; background:{{ m.backdrop }}"><img src="{{ m.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></div>
+        <div style="flex:1; display:flex; flex-direction:column; min-width:0"><b style="font-size:14px">{{ m.name }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ m.title }}</span></div>
+        <span style="display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700"><span style="width:8px; height:8px; border-radius:50%; background:{{ m.moodC }}"></span>{{ m.moodN }}</span>
+      </div>
+    </sc-for>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasEvent }}">
+  <div style="position:absolute; inset:0; z-index:48; background:var(--ik-scrim); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px">
+    <div role="dialog" aria-label="{{ ev.tag }} event" style="width:520px; max-width:100%; border-radius:26px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 30px 80px oklch(0.05 0.03 280 / 0.5); overflow:hidden; animation:ilIn 280ms cubic-bezier(.2,.9,.3,1.08)">
+      <div style="position:relative; height:170px; background:{{ ev.art }}; display:flex; align-items:flex-end; padding:16px 20px">
+        <sc-if value="{{ ev.hasImg }}"><img src="{{ ev.img }}" alt="" style="position:absolute; right:20px; bottom:0; height:150px; width:150px; border-radius:50% 50% 0 0; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></sc-if>
+        <span style="position:relative; display:flex; align-items:center; gap:6px; height:26px; padding:0 12px; border-radius:999px; background:oklch(0.13 0.03 285 / 0.8); color:#fff; font-size:12px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase">{{ ev.tag }} event</span>
+        <span style="position:absolute; top:14px; left:20px; font-size:12px; color:#0A081B; font-weight:600">Illustration from GenieKreator config</span>
+      </div>
+      <div style="padding:20px 22px 22px; display:flex; flex-direction:column; gap:12px">
+        <h2 style="margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em; text-wrap:balance">{{ ev.title }}</h2>
+        <p style="margin:0; color:var(--ik-text-2); text-wrap:pretty">{{ ev.body }}</p>
+        <div style="display:flex; flex-direction:column; gap:6px"><sc-for list="{{ ev.impact }}" as="im" hint-placeholder-count="2"><span style="display:flex; gap:8px; align-items:center; font-size:13px"><span style="width:6px; height:6px; border-radius:50%; background:var(--ik-acc-2)"></span>{{ im }}</span></sc-for></div>
+        <div style="display:flex; align-items:center; gap:8px; padding-top:6px"><span style="font-size:12px; color:var(--ik-text-2); display:flex; gap:6px; align-items:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"></rect><rect x="14" y="4" width="5" height="16" rx="1"></rect></svg>Clock paused</span><span style="flex:1"></span>
+          <sc-if value="{{ ev.two }}"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="md" onClick="{{ ev.second }}" hint-size="180px,40px">{{ ev.secondLabel }}</x-import></span></sc-if>
+          <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ closeEvent }}" hint-size="110px,40px">{{ ev.cta }}</x-import></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ pal }}">
+  <div onClick="{{ closePal }}" style="position:absolute; inset:0; background:var(--ik-scrim); display:flex; justify-content:center; align-items:flex-start; padding-top:120px; z-index:49">
+    <div role="dialog" aria-label="Command palette" onClick="{{ stop }}" style="width:560px; max-width:calc(100% - 32px); border-radius:20px; background:var(--ik-mat); backdrop-filter:blur(24px); border:1px solid var(--ik-line-strong); overflow:hidden">
+      <input ref="{{ palRef }}" value="{{ q }}" onChange="{{ onQ }}" onKeyDown="{{ onPalKey }}" placeholder="Find a teammate or an action" aria-label="Find a teammate or an action" style="width:100%; height:56px; padding:0 18px; border:0; border-bottom:1px solid var(--ik-line); outline:0; background:transparent; color:var(--ik-text); font-size:15px">
+      <div style="max-height:340px; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:2px">
+        <sc-for list="{{ palItems }}" as="it" hint-placeholder-count="6"><button onClick="{{ it.run }}" style="display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:12px; border:0; background:{{ it.bg }}; color:var(--ik-text); cursor:pointer; text-align:left" style-hover="background:var(--ik-raised)"><span style="width:30px; height:30px; flex:none; border-radius:50%; overflow:hidden; background:{{ it.iconBg }}"><sc-if value="{{ it.hasImg }}"><img src="{{ it.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></sc-if></span><b style="flex:1; font-size:14px">{{ it.n }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ it.sub }}</span></button></sc-for>
+      </div>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { sel: null, tip: null, legend: false, inbox: false, profile: null, flow: null, nudgeOk: false, whyOpen: false, nums: false, reveal: null, event: null, call: false, sponsor: false, scoreTip: false, pal: false, q: '', done: [], fresh: true, readIds: [] };
+  rootRef = React.createRef(); palRef = React.createRef(); hot = false;
+  componentDidMount() {
+    const u = this.props.uiState, D = this.props.d, st = {};
+    if (u === 'inbox' || u === 'empty') st.inbox = true;
+    if (u === 'empty') st.readIds = D.inbox.map(i => i.id);
+    if (u === 'profile') { st.profile = 'kent'; st.sel = 'kent'; }
+    if (u === 'select') st.sel = 'kent';
+    if (u === 'tooltip') { st.sel = 'kent'; st.tip = 'kent:G'; }
+    if (u === 'legend') st.legend = true;
+    if (u === 'drawer') st.flow = { a: D.teamActions[3], opt: 1, picks: ['mandy', 'justin', 'beth'] };
+    if (u === 'nudge') st.flow = { a: D.teamActions[4], opt: null, picks: ['justin', 'beth'] };
+    if (u === 'live') { st.sel = 'kent'; st.flow = { a: D.memberActions[0], opt: null, picks: ['kent'] }; }
+    if (u === 'call') st.call = true;
+    if (u === 'why') st.whyOpen = true;
+    if (this.props.eventType) st.event = this.props.eventType;
+    this.setState(st);
+    this.ft = setTimeout(() => this.setState({ fresh: false }), 3000);
+    this.onKey = e => {
+      if (!this.hot) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); this.setState({ pal: true, q: '' }); }
+      if (e.key === 'Escape') this.setState({ pal: false, legend: false, inbox: false, profile: null, flow: null, tip: null });
+    };
+    window.addEventListener('keydown', this.onKey);
+    if (window.ResizeObserver && this.rootRef.current) { this.ro = new ResizeObserver(es => { const n = es[0].contentRect.width < 1400; if (n !== this.state.narrow) this.setState({ narrow: n }); }); this.ro.observe(this.rootRef.current); }
+  }
+  componentDidUpdate(pp, ps) { if (this.state.pal && !ps.pal && this.palRef.current) this.palRef.current.focus(); }
+  componentWillUnmount() { this.ro && this.ro.disconnect(); clearTimeout(this.ft); window.removeEventListener('keydown', this.onKey); }
+  fmt(d) { if (d === 0) return 'No days'; const w = Math.floor(d), h = d % 1 ? '½' : ''; if (!w) return '½ day'; return w + h + (d === 1 ? ' day' : ' days'); }
+  first(n) { return n.split(' ')[0]; }
+  backdrop(m) { return m.away ? 'linear-gradient(160deg,#E4E6F0,#C9CEDF)' : (m.mood === 'frustrated' || m.mood === 'concerned') ? 'linear-gradient(160deg,#FFE7C2,#F7C17E)' : 'linear-gradient(160deg,#DEE9FF,#9FDCEB)'; }
+  kindLabel(a) { return a.kind === 'live' ? 'Live conversation' : a.kind === 'hybrid' ? 'Decision, then a conversation' : 'Instant decision'; }
+  tileFor(a, m) {
+    const app = this.props.app, done = this.state.done.includes(a.k + ':' + (m ? m.id : 'team'));
+    let sub = a.kind === 'live' ? 'Live' + (a.dur ? ', ' + a.dur.toLowerCase() : '') : a.kind === 'hybrid' ? 'Decision, then live' : 'Instant', why = '', dis = false;
+    if (a.lock) { dis = true; why = a.lock; sub = a.lock; }
+    else if (done) { dis = true; sub = 'Planned today'; }
+    else if (m && m.away && a.k !== 'feedback') { dis = true; sub = 'Away in training until Day 4'; why = sub; }
+    else if (m && a.k === 'reward' && m.rewarded) { dis = true; sub = a.cooldown; why = a.cooldown; }
+    else if (a.c > app.capacity) { dis = true; sub = `Needs ${this.fmt(a.c)}, you have ${this.fmt(app.capacity)}`; why = sub; }
+    const live = a.kind !== 'static';
+    return { n: a.n, sub, why, cost: this.fmt(a.c), disabled: dis, isLive: live && !a.lock, isStatic: !live && !a.lock, isLock: !!a.lock,
+      iconBg: dis ? 'var(--ik-track)' : live ? 'var(--grad-brand)' : 'linear-gradient(135deg,#43D6E8,#00F2AD)', iconC: dis ? 'var(--ik-text-2)' : '#0A081B',
+      color: dis ? 'var(--ik-text-2)' : 'var(--ik-text)', cursor: dis ? 'default' : 'pointer',
+      pick: () => { if (dis) return; this.setState({ profile: null, flow: { a, opt: a.options ? 0 : null, picks: m ? [m.id] : [], member: !!m }, nudgeOk: false }); } };
+  }
+  eligible(m) {
+    const f = this.state.flow; if (!f || !f.a.select || f.member) return { ok: true };
+    if (m.away) return { ok: false, why: 'Away in training until Day 4' };
+    if (f.a.k === 'swap' && f.picks.length === 1 && f.picks[0] !== m.id) { const p = this.props.app.members.find(x => x.id === f.picks[0]); if (p.stage === m.stage) return { ok: false, why: `Same stage as ${this.first(p.name)}` }; }
+    if (f.a.k === 'swap') { const others = this.props.app.members.filter(x => x.stage === m.stage && x.id !== m.id); }
+    return { ok: true };
+  }
+  clickCard(m) {
+    const f = this.state.flow;
+    if (f && f.a.select && !f.member) {
+      if (!this.eligible(m).ok) return;
+      const has = f.picks.includes(m.id), max = f.a.select[1];
+      let picks = has ? f.picks.filter(x => x !== m.id) : [...f.picks, m.id];
+      if (picks.length > max) picks = picks.slice(picks.length - max);
+      this.setState({ flow: { ...f, picks }, nudgeOk: false });
+      return;
+    }
+    this.setState(s => ({ sel: s.sel === m.id ? null : m.id, flow: null }));
+  }
+  confirmFlow() {
+    const f = this.state.flow, { act, app } = this.props; if (!f) return;
+    const a = f.a, names = f.picks.map(id => this.first(app.members.find(x => x.id === id).name));
+    if (a.kind === 'live' || a.kind === 'hybrid') { act.spend(a.c); act.live(a.format === 'meeting' ? 'meeting' : a.format === 'email' ? 'email' : 'roleplay', f.picks[0] || 'kent'); return; }
+    act.spend(a.c);
+    this.setState(s => ({ flow: null, done: [...s.done, a.k + ':' + (f.member ? f.picks[0] : 'team')] }));
+    act.say(`${this.summary(f, names)} You'll see how it lands at day end.`);
+  }
+  summary(f, names) {
+    const a = f.a, list = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : (names[0] || '');
+    const opt = a.options && f.opt !== null ? a.options[f.opt].n : '';
+    if (a.k === 'training') return `Send ${list || 'up to 3 people'} to a ${opt.toLowerCase()}. ${this.fmt(a.c)}.`;
+    if (a.k === 'energize') return `${opt} with the whole team. ${this.fmt(a.c)}.`;
+    if (a.k === 'swap') return names.length === 2 ? `Swap ${names[0]} and ${names[1]}, then explain it to them. ${this.fmt(a.c)}.` : `Pick two people in different stages. ${this.fmt(a.c)}.`;
+    if (a.k === 'meet') return `Meet the whole team for about 20 minutes. ${this.fmt(a.c)}.`;
+    if (a.k === 'email') return 'Opens the email composer. No days used.';
+    if (a.kind === 'live') return `${a.n} with ${list}. ${this.fmt(a.c)}. ${a.dur}, in voice or text.`;
+    if (a.k === 'reward') return `Reward ${list}, then tell ${names.length > 1 ? 'them' : 'them'} why. ${this.fmt(a.c)}.`;
+    return `${a.n}: ${list}. ${this.fmt(a.c)}.`;
+  }
+  renderVals() {
+    const { d: D, app, act } = this.props, s = this.state;
+    if (!D || !app.members) return {};
+    const mobile = !!this.props.mobile, outcome = !!app.outcome, cap = app.capacity;
+    const members = app.members.map(m => outcome && m.id === 'kent' ? { ...m, mood: 'neutral', unread: false } : m);
+    const f = s.flow, picking = !!(f && f.a.select && !f.member);
+    const card = m => {
+      const mood = D.moods[m.mood], el = this.eligible(m), on = picking ? f.picks.includes(m.id) : s.sel === m.id, cur = m.style;
+      const segs = D.styles.map((st, i) => ({ k: st.k, name: st.n, desc: st.d, on: cur === st.k, aria: `${st.n}. ${st.d}`, tip: s.tip === m.id + ':' + st.k,
+        tipLeft: i < 2 ? '0' : '100%', tipShift: i < 2 ? '0' : '-100%',
+        bg: cur === st.k ? 'var(--grad-brand)' : 'transparent', color: cur === st.k ? '#0A081B' : 'var(--ik-text-2)',
+        tipOn: () => this.setState({ tip: m.id + ':' + st.k }), tipOff: () => this.setState(x => x.tip === m.id + ':' + st.k ? { tip: null } : null),
+        pick: e => { e && e.stopPropagation(); if (cur !== st.k) { act.setStyle(m.id, st.k); act.say(`You'll lead ${this.first(m.name)} with ${st.n} this week.`); } } }));
+      const trustC = m.trust < 30 ? 'oklch(0.84 0.14 78)' : '#00F2AD', circ = 2 * Math.PI * 16;
+      return { id: m.id, name: m.name, title: m.title, img: m.img, backdrop: this.backdrop(m), filter: m.away ? 'grayscale(1)' : 'none',
+        moodN: m.away ? 'In training' : mood.n, moodC: mood.c, unread: !!m.unread, promise: !!m.promise, promiseT: m.promise || '',
+        trust: m.trust, trustC, trustDash: `${(m.trust / 100 * circ).toFixed(1)} ${circ.toFixed(1)}`,
+        tags: m.tags || [], hasTags: !!(m.tags && m.tags.length),
+        bars: ['skill', 'morale', 'result'].map(k => { const v = m[k], lo = v < 30; return { n: k[0].toUpperCase() + k.slice(1), v, w: v + '%', aria: `${k} ${v}${lo ? ', low' : ''}`,
+          bg: lo ? 'var(--ik-warn)' : 'linear-gradient(90deg, var(--ik-acc), var(--ik-acc-2))', c: lo ? 'var(--ik-warn)' : 'var(--ik-text)' }; }),
+        seg: segs, styleAria: `Leadership style for ${m.name}`, on,
+        border: on ? 'var(--ik-acc-2)' : 'var(--ik-line)', glow: on ? '0 0 0 1px var(--ik-acc-2), 0 12px 36px oklch(0.75 0.14 220 / 0.35)' : '0 6px 20px oklch(0.05 0.03 280 / 0.18)',
+        op: picking && !el.ok ? 0.4 : 1, z: s.tip && s.tip.startsWith(m.id + ':') ? 20 : 1, dimWhy: picking && !el.ok ? el.why : '', cursor: picking && !el.ok ? 'not-allowed' : 'pointer',
+        aria: `${m.name}, ${m.title}. ${mood.n}. Skill ${m.skill}, Morale ${m.morale}, Result ${m.result}, Trust ${m.trust}.${picking && !el.ok ? ' Not available: ' + el.why : ''}`,
+        click: () => this.clickCard(m), key: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.clickCard(m); } },
+        profile: e => { e.stopPropagation(); act.openProfile(m.id); this.setState({ profile: m.id, sel: m.id, flow: null }); } };
+    };
+    const worst = D.stages.reduce((b, st, i) => (st.count / st.ideal < D.stages[b].count / D.stages[b].ideal ? i : b), 0);
+    const columns = D.stages.map((st, i) => ({ n: st.n, count: st.count, sub: i === worst ? 'Bottleneck this week' : `Ideal ${st.ideal}`,
+      hBg: i === worst ? 'var(--ik-warn-soft)' : 'var(--ik-card)', hBorder: i === worst ? 'var(--ik-warn)' : 'var(--ik-line)', subC: i === worst ? 'var(--ik-warn)' : 'var(--ik-text-2)', subW: i === worst ? '700' : '400',
+      cards: members.filter(m => m.stage === i).map(card) }));
+    const avg = k => Math.round(members.reduce((a, m) => a + m[k], 0) / members.length);
+    const kd = outcome ? { skill: 0, morale: 0.6, result: 0, trust: 0.6 } : { skill: 0.3, morale: 0, result: 0.6, trust: -0.3 };
+    const kpis = ['skill', 'morale', 'result', 'trust'].map(k => { const v = avg(k), dd = kd[k];
+      return { n: 'Team ' + k, v, w: v + '%', trend: s.fresh && dd ? (dd > 0 ? '+' : '−') + Math.abs(dd).toFixed(1) : dd > 0 ? '▲ rising' : dd < 0 ? '▼ easing' : '● steady',
+        c: dd > 0 ? 'var(--ik-pos)' : dd < 0 ? 'var(--ik-neg)' : 'var(--ik-text-2)', aria: `Team ${k} ${v}` }; });
+    const pos = members.filter(m => m.mood === 'happy').length, neu = members.filter(m => m.mood === 'neutral' || m.mood === 'thinking').length, neg = members.length - pos - neu;
+    const pulse = [{ n: pos, label: 'upbeat', c: '#00F2AD' }, { n: neu, label: 'steady', c: '#DEE9FF' }, { n: neg, label: 'struggling', c: 'oklch(0.84 0.14 78)' }].filter(x => x.n);
+    const sm = members.find(m => m.id === s.sel);
+    let fl = {};
+    if (f) {
+      const names = f.picks.map(id => this.first(members.find(x => x.id === id).name));
+      const needNudge = f.a.prereq && f.picks.includes('justin') && !s.nudgeOk;
+      const min = f.a.select ? f.a.select[0] : 0;
+      fl = { n: f.a.n, kind: this.kindLabel(f.a), cost: this.fmt(f.a.c), desc: f.a.desc || `${f.a.dur || ''}. In voice or text, you can switch at any time.`,
+        hasOpts: !!f.a.options, opts: (f.a.options || []).map((o, i) => ({ n: o.n, d: o.d, on: f.opt === i, border: f.opt === i ? 'var(--ik-acc-2)' : 'var(--ik-line)', bg: f.opt === i ? 'var(--ik-acc-soft)' : 'var(--ik-raised)', dot: f.opt === i ? 'var(--ik-acc-2)' : 'transparent', pick: () => this.setState({ flow: { ...f, opt: i } }) })),
+        whoTitle: f.a.select && !f.member ? `People · ${f.picks.length} of ${f.a.select[1]}` : f.member ? 'With' : 'Who', picking, limit: f.a.limit || '',
+        picks: f.picks.map(id => { const m = members.find(x => x.id === id); return { n: m.name, img: m.img }; }),
+        nudge: !!needNudge, nudgeText: 'You have not assessed Justin for Qualification yet. Assess first, 1 day? You can still go ahead without it.',
+        summary: this.summary(f, names), invalid: f.picks.length < min || (f.a.options && f.opt === null),
+        cta: f.a.kind === 'static' ? 'Confirm' : f.a.k === 'email' ? 'Open composer' : 'Confirm and start' };
+    }
+    const pm = members.find(m => m.id === s.profile);
+    let pf = {};
+    if (pm) {
+      const mood = D.moods[pm.mood];
+      const kent = pm.id === 'kent';
+      pf = { name: pm.name, title: pm.title, img: pm.img, backdrop: this.backdrop(pm), moodN: mood.n, aria: `Profile for ${pm.name}`,
+        stats: ['skill', 'morale', 'result', 'trust'].map(k => ({ n: k[0].toUpperCase() + k.slice(1), v: pm[k], c: pm[k] < 30 ? 'var(--ik-warn)' : 'var(--ik-text)' })),
+        hasShared: kent && outcome, shared: 'feels overlooked since the territory split moved his best leads to Beth.',
+        facts: [{ k: 'Style this week', v: D.styles.find(x => x.k === pm.style).n }, { k: 'Previous company', v: pm.prev }, { k: 'Tenure', v: pm.tenure }, { k: 'Experience', v: pm.exp }, { k: 'Skills', v: pm.skills }, { k: 'Remarks', v: pm.remarks },
+          { k: 'Career goal', v: kent && outcome ? 'Wants to mentor new hires' : 'Not shared yet. It may come up in conversation.' }, { k: 'Relationships', v: pm.relations }],
+        timeline: (kent ? [
+          ...(outcome ? [{ when: 'Week 2, Day 3', t: '1:1 conversation', quote: "Since the territory split, my best leads go to Beth. Nobody asked me.", delta: 'Morale +8, Trust +6', dc: 'var(--ik-pos)', dot: 'var(--ik-pos)' }] : []),
+          { when: 'Week 2, Day 2', t: 'Chat request went unanswered', quote: 'Do you have 15 minutes today? Something has been bothering me.', delta: 'Morale −6', dc: 'var(--ik-neg)', dot: 'var(--ik-neg)' },
+          { when: 'Week 1, Day 4', t: 'Style: Directing', quote: '', delta: 'Reaction: felt micromanaged. Morale −4', dc: 'var(--ik-neg)', dot: 'var(--ik-neg)' },
+          { when: 'Week 1, Day 1', t: 'Meet the team', quote: 'Happy to be here. Busy week ahead.', delta: 'No change', dc: 'var(--ik-text-2)', dot: 'var(--ik-line-strong)' }
+        ] : [{ when: 'Week 1, Day 4', t: 'Style: ' + D.styles.find(x => x.k === pm.last).n, quote: '', delta: pm.lastReact === 'pos' ? 'Reaction: positive' : 'Reaction: negative', dc: pm.lastReact === 'pos' ? 'var(--ik-pos)' : 'var(--ik-neg)', dot: pm.lastReact === 'pos' ? 'var(--ik-pos)' : 'var(--ik-neg)' },
+          { when: 'Week 1, Day 1', t: 'Meet the team', quote: '', delta: 'No change', dc: 'var(--ik-text-2)', dot: 'var(--ik-line-strong)' }]).map(t => ({ ...t, hasQuote: !!t.quote })),
+        hasPromise: !!pm.promise || (kent && outcome), promise: kent && outcome ? 'Review lead routing with Kent by Friday' : pm.promise || '',
+        actions: D.memberActions.map(a => this.tileFor(a, pm)) };
+    }
+    const oc = D.outcome;
+    const ev = s.event ? D.events[s.event] : null;
+    const evArt = { impact: 'linear-gradient(135deg,#43D6E8,#00F2AD)', signal: 'linear-gradient(135deg,#DEE9FF,#9FDCEB)', capacity: 'linear-gradient(135deg,#FFE7C2,#F7C17E)', diagnostic: 'linear-gradient(135deg,#249DFF,#43D6E8)' };
+    const evImg = { signal: 'lowe', capacity: 'ruth', diagnostic: 'peter' };
+    const unreadItems = D.inbox.filter(i => !s.readIds.includes(i.id));
+    const sender = it => it.from === 'sponsor' ? { hasImg: false, img: '', label: 'PN', bg: 'var(--grad-brand)' } : it.from === 'news' ? { hasImg: false, img: '', label: 'News', bg: 'linear-gradient(135deg,#43D6E8,#00F2AD)' } : { hasImg: true, img: `assets/npc/${it.from}.png`, label: '', bg: 'linear-gradient(160deg,#DEE9FF,#9FDCEB)' };
+    const openItem = it => { this.setState(x => ({ inbox: false, readIds: [...x.readIds, it.id] })); if (it.type === 'news') this.setState({ event: 'impact' }); else if (it.type === 'email') act.live('email', it.from); else if (it.type === 'sponsor') act.live('sponsor'); else act.live('roleplay', it.from); };
+    const q = s.q.trim().toLowerCase();
+    const palItems = [...members.map(m => ({ n: m.name, sub: m.title, hasImg: true, img: m.img, iconBg: this.backdrop(m), run: () => this.setState({ pal: false, sel: m.id, flow: null }) })),
+      ...D.teamActions.map(a => ({ n: a.n, sub: this.fmt(a.c), hasImg: false, img: '', iconBg: 'var(--grad-brand)', run: () => { this.setState({ pal: false }); this.tileFor(a, null).pick(); } }))]
+      .filter(i => !q || i.n.toLowerCase().includes(q)).slice(0, 9).map((i, x) => ({ ...i, bg: x === 0 && q ? 'var(--ik-raised)' : 'transparent' }));
+    return {
+      rootRef: this.rootRef, palRef: this.palRef, hotOn: () => { this.hot = true; }, hotOff: () => { this.hot = false; },
+      app, isDesktop: !mobile, isMobile: mobile, isClient: app.client, isOffline: this.props.uiState === 'offline',
+      nav: app.client ? ['Objective', 'History', 'More'] : ['Objective', 'Funnel', 'History', 'Badges', 'More'].map(n => ({ n, go: () => act.say(n === 'More' ? 'More: Tutorial, Funnel, Leaderboard, Badges and Help.' : `${n} opens as a panel over the board.`) })),
+      capSlots: [0, 1, 2, 3, 4].map(i => { const v = cap >= i + 1 ? 1 : cap > i ? 0.5 : 0; return { fill: v === 1 ? '#43D6E8' : v ? 'oklch(0.85 0.1 205 / 0.45)' : 'transparent', stroke: v ? '#43D6E8' : 'var(--ik-line-strong)' }; }),
+      capText: this.fmt(cap), capAria: `${cap} of 5 days left this week`, capPulse: cap <= 1 && cap > 0 ? 'ilPulse 1.6s ease-in-out infinite' : 'none', outOfDays: cap === 0,
+      pause: () => act.overlay('paused'), openSettings: () => act.overlay('settings'),
+      scoreTip: s.scoreTip, scoreOn: () => this.setState({ scoreTip: true }), scoreOff: () => this.setState({ scoreTip: false }),
+      scoreParts: [{ n: 'Business', v: 420, w: '42%' }, { n: 'People', v: 510, w: '51%' }, { n: 'Leadership', v: 310, w: '31%' }],
+      endVariant: f ? 'secondary' : 'primary', endWeek: () => act.go('weekend'),
+      hasCall: s.call, scheduleCall: () => { this.setState({ call: false }); act.say('Call with Priya scheduled for tomorrow morning.'); }, takeCall: () => act.live('sponsor'),
+      kpis, pulse, pulseAria: `Team pulse: ${pos} upbeat, ${neu} steady, ${neg} struggling`,
+      sponsorOpen: s.sponsor, toggleSponsor: () => this.setState(x => ({ sponsor: !x.sponsor })),
+      sponsorBars: [0, 1, 2, 3, 4].map(i => ({ bg: i < 3 ? 'linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))' : 'var(--ik-track)' })),
+      hasOutcome: outcome, oc, whyOpen: s.whyOpen, whyLabel: s.whyOpen ? 'Hide why' : 'See why', toggleWhy: () => this.setState(x => ({ whyOpen: !x.whyOpen })),
+      replay: () => act.say('Playing Kent’s reply with captions.'), toHistory: () => act.say('History opens filtered to Kent.'), dismissOutcome: () => act.clearOutcome(),
+      affected: oc.affected.map(id => { const m = members.find(x => x.id === id); return { img: m.img, aria: `${m.name}. Show reaction`, ring: s.reveal === id ? 'var(--ik-acc-2)' : 'var(--ik-line-strong)', tap: () => this.setState(x => ({ reveal: x.reveal === id ? null : id })) }; }),
+      hasReaction: !!s.reveal, reaction: s.reveal ? { name: this.first(members.find(x => x.id === s.reveal).name), t: oc.reactions[s.reveal] } : {},
+      moves: oc.moves.map(mv => { const m = members.find(x => x.id === mv.id); const k = mv.k[0].toUpperCase() + mv.k.slice(1);
+        return { text: s.nums ? `${this.first(m.name)} ${k} ${mv.d > 0 ? '+' : '−'}${Math.abs(mv.d)}` : `${this.first(m.name)} ${k.toLowerCase()} ${mv.d > 0 ? 'up' : 'down'}`, arrow: mv.d > 0 ? '▲' : '▼', c: mv.d > 0 ? 'var(--ik-pos)' : 'var(--ik-neg)', bg: mv.d > 0 ? 'var(--ik-pos-soft)' : 'var(--ik-neg-soft)' }; }),
+      toggleNums: () => this.setState(x => ({ nums: !x.nums })),
+      inbox: s.inbox, toggleInbox: () => this.setState(x => ({ inbox: !x.inbox })), unread: unreadItems.length, hasUnread: unreadItems.length > 0, inboxAria: `Inbox, ${unreadItems.length} unread`,
+      inboxRail: unreadItems.map(it => ({ ...sender(it), aria: it.title, ring: it.urgent ? 'oklch(0.84 0.14 78)' : 'var(--ik-line)', open: () => openItem(it) })),
+      inboxItems: unreadItems.map(it => ({ ...sender(it), ...it, tag: it.type === 'chat' ? 'Chat from ' + this.first(members.find(m => m.id === it.from).name) : it.type === 'sponsor' ? 'Priya, sponsor note' : it.type === 'news' ? 'News' : 'Email from ' + this.first(members.find(m => m.id === it.from).name),
+        urgent: !!it.urgent, border: it.urgent ? 'var(--ik-warn)' : 'var(--ik-line)', cta: it.type === 'news' ? 'See impact' : 'Reply now', open: () => openItem(it), later: () => this.setState(x => ({ readIds: [...x.readIds, it.id] })) })),
+      inboxEmpty: unreadItems.length === 0,
+      boardHint: picking ? 'Click people to add them to the action' : sm ? `${sm.name} selected` : 'Click anyone to select them',
+      legend: s.legend, toggleLegend: () => this.setState(x => ({ legend: !x.legend })), legendRows: D.styles,
+      columns, noFlow: !f, hasFlow: !!f, fl, closeFlow: () => this.setState({ flow: null }), confirmFlow: () => this.confirmFlow(),
+      assessFirst: () => { act.spend(1); this.setState({ nudgeOk: true }); act.say('Justin assessed for Qualification. 1 day used.'); }, dismissNudge: () => this.setState({ nudgeOk: true }), fullW: { width: '100%' },
+      teamTiles: D.teamActions.map(a => this.tileFor(a, null)), indivTitle: sm ? `For ${this.first(sm.name)}` : 'For one person', noSel: !sm, hasSel: !!sm, indivTiles: sm ? D.memberActions.map(a => this.tileFor(a, sm)) : [],
+      hasProfile: !!pm, pf, closeProfile: () => this.setState({ profile: null }),
+      hasEvent: !!ev, ev: ev ? { ...ev, art: evArt[s.event], hasImg: !!evImg[s.event], img: evImg[s.event] ? `assets/npc/${evImg[s.event]}.png` : '', two: s.event === 'capacity' || s.event === 'impact',
+        secondLabel: s.event === 'capacity' ? 'Talk to Ruth first' : 'Call Priya', second: () => { this.setState({ event: null }); s.event === 'capacity' ? act.live('roleplay', 'ruth') : act.live('sponsor'); } } : {},
+      closeEvent: () => { this.setState({ event: null }); if (ev && s.event === 'capacity') act.say('Leave approved. Justin covers Brightwell on Thursday and Friday.'); },
+      mobileList: members.slice(0, 6).map(m => ({ name: m.name, title: m.title, img: m.img, backdrop: this.backdrop(m), moodN: D.moods[m.mood].n, moodC: D.moods[m.mood].c })), grow: { flex: 1 },
+      pal: s.pal, openPal: () => { this.hot = true; this.setState({ pal: true, q: '' }); }, closePal: () => this.setState({ pal: false }), stop: e => e.stopPropagation(), q: s.q, onQ: e => this.setState({ q: e.target.value }),
+      onPalKey: e => { if (e.key === 'Enter' && palItems[0]) palItems[0].run(); if (e.key === 'Escape') this.setState({ pal: false }); }, palItems
+    };
+  }
+}
+</script>
+</body>
+</html>

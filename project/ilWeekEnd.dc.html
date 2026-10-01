@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+</helmet>
+<div style="flex:1; min-height:{{ app.minH }}; display:flex; flex-direction:column; padding:20px 32px 32px; gap:20px; position:relative">
+  <header style="display:flex; align-items:center; gap:16px"><span style="font-size:22px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span><span style="font-size:13px; color:var(--ik-text-2)">Week 2 of 8 · Week end</span><span style="flex:1"></span><button onClick="{{ toEnd }}" style="border:0; background:transparent; color:var(--ik-text-2); font-size:12px; font-weight:600; cursor:pointer">Prototype shortcut: jump to the end of the simulation</button></header>
+
+  <sc-if value="{{ isBanner }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; text-align:center">
+      <div aria-hidden="true" style="position:absolute; left:50%; top:45%; width:560px; height:560px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(circle, oklch(0.75 0.14 200 / 0.35), transparent 65%)"></div>
+      <span style="position:relative; font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">End of week 2</span>
+      <h1 style="position:relative; margin:0; font-size:64px; line-height:1; font-weight:700; letter-spacing:-0.03em">Kent is back in the game.</h1>
+      <div aria-label="2 of 3 stars this week" style="position:relative; display:flex; gap:14px">
+        <sc-for list="{{ stars }}" as="st" hint-placeholder-count="3"><svg width="64" height="64" viewBox="0 0 24 24" style="animation:ilIn 500ms cubic-bezier(.2,.9,.3,1.3) both; animation-delay:{{ st.delay }}"><defs><linearGradient id="{{ st.gid }}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#249DFF"></stop><stop offset=".5" stop-color="#43D6E8"></stop><stop offset="1" stop-color="#00F2AD"></stop></linearGradient></defs><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3" fill="{{ st.fill }}" stroke="{{ st.stroke }}" stroke-width="1.2" stroke-linejoin="round"></polygon></svg></sc-for>
+      </div>
+      <p style="position:relative; margin:0; font-size:17px; color:var(--ik-text-2); max-width:560px; text-wrap:pretty">You made time for the people who needed it. Revenue is still behind pace, so next week is about demos.</p>
+      <div style="position:relative"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ next }}" hint-size="160px,48px">See your week</x-import></span></div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isReport }}">
+    <div style="flex:1; display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:20px; animation:ilIn 300ms ease">
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div style="padding:20px; border-radius:24px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:12px">
+          <div style="display:flex; justify-content:space-between"><h2 style="margin:0; font-size:20px; font-weight:700">Funnel this week</h2><span style="font-size:12px; color:var(--ik-text-2)">Bar is this week, tick is ideal</span></div>
+          <sc-for list="{{ funnel }}" as="fn" hint-placeholder-count="5"><div style="display:grid; grid-template-columns:130px 1fr 70px; gap:12px; align-items:center; font-size:13px"><span>{{ fn.n }}</span><div style="position:relative; height:12px; border-radius:6px; background:var(--ik-track)"><div style="height:100%; width:{{ fn.w }}; border-radius:6px; background:{{ fn.bg }}"></div><div style="position:absolute; top:-4px; bottom:-4px; left:{{ fn.ideal }}; width:2px; background:var(--ik-text)"></div></div><b style="text-align:right">{{ fn.v }}</b></div></sc-for>
+          <span style="font-size:13px; color:var(--ik-warn); font-weight:600">Closing converted the least against ideal. That is your bottleneck going into week 3.</span>
+        </div>
+        <div style="padding:20px; border-radius:24px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:10px">
+          <h2 style="margin:0; font-size:20px; font-weight:700">Team over the week</h2>
+          <div style="display:grid; grid-template-columns:1fr 70px 70px 70px; gap:8px; font-size:12px; font-weight:700; color:var(--ik-text-2)"><span></span><span style="text-align:right">Start</span><span style="text-align:right">Change</span><span style="text-align:right">End</span></div>
+          <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4"><div style="display:grid; grid-template-columns:1fr 70px 70px 70px; gap:8px; padding:8px 0; border-top:1px solid var(--ik-line); font-size:14px"><span>{{ k.n }}</span><span style="text-align:right">{{ k.a }}</span><b style="text-align:right; color:{{ k.c }}">{{ k.d }}</b><b style="text-align:right">{{ k.b }}</b></div></sc-for>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:20px">
+        <div style="padding:20px; border-radius:24px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:12px">
+          <h2 style="margin:0; font-size:20px; font-weight:700">Stars earned</h2>
+          <sc-for list="{{ starRows }}" as="sr" hint-placeholder-count="3"><div style="display:flex; gap:12px; align-items:center"><svg width="26" height="26" viewBox="0 0 24 24"><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3" fill="{{ sr.fill }}" stroke="{{ sr.stroke }}" stroke-width="1.5"></polygon></svg><span style="display:flex; flex-direction:column"><b style="font-size:14px">{{ sr.t }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ sr.d }}</span></span></div></sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px">
+          <div style="padding:18px; border-radius:24px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px"><span style="font-size:12px; color:var(--ik-text-2)">Streak</span><b style="font-size:26px; display:flex; align-items:center; gap:6px"><svg width="22" height="22" viewBox="0 0 24 24" fill="oklch(0.8 0.15 60)"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>3 days</b><span style="font-size:12px; color:var(--ik-text-2)">Replied to every message on time. 2 more days for a bonus.</span></div>
+          <div style="padding:18px; border-radius:24px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px"><span style="font-size:12px; color:var(--ik-text-2)">Sponsor confidence</span><b style="font-size:22px">Steady to Confident</b><span style="font-size:12px; color:var(--ik-pos); font-weight:700">▲ One step up</span></div>
+          <div style="grid-column:1 / -1; padding:18px; border-radius:24px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:8px"><span style="font-size:12px; color:var(--ik-text-2)">Team Pulse</span><div style="display:flex; height:12px; border-radius:6px; overflow:hidden; gap:2px"><div style="flex:6; background:#00F2AD"></div><div style="flex:3; background:#DEE9FF"></div><div style="flex:1; background:oklch(0.84 0.14 78)"></div></div><span style="font-size:13px"><b>6</b> upbeat · <b>3</b> steady · <b>1</b> struggling, up from 3 struggling last week</span></div>
+        </div>
+        <div style="display:flex; justify-content:flex-end"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ next }}" hint-size="120px,48px">Continue</x-import></span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isBadge }}">
+    <div style="flex:1; display:flex; align-items:center; justify-content:center">
+      <div role="dialog" aria-label="Badge earned" style="width:460px; padding:32px; border-radius:30px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 0 80px oklch(0.75 0.14 200 / 0.35); display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; animation:ilIn 400ms cubic-bezier(.2,.9,.3,1.2)">
+        <div style="width:140px; height:140px; border-radius:50%; background:var(--grad-spectrum); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 8px oklch(1 0 0 / 0.08)"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#0A081B" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7-6 6-6 10"></path><path d="M9 8a3 3 0 0 1 6 0"></path><circle cx="12" cy="21" r="1"></circle></svg></div>
+        <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">Badge earned · 1 of 1</span>
+        <h2 style="margin:0; font-size:30px; font-weight:700">Listener</h2>
+        <p style="margin:0; color:var(--ik-text-2)">You asked three open questions in your 1:1 with Kent before offering a fix.</p>
+        <div style="display:flex; gap:10px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="ghost" size="md" onClick="{{ next }}" hint-size="80px,40px">Skip</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ next }}" hint-size="100px,40px">Nice</x-import></span></div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isUnlock }}">
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:22px; animation:ilIn 300ms ease">
+      <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">Priya's confidence went up</span>
+      <h1 style="margin:0; font-size:40px; font-weight:700; letter-spacing:-0.02em">Choose one reward for week 3</h1>
+      <div role="radiogroup" aria-label="Rewards" style="display:grid; grid-template-columns:repeat(3,280px); gap:16px">
+        <sc-for list="{{ rewards }}" as="r" hint-placeholder-count="3"><button role="radio" aria-checked="{{ r.on }}" onClick="{{ r.pick }}" style="padding:20px; border-radius:24px; border:2px solid {{ r.border }}; background:{{ r.bg }}; color:var(--ik-text); text-align:left; cursor:pointer; display:flex; flex-direction:column; gap:10px; transform:{{ r.lift }}; transition:transform 200ms ease"><span style="height:90px; border-radius:16px; background:{{ r.art }}"></span><b style="font-size:17px">{{ r.n }}</b><span style="font-size:13px; color:var(--ik-text-2)">{{ r.d }}</span></button></sc-for>
+      </div>
+      <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" disabled="{{ noReward }}" onClick="{{ next }}" hint-size="160px,48px">Take this reward</x-import></span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isNews }}">
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px; animation:ilIn 300ms ease">
+      <span style="font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)">Week 3 news · {{ newsPos }}</span>
+      <div style="width:720px; max-width:100%; border-radius:28px; overflow:hidden; background:var(--ik-mat); border:1px solid var(--ik-line-strong)">
+        <div style="height:220px; background:{{ news.art }}; position:relative"><span style="position:absolute; top:14px; left:18px; font-size:12px; font-weight:700; color:#0A081B">Illustration from GenieKreator config</span></div>
+        <div style="padding:22px 24px; display:flex; flex-direction:column; gap:10px"><h2 style="margin:0; font-size:26px; font-weight:700; letter-spacing:-0.02em">{{ news.t }}</h2><p style="margin:0; color:var(--ik-text-2)">{{ news.d }}</p>
+          <sc-if value="{{ impactOpen }}"><div style="padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px">{{ news.impact }}</div></sc-if>
+          <div style="display:flex; gap:10px; align-items:center"><button onClick="{{ toggleImpact }}" style="border:0; background:transparent; color:var(--ik-acc-2); font-weight:700; font-size:13px; cursor:pointer; padding:0">See impact</button><span style="flex:1"></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="md" disabled="{{ firstNews }}" onClick="{{ prevNews }}" hint-size="100px,40px">Previous</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ nextNews }}" hint-size="180px,40px">{{ newsCta }}</x-import></span></div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  STEPS = ['banner', 'report', 'badge', 'unlock', 'news'];
+  state = { step: 'banner', reward: null, news: 0, impact: false };
+  componentDidMount() { if (this.STEPS.includes(this.props.step)) this.setState({ step: this.props.step }); }
+  next() { const i = this.STEPS.indexOf(this.state.step); this.setState({ step: this.STEPS[Math.min(i + 1, 4)] }); }
+  renderVals() {
+    const { d: D, act } = this.props, s = this.state;
+    if (!D) return {};
+    const NEWS = [
+      { t: 'A competitor cut prices by 10%', d: 'Two of your open deals mention it. Expect tougher proposal conversations.', impact: 'Proposal and Closing stages will convert a little slower unless the team sells value.', art: 'linear-gradient(135deg,#249DFF,#43D6E8)' },
+      { t: 'Ashcroft signed at list price', d: 'Jack and Green held the line. Priya sent a note to the whole team.', impact: 'Revenue +$8,400. Morale lifts for Jack and Green.', art: 'linear-gradient(135deg,#43D6E8,#00F2AD)' }
+    ];
+    const gold = 'url(#wg0)';
+    return {
+      isBanner: s.step === 'banner', isReport: s.step === 'report', isBadge: s.step === 'badge', isUnlock: s.step === 'unlock', isNews: s.step === 'news',
+      next: () => this.next(), toEnd: () => act.go('end'),
+      stars: [0, 1, 2].map(i => ({ gid: 'wg' + i, delay: (i * 0.18) + 's', fill: i < 2 ? `url(#wg${i})` : 'transparent', stroke: i < 2 ? 'transparent' : 'var(--ik-line-strong)' })),
+      funnel: D.stages.map((st, i) => ({ n: st.n, v: `${st.count} of ${st.ideal}`, w: Math.round(st.count / 45 * 100) + '%', ideal: Math.round(st.ideal / 45 * 100) + '%', bg: i === 4 ? 'var(--ik-warn)' : 'linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))' })),
+      kpis: [['Team skill', 56, 57], ['Team morale', 54, 58], ['Team result', 58, 60], ['Team trust', 53, 57]].map(([n, a, b]) => ({ n, a, b, d: (b - a > 0 ? '+' : '') + (b - a), c: b - a > 0 ? 'var(--ik-pos)' : 'var(--ik-text-2)' })),
+      starRows: [{ t: 'People star', d: 'Lifted team morale by 4 points' }, { t: 'Leadership star', d: 'Matched your style to 7 of 10 people' }, { t: 'Business star, not yet', d: 'Hit week 2 revenue pace. You were $18,800 short.' }]
+        .map((r, i) => ({ ...r, fill: i < 2 ? '#43D6E8' : 'transparent', stroke: i < 2 ? '#43D6E8' : 'var(--ik-line-strong)' })),
+      rewards: [{ n: 'An extra half day', d: 'Five and a half days of your time in week 3.', art: 'linear-gradient(135deg,#249DFF,#43D6E8)' }, { n: 'A quiet word', d: 'Learn one thing a team member has not told you yet.', art: 'linear-gradient(135deg,#43D6E8,#00F2AD)' }, { n: 'Team lunch budget', d: 'Energize the team once in week 3 at no day cost.', art: 'linear-gradient(135deg,#DEE9FF,#9FDCEB)' }]
+        .map((r, i) => ({ ...r, on: s.reward === i, border: s.reward === i ? 'var(--ik-acc-2)' : 'var(--ik-line)', bg: s.reward === i ? 'var(--ik-acc-soft)' : 'var(--ik-card)', lift: s.reward === i ? 'translateY(-6px)' : 'none', pick: () => this.setState({ reward: i }) })),
+      noReward: s.reward === null,
+      news: NEWS[s.news], newsPos: `${s.news + 1} of ${NEWS.length}`, firstNews: s.news === 0, impactOpen: s.impact, toggleImpact: () => this.setState(x => ({ impact: !x.impact })),
+      prevNews: () => this.setState(x => ({ news: Math.max(0, x.news - 1), impact: false })),
+      newsCta: s.news === NEWS.length - 1 ? 'Set styles for week 3' : 'Next',
+      nextNews: () => { if (s.news < NEWS.length - 1) this.setState({ news: s.news + 1, impact: false }); else act.go('style'); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/colors.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/typography.css">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/shape.css">
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+<style>body{margin:0}*{box-sizing:border-box}button,input{font:inherit}a{color:#249DFF}a:hover{color:#43D6E8}@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}</style>
+</helmet>
+<div style="{{ rootVars }}">
+<div ref="{{ rootRef }}" onMouseEnter="{{ hotOn }}" onMouseLeave="{{ hotOff }}" style="--ik-text:light-dark(oklch(0.2 0.03 280), oklch(0.94 0.03 265)); --ik-text-2:light-dark(oklch(0.45 0.025 278), oklch(0.78 0.03 268)); --ik-card:light-dark(oklch(1 0 0), oklch(0.17 0.035 283 / 0.82)); --ik-raised:light-dark(oklch(0.955 0.01 270), oklch(1 0 0 / 0.06)); --ik-line:light-dark(oklch(0.9 0.012 270), oklch(1 0 0 / 0.1)); --ik-line-strong:light-dark(oklch(0.82 0.015 270), oklch(1 0 0 / 0.18)); --ik-track:light-dark(oklch(0.92 0.01 270), oklch(1 0 0 / 0.1)); --ik-acc:var(--client-acc, light-dark(oklch(0.53 0.17 252), #249DFF)); --ik-acc-2:var(--client-acc-2, light-dark(oklch(0.6 0.12 205), #43D6E8)); --ik-acc-soft:var(--client-acc-soft, light-dark(oklch(0.95 0.03 250), oklch(0.62 0.17 250 / 0.18))); --ik-on-acc:light-dark(oklch(1 0 0), #0A081B); --ik-warn:light-dark(oklch(0.55 0.13 62), oklch(0.84 0.14 78)); --ik-pos:light-dark(oklch(0.5 0.11 165), #00F2AD); --ik-neg:light-dark(oklch(0.53 0.17 25), oklch(0.78 0.13 25)); --ik-mat:light-dark(oklch(1 0 0 / 0.92), oklch(0.16 0.035 284 / 0.92)); --ik-scrim:light-dark(oklch(0.2 0.03 280 / 0.3), oklch(0.05 0.02 285 / 0.62)); --text-body:var(--ik-text); --surface-2:var(--ik-raised); --surface-border-strong:var(--ik-line-strong); --grad-brand:var(--client-grad, linear-gradient(135deg,#249DFF,#43D6E8)); color:var(--ik-text); font-family:'Manrope', system-ui, sans-serif; font-size:14px; line-height:1.5; font-variant-numeric:tabular-nums; min-height:980px; position:relative; overflow:hidden; display:flex; flex-direction:column">
+
+<header style="display:flex; align-items:center; gap:20px; padding:16px 32px; flex-wrap:nowrap; white-space:nowrap">
+  <div style="display:flex; align-items:center; gap:12px">
+    <sc-if value="{{ isClient }}" hint-placeholder-val="{{ false }}"><div style="height:28px; padding:0 10px; border:1px dashed var(--ik-line-strong); border-radius:6px; display:flex; align-items:center; font-size:12px; color:var(--ik-text-2)">Halden Group logo</div></sc-if>
+    <span style="font-size:24px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span>
+  </div>
+  <div aria-label="Week 2 of 8" style="display:flex; align-items:center; gap:0; min-width:0; flex-shrink:1">
+    <sc-for list="{{ weeks }}" as="w" hint-placeholder-count="8">
+      <div style="display:flex; align-items:center">
+        <div style="width:{{ w.size }}; height:{{ w.size }}; border-radius:50%; background:{{ w.bg }}; border:{{ w.border }}; box-shadow:{{ w.glow }}; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:{{ w.color }}">{{ w.label }}</div>
+        <sc-if value="{{ w.line }}"><div style="width:12px; height:2px; background:{{ w.lineBg }}"></div></sc-if>
+      </div>
+    </sc-for>
+    <span style="margin-left:14px; font-size:13px; color:var(--ik-text-2)"><b style="color:var(--ik-text)">Week 2</b> · Day 3</span>
+  </div>
+  <div style="flex:1"></div>
+  <div aria-label="{{ capAria }}" style="display:flex; align-items:center; gap:10px">
+    <div style="display:flex; gap:2px">
+      <sc-for list="{{ capSlots }}" as="c" hint-placeholder-count="5">
+        <svg width="18" height="22" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="{{ c.gid }}" x1="0" x2="1"><stop offset="{{ c.stop }}" stop-color="#43D6E8"></stop><stop offset="{{ c.stop }}" stop-color="transparent"></stop></linearGradient></defs><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" fill="{{ c.fill }}" stroke="{{ c.stroke }}" stroke-width="1.5" stroke-linejoin="round"></path></svg>
+      </sc-for>
+    </div>
+    <span style="font-size:13px; color:var(--ik-text-2)"><b style="color:var(--ik-text)">{{ capText }}</b> left</span>
+  </div>
+  <div style="display:flex; align-items:center; gap:8px" aria-label="Leadership score 1,240">
+    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#249DFF"></stop><stop offset="1" stop-color="#00F2AD"></stop></linearGradient></defs><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3" fill="url(#sg)"></polygon></svg>
+    <span style="font-size:17px; font-weight:700">1,240</span>
+  </div>
+  <span style="font-size:13px; color:var(--ik-text-2)"><b style="color:var(--ik-text)">{{ clock }}</b> left</span>
+  <button onClick="{{ openPal }}" aria-label="Search members and actions" style="height:36px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text-2); cursor:pointer; display:flex; align-items:center; gap:8px; font-size:13px" style-hover="border-color:var(--ik-line-strong)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>⌘K
+  </button>
+  <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="{{ finishVariant }}" size="md" onClick="{{ finishDay }}" hint-size="110px,40px">End day 3</x-import>
+</header>
+
+<section aria-label="Waiting on you" style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)) minmax(280px,1.1fr); gap:12px; padding:0 32px 20px">
+  <sc-for list="{{ inbox }}" as="i" hint-placeholder-count="3">
+    <button onClick="{{ i.open }}" style="display:flex; align-items:center; gap:12px; padding:10px 14px 10px 10px; border-radius:16px; border:1px solid var(--ik-line); background:var(--ik-card); backdrop-filter:blur(12px); color:var(--ik-text); cursor:pointer; text-align:left; min-width:0; transition:transform 180ms ease" style-hover="transform:translateY(-2px); border-color:var(--ik-line-strong)">
+      <span style="position:relative; flex:none; width:44px; height:44px; border-radius:12px; overflow:hidden; background:{{ i.iconBg }}; display:flex; align-items:center; justify-content:center; color:#0A081B">
+        <sc-if value="{{ i.hasImg }}"><img src="{{ i.img }}" alt="" style="width:100%; height:100%; object-fit:cover; mix-blend-mode:multiply"></sc-if>
+        <sc-if value="{{ i.isMail }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg></sc-if>
+        <sc-if value="{{ i.isEvent }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg></sc-if>
+      </span>
+      <span style="display:flex; flex-direction:column; min-width:0">
+        <span style="font-size:12px; font-weight:600; color:var(--ik-text-2)">{{ i.tag }}</span>
+        <span style="font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ i.subj }}</span>
+      </span>
+    </button>
+  </sc-for>
+  <div style="display:flex; flex-direction:column; justify-content:center; gap:8px; padding:10px 16px; border-radius:16px; border:1px solid var(--ik-line); background:var(--ik-card); backdrop-filter:blur(12px)">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px"><span style="font-size:12px; font-weight:600; color:var(--ik-text-2)">Quarter target</span><span><b style="font-size:16px">$41,200</b><span style="font-size:12px; color:var(--ik-text-2)"> of $240,000</span></span></div>
+    <div aria-label="Booked $41,200. Week 2 pace is $60,000." style="position:relative; height:8px; border-radius:4px; background:var(--ik-track)">
+      <div style="position:absolute; left:0; top:0; bottom:0; width:17.2%; border-radius:4px; background:linear-gradient(90deg, var(--ik-acc), var(--ik-acc-2))"></div>
+      <div title="Week 2 pace, $60,000" style="position:absolute; left:25%; top:-4px; bottom:-4px; width:2px; border-radius:1px; background:var(--ik-text)"></div>
+    </div>
+  </div>
+</section>
+
+<section aria-label="Your team" style="flex:1; padding:0 32px 32px; display:flex; flex-direction:column; gap:16px">
+  <div style="display:flex; align-items:center; justify-content:space-between; gap:16px">
+    <div style="display:flex; align-items:baseline; gap:16px">
+      <h2 style="margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em">Your team</h2>
+      <span style="font-size:13px; color:var(--ik-text-2)">{{ attentionText }}</span>
+    </div>
+    <div role="radiogroup" aria-label="Sort team" style="display:flex; gap:2px; padding:3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)">
+      <sc-for list="{{ sorts }}" as="s" hint-placeholder-count="2">
+        <button role="radio" aria-checked="{{ s.on }}" onClick="{{ s.pick }}" style="height:30px; padding:0 14px; border:0; border-radius:999px; cursor:pointer; font-size:13px; font-weight:600; background:{{ s.bg }}; color:{{ s.color }}">{{ s.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:16px">
+    <sc-for list="{{ members }}" as="m" hint-placeholder-count="10">
+      <div data-mid="{{ m.id }}" role="button" tabIndex="0" aria-label="{{ m.aria }}" onClick="{{ m.open }}" onKeyDown="{{ m.key }}" style="position:relative; border-radius:20px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid {{ m.border }}; box-shadow:{{ m.glow }}; overflow:hidden; display:flex; flex-direction:column; cursor:pointer; outline-offset:3px; transition:transform 220ms cubic-bezier(.2,.9,.3,1.08), box-shadow 220ms ease" style-hover="transform:translateY(-4px)" style-focus="outline:2px solid var(--ik-acc)">
+        <div style="position:relative; aspect-ratio:1 / 1; background:{{ m.backdrop }}">
+          <img src="{{ m.img }}" alt="" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply; filter:{{ m.filter }}">
+          <div style="position:absolute; inset:0; background:linear-gradient(180deg, oklch(0.13 0.03 285 / 0) 45%, oklch(0.13 0.03 285 / 0.9) 100%)"></div>
+          <div style="position:absolute; top:10px; left:10px; right:10px; display:flex; flex-wrap:wrap-reverse; justify-content:space-between; gap:6px">
+          <sc-if value="{{ m.hasBadge }}">
+            <span style="order:2; display:flex; align-items:center; gap:5px; height:24px; padding:0 10px; border-radius:999px; background:{{ m.badgeBg }}; color:#0A081B; font-size:12px; font-weight:700">{{ m.badge }}</span>
+          </sc-if>
+          <sc-if value="{{ m.hasChip }}">
+            <button onClick="{{ m.chip.open }}" aria-label="{{ m.chip.aria }}" style="order:1; display:flex; align-items:center; gap:5px; height:24px; padding:0 9px; border-radius:999px; border:0; background:oklch(0.13 0.03 285 / 0.82); backdrop-filter:blur(8px); color:#DEE9FF; font-size:12px; font-weight:700; cursor:pointer" style-hover="background:oklch(0.2 0.04 285 / 0.95)"><span style="color:{{ m.chip.color }}">{{ m.chip.arrow }}</span>{{ m.chip.short }}</button>
+          </sc-if>
+          </div>
+          <div style="position:absolute; left:14px; right:14px; bottom:10px; display:flex; flex-direction:column">
+            <span style="font-size:17px; font-weight:700; letter-spacing:-0.01em; color:#fff">{{ m.name }}</span>
+            <span style="font-size:12px; color:#DEE9FF">{{ m.roleName }}</span>
+          </div>
+        </div>
+        <div style="padding:12px 14px 14px; display:flex; flex-direction:column; gap:12px">
+          <div style="display:flex; flex-direction:column; gap:7px">
+            <sc-for list="{{ m.metrics }}" as="c" hint-placeholder-count="4">
+              <div aria-label="{{ c.aria }}" style="display:grid; grid-template-columns:50px minmax(0,1fr) 22px; gap:8px; align-items:center; font-size:12px">
+                <span style="color:var(--ik-text-2)">{{ c.label }}</span>
+                <div style="position:relative; height:6px; border-radius:3px; background:var(--ik-track)"><div style="position:absolute; left:0; top:0; bottom:0; width:{{ c.w }}; border-radius:3px; background:{{ c.barColor }}; transition:width 280ms cubic-bezier(.34,1.4,.64,1)"></div></div>
+                <span style="text-align:right; font-weight:700; color:{{ c.vColor }}">{{ c.v }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div role="radiogroup" aria-label="{{ m.styleAria }}" style="display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:2px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)">
+            <sc-for list="{{ m.styleOpts }}" as="s" hint-placeholder-count="4">
+              <button role="radio" aria-checked="{{ s.on }}" aria-label="{{ s.name }}" title="{{ s.name }}" onClick="{{ s.pick }}" style="height:28px; border:0; border-radius:999px; cursor:pointer; font-size:12px; font-weight:700; background:{{ s.bg }}; color:{{ s.color }}; transition:background 160ms ease">{{ s.k }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<div onClick="{{ closeSel }}" style="position:absolute; inset:0; background:var(--ik-scrim); opacity:{{ scrimOp }}; pointer-events:{{ scrimPe }}; transition:opacity 240ms ease; z-index:10"></div>
+<aside aria-label="Member detail" aria-hidden="{{ drawerHidden }}" style="position:absolute; top:0; right:0; bottom:0; width:440px; background:var(--ik-mat); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border-left:1px solid var(--ik-line-strong); transform:{{ drawerX }}; transition:transform 300ms cubic-bezier(.2,.9,.3,1.04); z-index:11; display:flex; flex-direction:column; overflow:auto">
+  <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}">
+    <div style="position:relative; height:240px; flex:none; background:{{ p.backdrop }}">
+      <img src="{{ p.img }}" alt="{{ p.name }}" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 18%; mix-blend-mode:multiply">
+      <div style="position:absolute; inset:0; background:linear-gradient(180deg, oklch(0.13 0.03 285 / 0) 40%, oklch(0.13 0.03 285 / 0.92) 100%)"></div>
+      <button aria-label="Close" onClick="{{ closeSel }}" style="position:absolute; top:12px; right:12px; width:36px; height:36px; border-radius:50%; border:0; background:oklch(0.13 0.03 285 / 0.7); color:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg></button>
+      <div style="position:absolute; left:24px; right:24px; bottom:16px; display:flex; flex-direction:column; gap:2px">
+        <h3 style="margin:0; font-size:26px; font-weight:700; letter-spacing:-0.02em; color:#fff">{{ p.name }}</h3>
+        <span style="font-size:13px; color:#DEE9FF">{{ p.roleName }}</span>
+      </div>
+    </div>
+    <div style="padding:20px 24px 24px; display:flex; flex-direction:column; gap:20px; flex:1">
+      <div style="position:relative; padding:12px 16px; border-radius:16px 16px 16px 4px; background:var(--ik-raised); border:1px solid var(--ik-line); font-size:14px">“{{ p.quote }}”</div>
+      <sc-if value="{{ hasExplain }}">
+        <section aria-label="Why this changed" style="border-radius:16px; background:var(--ik-acc-soft); border:1px solid var(--ik-line); padding:16px; display:flex; flex-direction:column; gap:10px">
+          <div style="display:flex; align-items:center; justify-content:space-between"><span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">{{ ex.title }}</span><button onClick="{{ closeExplain }}" style="border:0; background:transparent; color:var(--ik-acc); font-size:13px; font-weight:600; cursor:pointer">Hide</button></div>
+          <div style="display:flex; align-items:baseline; gap:8px"><span style="font-size:28px; font-weight:700">{{ ex.from }}</span><span style="color:var(--ik-text-2)">to</span><span style="font-size:28px; font-weight:700; color:{{ ex.dColor }}">{{ ex.to }}</span></div>
+          <span>{{ ex.cause }}</span>
+          <span style="font-size:13px; color:var(--ik-text-2)">{{ ex.rule }}</span>
+          <figure style="margin:0; padding:10px 12px; border-radius:12px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:4px"><blockquote style="margin:0">“{{ ex.ev }}”</blockquote><figcaption style="font-size:12px; color:var(--ik-text-2)">{{ ex.evBy }}</figcaption></figure>
+          <span style="display:flex; align-items:center; gap:6px; font-size:12px; color:var(--ik-text-2)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ik-acc)" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path></svg>{{ ex.judged }}</span>
+        </section>
+      </sc-if>
+      <sc-if value="{{ p.hasChip }}"><sc-if value="{{ noExplain }}">
+        <button onClick="{{ p.chip.open }}" style="align-self:flex-start; display:flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text); font-size:13px; font-weight:600; cursor:pointer"><span style="color:{{ p.chip.color }}">{{ p.chip.arrow }}</span>{{ p.chip.text }}</button>
+      </sc-if></sc-if>
+      <section style="display:flex; flex-direction:column; gap:10px">
+        <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">Your style with {{ p.pron }} this week</span>
+        <div role="radiogroup" aria-label="Leadership style" style="display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)">
+          <sc-for list="{{ p.styleOpts }}" as="s" hint-placeholder-count="4">
+            <button role="radio" aria-checked="{{ s.on }}" onClick="{{ s.pick }}" style="height:38px; border:0; border-radius:999px; cursor:pointer; font-size:13px; font-weight:700; background:{{ s.bg }}; color:{{ s.color }}; transition:background 160ms ease">{{ s.name }}</button>
+          </sc-for>
+        </div>
+        <span style="font-size:13px; color:var(--ik-text-2)">{{ p.styleDesc }}</span>
+      </section>
+      <section style="display:flex; flex-direction:column; gap:10px">
+        <span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">Spend your days</span>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px">
+          <sc-for list="{{ p.actions }}" as="a" hint-placeholder-count="6">
+            <button onClick="{{ a.pick }}" disabled="{{ a.disabled }}" aria-pressed="{{ a.on }}" style="text-align:left; display:flex; flex-direction:column; gap:6px; padding:12px; border-radius:14px; border:1.5px solid {{ a.border }}; background:{{ a.bg }}; color:{{ a.color }}; cursor:{{ a.cursor }}; transition:border-color 160ms ease, transform 160ms ease" style-hover="border-color:var(--ik-line-strong)">
+              <span style="font-weight:700">{{ a.n }}</span>
+              <span style="display:flex; align-items:center; gap:4px; font-size:12px; color:var(--ik-text-2)"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--ik-acc-2)" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>{{ a.sub }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+    <sc-if value="{{ hasPending }}">
+      <div style="position:sticky; bottom:0; padding:16px 24px; border-top:1px solid var(--ik-line); background:var(--ik-mat); display:flex; align-items:center; gap:12px">
+        <div style="flex:1; display:flex; flex-direction:column"><span style="font-weight:700">{{ pend.title }}</span><span style="font-size:12px; color:var(--ik-text-2)">{{ pend.sub }}</span></div>
+        <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="md" onClick="{{ cancelPend }}" hint-size="84px,40px">Cancel</x-import>
+        <x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ confirmPend }}" hint-size="100px,40px">Confirm</x-import>
+      </div>
+    </sc-if>
+  </sc-if>
+</aside>
+
+<sc-if value="{{ pal }}">
+  <div onClick="{{ closePal }}" style="position:absolute; inset:0; background:var(--ik-scrim); display:flex; justify-content:center; align-items:flex-start; padding-top:140px; z-index:20">
+    <div role="dialog" aria-label="Command palette" onClick="{{ stop }}" style="width:560px; max-width:calc(100% - 32px); border-radius:20px; background:var(--ik-mat); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid var(--ik-line-strong); box-shadow:0 24px 64px oklch(0.05 0.03 280 / 0.4); overflow:hidden">
+      <div style="display:flex; align-items:center; gap:12px; padding:0 18px; height:56px; border-bottom:1px solid var(--ik-line); color:var(--ik-text-2)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <input ref="{{ palRef }}" value="{{ q }}" onChange="{{ onQ }}" onKeyDown="{{ onPalKey }}" placeholder="Find a teammate or an action" aria-label="Find a teammate or an action" style="flex:1; border:0; outline:0; background:transparent; color:var(--ik-text); font-size:15px">
+      </div>
+      <div style="max-height:360px; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:2px">
+        <sc-for list="{{ palItems }}" as="it" hint-placeholder-count="6">
+          <button onClick="{{ it.run }}" style="display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:12px; border:0; background:{{ it.bg }}; color:var(--ik-text); cursor:pointer; text-align:left" style-hover="background:var(--ik-raised)">
+            <span style="width:32px; height:32px; border-radius:50%; overflow:hidden; flex:none; background:{{ it.iconBg }}"><sc-if value="{{ it.hasImg }}"><img src="{{ it.img }}" alt="" style="width:100%; height:100%; object-fit:cover; mix-blend-mode:multiply"></sc-if></span>
+            <span style="flex:1; font-weight:600">{{ it.n }}</span>
+            <span style="font-size:12px; color:var(--ik-text-2)">{{ it.sub }}</span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ palEmpty }}"><p style="margin:0; padding:16px 12px; font-size:13px; color:var(--ik-text-2)">No matches. Try a name, or an action like Coach.</p></sc-if>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}">
+  <div role="status" aria-live="polite" style="position:absolute; left:50%; bottom:24px; transform:translateX(-50%); padding:12px 18px; border-radius:999px; background:var(--ik-text); color:light-dark(#fff, #0A081B); font-size:13px; font-weight:600; box-shadow:0 12px 32px oklch(0.05 0.03 280 / 0.35); z-index:30; white-space:nowrap">{{ toast }}</div>
+</sc-if>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark' | 'light'&quot;},&quot;clientTheme&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  K = { skill: 'Skill', morale: 'Morale', result: 'Result', trust: 'Trust' };
+  KEYS = ['skill', 'morale', 'result', 'trust'];
+  STY = [
+    { k: 'D', n: 'Directing', d: 'You set the task and check in closely.' },
+    { k: 'G', n: 'Guiding', d: 'You explain the why and coach as they practise.' },
+    { k: 'P', n: 'Partnering', d: 'You decide together and share ownership.' },
+    { k: 'E', n: 'Entrusting', d: 'You hand over the goal and step back.' }
+  ];
+  ROLES = ['Lead generation', 'Qualification', 'Solution demo', 'Proposal', 'Closing'];
+  M = [
+    { id: 'kent', name: 'Kent Goldberg', pron: 'him', role: 0, skill: 35, morale: 9, result: 37, trust: 30, style: 'D', quote: "Since the territory split, I'm not sure anyone notices what I bring in.",
+      ch: { morale: { d: -6, why: 'request went unanswered', cause: 'Kent asked for 15 minutes on Day 2 and did not hear back.', rule: 'Morale drops 4 to 8 points when a direct request for time goes unanswered for a full day.', ai: false, ev: 'Do you have 15 minutes today? Something has been bothering me.', evBy: 'Kent, chat on Day 2' } } },
+    { id: 'mandy', name: 'Mandy Lobert', pron: 'her', role: 1, skill: 50, morale: 61, result: 53, trust: 55, style: 'D', quote: 'I can qualify faster if I know which accounts matter most.' },
+    { id: 'green', name: 'Green Bell', pron: 'him', role: 2, skill: 89, morale: 63, result: 78, trust: 70, style: 'P', quote: "Ashcroft loved the demo. What's my path to leading a pod?",
+      ch: { result: { d: 4, why: 'moved Ashcroft to proposal', cause: 'Green ran the Ashcroft demo and the account moved to proposal.', rule: 'A stage advance on a key account adds 3 to 5 Result points.', ai: false, ev: 'Ashcroft moved from demo to proposal. Deal value $8,400.', evBy: 'Pipeline log, Day 2' } } },
+    { id: 'jack', name: 'Jack Holt', pron: 'him', role: 4, skill: 92, morale: 83, result: 83, trust: 82, style: 'E', rewarded: true, quote: 'Give me the number and I will get it done.',
+      ch: { result: { d: 2, why: 'thrived on his own', cause: 'Jack handled two closing calls independently.', rule: 'A high skill, high morale member led with Entrusting gains 1 to 3 Result points a day.', ai: false, ev: 'Closed the Brightwell renewal without escalation.', evBy: 'Pipeline log, Day 2' } } },
+    { id: 'ruth', name: 'Ruth Ether', pron: 'her', role: 3, skill: 80, morale: 59, result: 83, trust: 64, style: 'P', quote: 'I would rather send you a draft than talk it through in the meeting.' },
+    { id: 'beth', name: 'Beth Killiney', pron: 'her', role: 0, skill: 25, morale: 57, result: 32, trust: 48, style: 'D', quote: 'Thanks for sitting with me. The script finally makes sense.',
+      ch: { morale: { d: 6, why: '1:1 went well', cause: 'Your 1:1 with Beth gave her clear next steps.', rule: 'A Strong 1:1 with a new member led with Directing adds 4 to 8 Morale points.', ai: true, band: 'Strong', ev: "Let's walk through your first three calls together tomorrow. I'll sit in on the second one.", evBy: 'You, 1:1 with Beth on Day 2' } } },
+    { id: 'derick', name: 'Derick Kaynes', pron: 'him', role: 4, skill: 70, morale: 85, result: 81, trust: 77, style: 'E', quote: "I've been helping Beth with her calls. Happy to do more." },
+    { id: 'lowe', name: 'Lowe Rex', pron: 'him', role: 2, skill: 80, morale: 45, result: 77, trust: 52, style: 'P', quote: 'That comment in the meeting stung a bit, honestly.',
+      ch: { trust: { d: -3, why: 'feedback felt public', cause: "You raised the length of Lowe's demos in front of the team.", rule: 'Corrective feedback in a group setting lowers Trust by 2 to 4 points.', ai: true, band: 'Weak', ev: "Lowe, your demos are running long. Let's fix that before Friday.", evBy: 'You, team meeting on Day 2' } } },
+    { id: 'peter', name: 'Peter Higgins', pron: 'him', role: 1, skill: 19, morale: 20, result: 26, trust: 24, style: 'D', away: 'In training', quote: 'I asked for help once. I did not want to ask again.',
+      ch: { skill: { d: 3, why: 'training day 1 of 2', cause: 'Peter started product training on Day 2.', rule: 'Training adds 2 to 4 Skill points a day. The member is away meanwhile.', ai: false, ev: 'Product fundamentals, module 1 completed.', evBy: 'Training log, Day 2' } } },
+    { id: 'justin', name: 'Justin Keel', pron: 'him', role: 3, skill: 26, morale: 84, result: 37, trust: 60, style: 'E', quote: 'Proposals are going great. Well, mostly.' }
+  ];
+  ACT = [
+    { k: 'f2f', n: 'Meet face to face', c: 0.5, verb: '1:1 with' },
+    { k: 'coach', n: 'Coach', c: 1, verb: 'Coach' },
+    { k: 'feedback', n: 'Give feedback', c: 0.5, verb: 'Feedback for' },
+    { k: 'goals', n: 'Set goals', c: 0.5, verb: 'Goals with' },
+    { k: 'reward', n: 'Reward', c: 0.5, verb: 'Reward' },
+    { k: 'train', n: 'Send for training', c: 2, verb: 'Training for' },
+    { k: 'assess', n: 'Assess', c: 0.5, verb: 'Assess' },
+    { k: 'reassign', n: 'Reassign role', c: 0.5, verb: 'Reassign' }
+  ];
+  TEAM = [{ k: 'meet', n: 'Meet the team', c: 1 }, { k: 'energize', n: 'Energize the team', c: 0.5 }, { k: 'email', n: 'Send email', c: 0 }, { k: 'hire', n: 'Hire member', c: 1 }];
+
+  state = { sel: null, explain: null, pending: null, sort: 'attention', capacity: 2.5, planned: [], toast: null, pal: false, q: '', secs: 2292,
+    styles: Object.fromEntries(this.M.map(m => [m.id, m.style])) };
+  rootRef = React.createRef(); palRef = React.createRef(); hot = false;
+
+  componentDidMount() {
+    this.tick = setInterval(() => this.setState(s => ({ secs: Math.max(0, s.secs - 1) })), 1000);
+    this.onKey = e => {
+      if (!this.hot) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); this.setState({ pal: true, q: '' }); }
+      else if (e.key === 'Escape') { if (this.state.pal) this.setState({ pal: false }); else this.setState({ sel: null, explain: null, pending: null }); }
+    };
+    window.addEventListener('keydown', this.onKey);
+  }
+  componentWillUnmount() { clearInterval(this.tick); clearTimeout(this.tt); window.removeEventListener('keydown', this.onKey); }
+  componentDidUpdate(pp, ps) { if (this.state.pal && !ps.pal && this.palRef.current) this.palRef.current.focus(); }
+  reduced() { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+  say(t) { clearTimeout(this.tt); this.setState({ toast: t }); this.tt = setTimeout(() => this.setState({ toast: null }), 3200); }
+  fmt(d) { if (d === 0) return 'No time'; const w = Math.floor(d), h = d % 1 ? '½' : ''; if (!w) return '½ day'; return w + h + (d === 1 ? ' day' : ' days'); }
+  first(m) { return m.name.split(' ')[0]; }
+  low(m) { return this.KEYS.filter(k => m[k] < 30); }
+  backdrop(m) { return m.away ? 'linear-gradient(160deg,#E4E6F0,#C9CEDF)' : this.low(m).length ? 'linear-gradient(160deg,#FFE7C2,#F7C17E)' : 'linear-gradient(160deg,#DEE9FF,#9FDCEB)'; }
+  chip(m) {
+    const e = Object.entries(m.ch || {})[0]; if (!e) return null; const [k, c] = e;
+    return { short: `${this.K[k]} ${c.d > 0 ? '+' : '−'}${Math.abs(c.d)}`, text: `${this.K[k]} ${c.d > 0 ? '+' : '−'}${Math.abs(c.d)}, ${c.why}`, aria: `${this.K[k]} changed by ${c.d}, ${c.why}. Show why.`,
+      arrow: c.d > 0 ? '▲' : '▼', color: c.d > 0 ? '#00F2AD' : 'oklch(0.78 0.13 25)',
+      open: ev => { ev && ev.stopPropagation(); this.setState({ sel: m.id, explain: k, pending: null }); } };
+  }
+  setSort(s) {
+    const root = this.rootRef.current, first = {};
+    if (root) root.querySelectorAll('[data-mid]').forEach(el => first[el.dataset.mid] = el.getBoundingClientRect());
+    this.setState({ sort: s }, () => {
+      if (!root || this.reduced()) return;
+      root.querySelectorAll('[data-mid]').forEach(el => {
+        const a = first[el.dataset.mid], b = el.getBoundingClientRect(); if (!a) return;
+        const dx = a.left - b.left, dy = a.top - b.top;
+        if (dx || dy) el.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.2,.9,.3,1.08)' });
+      });
+    });
+  }
+  styleOpts(m) {
+    const cur = this.state.styles[m.id];
+    return this.STY.map(s => ({ k: s.k, name: s.n, on: cur === s.k,
+      bg: cur === s.k ? 'var(--grad-brand)' : 'transparent', color: cur === s.k ? '#0A081B' : 'var(--ik-text-2)',
+      pick: e => { e && e.stopPropagation(); if (cur !== s.k) { this.setState(st => ({ styles: { ...st.styles, [m.id]: s.k } })); this.say(`You'll lead ${this.first(m)} with ${s.n} this week.`); } } }));
+  }
+  tile(a, m) {
+    const st = this.state, pend = st.pending && st.pending.k === a.k && st.pending.who === m.id;
+    const planned = st.planned.some(p => p.k === a.k && p.who === m.id);
+    let sub = this.fmt(a.c), disabled = false;
+    if (planned) { sub = 'Planned today'; disabled = true; }
+    else if (m.away && a.k !== 'feedback') { sub = 'Away in training'; disabled = true; }
+    else if (a.k === 'reward' && m.rewarded) { sub = 'Used this week'; disabled = true; }
+    else if (a.c > st.capacity) { sub = `Needs ${this.fmt(a.c)}`; disabled = true; }
+    return { n: a.n, sub, disabled, on: pend, bg: pend ? 'var(--ik-acc-soft)' : 'var(--ik-raised)',
+      border: pend ? 'var(--ik-acc)' : 'transparent', color: disabled ? 'var(--ik-text-2)' : 'var(--ik-text)', cursor: disabled ? 'default' : 'pointer',
+      pick: () => !disabled && this.setState({ pending: pend ? null : { k: a.k, who: m.id, a } }) };
+  }
+  confirm() {
+    const p = this.state.pending; if (!p) return;
+    const m = this.M.find(x => x.id === p.who), label = `${p.a.verb} ${this.first(m)}`;
+    this.setState(s => ({ capacity: s.capacity - p.a.c, pending: null, planned: [...s.planned, { k: p.k, who: p.who }] }));
+    this.say(`${label} is set for today. You'll see how it lands at day end.`);
+  }
+  renderVals() {
+    const st = this.state, dark = (this.props.theme ?? 'dark') === 'dark', client = !!this.props.clientTheme;
+    const rootVars = { colorScheme: dark ? 'dark' : 'light',
+      background: dark ? '#0A081B url(assets/bg-1.png) center / cover no-repeat' : 'radial-gradient(1200px 600px at 85% 100%, oklch(0.9 0.06 230), transparent 70%), oklch(0.97 0.012 270)' };
+    if (client) Object.assign(rootVars, { '--client-acc': 'light-dark(oklch(0.5 0.17 0), oklch(0.72 0.17 0))', '--client-acc-2': 'light-dark(oklch(0.58 0.15 30), oklch(0.8 0.12 30))',
+      '--client-acc-soft': 'light-dark(oklch(0.95 0.025 0), oklch(0.6 0.18 0 / 0.18))', '--client-grad': 'linear-gradient(135deg, oklch(0.66 0.19 2), oklch(0.78 0.13 30))' });
+    const mn = m => Math.min(...this.KEYS.map(k => m[k]));
+    const list = [...this.M]; if (st.sort === 'attention') list.sort((a, b) => mn(a) - mn(b)); else list.sort((a, b) => a.role - b.role || a.name.localeCompare(b.name));
+    const members = list.map(m => {
+      const lows = this.low(m), on = st.sel === m.id, ch = this.chip(m);
+      return { id: m.id, name: m.name, roleName: this.ROLES[m.role], img: `assets/npc/${m.id}.png`, backdrop: this.backdrop(m),
+        filter: m.away ? 'grayscale(1) contrast(.9)' : 'none',
+        hasBadge: !!m.away || lows.length > 0, badge: m.away ? 'In training' : 'Needs you', badgeBg: m.away ? '#DEE9FF' : 'oklch(0.84 0.14 78)',
+        border: on ? 'var(--ik-acc)' : lows.length && !m.away ? 'oklch(0.84 0.14 78 / 0.7)' : 'var(--ik-line)',
+        glow: on ? '0 0 0 2px var(--ik-acc), 0 12px 40px oklch(0.62 0.17 250 / 0.35)' : lows.length && !m.away ? '0 10px 36px oklch(0.84 0.14 78 / 0.22)' : '0 8px 24px oklch(0.05 0.03 280 / 0.18)',
+        hasChip: !!ch, chip: ch || {},
+        metrics: this.KEYS.map(k => { const v = m[k], lo = v < 30; return { label: this.K[k], v, w: v + '%', aria: `${this.K[k]} ${v}${lo ? ', low' : ''}`,
+          barColor: lo ? 'var(--ik-warn)' : 'linear-gradient(90deg, var(--ik-acc), var(--ik-acc-2))', vColor: lo ? 'var(--ik-warn)' : 'var(--ik-text)' }; }),
+        styleOpts: this.styleOpts(m), styleAria: `Leadership style for ${m.name}`,
+        aria: `${m.name}, ${this.ROLES[m.role]}. Skill ${m.skill}, Morale ${m.morale}, Result ${m.result}, Trust ${m.trust}.`,
+        open: () => this.setState({ sel: m.id, explain: null, pending: null }),
+        key: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.setState({ sel: m.id, explain: null, pending: null }); } } };
+    });
+    const sm = this.M.find(m => m.id === st.sel);
+    let p = {}, ex = {}, pend = {};
+    if (sm) {
+      const cur = this.STY.find(s => s.k === st.styles[sm.id]), ch = this.chip(sm);
+      p = { name: sm.name, pron: sm.pron, img: `assets/npc/${sm.id}.png`, backdrop: this.backdrop(sm), roleName: this.ROLES[sm.role] + (sm.away ? ', in training until Day 4' : ''),
+        quote: sm.quote, hasChip: !!ch, chip: ch || {}, styleOpts: this.styleOpts(sm), styleDesc: cur.d, actions: this.ACT.map(a => this.tile(a, sm)) };
+      const ec = st.explain && sm.ch && sm.ch[st.explain];
+      if (ec) ex = { title: `Why ${this.K[st.explain]} changed`, from: sm[st.explain] - ec.d, to: sm[st.explain], dColor: ec.d > 0 ? 'var(--ik-pos)' : 'var(--ik-neg)',
+        cause: ec.cause, rule: ec.rule, ev: ec.ev, evBy: ec.evBy, judged: ec.ai ? `AI rated your words ${ec.band}. The rule set the change.` : 'Authored rule. No AI judgement.' };
+      if (st.pending) { const a = st.pending.a; pend = { title: `${a.verb} ${this.first(sm)}`, sub: `Uses ${this.fmt(a.c)}. ${this.fmt(st.capacity - a.c)} left after.` }; }
+    }
+    const cap = st.capacity, q = st.q.trim().toLowerCase();
+    let palItems = [
+      ...this.M.map(m => ({ n: m.name, sub: this.ROLES[m.role], hasImg: true, img: `assets/npc/${m.id}.png`, iconBg: this.backdrop(m), run: () => this.setState({ pal: false, sel: m.id, explain: null, pending: null }) })),
+      ...this.TEAM.map(a => ({ n: a.n, sub: this.fmt(a.c), hasImg: false, img: '', iconBg: 'var(--grad-brand)', run: () => { this.setState({ pal: false }); this.say(`${a.n} opens in the next round of screens.`); } }))
+    ].filter(i => !q || i.n.toLowerCase().includes(q)).slice(0, 10).map((i, x) => ({ ...i, bg: x === 0 && q ? 'var(--ik-raised)' : 'transparent' }));
+    const need = this.M.filter(m => this.low(m).length && !m.away).length;
+    return {
+      rootVars, rootRef: this.rootRef, palRef: this.palRef, isClient: client,
+      hotOn: () => { this.hot = true; }, hotOff: () => { this.hot = false; },
+      weeks: [0, 1, 2, 3, 4, 5, 6, 7].map(i => ({ label: i === 1 ? '2' : i < 1 ? '✓' : '', size: i === 1 ? '28px' : '18px',
+        bg: i < 1 ? 'var(--ik-acc)' : i === 1 ? 'var(--grad-brand)' : 'transparent', border: i > 1 ? '1.5px solid var(--ik-line-strong)' : '0',
+        glow: i === 1 ? '0 0 18px oklch(0.75 0.14 220 / 0.6)' : 'none', color: '#0A081B', line: i < 7, lineBg: i < 1 ? 'var(--ik-acc)' : 'var(--ik-line-strong)' })),
+      capSlots: [0, 1, 2, 3, 4].map(i => { const f = cap >= i + 1 ? 1 : cap > i ? 0.5 : 0; return { gid: 'cap' + i, stop: f === 0.5 ? '0.5' : '1',
+        fill: f === 1 ? '#43D6E8' : f === 0.5 ? `url(#cap${i})` : 'transparent', stroke: f ? '#43D6E8' : 'var(--ik-line-strong)' }; }),
+      capText: cap ? this.fmt(cap) : 'No days', capAria: `${cap} of 5 days left this week`,
+      clock: `${Math.floor(st.secs / 60)}:${String(st.secs % 60).padStart(2, '0')}`,
+      finishVariant: st.pending ? 'secondary' : 'primary',
+      finishDay: () => this.say('Day end arrives with the week 1 prototype.'),
+      openPal: () => { this.hot = true; this.setState({ pal: true, q: '' }); }, closePal: () => this.setState({ pal: false }), stop: e => e.stopPropagation(),
+      q: st.q, onQ: e => this.setState({ q: e.target.value }),
+      onPalKey: e => { if (e.key === 'Enter' && palItems[0]) palItems[0].run(); if (e.key === 'Escape') this.setState({ pal: false }); },
+      pal: st.pal, palItems, palEmpty: !palItems.length,
+      inbox: [
+        { tag: 'Kent, chat', subj: 'Do you have 15 minutes today?', hasImg: true, img: 'assets/npc/kent.png', iconBg: 'linear-gradient(160deg,#FFE7C2,#F7C17E)', isMail: false, isEvent: false },
+        { tag: 'Priya, sponsor email', subj: 'Pipeline review moved to Friday', hasImg: false, img: '', iconBg: 'var(--grad-brand)', isMail: true, isEvent: false },
+        { tag: 'Event', subj: 'Ashcroft wants 12% off to sign', hasImg: false, img: '', iconBg: 'linear-gradient(135deg,#43D6E8,#00F2AD)', isMail: false, isEvent: true }
+      ].map(i => ({ ...i, open: () => this.say('Live interactions open in the next round.') })),
+      attentionText: `${need} need you today`,
+      sorts: [['attention', 'Needs you first'], ['role', 'By funnel role']].map(([k, label]) => ({ label, on: st.sort === k,
+        bg: st.sort === k ? 'var(--grad-brand)' : 'transparent', color: st.sort === k ? '#0A081B' : 'var(--ik-text-2)', pick: () => st.sort !== k && this.setSort(k) })),
+      members, hasSel: !!sm, p, ex, hasExplain: !!ex.title, noExplain: !ex.title,
+      drawerX: sm ? 'translateX(0)' : 'translateX(105%)', drawerHidden: !sm, scrimOp: sm ? 1 : 0, scrimPe: sm ? 'auto' : 'none',
+      closeSel: () => this.setState({ sel: null, explain: null, pending: null }), closeExplain: () => this.setState({ explain: null }),
+      hasPending: !!st.pending, pend, cancelPend: () => this.setState({ pending: null }), confirmPend: () => this.confirm(),
+      hasToast: !!st.toast, toast: st.toast || ''
+    };
+  }
+}
+</script>
+</body>
+</html>

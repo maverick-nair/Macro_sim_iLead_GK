@@ -1,0 +1,12 @@
+:root{
+--font-sans:'Manrope',system-ui,sans-serif; /* sole brand typeface — no secondary permitted */
+/* Type scale — Genie Brand Guidebook §03 */
+--type-display:800 54px/1.05 var(--font-sans); --track-display:-0.03em; /* hero headlines */
+--type-h1:800 36px/1.1 var(--font-sans);      --track-h1:-0.02em;      /* page titles */
+--type-h2:700 28px/1.15 var(--font-sans);     --track-h2:-0.015em;     /* section headings */
+--type-h3:700 20px/1.2 var(--font-sans);      --track-h3:-0.01em;      /* sub-sections, card headers */
+--type-body-lg:400 17px/1.7 var(--font-sans);                          /* intros, pull quotes */
+--type-body:400 15px/1.65 var(--font-sans);                            /* default body */
+--type-caption:500 12px/1.5 var(--font-sans);                          /* metadata, timestamps */
+--type-label:700 11px/1.4 var(--font-sans);   --track-label:0.12em;    /* eyebrows — uppercase */
+}

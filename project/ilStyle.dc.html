@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+</helmet>
+<div style="flex:1; min-height:{{ app.minH }}; display:flex; flex-direction:column; gap:18px; padding:20px 32px 32px">
+  <header style="display:flex; align-items:center; gap:16px">
+    <span style="font-size:22px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent">iLead</span>
+    <span style="font-size:13px; color:var(--ik-text-2); white-space:nowrap"><b style="color:var(--ik-text)">Week {{ app.week }}</b> of 8 · Style setting</span>
+    <span style="flex:1"></span>
+    <div role="radiogroup" aria-label="View" style="display:flex; gap:2px; padding:3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)">
+      <sc-for list="{{ views }}" as="v" hint-placeholder-count="2"><button role="radio" aria-checked="{{ v.on }}" onClick="{{ v.pick }}" style="height:32px; padding:0 14px; border:0; border-radius:999px; font-size:13px; font-weight:700; cursor:pointer; background:{{ v.bg }}; color:{{ v.color }}">{{ v.n }}</button></sc-for>
+    </div>
+    <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ toSummary }}" hint-size="160px,40px">Review and confirm</x-import></span>
+  </header>
+
+  <div style="display:grid; grid-template-columns:minmax(0,1.1fr) repeat(4,minmax(0,1fr)); gap:12px">
+    <div style="display:flex; gap:12px; align-items:center; padding:12px 14px; border-radius:18px; background:var(--ik-card); border:1px solid var(--ik-line)">
+      <span style="flex:none; width:44px; height:44px; border-radius:50%; background:var(--grad-brand); color:#0A081B; font-weight:700; display:flex; align-items:center; justify-content:center">PN</span>
+      <span style="font-size:14px; text-wrap:pretty">“To each their own. Your people need different things from you this week.”</span>
+    </div>
+    <sc-for list="{{ defs }}" as="df" hint-placeholder-count="4">
+      <div style="padding:12px 14px; border-radius:18px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; gap:10px; align-items:flex-start">
+        <span style="flex:none; width:30px; height:30px; border-radius:50%; background:var(--grad-brand); color:#0A081B; font-weight:700; display:flex; align-items:center; justify-content:center">{{ df.k }}</span>
+        <span style="display:flex; flex-direction:column"><b style="font-size:14px">{{ df.n }}</b><span style="font-size:12px; color:var(--ik-text-2); line-height:1.4">{{ df.d }}</span></span>
+      </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isCards }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:14px">
+      <sc-for list="{{ rows }}" as="m" hint-placeholder-count="10">
+        <div style="border-radius:20px; background:var(--ik-card); backdrop-filter:blur(12px); border:2px solid {{ m.border }}; display:flex; flex-direction:column">
+          <div style="position:relative; height:120px; border-radius:18px 18px 0 0; overflow:hidden; background:{{ m.backdrop }}"><img src="{{ m.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center 12%; mix-blend-mode:multiply; filter:{{ m.filter }}"><div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 50%, oklch(0.13 0.03 285 / 0.8))"></div><div style="position:absolute; left:12px; bottom:8px; color:#fff; display:flex; flex-direction:column"><b style="font-size:15px">{{ m.name }}</b><span style="font-size:12px">{{ m.stage }}</span></div></div>
+          <div style="padding:10px 12px 12px; display:flex; flex-direction:column; gap:10px">
+            <span style="font-size:12px; color:var(--ik-text-2)">Skill <b style="color:var(--ik-text)">{{ m.skill }}</b> · Morale <b style="color:var(--ik-text)">{{ m.morale }}</b> · Trust <b style="color:var(--ik-text)">{{ m.trust }}</b></span>
+            <span style="align-self:flex-start; display:flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:999px; background:{{ m.lastBg }}; font-size:12px; font-weight:600"><span style="color:{{ m.lastC }}">{{ m.lastArrow }}</span>Last week: {{ m.lastN }}</span>
+            <div role="radiogroup" aria-label="{{ m.aria }}" style="display:grid; grid-template-columns:repeat(4,1fr); gap:2px; padding:2px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)">
+              <sc-for list="{{ m.seg }}" as="s" hint-placeholder-count="4">
+                <div style="position:relative">
+                  <button role="radio" aria-checked="{{ s.on }}" aria-label="{{ s.aria }}" onClick="{{ s.pick }}" onMouseEnter="{{ s.tipOn }}" onMouseLeave="{{ s.tipOff }}" onFocus="{{ s.tipOn }}" onBlur="{{ s.tipOff }}" style="width:100%; height:30px; border:0; border-radius:999px; cursor:pointer; font-size:13px; font-weight:700; background:{{ s.bg }}; color:{{ s.color }}; transition:background 160ms ease">{{ s.k }}</button>
+                  <sc-if value="{{ s.tip }}"><div role="tooltip" style="position:absolute; bottom:calc(100% + 10px); left:{{ s.tipLeft }}; transform:translateX({{ s.tipShift }}); width:200px; padding:10px 12px; border-radius:12px; background:var(--ik-text); color:light-dark(#fff, #0A081B); z-index:45; pointer-events:none; display:flex; flex-direction:column; gap:2px"><b style="font-size:13px">{{ s.name }}</b><span style="font-size:12px; line-height:1.4">{{ s.desc }}</span></div></sc-if>
+                </div>
+              </sc-for>
+            </div>
+            <span style="font-size:12px; color:var(--ik-text-2); min-height:34px; text-wrap:pretty"><b style="color:var(--ik-text)">{{ m.curN }}.</b> {{ m.note }}</span>
+            <sc-if value="{{ m.noting }}"><input value="{{ m.rationale }}" onChange="{{ m.onNote }}" placeholder="Why this style? Optional" aria-label="{{ m.noteAria }}" style="height:34px; padding:0 10px; border-radius:10px; border:1px solid var(--ik-line-strong); background:var(--ik-raised); color:var(--ik-text); font-size:13px"></sc-if>
+            <sc-if value="{{ m.notNoting }}"><button onClick="{{ m.addNote }}" style="align-self:flex-start; border:0; background:transparent; padding:0; color:var(--ik-acc-2); font-size:12px; font-weight:700; cursor:pointer">{{ m.noteCta }}</button></sc-if>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isList }}">
+    <div role="table" aria-label="Styles for every team member" style="border-radius:22px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); overflow:hidden">
+      <div role="row" style="display:grid; grid-template-columns:minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr); gap:12px; padding:12px 18px; font-size:12px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ik-text-2); border-bottom:1px solid var(--ik-line)">
+        <span>Member</span><span>Skill · Morale · Trust</span><span>Last week</span><span style="text-align:center">Directing</span><span style="text-align:center">Guiding</span><span style="text-align:center">Partnering</span><span style="text-align:center">Entrusting</span><span>Your reason</span>
+      </div>
+      <sc-for list="{{ rows }}" as="m" hint-placeholder-count="10">
+        <div role="row" style="display:grid; grid-template-columns:minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr); gap:12px; align-items:center; padding:10px 18px; border-bottom:1px solid var(--ik-line)">
+          <div style="display:flex; gap:10px; align-items:center"><span style="width:40px; height:40px; flex:none; border-radius:50%; overflow:hidden; background:{{ m.backdrop }}"><img src="{{ m.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></span><span style="display:flex; flex-direction:column"><b style="font-size:14px">{{ m.name }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ m.stage }}</span></span></div>
+          <span style="font-size:13px">{{ m.skill }} · {{ m.morale }} · {{ m.trust }}</span>
+          <span style="font-size:13px"><span style="color:{{ m.lastC }}">{{ m.lastArrow }}</span> {{ m.lastN }}, {{ m.lastWord }}</span>
+          <sc-for list="{{ m.seg }}" as="s" hint-placeholder-count="4">
+            <label style="display:flex; justify-content:center; cursor:pointer"><input type="radio" name="{{ m.radioName }}" checked="{{ s.on }}" onChange="{{ s.pick }}" aria-label="{{ s.aria }}" style="width:20px; height:20px; accent-color:#249DFF; cursor:pointer"></label>
+          </sc-for>
+          <span style="font-size:13px; color:var(--ik-text-2)">{{ m.rationaleShow }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isSummary }}">
+    <div style="position:absolute; inset:0; z-index:40; background:var(--ik-scrim); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px">
+      <div role="dialog" aria-label="Confirm styles" style="width:720px; max-width:100%; border-radius:26px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); padding:26px; display:flex; flex-direction:column; gap:16px; animation:ilIn 260ms ease">
+        <h2 style="margin:0; font-size:24px; font-weight:700">Your styles for week {{ app.week }}</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px 24px">
+          <sc-for list="{{ rows }}" as="m" hint-placeholder-count="10">
+            <div style="display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--ik-line)"><span style="width:32px; height:32px; flex:none; border-radius:50%; overflow:hidden; background:{{ m.backdrop }}"><img src="{{ m.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></span><b style="flex:1; font-size:14px">{{ m.name }}</b><span style="font-size:13px">{{ m.curN }}</span><sc-if value="{{ m.changed }}"><span style="font-size:12px; font-weight:700; color:var(--ik-acc-2)">Changed</span></sc-if></div>
+          </sc-for>
+        </div>
+        <span style="font-size:13px; color:var(--ik-text-2)">Styles take effect straight away. Peter's applies when he is back from training.</span>
+        <div style="display:flex; justify-content:flex-end; gap:10px"><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="lg" onClick="{{ back }}" hint-size="110px,48px">Go back</x-import></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="lg" onClick="{{ confirm }}" hint-size="160px,48px">Confirm styles</x-import></span></div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { view: 'cards', summary: false, tip: null, noting: null, notes: { kent: 'Kent is experienced but hurt. Less telling, more listening.' } };
+  componentDidMount() { const v = this.props.view; if (v === 'list') this.setState({ view: 'list' }); if (v === 'summary') this.setState({ summary: true }); if (v === 'tooltip') this.setState({ tip: 'kent:P' }); }
+  renderVals() {
+    const { d: D, app, act } = this.props, s = this.state;
+    if (!D || !app.members) return {};
+    const rows = app.members.map(m => {
+      const cur = D.styles.find(x => x.k === m.style), last = D.styles.find(x => x.k === m.last), pos = m.lastReact === 'pos';
+      return { name: m.name, img: m.img, stage: D.stages[m.stage].n, skill: m.skill, morale: m.morale, trust: m.trust,
+        backdrop: m.away ? 'linear-gradient(160deg,#E4E6F0,#C9CEDF)' : 'linear-gradient(160deg,#DEE9FF,#9FDCEB)', filter: m.away ? 'grayscale(1)' : 'none',
+        border: m.style !== m.last ? 'var(--ik-acc-2)' : 'var(--ik-line)', changed: m.style !== m.last,
+        lastN: last.n, lastArrow: pos ? '▲' : '▼', lastC: pos ? 'var(--ik-pos)' : 'var(--ik-neg)', lastBg: pos ? 'var(--ik-pos-soft)' : 'var(--ik-neg-soft)', lastWord: pos ? 'reacted well' : 'reacted badly',
+        curN: cur.n, note: m.away ? 'Applies when he is back from training.' : cur.d, aria: `Style for ${m.name}`, radioName: 'st-' + m.id,
+        seg: D.styles.map((st, i) => ({ k: st.k, name: st.n, desc: st.d, on: m.style === st.k, aria: `${st.n} for ${m.name}`, tip: s.tip === m.id + ':' + st.k,
+          tipLeft: i < 2 ? '0' : '100%', tipShift: i < 2 ? '0' : '-100%', bg: m.style === st.k ? 'var(--grad-brand)' : 'transparent', color: m.style === st.k ? '#0A081B' : 'var(--ik-text-2)',
+          tipOn: () => this.setState({ tip: m.id + ':' + st.k }), tipOff: () => this.setState(x => x.tip === m.id + ':' + st.k ? { tip: null } : null),
+          pick: () => act.setStyle(m.id, st.k) })),
+        noting: s.noting === m.id, notNoting: s.noting !== m.id, rationale: s.notes[m.id] || '', rationaleShow: s.notes[m.id] || 'No note',
+        noteCta: s.notes[m.id] ? 'Note: ' + s.notes[m.id].slice(0, 28) + '…' : 'Add a reason', noteAria: `Reason for ${m.name}`,
+        addNote: () => this.setState({ noting: m.id }), onNote: e => { const v = e.target.value; this.setState(x => ({ notes: { ...x.notes, [m.id]: v } })); } };
+    });
+    return {
+      app, rows, defs: D.styles,
+      views: [['cards', 'Cards'], ['list', 'List']].map(([k, n]) => ({ n, on: s.view === k, bg: s.view === k ? 'var(--grad-brand)' : 'transparent', color: s.view === k ? '#0A081B' : 'var(--ik-text-2)', pick: () => this.setState({ view: k }) })),
+      isCards: s.view === 'cards', isList: s.view === 'list', isSummary: s.summary,
+      toSummary: () => this.setState({ summary: true }), back: () => this.setState({ summary: false }),
+      confirm: () => { act.go('board'); act.say('Priya: “Good. Let us see how the team takes it.” Styles are set for the week.'); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<script src="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/_ds_bundle.js"></script>
+</helmet>
+<div style="flex:1; min-height:{{ app.minH }}; display:flex; flex-direction:column">
+  <header style="display:flex; align-items:center; gap:{{ hGap }}; padding:{{ hPad }}; border-bottom:1px solid var(--ik-line); background:var(--ik-mat); backdrop-filter:blur(16px)">
+    <span aria-hidden="true" style="width:36px; height:36px; flex:none; border-radius:12px; background:var(--grad-brand); color:#0A081B; display:flex; align-items:center; justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg></span>
+    <div style="display:flex; flex-direction:column; min-width:0; flex:1"><b style="font-size:{{ titleSize }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">{{ title }}</b><span style="font-size:12px; color:var(--ik-text-2)">{{ sub }}</span></div>
+    <button onClick="{{ pause }}" aria-label="Pause" style="display:flex; align-items:center; gap:6px; height:34px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text); font-size:13px; font-weight:700; cursor:pointer"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"></rect><rect x="14" y="4" width="5" height="16" rx="1"></rect></svg>{{ timer }}</button>
+    <sc-if value="{{ isDesk }}">
+      <span style="font-size:12px; color:var(--ik-text-2)">Main clock paused</span>
+      <button onClick="{{ useHint }}" disabled="{{ hintUsed }}" style="height:34px; padding:0 14px; border-radius:999px; border:1px solid var(--ik-line); background:transparent; color:{{ hintC }}; font-size:13px; font-weight:700; cursor:pointer">{{ hintLabel }}</button>
+      <div role="radiogroup" aria-label="Input mode" style="display:flex; gap:2px; padding:3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)"><sc-for list="{{ modes }}" as="md" hint-placeholder-count="2"><button role="radio" aria-checked="{{ md.on }}" onClick="{{ md.pick }}" style="height:28px; padding:0 12px; border:0; border-radius:999px; font-size:12px; font-weight:700; cursor:pointer; background:{{ md.bg }}; color:{{ md.color }}">{{ md.n }}</button></sc-for></div>
+    </sc-if>
+    <span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="{{ endVariant }}" size="md" onClick="{{ end }}" hint-size="120px,40px">{{ endLabel }}</x-import></span>
+  </header>
+
+  <sc-if value="{{ offline }}"><div role="alert" style="padding:10px 24px; background:var(--ik-warn-soft); border-bottom:1px solid var(--ik-warn); font-size:13px"><b>Connection lost.</b> Your draft is saved on this device. We will send it as soon as you are back online.</div></sc-if>
+
+  <div style="flex:1; display:grid; grid-template-columns:{{ cols }}; gap:{{ bodyGap }}; padding:{{ bodyPad }}; min-height:0">
+    <sc-if value="{{ showBrief }}">
+      <aside aria-label="Your brief" style="border-radius:22px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); padding:18px; display:flex; flex-direction:column; gap:14px; align-self:start">
+        <div style="display:flex; justify-content:space-between; align-items:center"><span style="font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)">Your brief</span><button onClick="{{ toggleBrief }}" style="border:0; background:transparent; color:var(--ik-acc-2); font-size:12px; font-weight:700; cursor:pointer">Hide</button></div>
+        <div style="display:flex; flex-direction:column; gap:4px"><b style="font-size:12px; color:var(--ik-text-2)">Your goal</b><span style="font-size:14px; font-weight:600; text-wrap:pretty">{{ brief.goal }}</span></div>
+        <sc-for list="{{ brief.rows }}" as="br" hint-placeholder-count="4"><div style="display:flex; flex-direction:column; gap:2px"><b style="font-size:12px; color:var(--ik-text-2)">{{ br.k }}</b><span style="font-size:13px; text-wrap:pretty">{{ br.v }}</span></div></sc-for>
+        <sc-if value="{{ hintOpen }}"><div role="note" style="padding:12px; border-radius:14px; background:var(--ik-acc-soft); border:1px solid var(--ik-acc); font-size:13px; display:flex; flex-direction:column; gap:4px; animation:ilIn 240ms ease"><b>Coaching tip</b><span>{{ brief.hint }}</span></div></sc-if>
+      </aside>
+    </sc-if>
+    <sc-if value="{{ briefCollapsed }}"><button onClick="{{ toggleBrief }}" style="align-self:start; height:36px; padding:0 14px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-card); color:var(--ik-text); font-size:13px; font-weight:700; cursor:pointer">Show brief</button></sc-if>
+
+    <section aria-label="Conversation" style="display:flex; flex-direction:column; gap:14px; min-width:0; min-height:0">
+      <sc-if value="{{ isRole }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1; display:grid; grid-template-columns:{{ stageCols }}; gap:20px; min-height:0">
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px; padding:12px">
+            <div style="position:relative; width:{{ portrait }}; height:{{ portrait }}">
+              <div aria-hidden="true" style="position:absolute; inset:-14px; border-radius:50%; background:conic-gradient(from 200deg, {{ moodC }}, transparent 40%, {{ moodC }} 70%, transparent); filter:blur(10px); opacity:.75; transition:background 600ms ease"></div>
+              <sc-if value="{{ npcTalking }}"><div aria-hidden="true" style="position:absolute; inset:-8px; border-radius:50%; border:2px solid {{ moodC }}; animation:ilRing 1.6s ease-out infinite"></div></sc-if>
+              <div style="position:relative; width:100%; height:100%; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); border:3px solid {{ moodC }}; transition:border-color 600ms ease"><img src="{{ npc.img }}" alt="{{ npc.name }}" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></div>
+            </div>
+            <span style="display:flex; align-items:center; gap:6px; height:26px; padding:0 12px; border-radius:999px; background:var(--ik-card); border:1px solid var(--ik-line); font-size:12px; font-weight:700"><span style="width:8px; height:8px; border-radius:50%; background:{{ moodC }}"></span>{{ npc.first }} seems {{ moodWord }}</span>
+            <sc-if value="{{ showCaption }}">
+              <div aria-live="polite" style="max-width:560px; padding:14px 18px; border-radius:20px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); font-size:{{ capSize }}; line-height:1.5; text-align:center; text-wrap:pretty">
+                <span style="display:block; font-size:12px; font-weight:700; color:var(--ik-text-2); margin-bottom:4px">{{ capWho }} · captions</span>{{ caption }}<sc-if value="{{ streaming }}"><span style="display:inline-block; width:2px; height:18px; margin-left:3px; vertical-align:middle; background:var(--ik-acc-2); animation:ilPulse 0.9s infinite"></span></sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ thinking }}"><div role="status" style="display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:999px; background:var(--ik-card); border:1px solid var(--ik-line); font-size:13px; color:var(--ik-text-2)"><span style="display:flex; gap:4px"><span style="width:6px; height:6px; border-radius:50%; background:var(--ik-text-2); animation:ilDot 1.2s infinite"></span><span style="width:6px; height:6px; border-radius:50%; background:var(--ik-text-2); animation:ilDot 1.2s infinite .15s"></span><span style="width:6px; height:6px; border-radius:50%; background:var(--ik-text-2); animation:ilDot 1.2s infinite .3s"></span></span>{{ npc.first }} is thinking</div></sc-if>
+            <sc-if value="{{ slow }}"><div role="alert" style="display:flex; align-items:center; gap:10px; font-size:13px"><span style="color:var(--ik-text-2)">{{ npc.first }} is taking longer than usual.</span><button onClick="{{ retry }}" style="height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line-strong); background:transparent; color:var(--ik-text); font-weight:700; cursor:pointer">Retry</button></div></sc-if>
+          </div>
+          <sc-if value="{{ showTranscript }}">
+            <div aria-label="Transcript" style="border-radius:22px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; min-height:0; overflow:hidden">
+              <div style="display:flex; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--ik-line); font-size:12px; color:var(--ik-text-2)"><b>Transcript</b><span>Saved to History</span></div>
+              <div style="flex:1; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px">
+                <sc-for list="{{ log }}" as="t" hint-placeholder-count="2">
+                  <div style="align-self:{{ t.align }}; max-width:88%; display:flex; flex-direction:column; gap:4px">
+                    <div style="padding:10px 14px; border-radius:{{ t.radius }}; background:{{ t.bg }}; color:{{ t.color }}; font-size:14px; text-wrap:pretty">{{ t.text }}</div>
+                    <span style="font-size:12px; color:var(--ik-text-2); display:flex; gap:6px; align-items:center; justify-content:{{ t.justify }}">{{ t.meta }}<sc-if value="{{ t.ai }}"><span style="display:flex; gap:3px; align-items:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--ik-acc-2)" stroke-width="2.25" stroke-linejoin="round"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path></svg>AI persona</span><button onClick="{{ t.replay }}" aria-label="Replay this line" style="border:0; background:transparent; padding:0; color:var(--ik-acc-2); font-size:12px; font-weight:700; cursor:pointer">Replay</button></sc-if></span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isMeeting }}">
+        <div style="flex:1; display:grid; grid-template-columns:repeat({{ meetCols }},minmax(0,1fr)); gap:10px; align-content:start">
+          <sc-for list="{{ attendees }}" as="a" hint-placeholder-count="10">
+            <div style="position:relative; aspect-ratio:4 / 3; border-radius:18px; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); border:3px solid {{ a.ring }}; box-shadow:{{ a.glow }}; transition:border-color 240ms ease, box-shadow 240ms ease">
+              <img src="{{ a.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center 15%; mix-blend-mode:multiply">
+              <div style="position:absolute; inset:0; background:linear-gradient(180deg, transparent 55%, oklch(0.13 0.03 285 / 0.8))"></div>
+              <span style="position:absolute; left:10px; bottom:8px; color:#fff; font-size:13px; font-weight:700">{{ a.n }}</span>
+              <sc-if value="{{ a.hand }}"><button onClick="{{ callOn }}" style="position:absolute; top:8px; right:8px; height:28px; padding:0 10px; border-radius:999px; border:0; background:oklch(0.84 0.14 78); color:#0A081B; font-size:12px; font-weight:700; cursor:pointer">Hand raised · Call on</button></sc-if>
+              <sc-if value="{{ a.speaking }}"><span style="position:absolute; top:8px; left:8px; height:24px; padding:0 10px; border-radius:999px; background:#00F2AD; color:#0A081B; font-size:12px; font-weight:700; display:flex; align-items:center">Speaking</span></sc-if>
+            </div>
+          </sc-for>
+        </div>
+        <div aria-live="polite" style="padding:14px 18px; border-radius:20px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); font-size:16px"><b style="font-size:12px; color:var(--ik-text-2); display:block">{{ capWho }} · captions</b>{{ caption }}</div>
+      </sc-if>
+
+      <sc-if value="{{ isSponsor }}">
+        <div style="flex:1; display:grid; grid-template-columns:{{ sponsorCols }}; gap:20px; align-content:start">
+          <div style="display:flex; flex-direction:column; gap:14px; align-items:center">
+            <div style="position:relative; width:100%; max-width:420px; aspect-ratio:1 / 1; border-radius:28px; background:linear-gradient(160deg,#249DFF,#43D6E8 60%,#00F2AD); display:flex; align-items:center; justify-content:center"><span style="font-size:110px; font-weight:700; color:#0A081B; opacity:.85">PN</span><span style="position:absolute; top:14px; left:16px; font-size:12px; font-weight:700; color:#0A081B">Sponsor avatar</span><sc-if value="{{ npcTalking }}"><span style="position:absolute; inset:-6px; border-radius:32px; border:2px solid #43D6E8; animation:ilRing 1.6s ease-out infinite"></span></sc-if></div>
+            <div aria-live="polite" style="width:100%; max-width:520px; padding:14px 18px; border-radius:20px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); font-size:16px; text-align:center"><b style="font-size:12px; color:var(--ik-text-2); display:block">Priya · captions</b>{{ caption }}</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px">
+            <div style="padding:16px; border-radius:20px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:10px">
+              <b>Your three points</b><span style="font-size:12px; color:var(--ik-text-2)">Write these before you speak. Priya will ask about them.</span>
+              <sc-for list="{{ notes }}" as="n" hint-placeholder-count="3"><input value="{{ n.v }}" onChange="{{ n.on }}" placeholder="{{ n.ph }}" aria-label="{{ n.aria }}" style="height:40px; padding:0 12px; border-radius:12px; border:1px solid var(--ik-line-strong); background:var(--ik-raised); color:var(--ik-text); font-size:14px"></sc-for>
+            </div>
+            <div style="padding:16px; border-radius:20px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:8px">
+              <div style="display:flex; justify-content:space-between"><b>Funnel this week</b><span style="font-size:12px; color:var(--ik-text-2)">Pinned for reference</span></div>
+              <sc-for list="{{ funnel }}" as="fn" hint-placeholder-count="5"><div style="display:grid; grid-template-columns:110px 1fr 54px; gap:8px; align-items:center; font-size:12px"><span style="color:var(--ik-text-2)">{{ fn.n }}</span><div style="position:relative; height:8px; border-radius:4px; background:var(--ik-track)"><div style="height:100%; width:{{ fn.w }}; border-radius:4px; background:linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))"></div><div style="position:absolute; top:-3px; bottom:-3px; left:{{ fn.ideal }}; width:2px; background:var(--ik-text)"></div></div><b style="text-align:right">{{ fn.v }}</b></div></sc-for>
+              <span style="font-size:12px; color:var(--ik-text-2)">Tick marks the ideal. Revenue $41,200 of $240,000.</span>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isEmail }}">
+        <div style="flex:1; border-radius:22px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); display:flex; flex-direction:column; overflow:hidden">
+          <sc-for list="{{ fields }}" as="fd" hint-placeholder-count="3">
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--ik-line); min-height:52px">
+              <span style="width:56px; font-size:13px; color:var(--ik-text-2)">{{ fd.k }}</span>
+              <sc-if value="{{ fd.isChips }}"><div style="flex:1; display:flex; flex-wrap:wrap; gap:6px"><sc-for list="{{ fd.chips }}" as="c" hint-placeholder-count="2"><span style="display:flex; align-items:center; gap:6px; height:30px; padding:0 10px 0 3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line); font-size:13px; font-weight:600; white-space:nowrap"><span style="width:24px; height:24px; border-radius:50%; overflow:hidden; background:{{ c.bg }}; color:#0A081B; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center"><sc-if value="{{ c.hasImg }}"><img src="{{ c.img }}" alt="" style="width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply"></sc-if>{{ c.ini }}</span>{{ c.n }}</span></sc-for><button style="height:30px; padding:0 10px; border-radius:999px; border:1px dashed var(--ik-line-strong); background:transparent; color:var(--ik-text-2); font-size:12px; font-weight:700; white-space:nowrap">Add from team</button></div></sc-if>
+              <sc-if value="{{ fd.isText }}"><input value="{{ subject }}" onChange="{{ onSubject }}" aria-label="Subject" style="flex:1; height:36px; border:0; outline:0; background:transparent; color:var(--ik-text); font-size:15px; font-weight:600"></sc-if>
+              <button aria-label="{{ fd.dictAria }}" onClick="{{ dictate }}" style="width:32px; height:32px; flex:none; border-radius:50%; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text-2); cursor:pointer; display:flex; align-items:center; justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg></button>
+            </div>
+          </sc-for>
+          <div style="flex:1; position:relative; display:flex">
+            <textarea value="{{ body }}" onChange="{{ onBody }}" aria-label="Email body" style="flex:1; min-height:260px; padding:16px; border:0; outline:0; resize:none; background:transparent; color:var(--ik-text); font-size:15px; line-height:1.65"></textarea>
+            <sc-if value="{{ dictating }}"><div style="position:absolute; left:16px; right:16px; bottom:12px; padding:10px 14px; border-radius:14px; background:var(--ik-mat); border:1px solid var(--ik-acc); display:flex; align-items:center; gap:10px; font-size:13px"><span style="display:flex; gap:2px; align-items:center; height:20px"><sc-for list="{{ waveSm }}" as="w" hint-placeholder-count="12"><span style="width:3px; height:{{ w }}; border-radius:2px; background:var(--ik-acc-2)"></span></sc-for></span>Listening. Your words go into the body, you can edit before sending.</div></sc-if>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid var(--ik-line)"><span style="font-size:12px; color:var(--ik-text-2)">Draft saved · Replies arrive in your inbox over the next sim day</span><span style="flex:1"></span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="primary" size="md" onClick="{{ end }}" hint-size="90px,40px">Send</x-import></span></div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showInput }}">
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <sc-if value="{{ micDenied }}"><div role="alert" style="padding:12px 14px; border-radius:16px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; align-items:center; gap:12px; font-size:13px; flex-wrap:wrap"><span style="flex:1; min-width:200px"><b>Your mic is blocked.</b> The conversation is intact. Allow the mic in your browser's address bar, or keep going in text.</span><span style="display:inline-flex; flex:none; white-space:nowrap"><x-import component-from-global-scope="GenieKreatorGuidelines_1f4d6d.Button" variant="secondary" size="sm" onClick="{{ toText }}" hint-size="140px,32px">Continue in text</x-import></span></div></sc-if>
+          <sc-if value="{{ poor }}"><div role="alert" style="padding:10px 14px; border-radius:16px; background:var(--ik-raised); border:1px solid var(--ik-line-strong); font-size:13px"><b>We did not catch all of that.</b> Fix the gaps below and send, or try again.</div></sc-if>
+          <div style="display:flex; align-items:flex-end; gap:10px; padding:10px; border-radius:24px; background:var(--ik-mat); border:1px solid {{ barBorder }}; box-shadow:{{ barGlow }}">
+            <div style="flex:1; display:flex; flex-direction:column; gap:4px; min-width:0">
+              <span style="font-size:12px; font-weight:700; color:{{ stateC }}; padding:0 8px">{{ stateLabel }}</span>
+              <sc-if value="{{ listening }}"><div style="display:flex; align-items:center; gap:10px; padding:4px 8px; min-height:48px"><span style="display:flex; gap:2px; align-items:center; height:36px" aria-hidden="true"><sc-for list="{{ wave }}" as="w" hint-placeholder-count="24"><span style="width:3px; height:{{ w }}; border-radius:2px; background:var(--ik-acc-2); transition:height 90ms linear"></span></sc-for></span><span style="font-size:15px">{{ draft }}</span></div></sc-if>
+              <sc-if value="{{ editable }}"><textarea value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onKey }}" placeholder="{{ ph }}" aria-label="Your reply" rows="2" style="width:100%; padding:8px; border:0; outline:0; resize:none; background:transparent; color:var(--ik-text); font-size:15px; line-height:1.5"></textarea></sc-if>
+            </div>
+            <sc-if value="{{ canRedo }}"><button onClick="{{ redo }}" aria-label="Record again" style="width:44px; height:44px; flex:none; border-radius:50%; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text); cursor:pointer">↺</button></sc-if>
+            <button onClick="{{ mic }}" disabled="{{ micDenied }}" aria-label="{{ micAria }}" aria-pressed="{{ listening }}" style="position:relative; width:{{ micSize }}; height:{{ micSize }}; flex:none; border-radius:50%; border:0; background:{{ micBg }}; color:{{ micC }}; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:{{ micGlow }}">
+              <sc-if value="{{ listening }}"><span style="position:absolute; inset:-6px; border-radius:50%; border:2px solid var(--ik-acc-2); animation:ilRing 1.4s ease-out infinite"></span></sc-if>
+              <sc-if value="{{ micDenied }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m2 2 20 20"></path><path d="M18.89 13.23A7 7 0 0 0 19 12v-2"></path><path d="M5 10v2a7 7 0 0 0 12 5"></path><path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"></path><path d="M9 9v3a3 3 0 0 0 5.12 2.12"></path></svg></sc-if>
+              <sc-if value="{{ micOk }}"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg></sc-if>
+            </button>
+            <button onClick="{{ send }}" disabled="{{ cantSend }}" aria-label="Send" style="width:48px; height:48px; flex:none; border-radius:50%; border:0; background:{{ sendBg }}; color:#0A081B; cursor:pointer; display:flex; align-items:center; justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 14 0"></path><path d="m13 6 6 6-6 6"></path></svg></button>
+          </div>
+          <span style="font-size:12px; color:var(--ik-text-2); padding:0 8px">{{ helper }}</span>
+        </div>
+      </sc-if>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { mode: 'voice', phase: 'speaking', turn: 0, words: 0, log: [], draft: '', wave: Array(24).fill(4), micDenied: false, poor: false, slow: false, brief: true, hint: false, secs: 372, mood: 0, subject: 'Lead routing, and thank you', body: "Hi Kent,\n\nThanks for being honest with me today. You're right that we changed the territory split without asking you, and I'm sorry.\n\nCan we sit down Thursday at 10 to look at routing together? I'd also like your help getting Beth up to speed on the older accounts.\n\n", dictating: false, notes: ['Ashcroft is winnable at list price', '', ''], speaker: 0, called: false };
+  scripts() {
+    const who = this.props.app && this.props.app.who;
+    if (this.props.variant === 'meeting') return { npc: [{ id: 'green', t: 'Ashcroft is close, but procurement wants twelve percent off.' }, { id: 'jack', t: "We shouldn't cut price. Let me call their CFO directly." }, { id: 'ruth', t: 'Thanks. If we hold price, I can rework the proposal to show the payback period.' }], user: ["Thanks, Green. Before we decide, I'd like to hear from everyone.", 'Ruth, you had your hand up. Go ahead.'] };
+    if (this.props.variant === 'sponsor') return { npc: [{ id: 'sponsor', t: 'Thanks for joining. Walk me through where the pipeline stands.' }, { id: 'sponsor', t: 'Demos look thin. What is your plan for the next two weeks?' }, { id: 'sponsor', t: 'Good. I will back holding the price if Jack leads Ashcroft.' }], user: ['We are behind pace, mostly at the demo stage. Ashcroft is our best chance this week.', 'Green will coach Lowe on shorter demos, and I am moving Kent back onto the older accounts.'] };
+    if (who && who !== 'kent') return { npc: [{ id: who, t: 'Hi. You wanted to talk?' }, { id: who, t: 'Honestly, it has been a tough week. I could use some clarity on priorities.' }, { id: who, t: 'Thanks. That really helps.' }], user: ['Yes, I wanted to check in on how things are going for you.', "Let's agree your top two priorities for Friday, and I'll clear the rest."] };
+    return { npc: [{ id: 'kent', t: "Hi. Thanks for finally making time. I wasn't sure you got my message." }, { id: 'kent', t: "Since the territory split, my best leads go to Beth. I've been doing this six years and nobody asked me." }, { id: 'kent', t: 'Okay. That would actually help. I can bring Beth up to speed on the old accounts.' }],
+      user: ["I'm sorry I missed it yesterday. I want to hear what's on your mind, take your time.", "That's fair, and I should have asked. Let's look at lead routing together, and I'd value your help getting Beth up to speed."] };
+  }
+  componentDidMount() {
+    const u = this.props.uiState, S = this.scripts(), st = {};
+    const L = (n) => { const out = []; for (let i = 0; i < n; i++) { out.push({ who: 'npc', i }); if (i < S.user.length && out.length < n * 2 - 1) out.push({ who: 'me', i }); } return out; };
+    if (u === 'listening') Object.assign(st, { phase: 'listening', turn: 0, log: [{ who: 'npc', i: 0 }], words: 99, draft: S.user[0].split(' ').slice(0, 9).join(' ') });
+    else if (u === 'review') Object.assign(st, { phase: 'review', turn: 0, log: [{ who: 'npc', i: 0 }], words: 99, draft: S.user[0] });
+    else if (u === 'thinking') Object.assign(st, { phase: 'thinking', turn: 1, log: [{ who: 'npc', i: 0 }, { who: 'me', i: 0 }], words: 0 });
+    else if (u === 'speaking') Object.assign(st, { phase: 'speaking', turn: 1, log: [{ who: 'npc', i: 0 }, { who: 'me', i: 0 }], words: 9, mood: 1 });
+    else if (u === 'micDenied') Object.assign(st, { phase: 'idle', mode: 'text', micDenied: true, turn: 0, log: [{ who: 'npc', i: 0 }], words: 99 });
+    else if (u === 'poorAudio') Object.assign(st, { phase: 'review', poor: true, turn: 0, log: [{ who: 'npc', i: 0 }], words: 99, draft: "I'm sorry I ... it yesterday. I want to hear what's ... mind" });
+    else if (u === 'slow') Object.assign(st, { phase: 'thinking', slow: true, turn: 1, log: [{ who: 'npc', i: 0 }, { who: 'me', i: 0 }] });
+    else if (u === 'text') Object.assign(st, { phase: 'idle', mode: 'text', turn: 0, log: [{ who: 'npc', i: 0 }], words: 99, draft: '' });
+    else if (u === 'done') Object.assign(st, { phase: 'done', turn: 2, log: [{ who: 'npc', i: 0 }, { who: 'me', i: 0 }, { who: 'npc', i: 1 }, { who: 'me', i: 1 }, { who: 'npc', i: 2 }], words: 99, mood: 2 });
+    else if (u === 'hint') Object.assign(st, { hint: true, phase: 'idle', log: [{ who: 'npc', i: 0 }], words: 99 });
+    else if (u === 'dictating') Object.assign(st, { dictating: true });
+    else Object.assign(st, { log: [{ who: 'npc', i: 0 }], words: 0 });
+    if (this.props.mobile) st.brief = false;
+    this.setState(st);
+    this.clk = setInterval(() => { if (!(this.props.app && this.props.app.frozen)) this.setState(s => ({ secs: Math.max(0, s.secs - 1) })); }, 1000);
+    this.str = setInterval(() => this.stream(), 70);
+    this.wv = setInterval(() => { const s = this.state; if (s.phase === 'listening' || s.dictating) this.setState({ wave: s.wave.map(() => 4 + Math.round(Math.random() * 30)) }); }, 100);
+  }
+  componentWillUnmount() { clearInterval(this.clk); clearInterval(this.str); clearInterval(this.wv); clearInterval(this.lt); clearTimeout(this.th); }
+  stream() {
+    const s = this.state, S = this.scripts();
+    if (s.phase !== 'speaking') return;
+    const line = S.npc[s.turn].t.split(' ');
+    if (s.words < line.length) { if (this.props.uiState !== 'speaking') this.setState({ words: s.words + 1 }); }
+    else this.setState({ phase: s.turn >= S.npc.length - 1 ? 'done' : 'idle' });
+  }
+  startListen() {
+    const S = this.scripts(), s = this.state;
+    if (s.micDenied || s.phase === 'done') return;
+    if (s.phase === 'speaking') this.setState({ words: 999 });
+    const words = S.user[Math.min(s.turn, S.user.length - 1)].split(' ');
+    this.setState({ phase: 'listening', draft: '', poor: false });
+    let n = 0; clearInterval(this.lt);
+    this.lt = setInterval(() => { n++; this.setState({ draft: words.slice(0, n).join(' ') }); if (n >= words.length) { clearInterval(this.lt); this.setState({ phase: 'review' }); } }, 160);
+  }
+  send() {
+    const s = this.state, S = this.scripts();
+    if (s.phase === 'done') return;
+    const ui = s.turn;
+    if (ui >= S.user.length) return;
+    const text = s.draft.trim() || S.user[ui];
+    clearInterval(this.lt);
+    this.setState(x => ({ log: [...x.log, { who: 'me', i: ui, text }], draft: '', phase: 'thinking', poor: false, turn: x.turn + 1, words: 0 }));
+    this.th = setTimeout(() => this.setState(x => ({ phase: 'speaking', log: [...x.log, { who: 'npc', i: x.turn }], mood: Math.min(2, x.mood + 1), called: this.props.variant === 'meeting' && x.turn === 2 })), 1300);
+  }
+  renderVals() {
+    const { d: D, app, act } = this.props, s = this.state, S = this.scripts(), mobile = !!this.props.mobile, v = this.props.variant || 'roleplay';
+    if (!D || !app.members) return {};
+    const mem = id => id === 'sponsor' ? { name: 'Priya Nair', img: '', first: 'Priya' } : (() => { const m = app.members.find(x => x.id === id); return { name: m.name, img: m.img, first: m.name.split(' ')[0] }; })();
+    const who = v === 'roleplay' ? (app.who || 'kent') : v === 'sponsor' ? 'sponsor' : (app.who || 'kent');
+    const npc = mem(S.npc[0].id);
+    const moods = ['oklch(0.78 0.13 25)', 'oklch(0.84 0.14 78)', '#00F2AD'], moodWords = ['frustrated', 'guarded', 'more open'];
+    const curLine = S.npc[Math.min(s.turn, S.npc.length - 1)];
+    const lineWords = curLine.t.split(' ');
+    const shown = s.phase === 'speaking' ? lineWords.slice(0, s.words).join(' ') : curLine.t;
+    const lastNpcInLog = [...s.log].reverse().find(t => t.who === 'npc');
+    const log = s.log.map((t, idx) => {
+      const isNpc = t.who === 'npc', live = isNpc && idx === s.log.length - 1 && s.phase === 'speaking';
+      const text = isNpc ? (live ? shown : S.npc[t.i].t) : (t.text || S.user[t.i]);
+      return { text, ai: isNpc, meta: isNpc ? mem(S.npc[t.i].id).first : 'You', align: isNpc ? 'flex-start' : 'flex-end', justify: isNpc ? 'flex-start' : 'flex-end',
+        radius: isNpc ? '18px 18px 18px 6px' : '18px 18px 6px 18px', bg: isNpc ? 'var(--ik-raised)' : 'var(--grad-brand)', color: isNpc ? 'var(--ik-text)' : '#0A081B',
+        replay: () => act.say('Replaying with captions.') };
+    });
+    const voice = s.mode === 'voice' && !s.micDenied, listening = s.phase === 'listening', review = s.phase === 'review', done = s.phase === 'done';
+    const titles = { roleplay: `1:1 with ${mem(who).name}`, meeting: 'Team meeting', sponsor: 'Sponsor briefing with Priya Nair', email: `Email to ${mem(app.who && app.who !== 'kent' ? app.who : 'kent').name}` };
+    const subs = { roleplay: 'Meet face to face · ½ day', meeting: 'Agenda: the Ashcroft discount · 1 day', sponsor: 'Q and A · about 6 minutes', email: 'No days used' };
+    const briefs = {
+      roleplay: { goal: 'Find out what is bothering Kent and rebuild his trust.', rows: [{ k: 'What you know', v: 'Six years on the team. Lost his best leads in the territory split. You missed his chat request yesterday.' }, { k: 'Current mood', v: 'Frustrated' }, { k: 'Open promises', v: 'None yet' }, { k: 'Your style for him', v: 'Directing. You set the task and check in closely.' }], hint: 'Acknowledge the missed message first. People share more once they feel heard.' },
+      meeting: { goal: 'Decide on the Ashcroft discount with the team, and hear the quieter voices.', rows: [{ k: 'Agenda', v: '1. Ashcroft discount  2. Demo length  3. Friday review' }, { k: 'Watch for', v: 'Ruth rarely speaks up in meetings.' }, { k: 'Team mood', v: 'Mostly upbeat, two struggling' }], hint: 'Invite people by name. A raised hand left waiting costs trust.' },
+      sponsor: { goal: 'Give Priya an honest view of the pipeline and a plan she can back.', rows: [{ k: 'She cares about', v: 'Demo conversion and the Ashcroft deal.' }, { k: 'Confidence', v: 'Steady, 3 of 5' }], hint: 'Lead with the number, then the plan. Priya values directness.' },
+      email: { goal: 'Follow up with Kent in writing so the change sticks.', rows: [{ k: 'Context', v: 'Your 1:1 went well. Kent agreed to help Beth.' }, { k: 'Tone', v: 'Warm and specific. Name a time.' }], hint: 'Put the agreement in writing, with a date.' }
+    };
+    const showBrief = s.brief && (!mobile || v !== 'email');
+    const attendees = app.members.map((m, i) => {
+      const spkId = S.npc[Math.min(s.turn, S.npc.length - 1)].id, speaking = m.id === spkId && (s.phase === 'speaking' || s.phase === 'idle');
+      return { n: m.name.split(' ')[0], img: m.img, speaking, hand: m.id === 'ruth' && !s.called && s.turn < 2, ring: speaking ? '#00F2AD' : 'transparent', glow: speaking ? '0 0 30px oklch(0.86 0.17 165 / 0.45)' : 'none' };
+    }).slice(0, mobile ? 6 : 10);
+    const stateLabel = s.micDenied ? 'Text mode' : listening ? 'Listening' : review ? (s.poor ? 'Partial transcript' : 'Edit if you like, then send') : s.phase === 'speaking' ? `${mem(curLine.id).first} is speaking. Talk to interrupt.` : s.phase === 'thinking' ? 'Waiting for a reply' : done ? 'Conversation has reached a natural close' : voice ? 'Press the mic and speak' : 'Type your reply';
+    return {
+      title: titles[v], sub: subs[v], titleSize: mobile ? '15px' : '17px', hGap: mobile ? '10px' : '16px', hPad: mobile ? '10px 14px' : '12px 24px', isDesk: !mobile,
+      timer: `${Math.floor(s.secs / 60)}:${String(s.secs % 60).padStart(2, '0')}`, pause: () => act.overlay('paused'),
+      hintUsed: s.hint, hintLabel: s.hint ? 'Hint used' : 'Hint', hintC: s.hint ? 'var(--ik-text-2)' : 'var(--ik-text)', useHint: () => this.setState({ hint: true, brief: true }), hintOpen: s.hint,
+      modes: [['voice', 'Voice'], ['text', 'Text']].map(([k, n]) => ({ n, on: s.mode === k, bg: s.mode === k ? 'var(--grad-brand)' : 'transparent', color: s.mode === k ? '#0A081B' : 'var(--ik-text-2)', pick: () => this.setState({ mode: k, phase: s.phase === 'listening' ? 'review' : s.phase }) })),
+      endVariant: done ? 'primary' : 'secondary', endLabel: done ? 'End and see how it lands' : v === 'email' ? 'Discard' : 'End', end: () => v === 'email' && !done && false ? null : act.go('reacting'),
+      offline: this.props.uiState === 'offline',
+      cols: mobile ? '1fr' : showBrief ? '300px minmax(0,1fr)' : 'auto minmax(0,1fr)', bodyGap: mobile ? '10px' : '20px', bodyPad: mobile ? '10px 12px 12px' : '20px 24px 24px',
+      showBrief, briefCollapsed: !showBrief, toggleBrief: () => this.setState(x => ({ brief: !x.brief })), brief: briefs[v],
+      isRole: v === 'roleplay', isMeeting: v === 'meeting', isSponsor: v === 'sponsor', isEmail: v === 'email',
+      stageCols: mobile ? '1fr' : 'minmax(0,1.2fr) minmax(300px,1fr)', portrait: mobile ? '150px' : '230px', capSize: mobile ? '15px' : '18px',
+      npc: mem(who), moodC: moods[s.mood], moodWord: moodWords[s.mood], npcTalking: s.phase === 'speaking',
+      showCaption: app.settings.captions && s.phase !== 'thinking', caption: shown, capWho: mem(curLine.id).first, streaming: s.phase === 'speaking',
+      thinking: s.phase === 'thinking' && !s.slow, slow: s.slow, retry: () => { this.setState({ slow: false, phase: 'speaking', log: [...s.log, { who: 'npc', i: s.turn }] }); },
+      showTranscript: !mobile || s.log.length > 0, log,
+      meetCols: mobile ? 2 : 5, attendees, callOn: () => { this.setState({ draft: S.user[1] }); act.say('You invited Ruth to speak.'); },
+      sponsorCols: mobile ? '1fr' : 'minmax(0,1fr) minmax(0,1fr)',
+      notes: s.notes.map((n, i) => ({ v: n, ph: ['Where the pipeline stands', 'What is blocking demos', 'What you need from Priya'][i], aria: `Point ${i + 1}`, on: e => { const val = e.target.value; this.setState(x => { const a = [...x.notes]; a[i] = val; return { notes: a }; }); } })),
+      funnel: D.stages.map(st => ({ n: st.n, v: `${st.count} / ${st.ideal}`, w: Math.round(st.count / 45 * 100) + '%', ideal: Math.round(st.ideal / 45 * 100) + '%' })),
+      fields: [{ k: 'To', isChips: true, isText: false, chips: [{ n: 'Kent Goldberg', hasImg: true, img: 'assets/npc/kent.png', ini: '', bg: '#DEE9FF' }], dictAria: 'Dictate recipients' },
+        { k: 'CC', isChips: true, isText: false, chips: [{ n: 'Beth Killiney', hasImg: true, img: 'assets/npc/beth.png', ini: '', bg: '#DEE9FF' }], dictAria: 'Dictate CC' },
+        { k: 'Subject', isChips: false, isText: true, chips: [], dictAria: 'Dictate subject' }],
+      subject: s.subject, onSubject: e => this.setState({ subject: e.target.value }), body: s.body, onBody: e => this.setState({ body: e.target.value }),
+      dictate: () => this.setState(x => ({ dictating: !x.dictating })), dictating: s.dictating, waveSm: s.wave.slice(0, 12).map(w => Math.max(4, w / 2) + 'px'),
+      showInput: v !== 'email', micDenied: s.micDenied, poor: s.poor, toText: () => this.setState({ mode: 'text' }),
+      listening, editable: !listening, draft: s.draft, onDraft: e => this.setState({ draft: e.target.value }),
+      onKey: e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(); } },
+      ph: done ? 'You can end the conversation when ready' : s.mode === 'text' || s.micDenied ? 'Type what you would say' : 'Your words appear here as you speak',
+      wave: s.wave.map(w => w + 'px'), canRedo: review && voice, redo: () => this.startListen(),
+      micAria: listening ? 'Stop and review' : 'Start speaking', micOk: !s.micDenied, micSize: voice ? (mobile ? '64px' : '60px') : '48px',
+      micBg: s.micDenied ? 'var(--ik-track)' : listening ? '#00F2AD' : voice ? 'var(--grad-brand)' : 'var(--ik-raised)', micC: s.micDenied ? 'var(--ik-text-2)' : voice || listening ? '#0A081B' : 'var(--ik-text)',
+      micGlow: listening ? '0 0 40px oklch(0.86 0.17 165 / 0.6)' : voice ? '0 0 24px oklch(0.75 0.14 220 / 0.4)' : 'none',
+      mic: () => { if (listening) { clearInterval(this.lt); this.setState({ phase: 'review' }); } else this.startListen(); },
+      send: () => this.send(), cantSend: listening || s.phase === 'thinking' || done, sendBg: listening || done ? 'var(--ik-track)' : 'var(--grad-brand)',
+      barBorder: listening ? '#00F2AD' : 'var(--ik-line-strong)', barGlow: listening ? '0 0 0 3px oklch(0.86 0.17 165 / 0.2)' : 'none', stateLabel, stateC: listening ? 'var(--ik-pos)' : 'var(--ik-text-2)',
+      helper: s.micDenied ? 'Voice is never required. Everything works in text.' : voice ? 'Push to talk. Hold Space, or tap the mic. You can edit the transcript before it is sent.' : 'Press Enter to send, Shift and Enter for a new line.'
+    };
+  }
+}
+</script>
+</body>
+</html>

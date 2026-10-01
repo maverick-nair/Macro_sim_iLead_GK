@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/geniekreator-guidelines-1f4d6daa-0ebd-461a-8396-6f4c3ad9b031/tokens/fonts.css">
+<style>body{margin:0;background:#ecebf0;font-family:'Manrope',system-ui,sans-serif}*{box-sizing:border-box}a{color:oklch(0.53 0.17 252)}a:hover{color:oklch(0.45 0.17 252)}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 system-ui,sans-serif;color:rgba(0,0,0,.55);max-width:1440px}.dv-card{max-width:100%;background:#0A081B;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}.dv-opt:target .dv-oid{background:#2a78d6;color:#fff}.dv-next{margin:22px 0 0;font:12px/1.5 system-ui,sans-serif;color:rgba(0,0,0,.5)}</style>
+</helmet>
+<section class="dv-turn" id="intro" style="padding-bottom:8px">
+  <div style="max-width:1100px; display:flex; flex-direction:column; gap:12px; color:#1a1a1a">
+    <h1 style="margin:0; font-size:36px; font-weight:700; letter-spacing:-0.03em">iLead, a Business Simulation · Every screen</h1>
+    <p style="margin:0; font-size:15px; line-height:1.6; color:rgba(0,0,0,.65)">Every frame below is the live prototype, opened at that point. Start at <a href="#p1">p1</a> to play straight through. Edge states (offline, mic denied, slow AI, errors, loading) are in <a href="iLead States.dc.html">iLead States</a>. Foundations and earlier rounds are in <a href="iLead Foundations and Board.dc.html">Foundations and Board</a>.</p>
+    <p style="margin:0; font-size:13px; line-height:1.6; color:rgba(0,0,0,.55)">Flows to try in <a href="#p1">p1</a>: a) Week 1 loop: onboarding to style setting to the board, spend days, then End week. b) 1:1 by voice: select Kent, Meet face to face, Confirm, press the mic, send, End. c) Email: open the Inbox, Ruth's leave email, Reply now. d) End to report: on the week end screen use the prototype shortcut, then View my report.</p>
+  </div>
+</section>
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="8">
+  <section class="dv-turn" id="{{ g.id }}">
+    <div class="dv-thd"><a class="dv-tid" href="{{ g.href }}">{{ g.num }}</a><span class="dv-tname">{{ g.title }}</span></div>
+    <div class="dv-opts">
+      <sc-for list="{{ g.frames }}" as="f" hint-placeholder-count="3">
+        <div class="dv-opt" id="{{ f.id }}">
+          <div class="dv-olabel"><a class="dv-oid" href="{{ f.href }}">{{ f.id }}</a>{{ f.label }}</div>
+          <div class="dv-card" style="width:{{ f.w }}">
+            <dc-import name="iLeadApp" frozen="{{ f.frozen }}" screen="{{ f.screen }}" variant="{{ f.variant }}" ui-state="{{ f.ui }}" step="{{ f.step }}" overlay="{{ f.overlay }}" outcome="{{ f.outcome }}" event-type="{{ f.ev }}" mobile="{{ f.mobile }}" print="{{ f.print }}" theme="{{ f.theme }}" client-theme="{{ f.client }}" hint-size="{{ f.hint }}"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</sc-for>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const F = (id, label, o = {}) => ({ id, href: '#' + id, label, frozen: id !== 'p1', w: o.mobile ? '390px' : o.w || '1440px', hint: o.mobile ? '390px,844px' : (o.w || '1440px') + ',900px', ...o });
+    const G = [
+      ['p', 'Clickable prototype, from the start', [F('p1', 'Full prototype. Starts at onboarding. Everything is clickable.', { screen: 'onboarding' })]],
+      ['o', 'Screens 1 and 2 · Welcome, briefing and meet your team', [
+        F('o1', 'Language and play mode', { screen: 'onboarding', step: 'lang' }),
+        F('o2', 'Welcome from the sponsor, three tabs. Next unlocks after the video or 10 seconds', { screen: 'onboarding', step: 'sponsor' }),
+        F('o3', 'Consent and data use. Text only stays available', { screen: 'onboarding', step: 'consent' }),
+        F('o4', 'Voice setup after a successful test', { screen: 'onboarding', step: 'voice', ui: 'heard' }),
+        F('o5', 'How to play, four cards', { screen: 'onboarding', step: 'how' }),
+        F('o6', 'Meet your team. Stats hidden until a profile is read, 3 of 3 unlocks week 1', { screen: 'onboarding', step: 'team', ui: 'read' })]],
+      ['b', 'Screens 3, 4, 6 and 9 · Main board, profile, action drawer, events', [
+        F('b1', 'Main board. HUD, metrics strip, stage columns with bottleneck, inbox rail, actions panel. Kent selected', { screen: 'board', ui: 'select' }),
+        F('b2', 'D, G, P, E: hover or focus any letter for the full name and meaning', { screen: 'board', ui: 'tooltip' }),
+        F('b3', '"What do D, G, P and E mean?" opens the style guide', { screen: 'board', ui: 'legend' }),
+        F('b4', 'Action drawer, static: Send for training. Option cards, people picked on the board, Peter dimmed with a reason', { screen: 'board', ui: 'drawer' }),
+        F('b5', 'Action drawer, hybrid: Swap roles with the prerequisite nudge', { screen: 'board', ui: 'nudge' }),
+        F('b6', 'Action drawer, live: Meet Kent face to face, confirm starts the conversation', { screen: 'board', ui: 'live' }),
+        F('b7', 'Full profile in 3 columns: profile, your interactions, take an action', { screen: 'board', ui: 'profile', outcome: true }),
+        F('b8', 'Inbox drawer. Urgent items pinned, replying costs no days', { screen: 'board', ui: 'inbox' }),
+        F('b9', 'Event card, Impact', { screen: 'board', ev: 'impact' }),
+        F('b10', 'Event card, Signal', { screen: 'board', ev: 'signal' }),
+        F('b11', 'Event card, Capacity', { screen: 'board', ev: 'capacity' }),
+        F('b12', 'Event card, Diagnostic', { screen: 'board', ev: 'diagnostic' }),
+        F('b13', 'Incoming sponsor call', { screen: 'board', ui: 'call' }),
+        F('b14', 'Light theme', { screen: 'board', ui: 'select', theme: 'light' }),
+        F('b15', 'Halden Group client theme at 1280. Brand color maps to accent tokens only', { screen: 'board', client: true, w: '1280px' })]],
+      ['s', 'Screen 5 · Weekly style setting', [
+        F('s1', 'Card view with definitions on top, last week tags, optional reasons. Tooltip on hover', { screen: 'style' }),
+        F('s2', 'List view, faster for keyboard and screen readers', { screen: 'style', step: 'list' }),
+        F('s3', 'Summary and confirm', { screen: 'style', step: 'summary' })]],
+      ['l', 'Screen 7 · Live interaction shell, four variants', [
+        F('l1', '1:1 AI RolePlay by voice. Transcript ready to edit before sending', { screen: 'live', variant: 'roleplay', ui: 'review' }),
+        F('l2', '1:1, NPC streaming with captions. Speaking interrupts', { screen: 'live', variant: 'roleplay', ui: 'speaking' }),
+        F('l3', '1:1 in text mode', { screen: 'live', variant: 'roleplay', ui: 'text' }),
+        F('l4', 'Email composer with recipient chips and dictation per field', { screen: 'live', variant: 'email' }),
+        F('l5', 'Team meeting. Active speaker, raised hand, call on by name', { screen: 'live', variant: 'meeting' }),
+        F('l6', 'Sponsor briefing. Three points first, funnel pinned', { screen: 'live', variant: 'sponsor' })]],
+      ['r', 'Screen 8 · Reacting, then the outcome panel', [
+        F('r1', '"The team is reacting", 3 seconds while evaluation runs', { screen: 'reacting' }),
+        F('r2', 'Outcome panel with why expanded: cause, rule, your words. Tap faces for reactions, chips for numbers', { screen: 'board', outcome: true, ui: 'why' })]],
+      ['w', 'Screen 10 · Week end sequence', [
+        F('w1', 'End of week banner', { screen: 'weekend', step: 'banner' }),
+        F('w2', 'Weekly report: funnel vs ideal, KPI start and end, stars, streak, sponsor, Team Pulse', { screen: 'weekend', step: 'report' }),
+        F('w3', 'Badge earned, skippable', { screen: 'weekend', step: 'badge' }),
+        F('w4', 'Unlock offer, choose one reward', { screen: 'weekend', step: 'unlock' }),
+        F('w5', 'Next week news bulletin', { screen: 'weekend', step: 'news' })]],
+      ['e', 'Screens 11 and 12 · Reflection and development report', [
+        F('e1', 'End of simulation reflection', { screen: 'end' }),
+        F('e2', 'Development report, web view', { screen: 'report' }),
+        F('e3', 'Development report, print layout, two letter pages', { screen: 'report', print: true })]],
+      ['x', 'Screens 13 and 14 · Settings, pause, resume and session expiry', [
+        F('x1', 'Settings and accessibility', { screen: 'board', overlay: 'settings' }),
+        F('x2', 'Paused', { screen: 'board', overlay: 'paused' }),
+        F('x3', 'Resume recap', { screen: 'board', overlay: 'resume' }),
+        F('x4', 'Session timed out', { screen: 'board', overlay: 'expired' })]],
+      ['m', 'Mobile at 390 · live interactions, outcome and report', [
+        F('m1', '1:1 by voice', { screen: 'live', variant: 'roleplay', ui: 'review', mobile: true }),
+        F('m2', '1:1, mic denied, continue in text', { screen: 'live', variant: 'roleplay', ui: 'micDenied', mobile: true }),
+        F('m3', 'Email', { screen: 'live', variant: 'email', mobile: true }),
+        F('m4', 'Team meeting', { screen: 'live', variant: 'meeting', mobile: true }),
+        F('m5', 'Sponsor briefing', { screen: 'live', variant: 'sponsor', mobile: true }),
+        F('m6', 'Outcome', { screen: 'board', outcome: true, mobile: true }),
+        F('m7', 'Report', { screen: 'report', mobile: true })]]
+    ];
+    return { groups: G.map(([id, title, frames], i) => ({ id: 'g-' + id, href: '#g-' + id, num: String(i + 1), title, frames })) };
+  }
+}
+</script>
+</body>
+</html>
