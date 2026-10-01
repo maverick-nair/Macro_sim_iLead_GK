@@ -1,0 +1,13 @@
+{
+  "style": {
+    "segment": {
+      "transition": { "value": "background {duration.fast} {easing.brand}", "$description": "Selected letter fill" }
+    },
+    "tooltip": {
+      "bg": { "value": "{color.fg.primary}", "$description": "Inverted: the tooltip uses the text color as its fill" },
+      "fg": { "value": "{color.fg.on-accent}" },
+      "shadow": { "value": "0 10px 30px {color.member.shadow-raised}" },
+      "leading": { "value": "1.4", "$description": "Description line height" }
+    }
+  }
+}
