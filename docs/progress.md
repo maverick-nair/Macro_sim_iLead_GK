@@ -6,7 +6,8 @@
 
 - Located all five source specs (two uploaded as PDFs, all five live as Claude Docs) and exported them verbatim to `docs/source/`, with the six embedded drawings reconstructed as Mermaid. The two uploaded PDFs are kept in `docs/source/pdf/`. Live docs and PDFs match word for word.
 - `docs/plan.md`: architecture (Mermaid), rule to mechanism mapping, package layout, SimulationTemplate outline for all 12 areas, persistence model, engine design with formulas, AI adapters and evaluator pipeline, routes and API surface, job design, workspace mechanics, UI system, test plan per milestone, risks, and 7 questions.
-- `docs/decisions.md`: 13 conflicts resolved by doc priority, 13 open decisions to build as configurable (`TODO(decision)`), 21 assumptions where the docs are silent, plus the arithmetic behind the M2 report and score fixtures.
+- `docs/decisions.md`: 14 conflicts resolved by doc priority, 13 open decisions to build as configurable (`TODO(decision)`), 29 assumptions where the docs are silent, plus the arithmetic behind the M2 report and score fixtures.
+- Independent review of the plan against all five specs: 14 findings (unflagged mechanics, a missing lock path, the Mandy caveat on the derived bands, Results and human audit scope, a missed conflict on event labels, smaller screen elements, status storage) fixed in the plan and decisions log; arithmetic for both M2 fixtures re-verified.
 - `CLAUDE.md`: the rules from the brief, doc priority, copy rules, look and feel, stack and milestone workflow.
 
 **Checks run**

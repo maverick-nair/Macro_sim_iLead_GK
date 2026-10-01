@@ -27,7 +27,7 @@ Guidance for anyone (human or agent) working in this repository: the iLead autho
 ## Architecture rules (non negotiable)
 
 1. **Everything is data.** A `SimulationTemplate` is one versioned, Zod validated object covering all 12 areas of the Configuration Spec, exported as JSON Schema. UI, generators, engine, report and quality gates all read this one object from `@gk/schema`. Authoring metadata (provenance, area status, revision) lives beside the template, never inside it.
-2. **Locked engine.** Turn loop, state maths, evaluation pipeline, safety guardrails and report formulas live in `packages/engine`: pure, deterministic, headless TypeScript with a seeded RNG stored in state. Inside the engine: no `Date`, no `Math.random`, no network, no filesystem, no React, no Prisma, no AI adapters.
+2. **Locked engine.** Turn loop, state maths, evaluation pipeline, safety guardrails and report formulas live in `packages/engine`; data privacy and audit logging are also locked (enforced in the server services, not editable by authors): pure, deterministic, headless TypeScript with a seeded RNG stored in state. Inside the engine: no `Date`, no `Math.random`, no network, no filesystem, no React, no Prisma, no AI adapters.
 3. **AI judges, rules decide.** LLMs may generate content, play NPCs, and classify a live interaction into a band (Strong, Adequate, Weak, Harmful) against an authored rubric. Stat changes always come from authored consequence tables. Never pass an LLM produced number into a stat.
 4. **Provider adapters.** Every external AI capability sits behind an interface with a mock: LLM (default Anthropic Claude via the official SDK), speech to text, text to speech, image generation; plus storage, mail and moderation. Tests and local dev use mocks. Keys come from env vars only; never commit keys or a default model id.
 5. **Structured outputs.** Every LLM call returns JSON validated by Zod, with retry on validation failure. Prompts are versioned files in `/prompts/<task>/<version>.md`; no inline prompt strings in components or services.
@@ -41,7 +41,7 @@ Guidance for anyone (human or agent) working in this repository: the iLead autho
 - Say "skills", never "competency" or any form of it.
 - No em dashes, en dashes, or hyphens used as punctuation. Use commas, colons, full stops or parentheses.
 - Headlines are questions from the author's side ("What kind of simulation do you want to build?"). Card lines describe what the author will build, not what the learner will feel. Buttons are verbs (Generate draft, Use this format, Run all checks, Publish).
-- Names exactly: Business Simulations, Day in the Life (DILO) Simulations, iLead, AI RolePlay. Product name: GenieKreator.
+- Names exactly: Business Simulations, Day in the Life (DILO) Simulations, iLead, AI RolePlay. Product name: GenieKreator. Exception: the existing E1 card keeps its title "AI RolePlays" (decisions C-09).
 - 4E pill tabs and their product lines: Evaluate (Conversation AI, Nano AI, PitchPerfect AI), Educate (AI Microlearn, Interactive Learn), Experience (Simulations, AI RolePlay), Enable (AI Koach).
 - All UI strings live in `apps/web/src/i18n/en.json`. `pnpm lint:copy` enforces these rules.
 - These rules also apply to every document in `docs/` and to commit messages: no em dashes.

@@ -24,7 +24,7 @@ Also used, outside the priority list: the **GenieKreator Brand Guidelines** arti
 
 An L&D author reaches iLead in 4 clicks (Experience, Simulations, Business Simulations, iLead), picks a start mode, answers an 8 question brief, waits about 3 minutes for AI generation, then refines 12 areas in one workspace with an AI copilot, playtests, runs 7 quality gates, gets each area reviewed, and publishes a version that appears in Products with results (Screens doc, Summary and Journey flow).
 
-Everything a learner sees, hears or is scored on is data in one SimulationTemplate; the turn loop, state maths, evaluation pipeline, safety guardrails and report formulas are a locked engine (Config Spec, "What is configurable vs locked").
+Everything a learner sees, hears or is scored on is data in one SimulationTemplate; the turn loop, state maths, evaluation pipeline, safety guardrails, data privacy and audit logging, and report formulas are a locked engine (Config Spec, "What is configurable vs locked").
 
 Out of scope: the DILO builder itself (navigation card only), the AI RolePlays builder, the other 4E product lines (shown as tab content only), and production cohort delivery on the KNOLSKAPE platform beyond an adapter stub.
 
@@ -204,7 +204,7 @@ SimulationTemplate {
       remarks; hiddenConcern: { text, linkedEventIds, linkedActionIds }; careerGoal; archetype };
     stats: { skill, morale, result (0 to 100); trust? (0 to 100) ★;
       roleFit: Record<roleId, { skill, motivation, performance }>;  // hidden; Assess reveals one cell
-      sensitivity: { recognition, criticism, change, workload };     // multipliers, default 1
+      sensitivity: { recognition, criticism, change, workload };     // multipliers on deltas from actions and events tagged with that category (A-22), default 1
       influence (0 to 100) };
     persona ★: { personality: { openness, assertiveness, warmth, resilience, candour } (1 to 5);
       communicationStyle: "direct" | "polite" | "verbose" | "terse" | "emotional" | "formal";
@@ -237,10 +237,10 @@ SimulationTemplate {
     framework: "ilead" | "situational_leadership" | "coaching_styles" | "client_upload";
     styles: { id, name, shortCode, definition, colour }[] (3 to 6);
     readinessBands: { id, label, skill: [min, max], morale: [min, max], trust?: [min, max] }[];
-    fitMatrix: Record<bandId, Record<styleId, "fit" | "partial" | "misfit">>;
+    fitMatrix: Record<bandId, styleId>;                  // needed style per band (match or mismatch only)
     memberExceptions: { npcId, week, styleId }[];        // also shown in the NPC "Stats and fit" tab (C-08)
-    roleMisfit: { roleFitSkillBelow; strength: "none" | "moderate" | "strong" };
-    deltaTable: Record<"fit" | "partial" | "misfit", StatDeltas>;
+    roleMisfit: { roleFitSkillBelow; strength: "none" | "moderate" | "strong" };   // semantics A-22
+    deltaTable: Record<"match" | "mismatch", StatDeltas>;
     teamFeedback: Record<"below_half" | "half" | "majority" | "all", string[]>;
     inferenceRules ★: { styleId, indicators: string[] }[];
     intentVsAction ★: { enabled; gapWeeks; trustDelta };
@@ -254,8 +254,8 @@ SimulationTemplate {
     prerequisites: { actionId, sameTarget, penalty: StatDeltas, nudge: boolean }[];
     effects: Effect[];                 // locked effect kinds: statDelta, swapRoles, reassignRole, makeUnavailable,
                                        // revealRoleFit, hireCandidate, removeMember, teamDelta, scheduleEvent
-    options: { id, label, description, styleTag?, dayCost?, consequences: Record<"fit" | "misfit" | "any", StatDeltas>,
-               quotes: Record<"fit" | "misfit" | "any", string[]> }[] (2 to 4);
+    options: { id, label, description, styleTag?, dayCost?, consequences: Record<"match" | "mismatch" | "any", StatDeltas>,
+               quotes: Record<"match" | "mismatch" | "any", string[]> }[] (2 to 4);
     baseConsequences: { target: StatDeltas; rippleRuleIds: string[] };
     unlock: { kind: "always" | "from_week" | "after_event" | "sponsor_unlock"; week?; eventId? };
     interaction? ★: LiveInteraction;
@@ -306,7 +306,7 @@ SimulationTemplate {
   gamification ★: {
     elements: { score, stars, streaks, badges, sponsorMeter, unlocks, teamPulse, leaderboard, tiers: boolean };
     weights: { business, people, leadership } (sum 100); scale: { kind: "0_100" | "0_1000" | "custom"; max };
-    liveBandScores: Record<Band, number>;              // 100, 70, 35, 0 (formula input, configurable per Config Spec)
+    liveBandScores: Record<Band, number>;              // 100, 70, 35, 0 from the Design doc L formula; editable per A-26
     stars: [number, number, number]; streak: { minStars, startWeeks, bonusPerWeek, cap };
     badges: { id, name, icon, copy, lockedHint, event, condition: Expr, count?, repeatable }[];
     sponsorMeter: { start; briefing: Record<Band, number>; weekRevenue: { above, below }; escalation };
@@ -318,7 +318,7 @@ SimulationTemplate {
     sections: { id: ReportSectionId, enabled, order }[];     // the 10 Report 2.0 sections
     skillsFramework: { source: "ilead_default" | "knolskape_ontology" | "client_upload"; skills: { id, name, definition }[] };
     linkage: Record<skillId, InteractionKey[]>; minObservations;   // default 2
-    ratingScale: { id, label, colour, minScore }[] (5);           // Novice to Role Model
+    ratingScale: { id, label, colour, minScore }[] (default 5);   // Novice to Role Model; level count is configurable
     anchors: Record<skillId, Record<levelId, string>>;
     narrativeBank: { section, band?, styleId?, levelId?, capabilityBand?, text }[];
     evidence: { perSkill; redactNames }; developmentPlan: { priorities; items: { skillId, practiceActivity, onTheJobAction, checkInDays }[] };
@@ -337,6 +337,7 @@ SimulationTemplate {
   governance: {
     collaborators: { userId, role: "admin" | "author" | "reviewer" | "facilitator" | "viewer" }[];
     approval: { enabled; reviewersPerArea: Partial<Record<AreaKey, userId[]>> };
+    locks: { path, lockedBy, reason }[];   // read only mirror of org policy locks for this build (A-23)
     versioning: { enabled }; templates: { enabled }; useDeclaration: "development" | "selection";
   }
 }
@@ -358,7 +359,7 @@ DraftDocument {
     via?: "form" | "copilot" | "regenerate";
     generator?: { area, promptId, promptVersion, runId };
     by?: userId; at: ISODate }>;
-  areaState: Record<AreaKey, { status: "not_opened" | "needs_attention" | "reviewed"; reviewedAt?; reviewedBy? }>;
+  areaState: Record<AreaKey, { opened: boolean; reviewed: boolean; reviewedAt?; reviewedBy?; attention: string[] }>;   // A-29
   revision: number;                         // optimistic concurrency
 }
 ```
@@ -410,6 +411,7 @@ erDiagram
 | ReviewAssignment, Comment | areaKey, reviewerId, decision; fieldPath, body, resolved | Review flow (P3) |
 | TemplateVersion, Delivery | immutable template; kind (link, scorm12, scorm2004, xapi, cohort), cohort dates, facilitator, leaderboard scope | Publish (P4) |
 | PlaySession, PlayEvent, InteractionRun, Evaluation, Transcript | seed, snapshot revision, engine state; seq, type, payload; band, styleShown, reasons, evidence | Playtest and later live runs |
+| AuditSample | interactionRunId, assessorId, humanBand, note, status | Human review tier (Config Spec "Sample audit" default; Design doc ITC row "a human audit sample of AI scored interactions"); feeds Results "Interaction quality" and "Content health" |
 | PlaytestNote, Notification, AuditLog | | |
 
 Edit locks and presence live in Redis with TTL, not Postgres.
@@ -454,9 +456,9 @@ What each step does: Briefing delivers the news bulletin, NPC messages, and sche
 | Rule | Source | Engine behaviour |
 | --- | --- | --- |
 | Style fit by readiness band | Teardown hidden rule 1; Config Leadership | Needed style = fit matrix of the member's current band; member exceptions override; recomputed every week from current stats |
-| Role misfit penalty | Teardown (Justin failed all styles); Config | If role fit skill for the current role is below threshold, "strong" turns every style into misfit, "moderate" downgrades fit to partial |
-| Delta table and team message | Teardown week table; Config | Fit, partial, misfit deltas per member scaled by sensitivity; team message picked by share of fits (below half, half, majority, all), variant chosen by RNG |
-| Option scoring reuses style fit | Teardown hidden rule 2 | Static options with a style tag score fit or misfit against the needed style, not the event context |
+| Role misfit penalty | Teardown (Justin failed all styles); Config | If role fit skill for the current role is below threshold, "strong" makes every style a mismatch and "moderate" halves match gains (A-22: the docs give the effect, not the mechanism) |
+| Delta table and team message | Teardown week table; Config | Match or mismatch deltas per member; team message picked by share of matches (below half, half, majority, all), variant chosen by RNG |
+| Option scoring reuses style fit | Teardown hidden rule 2 | Static options with a style tag score match or mismatch against the needed style, not the event context |
 | Day budget, costs, cooldowns, limits | Teardown catalogue; Config Actions | Energize 10 day cooldown; email max 3 recipients; training max 3; per option day cost |
 | Eligibility | Teardown hidden rule 6 | Max 2 per role; at least 1 left in role after Fire; training only if a peer covers the role; unavailable members excluded |
 | Prerequisites | Teardown hidden rule 3 | Swap without Assess applies the authored penalty; the drawer nudge is UI only |
@@ -473,9 +475,9 @@ What each step does: Briefing delivers the news bulletin, NPC messages, and sche
 
 The Config Spec marks readiness bands, the fit matrix, throughput weights and base consequences as "hidden engine values" or "engine default". No doc gives the numbers. Unless you supply the real values (Q1), M1 seeds values derived from the Teardown, each tagged `provenance: "derived"` in the seed and listed in `docs/decisions.md`:
 
-- **Readiness bands (A-11).** A 2 by 2 grid on Skill (threshold 50) and Morale (threshold 60) mapped to the 4 styles as in Situational Leadership: low Skill and low Morale need Directing; low Skill and high Morale need Guiding; high Skill and low Morale need Partnering; high Skill and high Morale need Entrusting. This reproduces every observation in the Teardown: Kent 30/22, Peter 10/15 and Beth 25/57 need Directing; Beth 25/73 does not (she needs Guiding, which explains her Week 1 miss); Green 89/56, Lowe 80/45 and Ruth 80/50 need Partnering; Jack 92/85 and Derick 70/71 need Entrusting.
-- **Delta table.** Fit +2 morale, +2 result; misfit -1 morale, -1 result (Teardown "+2 to +3, -1 to -2"); tuned by the balance gate.
-- **Funnel.** Ideal 3, 2, 1, 1, 1 per week; productivity = 0.4 Skill + 0.3 Morale + 0.3 Result; capacity scales with the owners' mean productivity against a reference and with how many owners are available. Tuned in M2 so the strong bot reaches $240,000 and Gold and the careless bot stays below target and in Bronze (Config quality gate).
+- **Readiness bands (A-11).** A 2 by 2 grid on Skill (threshold 50) and Morale (threshold 60) mapped to the 4 styles as in Situational Leadership: low Skill and low Morale need Directing; low Skill and high Morale need Guiding; high Skill and low Morale need Partnering; high Skill and high Morale need Entrusting. This reproduces the Teardown observations: Kent 30/22, Peter 10/15 and Beth 25/57 need Directing; Beth 25/73 does not (she needs Guiding, which explains her Week 1 miss); Green 89/56, Lowe 80/45 and Ruth 80/50 need Partnering; Jack 92/85 and Derick 70/71 need Entrusting. One caveat: Mandy is 40/62 right after the swap, which this model calls Guiding; her observed Directing fit (Coach at Week 3, Day 5) holds only because her Morale fell below 60 by then (training, two mismatched weeks, drift and the Week 3 news event), and by Week 4 her Skill is close to the 50 threshold. The thresholds are therefore a starting point for the balance gate, not a proven fit. The M2 report fixture is a hand labelled choice log fed to the report functions, not an engine replay.
+- **Delta table (A-24).** Match +2 morale, +2 result; mismatch -1 morale, -1 result (Teardown "+2 to +3, -1 to -2"); tuned by the balance gate.
+- **Funnel (A-25).** Ideal 3, 2, 1, 1, 1 per week; productivity = 0.4 Skill + 0.3 Morale + 0.3 Result; capacity scales with the owners' mean productivity against a reference and with how many owners are available. Tuned in M2 so the strong bot reaches $240,000 and Gold and the careless bot stays below target and in Bronze (Config quality gate).
 
 ### 5.5 Gamification and report formulas (Design doc, locked; inputs and weights configurable)
 
@@ -485,7 +487,7 @@ The Config Spec marks readiness bands, the fit matrix, throughput weights and ba
 - **Sponsor confidence**: starts 50; briefing band +20, +5, -10, -25; week revenue vs ideal +5 or -5; escalation to CEO -10. 70 or more offers one unlock; below 30 triggers a CEO check in costing a day.
 - **Team Pulse**: mean of team Morale and team Trust. **Tiers**: Platinum 850, Gold 700, Silver 500, Bronze below 500.
 - **Badges**: rules over the event log, `{ id, event, condition, count, repeatable }`, e.g. `{ "id": "read_the_room", "event": "week_end", "condition": "style_fit_count >= 9", "repeatable": false }`. All 10 default badges ship in the seed.
-- **Report metrics (Teardown, confirmed)**: dominant style (most used across all style tagged choices); style share; contextual capability % = correct style tagged choices / all; intent vs style per member (intent = dominant weekly setting, ties listed; style = dominant style of individual actions with that member, "None" if none); attention per member (average Result, delta = final minus starting Result, actions taken). The average Result is the mean of the member's Result sampled after each player action: the Teardown run had 11 actions and its figures are exact elevenths (Kent 464/11 = 42.18, Jack 1032/11 = 93.82) (A-10).
+- **Report metrics (Teardown, confirmed)**: dominant style (most used across all style tagged choices); style share; contextual capability % = correct style tagged choices / all; intent vs style per member (intent = dominant weekly setting, ties listed; style = dominant style of individual actions with that member, "None" if none); attention per member (average Result, delta = final minus starting Result, actions taken). The average Result is taken as the mean of the member's Result sampled after each player action: the Teardown run had 11 actions and its figures are consistent with elevenths (Kent 464/11 = 42.18, Jack 1032/11 = 93.82), though other sample counts also fit at two decimals, so M2 confirms it against the event log (A-10).
 - **Report 2.0 additions**: style used vs needed per readiness band (4 by 4 grid), intent vs action with one quoted example, skills profile on the 5 level scale with 2 evidence quotes per skill, key moments in SBI form from the event log, people trajectories, funnel vs ideal with bottleneck, conversation analytics (descriptive only), development plan from template copy mapped to the lowest skills, methodology page from template copy.
 
 ### 5.6 Expression language
@@ -513,7 +515,7 @@ Keys come only from env (`ANTHROPIC_API_KEY`, `LLM_MODEL`, vendor keys). `LLM_MO
 
 **Structured output with retry.** `generateObject` sends the Zod schema as the output format, parses the response, validates with Zod, and on failure retries up to 2 times with the validation issues appended to the conversation. It also checks the stop reason before reading content (refusals and max tokens are typed errors, not parse errors).
 
-**Determinism for the evaluator.** Current Claude models do not accept sampling parameters such as temperature, so "deterministic settings" means: pinned model and prompt version, outcome bands instead of raw numbers, structured output, evidence quotes verified as verbatim substrings of the transcript, a result cache keyed by hash(transcript, rubric, prompt version, model), and the 85% calibration gate. Optional majority vote over 3 runs for high stakes use (`report.humanReview` = full review).
+**Determinism for the evaluator.** Current Claude models do not accept sampling parameters such as temperature, so "deterministic settings" means: pinned model and prompt version, outcome bands instead of raw numbers, structured output, evidence quotes verified as verbatim substrings of the transcript, a result cache keyed by hash(transcript, rubric, prompt version, model), and the 85% calibration gate.
 
 **Prompt caching.** NPC persona context (persona, knowledge scope, off limits, memory) is a stable system prefix per NPC with a cache breakpoint; volatile state (current mood, this week's facts) goes after it.
 
@@ -610,6 +612,11 @@ Participant input moderation before it reaches an NPC; NPCs answer abuse in role
 
 Errors use one envelope `{ error: { code, message, details? } }` with stable codes (`VALIDATION`, `LOCKED_BY_ADMIN`, `EDIT_LOCKED`, `REVISION_CONFLICT`, `NOT_FOUND`, `FORBIDDEN`, `PROVIDER_FAILED`).
 
+### 7.3 Screen details carried into milestones
+
+Smaller elements from the Screens doc, listed so none is lost: E4 sample report thumbnail that opens a preview (M3, rendered from the seed report model); B1 right column "What we will build" summary that fills as answers arrive, and the Save brief and exit button (M4); Products card description "AI drafted from the brief, editable" (M4); Overview time estimate and the Time and pacing "live estimate of learner minutes as settings change", computed by a pure estimator seeded from the Design doc pacing table (A-28, M5); top bar Submit for review disabled until checks pass (M5, M8); cast health "diversity mix against the brief" (M6); P4 cohort setup "language default" (M9).
+
+
 ## 8. Job design (BullMQ on Redis)
 
 | Queue | Job | Concurrency | Retry | Output |
@@ -631,7 +638,7 @@ Errors use one envelope `{ error: { code, message, details? } }` with stable cod
 - **Autosave.** Each field change sends a JSON Patch with `baseRevision`. Disjoint concurrent patches are rebased; overlapping ones return `REVISION_CONFLICT` with the latest value. The top bar shows Saving or Saved.
 - **Co editing.** Field level soft locks in Redis (30 second TTL, heartbeat while focused); other authors see the field locked with the editor's name; avatars in the top bar from the presence stream.
 - **Copilot.** Plain language request goes to `copilot/plan-patch`, which returns a reply and proposals of JSON Patch ops restricted to unlocked paths. The server applies each proposal to a copy, validates with `TemplateSchema`, and stores before and after values. Apply writes with `source: "author", via: "copilot"` (A-09); Dismiss discards. Mic input goes through `SpeechToText` after consent.
-- **Area status.** Grey until opened; Green once the author confirms it or edits any field; Amber when it has publishable validation issues, a failed or stale gate pointing to it, a generation failure, or a reviewer's change request; padlock when fully admin locked.
+- **Area status.** "Reviewed" and "needs attention" are stored separately (A-29). Reviewed becomes true once the author confirms the area or edits any field, and it is what the 70% progress part counts. The rail dot shows: padlock when fully admin locked; otherwise Amber when the area has attention reasons (publishable validation issues, a failed or stale gate pointing to it, a generation failure, a reviewer's change request); otherwise Green when reviewed; otherwise Grey.
 - **Progress formula** (Screens, Products list): 70% × reviewed areas / 12 + 20% × passed gates / 7 + 10% × approved areas / 12, rounded to a whole percent (A-02: both the gate and the approval parts accrue per item). A gate with many instances (calibration per interaction, persona per NPC) passes only when all its instances pass.
 - **Statuses.** Draft, In review (after Submit for review), Approved (all areas approved), Published (has a live version). After publish, further edits show an "Unpublished changes" note and restart review for the next version (A-14).
 
@@ -640,7 +647,7 @@ Errors use one envelope `{ error: { code, message, details? } }` with stable cod
 - **Tokens from the Brand Guidelines**: Deep Space `#0A081B` background, Surface 1 `#111029` for nav, Surface 2 `rgba(255,255,255,.04)` for cards, Electric Blue `#249DFF` (primary, active pill), Cyber Cyan `#43D6E8` (primary buttons such as Continue Editing), Mint Green `#00F2AD` (success, progress completion), Pale Lavender `#DEE9FF` text, 135 degree brand gradients, radii 8/12/16/pill, Manrope only (self hosted, no runtime font fetch), sentence case.
 - **Layout parity with today's GenieKreator** (screenshots): breadcrumb top left, centred pill tabs (Evaluate, Educate, Experience, Enable), illustrated choice cards with an author perspective line, a "Products" section rule with search, product cards with type chip, description, progress bar with %, Created and Updated dates, Continue Editing and Preview, overflow menu.
 - **Accessibility**: muted text at 62% lavender is used for body copy only where it meets 4.5:1; 40% faint is never used for text. Focus ring 2px Cyber Cyan with offset. Framer Motion animations wrap `useReducedMotion`. Every interactive element is reachable by keyboard in DOM order.
-- **Copy**: every UI string lives in `src/i18n/en.json`; `scripts/lint-copy` fails CI on em or en dashes, a spaced hyphen used as punctuation, any form of "competenc", and misspellings of Business Simulations, Day in the Life (DILO) Simulations, iLead, AI RolePlay. Headlines are author side questions; buttons are verbs.
+- **Copy**: every UI string lives in `src/i18n/en.json`; `scripts/lint-copy` fails CI on em or en dashes, a spaced hyphen used as punctuation, any form of "competenc", and misspellings of Business Simulations, Day in the Life (DILO) Simulations, iLead, AI RolePlay (the existing E1 card title "AI RolePlays" is whitelisted, C-09). Headlines are author side questions; buttons are verbs.
 - **Other 4E tabs** show their product cards from your list (Evaluate: Conversation AI, Nano AI, PitchPerfect AI; Educate: AI Microlearn, Interactive Learn; Enable: AI Koach) as non functional placeholders.
 
 ## 11. Testing and CI
@@ -672,7 +679,7 @@ Tooling: Vitest (unit and integration, workspace mode, `fast-check` for properti
 | M6 | Cast studio | M5 |
 | M7 | Interaction designer, `@gk/evaluator`, calibration | M5, M2 |
 | M8 | `@gk/quality`, Quality check page, learner runtime and Playtest | M2, M7 |
-| M9 | Review, publish, versions, `@gk/export`, Products additions, Results shell | M8 |
+| M9 | Review, publish, versions, `@gk/export`, Products additions, Results with its five views (cohort overview, skills view, interaction quality, experience feedback, content health) and the human audit sample queue for assessors | M8 |
 
 After each milestone: typecheck, lint, copy lint, unit and e2e tests, screenshots checked against the spec tables, `docs/progress.md` updated, commit, push, stop for review.
 
@@ -688,7 +695,7 @@ After each milestone: typecheck, lint, copy lint, unit and e2e tests, screenshot
 
 ## 14. Conflicts, open decisions, assumptions
 
-Logged in `docs/decisions.md`: 13 conflicts resolved by doc priority (C-xx), 13 open decisions implemented as configurable with `TODO(decision)` (D-xx), and 21 assumptions where the docs are silent (A-xx).
+Logged in `docs/decisions.md`: 14 conflicts resolved by doc priority (C-xx), 13 open decisions implemented as configurable with `TODO(decision)` (D-xx), and 29 assumptions where the docs are silent (A-xx).
 
 ## 15. Questions for you
 
