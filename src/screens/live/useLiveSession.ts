@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LiveVariant } from '../../data/types';
-import type { AppModel } from '../../app/types';
+import type { AppModel, InputMode } from '../../app/types';
+import type { MicState } from '../../components/live/MicButton';
+import type { MicHintInput, MicStatusKind } from '../../components/live/MicStatus';
 import { initialBody, initialSubject, scriptsFor, type LiveScript } from './content';
 
 /**
@@ -97,6 +99,33 @@ function initialStateFor(uiState: string | undefined, mobile: boolean | undefine
   else Object.assign(st, { log: [npc0], words: 0 });
   if (mobile) st.brief = false;
   return { ...defaults, ...st };
+}
+
+/** The mic button's state for the current phase. */
+export function micStateOf(s: LiveState): MicState {
+  if (s.micDenied) return 'denied';
+  if (s.phase === 'listening') return 'listening';
+  if (s.phase === 'review') return 'review';
+  return 'idle';
+}
+
+/** The reply bar's state line for the current phase, in the order the design checks them. */
+export function micStatusOf(s: LiveState, input: InputMode): MicStatusKind {
+  if (s.micDenied) return 'denied';
+  if (s.phase === 'listening') return 'listening';
+  if (s.phase === 'review') return s.poor ? 'partial' : 'review';
+  if (s.phase === 'speaking') return 'speaking';
+  if (s.phase === 'thinking') return 'thinking';
+  if (s.phase === 'done') return 'done';
+  if (s.mode === 'voice') return input === 'open' ? 'readyOpen' : 'readyPtt';
+  return 'readyText';
+}
+
+/** The hint under the reply bar: push to talk or hands free in voice, keys in text. */
+export function micHintOf(s: LiveState, input: InputMode): MicHintInput {
+  if (s.micDenied) return 'denied';
+  if (s.mode === 'voice') return input === 'open' ? 'open' : 'ptt';
+  return 'text';
 }
 
 export function useLiveSession(props: LiveSessionProps) {

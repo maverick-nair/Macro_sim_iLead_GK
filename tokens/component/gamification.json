@@ -1,0 +1,16 @@
+{
+  "gamification": {
+    "eyebrow": {
+      "tracking": { "value": "0.12em" }
+    },
+    "badge": {
+      "award-shadow": { "value": "0 0 80px {color.celebration.glow}" },
+      "award-enter": { "value": "ilIn 400ms cubic-bezier(.2,.9,.3,1.2)" },
+      "medal-ring": { "value": "0 0 0 8px {color.celebration.ring}" }
+    },
+    "star": {
+      "enter": { "value": "ilIn 500ms cubic-bezier(.2,.9,.3,1.3) both" },
+      "stagger": { "value": "180ms", "$description": "Delay between stars appearing" }
+    }
+  }
+}

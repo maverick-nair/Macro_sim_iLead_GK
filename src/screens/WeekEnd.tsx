@@ -1,7 +1,9 @@
-import { useId, useState } from 'react';
+import { useState } from 'react';
 import type { ScreenProps } from '../app/types';
 import { css } from '../lib/css';
 import { NoWrapButton } from '../ds/Button';
+import { BadgeAward } from '../components/gamification/Badge';
+import { StarMeter, StarRow, type StarKind } from '../components/gamification/StarMeter';
 
 /** Week end flow, ported from `project/ilWeekEnd.dc.html`. */
 export interface WeekEndProps extends ScreenProps {
@@ -19,15 +21,6 @@ const NEWS = [
   { t: 'Ashcroft signed at list price', d: 'Jack and Green held the line. Priya sent a note to the whole team.', impact: 'Revenue +$8,400. Morale lifts for Jack and Green.', art: 'linear-gradient(135deg,#43D6E8,#00F2AD)' }
 ];
 
-const STAR_POINTS = '12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3';
-
-const STARS = [0, 1, 2].map(i => ({
-  gid: 'wg' + i,
-  delay: i * 0.18 + 's',
-  filled: i < 2,
-  stroke: i < 2 ? 'transparent' : 'var(--ik-line-strong)'
-}));
-
 const KPIS = ([['Team skill', 56, 57], ['Team morale', 54, 58], ['Team result', 58, 60], ['Team trust', 53, 57]] as const).map(([n, a, b]) => ({
   n,
   a,
@@ -36,11 +29,20 @@ const KPIS = ([['Team skill', 56, 57], ['Team morale', 54, 58], ['Team result', 
   c: b - a > 0 ? 'var(--ik-pos)' : 'var(--ik-text-2)'
 }));
 
-const STAR_ROWS = [
-  { t: 'People star', d: 'Lifted team morale by 4 points' },
-  { t: 'Leadership star', d: 'Matched your style to 7 of 10 people' },
-  { t: 'Business star, not yet', d: 'Hit week 2 revenue pace. You were $18,800 short.' }
-].map((r, i) => ({ ...r, fill: i < 2 ? '#43D6E8' : 'transparent', stroke: i < 2 ? '#43D6E8' : 'var(--ik-line-strong)' }));
+const STAR_ROWS: Array<{ kind: StarKind; earned: boolean; detail: string }> = [
+  { kind: 'people', earned: true, detail: 'Lifted team morale by 4 points' },
+  { kind: 'leadership', earned: true, detail: 'Matched your style to 7 of 10 people' },
+  { kind: 'business', earned: false, detail: 'Hit week 2 revenue pace. You were $18,800 short.' }
+];
+
+/** The Listener badge artwork. Badge art comes from the scenario config once the engine serves it. */
+const LISTENER_ICON = (
+  <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 8a6 6 0 0 1 12 0c0 7-6 6-6 10"></path>
+    <path d="M9 8a3 3 0 0 1 6 0"></path>
+    <circle cx="12" cy="21" r="1"></circle>
+  </svg>
+);
 
 const REWARDS = [
   { n: 'An extra half day', d: 'Five and a half days of your time in week 3.', art: 'linear-gradient(135deg,#249DFF,#43D6E8)' },
@@ -52,8 +54,6 @@ const CARD = 'padding:20px; border-radius:24px; background:var(--ik-card); backd
 const EYEBROW = 'font-size:12px; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ik-acc-2)';
 
 export function WeekEnd({ d, app, act, step: initialStep }: WeekEndProps) {
-  // Gradient ids must be unique per page, the screens gallery renders many week ends at once.
-  const uid = useId().replace(/:/g, '');
   const [step, setStep] = useState<Step>(() => (isStep(initialStep) ? initialStep : 'banner'));
   const [reward, setReward] = useState<number | null>(null);
   const [newsIdx, setNewsIdx] = useState(0);
@@ -100,20 +100,7 @@ export function WeekEnd({ d, app, act, step: initialStep }: WeekEndProps) {
           <div aria-hidden="true" style={css('position:absolute; left:50%; top:45%; width:560px; height:560px; transform:translate(-50%,-50%); border-radius:50%; background:radial-gradient(circle, oklch(0.75 0.14 200 / 0.35), transparent 65%)')}></div>
           <span style={css(`position:relative; ${EYEBROW}`)}>End of week 2</span>
           <h1 style={css('position:relative; margin:0; font-size:64px; line-height:1; font-weight:700; letter-spacing:-0.03em')}>Kent is back in the game.</h1>
-          <div aria-label="2 of 3 stars this week" style={css('position:relative; display:flex; gap:14px')}>
-            {STARS.map(st => (
-              <svg key={st.gid} width="64" height="64" viewBox="0 0 24 24" style={css(`animation:ilIn 500ms cubic-bezier(.2,.9,.3,1.3) both; animation-delay:${st.delay}`)}>
-                <defs>
-                  <linearGradient id={uid + st.gid} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor="#249DFF"></stop>
-                    <stop offset=".5" stopColor="#43D6E8"></stop>
-                    <stop offset="1" stopColor="#00F2AD"></stop>
-                  </linearGradient>
-                </defs>
-                <polygon points={STAR_POINTS} fill={st.filled ? `url(#${uid}${st.gid})` : 'transparent'} stroke={st.stroke} strokeWidth="1.2" strokeLinejoin="round"></polygon>
-              </svg>
-            ))}
-          </div>
+          <StarMeter earned={2} total={3} />
           <p style={css('position:relative; margin:0; font-size:17px; color:var(--ik-text-2); max-width:560px; text-wrap:pretty')}>
             You made time for the people who needed it. Revenue is still behind pace, so next week is about demos.
           </p>
@@ -164,17 +151,7 @@ export function WeekEnd({ d, app, act, step: initialStep }: WeekEndProps) {
           <div style={css('display:flex; flex-direction:column; gap:20px')}>
             <div style={css(`${CARD} gap:12px`)}>
               <h2 style={css('margin:0; font-size:20px; font-weight:700')}>Stars earned</h2>
-              {STAR_ROWS.map(sr => (
-                <div key={sr.t} style={css('display:flex; gap:12px; align-items:center')}>
-                  <svg width="26" height="26" viewBox="0 0 24 24">
-                    <polygon points={STAR_POINTS} fill={sr.fill} stroke={sr.stroke} strokeWidth="1.5"></polygon>
-                  </svg>
-                  <span style={css('display:flex; flex-direction:column')}>
-                    <b style={css('font-size:14px')}>{sr.t}</b>
-                    <span style={css('font-size:12px; color:var(--ik-text-2)')}>{sr.d}</span>
-                  </span>
-                </div>
-              ))}
+              {STAR_ROWS.map(sr => <StarRow key={sr.kind} {...sr} />)}
             </div>
             <div style={css('display:grid; grid-template-columns:1fr 1fr; gap:14px')}>
               <div style={css('padding:18px; border-radius:24px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px')}>
@@ -213,22 +190,7 @@ export function WeekEnd({ d, app, act, step: initialStep }: WeekEndProps) {
 
       {step === 'badge' && (
         <div style={css('flex:1; display:flex; align-items:center; justify-content:center')}>
-          <div role="dialog" aria-label="Badge earned" style={css('width:460px; padding:32px; border-radius:30px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 0 80px oklch(0.75 0.14 200 / 0.35); display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; animation:ilIn 400ms cubic-bezier(.2,.9,.3,1.2)')}>
-            <div style={css('width:140px; height:140px; border-radius:50%; background:var(--grad-spectrum); display:flex; align-items:center; justify-content:center; box-shadow:0 0 0 8px oklch(1 0 0 / 0.08)')}>
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#0A081B" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M6 8a6 6 0 0 1 12 0c0 7-6 6-6 10"></path>
-                <path d="M9 8a3 3 0 0 1 6 0"></path>
-                <circle cx="12" cy="21" r="1"></circle>
-              </svg>
-            </div>
-            <span style={css(EYEBROW)}>Badge earned · 1 of 1</span>
-            <h2 style={css('margin:0; font-size:30px; font-weight:700')}>Listener</h2>
-            <p style={css('margin:0; color:var(--ik-text-2)')}>You asked three open questions in your 1:1 with Kent before offering a fix.</p>
-            <div style={css('display:flex; gap:10px')}>
-              <NoWrapButton variant="ghost" size="md" onClick={next}>Skip</NoWrapButton>
-              <NoWrapButton variant="primary" size="md" onClick={next}>Nice</NoWrapButton>
-            </div>
-          </div>
+          <BadgeAward name="Listener" reason="You asked three open questions in your 1:1 with Kent before offering a fix." icon={LISTENER_ICON} index={1} total={1} onSkip={next} onContinue={next} />
         </div>
       )}
 

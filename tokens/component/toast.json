@@ -5,6 +5,14 @@
     },
     "fg": {
       "value": "light-dark(#fff, #0A081B)"
+    },
+    "max-width": {
+      "value": "90%",
+      "$description": "Long messages wrap instead of reaching the screen edges"
+    },
+    "enter": {
+      "value": "ilIn 200ms ease",
+      "$description": "Rises in from below"
     }
   }
 }

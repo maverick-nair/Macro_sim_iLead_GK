@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useApi } from '../api';
+import { Toast } from '../components/feedback/Toast';
 import { I18nProvider } from '../i18n';
 import type { LiveVariant, MetricKey, Outcome, Scenario, StyleKey, EventType } from '../data/types';
 import { NoWrapButton } from '../ds/Button';
@@ -369,9 +370,7 @@ export function App(p: AppProps) {
           </div>
         )}
 
-        {s.toast && (
-          <div role="status" aria-live="polite" style={css('position:absolute; left:50%; bottom:24px; transform:translateX(-50%); padding:12px 18px; border-radius:999px; background:var(--ik-text); color:light-dark(#fff, #0A081B); font-size:13px; font-weight:600; z-index:60; max-width:90%; text-align:center; animation:ilIn 200ms ease')}>{s.toast}</div>
-        )}
+        <Toast message={s.toast} />
       </div>
     </div>
     </I18nProvider>

@@ -1,0 +1,9 @@
+{
+  "gamification.stars.aria": "{earned} of {total} stars this week",
+  "gamification.star.title": "{kind, select, people {People star} leadership {Leadership star} business {Business star} other {Star}}{earned, select, true {} other {, not yet}}",
+  "gamification.badge.awardAria": "Badge earned",
+  "gamification.badge.awardCount": "Badge earned · {index} of {total}",
+  "gamification.badge.skip": "Skip",
+  "gamification.badge.continue": "Nice",
+  "gamification.badge.status": "{status, select, new {, newly earned} earned {, earned} other {, locked}}. {detail}"
+}

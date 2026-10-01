@@ -4,7 +4,12 @@ import type { LiveVariant } from '../data/types';
 import { css } from '../lib/css';
 import { NoWrapButton } from '../ds/Button';
 import { briefs, moodColors, moodWords, notePlaceholders, subs } from './live/content';
-import { useLiveSession } from './live/useLiveSession';
+import { micHintOf, micStateOf, micStatusOf, useLiveSession } from './live/useLiveSession';
+import { LiveCaption } from '../components/live/LiveCaption';
+import { MicButton, RecordAgainButton } from '../components/live/MicButton';
+import { MicHint, MicStatus } from '../components/live/MicStatus';
+import { TranscriptBubble } from '../components/live/TranscriptBubble';
+import { Waveform } from '../components/live/Waveform';
 
 /**
  * Live interaction shell: 1:1 AI RolePlay (voice and text), email composer,
@@ -46,15 +51,11 @@ export function Live(props: LiveProps) {
     const live = isNpc && idx === s.log.length - 1 && s.phase === 'speaking';
     const text = isNpc ? (live ? shown : S.npc[t.i].t) : t.text || S.user[t.i];
     return {
+      speaker: isNpc ? ('npc' as const) : ('you' as const),
       text,
-      ai: isNpc,
-      meta: isNpc ? mem(S.npc[t.i].id).first : 'You',
-      align: isNpc ? 'flex-start' : 'flex-end',
-      justify: isNpc ? 'flex-start' : 'flex-end',
-      radius: isNpc ? '18px 18px 18px 6px' : '18px 18px 6px 18px',
-      bg: isNpc ? 'var(--ik-raised)' : 'var(--grad-brand)',
-      color: isNpc ? 'var(--ik-text)' : '#0A081B',
-      replay: () => act.say('Replaying with captions.')
+      name: isNpc ? mem(S.npc[t.i].id).first : undefined,
+      streaming: live,
+      onReplay: isNpc ? () => act.say('Replaying with captions.') : undefined
     };
   });
   const voice = s.mode === 'voice' && !s.micDenied;
@@ -82,23 +83,7 @@ export function Live(props: LiveProps) {
       };
     })
     .slice(0, mobile ? 6 : 10);
-  const stateLabel = s.micDenied
-    ? 'Text mode'
-    : listening
-      ? 'Listening'
-      : review
-        ? s.poor
-          ? 'Partial transcript'
-          : 'Edit if you like, then send'
-        : s.phase === 'speaking'
-          ? `${mem(curLine.id).first} is speaking. Talk to interrupt.`
-          : s.phase === 'thinking'
-            ? 'Waiting for a reply'
-            : done
-              ? 'Conversation has reached a natural close'
-              : voice
-                ? 'Press the mic and speak'
-                : 'Type your reply';
+  const micStatus = micStatusOf(s, app.settings.input);
 
   // Values named as in the design's renderVals().
   const title = titles[v];
@@ -183,7 +168,7 @@ export function Live(props: LiveProps) {
   const onSubject = (e: ChangeEvent<HTMLInputElement>) => setState({ subject: e.target.value });
   const onBody = (e: ChangeEvent<HTMLTextAreaElement>) => setState({ body: e.target.value });
   const dictate = () => setState(x => ({ dictating: !x.dictating }));
-  const waveSm = s.wave.slice(0, 12).map(w => Math.max(4, w / 2) + 'px');
+  const waveSm = s.wave.slice(0, 12).map(w => Math.max(4, w / 2));
   const showInput = v !== 'email';
   const toText = () => setState({ mode: 'text' });
   const editable = !listening;
@@ -195,25 +180,12 @@ export function Live(props: LiveProps) {
     }
   };
   const ph = done ? 'You can end the conversation when ready' : s.mode === 'text' || s.micDenied ? 'Type what you would say' : 'Your words appear here as you speak';
-  const wave = s.wave.map(w => w + 'px');
   const canRedo = review && voice;
-  const micAria = listening ? 'Stop and review' : 'Start speaking';
-  const micOk = !s.micDenied;
-  const micSize = voice ? (mobile ? '64px' : '60px') : '48px';
-  const micBg = s.micDenied ? 'var(--ik-track)' : listening ? '#00F2AD' : voice ? 'var(--grad-brand)' : 'var(--ik-raised)';
-  const micC = s.micDenied ? 'var(--ik-text-2)' : voice || listening ? '#0A081B' : 'var(--ik-text)';
-  const micGlow = listening ? '0 0 40px oklch(0.86 0.17 165 / 0.6)' : voice ? '0 0 24px oklch(0.75 0.14 220 / 0.4)' : 'none';
   const mic = () => (listening ? stopListen() : startListen());
   const cantSend = listening || s.phase === 'thinking' || done;
   const sendBg = listening || done ? 'var(--ik-track)' : 'var(--grad-brand)';
   const barBorder = listening ? '#00F2AD' : 'var(--ik-line-strong)';
   const barGlow = listening ? '0 0 0 3px oklch(0.86 0.17 165 / 0.2)' : 'none';
-  const stateC = listening ? 'var(--ik-pos)' : 'var(--ik-text-2)';
-  const helper = s.micDenied
-    ? 'Voice is never required. Everything works in text.'
-    : voice
-      ? 'Push to talk. Hold Space, or tap the mic. You can edit the transcript before it is sent.'
-      : 'Press Enter to send, Shift and Enter for a new line.';
 
   return (
     <div style={css(`flex:1; min-height:${app.minH}; display:flex; flex-direction:column`)}>
@@ -311,15 +283,7 @@ export function Live(props: LiveProps) {
                   {' seems '}
                   <span>{moodWord}</span>
                 </span>
-                {showCaption && (
-                  <div aria-live="polite" style={css(`max-width:560px; padding:14px 18px; border-radius:20px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); font-size:${capSize}; line-height:1.5; text-align:center; text-wrap:pretty`)}>
-                    <span style={css('display:block; font-size:12px; font-weight:700; color:var(--ik-text-2); margin-bottom:4px')}>
-                      <span>{capWho}</span> · captions
-                    </span>
-                    <span>{caption}</span>
-                    {streaming && <span style={css('display:inline-block; width:2px; height:18px; margin-left:3px; vertical-align:middle; background:var(--ik-acc-2); animation:ilPulse 0.9s infinite')}></span>}
-                  </div>
-                )}
+                {showCaption && <LiveCaption name={capWho} text={caption} streaming={streaming} size={mobile ? 'md' : 'lg'} />}
                 {thinking && (
                   <div role="status" style={css('display:flex; align-items:center; gap:8px; padding:10px 16px; border-radius:999px; background:var(--ik-card); border:1px solid var(--ik-line); font-size:13px; color:var(--ik-text-2)')}>
                     <span style={css('display:flex; gap:4px')}>
@@ -347,27 +311,7 @@ export function Live(props: LiveProps) {
                     <span>Saved to History</span>
                   </div>
                   <div style={css('flex:1; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:10px')}>
-                    {log.map((t, i) => (
-                      <div key={i} style={css(`align-self:${t.align}; max-width:88%; display:flex; flex-direction:column; gap:4px`)}>
-                        <div style={css(`padding:10px 14px; border-radius:${t.radius}; background:${t.bg}; color:${t.color}; font-size:14px; text-wrap:pretty`)}>{t.text}</div>
-                        <span style={css(`font-size:12px; color:var(--ik-text-2); display:flex; gap:6px; align-items:center; justify-content:${t.justify}`)}>
-                          <span>{t.meta}</span>
-                          {t.ai && (
-                            <>
-                              <span style={css('display:flex; gap:3px; align-items:center')}>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--ik-acc-2)" strokeWidth="2.25" strokeLinejoin="round">
-                                  <path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"></path>
-                                </svg>
-                                AI persona
-                              </span>
-                              <button onClick={t.replay} aria-label="Replay this line" style={css('border:0; background:transparent; padding:0; color:var(--ik-acc-2); font-size:12px; font-weight:700; cursor:pointer')}>
-                                Replay
-                              </button>
-                            </>
-                          )}
-                        </span>
-                      </div>
-                    ))}
+                    {log.map((t, i) => <TranscriptBubble key={i} {...t} />)}
                   </div>
                 </div>
               )}
@@ -391,12 +335,7 @@ export function Live(props: LiveProps) {
                   </div>
                 ))}
               </div>
-              <div aria-live="polite" style={css('padding:14px 18px; border-radius:20px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); font-size:16px')}>
-                <b style={css('font-size:12px; color:var(--ik-text-2); display:block')}>
-                  <span>{capWho}</span> · captions
-                </b>
-                <span>{caption}</span>
-              </div>
+              <LiveCaption variant="panel" name={capWho} text={caption} />
             </>
           )}
 
@@ -408,10 +347,7 @@ export function Live(props: LiveProps) {
                   <span style={css('position:absolute; top:14px; left:16px; font-size:12px; font-weight:700; color:#0A081B')}>Sponsor avatar</span>
                   {npcTalking && <span style={css('position:absolute; inset:-6px; border-radius:32px; border:2px solid #43D6E8; animation:ilRing 1.6s ease-out infinite')}></span>}
                 </div>
-                <div aria-live="polite" style={css('width:100%; max-width:520px; padding:14px 18px; border-radius:20px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); font-size:16px; text-align:center')}>
-                  <b style={css('font-size:12px; color:var(--ik-text-2); display:block')}>Priya · captions</b>
-                  <span>{caption}</span>
-                </div>
+                <LiveCaption variant="panel" centered name={mem('sponsor').first} text={caption} />
               </div>
               <div style={css('display:flex; flex-direction:column; gap:12px')}>
                 <div style={css('padding:16px; border-radius:20px; background:var(--ik-card); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:10px')}>
@@ -474,11 +410,7 @@ export function Live(props: LiveProps) {
                 <textarea value={s.body} onChange={onBody} aria-label="Email body" style={css('flex:1; min-height:260px; padding:16px; border:0; outline:0; resize:none; background:transparent; color:var(--ik-text); font-size:15px; line-height:1.65')}></textarea>
                 {s.dictating && (
                   <div style={css('position:absolute; left:16px; right:16px; bottom:12px; padding:10px 14px; border-radius:14px; background:var(--ik-mat); border:1px solid var(--ik-acc); display:flex; align-items:center; gap:10px; font-size:13px')}>
-                    <span style={css('display:flex; gap:2px; align-items:center; height:20px')}>
-                      {waveSm.map((w, i) => (
-                        <span key={i} style={css(`width:3px; height:${w}; border-radius:2px; background:var(--ik-acc-2)`)}></span>
-                      ))}
-                    </span>
+                    <Waveform levels={waveSm} size="sm" />
                     Listening. Your words go into the body, you can edit before sending.
                   </div>
                 )}
@@ -512,14 +444,10 @@ export function Live(props: LiveProps) {
               )}
               <div style={css(`display:flex; align-items:flex-end; gap:10px; padding:10px; border-radius:24px; background:var(--ik-mat); border:1px solid ${barBorder}; box-shadow:${barGlow}`)}>
                 <div style={css('flex:1; display:flex; flex-direction:column; gap:4px; min-width:0')}>
-                  <span style={css(`font-size:12px; font-weight:700; color:${stateC}; padding:0 8px`)}>{stateLabel}</span>
+                  <MicStatus status={micStatus} speaker={mem(curLine.id).first} />
                   {listening && (
                     <div style={css('display:flex; align-items:center; gap:10px; padding:4px 8px; min-height:48px')}>
-                      <span style={css('display:flex; gap:2px; align-items:center; height:36px')} aria-hidden="true">
-                        {wave.map((w, i) => (
-                          <span key={i} style={css(`width:3px; height:${w}; border-radius:2px; background:var(--ik-acc-2); transition:height 90ms linear`)}></span>
-                        ))}
-                      </span>
+                      <Waveform levels={s.wave} />
                       <span style={css('font-size:15px')}>{s.draft}</span>
                     </div>
                   )}
@@ -527,30 +455,8 @@ export function Live(props: LiveProps) {
                     <textarea value={s.draft} onChange={onDraft} onKeyDown={onKey} placeholder={ph} aria-label="Your reply" rows={2} style={css('width:100%; padding:8px; border:0; outline:0; resize:none; background:transparent; color:var(--ik-text); font-size:15px; line-height:1.5')}></textarea>
                   )}
                 </div>
-                {canRedo && (
-                  <button onClick={startListen} aria-label="Record again" style={css('width:44px; height:44px; flex:none; border-radius:50%; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text); cursor:pointer')}>
-                    ↺
-                  </button>
-                )}
-                <button onClick={mic} disabled={s.micDenied} aria-label={micAria} aria-pressed={listening} style={css(`position:relative; width:${micSize}; height:${micSize}; flex:none; border-radius:50%; border:0; background:${micBg}; color:${micC}; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:${micGlow}`)}>
-                  {listening && <span style={css('position:absolute; inset:-6px; border-radius:50%; border:2px solid var(--ik-acc-2); animation:ilRing 1.4s ease-out infinite')}></span>}
-                  {s.micDenied && (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="m2 2 20 20"></path>
-                      <path d="M18.89 13.23A7 7 0 0 0 19 12v-2"></path>
-                      <path d="M5 10v2a7 7 0 0 0 12 5"></path>
-                      <path d="M15 9.34V5a3 3 0 0 0-5.68-1.33"></path>
-                      <path d="M9 9v3a3 3 0 0 0 5.12 2.12"></path>
-                    </svg>
-                  )}
-                  {micOk && (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d={micPath}></path>
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                      <path d="M12 19v3"></path>
-                    </svg>
-                  )}
-                </button>
+                {canRedo && <RecordAgainButton onPress={startListen} />}
+                <MicButton state={micStateOf(s)} mode={s.mode} size={mobile ? 'lg' : 'md'} onPress={mic} />
                 <button onClick={send} disabled={cantSend} aria-label="Send" style={css(`width:48px; height:48px; flex:none; border-radius:50%; border:0; background:${sendBg}; color:#0A081B; cursor:pointer; display:flex; align-items:center; justify-content:center`)}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m5 12 14 0"></path>
@@ -558,7 +464,7 @@ export function Live(props: LiveProps) {
                   </svg>
                 </button>
               </div>
-              <span style={css('font-size:12px; color:var(--ik-text-2); padding:0 8px')}>{helper}</span>
+              <MicHint input={micHintOf(s, app.settings.input)} />
             </div>
           )}
         </section>

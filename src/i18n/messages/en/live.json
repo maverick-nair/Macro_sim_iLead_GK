@@ -1,0 +1,12 @@
+{
+  "live.turn.you": "You",
+  "live.turn.ai": "AI persona",
+  "live.turn.replay": "Replay",
+  "live.turn.replayAria": "Replay this line",
+  "live.caption.label": "{name} · captions",
+  "live.caption.ai": "AI persona voice",
+  "live.mic.aria": "{state, select, listening {Stop and review} denied {Mic blocked} other {Start speaking}}",
+  "live.mic.redo": "Record again",
+  "live.mic.status": "{status, select, denied {Text mode} listening {Listening} review {Edit if you like, then send} partial {Partial transcript} speaking {{name} is speaking. Talk to interrupt.} thinking {Waiting for a reply} done {Conversation has reached a natural close} readyPtt {Press the mic and speak} readyOpen {Speak when you are ready} other {Type your reply}}",
+  "live.mic.hint": "{input, select, denied {Voice is never required. Everything works in text.} ptt {Push to talk. Hold Space, or tap the mic. You can edit the transcript before it is sent.} open {Hands free. Speak when you are ready and pause when you are done. You can edit the transcript before it is sent.} other {Press Enter to send, Shift and Enter for a new line.}}"
+}

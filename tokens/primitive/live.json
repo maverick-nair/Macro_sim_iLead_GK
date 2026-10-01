@@ -1,0 +1,7 @@
+{
+  "color": {
+    "azure": {
+      "750": { "$value": "oklch(0.75 0.14 220)", "$description": "Mic ready glow" }
+    }
+  }
+}

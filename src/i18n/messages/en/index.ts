@@ -4,9 +4,11 @@
  * (checked by src/i18n/catalog.test.ts).
  */
 import common from './common.json';
+import gamification from './gamification.json';
+import live from './live.json';
 import member from './member.json';
 import metric from './metric.json';
 import reason from './reason.json';
 import style from './style.json';
 
-export const en = { ...common, ...member, ...metric, ...reason, ...style };
+export const en = { ...common, ...gamification, ...live, ...member, ...metric, ...reason, ...style };

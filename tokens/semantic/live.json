@@ -1,0 +1,21 @@
+{
+  "color": {
+    "voice": {
+      "ready-glow": {
+        "light": { "ref": "color.azure.750", "alpha": 0.4 },
+        "dark": { "ref": "color.azure.750", "alpha": 0.4 },
+        "$description": "Halo around the mic when voice is ready"
+      },
+      "listening": {
+        "light": "{color.brand.mint-green}",
+        "dark": "{color.brand.mint-green}",
+        "$description": "Mic fill while it is listening"
+      },
+      "listening-glow": {
+        "light": { "ref": "color.mint.860", "alpha": 0.6 },
+        "dark": { "ref": "color.mint.860", "alpha": 0.6 },
+        "$description": "Halo around the mic while it is listening"
+      }
+    }
+  }
+}
