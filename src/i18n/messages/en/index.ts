@@ -3,8 +3,11 @@
  * Add a file, import it here, and spread it into the catalog. Keys must be unique across files
  * (checked by src/i18n/catalog.test.ts).
  */
+import action from './action.json';
 import common from './common.json';
 import metric from './metric.json';
+import outcome from './outcome.json';
+import palette from './palette.json';
 import reason from './reason.json';
 
-export const en = { ...common, ...metric, ...reason };
+export const en = { ...common, ...metric, ...reason, ...action, ...palette, ...outcome };

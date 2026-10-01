@@ -1,0 +1,9 @@
+{
+  "fill": {
+    "portrait": {
+      "calm": { "value": "{gradient.portrait.calm}", "$description": "Portrait backdrop, default" },
+      "warm": { "value": "{gradient.portrait.warm}", "$description": "Portrait backdrop, frustrated or concerned" },
+      "away": { "value": "{gradient.portrait.away}", "$description": "Portrait backdrop, away" }
+    }
+  }
+}

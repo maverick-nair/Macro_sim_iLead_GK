@@ -1,0 +1,10 @@
+{
+  "palette": {
+    "offset": { "value": "120px", "$description": "Distance from the top of the board to the dialog" },
+    "width": { "value": "560px" },
+    "max-width": { "value": "calc(100% - 32px)", "$description": "16px gutter each side on narrow screens" },
+    "results": {
+      "max-height": { "value": "340px", "$description": "About 7 rows, then the list scrolls" }
+    }
+  }
+}

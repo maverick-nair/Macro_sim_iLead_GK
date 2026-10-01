@@ -1,0 +1,8 @@
+{
+  "shadow": {
+    "outcome-glow": {
+      "$value": "0 0 0 1px oklch(0.75 0.14 220 / 0.25), 0 16px 48px oklch(0.05 0.03 280 / 0.35)",
+      "$description": "Cyan hairline glow plus a deep drop shadow. Lifts the outcome band above the board."
+    }
+  }
+}

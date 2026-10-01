@@ -1,0 +1,10 @@
+{
+  "$description": "Portrait backdrops: the soft gradient behind an NPC cut out portrait (mix-blend multiply), by mood. Exact values the final screens render.",
+  "gradient": {
+    "portrait": {
+      "calm": { "$value": "linear-gradient(160deg,#DEE9FF,#9FDCEB)", "$description": "Lavender to aqua. Default and positive moods." },
+      "warm": { "$value": "linear-gradient(160deg,#FFE7C2,#F7C17E)", "$description": "Peach to apricot. Frustrated or concerned." },
+      "away": { "$value": "linear-gradient(160deg,#E4E6F0,#C9CEDF)", "$description": "Fog greys. Away in training." }
+    }
+  }
+}
