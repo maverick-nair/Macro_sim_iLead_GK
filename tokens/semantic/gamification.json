@@ -1,0 +1,21 @@
+{
+  "color": {
+    "celebration": {
+      "glow": {
+        "light": { "ref": "color.cyan.750", "alpha": 0.35 },
+        "dark": { "ref": "color.cyan.750", "alpha": 0.35 },
+        "$description": "Glow around a badge award"
+      },
+      "ring": {
+        "light": { "ref": "color.white", "alpha": 0.08 },
+        "dark": { "ref": "color.white", "alpha": 0.08 },
+        "$description": "Soft ring around a badge medal"
+      },
+      "star": {
+        "light": "{color.brand.cyber-cyan}",
+        "dark": "{color.brand.cyber-cyan}",
+        "$description": "An earned star in the weekly report"
+      }
+    }
+  }
+}

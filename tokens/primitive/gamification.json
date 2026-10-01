@@ -1,0 +1,7 @@
+{
+  "color": {
+    "cyan": {
+      "750": { "$value": "oklch(0.75 0.14 200)", "$description": "Celebration glow behind awards" }
+    }
+  }
+}

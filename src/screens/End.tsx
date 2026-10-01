@@ -2,6 +2,7 @@ import { useState, type ChangeEvent } from 'react';
 import type { ScreenProps } from '../app/types';
 import { css } from '../lib/css';
 import { NoWrapButton } from '../ds/Button';
+import { BadgeShelf, type BadgeChipProps } from '../components/gamification/Badge';
 
 /** End of simulation reflection, ported from `project/ilEnd.dc.html`. */
 
@@ -32,11 +33,11 @@ export function End({ d, app, act }: ScreenProps) {
   const [answers, setAnswers] = useState<string[]>(['Kent taught me that the loudest problem is not always the real one. Asking first changed everything.', '']);
   const [rating, setRating] = useState(4);
 
-  const badges = d.badges.map((b, i) => ({
-    n: b.n,
-    d: b.d,
-    c: i < 4 ? 'var(--ik-text)' : 'var(--ik-text-2)',
-    bg: i < 4 ? 'var(--grad-spectrum)' : 'var(--ik-track)'
+  // The design shows four of six earned by the end of the simulation; the scenario data is week 2's.
+  const badges: BadgeChipProps[] = d.badges.map((b, i) => ({
+    name: b.n,
+    detail: b.d,
+    status: i < 4 ? (b.isNew ? 'new' : 'earned') : 'locked'
   }));
 
   const onAnswer = (i: number) => (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -119,14 +120,7 @@ export function End({ d, app, act }: ScreenProps) {
           ))}
           <div style={css('display:flex; flex-direction:column; gap:8px; padding-top:6px')}>
             <h2 style={css('margin:0; font-size:16px; font-weight:700')}>Badges</h2>
-            <div style={css('display:flex; gap:10px; flex-wrap:wrap')}>
-              {badges.map(b => (
-                <span key={b.n} title={b.d} style={css(`display:flex; align-items:center; gap:8px; height:36px; padding:0 14px 0 4px; border-radius:999px; background:var(--ik-card); border:1px solid var(--ik-line); font-size:13px; font-weight:700; color:${b.c}`)}>
-                  <span style={css(`width:28px; height:28px; border-radius:50%; background:${b.bg}`)}></span>
-                  <span>{b.n}</span>
-                </span>
-              ))}
-            </div>
+            <BadgeShelf badges={badges} />
           </div>
         </div>
         <div style={css('display:flex; flex-direction:column; gap:14px; padding:20px; border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong)')}>

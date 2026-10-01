@@ -27,6 +27,12 @@
   --color-status-gain-soft: var(--il-color-status-gain-soft);
   --color-status-decline: var(--il-color-status-decline);
   --color-status-decline-soft: var(--il-color-status-decline-soft);
+  --color-celebration-glow: var(--il-color-celebration-glow);
+  --color-celebration-ring: var(--il-color-celebration-ring);
+  --color-celebration-star: var(--il-color-celebration-star);
+  --color-voice-ready-glow: var(--il-color-voice-ready-glow);
+  --color-voice-listening: var(--il-color-voice-listening);
+  --color-voice-listening-glow: var(--il-color-voice-listening-glow);
   --background-image-brand: var(--il-fill-brand);
   --background-image-product: var(--il-fill-product);
   --background-image-spectrum: var(--il-fill-spectrum);

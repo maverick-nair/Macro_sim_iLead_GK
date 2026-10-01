@@ -24,6 +24,7 @@
   --il-color-blue-620: oklch(0.62 0.17 250);
   --il-color-blue-950: oklch(0.95 0.03 250);
   --il-color-cyan-600: oklch(0.6 0.12 205);
+  --il-color-cyan-750: oklch(0.75 0.14 200);
   --il-color-amber-550: oklch(0.55 0.13 62);
   --il-color-amber-840: oklch(0.84 0.14 78);
   --il-color-amber-960: oklch(0.96 0.04 80);
@@ -33,6 +34,7 @@
   --il-color-coral-530: oklch(0.53 0.17 25);
   --il-color-coral-780: oklch(0.78 0.13 25);
   --il-color-coral-960: oklch(0.96 0.025 25);
+  --il-color-azure-750: oklch(0.75 0.14 220);
   --il-gradient-brand: linear-gradient(135deg,#249DFF,#43D6E8);
   --il-gradient-product: linear-gradient(135deg,#43D6E8,#00F2AD);
   --il-gradient-spectrum: linear-gradient(135deg,#249DFF 0%,#43D6E8 50%,#00F2AD 100%);
@@ -139,6 +141,12 @@
   --il-color-status-gain-soft: light-dark(var(--il-color-mint-950), oklch(0.86 0.17 165 / 0.14));
   --il-color-status-decline: light-dark(var(--il-color-coral-530), var(--il-color-coral-780));
   --il-color-status-decline-soft: light-dark(var(--il-color-coral-960), oklch(0.78 0.13 25 / 0.14));
+  --il-color-celebration-glow: light-dark(oklch(0.75 0.14 200 / 0.35), oklch(0.75 0.14 200 / 0.35));
+  --il-color-celebration-ring: light-dark(oklch(1 0 0 / 0.08), oklch(1 0 0 / 0.08));
+  --il-color-celebration-star: light-dark(var(--il-color-brand-cyber-cyan), var(--il-color-brand-cyber-cyan));
+  --il-color-voice-ready-glow: light-dark(oklch(0.75 0.14 220 / 0.4), oklch(0.75 0.14 220 / 0.4));
+  --il-color-voice-listening: light-dark(var(--il-color-brand-mint-green), var(--il-color-brand-mint-green));
+  --il-color-voice-listening-glow: light-dark(oklch(0.86 0.17 165 / 0.6), oklch(0.86 0.17 165 / 0.6));
   --il-fill-brand: var(--client-grad, var(--il-gradient-brand));
   --il-fill-product: var(--il-gradient-product);
   --il-fill-spectrum: var(--il-gradient-spectrum);
@@ -164,6 +172,18 @@
   --il-dialog-radius: var(--il-radius-24);
   --il-dialog-bg: var(--il-color-surface-material);
   --il-dialog-border: var(--il-color-line-strong);
+  --il-gamification-eyebrow-tracking: 0.12em;
+  --il-gamification-badge-award-shadow: 0 0 80px var(--il-color-celebration-glow);
+  --il-gamification-badge-award-enter: ilIn 400ms cubic-bezier(.2,.9,.3,1.2);
+  --il-gamification-badge-medal-ring: 0 0 0 8px var(--il-color-celebration-ring);
+  --il-gamification-star-enter: ilIn 500ms cubic-bezier(.2,.9,.3,1.3) both;
+  --il-gamification-star-stagger: 180ms;
+  --il-live-bubble-max-width: 88%;
+  --il-live-caption-cursor: ilPulse 0.9s infinite;
+  --il-live-mic-glow-ready: 0 0 24px var(--il-color-voice-ready-glow);
+  --il-live-mic-glow-listening: 0 0 40px var(--il-color-voice-listening-glow);
+  --il-live-mic-ring: ilRing 1.4s ease-out infinite;
+  --il-live-waveform-transition: height 90ms linear;
   --il-metric-bar-columns: 46px minmax(0,1fr) 22px;
   --il-metric-bar-fill: var(--il-fill-meter);
   --il-metric-bar-fill-low: var(--il-color-status-attention);
@@ -174,6 +194,8 @@
   --il-switch-thumb-off: var(--il-color-brand-pale-lavender);
   --il-toast-bg: var(--il-color-fg-primary);
   --il-toast-fg: light-dark(#fff, #0A081B);
+  --il-toast-max-width: 90%;
+  --il-toast-enter: ilIn 200ms ease;
   /* Migration aliases, removed as screens move to utilities. */
   --ik-text: var(--il-color-fg-primary);
   --ik-text-2: var(--il-color-fg-secondary);
