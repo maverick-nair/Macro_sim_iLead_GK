@@ -1,0 +1,194 @@
+{
+  "$description": "Semantic layer. Meaning, per mode. Each color has a light and a dark value, emitted as light-dark() so color-scheme on the app root picks the mode. `alpha` applies an opacity to an OKLCH primitive. `overridableBy` names the brand variable a GenieKreator theme may set (accent tokens only). `contrast` declares a minimum WCAG 2.2 ratio against another semantic token, checked at build time.",
+  "color": {
+    "fg": {
+      "primary": {
+        "light": "{color.ink.200}",
+        "dark": "{color.lavender.940}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 4.5
+        },
+        "$description": "Names, values, headings"
+      },
+      "secondary": {
+        "light": "{color.ink.450}",
+        "dark": "{color.lavender.780}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 4.5
+        },
+        "$description": "Labels, metadata, descriptions"
+      },
+      "on-accent": {
+        "light": "{color.white}",
+        "dark": "{color.brand.deep-space}",
+        "$description": "Text on accent fills"
+      }
+    },
+    "surface": {
+      "card": {
+        "light": "{color.white}",
+        "dark": {
+          "ref": "color.night.170",
+          "alpha": 0.82
+        },
+        "$description": "Cards over the background image"
+      },
+      "solid": {
+        "light": "{color.white}",
+        "dark": "{color.night.170}",
+        "$description": "Opaque card, fallback for translucent layers"
+      },
+      "raised": {
+        "light": "{color.mist.955}",
+        "dark": {
+          "ref": "color.white",
+          "alpha": 0.06
+        },
+        "$description": "Insets, segmented control tracks"
+      },
+      "material": {
+        "light": {
+          "ref": "color.white",
+          "alpha": 0.93
+        },
+        "dark": {
+          "ref": "color.night.160",
+          "alpha": 0.93
+        },
+        "$description": "Translucent overlays and drawers"
+      },
+      "scrim": {
+        "light": {
+          "ref": "color.ink.200",
+          "alpha": 0.35
+        },
+        "dark": {
+          "ref": "color.night.050",
+          "alpha": 0.66
+        },
+        "$description": "Behind dialogs"
+      }
+    },
+    "line": {
+      "default": {
+        "light": "{color.mist.900}",
+        "dark": {
+          "ref": "color.white",
+          "alpha": 0.1
+        },
+        "$description": "Hairlines, decorative"
+      },
+      "strong": {
+        "light": "{color.mist.820}",
+        "dark": {
+          "ref": "color.white",
+          "alpha": 0.2
+        },
+        "$description": "Control borders"
+      }
+    },
+    "track": {
+      "light": "{color.mist.920}",
+      "dark": {
+        "ref": "color.white",
+        "alpha": 0.1
+      },
+      "$description": "Empty part of bars and meters"
+    },
+    "accent": {
+      "default": {
+        "light": "{color.blue.530}",
+        "dark": "{color.brand.electric-blue}",
+        "overridableBy": "client-acc",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 3
+        },
+        "$description": "Bars, selected state, links"
+      },
+      "secondary": {
+        "light": "{color.cyan.600}",
+        "dark": "{color.brand.cyber-cyan}",
+        "overridableBy": "client-acc-2",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 3
+        },
+        "$description": "Eyebrows, icons, focus"
+      },
+      "soft": {
+        "light": "{color.blue.950}",
+        "dark": {
+          "ref": "color.blue.620",
+          "alpha": 0.18
+        },
+        "overridableBy": "client-acc-soft",
+        "$description": "Selected backgrounds"
+      }
+    },
+    "status": {
+      "attention": {
+        "light": "{color.amber.550}",
+        "dark": "{color.amber.840}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 3
+        },
+        "$description": "Needs attention, under 30"
+      },
+      "attention-soft": {
+        "light": "{color.amber.960}",
+        "dark": {
+          "ref": "color.amber.840",
+          "alpha": 0.14
+        }
+      },
+      "gain": {
+        "light": "{color.mint.500}",
+        "dark": "{color.brand.mint-green}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 3
+        },
+        "$description": "Positive delta"
+      },
+      "gain-soft": {
+        "light": "{color.mint.950}",
+        "dark": {
+          "ref": "color.mint.860",
+          "alpha": 0.14
+        }
+      },
+      "decline": {
+        "light": "{color.coral.530}",
+        "dark": "{color.coral.780}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 3
+        },
+        "$description": "Negative delta"
+      },
+      "decline-soft": {
+        "light": "{color.coral.960}",
+        "dark": {
+          "ref": "color.coral.780",
+          "alpha": 0.14
+        }
+      }
+    }
+  },
+  "fill": {
+    "brand": {
+      "value": "{gradient.brand}",
+      "overridableBy": "client-grad"
+    },
+    "product": {
+      "value": "{gradient.product}"
+    },
+    "spectrum": {
+      "value": "{gradient.spectrum}"
+    }
+  }
+}

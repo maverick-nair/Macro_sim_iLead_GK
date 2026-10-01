@@ -1,0 +1,336 @@
+{
+  "$description": "Primitive layer. Raw values only, no meaning. Colors are the exact values the final iLead screens render (OKLCH, plus the five Genie brand hexes). Names are family + lightness x1000.",
+  "color": {
+    "brand": {
+      "electric-blue": {
+        "$value": "#249DFF",
+        "$description": "Genie Electric Blue. CTAs, links, active."
+      },
+      "cyber-cyan": {
+        "$value": "#43D6E8",
+        "$description": "Genie Cyber Cyan. Hover, highlights."
+      },
+      "mint-green": {
+        "$value": "#00F2AD",
+        "$description": "Genie Mint Green. Success, progress."
+      },
+      "deep-space": {
+        "$value": "#0A081B",
+        "$description": "Genie Deep Space. Default background."
+      },
+      "pale-lavender": {
+        "$value": "#DEE9FF",
+        "$description": "Genie Pale Lavender. Text on dark."
+      },
+      "surface-1": {
+        "$value": "#111029",
+        "$description": "Genie Surface 1. Nav, sidebars."
+      }
+    },
+    "white": {
+      "$value": "oklch(1 0 0)"
+    },
+    "ink": {
+      "200": {
+        "$value": "oklch(0.2 0.03 280)"
+      },
+      "450": {
+        "$value": "oklch(0.45 0.025 278)"
+      }
+    },
+    "lavender": {
+      "780": {
+        "$value": "oklch(0.78 0.03 268)"
+      },
+      "940": {
+        "$value": "oklch(0.94 0.03 265)"
+      }
+    },
+    "mist": {
+      "820": {
+        "$value": "oklch(0.82 0.015 270)"
+      },
+      "900": {
+        "$value": "oklch(0.9 0.012 270)"
+      },
+      "920": {
+        "$value": "oklch(0.92 0.01 270)"
+      },
+      "955": {
+        "$value": "oklch(0.955 0.01 270)"
+      }
+    },
+    "night": {
+      "050": {
+        "$value": "oklch(0.05 0.02 285)"
+      },
+      "160": {
+        "$value": "oklch(0.16 0.035 284)"
+      },
+      "170": {
+        "$value": "oklch(0.17 0.035 283)"
+      }
+    },
+    "blue": {
+      "530": {
+        "$value": "oklch(0.53 0.17 252)"
+      },
+      "620": {
+        "$value": "oklch(0.62 0.17 250)"
+      },
+      "950": {
+        "$value": "oklch(0.95 0.03 250)"
+      }
+    },
+    "cyan": {
+      "600": {
+        "$value": "oklch(0.6 0.12 205)"
+      }
+    },
+    "amber": {
+      "550": {
+        "$value": "oklch(0.55 0.13 62)"
+      },
+      "840": {
+        "$value": "oklch(0.84 0.14 78)"
+      },
+      "960": {
+        "$value": "oklch(0.96 0.04 80)"
+      }
+    },
+    "mint": {
+      "500": {
+        "$value": "oklch(0.5 0.11 165)"
+      },
+      "860": {
+        "$value": "oklch(0.86 0.17 165)"
+      },
+      "950": {
+        "$value": "oklch(0.95 0.04 165)"
+      }
+    },
+    "coral": {
+      "530": {
+        "$value": "oklch(0.53 0.17 25)"
+      },
+      "780": {
+        "$value": "oklch(0.78 0.13 25)"
+      },
+      "960": {
+        "$value": "oklch(0.96 0.025 25)"
+      }
+    }
+  },
+  "gradient": {
+    "brand": {
+      "$value": "linear-gradient(135deg,#249DFF,#43D6E8)",
+      "$description": "Blue to Cyan. Logo, primary buttons."
+    },
+    "product": {
+      "$value": "linear-gradient(135deg,#43D6E8,#00F2AD)",
+      "$description": "Cyan to Mint. Progress fills."
+    },
+    "spectrum": {
+      "$value": "linear-gradient(135deg,#249DFF 0%,#43D6E8 50%,#00F2AD 100%)",
+      "$description": "Blue, Cyan, Mint. Celebration."
+    }
+  },
+  "font": {
+    "family": {
+      "sans": {
+        "$value": "'Manrope', system-ui, sans-serif"
+      }
+    },
+    "weight": {
+      "400": {
+        "$value": "400"
+      },
+      "600": {
+        "$value": "600"
+      },
+      "700": {
+        "$value": "700"
+      },
+      "800": {
+        "$value": "800"
+      }
+    },
+    "size": {
+      "11": {
+        "$value": "11px"
+      },
+      "12": {
+        "$value": "12px"
+      },
+      "13": {
+        "$value": "13px"
+      },
+      "14": {
+        "$value": "14px"
+      },
+      "15": {
+        "$value": "15px"
+      },
+      "16": {
+        "$value": "16px"
+      },
+      "17": {
+        "$value": "17px"
+      },
+      "18": {
+        "$value": "18px"
+      },
+      "20": {
+        "$value": "20px"
+      },
+      "22": {
+        "$value": "22px"
+      },
+      "24": {
+        "$value": "24px"
+      },
+      "26": {
+        "$value": "26px"
+      },
+      "28": {
+        "$value": "28px"
+      },
+      "30": {
+        "$value": "30px"
+      },
+      "32": {
+        "$value": "32px"
+      },
+      "34": {
+        "$value": "34px"
+      },
+      "36": {
+        "$value": "36px"
+      },
+      "40": {
+        "$value": "40px"
+      },
+      "44": {
+        "$value": "44px"
+      },
+      "48": {
+        "$value": "48px"
+      },
+      "54": {
+        "$value": "54px"
+      },
+      "60": {
+        "$value": "60px"
+      },
+      "64": {
+        "$value": "64px"
+      },
+      "110": {
+        "$value": "110px"
+      },
+      "120": {
+        "$value": "120px"
+      }
+    }
+  },
+  "space": {
+    "unit": {
+      "$value": "4px",
+      "$description": "Spacing multiplier. Utilities use quarter steps, so p-2.5 is 10px and p-0.75 is 3px, which covers every spacing value in the design."
+    }
+  },
+  "radius": {
+    "2": {
+      "$value": "2px"
+    },
+    "3": {
+      "$value": "3px"
+    },
+    "4": {
+      "$value": "4px"
+    },
+    "5": {
+      "$value": "5px"
+    },
+    "6": {
+      "$value": "6px"
+    },
+    "8": {
+      "$value": "8px"
+    },
+    "10": {
+      "$value": "10px"
+    },
+    "12": {
+      "$value": "12px"
+    },
+    "14": {
+      "$value": "14px"
+    },
+    "16": {
+      "$value": "16px"
+    },
+    "18": {
+      "$value": "18px"
+    },
+    "20": {
+      "$value": "20px"
+    },
+    "22": {
+      "$value": "22px"
+    },
+    "24": {
+      "$value": "24px"
+    },
+    "26": {
+      "$value": "26px"
+    },
+    "28": {
+      "$value": "28px"
+    },
+    "30": {
+      "$value": "30px"
+    },
+    "32": {
+      "$value": "32px"
+    },
+    "pill": {
+      "$value": "999px"
+    },
+    "round": {
+      "$value": "50%"
+    }
+  },
+  "duration": {
+    "fast": {
+      "$value": "150ms",
+      "$description": "Hover, press, segment switch"
+    },
+    "base": {
+      "$value": "220ms",
+      "$description": "Panels, chips appearing"
+    },
+    "slow": {
+      "$value": "300ms",
+      "$description": "Drawers, row reorder"
+    }
+  },
+  "easing": {
+    "brand": {
+      "$value": "cubic-bezier(.4,0,.2,1)"
+    },
+    "spring": {
+      "$value": "cubic-bezier(.34,1.4,.64,1)",
+      "$description": "Metric values settling"
+    },
+    "settle": {
+      "$value": "cubic-bezier(.2,.9,.3,1.08)",
+      "$description": "Reorder and slide"
+    }
+  },
+  "shadow": {
+    "glow": {
+      "$value": "0 0 24px rgba(36,157,255,.25)"
+    }
+  }
+}

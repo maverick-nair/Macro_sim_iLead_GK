@@ -4,9 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "tokens": "tsx scripts/tokens/build.ts",
+    "tokens:check": "tsx scripts/tokens/build.ts --check",
+    "dev": "npm run tokens && vite",
+    "build": "npm run tokens:check && tsc -b && vite build",
     "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -14,11 +20,19 @@
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
+    "@storybook/react-vite": "^10.6.1",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/culori": "^4.0.1",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
+    "culori": "^4.0.2",
+    "storybook": "^10.6.1",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "~5.9",
-    "vite": "^8.3.2"
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   }
 }

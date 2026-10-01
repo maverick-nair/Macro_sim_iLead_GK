@@ -1,0 +1,104 @@
+{
+  "$description": "Component layer. Values a component reads, expressed in semantic or primitive tokens. Components never reference primitives directly when a semantic token exists.",
+  "button": {
+    "radius": {
+      "value": "{radius.pill}"
+    },
+    "font-weight": {
+      "value": "{font.weight.700}"
+    },
+    "sm": {
+      "height": {
+        "value": "32px"
+      },
+      "padding-x": {
+        "value": "14px"
+      },
+      "font-size": {
+        "value": "{font.size.13}"
+      }
+    },
+    "md": {
+      "height": {
+        "value": "40px"
+      },
+      "padding-x": {
+        "value": "20px"
+      },
+      "font-size": {
+        "value": "{font.size.14}"
+      }
+    },
+    "lg": {
+      "height": {
+        "value": "48px"
+      },
+      "padding-x": {
+        "value": "26px"
+      },
+      "font-size": {
+        "value": "{font.size.15}"
+      }
+    },
+    "primary": {
+      "bg": {
+        "value": "{fill.brand}"
+      },
+      "fg": {
+        "value": "{color.brand.deep-space}"
+      }
+    },
+    "secondary": {
+      "bg": {
+        "value": "{color.surface.raised}"
+      },
+      "fg": {
+        "value": "{color.fg.primary}"
+      },
+      "border": {
+        "value": "{color.line.strong}"
+      }
+    },
+    "ghost": {
+      "fg": {
+        "value": "{color.brand.electric-blue}"
+      },
+      "fg-hover": {
+        "value": "{color.brand.cyber-cyan}"
+      }
+    }
+  },
+  "switch": {
+    "track-on": {
+      "value": "{fill.brand}"
+    },
+    "track-off": {
+      "value": "rgba(255,255,255,.12)"
+    },
+    "thumb-on": {
+      "value": "{color.brand.deep-space}"
+    },
+    "thumb-off": {
+      "value": "{color.brand.pale-lavender}"
+    }
+  },
+  "dialog": {
+    "radius": {
+      "value": "{radius.24}"
+    },
+    "bg": {
+      "value": "{color.surface.material}"
+    },
+    "border": {
+      "value": "{color.line.strong}"
+    }
+  },
+  "toast": {
+    "bg": {
+      "value": "{color.fg.primary}"
+    },
+    "fg": {
+      "value": "light-dark(#fff, #0A081B)"
+    }
+  }
+}

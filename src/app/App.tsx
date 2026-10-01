@@ -76,7 +76,8 @@ function applyMoves(stats: Stats, outcome: Outcome): Stats {
   return next;
 }
 
-const TOKENS = css(`--ik-text:light-dark(oklch(0.2 0.03 280), oklch(0.94 0.03 265)); --ik-text-2:light-dark(oklch(0.45 0.025 278), oklch(0.78 0.03 268)); --ik-card:light-dark(oklch(1 0 0), oklch(0.17 0.035 283 / 0.82)); --ik-solid:light-dark(oklch(1 0 0), oklch(0.17 0.035 283)); --ik-raised:light-dark(oklch(0.955 0.01 270), oklch(1 0 0 / 0.06)); --ik-line:light-dark(oklch(0.9 0.012 270), oklch(1 0 0 / 0.1)); --ik-line-strong:light-dark(oklch(0.82 0.015 270), oklch(1 0 0 / 0.2)); --ik-track:light-dark(oklch(0.92 0.01 270), oklch(1 0 0 / 0.1)); --ik-acc:var(--client-acc, light-dark(oklch(0.53 0.17 252), #249DFF)); --ik-acc-2:var(--client-acc-2, light-dark(oklch(0.6 0.12 205), #43D6E8)); --ik-acc-soft:var(--client-acc-soft, light-dark(oklch(0.95 0.03 250), oklch(0.62 0.17 250 / 0.18))); --ik-on-acc:light-dark(oklch(1 0 0), #0A081B); --ik-warn:light-dark(oklch(0.55 0.13 62), oklch(0.84 0.14 78)); --ik-warn-soft:light-dark(oklch(0.96 0.04 80), oklch(0.84 0.14 78 / 0.14)); --ik-pos:light-dark(oklch(0.5 0.11 165), #00F2AD); --ik-pos-soft:light-dark(oklch(0.95 0.04 165), oklch(0.86 0.17 165 / 0.14)); --ik-neg:light-dark(oklch(0.53 0.17 25), oklch(0.78 0.13 25)); --ik-neg-soft:light-dark(oklch(0.96 0.025 25), oklch(0.78 0.13 25 / 0.14)); --ik-mat:light-dark(oklch(1 0 0 / 0.93), oklch(0.16 0.035 284 / 0.93)); --ik-scrim:light-dark(oklch(0.2 0.03 280 / 0.35), oklch(0.05 0.02 285 / 0.66)); --text-body:var(--ik-text); --surface-2:var(--ik-raised); --surface-border-strong:var(--ik-line-strong); --grad-brand:var(--client-grad, linear-gradient(135deg,#249DFF,#43D6E8)); color:var(--ik-text); font-family:'Manrope', system-ui, sans-serif; font-size:14px; line-height:1.5; font-variant-numeric:tabular-nums; position:relative; min-height:inherit; overflow:hidden; display:flex; flex-direction:column`);
+/** Layout of the themed root. Colors come from the generated `.il-theme` token layers. */
+const THEME_ROOT = css(`color:var(--ik-text); font-family:var(--font-sans); font-size:14px; line-height:1.5; font-variant-numeric:tabular-nums; position:relative; min-height:inherit; overflow:hidden; display:flex; flex-direction:column`);
 
 /** Halden Group sample client theme. The client brand color maps only to accent tokens. */
 const CLIENT_THEME: Record<string, string> = {
@@ -239,7 +240,7 @@ export function App(p: AppProps) {
 
   return (
     <div style={rootVars} className={s.settings.reduced ? 'il-reduced-motion' : undefined}>
-      <div style={TOKENS}>
+      <div className="il-theme" style={THEME_ROOT}>
         {isLoading && (
           <div style={css('flex:1; min-height:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px')}>
             <span style={css('font-size:28px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent')}>iLead</span>

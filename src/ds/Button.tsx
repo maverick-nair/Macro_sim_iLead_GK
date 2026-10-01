@@ -4,16 +4,18 @@ import { useState, type CSSProperties, type ReactNode } from 'react';
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-const sizes: Record<ButtonSize, CSSProperties> = {
-  sm: { height: 32, padding: '0 14px', fontSize: 13 },
-  md: { height: 40, padding: '0 20px', fontSize: 14 },
-  lg: { height: 48, padding: '0 26px', fontSize: 15 }
-};
+const size = (s: ButtonSize): CSSProperties => ({
+  height: `var(--il-button-${s}-height)`,
+  padding: `0 var(--il-button-${s}-padding-x)`,
+  fontSize: `var(--il-button-${s}-font-size)`
+});
+const sizes: Record<ButtonSize, CSSProperties> = { sm: size('sm'), md: size('md'), lg: size('lg') };
 
+// Button tokens live in tokens/component.json.
 const variants: Record<ButtonVariant, CSSProperties> = {
-  primary: { background: 'var(--grad-brand)', color: '#0A081B', border: 'none' },
-  secondary: { background: 'var(--surface-2)', color: 'var(--text-body)', border: '1px solid var(--surface-border-strong)' },
-  ghost: { background: 'transparent', color: 'var(--electric-blue)', border: 'none' }
+  primary: { background: 'var(--il-button-primary-bg)', color: 'var(--il-button-primary-fg)', border: 'none' },
+  secondary: { background: 'var(--il-button-secondary-bg)', color: 'var(--il-button-secondary-fg)', border: '1px solid var(--il-button-secondary-border)' },
+  ghost: { background: 'transparent', color: 'var(--il-button-ghost-fg)', border: 'none' }
 };
 
 export interface ButtonProps {
@@ -40,18 +42,18 @@ export function Button({ variant = 'primary', size = 'md', disabled = false, chi
       style={{
         ...sizes[size],
         ...v,
-        fontFamily: 'var(--font-sans)',
-        fontWeight: 700,
-        borderRadius: 'var(--radius-pill)',
+        fontFamily: 'var(--il-font-family-sans)',
+        fontWeight: 'var(--il-button-font-weight)' as CSSProperties['fontWeight'],
+        borderRadius: 'var(--il-button-radius)',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.4 : 1,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
-        transition: 'filter .15s var(--ease-brand),background .15s',
+        transition: 'filter var(--il-duration-fast) var(--il-easing-brand),background var(--il-duration-fast)',
         filter: hover && !disabled ? 'brightness(1.15)' : 'none',
-        ...(variant === 'ghost' && hover && !disabled ? { color: 'var(--cyber-cyan)' } : null),
+        ...(variant === 'ghost' && hover && !disabled ? { color: 'var(--il-button-ghost-fg-hover)' } : null),
         ...style
       }}
     >

@@ -36,8 +36,8 @@ export function Switch({ label, checked, onChange, disabled = false, style }: Sw
         gap: 10,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.4 : 1,
-        font: 'var(--type-body)',
-        color: 'var(--text-body)',
+        font: 'var(--il-font-weight-400) var(--il-font-size-15)/1.65 var(--il-font-family-sans)',
+        color: 'var(--il-color-fg-primary)',
         userSelect: 'none',
         ...style
       }}
@@ -49,13 +49,13 @@ export function Switch({ label, checked, onChange, disabled = false, style }: Sw
           borderRadius: 999,
           padding: 2,
           boxSizing: 'border-box',
-          background: on ? 'var(--grad-brand)' : 'rgba(255,255,255,.12)',
+          background: on ? 'var(--il-switch-track-on)' : 'var(--il-switch-track-off)',
           display: 'inline-flex',
           justifyContent: on ? 'flex-end' : 'flex-start',
-          transition: 'background .2s var(--ease-brand)'
+          transition: 'background .2s var(--il-easing-brand)'
         }}
       >
-        <span style={{ width: 18, height: 18, borderRadius: '50%', background: on ? '#0A081B' : 'var(--pale-lavender)', transition: 'background .2s' }} />
+        <span style={{ width: 18, height: 18, borderRadius: '50%', background: on ? 'var(--il-switch-thumb-on)' : 'var(--il-switch-thumb-off)', transition: 'background .2s' }} />
       </span>
       {label}
     </label>
