@@ -54,6 +54,9 @@
   --background-image-product: var(--il-fill-product);
   --background-image-spectrum: var(--il-fill-spectrum);
   --background-image-meter: var(--il-fill-meter);
+  --background-image-portrait-calm: var(--il-fill-portrait-calm);
+  --background-image-portrait-warm: var(--il-fill-portrait-warm);
+  --background-image-portrait-away: var(--il-fill-portrait-away);
   --color-brand-electric-blue: var(--il-color-brand-electric-blue);
   --color-brand-cyber-cyan: var(--il-color-brand-cyber-cyan);
   --color-brand-mint-green: var(--il-color-brand-mint-green);
@@ -115,6 +118,7 @@
   --ease-spring: var(--il-easing-spring);
   --ease-settle: var(--il-easing-settle);
   --shadow-glow: var(--il-shadow-glow);
+  --shadow-outcome-glow: var(--il-shadow-outcome-glow);
   --blur-12: var(--il-blur-12);
   --blur-14: var(--il-blur-14);
   --blur-20: var(--il-blur-20);

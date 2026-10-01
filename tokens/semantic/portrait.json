@@ -1,0 +1,10 @@
+{
+  "$description": "Portrait backdrops: the soft gradient behind an NPC cut out portrait (mix-blend multiply), by mood. One source for the member card, outcome panel, inbox and palette.",
+  "fill": {
+    "portrait": {
+      "calm": { "value": "linear-gradient(160deg,{color.portrait.sky-100},{color.portrait.sky-300})", "$description": "Default, steady, upbeat and thinking moods" },
+      "warm": { "value": "linear-gradient(160deg,{color.portrait.sand-100},{color.portrait.sand-300})", "$description": "Frustrated or concerned" },
+      "away": { "value": "linear-gradient(160deg,{color.portrait.fog-100},{color.portrait.fog-300})", "$description": "Away in training" }
+    }
+  }
+}

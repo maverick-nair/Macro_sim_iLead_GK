@@ -1,0 +1,22 @@
+{
+  "action": {
+    "tile": {
+      "columns": { "value": "30px minmax(0,1fr) auto", "$description": "Icon, name and sub line, cost" },
+      "compact-columns": { "value": "minmax(0,1fr) auto", "$description": "Profile column tile: name and sub line, cost" }
+    },
+    "icon": {
+      "live": { "value": "{fill.brand}", "$description": "Live and hybrid actions" },
+      "instant": { "value": "{fill.product}", "$description": "Instant decisions" }
+    },
+    "section": {
+      "tracking": { "value": "0.08em", "$description": "Uppercase section labels" }
+    },
+    "drawer": {
+      "enter": { "value": "ilIn 240ms ease" },
+      "title-tracking": { "value": "-0.02em" }
+    },
+    "option": {
+      "border-width": { "value": "1.5px" }
+    }
+  }
+}

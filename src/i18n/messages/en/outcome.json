@@ -1,0 +1,16 @@
+{
+  "outcome.region": "Outcome",
+  "outcome.eyebrow": "How it landed",
+  "outcome.eyebrowContext": "How it landed · {context}",
+  "outcome.context.oneOnOne": "1:1 with {name}",
+  "outcome.replay": "Replay {name}'s reply",
+  "outcome.replayShort": "Replay",
+  "outcome.face": "{name}. Show reaction",
+  "outcome.reaction": "{name}:",
+  "outcome.dismiss": "Dismiss outcome",
+  "outcome.why": "{open, select, true {Hide why} other {See why}}",
+  "outcome.history": "Open in History",
+  "outcome.back": "Back to my team",
+  "outcome.toast.replay": "Playing {name}’s reply with captions.",
+  "outcome.toast.history": "History opens filtered to {name}."
+}

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ChangeEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, type KeyboardEvent } from 'react';
 import type { ScreenProps, MemberView } from '../app/types';
 import type { EventType, MemberAction, MetricKey, StyleKey, TeamAction } from '../data/types';
 import { css, pseudo } from '../lib/css';
@@ -6,8 +6,12 @@ import { Button, NoWrapButton } from '../ds/Button';
 import { useMergeState } from './board/useMergeState';
 import { MemberCard, type MemberCardProps } from '../components/member/MemberCard';
 import { KpiTile, type KpiTrend } from '../components/metric/KpiTile';
-import { ReasonChip } from '../components/reason/ReasonChip';
-import { ReasonDetail } from '../components/reason/ReasonDetail';
+import { ActionTile, type ActionBlock, type ActionTileProps } from '../components/action/ActionTile';
+import { ActionDrawer, type ActionDrawerProps } from '../components/action/ActionDrawer';
+import { useDays } from '../components/action/days';
+import { CommandPalette, type PaletteResult, type PaletteTone } from '../components/palette/CommandPalette';
+import { OutcomePanel, type OutcomePanelProps } from '../components/outcome/OutcomePanel';
+import { useI18n, type I18n } from '../i18n';
 
 /**
  * Main board: HUD, metrics strip, team board with stage columns, inbox rail,
@@ -54,21 +58,7 @@ interface BoardState {
   narrow?: boolean;
 }
 
-interface Tile {
-  n: string;
-  sub: string | undefined;
-  why: string | undefined;
-  cost: string;
-  disabled: boolean;
-  isLive: boolean;
-  isStatic: boolean;
-  isLock: boolean;
-  iconBg: string;
-  iconC: string;
-  color: string;
-  cursor: string;
-  pick: () => void;
-}
+type Tile = Omit<ActionTileProps, 'layout'>;
 
 const METRICS: MetricKey[] = ['skill', 'morale', 'result', 'trust'];
 
@@ -83,20 +73,23 @@ const cap1 = (k: string) => k[0].toUpperCase() + k.slice(1);
 function backdrop(m: MemberView): string {
   return m.away ? 'linear-gradient(160deg,#E4E6F0,#C9CEDF)' : (m.mood === 'frustrated' || m.mood === 'concerned') ? 'linear-gradient(160deg,#FFE7C2,#F7C17E)' : 'linear-gradient(160deg,#DEE9FF,#9FDCEB)';
 }
-function kindLabel(a: AnyAction): string {
-  return a.kind === 'live' ? 'Live conversation' : a.kind === 'hybrid' ? 'Decision, then a conversation' : 'Instant decision';
+/** Palette icon backdrop, the same mood rule as the card backdrop. */
+function paletteTone(m: MemberView): PaletteTone {
+  return m.away ? 'away' : (m.mood === 'frustrated' || m.mood === 'concerned') ? 'warm' : 'calm';
 }
-function summary(f: Flow, names: string[]): string {
-  const a = f.a, list = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : (names[0] || '');
-  const opt = a.options && f.opt !== null ? a.options[f.opt].n : '';
-  if (a.k === 'training') return `Send ${list || 'up to 3 people'} to a ${opt.toLowerCase()}. ${fmt(a.c)}.`;
-  if (a.k === 'energize') return `${opt} with the whole team. ${fmt(a.c)}.`;
-  if (a.k === 'swap') return names.length === 2 ? `Swap ${names[0]} and ${names[1]}, then explain it to them. ${fmt(a.c)}.` : `Pick two people in different stages. ${fmt(a.c)}.`;
-  if (a.k === 'meet') return `Meet the whole team for about 20 minutes. ${fmt(a.c)}.`;
-  if (a.k === 'email') return 'Opens the email composer. No days used.';
-  if (a.kind === 'live') return `${a.n} with ${list}. ${fmt(a.c)}. ${a.dur}, in voice or text.`;
-  if (a.k === 'reward') return `Reward ${list}, then tell them why. ${fmt(a.c)}.`;
-  return `${a.n}: ${list}. ${fmt(a.c)}.`;
+/** The drawer's summary line: what will happen and the day cost. */
+function summary(t: I18n['t'], days: (d: number) => string, f: Flow, names: string[]): string {
+  const a = f.a, cost = days(a.c);
+  const list = names.length > 1 ? t('action.list.pair', { rest: names.slice(0, -1).join(', '), last: names[names.length - 1] }) : (names[0] || '');
+  const option = a.options && f.opt !== null ? a.options[f.opt].n : '';
+  if (a.k === 'training') return t('action.summary.training', { list: list || t('action.summary.upTo', { max: a.select ? a.select[1] : 3 }), option: option.toLowerCase(), cost });
+  if (a.k === 'energize') return t('action.summary.energize', { option, cost });
+  if (a.k === 'swap') return names.length === 2 ? t('action.summary.swap', { a: names[0], b: names[1], cost }) : t('action.summary.swapPick', { cost });
+  if (a.k === 'meet') return t('action.summary.meet', { cost });
+  if (a.k === 'email') return t('action.summary.email');
+  if (a.kind === 'live') return t('action.summary.live', { action: a.n, list, cost, duration: a.dur ?? '' });
+  if (a.k === 'reward') return t('action.summary.reward', { list, cost });
+  return t('action.summary.other', { action: a.n, list, cost });
 }
 
 function initialState(props: BoardProps): BoardState {
@@ -120,30 +113,12 @@ function initialState(props: BoardProps): BoardState {
 const EV_ART: Record<EventType, string> = { impact: 'linear-gradient(135deg,#43D6E8,#00F2AD)', signal: 'linear-gradient(135deg,#DEE9FF,#9FDCEB)', capacity: 'linear-gradient(135deg,#FFE7C2,#F7C17E)', diagnostic: 'linear-gradient(135deg,#249DFF,#43D6E8)' };
 const EV_IMG: Partial<Record<EventType, string>> = { signal: 'lowe', capacity: 'ruth', diagnostic: 'peter' };
 
-const MicIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><path d="M12 19v3"></path></svg>;
-const BoltIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>;
-const LockIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect width="16" height="10" x="4" y="11" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>;
-
-/** Action tile in the Actions panel (team and individual lists share this markup). */
-function ActionTile({ a }: { a: Tile }) {
-  return (
-    <button onClick={a.pick} disabled={a.disabled} title={a.why} style={css(`display:grid; grid-template-columns:30px minmax(0,1fr) auto; gap:10px; align-items:center; padding:9px 10px; border-radius:14px; border:1px solid var(--ik-line); background:var(--ik-raised); color:${a.color}; cursor:${a.cursor}; text-align:left`)} className={pseudo('hover', 'border-color:var(--ik-line-strong)')}>
-      <span style={css(`width:30px; height:30px; border-radius:10px; background:${a.iconBg}; color:${a.iconC}; display:flex; align-items:center; justify-content:center`)}>
-        {a.isLive && <MicIcon />}
-        {a.isStatic && <BoltIcon />}
-        {a.isLock && <LockIcon />}
-      </span>
-      <span style={css('display:flex; flex-direction:column; min-width:0')}><b style={css('font-size:13px')}>{a.n}</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>{a.sub}</span></span>
-      <span style={css('font-size:12px; font-weight:700; color:var(--ik-text-2)')}>{a.cost}</span>
-    </button>
-  );
-}
-
 export function Board(props: BoardProps) {
   const { d: D, app, act } = props;
   const [s, setState] = useMergeState<BoardState>(() => initialState(props));
   const rootRef = useRef<HTMLDivElement>(null);
-  const palRef = useRef<HTMLInputElement>(null);
+  const { t } = useI18n();
+  const days = useDays();
   const hot = useRef(false);
 
   // componentDidMount / componentWillUnmount
@@ -163,27 +138,21 @@ export function Board(props: BoardProps) {
     return () => { ro?.disconnect(); clearTimeout(ft); window.removeEventListener('keydown', onKey); };
   }, [setState]);
 
-  // componentDidUpdate: focus the palette input when it opens
-  useEffect(() => { if (s.pal && palRef.current) palRef.current.focus(); }, [s.pal]);
-
   if (!D || !app.members) return null;
 
   const memberById = (list: MemberView[], id: string) => list.find(x => x.id === id) as MemberView;
 
   const tileFor = (a: AnyAction, m: MemberView | null): Tile => {
     const done = s.done.includes(a.k + ':' + (m ? m.id : 'team'));
-    let sub: string | undefined = a.kind === 'live' ? 'Live' + (a.dur ? ', ' + a.dur.toLowerCase() : '') : a.kind === 'hybrid' ? 'Decision, then live' : 'Instant';
-    let why: string | undefined = '', dis = false;
-    if (a.lock) { dis = true; why = a.lock; sub = a.lock; }
-    else if (done) { dis = true; sub = 'Planned today'; }
-    else if (m && m.away && a.k !== 'feedback') { dis = true; sub = 'Away in training until Day 4'; why = sub; }
-    else if (m && a.k === 'reward' && m.rewarded) { dis = true; sub = a.cooldown; why = a.cooldown; }
-    else if (a.c > app.capacity) { dis = true; sub = `Needs ${fmt(a.c)}, you have ${fmt(app.capacity)}`; why = sub; }
-    const live = a.kind !== 'static';
-    return { n: a.n, sub, why, cost: fmt(a.c), disabled: dis, isLive: live && !a.lock, isStatic: !live && !a.lock, isLock: !!a.lock,
-      iconBg: dis ? 'var(--ik-track)' : live ? 'var(--grad-brand)' : 'linear-gradient(135deg,#43D6E8,#00F2AD)', iconC: dis ? 'var(--ik-text-2)' : '#0A081B',
-      color: dis ? 'var(--ik-text-2)' : 'var(--ik-text)', cursor: dis ? 'default' : 'pointer',
-      pick: () => { if (dis) return; setState({ profile: null, flow: { a, opt: a.options ? 0 : null, picks: m ? [m.id] : [], member: !!m }, nudgeOk: false }); } };
+    // TODO(M2): the engine decides availability; "until Day 4" is the prototype's fixture.
+    let block: ActionBlock | undefined;
+    if (a.lock) block = { reason: 'locked', text: a.lock };
+    else if (done) block = { reason: 'planned' };
+    else if (m && m.away && a.k !== 'feedback') block = { reason: 'away', untilDay: 4 };
+    else if (m && a.k === 'reward' && m.rewarded) block = { reason: 'cooldown', text: a.cooldown ?? '' };
+    else if (a.c > app.capacity) block = { reason: 'days', need: a.c, have: app.capacity };
+    return { name: a.n, kind: a.kind, days: a.c, duration: a.dur, block,
+      onPick: () => { if (block) return; setState({ profile: null, flow: { a, opt: a.options ? 0 : null, picks: m ? [m.id] : [], member: !!m }, nudgeOk: false }); } };
   };
 
   const eligible = (m: MemberView): { ok: boolean; why?: string } => {
@@ -212,7 +181,7 @@ export function Board(props: BoardProps) {
     if (a.kind === 'live' || a.kind === 'hybrid') { act.spend(a.c); act.live(a.format === 'meeting' ? 'meeting' : a.format === 'email' ? 'email' : 'roleplay', f.picks[0] || 'kent'); return; }
     act.spend(a.c);
     setState(x => ({ flow: null, done: [...x.done, a.k + ':' + (f.member ? f.picks[0] : 'team')] }));
-    act.say(`${summary(f, names)} You'll see how it lands at day end.`);
+    act.say(t('action.toast.planned', { summary: summary(t, days, f, names) }));
   };
 
   // ---- renderVals ----
@@ -248,23 +217,22 @@ export function Board(props: BoardProps) {
   const pulse = [{ n: pos, label: 'upbeat', c: '#00F2AD' }, { n: neu, label: 'steady', c: '#DEE9FF' }, { n: neg, label: 'struggling', c: 'oklch(0.84 0.14 78)' }].filter(x => x.n);
   const sm = members.find(m => m.id === s.sel);
 
-  let fl: {
-    n: string; kind: string; cost: string; desc: string; hasOpts: boolean;
-    opts: { n: string; d: string; on: boolean; border: string; bg: string; dot: string; pick: () => void }[];
-    whoTitle: string; picking: boolean; limit: string; picks: { n: string; img: string }[];
-    nudge: boolean; nudgeText: string; summary: string; invalid: boolean; cta: string;
-  } | null = null;
+  // TODO(M2): the engine supplies the prerequisite; Justin and Qualification are the prototype's fixture.
+  const NUDGE = { name: 'Justin', area: 'Qualification', days: 1 };
+  let fl: ActionDrawerProps | null = null;
   if (f) {
     const names = f.picks.map(id => first(memberById(members, id).name));
     const needNudge = f.a.prereq && f.picks.includes('justin') && !s.nudgeOk;
     const min = f.a.select ? f.a.select[0] : 0;
-    fl = { n: f.a.n, kind: kindLabel(f.a), cost: fmt(f.a.c), desc: f.a.desc || `${f.a.dur || ''}. In voice or text, you can switch at any time.`,
-      hasOpts: !!f.a.options, opts: (f.a.options || []).map((o, i) => ({ n: o.n, d: o.d, on: f.opt === i, border: f.opt === i ? 'var(--ik-acc-2)' : 'var(--ik-line)', bg: f.opt === i ? 'var(--ik-acc-soft)' : 'var(--ik-raised)', dot: f.opt === i ? 'var(--ik-acc-2)' : 'transparent', pick: () => setState({ flow: { ...f, opt: i } }) })),
-      whoTitle: f.a.select && !f.member ? `People · ${f.picks.length} of ${f.a.select[1]}` : f.member ? 'With' : 'Who', picking, limit: f.a.limit || '',
-      picks: f.picks.map(id => { const m = memberById(members, id); return { n: m.name, img: m.img }; }),
-      nudge: !!needNudge, nudgeText: 'You have not assessed Justin for Qualification yet. Assess first, 1 day? You can still go ahead without it.',
-      summary: summary(f, names), invalid: f.picks.length < min || !!(f.a.options && f.opt === null),
-      cta: f.a.kind === 'static' ? 'Confirm' : f.a.k === 'email' ? 'Open composer' : 'Confirm and start' };
+    fl = { name: f.a.n, kind: f.a.kind, days: f.a.c, description: f.a.desc || t('action.drawer.liveDescription', { duration: f.a.dur || '' }),
+      options: f.a.options?.map(o => ({ name: o.n, detail: o.d })), option: f.opt, onOption: i => setState({ flow: { ...f, opt: i } }),
+      people: f.a.select && !f.member ? { mode: 'pick', max: f.a.select[1], limit: f.a.limit || '' } : f.member ? { mode: 'with' } : { mode: 'who' },
+      picks: f.picks.map(id => { const m = memberById(members, id); return { id, name: m.name, img: m.img }; }),
+      nudge: needNudge ? { ...NUDGE,
+        onAssess: () => { act.spend(NUDGE.days); setState({ nudgeOk: true }); act.say(t('action.toast.assessed', { name: NUDGE.name, area: NUDGE.area, cost: days(NUDGE.days) })); },
+        onContinue: () => setState({ nudgeOk: true }) } : undefined,
+      summary: summary(t, days, f, names), canConfirm: !(f.picks.length < min || !!(f.a.options && f.opt === null)),
+      cta: f.a.kind === 'static' ? 'confirm' : f.a.k === 'email' ? 'composer' : 'start', onConfirm: confirmFlow, onBack: () => setState({ flow: null }) };
   }
 
   const pm = members.find(m => m.id === s.profile);
@@ -302,9 +270,10 @@ export function Board(props: BoardProps) {
   const sender = (it: (typeof D.inbox)[number]): Sender => (it.from === 'sponsor' ? { hasImg: false, img: '', label: 'PN', bg: 'var(--grad-brand)' } : it.from === 'news' ? { hasImg: false, img: '', label: 'News', bg: 'linear-gradient(135deg,#43D6E8,#00F2AD)' } : { hasImg: true, img: `/assets/npc/${it.from}.png`, label: '', bg: 'linear-gradient(160deg,#DEE9FF,#9FDCEB)' });
   const openItem = (it: (typeof D.inbox)[number]) => { setState(x => ({ inbox: false, readIds: [...x.readIds, it.id] })); if (it.type === 'news') setState({ event: 'impact' }); else if (it.type === 'email') act.live('email', it.from); else if (it.type === 'sponsor') act.live('sponsor'); else act.live('roleplay', it.from); };
   const q = s.q.trim().toLowerCase();
-  const palItems = [...members.map(m => ({ n: m.name, sub: m.title, hasImg: true, img: m.img, iconBg: backdrop(m), run: () => setState({ pal: false, sel: m.id, flow: null }) })),
-    ...D.teamActions.map(a => ({ n: a.n, sub: fmt(a.c), hasImg: false, img: '', iconBg: 'var(--grad-brand)', run: () => { setState({ pal: false }); tileFor(a, null).pick(); } }))]
-    .filter(i => !q || i.n.toLowerCase().includes(q)).slice(0, 9).map((i, x) => ({ ...i, bg: x === 0 && q ? 'var(--ik-raised)' : 'transparent' }));
+  const palItems: PaletteResult[] = [
+    ...members.map(m => ({ id: 'member:' + m.id, name: m.name, detail: m.title, img: m.img, tone: paletteTone(m), onRun: () => setState({ pal: false, sel: m.id, flow: null }) })),
+    ...D.teamActions.map(a => ({ id: 'action:' + a.k, name: a.n, detail: days(a.c), tone: 'brand' as const, onRun: () => { setState({ pal: false }); tileFor(a, null).onPick(); } }))]
+    .filter(i => !q || i.name.toLowerCase().includes(q)).slice(0, 9);
 
   const isOffline = props.uiState === 'offline';
   // Faithful to the design: in client mode the nav list is plain strings, so the buttons render with no label and no handler.
@@ -314,13 +283,19 @@ export function Board(props: BoardProps) {
   const scoreParts = [{ n: 'Business', v: 420, w: '42%' }, { n: 'People', v: 510, w: '51%' }, { n: 'Leadership', v: 310, w: '31%' }];
   const scoreOn = () => setState({ scoreTip: true }), scoreOff = () => setState({ scoreTip: false });
   const sponsorBars = [0, 1, 2, 3, 4].map(i => ({ bg: i < 3 ? 'linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))' : 'var(--ik-track)' }));
-  const whyLabel = s.whyOpen ? 'Hide why' : 'See why';
-  const toggleWhy = () => setState(x => ({ whyOpen: !x.whyOpen }));
-  const replay = () => act.say('Playing Kent’s reply with captions.');
-  const dismissOutcome = () => act.clearOutcome();
-  const affected = oc.affected.map(id => { const m = memberById(members, id); return { id, img: m.img, aria: `${m.name}. Show reaction`, ring: s.reveal === id ? 'var(--ik-acc-2)' : 'var(--ik-line-strong)', tap: () => setState(x => ({ reveal: x.reveal === id ? null : id })) }; });
-  const reaction = s.reveal ? { name: first(memberById(members, s.reveal).name), t: oc.reactions[s.reveal] } : null;
-  const moves = oc.moves.map(mv => ({ name: first(memberById(members, mv.id).name), metric: mv.k, delta: mv.d, showNumbers: s.nums, onToggle: () => setState(x => ({ nums: !x.nums })) }));
+  const person = (id: string) => { const m = memberById(members, id); return { id, name: m.name, shortName: first(m.name), img: m.img }; };
+  const ocWho = person(oc.who);
+  const outcomePanel: OutcomePanelProps = {
+    person: ocWho, context: t('outcome.context.oneOnOne', { name: ocWho.shortName }), headline: oc.headline, reply: oc.reply,
+    onReplay: () => act.say(t('outcome.toast.replay', { name: ocWho.shortName })),
+    why: { cause: oc.why.cause, rule: oc.why.rule, evidence: oc.why.ev, judgedByAI: true }, whyOpen: s.whyOpen, onToggleWhy: () => setState(x => ({ whyOpen: !x.whyOpen })),
+    affected: oc.affected.map(person), revealed: s.reveal,
+    reaction: s.reveal ? { name: first(memberById(members, s.reveal).name), text: oc.reactions[s.reveal] } : undefined,
+    onReveal: id => setState(x => ({ reveal: x.reveal === id ? null : id })),
+    changes: oc.moves.map(mv => ({ name: first(memberById(members, mv.id).name), metric: mv.k, delta: mv.d })), showNumbers: s.nums, onToggleNumbers: () => setState(x => ({ nums: !x.nums })),
+    ripple: oc.ripple, changed: oc.changed, onDismiss: () => act.clearOutcome(),
+    onOpenHistory: () => act.say(t('outcome.toast.history', { name: ocWho.shortName }))
+  };
   const toggleInbox = () => setState(x => ({ inbox: !x.inbox }));
   const unread = unreadItems.length;
   const inboxRail = unreadItems.map(it => ({ ...sender(it), id: it.id, aria: it.title, ring: it.urgent ? 'oklch(0.84 0.14 78)' : 'var(--ik-line)', open: () => openItem(it) }));
@@ -330,14 +305,12 @@ export function Board(props: BoardProps) {
   const teamTiles = D.teamActions.map(a => tileFor(a, null));
   const indivTitle = sm ? `For ${first(sm.name)}` : 'For one person';
   const indivTiles = sm ? D.memberActions.map(a => tileFor(a, sm)) : [];
-  const assessFirst = () => { act.spend(1); setState({ nudgeOk: true }); act.say('Justin assessed for Qualification. 1 day used.'); };
   const ev = evData && evKey ? { ...evData, art: EV_ART[evKey], hasImg: !!EV_IMG[evKey], img: EV_IMG[evKey] ? `/assets/npc/${EV_IMG[evKey]}.png` : '', two: evKey === 'capacity' || evKey === 'impact',
     secondLabel: evKey === 'capacity' ? 'Talk to Ruth first' : 'Call Priya', second: () => { setState({ event: null }); if (evKey === 'capacity') act.live('roleplay', 'ruth'); else act.live('sponsor'); } } : null;
   const closeEvent = () => { setState({ event: null }); if (ev && evKey === 'capacity') act.say('Leave approved. Justin covers Brightwell on Thursday and Friday.'); };
   const mobileList = members.slice(0, 6).map(m => ({ id: m.id, name: m.name, title: m.title, img: m.img, backdrop: backdrop(m), moodN: D.moods[m.mood].n, moodC: D.moods[m.mood].c }));
   const openPal = () => { hot.current = true; setState({ pal: true, q: '' }); };
   const closePal = () => setState({ pal: false });
-  const onPalKey = (e: KeyboardEvent<HTMLInputElement>) => { if (e.key === 'Enter' && palItems[0]) palItems[0].run(); if (e.key === 'Escape') setState({ pal: false }); };
 
   return (
     <div ref={rootRef} onMouseEnter={() => { hot.current = true; }} onMouseLeave={() => { hot.current = false; }} style={css(`flex:1; display:flex; flex-direction:column; min-height:${app.minH}; position:relative`)}>
@@ -425,38 +398,7 @@ export function Board(props: BoardProps) {
             </div>
           </section>
 
-          {outcome && (
-            <section aria-label="Outcome" style={css('margin:0 24px 14px; padding:16px 20px; border-radius:22px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 0 0 1px oklch(0.75 0.14 220 / 0.25), 0 16px 48px oklch(0.05 0.03 280 / 0.35); display:grid; grid-template-columns:auto minmax(0,1.4fr) minmax(0,1fr) auto; gap:24px; align-items:start; animation:ilIn 320ms cubic-bezier(.2,.9,.3,1.08)')}>
-              <div style={css('width:84px; height:84px; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); box-shadow:0 0 0 3px var(--ik-pos)')}><img src="/assets/npc/kent.png" alt="Kent Goldberg" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} /></div>
-              <div style={css('display:flex; flex-direction:column; gap:8px; min-width:0')}>
-                <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)')}>How it landed · 1:1 with Kent</span>
-                <h3 style={css('margin:0; font-size:20px; font-weight:700; letter-spacing:-0.01em')}>{oc.headline}</h3>
-                <div style={css('display:flex; gap:10px; align-items:flex-start')}>
-                  <button onClick={replay} aria-label="Replay Kent's reply" style={css('flex:none; width:32px; height:32px; border-radius:50%; border:0; background:var(--grad-brand); color:#0A081B; cursor:pointer; display:flex; align-items:center; justify-content:center')}><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"></path></svg></button>
-                  <span style={css('font-size:14px; text-wrap:pretty')}>“{oc.reply}”</span>
-                </div>
-                {s.whyOpen && <ReasonDetail cause={oc.why.cause} rule={oc.why.rule} evidence={oc.why.ev} judgedByAI />}
-              </div>
-              <div style={css('display:flex; flex-direction:column; gap:10px; min-width:0')}>
-                <div style={css('display:flex; gap:8px')}>
-                  {affected.map(af => (
-                    <button key={af.id} onClick={af.tap} aria-label={af.aria} style={css(`position:relative; width:44px; height:44px; padding:0; border-radius:50%; overflow:hidden; border:2px solid ${af.ring}; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); cursor:pointer`)}><img src={af.img} alt="" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} /></button>
-                  ))}
-                </div>
-                {reaction && <span style={css('font-size:13px; padding:8px 10px; border-radius:12px; background:var(--ik-raised)')}><b>{reaction.name}:</b> {reaction.t}</span>}
-                <div style={css('display:flex; flex-wrap:wrap; gap:6px')}>
-                  {moves.map((mv, i) => <ReasonChip key={i} {...mv} />)}
-                </div>
-                <span style={css('font-size:13px; color:var(--ik-text-2)')}>{oc.ripple}</span>
-                {oc.changed.map((ch, i) => <span key={i} style={css('font-size:13px')}>{ch}</span>)}
-              </div>
-              <div style={css('display:flex; flex-direction:column; gap:8px; align-items:flex-end')}>
-                <button onClick={dismissOutcome} aria-label="Dismiss outcome" style={css('width:32px; height:32px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer')}>✕</button>
-                <button onClick={toggleWhy} style={css('border:0; background:transparent; color:var(--ik-acc-2); font-size:13px; font-weight:700; cursor:pointer')}>{whyLabel}</button>
-                <button onClick={() => act.say('History opens filtered to Kent.')} style={css('border:0; background:transparent; color:var(--ik-text-2); font-size:13px; font-weight:600; cursor:pointer')}>Open in History</button>
-              </div>
-            </section>
-          )}
+          {outcome && <OutcomePanel {...outcomePanel} />}
 
           <div style={css('flex:1; display:grid; grid-template-columns:64px minmax(0,1fr) 330px; gap:0; position:relative; min-height:0')}>
             <aside aria-label="Inbox" style={css('display:flex; flex-direction:column; align-items:center; gap:10px; padding:4px 0 24px 16px')}>
@@ -508,13 +450,13 @@ export function Board(props: BoardProps) {
                     {outOfDays && <div style={css('padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px; display:flex; flex-direction:column; gap:4px')}><b>You have used all 5 days</b><span style={css('color:var(--ik-text-2)')}>Actions are locked until next week. Reply to messages any time, they cost no days.</span></div>}
                     <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)')}>Team</span>
                     <div style={css('display:flex; flex-direction:column; gap:6px')}>
-                      {teamTiles.map((a, i) => <ActionTile key={i} a={a} />)}
+                      {teamTiles.map((a, i) => <ActionTile key={i} {...a} />)}
                     </div>
                     <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2); padding-top:4px')}>{indivTitle}</span>
                     {!sm && <p style={css('margin:0; font-size:13px; color:var(--ik-text-2)')}>Select a person on the board to see what you can do with them.</p>}
                     {sm && (
                       <div style={css('display:flex; flex-direction:column; gap:6px')}>
-                        {indivTiles.map((a, i) => <ActionTile key={i} a={a} />)}
+                        {indivTiles.map((a, i) => <ActionTile key={i} {...a} />)}
                       </div>
                     )}
                     <div style={css('display:flex; gap:12px; font-size:12px; color:var(--ik-text-2); padding-top:6px; margin-top:auto; flex-wrap:wrap')}>
@@ -523,42 +465,7 @@ export function Board(props: BoardProps) {
                     </div>
                   </div>
                 )}
-                {fl && (
-                  <div style={css('padding:16px 18px; display:flex; flex-direction:column; gap:14px; flex:1; overflow:auto; animation:ilIn 240ms ease')}>
-                    <button onClick={() => setState({ flow: null })} style={css('align-self:flex-start; border:0; background:transparent; padding:0; color:var(--ik-text-2); font-size:13px; font-weight:600; cursor:pointer')}>← All actions</button>
-                    <div style={css('display:flex; flex-direction:column; gap:6px')}>
-                      <div style={css('display:flex; gap:6px')}><span style={css('height:22px; padding:0 8px; border-radius:999px; background:var(--ik-acc-soft); font-size:12px; font-weight:700; display:flex; align-items:center')}>{fl.kind}</span><span style={css('height:22px; padding:0 8px; border-radius:999px; background:var(--ik-raised); font-size:12px; font-weight:700; display:flex; align-items:center')}>{fl.cost}</span></div>
-                      <h2 style={css('margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em')}>{fl.n}</h2>
-                      <span style={css('font-size:13px; color:var(--ik-text-2); text-wrap:pretty')}>{fl.desc}</span>
-                    </div>
-                    {fl.hasOpts && (
-                      <div role="radiogroup" aria-label="Choose an option" style={css('display:flex; flex-direction:column; gap:8px')}>
-                        {fl.opts.map((o, i) => (
-                          <button key={i} role="radio" aria-checked={o.on} onClick={o.pick} style={css(`display:flex; gap:10px; align-items:flex-start; text-align:left; padding:12px; border-radius:14px; border:1.5px solid ${o.border}; background:${o.bg}; color:var(--ik-text); cursor:pointer`)}>
-                            <span style={css(`flex:none; width:18px; height:18px; margin-top:1px; border-radius:50%; border:2px solid ${o.border}; display:flex; align-items:center; justify-content:center`)}><span style={css(`width:8px; height:8px; border-radius:50%; background:${o.dot}`)}></span></span>
-                            <span style={css('display:flex; flex-direction:column')}><b style={css('font-size:13px')}>{o.n}</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>{o.d}</span></span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    <div style={css('display:flex; flex-direction:column; gap:8px')}>
-                      <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)')}>{fl.whoTitle}</span>
-                      {fl.picking && <span style={css('font-size:13px; color:var(--ik-text-2)')}>{fl.limit}. Click people on the board.</span>}
-                      <div style={css('display:flex; flex-wrap:wrap; gap:6px')}>
-                        {fl.picks.map((pk, i) => <span key={i} style={css('display:flex; align-items:center; gap:6px; height:30px; padding:0 10px 0 3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line); font-size:13px; font-weight:600; white-space:nowrap')}><img src={pk.img} alt="" style={css('width:24px; height:24px; border-radius:50%; object-fit:cover; object-position:center top; background:#DEE9FF')} />{pk.n}</span>)}
-                      </div>
-                    </div>
-                    {fl.nudge && (
-                      <div role="note" style={css('padding:12px; border-radius:14px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; flex-direction:column; gap:8px; font-size:13px')}>
-                        <span style={css('text-wrap:pretty')}>{fl.nudgeText}</span>
-                        <div style={css('display:flex; gap:8px')}><NoWrapButton variant="secondary" size="sm" onClick={assessFirst}>Assess first</NoWrapButton><NoWrapButton variant="ghost" size="sm" onClick={() => setState({ nudgeOk: true })}>Continue</NoWrapButton></div>
-                      </div>
-                    )}
-                    <div style={css('margin-top:auto; padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px; text-wrap:pretty')}>{fl.summary}</div>
-                    {/* The runtime only forwards position/size props of an x-import style to a wrapper div; the Button itself is not stretched. */}
-                    <div style={{ width: '100%' }}><Button variant="primary" size="lg" disabled={fl.invalid} onClick={confirmFlow}>{fl.cta}</Button></div>
-                  </div>
-                )}
+                {fl && <ActionDrawer {...fl} />}
               </div>
             </aside>
 
@@ -607,9 +514,7 @@ export function Board(props: BoardProps) {
                 </div>
                 <div style={css('display:flex; flex-direction:column; overflow:auto; padding:20px; gap:10px')}>
                   <div style={css('display:flex; justify-content:space-between; align-items:center')}><h3 style={css('margin:0; font-size:18px; font-weight:700')}>Take an action</h3><button onClick={() => setState({ profile: null })} aria-label="Close profile" style={css('width:32px; height:32px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer')}>✕</button></div>
-                  {pf.actions.map((a, i) => (
-                    <button key={i} onClick={a.pick} disabled={a.disabled} style={css(`display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; padding:12px; border-radius:14px; border:1px solid var(--ik-line); background:var(--ik-raised); color:${a.color}; cursor:${a.cursor}; text-align:left`)}><span style={css('display:flex; flex-direction:column')}><b style={css('font-size:13px')}>{a.n}</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>{a.sub}</span></span><span style={css('font-size:12px; font-weight:700; color:var(--ik-text-2)')}>{a.cost}</span></button>
-                  ))}
+                  {pf.actions.map((a, i) => <ActionTile key={i} layout="compact" {...a} />)}
                 </div>
               </div>
             )}
@@ -620,16 +525,7 @@ export function Board(props: BoardProps) {
       {mobile && (
         <div style={css('flex:1; display:flex; flex-direction:column; gap:12px; padding:12px 16px 24px')}>
           <div style={css('display:flex; align-items:center; gap:10px')}><span style={css('font-size:20px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent')}>iLead</span><span style={css('flex:1')}></span><span style={css('font-size:12px; color:var(--ik-text-2); white-space:nowrap')}><b style={css('color:var(--ik-text)')}>Week 2</b> · Day 3 · {capText} left</span></div>
-          <section aria-label="Outcome" style={css('padding:18px; border-radius:22px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); display:flex; flex-direction:column; gap:12px; animation:ilIn 320ms ease')}>
-            <div style={css('display:flex; gap:12px; align-items:center')}><div style={css('width:64px; height:64px; flex:none; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); box-shadow:0 0 0 3px var(--ik-pos)')}><img src="/assets/npc/kent.png" alt="Kent" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} /></div><div style={css('display:flex; flex-direction:column')}><span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)')}>How it landed</span><b style={css('font-size:18px; line-height:1.25')}>{oc.headline}</b></div></div>
-            <div style={css('display:flex; gap:10px; align-items:flex-start; padding:12px; border-radius:14px; background:var(--ik-raised)')}><button onClick={replay} aria-label="Replay" style={css('flex:none; width:32px; height:32px; border-radius:50%; border:0; background:var(--grad-brand); color:#0A081B')}>▶</button><span style={css('font-size:14px')}>“{oc.reply}”</span></div>
-            <div style={css('display:flex; flex-wrap:wrap; gap:6px')}>{moves.map((mv, i) => <ReasonChip key={i} {...mv} size="md" />)}</div>
-            <span style={css('font-size:13px; color:var(--ik-text-2)')}>{oc.ripple}</span>
-            {oc.changed.map((ch, i) => <span key={i} style={css('font-size:14px')}>{ch}</span>)}
-            {s.whyOpen && <ReasonDetail cause={oc.why.cause} rule={oc.why.rule} evidence={oc.why.ev} judgedByAI layout="stack" />}
-            {/* The design passes style={flex:1} to the primary Button, but the runtime drops non position/size props, so it does not grow. */}
-            <div style={css('display:flex; gap:8px')}><NoWrapButton variant="secondary" size="lg" onClick={toggleWhy}>{whyLabel}</NoWrapButton><Button variant="primary" size="lg" onClick={dismissOutcome}>Back to my team</Button></div>
-          </section>
+          <OutcomePanel layout="card" {...outcomePanel} />
           <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2); padding-top:4px')}>Your team</span>
           {mobileList.map(m => (
             <div key={m.id} style={css('display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:16px; background:var(--ik-card); border:1px solid var(--ik-line); min-height:56px')}>
@@ -663,16 +559,7 @@ export function Board(props: BoardProps) {
         </div>
       )}
 
-      {s.pal && (
-        <div onClick={closePal} style={css('position:absolute; inset:0; background:var(--ik-scrim); display:flex; justify-content:center; align-items:flex-start; padding-top:120px; z-index:49')}>
-          <div role="dialog" aria-label="Command palette" onClick={e => e.stopPropagation()} style={css('width:560px; max-width:calc(100% - 32px); border-radius:20px; background:var(--ik-mat); backdrop-filter:blur(24px); border:1px solid var(--ik-line-strong); overflow:hidden')}>
-            <input ref={palRef} value={s.q} onChange={(e: ChangeEvent<HTMLInputElement>) => setState({ q: e.target.value })} onKeyDown={onPalKey} placeholder="Find a teammate or an action" aria-label="Find a teammate or an action" style={css('width:100%; height:56px; padding:0 18px; border:0; border-bottom:1px solid var(--ik-line); outline:0; background:transparent; color:var(--ik-text); font-size:15px')} />
-            <div style={css('max-height:340px; overflow:auto; padding:8px; display:flex; flex-direction:column; gap:2px')}>
-              {palItems.map((it, i) => <button key={i} onClick={it.run} style={css(`display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:12px; border:0; background:${it.bg}; color:var(--ik-text); cursor:pointer; text-align:left`)} className={pseudo('hover', 'background:var(--ik-raised)')}><span style={css(`width:30px; height:30px; flex:none; border-radius:50%; overflow:hidden; background:${it.iconBg}`)}>{it.hasImg && <img src={it.img} alt="" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} />}</span><b style={css('flex:1; font-size:14px')}>{it.n}</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>{it.sub}</span></button>)}
-            </div>
-          </div>
-        </div>
-      )}
+      <CommandPalette open={s.pal} onClose={closePal} query={s.q} onQueryChange={q => setState({ q })} results={palItems} />
     </div>
   );
 }
