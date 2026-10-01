@@ -1,0 +1,5 @@
+docs/source
+pnpm-lock.yaml
+packages/schema/generated
+packages/db/prisma/migrations
+*.md

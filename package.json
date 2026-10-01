@@ -1,0 +1,38 @@
+{
+  "name": "geniekreator-ilead",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@10.9.0",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json && pnpm -r --parallel run typecheck",
+    "lint": "eslint .",
+    "lint:copy": "tsx scripts/lint-copy.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "schema:export": "tsx scripts/export-json-schema.ts",
+    "sim": "tsx packages/sim-cli/src/index.ts",
+    "db:generate": "pnpm --filter @gk/db run generate",
+    "db:migrate": "pnpm --filter @gk/db run migrate:deploy",
+    "check": "pnpm typecheck && pnpm lint && pnpm lint:copy && pnpm test"
+  },
+  "devDependencies": {
+    "@gk/schema": "workspace:*",
+    "@gk/seed-ilead": "workspace:*",
+    "@eslint/js": "10.0.1",
+    "@types/node": "^22.10.0",
+    "eslint": "10.11.0",
+    "fast-check": "4.10.2",
+    "globals": "17.13.0",
+    "prettier": "3.9.9",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.3"
+  }
+}

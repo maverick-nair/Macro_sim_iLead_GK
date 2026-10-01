@@ -1,0 +1,558 @@
+// GenieKreator iLead persistence (docs/plan.md section 4.3).
+// The SimulationTemplate is stored as validated JSON; @gk/schema is the source of truth for its shape.
+// Edit locks and presence live in Redis with a TTL, not here.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Organisation and people
+
+enum Role {
+  admin
+  author
+  reviewer
+  facilitator
+  viewer
+}
+
+model Org {
+  id           String          @id @default(cuid())
+  name         String
+  slug         String          @unique
+  createdAt    DateTime        @default(now())
+  memberships  Membership[]
+  policy       OrgPolicy?
+  products     Product[]
+  assets       Asset[]
+  participants Participant[]
+  consents     ConsentRecord[]
+  auditLogs    AuditLog[]
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String
+  createdAt         DateTime           @default(now())
+  memberships       Membership[]
+  notifications     Notification[]
+  reviewAssignments ReviewAssignment[]
+  comments          Comment[]
+  auditSamples      AuditSample[]
+}
+
+model Membership {
+  id     String @id @default(cuid())
+  orgId  String
+  userId String
+  role   Role
+  org    Org    @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+}
+
+/// Admin locks and org defaults (Config Spec, Governance). locks: Lock[] from @gk/schema.
+model OrgPolicy {
+  orgId                  String   @id
+  locks                  Json
+  defaultSkillsFramework Json?
+  updatedAt              DateTime @updatedAt
+  org                    Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+// Products and authoring
+
+enum ProductKind {
+  business_sim
+  dilo_sim
+  ai_roleplay
+}
+
+enum ProductStatus {
+  draft
+  in_review
+  approved
+  published
+  archived
+}
+
+model Product {
+  id             String            @id @default(cuid())
+  orgId          String
+  kind           ProductKind
+  /// Format within the kind, for example "ilead".
+  format         String?
+  title          String
+  client         String?
+  description    String?
+  status         ProductStatus     @default(draft)
+  progressPct    Int               @default(0)
+  /// Continue Editing returns here.
+  lastAreaKey    String?
+  liveVersionId  String?           @unique
+  createdById    String
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  org            Org               @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  draft          Draft?
+  brief          Brief?
+  versions       TemplateVersion[] @relation("ProductVersions")
+  liveVersion    TemplateVersion?  @relation("LiveVersion", fields: [liveVersionId], references: [id])
+  generationRuns GenerationRun[]
+  assets         Asset[]
+
+  @@index([orgId, updatedAt])
+}
+
+/// The working copy: DraftDocument from @gk/schema split into columns.
+model Draft {
+  id            String             @id @default(cuid())
+  productId     String             @unique
+  template      Json
+  fieldMeta     Json
+  areaState     Json
+  revision      Int                @default(0)
+  schemaVersion Int
+  updatedAt     DateTime           @updatedAt
+  updatedById   String?
+  product       Product            @relation(fields: [productId], references: [id], onDelete: Cascade)
+  proposals     CopilotProposal[]
+  qualityRuns   QualityCheckRun[]
+  reviews       ReviewAssignment[]
+  comments      Comment[]
+  playtestNotes PlaytestNote[]
+  playSessions  PlaySession[]
+}
+
+/// The 8 brief questions (Screens B1).
+model Brief {
+  id        String   @id @default(cuid())
+  productId String   @unique
+  answers   Json
+  strength  Int      @default(0)
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+enum AssetKind {
+  org_chart
+  process_doc
+  values
+  product_sheet
+  brand_kit
+  policy
+  skills_framework
+  image
+  audio
+  video
+}
+
+enum SafetyStatus {
+  pending
+  passed
+  failed
+}
+
+model Asset {
+  id              String         @id @default(cuid())
+  orgId           String
+  productId       String?
+  kind            AssetKind
+  storageKey      String         @unique
+  mime            String
+  sizeBytes       Int
+  extractedText   String?
+  safetyStatus    SafetyStatus   @default(pending)
+  consentRecordId String?
+  createdById     String
+  createdAt       DateTime       @default(now())
+  org             Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  product         Product?       @relation(fields: [productId], references: [id], onDelete: SetNull)
+  consentRecord   ConsentRecord? @relation(fields: [consentRecordId], references: [id])
+}
+
+enum JobStatus {
+  queued
+  running
+  done
+  failed
+}
+
+model GenerationRun {
+  id          String              @id @default(cuid())
+  productId   String
+  status      JobStatus           @default(queued)
+  startedById String
+  createdAt   DateTime            @default(now())
+  finishedAt  DateTime?
+  product     Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  jobs        GenerationAreaJob[]
+}
+
+/// One job per area, retried on its own (Screens B2).
+model GenerationAreaJob {
+  id            String        @id @default(cuid())
+  runId         String
+  area          String
+  order         Int
+  status        JobStatus     @default(queued)
+  attempt       Int           @default(0)
+  error         String?
+  outputHash    String?
+  promptId      String?
+  promptVersion String?
+  startedAt     DateTime?
+  finishedAt    DateTime?
+  run           GenerationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+
+  @@unique([runId, area])
+}
+
+enum ProposalStatus {
+  pending
+  applied
+  dismissed
+}
+
+/// Every AI change is reviewable before it lands (copilot).
+model CopilotProposal {
+  id          String         @id @default(cuid())
+  draftId     String
+  prompt      String
+  patch       Json
+  before      Json
+  after       Json
+  status      ProposalStatus @default(pending)
+  createdById String
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+  draft       Draft          @relation(fields: [draftId], references: [id], onDelete: Cascade)
+}
+
+enum GateStatus {
+  not_run
+  running
+  passed
+  failed
+  stale
+}
+
+model QualityCheckRun {
+  id         String     @id @default(cuid())
+  draftId    String
+  gate       String
+  /// NPC or interaction the gate ran for, when the gate is scoped.
+  scopeId    String?
+  status     GateStatus @default(not_run)
+  inputsHash String?
+  revision   Int
+  result     Json?
+  createdAt  DateTime   @default(now())
+  finishedAt DateTime?
+  draft      Draft      @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId, gate])
+}
+
+enum ReviewDecision {
+  pending
+  approved
+  changes_requested
+}
+
+model ReviewAssignment {
+  id         String         @id @default(cuid())
+  draftId    String
+  areaKey    String
+  reviewerId String
+  decision   ReviewDecision @default(pending)
+  decidedAt  DateTime?
+  createdAt  DateTime       @default(now())
+  draft      Draft          @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  reviewer   User           @relation(fields: [reviewerId], references: [id])
+
+  @@unique([draftId, areaKey, reviewerId])
+}
+
+/// Comment pinned on a field (stable path).
+model Comment {
+  id        String    @id @default(cuid())
+  draftId   String
+  areaKey   String
+  fieldPath String
+  body      String
+  authorId  String
+  parentId  String?
+  resolved  Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  draft     Draft     @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id])
+  parent    Comment?  @relation("Thread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("Thread")
+}
+
+model PlaytestNote {
+  id        String   @id @default(cuid())
+  draftId   String
+  authorId  String
+  week      Int?
+  day       Int?
+  fieldPath String?
+  body      String
+  createdAt DateTime @default(now())
+  draft     Draft    @relation(fields: [draftId], references: [id], onDelete: Cascade)
+}
+
+// Publishing and delivery
+
+/// Immutable published version (Screens P4).
+model TemplateVersion {
+  id            String     @id @default(cuid())
+  productId     String
+  versionNumber Int
+  versionName   String
+  changeNote    String
+  template      Json
+  schemaVersion Int
+  engineVersion String
+  contentHash   String
+  publishedById String
+  publishedAt   DateTime
+  product       Product    @relation("ProductVersions", fields: [productId], references: [id], onDelete: Cascade)
+  liveFor       Product?   @relation("LiveVersion")
+  deliveries    Delivery[]
+
+  @@unique([productId, versionNumber])
+}
+
+enum DeliveryKind {
+  link
+  scorm12
+  scorm2004
+  xapi
+  cohort
+}
+
+model Delivery {
+  id               String          @id @default(cuid())
+  versionId        String
+  kind             DeliveryKind
+  cohortName       String?
+  startsAt         DateTime?
+  endsAt           DateTime?
+  facilitatorId    String?
+  leaderboardScope String?
+  shareToken       String?         @unique
+  createdAt        DateTime        @default(now())
+  version          TemplateVersion @relation(fields: [versionId], references: [id])
+  enrolments       Enrolment[]
+  playSessions     PlaySession[]
+}
+
+// Participants: a separate identity from authors (your answer to Q3)
+
+model Participant {
+  id           String      @id @default(cuid())
+  orgId        String
+  email        String?
+  lmsLearnerId String?
+  displayName  String?
+  createdAt    DateTime    @default(now())
+  org          Org         @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  enrolments   Enrolment[]
+
+  @@unique([orgId, email])
+  @@unique([orgId, lmsLearnerId])
+}
+
+model Enrolment {
+  id              String         @id @default(cuid())
+  participantId   String
+  deliveryId      String
+  consentRecordId String?
+  enrolledAt      DateTime       @default(now())
+  participant     Participant    @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  delivery        Delivery       @relation(fields: [deliveryId], references: [id], onDelete: Cascade)
+  consentRecord   ConsentRecord? @relation(fields: [consentRecordId], references: [id])
+  playSessions    PlaySession[]
+
+  @@unique([participantId, deliveryId])
+}
+
+enum ConsentPurpose {
+  audio_capture
+  voice_likeness
+  image_likeness
+}
+
+/// Consent is required before any audio capture (CLAUDE.md rule 6) and for licensed voices or likenesses.
+model ConsentRecord {
+  id          String         @id @default(cuid())
+  orgId       String
+  purpose     ConsentPurpose
+  subjectKind String
+  subjectId   String
+  grantedAt   DateTime
+  revokedAt   DateTime?
+  evidence    Json?
+  org         Org            @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  assets      Asset[]
+  enrolments  Enrolment[]
+}
+
+// Play
+
+enum SessionKind {
+  playtest
+  live
+}
+
+enum SessionStatus {
+  active
+  completed
+  abandoned
+}
+
+model PlaySession {
+  id               String           @id @default(cuid())
+  kind             SessionKind
+  draftId          String?
+  snapshotRevision Int?
+  deliveryId       String?
+  enrolmentId      String?
+  /// Author running a playtest.
+  userId           String?
+  seed             String
+  engineVersion    String
+  state            Json
+  status           SessionStatus    @default(active)
+  startedAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  completedAt      DateTime?
+  draft            Draft?           @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  delivery         Delivery?        @relation(fields: [deliveryId], references: [id])
+  enrolment        Enrolment?       @relation(fields: [enrolmentId], references: [id])
+  events           PlayEvent[]
+  interactions     InteractionRun[]
+}
+
+/// Append only engine log.
+model PlayEvent {
+  id        String      @id @default(cuid())
+  sessionId String
+  seq       Int
+  type      String
+  payload   Json
+  createdAt DateTime    @default(now())
+  session   PlaySession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, seq])
+}
+
+enum Band {
+  strong
+  adequate
+  weak
+  harmful
+}
+
+model InteractionRun {
+  id           String        @id @default(cuid())
+  sessionId    String
+  actionId     String
+  targetNpcIds String[]
+  format       String
+  inputMode    String
+  week         Int
+  day          Int
+  startedAt    DateTime      @default(now())
+  endedAt      DateTime?
+  session      PlaySession   @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  transcript   Transcript?
+  evaluation   Evaluation?
+  auditSamples AuditSample[]
+}
+
+/// Transcripts only: audio is not kept unless the delivery's consent and retention allow it.
+model Transcript {
+  id               String         @id @default(cuid())
+  interactionRunId String         @unique
+  turns            Json
+  createdAt        DateTime       @default(now())
+  interactionRun   InteractionRun @relation(fields: [interactionRunId], references: [id], onDelete: Cascade)
+}
+
+/// Band, reasons and verbatim evidence. The band selects an authored consequence; no model number reaches a stat.
+model Evaluation {
+  id               String         @id @default(cuid())
+  interactionRunId String         @unique
+  band             Band
+  styleShown       String?
+  dimensionBands   Json
+  redFlags         Json
+  reasons          Json
+  evidence         Json
+  promptId         String
+  promptVersion    String
+  /// Routing task name (for example "evaluator"); the model id comes from env at run time.
+  modelRoute       String
+  modelId          String?
+  createdAt        DateTime       @default(now())
+  interactionRun   InteractionRun @relation(fields: [interactionRunId], references: [id], onDelete: Cascade)
+}
+
+enum AuditStatus {
+  queued
+  in_review
+  done
+}
+
+/// Human review tier: a sample of AI scored interactions for assessors.
+model AuditSample {
+  id               String         @id @default(cuid())
+  interactionRunId String
+  assessorId       String?
+  humanBand        Band?
+  note             String?
+  status           AuditStatus    @default(queued)
+  createdAt        DateTime       @default(now())
+  decidedAt        DateTime?
+  interactionRun   InteractionRun @relation(fields: [interactionRunId], references: [id], onDelete: Cascade)
+  assessor         User?          @relation(fields: [assessorId], references: [id])
+}
+
+// Platform
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  kind      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+/// Append only (locked: data privacy and audit logging are enforced by the server, not editable by authors).
+model AuditLog {
+  id        String   @id @default(cuid())
+  orgId     String
+  actorId   String?
+  action    String
+  entity    String
+  entityId  String
+  data      Json?
+  createdAt DateTime @default(now())
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+}

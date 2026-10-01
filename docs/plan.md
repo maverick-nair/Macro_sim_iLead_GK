@@ -153,7 +153,7 @@ Dependency direction is one way: `schema` has no internal deps; `engine` and `se
 
 One versioned Zod object, `SimulationTemplate`, with `meta` plus one key per area. Areas and their editor groups follow the Screens doc (World, Rules, Experience and output). The Config Spec calls area 3 "NPCs"; the UI label is "Cast" (C-02). Settings marked ★ are new in iLead 2.0. Defaults are the "iLead default" column of the Config Spec and live in `@gk/seed-ilead`, not in the schema.
 
-Two validation levels: `TemplateSchema` (structural, enforced on every save so drafts always parse) and `PublishableTemplateSchema` (cross-field rules: weights sum to 100, every live interaction has 2 to 4 rubric dimensions, 6 to 12 calibration samples, every skill has at least 2 observation points, every referenced id exists). Publishable issues surface as amber area status and as quality gate failures, never as save errors.
+Two validation levels: `TemplateSchema` (structural, enforced on every save so drafts always parse) and `PublishableTemplateSchema` (cross-field rules: weights sum to 100, every live interaction has 2 to 4 rubric dimensions, every skill has at least 2 observation points, every referenced id exists; the 6 to 12 calibration sample minimum is enforced by the rubric calibration gate in M8, A-37). Publishable issues surface as amber area status and as quality gate failures, never as save errors.
 
 ```ts
 SimulationTemplate {
@@ -272,7 +272,7 @@ SimulationTemplate {
     consequences: Record<Band, { target: StatDeltas; bystanders: { selector, deltas }[]; sponsor: number }>;
     triggers: Record<Band, ({ kind: "followUpEvent", eventId } | { kind: "logPromise" } | { kind: "resolveConcern" } | { kind: "escalate", eventId })[]>;
     hints: { policy: "off" | "on_request" | "after_weak"; tips: string[] };
-    calibrationSet: { id, text, kind: "text" | "audio_transcript", authorBand?, note?, source: "ai" | "pilot" }[] (6 to 12);
+    calibrationSet: { id, text, kind: "text" | "audio_transcript", authorBand?, note?, source: "ai" | "pilot" }[] (up to 12; the gate needs 6, A-37);
     email?: { recipientsAllowed, cc, bcc, attachments, replyAllReactions };
     meeting?: { attendees, agendaRequired, npcToNpc };
     interview?: { candidates, questionBank, hiddenTrueProfile };
@@ -331,12 +331,12 @@ SimulationTemplate {
     accessibility: { captions, transcripts, keyboardOnly, screenReaderLabels, reducedMotion, highContrast, textSize };
     typedFallback: true;      // "Always available" in Config Spec, so a literal
     devices: ("desktop" | "tablet" | "mobile")[]; lowBandwidth: "auto" | "on" | "off";
-    integrations: { lms: ("scorm12" | "scorm2004" | "xapi" | "lti" | "api")[]; sso: boolean };
-    dataConsent: { audioConsentScreen; retentionDays?; transcriptStorage; storageRegion };
+    integrations: { lms: "platform_default" | ("scorm12" | "scorm2004" | "xapi" | "lti" | "api")[]; sso: boolean };
+    dataConsent: { audioConsentScreen; retention: "client_set" | days; transcriptStorage; storageRegion: "client_set" | string };
   }
   governance: {
-    collaborators: { userId, role: "admin" | "author" | "reviewer" | "facilitator" | "viewer" }[];
-    approval: { enabled; reviewersPerArea: Partial<Record<AreaKey, userId[]>> };
+    roles: ("admin" | "author" | "reviewer" | "facilitator" | "viewer")[];   // who takes part; people live in the DB (A-38)
+    approval: { enabled; reportApprover: "any_reviewer" | "ld_lead" /* D-04 */; requirePlaytestSignOff /* D-13 */ };
     locks: { path, lockedBy, reason }[];   // read only mirror of org policy locks for this build (A-23)
     versioning: { enabled }; templates: { enabled }; useDeclaration: "development" | "selection";
   }
@@ -356,10 +356,10 @@ DraftDocument {
   template: SimulationTemplate;
   fieldMeta: Record<JsonPointer, {          // drives the AI badge
     source: "seed" | "ai" | "author";
-    via?: "form" | "copilot" | "regenerate";
+    via?: "form" | "copilot" | "regenerate" | "generation" | "duplicate";
     generator?: { area, promptId, promptVersion, runId };
     by?: userId; at: ISODate }>;
-  areaState: Record<AreaKey, { opened: boolean; reviewed: boolean; reviewedAt?; reviewedBy?; attention: string[] }>;   // A-29
+  areaState: Record<AreaKey, { opened: boolean; reviewed: boolean; reviewedAt?; reviewedBy? }>;   // attention is computed, A-29
   revision: number;                         // optimistic concurrency
 }
 ```

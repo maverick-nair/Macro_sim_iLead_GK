@@ -1,0 +1,14 @@
+{
+  "name": "@gk/sim-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "validate:seed": "tsx src/index.ts validate seed:ilead"
+  },
+  "dependencies": {
+    "@gk/schema": "workspace:*",
+    "@gk/seed-ilead": "workspace:*"
+  }
+}

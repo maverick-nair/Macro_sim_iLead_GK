@@ -67,4 +67,11 @@ Milestones M0 to M9 are defined in `docs/plan.md`. For each milestone:
 
 ## Commands
 
-Added in M1 when the workspace exists (`pnpm typecheck`, `pnpm lint`, `pnpm lint:copy`, `pnpm test`, `pnpm e2e`, `pnpm sim`).
+Node 22.12 or later and pnpm 10. Copy `.env.example` to `.env` and export `DATABASE_URL` (or `TEST_DATABASE_URL`) for the database tests.
+
+- `pnpm install`, then `pnpm db:generate` (Prisma client) and `pnpm db:migrate` (apply migrations).
+- `pnpm typecheck`, `pnpm lint`, `pnpm lint:copy`, `pnpm format:check`, `pnpm test`.
+- `pnpm check` runs typecheck, lint, copy lint and tests in one go.
+- `pnpm schema:export` after any schema change (a test fails while the JSON Schema is stale).
+- `pnpm sim validate seed:ilead` (or a template JSON file).
+- `pnpm e2e` arrives in M3 with `apps/web`.
