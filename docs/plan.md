@@ -227,7 +227,7 @@ SimulationTemplate {
     branching: { enabled: boolean };
     targets: { primary: { kind: "revenue" | "units" | "sla_pct" | "nps" | "cases_resolved"; value };
       valuePerUnit; secondary: ("team_skill" | "morale" | "attrition" | "quality")[] (max 3);
-      kpiDials: ("skill" | "morale" | "result" | "trust" | "engagement" | "quality" | "safety")[] (3 to 5);
+      kpiDials: ("skill" | "morale" | "result" | "trust" | "engagement" | "quality" | "safety")[] (3 to 5);   // all 7 defined in docs/scoring-and-report.md
       kpiLabels: Partial<Record<Kpi, string>>; weeklyDrift: { morale, result };
       winCondition: { kind: "hit_target" | "target_and_morale" | "best_score"; moraleFloor? } }
   }
@@ -412,6 +412,7 @@ erDiagram
 | TemplateVersion, Delivery | immutable template; kind (link, scorm12, scorm2004, xapi, cohort), cohort dates, facilitator, leaderboard scope | Publish (P4) |
 | PlaySession, PlayEvent, InteractionRun, Evaluation, Transcript | seed, snapshot revision, engine state; seq, type, payload; band, styleShown, reasons, evidence | Playtest and later live runs |
 | AuditSample | interactionRunId, assessorId, humanBand, note, status | Human review tier (Config Spec "Sample audit" default; Design doc ITC row "a human audit sample of AI scored interactions"); feeds Results "Interaction quality" and "Content health" |
+| Participant, Enrolment | email or LMS learner id, consent record, delivery id; never an authoring user | Your answer to Q3: participants are a separate identity from authors and enter only through a share link, LMS launch or cohort invite |
 | PlaytestNote, Notification, AuditLog | | |
 
 Edit locks and presence live in Redis with TTL, not Postgres.
@@ -490,6 +491,8 @@ The Config Spec marks readiness bands, the fit matrix, throughput weights and ba
 - **Report metrics (Teardown, confirmed)**: dominant style (most used across all style tagged choices); style share; contextual capability % = correct style tagged choices / all; intent vs style per member (intent = dominant weekly setting, ties listed; style = dominant style of individual actions with that member, "None" if none); attention per member (average Result, delta = final minus starting Result, actions taken). The average Result is taken as the mean of the member's Result sampled after each player action: the Teardown run had 11 actions and its figures are consistent with elevenths (Kent 464/11 = 42.18, Jack 1032/11 = 93.82), though other sample counts also fit at two decimals, so M2 confirms it against the event log (A-10).
 - **Report 2.0 additions**: style used vs needed per readiness band (4 by 4 grid), intent vs action with one quoted example, skills profile on the 5 level scale with 2 evidence quotes per skill, key moments in SBI form from the event log, people trajectories, funnel vs ideal with bottleneck, conversation analytics (descriptive only), development plan from template copy mapped to the lowest skills, methodology page from template copy.
 
+**Complete rules:** every dial (including Engagement, Quality and Safety), skill rating, game score, badge and report section is specified in `docs/scoring-and-report.md`, which takes precedence over this summary.
+
 ### 5.6 Expression language
 
 Badge conditions and conditional event triggers use a tiny, safe expression language (identifiers from a whitelisted metric registry, numbers, comparisons, `and`, `or`, `not`, parentheses), parsed to an AST and evaluated without `eval`. Examples: `style_fit_count >= 9`, `member.morale < 30 for 2 weeks` (sugar for `sustainWeeks`).
@@ -511,7 +514,29 @@ Badge conditions and conditional event triggers use a tiny, safe expression lang
 | `Moderation` | `check(text)` | Keyword list | LLM classifier prompt |
 | `Storage`, `Mailer` | put/get/sign; send | Local disk; console | S3 compatible client; SMTP |
 
-Keys come only from env (`ANTHROPIC_API_KEY`, `LLM_MODEL`, vendor keys). `LLM_MODEL` has no default committed to the repo; the default is your call (Q6).
+Keys come only from env (`ANTHROPIC_API_KEY`, vendor keys).
+
+**Model routing (your answer to Q6: the best model for each task, with token use managed at scale).** Each task reads its own env var; exact model ids live in deployment config, not in the repo. Every request checks the stop reason and has refusal fallback enabled.
+
+| Task | Volume | Model family (current generation) | Effort | Env var |
+| --- | --- | --- | --- | --- |
+| Area generators, copilot patch planning, regenerate | Per build, low | Claude Opus | High for generators, medium for copilot | `LLM_MODEL_GENERATION` |
+| Evaluator (band classification) | Every live interaction, high | Claude Sonnet; an interaction can be pinned to Claude Opus when it cannot reach the 85% calibration gate after rubric fixes | Medium | `LLM_MODEL_EVALUATOR` |
+| NPC role play, sponsor briefing, interview candidates, test chat | Every turn, highest, latency sensitive | Claude Sonnet, streamed | Low | `LLM_MODEL_NPC` |
+| Calibration sample writing, upload extraction, translation | Per build | Claude Sonnet, Batch API where not interactive | Medium | `LLM_MODEL_UTILITY` |
+| Memory summaries, input moderation, NPC output safety check | Every interaction or turn | Claude Haiku | Low | `LLM_MODEL_FAST` |
+| Persona test and content safety gate (judge) | Per quality run | Claude Opus, Batch API | High | `LLM_MODEL_JUDGE` |
+
+**Token controls at scale**
+
+1. Prompt caching on every stable prefix: persona per NPC, rubric and anchors per interaction, brief plus earlier areas per build.
+2. Evaluate once per interaction, never per turn (Design doc risks table).
+3. NPC memory as short summaries capped by `memoryDepth`, never full transcripts.
+4. Hard limits: turn limit and time limit per interaction, max output tokens per task, live cap per week, and a per session token budget (configurable per org) that degrades gracefully to shorter replies before it stops.
+5. Result cache for the evaluator keyed by hash of transcript, rubric, prompt version and model; calibration reruns reuse it.
+6. Batch API (half price) for everything not interactive: persona tests, safety judging, calibration samples, translations, cohort re-scoring after a rubric change.
+7. Metering: input, output and cached tokens logged per org, build, session and task; an admin cost view and alerts at configurable thresholds.
+8. Per route effort settings, tuned against the calibration and persona gates rather than guessed.
 
 **Structured output with retry.** `generateObject` sends the Zod schema as the output format, parses the response, validates with Zod, and on failure retries up to 2 times with the validation issues appended to the conversation. It also checks the stop reason before reading content (refusals and max tokens are typed errors, not parse errors).
 
@@ -697,9 +722,9 @@ After each milestone: typecheck, lint, copy lint, unit and e2e tests, screenshot
 
 Logged in `docs/decisions.md`: 14 conflicts resolved by doc priority (C-xx), 13 open decisions implemented as configurable with `TODO(decision)` (D-xx), and 29 assumptions where the docs are silent (A-xx).
 
-## 15. Questions for you
+## 15. Questions for you (answered 2026-10-01)
 
-Each has a recommended default, so "go with the recommendations" is a complete answer.
+All seven were answered; the answers and what they change are in `docs/decisions.md`, "Your answers". The original questions are kept below for the record.
 
 1. **Engine values (blocks M1 and M2).** Do you have the current iLead engine values: readiness band thresholds, fit matrix, delta tables, the full role fit matrix (10 members × 5 roles), the funnel throughput formula, and the action and event deltas? *Recommended if not:* I seed the Teardown-derived values in section 5.4, tagged as derived, and tune them with the balance gate.
 2. **Trust in the seed (M1).** The Config Spec default for Trust is "Not used", but iLead 2.0 consequence tables, the People score, Team Pulse and badges all use Trust. *Strict reading:* Trust off in the seed. *Recommended:* Trust on at 50 for every member (the Config Spec's AI default), logged as conflict C-07.
@@ -707,4 +732,4 @@ Each has a recommended default, so "go with the recommendations" is a complete a
 4. **Coming soon formats (M3).** Which formats should the Business Simulations catalogue show as coming soon (open decision D-02)? *Recommended:* catalogue entries are data; I seed neutral placeholders for the four other skill themes (sales, change, strategy, operations) until you name them.
 5. **Report scale and skill integration (M7 to M9).** The docs name only the ends of the 5 level scale (Novice, Role Model) and do not say how interaction bands become a skill level. Some live interactions (Reward, Hire, Reply to NPC messages, Energize toast) have no column in the default linkage matrix. *Recommended:* placeholder names for levels 2 to 4, skill score = mean band score (100, 70, 35, 0) mapped to levels by configurable thresholds, and Reward linked to Recognition and fairness; the rest unlinked until you decide.
 6. **Model and vendors (M4).** Which Claude model should be the default for generation, evaluator and NPC chat, and which vendors for speech to text, text to speech and images? *Recommended:* one model set by `LLM_MODEL` for all three to start (I will suggest one in chat), vendors deferred with mocks until M6.
-7. **Extra KPI dials (M1 and M2).** The Config Spec lets authors pick Engagement, Quality and Safety dials, but no doc defines how the engine computes them. *Recommended:* keep them in the schema, block them at publish with "Not yet supported" until defined.
+7. **Extra KPI dials (M1 and M2).** The Config Spec lets authors pick Engagement, Quality and Safety dials, but no doc defines how the engine computes them. *Answered:* defined in full in `docs/scoring-and-report.md`.

@@ -5,7 +5,8 @@ Guidance for anyone (human or agent) working in this repository: the iLead autho
 ## Read first
 
 - `docs/plan.md`: architecture, data model, package layout, API, jobs, test plan per milestone.
-- `docs/decisions.md`: conflicts (C-xx), open decisions (D-xx), assumptions (A-xx).
+- `docs/scoring-and-report.md`: the decided rules for every dial, score, skill rating, badge and report section. Engine and report code must match it exactly.
+- `docs/decisions.md`: your answers, conflicts (C-xx), open decisions (D-xx), assumptions (A-xx).
 - `docs/progress.md`: what is built, deviations, open `TODO(decision)` items.
 - `docs/source/`: the five specs, exported verbatim. Never edit them by hand.
 

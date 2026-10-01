@@ -6,7 +6,19 @@ As of 2026-10-01 (M0). Three kinds of entry:
 - **D-xx Open decision.** A doc lists it as undecided. Not resolved here: implemented as configurable, marked `TODO(decision)` in code with this id, default noted.
 - **A-xx Assumption.** The docs are silent. A default was chosen so work can continue; each one is easy to change and is listed with where it lives.
 
-Questions that need your input are in `docs/plan.md` section 15 (Q1 to Q7). Answers will be recorded here.
+Questions Q1 to Q7 from `docs/plan.md` section 15 were answered on 2026-10-01; see "Your answers" below.
+
+## Your answers (2026-10-01)
+
+| Q | Your answer | What it changes |
+| --- | --- | --- |
+| Q1 Engine values | Use derived values | A-11 (bands), A-24 (delta table), A-25 (funnel) and A-12 (swap) are the seed values, tagged `provenance: "derived"` and tuned by the balance gate |
+| Q2 Trust | On at 50 for everyone | Overrides the Config Spec default "Not used" (C-07). Trust is on in the seed; P, Team Pulse, badges and intent vs action use it. KPI dials stay Skill, Morale, Result (C-06); Trust shows in Team Pulse and on member cards |
+| Q3 Sign in | Standalone, because end users differ from authors | Two separate identities. Authors, reviewers and admins sign in to the authoring app (dev sign in now, SSO adapter later). Participants never get authoring accounts: they enter a published version through a share link, an LMS launch (SCORM or xAPI) or a cohort invite, with their own participant record, consent and data. Participants can never reach authoring screens or drafts |
+| Q4 Coming soon formats | Neutral placeholders | Catalogue seeds "[Format name]" cards for Sales, Change, Strategy and Operations until you name them (D-02 stays open for the real list) |
+| Q5 Report scale and scoring | Define it fully | `docs/scoring-and-report.md`: 5 level scale with names and thresholds, evidence minimum, Harmful cap, overall level rule, evidence quotes, complete linkage matrix (4 new mappings), every Report 2.0 section, narratives, cohort Results and the human audit sample. Supersedes A-15 |
+| Q6 Models | Best model for each task, managing tokens at scale | Model routing per task with token controls, `docs/plan.md` section 6.1. Exact model ids are set per task by environment variables, not committed |
+| Q7 Engagement, Quality, Safety | Define them in detail | Full definitions, mechanics and effects in `docs/scoring-and-report.md` section 2. They are supported dials (off in the seed), not blocked |
 
 ## Conflicts (resolved by priority)
 
@@ -18,7 +30,7 @@ Questions that need your input are in `docs/plan.md` section 15 (Q1 to Q7). Answ
 | C-04 | Balance test pass rule | Config Spec: strong reaches the target and Gold; careless stays below target and in Bronze. iLead 2.0 Design gates section: strong must reach the target and all other bots (one style, careless, random) must not; its gamification guardrail adds strong at Gold or above and careless in Bronze, which agrees with the Config Spec | Config Spec rule decides pass or fail. One style and random outcomes are shown as warnings with a dominant strategy flag | `@gk/quality` balance gate (M8) |
 | C-05 | Time and pacing defaults | Config Spec defaults: play mode Full, real time limit 20 minutes, no clock pauses, save and resume off, 1 sitting. iLead 2.0 Design: Full takes 95 to 105 minutes, real time pauses during live interactions, save and resume required for Full. Participant Spec: clock pauses during live interactions and modals | Config Spec values seed the template. The Time and pacing editor shows a warning when Full mode is combined with a limit under 95 minutes or with save and resume off. See also D-05 | Seed (M1), Time editor (M5) |
 | C-06 | Default team KPI dials | Config Spec: Skill, Morale, Result. Participant Spec: Skill, Morale, Result, Trust | Config Spec: 3 dials | Seed (M1) |
-| C-07 | Trust | Config Spec: starting Trust "Not used" in the iLead default (AI default 50). iLead 2.0 Design: Trust is part of every NPC's state and drives consequences, the People score, Team Pulse and badges | Config Spec default unless you choose otherwise in Q2. If Trust is off, all Trust deltas are ignored and P uses morale only (matches the worked example "no trust data") | Seed (M1), engine (M2) |
+| C-07 | Trust | Config Spec: starting Trust "Not used" in the iLead default (AI default 50). iLead 2.0 Design: Trust is part of every NPC's state and drives consequences, the People score, Team Pulse and badges | **Decided by you (Q2): Trust on at 50 for every member.** The engine still supports Trust off (all Trust deltas ignored, P uses morale only, as in the worked example "no trust data") | Seed (M1), engine (M2) |
 | C-08 | Needed style override stored twice | Config Spec lists "Needed style override" under NPC stats and "Per member exceptions" under Leadership | Not a true conflict: one source of truth, `leadership.memberExceptions`, shown in both the Leadership editor and the NPC "Stats and fit" tab | Schema (M1) |
 | C-09 | "AI RolePlays" vs "AI RolePlay" | Screens E1 (existing screen, no change) and today's UI show the card title "AI RolePlays". The brief says to use the name "AI RolePlay" exactly | Keep the existing E1 card title "AI RolePlays" (the screen is marked no change); use "AI RolePlay" everywhere else, for example "1:1 AI RolePlay". Easy to flip | E1 card copy (M3) |
 | C-10 | Product name spelling | Brand Guidelines artifact: "Genie Kreator" (two words). Brief and all five docs: "GenieKreator" | Brief and docs: "GenieKreator" | All UI copy |
@@ -64,10 +76,10 @@ Questions that need your input are in `docs/plan.md` section 15 (Q1 to Q7). Answ
 | A-12 | What a swap does to stats | The member's Skill, Morale and Result become their role fit Skill, Motivation and Performance for the new role, then any prerequisite penalty applies | Engine (M2), pending Q1 | Teardown: Assess "predicts Skill, Motivation, Performance in the new role"; swap results move by role |
 | A-13 | Sponsor briefings and the live cap | Sponsor briefings do not count toward the weekly live cap | Engine (M2) | Design doc play modes: "2 per week plus 2 sponsor briefings" |
 | A-14 | Status after publish | Product stays Published; later edits show "Unpublished changes" and a new review cycle | Products (M9) | Screens lists the four statuses but not the post publish edit state |
-| A-15 | Skill rating from bands | Skill score = mean of linked dimension band scores (100, 70, 35, 0); level = highest scale level whose `minScore` it reaches; overall band = level of the mean skill score | Engine report (M2, M9), pending Q5 | Design doc says "integrated" without a rule |
+| A-15 | Skill rating from bands | Superseded by `docs/scoring-and-report.md` section 5 (your answer to Q5) | Engine report (M2, M9) | |
 | A-16 | Randomness and same day ordering | Named RNG streams per subsystem; on a given day fixed events fire before random ones, in deck order | Engine (M2) | Keeps runs stable when features are added |
 | A-17 | Percent display rounding | Engine stores exact fractions; display rounds half up to whole percent | Engine, report | 13/45, 6/45, 16/45, 10/45 and 31/45 display as 29, 13, 36, 22 and 69 |
-| A-18 | Local adapters and sign in | Local disk storage and console mailer in dev and tests; dev sign in with seeded users, pending Q3 | Infra (M3, M4) | Docs do not cover infrastructure |
+| A-18 | Local adapters and sign in | Local disk storage and console mailer in dev and tests; author dev sign in with seeded users; participant access separate (Q3 answer) | Infra (M3, M4, M8) | Docs do not cover infrastructure |
 | A-19 | Type chips | E2 Simulations list uses short chips "Business" and "DILO"; Products cards for iLead builds show "Business Simulation" plus a format chip "iLead" | Products list (M3) | Both wordings appear in the Screens doc for different screens |
 | A-20 | Meaning of "style fit %" | In the Leadership Score it is contextual capability % over the whole run; in weekly stars it is the share of correct weekly settings that week; `style_fit_count` is the number of correct weekly settings that week | Engine (M2) | Read the Room fires at "9 or 10 of 10 in one week" |
 | A-21 | Weekly drift amount | 3 points of Morale and 3 of Result | Seed (M1) | Config Spec and Teardown say "about 3 points per week" |

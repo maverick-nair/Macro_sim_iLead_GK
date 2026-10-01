@@ -20,10 +20,19 @@
 
 - The brief said the specs were already in `/docs`; the repository was empty. They now live in `docs/source/` (file names as in the brief) so the build has a stable, searchable copy.
 
+**Your answers (2026-10-01), now in the docs**
+
+- Q1 to Q7 recorded in `docs/decisions.md`, "Your answers".
+- New `docs/scoring-and-report.md`: full rules for the 7 dials (Engagement, Quality and Safety defined in detail), style metrics, live scoring, skill ratings on a 5 level scale, game scores, all 10 badges, every Report 2.0 section and cohort Results.
+- `docs/plan.md` section 6.1: model routing per task and token controls at scale. Participant identity is separate from authors (Q3).
+
+**Interface preview**
+
+- A clickable design canvas of 11 planned screens (E1 to E5, B1, B2, workspace with the Cast studio and NPC panel, live interaction designer, quality check, playtest) is published as a private artifact. It is a design reference for M3 to M8, not application code, and is not in this repo.
+
 **Waiting on you**
 
-- Review of `docs/plan.md` and `docs/decisions.md`.
-- Answers to plan section 15 (Q1 to Q7), or "go with the recommendations".
+- Review of the plan, the scoring spec and the interface preview, then a go for M1.
 
 **Open `TODO(decision)` items**
 
