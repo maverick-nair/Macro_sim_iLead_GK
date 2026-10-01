@@ -1,0 +1,56 @@
+/* Genie design system tokens (GenieKreator Guidelines). Copied from the design bundle. */
+@font-face{font-family:'Manrope';src:url('/fonts/Manrope-ExtraLight.ttf') format('truetype');font-weight:200;font-style:normal;font-display:swap}
+@font-face{font-family:'Manrope';src:url('/fonts/Manrope-Light.ttf') format('truetype');font-weight:300;font-style:normal;font-display:swap}
+@font-face{font-family:'Manrope';src:url('/fonts/Manrope-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Manrope';src:url('/fonts/Manrope-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Manrope';src:url('/fonts/Manrope-SemiBold.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Manrope';src:url('/fonts/Manrope-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'Manrope';src:url('/fonts/Manrope-ExtraBold.ttf') format('truetype');font-weight:800;font-style:normal;font-display:swap}
+:root{
+/* Primary palette: Genie Brand Guidebook §02 */
+--electric-blue:#249DFF; /* primary brand; CTAs, links, active states, gradient origin */
+--cyber-cyan:#43D6E8;    /* gradient midpoint; hover states, highlight accents, icon fills */
+--mint-green:#00F2AD;    /* success, progress completion, sub-brand names */
+--deep-space:#0A081B;    /* primary background: all interfaces default to this */
+--pale-lavender:#DEE9FF; /* primary text on dark */
+/* Surface tokens: layered opacity above Deep Space; never flat grey */
+--surface-1:#111029;                       /* nav, sidebars */
+--surface-2:rgba(255,255,255,.04);         /* cards */
+--surface-active:rgba(36,157,255,.08);     /* selected */
+--surface-border:rgba(255,255,255,.08);
+--surface-border-strong:rgba(255,255,255,.14);
+/* Semantic aliases */
+--bg-app:var(--deep-space);
+--surface-card:var(--surface-2);
+--surface-nav:var(--surface-1);
+--text-body:var(--pale-lavender);
+--text-muted:rgba(222,233,255,.62);
+--text-faint:rgba(222,233,255,.4);
+--accent:var(--electric-blue);
+--accent-hover:var(--cyber-cyan);
+--success:var(--mint-green);
+--focus-ring:rgba(36,157,255,.45);
+/* Brand gradients: always 135deg, blue leads */
+--grad-brand:linear-gradient(135deg,#249DFF,#43D6E8); /* @kind color */ /* logo, primary buttons, h1 */
+--grad-product:linear-gradient(135deg,#43D6E8,#00F2AD); /* @kind color */ /* sub-brand names, progress fills */
+--grad-spectrum:linear-gradient(135deg,#249DFF 0%,#43D6E8 50%,#00F2AD 100%); /* @kind color */ /* hero accents, celebration */
+}
+:root{
+--font-sans:'Manrope',system-ui,sans-serif; /* sole brand typeface: no secondary permitted */
+/* Type scale: Genie Brand Guidebook §03 */
+--type-display:800 54px/1.05 var(--font-sans); --track-display:-0.03em; /* hero headlines */
+--type-h1:800 36px/1.1 var(--font-sans);      --track-h1:-0.02em;      /* page titles */
+--type-h2:700 28px/1.15 var(--font-sans);     --track-h2:-0.015em;     /* section headings */
+--type-h3:700 20px/1.2 var(--font-sans);      --track-h3:-0.01em;      /* sub-sections, card headers */
+--type-body-lg:400 17px/1.7 var(--font-sans);                          /* intros, pull quotes */
+--type-body:400 15px/1.65 var(--font-sans);                            /* default body */
+--type-caption:500 12px/1.5 var(--font-sans);                          /* metadata, timestamps */
+--type-label:700 11px/1.4 var(--font-sans);   --track-label:0.12em;    /* eyebrows: uppercase */
+}
+:root{
+/* Intentional additions: not specified in the brand book; derived from its own layout so components can exist. Flagged in readme.md. */
+--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-pill:999px;
+--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;--space-7:48px;--space-8:64px;
+--shadow-glow:0 0 24px rgba(36,157,255,.25);
+--ease-brand:cubic-bezier(.4,0,.2,1); /* @kind other */
+}

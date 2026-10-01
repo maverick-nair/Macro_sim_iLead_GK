@@ -1,25 +1,48 @@
-# CODING AGENTS: READ THIS FIRST
+# iLead, a Business Simulation: participant app
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+React 19 + Vite + TypeScript implementation of the iLead 2.0 participant interface designed in Claude Design.
+The original design bundle (prototypes, chat transcript, design system) lives in `project/` and `chats/` and is the visual source of truth. The bundle's handoff notes are in `HANDOFF.md`.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+## Run it
 
-## What you should do — IMPORTANT
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # typecheck and production build to dist/
+```
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+| Route      | What it is |
+|------------|------------|
+| `/`        | The playable app, full screen. Starts at onboarding. `?theme=light` for the light theme, `?client=halden` for the sample client theme. Phones (600px and below) get the 390 layouts. |
+| `/screens` | Every screen, each frame the live app opened at that state. Port of `project/iLead Screens.dc.html`. Frame ids (`b4`, `l1`, ...) match the design and are linkable, for example `/screens#b4`. |
+| `/states`  | Edge states: loading, empty, offline, mic denied, slow AI. Port of `project/iLead States.dc.html`. |
 
-**Read `project/iLead Screens.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+## Layout
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+```
+src/
+  api/        Typed API layer: IleadApi interface, mock adapter (default), HTTP adapter
+  app/        App shell (port of iLeadApp): state, navigation, overlays, toast, contract types
+  data/       Scenario types and the default scenario (port of ilead-data.js)
+  ds/         Genie design system components used by the screens (Button, Switch)
+  gallery/    /screens and /states review canvases
+  lib/css.ts  css() and pseudo() helpers, see below
+  screens/    Onboarding, StyleSetting, Board, Live, WeekEnd, End, Report
+  styles/     Genie tokens, fonts, global keyframes
+public/       NPC portraits, backgrounds, Manrope fonts
+```
 
-## About the design files
+## Backend
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+All persistence and AI judging goes through `IleadApi` (`src/api/types.ts`):
+`getScenario`, `getSession`, `saveSettings`, `setStyle`, `planAction`, `submitInteraction` (returns the Outcome the board shows) and `endWeek`.
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+- With no configuration the app uses `createMockApi`, which serves the design's scenario in memory.
+- Set `VITE_ILEAD_API_URL` (see `.env.example`) to switch to `createHttpApi`. Its endpoint paths are a proposal, kept in `src/api/http.ts` so they are easy to align with the real service.
 
-## Bundle contents
+Voice capture, NPC speech streaming and the waveform are simulated in `src/screens/live/useLiveSession.ts` (`simulateNpcSpeechTick`, `simulateMicCapture`, `simulateWaveformTick`), ready to be replaced by a speech service.
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `iLead Foundations Review` project files (HTML prototypes, assets, components)
+## Styling approach
+
+The screens keep the design's inline CSS as strings passed through `css()`, which converts them to React style objects (memoised). This keeps every value diffable against the design source. Hover and focus styles use `pseudo('hover', '...')`, which generates a class, matching how the design runtime applied `style-hover`.
+Color tokens are `--ik-*` custom properties defined on the app root with `light-dark()`, so light and dark modes share one set of styles. A client theme only overrides the `--client-acc*` and `--client-grad` accent tokens.

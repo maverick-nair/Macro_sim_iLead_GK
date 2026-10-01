@@ -1,0 +1,32 @@
+@import './genie-tokens.css';
+
+/* App globals, from the iLeadApp design component helmet. */
+body { margin: 0; background: #0A081B; }
+*, *::before, *::after { box-sizing: border-box; }
+button, input, textarea, select { font: inherit; }
+a { color: #249DFF; }
+a:hover { color: #43D6E8; }
+
+@keyframes ilPulse { 0%, 100% { transform: scale(1); opacity: 1 } 50% { transform: scale(1.08); opacity: .75 } }
+@keyframes ilRing { 0% { transform: scale(.9); opacity: .9 } 100% { transform: scale(1.5); opacity: 0 } }
+@keyframes ilDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-3px) } }
+@keyframes ilIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
+@keyframes ilShimmer { 0% { background-position: -400px 0 } 100% { background-position: 400px 0 } }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+/* The in-app "Reduce motion" setting applies the same rule to the app subtree. */
+.il-reduced-motion, .il-reduced-motion * { transition: none !important; animation: none !important; }
+
+@media print {
+  @page { margin: 0.5cm; }
+  figure, table { break-inside: avoid; }
+  *, *::before, *::after {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+    animation-delay: -99s !important; animation-duration: .001s !important;
+    animation-iteration-count: 1 !important; animation-fill-mode: both !important;
+    animation-play-state: running !important; transition-duration: 0s !important;
+  }
+}
