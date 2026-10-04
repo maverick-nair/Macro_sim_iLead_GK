@@ -124,6 +124,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       case 'lastInStage': return t('board.block.lastInStage', { stage: stageName(b.stage) });
       case 'noCover': return t('board.block.noCover', { stage: stageName(b.stage) });
       case 'teamFull': return t('board.block.teamFull');
+      case 'liveCap': return t('board.block.liveCap', { cap: b.cap, unit: periodUnit });
     }
   };
   const block = (b: Block | null): ActionBlock | undefined => {

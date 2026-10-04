@@ -8,8 +8,17 @@ import type { Style } from './rules';
  * The real evaluator is a server side model call. `heuristicEvaluator` stands in for it in the mock
  * engine, tests and calibration: transparent keyword rules, so outcomes in demos are explainable.
  */
+export interface EvaluationInput {
+  format: string;
+  /** Everything the participant said or wrote, in order. */
+  text: string;
+  usedVoice?: boolean;
+  /** Rubric dimensions for this interaction; defaults per format. */
+  rubric?: Array<{ key: string }>;
+}
+
 export interface Evaluator {
-  evaluate(input: { format: string; text: string; usedVoice?: boolean }): Evaluation | Promise<Evaluation>;
+  evaluate(input: EvaluationInput): Evaluation | Promise<Evaluation>;
   /**
    * The other person's reply when the client sent none. The real one is an AI model streamed to the
    * client (M4); the heuristic gives a short line that fits how the words landed.
@@ -32,6 +41,7 @@ const CUES: Record<Style, RegExp[]> = {
 };
 const ACK = /\b(?:sorry|thank(?:s| you)|appreciate|i hear you|i understand|that sounds|must be)\b/i;
 const OPEN_Q = /\b(?:what|how|why|tell me|walk me through)\b[^?]*\?/gi;
+const OPEN_Q_ONE = /\b(?:what|how|why|tell me|walk me through)\b[^?]*\?/i;
 const INVITE = /\b(?:what do you think|your (?:ideas|view|input)|help me|how would you|what would you)\b/i;
 const NEXT_STEP = /\b(?:by (?:monday|tuesday|wednesday|thursday|friday|tomorrow|end of (?:day|week))|tomorrow|this week|next step|on day \d)\b/i;
 const CONCERN = /\b(?:what'?s on your mind|what is on your mind|what'?s bothering|how are you (?:feeling|doing)|what'?s really going on|is something wrong)\b/i;
@@ -46,12 +56,66 @@ function sentences(text: string) {
   return text.split(/(?<=[.?!])\s+/).map(s => s.trim()).filter(Boolean);
 }
 
+/** Default rubric dimensions per format (Design doc, Action by action; Configuration Spec). */
+export const DEFAULT_RUBRIC: Record<string, string[]> = {
+  roleplay: ['listening', 'clarity', 'involvement'],
+  chat: ['responsiveness', 'clarity', 'listening'],
+  email: ['specificity', 'tone', 'fairness'],
+  meeting: ['agenda', 'inclusion', 'clarity'],
+  sponsor: ['ownership', 'honesty', 'plan'],
+  interview: ['structure', 'probing', 'fairness'],
+  plan: ['specific', 'measurable', 'involvement']
+};
+
+const BAND_ORDER: Band[] = ['harmful', 'weak', 'adequate', 'strong'];
+/** Overall band: any red flag forces Harmful; otherwise the median of the dimension bands, ties to the lower band. */
+export function overallBand(dimensions: Array<{ band: Band }>, redFlags: string[]): Band {
+  if (redFlags.length) return 'harmful';
+  if (!dimensions.length) return 'weak';
+  const ranks = dimensions.map(d => BAND_ORDER.indexOf(d.band)).sort((a, b) => a - b);
+  return BAND_ORDER[ranks[Math.floor((ranks.length - 1) / 2)]];
+}
+
+const RED_FLAGS: Array<[string, RegExp]> = [
+  ['abuse', /\b(?:idiot|stupid|useless|pathetic|shut up|incompetent|worthless)\b/i],
+  ['blame', /\b(?:(?:it'?s|this is) (?:all )?your fault|you always mess|you never get anything)\b/i],
+  ['discrimination', /\b(?:how old are you|are you (?:married|pregnant)|do you (?:have|plan to have) (?:kids|children)|what(?:'s| is) your religion|where are you really from)\b/i],
+  ['policyBreach', /\b(?:don'?t tell hr|keep (?:this|it) off the record|fudge the numbers|backdate)\b/i]
+];
+
+/** Cue patterns per dimension; 2 or more hits read Strong, 1 Adequate, none Weak. */
+const DIM_CUES: Record<string, RegExp[]> = {
+  listening: [OPEN_Q_ONE, ACK, /\b(?:tell me more|help me understand|what i(?:'m| am) hearing|so you(?:'re| are) saying)\b/i],
+  clarity: [NEXT_STEP, /\b(?:the plan|first|then|by (?:when|day)|so that)\b/i, /\b(?:i need|we need|the goal is)\b/i],
+  involvement: [INVITE, /\b(?:together|your (?:plan|idea|call))\b/i, /\bhow would you\b/i],
+  responsiveness: [ACK, /\b(?:right away|today|now|this afternoon)\b/i, OPEN_Q_ONE],
+  specificity: [/\b(?:\d+|specifically|for example|the [a-z]+ account)\b/i, NEXT_STEP, /\b(?:because|since)\b/i],
+  tone: [ACK, /\b(?:thank|appreciate|well done|great work)\b/i, /\b(?:please|let me know)\b/i],
+  fairness: [/\b(?:everyone|the whole team|each of you|fair)\b/i, /\b(?:because|based on|the result(?:s)?)\b/i, /\b(?:example|evidence)\b/i],
+  agenda: [/\b(?:agenda|today we|three things|first|then|finally)\b/i, NEXT_STEP, /\b(?:goal|purpose)\b/i],
+  inclusion: [INVITE, /\b(?:what do you all think|anyone|[A-Z][a-z]+, what)\b/, OPEN_Q_ONE],
+  ownership: [/\b(?:i own|i take (?:responsibility|ownership)|my call|on me)\b/i, /\bi(?:'ll| will)\b/i, /\bwe(?:'ll| will)\b/i],
+  honesty: [/\b(?:behind|missed|below|short of|the truth|honestly)\b/i, /\b(?:risk|problem|issue)\b/i, /\b\d+\b/],
+  plan: [NEXT_STEP, /\b(?:plan|steps|by (?:week|day)|milestone)\b/i, /\b(?:support|need from you|resources)\b/i],
+  structure: [OPEN_Q_ONE, /\b(?:tell me about a time|walk me through|give me an example)\b/i, /\b(?:next question|another question)\b/i],
+  probing: [/\b(?:what happened next|why|how did you|what did you learn|tell me more)\b/i, OPEN_Q_ONE, /\b(?:result|outcome)\b/i],
+  specific: [/\b\d+\b/, /\b(?:specifically|exactly|each)\b/i, NEXT_STEP],
+  measurable: [/\b\d+\s*(?:%|percent|deals|leads|calls|meetings)\b/i, /\bby (?:day|week|monday|tuesday|wednesday|thursday|friday)\b/i, /\b(?:measure|track|target)\b/i]
+};
+
+function dimensionBand(key: string, text: string): { band: Band; evidence: string[] } {
+  const cues = DIM_CUES[key] ?? DIM_CUES.clarity;
+  const hits = cues.filter(rx => rx.test(text)).length;
+  const evidence = sentences(text).filter(sn => cues.some(rx => rx.test(sn))).slice(0, 2);
+  return { band: hits >= 2 ? 'strong' : hits === 1 ? 'adequate' : 'weak', evidence };
+}
+
 export const heuristicEvaluator: Evaluator = {
   reply({ text, band }) {
     const lines = REPLIES[band];
     return lines[text.length % lines.length];
   },
-  evaluate({ format, text, usedVoice }) {
+  evaluate({ format, text, usedVoice, rubric }) {
     const scores = (Object.keys(CUES) as Style[]).map(s => [s, CUES[s].filter(rx => rx.test(text)).length] as const);
     const total = scores.reduce((a, [, n]) => a + n, 0);
     const [styleUsed, top] = [...scores].sort((a, b) => b[1] - a[1])[0];
@@ -69,10 +133,11 @@ export const heuristicEvaluator: Evaluator = {
       const when = pm[2].toLowerCase();
       flags.promise = { text: `I'll ${pm[1]} ${pm[2]}`, dueInSubPeriods: DUE[when] ?? 3, fulfilledBy: ['f2f', 'goals', 'coach', 'feedback', 'reward', 'training', 'swap'] };
     }
-    // Rubric: up to 2 points per criterion, five criteria (5.1).
-    const points = (flags.acknowledged ? 2 : 0) + Math.min(2, openQuestions) + (flags.invitedContribution ? 2 : 0) + (flags.specificNextStep ? 2 : 0) + (top > 0 ? 2 : 0);
-    const share = points / 10;
-    const band: Band = flags.abusive ? 'harmful' : share >= 0.8 ? 'strong' : share >= 0.5 ? 'adequate' : 'weak';
+    // A band per rubric dimension, then the overall band (scoring-and-report.md 4).
+    const keys = rubric?.map(r => r.key) ?? DEFAULT_RUBRIC[format] ?? DEFAULT_RUBRIC.roleplay;
+    const dimensions = keys.map(key => ({ key, ...dimensionBand(key, text) }));
+    const redFlags = RED_FLAGS.filter(([, rx]) => rx.test(text)).map(([k]) => k);
+    const band = overallBand(dimensions, redFlags);
     const cueSentences = sentences(text).filter(s => Object.values(CUES).flat().some(rx => rx.test(s)) || ACK.test(s) || INVITE.test(s));
     return {
       styleUsed: top > 0 ? styleUsed : 'G',
@@ -81,7 +146,9 @@ export const heuristicEvaluator: Evaluator = {
       evidence: (cueSentences.length ? cueSentences : sentences(text)).slice(0, 2),
       flags,
       emailIntent: format === 'email' ? (WARN.test(text) ? 'warn' : CONGRATS.test(text) ? 'congratulate' : 'neutral') : undefined,
-      usedVoice
+      usedVoice,
+      dimensions,
+      redFlags
     };
   }
 };

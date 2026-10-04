@@ -1,8 +1,9 @@
+import { blank, UNTAGGED } from './live';
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
 import { mismatchType, styleDifference, trainingMismatch, type Mismatch, type Style, type Triple } from './rules';
 import {
-  addMessage, capacityLeft, effectChanges, firstName, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
+  addMessage, capacityLeft, effectChanges, firstName, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
   STYLE_NAMES, stageName, trustChange
 } from './sim';
 import type { Band, Change, Evaluation, MemberSim, Outcome, Reason, Sim } from './types';
@@ -44,12 +45,12 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
     const wasNeeded = m.neededAtStart;
     // Changing someone's style when what they need has not changed feels erratic (3.1).
     if (sim.period > 1 && m.lastStyle && chosen !== m.lastStyle && m.periodEnds.length && needed(sim, m) === wasNeeded && m.lastStyle === wasNeeded) {
-      changes.push(...trustChange(m, -2, { label: 'Style changed', cause: `You changed how you lead ${firstName(sim, m.id)}, though what ${pr(sim, m.id)} needs had not changed.`, rule: 'Changing someone’s style without a reason lowers trust by 2.', evidence: [] }));
+      changes.push(...trustChange(m, sim.config.trustRules.erraticStyleChange, { label: 'Style changed', cause: `You changed how you lead ${firstName(sim, m.id)}, though what ${pr(sim, m.id)} needs had not changed.`, rule: `Changing someone’s style without a reason lowers trust by ${-sim.config.trustRules.erraticStyleChange}.`, evidence: [] }));
     }
     m.lastStyle = m.style ?? chosen;
     m.style = chosen;
     const diff = record(sim, m, chosen, 'weeklyStyle');
-    const mt = mismatchType(diff, rng, { trust: m.trust });
+    const mt = mismatchType(diff, rng, misread(sim, m));
     const n = needed(sim, m);
     const reason: Reason = {
       label: mt === 0 ? 'Style fits' : 'Style missed',
@@ -97,14 +98,17 @@ export type Block =
   | { reason: 'gone' }
   | { reason: 'lastInStage'; stage: string }
   | { reason: 'noCover'; stage: string }
-  | { reason: 'teamFull' };
+  | { reason: 'teamFull' }
+  | { reason: 'liveCap'; cap: number };
 
 export function blockedReason(sim: Sim, a: Action, memberId: string | null, optionKey?: string): Block | null {
   if (sim.period < a.unlockPeriod) return { reason: 'locked', period: a.unlockPeriod };
   const cost = (optionKey ? a.options.find(o => o.key === optionKey)?.cost : undefined) ?? a.cost;
   if (cost > capacityLeft(sim)) return { reason: 'capacity', need: cost, have: capacityLeft(sim) };
   // Role coverage (Teardown hidden rule 6): a full team hires nobody.
-  if (a.rule === 'hire' && sim.members.length >= sim.config.stages.length * sim.config.maxPerStage) return { reason: 'teamFull' };
+  if (a.rule === 'hire' && (sim.members.length >= sim.config.stages.length * sim.config.maxPerStage || interviewees(sim).length === 0)) return { reason: 'teamFull' };
+  // Live interaction cap per period (Configuration Spec, Time and pacing).
+  if (a.kind !== 'static' && (sim.liveTaken[sim.period] ?? 0) >= sim.config.time.liveCap) return { reason: 'liveCap', cap: sim.config.time.liveCap };
   if (memberId) {
     const m = member(sim, memberId);
     if (!m) return { reason: 'gone' };
@@ -133,6 +137,7 @@ export function blockedText(b: Block): string {
     case 'lastInStage': return 'The only person left in this stage';
     case 'noCover': return 'Nobody else in this stage can cover the role';
     case 'teamFull': return 'The team is full';
+    case 'liveCap': return `You have had ${b.cap} live conversations this period`;
   }
 }
 
@@ -180,7 +185,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   switch (a.rule) {
     case 'weeklyStyle':
       for (const m of sim.members.filter(x => x.away === 0)) {
-        const mt = mismatchType(styleDifference(m.style ?? m.neededAtStart, m.neededAtStart), rng, { trust: m.trust });
+        const mt = mismatchType(styleDifference(m.style ?? m.neededAtStart, m.neededAtStart), rng, misread(sim, m));
         changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: `${o.label} with the team. ${firstName(sim, m.id)} is being led ${m.style ? STYLE_NAMES[m.style] : 'without a set style'} this period, and needed ${STYLE_NAMES[m.neededAtStart]}.`, rule: ruleText(a, o), evidence: [] }));
       }
       break;
@@ -208,7 +213,10 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     log(sim, { kind: 'action', title: o.label === a.description ? a.name : `${a.name}: ${o.label}`, memberIds: input.memberIds, changes });
   } else {
     interactionId = nextId(sim, 'i');
-    sim.interactions[interactionId] = { actionKey: a.key, optionKey: o.key, memberIds: input.memberIds, format: a.format!, startedAt: sim.absSub };
+    sim.liveTaken[sim.period] = (sim.liveTaken[sim.period] ?? 0) + 1;
+    sim.interactions[interactionId] = blank({ actionKey: a.key, optionKey: o.key, memberIds: input.memberIds, format: a.format!, startedAt: sim.absSub,
+      // Interview two candidates, then choose (Design doc, Hire member).
+      candidates: a.rule === 'hire' ? interviewees(sim) : undefined, candidate: a.rule === 'hire' ? 0 : undefined });
     // Hybrid decisions are locked before the conversation (spec).
     if (a.rule === 'swap' || a.rule === 'reward' || a.rule === 'fire') changes.push(...hybridDecision(sim, rng, a, targets, input.stage));
   }
@@ -288,8 +296,25 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   const vp = (sim.voicePeriods[sim.period] ??= { voice: 0, total: 0 });
   vp.total++; if (ev.usedVoice) vp.voice++;
 
+  const table = a?.live.consequences?.[ev.band];
   if (it.actionKey === 'sponsor') {
+    const msg = sim.inbox.find(x => x.id === it.replyTo);
+    if (msg) msg.state = 'answered';
     changes.push(...sponsorChange(sim, BAND_SPONSOR[ev.band], `Sponsor briefing ${BAND_WORDS[ev.band]}`));
+  } else if (a && table && a.rule !== 'hire') {
+    // Authored consequence table for the band (Configuration Spec, Consequence table).
+    const reason: Reason = { label: label(targets.length === 1 ? firstName(sim, targets[0].id) : 'the team'), cause: `How the ${a.name.toLowerCase()} landed.`, rule: `The author set what each outcome does for ${a.name}.`, evidence: quotes(ev) };
+    const ids = new Set(targets.map(m => m.id));
+    for (const m of targets) {
+      changes.push(...effectChanges(sim, rng, m, [table.target[0], table.target[1], table.target[2]], reason, { useTrust: false }));
+      changes.push(...trustChange(m, table.target[3], reason));
+    }
+    if (table.bystanders) for (const m of sim.members.filter(x => !ids.has(x.id) && x.away === 0)) {
+      const ripple = { ...reason, label: 'Noticed', cause: `${firstName(sim, m.id)} noticed how the ${a.name.toLowerCase()} went.` };
+      changes.push(...effectChanges(sim, rng, m, [table.bystanders[0], table.bystanders[1], table.bystanders[2]], ripple, { useTrust: false }));
+      changes.push(...trustChange(m, table.bystanders[3], ripple));
+    }
+    if (table.sponsor) changes.push(...sponsorChange(sim, table.sponsor, `${a.name} ${BAND_WORDS[ev.band]}`));
   } else if (it.actionKey === 'reply') {
     for (const m of targets) {
       const msg = sim.inbox.find(x => x.id === it.replyTo);
@@ -302,10 +327,13 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     }
   } else if (a && a.rule === 'styleOption') {
     const option = a.options.find(o => o.style === ev.styleUsed) ?? a.options[0];
+    // Meetings, briefings, interviews and multi person conversations carry no style (scoring-and-report.md 3).
+    const tagged = targets.length === 1 && !UNTAGGED.has(it.format);
     for (const m of targets) {
       const n = needed(sim, m);
-      const diff = record(sim, m, ev.styleUsed, a.key);
-      const mt = adjust(mismatchType(diff, rng, { trust: m.trust }), ev.band);
+      const diff = tagged ? record(sim, m, ev.styleUsed, a.key) : styleDifference(ev.styleUsed, n);
+      if (tagged) changes.push(...intentGap(sim, m, ev));
+      const mt = adjust(mismatchType(diff, rng, misread(sim, m)), ev.band);
       const reason: Reason = {
         label: label(firstName(sim, m.id)),
         cause: `Your approach read as ${ev.confidence < 0.5 ? 'mostly ' : ''}${STYLE_NAMES[ev.styleUsed]}; ${firstName(sim, m.id)} needed ${STYLE_NAMES[n]}.`,
@@ -335,12 +363,15 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       addMessage(sim, { from: m.id, kind: 'email', title: `Re: your email`, body: npcReply || 'Thanks for the note.', dueIn: null });
     }
   } else if (a && a.rule === 'hire') {
-    const accept = ev.band === 'strong' || ev.band === 'adequate' || (ev.band === 'weak' && rng.chance(0.5));
-    const cid = it.memberIds[0] ?? sim.candidates[0];
-    if (accept && cid) {
+    // The participant chose after interviewing (Design doc, Hire member). How the interviews went
+    // sets the new hire's first trust in you.
+    const cid = it.memberIds[0];
+    if (cid && sim.candidates.includes(cid)) {
       const p = person(sim, cid);
-      sim.members.push({ ...createMemberFrom(sim, cid), stage: p.homeStage });
+      const hire = { ...createMemberFrom(sim, cid), stage: p.homeStage };
+      sim.members.push(hire);
       sim.candidates = sim.candidates.filter(c => c !== cid);
+      changes.push(...trustChange(hire, BAND_TRUST[ev.band], { label: 'First impression', cause: `${firstName(sim, cid)} joined after an interview that ${BAND_WORDS[ev.band]}.`, rule: 'How the interview went sets a new hire’s first trust in you: +6, +2, −3 or −8.', evidence: quotes(ev) }));
     }
   } else if (a) {
     // Hybrid conversation after a locked decision: how it lands moves morale and trust.
@@ -384,11 +415,35 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   return outcome;
 }
 
+/** Up to two candidates whose home stage has room (role coverage), in storyline order. */
+export function interviewees(sim: Sim): string[] {
+  const room = (stage: string) => sim.members.filter(m => m.stage === stage).length < sim.config.maxPerStage;
+  return sim.candidates.filter(id => room(person(sim, id).homeStage)).slice(0, 2);
+}
+
+/**
+ * Intent vs action (Design doc, Consistency): when the style you show someone differs from the one
+ * you declared for them, two periods running, they lose trust. Applied once per period.
+ */
+function intentGap(sim: Sim, m: MemberSim, ev: Evaluation): Change[] {
+  if (!m.style || ev.styleUsed === m.style) return [];
+  const gaps = (sim.intentGaps[m.id] ??= []);
+  if (gaps.includes(sim.period)) return [];
+  gaps.push(sim.period);
+  if (!gaps.includes(sim.period - 1)) return [];
+  return trustChange(m, sim.config.trustRules.intentGap, {
+    label: 'Mixed signals',
+    cause: `You said you would lead ${firstName(sim, m.id)} with ${STYLE_NAMES[m.style]}, but in conversation it came across as ${STYLE_NAMES[ev.styleUsed]}, two ${sim.config.time.period.unit}s running.`,
+    rule: `When what you declare and what you do differ two ${sim.config.time.period.unit}s in a row, trust drops by ${-sim.config.trustRules.intentGap}.`,
+    evidence: quotes(ev)
+  });
+}
+
 function createMemberFrom(sim: Sim, id: string): MemberSim {
   const p = person(sim, id);
   const n = { skill: p.start.skill, morale: p.start.morale };
   return {
-    id, stage: p.homeStage, ...p.start, trustMovedThisSub: 0, style: null, lastStyle: null, lastReaction: null,
+    id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? sim.config.trustRules.start, trustCap: sim.config.trustRules.capPerSubPeriod, trustMovedThisSub: 0, style: null, lastStyle: null, lastReaction: null,
     neededAtStart: n.skill >= sim.config.thresholds.high ? (n.morale >= sim.config.thresholds.high ? 'E' : 'P') : n.morale >= sim.config.thresholds.high ? 'G' : 'D',
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: sim.period, revealed: false, concernShared: false, lastChange: 0,
     recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result
@@ -399,7 +454,10 @@ function createMemberFrom(sim: Sim, id: string): MemberSim {
 export function openConversation(sim: Sim, kind: 'reply' | 'sponsor', messageId?: string): string {
   const msg = messageId ? sim.inbox.find(m => m.id === messageId) : undefined;
   const id = nextId(sim, 'i');
-  sim.interactions[id] = { actionKey: kind, optionKey: null, memberIds: msg && msg.from !== 'sponsor' && msg.from !== 'news' ? [msg.from] : [], format: kind === 'sponsor' ? 'sponsor' : 'chat', startedAt: sim.absSub, replyTo: messageId };
+  // Sponsor briefings happen when scheduled, from the briefing message (Design doc: weeks 4 and 8).
+  if (kind === 'sponsor' && !msg?.briefing) throw new IntentError('The sponsor briefing is not due yet', 'noBriefing');
+  if (msg && msg.state !== 'open') throw new IntentError('That message is closed', 'closedMessage');
+  sim.interactions[id] = blank({ actionKey: kind, optionKey: null, memberIds: msg && msg.from !== 'sponsor' && msg.from !== 'news' ? [msg.from] : [], format: kind === 'sponsor' ? 'sponsor' : 'chat', startedAt: sim.absSub, replyTo: messageId });
   return id;
 }
 

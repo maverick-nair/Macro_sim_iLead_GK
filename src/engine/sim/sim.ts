@@ -12,7 +12,7 @@ import type { Change, EventCard, InboxMessage, LogEntry, MemberSim, MetricKey, R
 export function createSim(config: StorylineConfig, seed: number): Sim {
   const high = config.thresholds.high;
   const members: MemberSim[] = config.members.map(p => ({
-    id: p.id, stage: p.homeStage, ...p.start, trustMovedThisSub: 0,
+    id: p.id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? config.trustRules.start, trustCap: config.trustRules.capPerSubPeriod, trustMovedThisSub: 0,
     style: null, lastStyle: null, lastReaction: null, neededAtStart: neededStyle(p.start, high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: 1,
     revealed: false, concernShared: false, lastChange: 0, recognizedAt: null, reassignedInPeriod: null,
@@ -26,7 +26,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     score: { business: 0, people: 0, leadership: 0, bonus: 0 }, periods: [], streak: 0, badges: [],
     sponsor: { value: 50, causes: [], crossed: [] }, pendingReward: null, promises: [], inbox: [], cards: [],
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
-    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}
+    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}
   };
   markPeriodStart(sim);
   return sim;
@@ -54,6 +54,9 @@ export const teamAverage = (sim: Sim, k: MetricKey) => {
   return Math.round(avg((here.length ? here : sim.members).map(m => m[k])));
 };
 
+/** Options for mismatchType from the storyline's trust rules (D30, D49). */
+export const misread = (sim: Sim, m: MemberSim) => ({ trust: m.trust, lowTrust: sim.config.trustRules.lowTrust.below, lowTrustChance: sim.config.trustRules.lowTrust.chance });
+
 export const STYLE_NAMES: Record<Style, string> = { D: 'Directing', G: 'Guiding', P: 'Partnering', E: 'Entrusting' };
 const METRIC_NAMES: Record<MetricKey, string> = { skill: 'skill', morale: 'morale', result: 'result', trust: 'trust' };
 
@@ -72,7 +75,7 @@ export function gendered(body: { he: string; she: string; they?: string }, sim: 
 /** Applies a skill, morale, result change to a member and returns the reasoned changes. */
 export function effectChanges(sim: Sim, rng: Rng, m: MemberSim, effect: Triple, reason: Reason, opts: { boost?: number; scale?: number; useTrust?: boolean } = {}): Change[] {
   const before = { skill: m.skill, morale: m.morale, result: m.result };
-  const applied = applyEffect(m, effect, rng, { trust: opts.useTrust === false ? undefined : m.trust, boost: opts.boost, scale: opts.scale });
+  const applied = applyEffect(m, effect, rng, { trust: opts.useTrust === false ? undefined : m.trust, multiplier: sim.config.trustRules.multiplier, boost: opts.boost, scale: opts.scale });
   const out: Change[] = [];
   (['skill', 'morale', 'result'] as const).forEach((k, i) => {
     if (applied[i] !== 0) out.push({ subject: m.id, metric: k, from: before[k], to: m[k], delta: applied[i], reason });
@@ -85,7 +88,7 @@ export function effectChanges(sim: Sim, rng: Rng, m: MemberSim, effect: Triple, 
 
 export function trustChange(m: MemberSim, delta: number, reason: Reason): Change[] {
   const from = m.trust;
-  const d = applyTrust(m, delta);
+  const d = applyTrust(m, delta, m.trustCap);
   return d === 0 ? [] : [{ subject: m.id, metric: 'trust', from, to: m.trust, delta: d, reason }];
 }
 
@@ -112,6 +115,7 @@ export function record(sim: Sim, m: MemberSim, chosen: Style, source: string): M
 }
 
 function markPeriodStart(sim: Sim) {
+  scheduleBriefing(sim);
   sim.periodStart = {
     morale: teamAverage(sim, 'morale'),
     kpis: { skill: teamAverage(sim, 'skill'), morale: teamAverage(sim, 'morale'), result: teamAverage(sim, 'result'), trust: teamAverage(sim, 'trust') }
@@ -192,7 +196,7 @@ function scheduledEvents(sim: Sim, rng: Rng) {
     }
     const affected = target ? sim.members.filter(m => m.id === target) : sim.members;
     for (const m of affected) {
-      const mt = m.style ? mismatchType(styleDifference(m.style, m.neededAtStart), rng) : 1;
+      const mt = m.style ? mismatchType(styleDifference(m.style, m.neededAtStart), rng, misread(sim, m)) : 1;
       const reason: Reason = {
         label: ev.title,
         cause: gendered(ev.body, sim, target),
@@ -320,6 +324,15 @@ function triggersEverySub(sim: Sim, rng: Rng) {
 
 // ---------------------------------------------------------------- messages and promises
 
+/** A sponsor briefing opens in the periods the storyline names (Design doc: weeks 4 and 8). */
+function scheduleBriefing(sim: Sim) {
+  if (!sim.config.sponsor.briefings.includes(sim.period)) return;
+  if (sim.inbox.some(m => m.briefing && m.atAbsSub === sim.absSub)) return;
+  const first = sim.config.sponsor.name.split(' ')[0];
+  addMessage(sim, { from: 'sponsor', kind: 'sponsor', title: `Briefing with ${first}`, body: `${first} wants your update on the team and the target this ${sim.config.time.period.unit}.`, dueIn: perPeriod(sim), urgent: true });
+  sim.inbox[sim.inbox.length - 1].briefing = true;
+}
+
 export function addMessage(sim: Sim, msg: { from: string; kind: InboxMessage['kind']; title: string; body: string; dueIn: number | null; urgent?: boolean }) {
   sim.inbox.push({ id: nextId(sim, 'm'), from: msg.from, kind: msg.kind, title: msg.title, body: msg.body, atAbsSub: sim.absSub,
     dueAbsSub: msg.dueIn === null ? null : sim.absSub + msg.dueIn, urgent: !!msg.urgent, state: 'open' });
@@ -334,6 +347,9 @@ function dueChecks(sim: Sim) {
     if (m) {
       const changes = trustChange(m, -5, { label: 'No reply', cause: `${firstName(sim, m.id)} did not hear back from you in time.`, rule: 'A message left unanswered past its due day lowers trust by 5.', evidence: [] });
       log(sim, { kind: 'trigger', title: 'Message went unanswered', memberIds: [m.id], changes });
+    } else if (msg.briefing) {
+      // A skipped briefing escalates (Design doc: issue escalated to the CEO, −10).
+      log(sim, { kind: 'trigger', title: 'Sponsor briefing missed', memberIds: [], changes: sponsorChange(sim, -10, 'Missed the sponsor briefing') });
     } else if (msg.from === 'sponsor') {
       log(sim, { kind: 'trigger', title: 'Sponsor message unanswered', memberIds: [], changes: sponsorChange(sim, -5, 'No reply yet to the sponsor') });
     }

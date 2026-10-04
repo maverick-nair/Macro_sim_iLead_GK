@@ -93,8 +93,29 @@ export const Block = z.discriminatedUnion('reason', [
   z.object({ reason: z.literal('gone') }),
   z.object({ reason: z.literal('lastInStage'), stage: Id }),
   z.object({ reason: z.literal('noCover'), stage: Id }),
-  z.object({ reason: z.literal('teamFull') })
+  z.object({ reason: z.literal('teamFull') }),
+  z.object({ reason: z.literal('liveCap'), cap: z.number().int().min(1) })
 ]);
+
+const Who = z.object({ id: Id, name: Text, img: z.string().nullable() });
+
+/** The open live interaction (spec, Live interaction screens). */
+export const LiveView = z.object({
+  id: Id, format: z.enum(['roleplay', 'email', 'meeting', 'sponsor', 'chat', 'interview', 'plan']),
+  actionKey: Id, actionName: Text.nullable(), optionLabel: Text.nullable(),
+  /** Email and written plan are submitted once; the others are conversations. */
+  oneShot: z.boolean(),
+  people: z.array(Who), speaker: Who,
+  brief: z.object({ goal: Text.nullable(), known: z.array(Text), mood: Mood.nullable(), promises: z.array(Text), declaredStyle: StyleKey.nullable() }),
+  /** `aiGenerated` marks NPC turns for the AI label (brief, rule 7). */
+  turns: z.array(z.object({ id: Id, by: Id, text: Text, voice: z.boolean(), interrupted: z.boolean(), aiGenerated: z.boolean() })),
+  turnLimit: z.number().int().min(1), turnsLeft: z.number().int().min(0), minutes: Num,
+  closed: z.boolean(),
+  hint: z.object({ mode: z.enum(['off', 'onRequest']), text: Text.nullable() }),
+  candidates: z.array(Who.extend({ title: Text, cv: z.object({ previous: z.string(), experience: z.string(), skills: z.string(), remarks: Text.or(z.literal('')) }) })).nullable(),
+  candidate: z.number().int().min(0).nullable(),
+  replyTo: Id.nullable()
+});
 
 export const ActionView = z.object({
   key: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
@@ -153,7 +174,9 @@ export const EngineView = z.object({
   badges: z.array(z.object({ key: Id, earned: z.boolean(), hint: Text.nullable() })),
   sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
   pendingReward: z.array(Id).nullable(),
-  history: z.array(LogEntry)
+  history: z.array(LogEntry),
+  live: LiveView.nullable(),
+  liveCap: z.object({ cap: z.number().int(), used: z.number().int() })
 });
 
 /** What the participant asks for. The engine answers with a new view. */
@@ -163,6 +186,12 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('planAction'), action: Id, option: Id.optional(), memberIds: z.array(Id), stage: Id.optional() }),
   z.object({ type: z.literal('openConversation'), kind: z.enum(['reply', 'sponsor']), messageId: Id.optional() }),
   z.object({ type: z.literal('submitInteraction'), interactionId: Id, text: z.string().min(1), usedVoice: z.boolean().optional(), npcReply: z.string().optional() }),
+  z.object({ type: z.literal('sendTurn'), interactionId: Id, text: z.string().min(1), usedVoice: z.boolean().optional() }),
+  z.object({ type: z.literal('interruptTurn'), interactionId: Id, turnId: Id, shownChars: z.number().int().min(0) }),
+  z.object({ type: z.literal('requestHint'), interactionId: Id }),
+  z.object({ type: z.literal('nextCandidate'), interactionId: Id }),
+  z.object({ type: z.literal('chooseCandidate'), interactionId: Id, candidateId: Id.nullable() }),
+  z.object({ type: z.literal('endInteraction'), interactionId: Id }),
   z.object({ type: z.literal('dismissCard'), cardId: Id }),
   z.object({ type: z.literal('clearOutcome') }),
   z.object({ type: z.literal('endPeriod') }),
@@ -175,7 +204,9 @@ export const IntentResult = z.object({
   changes: z.array(MetricChange),
   outcome: Outcome.optional(),
   interactionId: Id.optional(),
-  summary: PeriodSummary.optional()
+  summary: PeriodSummary.optional(),
+  turn: z.object({ id: Id, by: Id, text: Text }).optional(),
+  hint: Text.optional()
 });
 
 /** One chunk of a streamed AI reply. `done` closes the stream. */
@@ -191,6 +222,7 @@ export type Outcome = z.output<typeof Outcome>;
 export type EngineView = z.output<typeof EngineView>;
 export type MemberView = z.output<typeof MemberView>;
 export type Block = z.output<typeof Block>;
+export type LiveView = z.output<typeof LiveView>;
 export type ActionView = z.output<typeof ActionView>;
 export type Intent = z.input<typeof Intent>;
 export type IntentResult = z.output<typeof IntentResult>;

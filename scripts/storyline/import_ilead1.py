@@ -20,6 +20,13 @@ TITLES = {'leads': 'Lead Generation Executive', 'qualify': 'Lead Qualifier', 'pr
           'negotiation': 'Negotiation Specialist', 'conversion': 'Conversion Specialist'}
 SHE = {'Beth Killiney', 'Rita Sandersky', 'Mandy Lobert', 'Ruth Ether', 'Sheila Frederick'}
 # Authored from each actor's workbook remarks; surfaces only in conversation (SIMULATION.md 3.4).
+CONCERN_LINES = {
+    'kent': "Honestly? This job is not what I was promised. I expected a lot more when I joined, and nobody seems to remember that.",
+    'beth': "I left Beta Elevators because of how I was managed there. So yes, I watch closely how things are run here.",
+    'justin': "I have been in Lead Qualification for three years. I really want a shot at Sales Conversion.",
+    'lowe': "I put a lot of technical depth into my proposals, and it never seems to get noticed.",
+    'peter': "My last appraisals have not gone well. I am trying, but some encouragement would go a long way.",
+}
 CONCERNS = {
     'kent': 'He expected a lot more from this job, and feels it is not what he was promised.',
     'justin': 'He has been in Lead Qualification for 3 years and wants to move to Sales Conversion.',
@@ -61,8 +68,9 @@ def to_person(name, d):
     h = d['byStage'][d['home']]
     prof = profiles.get(name) or profiles.get(name.replace('Desmond Mart', 'Desmond Marta')) or dict(previous='', tenure='', experience='', skills='', remarks='', relations='')
     out = dict(id=pid, name=name, title=TITLES[d['home']], pronoun='she' if name in SHE else 'he', homeStage=d['home'],
-               start=dict(h, trust=trust_start(h['morale'], h['result'])), byStage=d['byStage'], profile=prof)
+               start=dict(h), byStage=d['byStage'], profile=prof)
     if pid in CONCERNS: out['hiddenConcern'] = CONCERNS[pid]
+    if pid in CONCERN_LINES: out['concernLine'] = CONCERN_LINES[pid]
     if (ROOT / 'public' / 'assets' / 'npc' / f'{pid}.png').exists(): out['portrait'] = f'/assets/npc/{pid}.png'
     return out
 

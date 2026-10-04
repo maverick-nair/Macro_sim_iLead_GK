@@ -39,5 +39,6 @@
   "board.pick.exact": "{n, plural, =1 {One person} other {# people}}",
   "board.pick.range": "{min, plural, =0 {Up to {max} people} other {{min} to {max} people}}",
   "board.chip.team": "The team",
-  "board.chip.people": "{n} people"
+  "board.chip.people": "{n} people",
+  "board.block.liveCap": "You have had your {cap, plural, one {one live conversation} other {# live conversations}} this {unit, select, year {year} month {month} week {week} day {day} other {period}}"
 }

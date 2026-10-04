@@ -24,6 +24,10 @@ export interface Evaluation {
   /** Email only. */
   emailIntent?: 'congratulate' | 'warn' | 'neutral';
   usedVoice?: boolean;
+  /** A band per rubric dimension, with the words it rests on (scoring-and-report.md 4). */
+  dimensions: Array<{ key: string; band: Band; evidence: string[] }>;
+  /** Behaviours that force Harmful: blame, discrimination, policy breach, abuse. */
+  redFlags: string[];
 }
 
 export interface EvidenceQuote { quote: string; by: string; judgedByAI: boolean }
@@ -58,6 +62,8 @@ export interface MemberSim {
   result: number;
   trust: number;
   trustMovedThisSub: number;
+  /** Largest net trust move per sub-period, from the trust rules. */
+  trustCap: number;
   /** Style set for the current period, null until style setting. */
   style: Style | null;
   lastStyle: Style | null;
@@ -87,6 +93,33 @@ export interface MemberSim {
   lowestResult: number;
 }
 
+export interface Turn {
+  id: string;
+  /** 'you', a member or candidate id, or 'sponsor'. */
+  by: string;
+  text: string;
+  voice?: boolean;
+  /** The participant spoke over the NPC; the text is what was shown. */
+  interrupted?: boolean;
+}
+
+export interface Interaction {
+  actionKey: string;
+  optionKey: string | null;
+  memberIds: string[];
+  format: string;
+  startedAt: number;
+  replyTo?: string;
+  turns: Turn[];
+  hint: string | null;
+  concernRevealed: boolean;
+  /** The NPC signed off; the participant can only end it now. */
+  closed: boolean;
+  /** Interview: the candidates, and which one is in the room. */
+  candidates?: string[];
+  candidate?: number;
+}
+
 export interface InboxMessage {
   id: string;
   from: string;
@@ -97,6 +130,8 @@ export interface InboxMessage {
   dueAbsSub: number | null;
   urgent: boolean;
   state: 'open' | 'answered' | 'expired' | 'read';
+  /** A scheduled sponsor briefing (Design doc: weeks 4 and 8). */
+  briefing?: boolean;
 }
 
 export interface EventCard {
@@ -189,7 +224,11 @@ export interface Sim {
   periodStart: { morale: number; kpis: Record<'skill' | 'morale' | 'result' | 'trust', number> };
   seq: number;
   /** Open live interactions waiting for the participant's words. */
-  interactions: Record<string, { actionKey: string; optionKey: string | null; memberIds: string[]; format: string; startedAt: number; replyTo?: string }>;
+  interactions: Record<string, Interaction>;
+  /** Live and hybrid actions taken per period, for the live cap. */
+  liveTaken: Record<number, number>;
+  /** Periods in which someone's shown style differed from the declared one (intent vs action). */
+  intentGaps: Record<string, number[]>;
 }
 
 export type { Mismatch, Style, Triple };

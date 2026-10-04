@@ -1,0 +1,204 @@
+import type { StorylineConfig } from '../config';
+
+type Person = StorylineConfig['members'][number];
+import { IntentError } from './actions';
+import { member, nextId, person } from './sim';
+import type { Interaction, Mood, Sim, Turn } from './types';
+import { moodOf } from './view';
+
+/**
+ * Live interactions as conversations (Design doc, Evaluation pipeline; spec, Live interaction
+ * screens). An interaction holds the turns so far; the participant sends turns, the NPC answers in
+ * persona, and ending it runs the evaluator over everything the participant said. Email and written
+ * plan are one shot: the participant submits once.
+ *
+ * The NPC's words come from an `NpcModel`. In production that is an AI model on the server, streamed
+ * to the client; `personaNpc` is the transparent stand in for the mock engine, tests and calibration.
+ * Either way the NPC only talks: consequences come from the rubric and the authored tables.
+ */
+export interface NpcContext {
+  format: string;
+  /** Who is speaking: a member, a candidate, or 'sponsor'. */
+  speaker: { id: string; name: string; persona: Person | null; mood: Mood; trust: number };
+  /** The participant's last turn, or null for the opening line. */
+  said: string | null;
+  turnsSoFar: number;
+  turnsLeft: number;
+  concernRevealed: boolean;
+  actionName: string;
+  /** Body of the message being replied to (chat replies open with it). */
+  replyTo?: string;
+}
+
+export interface NpcReply { text: string; revealsConcern?: boolean; signsOff?: boolean }
+
+export interface NpcModel {
+  reply(ctx: NpcContext): NpcReply | Promise<NpcReply>;
+}
+
+/** One shot formats: the participant writes once, then the interaction ends. */
+export const ONE_SHOT = new Set(['email', 'plan']);
+/** Formats with no style tag (scoring-and-report.md 3): they never count as a style choice. */
+export const UNTAGGED = new Set(['meeting', 'sponsor', 'interview']);
+
+const OPEN_Q = /\b(?:what|how|why|tell me|walk me through)\b[^?]*\?/i;
+const CONCERN_Q = /\b(?:what'?s on your mind|what is on your mind|what'?s bothering|how are you (?:feeling|doing)|what'?s really going on|is something wrong|anything (?:else )?on your mind|how can i help)\b/i;
+const ACK = /\b(?:sorry|thank(?:s| you)|appreciate|i hear you|i understand|that sounds)\b/i;
+const STEP = /\b(?:by (?:monday|tuesday|wednesday|thursday|friday|tomorrow|end of (?:day|week))|tomorrow|this week|next step|let'?s agree)\b/i;
+const BYE = /\b(?:bye|thanks for your time|that'?s all|we can stop here|let'?s wrap up)\b/i;
+const HARSH = /\b(?:idiot|stupid|useless|pathetic|shut up|incompetent|worthless|your fault)\b/i;
+
+const pick = <T,>(list: T[], n: number) => list[n % list.length];
+
+/** The persona stand in: short, plain replies that follow mood, trust and what was said. */
+export const personaNpc: NpcModel = {
+  reply(ctx) {
+    const { speaker: sp, said, format } = ctx;
+    const first = sp.name.split(' ')[0];
+    if (said === null) {
+      if (ctx.replyTo) return { text: ctx.replyTo };
+      if (format === 'sponsor') return { text: `Thanks for making time. Give me your update: where are we against target, and what is your plan?` };
+      if (format === 'interview') return { text: `Hello, thank you for having me. I am ${sp.name}, and I am interested in the ${sp.persona?.title ?? 'role'} role.` };
+      if (format === 'meeting') return { text: `Morning, everyone is here. So, what did you want to go through?` };
+      const byMood: Record<Mood, string[]> = {
+        frustrated: ['You wanted to see me? Honestly, it has been a rough week.', 'Okay. I did not expect this meeting. What is it about?'],
+        concerned: ['Sure. I have a few things on my mind, to be honest.', 'Hi. Is everything alright? You wanted to talk.'],
+        thinking: ['Hi. I was hoping we would get a chance to talk.', 'Good timing. I had something I wanted to raise.'],
+        neutral: ['Hi. What did you want to talk about?', 'Sure, I have a few minutes. What is up?'],
+        happy: ['Hi! Good to see you. What did you want to talk about?', 'Hey, sure. Things are going well this week.']
+      };
+      return { text: pick(byMood[sp.mood], sp.name.length) };
+    }
+    if (HARSH.test(said)) return { text: 'That is not okay. I would rather stop here.', signsOff: true };
+    if (BYE.test(said) || ctx.turnsLeft <= 0) {
+      return { text: format === 'sponsor' ? 'Good. Keep me posted, and come back to me if you need support.' : format === 'interview' ? 'Thank you for your time. I look forward to hearing from you.' : `Okay. Thanks, I will get back to it.`, signsOff: true };
+    }
+    if (format === 'sponsor') {
+      const probes = ['What is the biggest risk to the target, in your view?', 'And what do you need from me to get there?', 'Who on the team are you most worried about, and what are you doing about it?'];
+      return { text: pick(probes, ctx.turnsSoFar) };
+    }
+    if (format === 'interview') {
+      const p = sp.persona;
+      if (/\b(?:experience|background|previous|before)\b/i.test(said)) return { text: p?.profile.remarks || `I have ${p?.profile.experience || 'some'} of experience in this area.` };
+      if (/\b(?:skill|strength|good at)\b/i.test(said)) return { text: `My strengths are ${p?.profile.skills || 'working with clients'}.` };
+      if (/\b(?:why|motivat|interest)\b/i.test(said)) return { text: 'I want a team where I can grow and where results are recognised.' };
+      return { text: pick(['Good question. I would start by understanding the customer, then work out the next step with them.', 'I learned to keep promises small and keep them. That has worked for me.', 'I would ask the team first. They usually know where the problem is.'], ctx.turnsSoFar) };
+    }
+    const canOpenUp = sp.persona?.concernLine && !ctx.concernRevealed && (sp.trust >= 45 || ACK.test(said)) && (CONCERN_Q.test(said) || (OPEN_Q.test(said) && ctx.turnsSoFar >= 2));
+    if (canOpenUp) return { text: sp.persona!.concernLine!, revealsConcern: true };
+    if (STEP.test(said)) return { text: pick(['Okay. I can do that by then.', 'Fair. I will have it ready.', 'Alright, that is clear. I will make it happen.'], ctx.turnsSoFar) };
+    if (ACK.test(said)) return { text: pick(['Thanks, I appreciate you saying that.', 'That helps, honestly.', 'Thanks. It means something that you noticed.'], ctx.turnsSoFar) };
+    if (OPEN_Q.test(said)) {
+      const byMood: Record<Mood, string> = {
+        frustrated: 'Mostly that things change and nobody asks us first.',
+        concerned: 'The pipeline is slow, and I am not sure what is expected of me anymore.',
+        thinking: 'I have some ideas, but I am not sure they would be welcome.',
+        neutral: 'Things are okay. The work is moving, slowly.',
+        happy: 'Going well. I think we can push a bit harder this week.'
+      };
+      return { text: byMood[sp.mood] };
+    }
+    return { text: pick([`Okay${sp.trust < 40 ? ', if you say so' : ''}.`, 'Right. Anything else?', `I hear you${sp.mood === 'frustrated' ? ', but I am not sure that fixes it' : ''}.`], ctx.turnsSoFar) };
+  }
+};
+
+/** Coaching tips per format, one per interaction (Configuration Spec, Hints: on request). */
+const HINTS: Record<string, string> = {
+  roleplay: 'Ask an open question about how they are doing before you get to the plan, then agree one concrete next step.',
+  chat: 'Answer what they asked first, then say what happens next and by when.',
+  email: 'Name the specific result or behaviour, say why it matters, and close with what you expect next.',
+  meeting: 'Start with the purpose and agenda, invite the quiet people by name, and close with who does what.',
+  sponsor: 'Own the numbers, name the biggest risk honestly, and say what support you need.',
+  interview: 'Ask for a specific example, then probe what they did and what happened. Keep every question about the job.',
+  plan: 'Make each goal measurable and dated, and agree the support you will give.'
+};
+
+export function speakerFor(sim: Sim, it: Interaction): string {
+  if (it.format === 'sponsor') return 'sponsor';
+  if (it.format === 'interview') return it.candidates?.[it.candidate ?? 0] ?? 'sponsor';
+  return it.memberIds[0] ?? (it.format === 'meeting' ? sim.members[0]?.id ?? 'sponsor' : 'sponsor');
+}
+
+function speakerCtx(sim: Sim, id: string): NpcContext['speaker'] {
+  if (id === 'sponsor') return { id, name: sim.config.sponsor.name, persona: null, mood: 'neutral', trust: 50 };
+  const m = member(sim, id);
+  const p = person(sim, id);
+  return { id, name: p.name, persona: p, mood: m ? moodOf(m, sim) : 'neutral', trust: m?.trust ?? sim.config.trustRules.start };
+}
+
+const actionName = (sim: Sim, it: Interaction) => sim.config.actions.find(a => a.key === it.actionKey)?.name ?? (it.actionKey === 'sponsor' ? 'Sponsor briefing' : 'Reply');
+export const turnLimit = (sim: Sim, it: Interaction) => sim.config.actions.find(a => a.key === it.actionKey)?.live.turnLimit ?? 12;
+const yourTurns = (it: Interaction) => it.turns.filter(t => t.by === 'you').length;
+
+async function npcSays(sim: Sim, npc: NpcModel, it: Interaction, said: string | null): Promise<Turn> {
+  const by = speakerFor(sim, it);
+  const msg = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
+  const r = await npc.reply({
+    format: it.format, speaker: speakerCtx(sim, by), said, turnsSoFar: yourTurns(it), turnsLeft: turnLimit(sim, it) - yourTurns(it),
+    concernRevealed: it.concernRevealed, actionName: actionName(sim, it), replyTo: said === null ? msg?.body : undefined
+  });
+  if (r.revealsConcern) it.concernRevealed = true;
+  if (r.signsOff) it.closed = true;
+  const turn: Turn = { id: nextId(sim, 't'), by, text: r.text };
+  it.turns.push(turn);
+  return turn;
+}
+
+/** A fresh interaction record. */
+export const blank = (base: Omit<Interaction, 'turns' | 'hint' | 'concernRevealed' | 'closed'>): Interaction => ({ ...base, turns: [], hint: null, concernRevealed: false, closed: false });
+
+/** The NPC speaks first unless the author set otherwise (Configuration Spec, Opening). */
+export async function opening(sim: Sim, npc: NpcModel, id: string) {
+  const it = sim.interactions[id];
+  if (!it || it.turns.length) return;
+  const who = sim.config.actions.find(a => a.key === it.actionKey)?.live.opening ?? 'npc';
+  if (!ONE_SHOT.has(it.format) && (who === 'npc' || it.replyTo)) await npcSays(sim, npc, it, null);
+}
+
+function get(sim: Sim, id: string): Interaction {
+  const it = sim.interactions[id];
+  if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
+  return it;
+}
+
+/** The participant says something; the NPC answers. Returns the NPC's turn. */
+export async function sendTurn(sim: Sim, npc: NpcModel, id: string, text: string, voice = false): Promise<Turn> {
+  const it = get(sim, id);
+  if (ONE_SHOT.has(it.format)) throw new IntentError('This format is submitted once', 'oneShot');
+  if (it.closed) throw new IntentError('The conversation has ended', 'closed');
+  if (yourTurns(it) >= turnLimit(sim, it)) throw new IntentError('No turns left', 'turnLimit');
+  it.turns.push({ id: nextId(sim, 't'), by: 'you', text, voice });
+  return npcSays(sim, npc, it, text);
+}
+
+/** The participant spoke over the NPC: keep only what was shown (spec, Interrupt). */
+export function interruptTurn(sim: Sim, id: string, turnId: string, shownChars: number) {
+  const it = get(sim, id);
+  const t = it.turns.find(x => x.id === turnId);
+  if (!t || t.by === 'you') throw new IntentError('Unknown turn', 'unknownTurn');
+  if (shownChars < t.text.length) { t.text = t.text.slice(0, Math.max(0, shownChars)).trimEnd(); t.interrupted = true; }
+}
+
+/** One coaching tip per interaction, when the author allows hints. */
+export function requestHint(sim: Sim, id: string): string {
+  const it = get(sim, id);
+  const mode = sim.config.actions.find(a => a.key === it.actionKey)?.live.hints ?? 'onRequest';
+  if (mode === 'off') throw new IntentError('Hints are off for this interaction', 'noHints');
+  it.hint ??= HINTS[it.format] ?? HINTS.roleplay;
+  return it.hint;
+}
+
+/** Interview: move on to the next candidate, who opens. */
+export async function nextCandidate(sim: Sim, npc: NpcModel, id: string) {
+  const it = get(sim, id);
+  if (it.format !== 'interview' || !it.candidates) throw new IntentError('Not an interview', 'notInterview');
+  if ((it.candidate ?? 0) + 1 >= it.candidates.length) throw new IntentError('No more candidates', 'noCandidate');
+  it.candidate = (it.candidate ?? 0) + 1;
+  it.closed = false;
+  await npcSays(sim, npc, it, null);
+}
+
+/** Everything the participant said or wrote, for the evaluator. */
+export const participantText = (it: Interaction) => it.turns.filter(t => t.by === 'you').map(t => t.text).join('\n');
+/** The NPC's last words, for the outcome panel. */
+export const lastNpcWords = (it: Interaction) => [...it.turns].reverse().find(t => t.by !== 'you')?.text ?? '';

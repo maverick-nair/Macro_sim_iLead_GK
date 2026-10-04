@@ -247,31 +247,45 @@ The Model doc gives the rule but no values. The Configuration Spec sets the size
 
 ---
 
-## 5. Live interactions [N][S]
+## 5. Live interactions [G][S]
 
-In iLead 1.0 you picked one of four written options. In 2.0 you speak or write freely, and an AI evaluator reads your words. The evaluator only reads; the rules decide the consequences. The UI never shows raw model scores [S].
+In iLead 1.0 you picked one of four written options. In 2.0 you speak or write freely, and an AI evaluator reads your words. The AI judges; the authored rules decide the consequences. The UI never shows raw model scores or band names [S].
 
-### 5.1 The evaluator returns
+### 5.0 Conversations [G][S]
+- An interaction holds turns. The NPC speaks first unless the author set otherwise (Configuration Spec, Opening).
+- Roleplay, chat, team meeting, sponsor briefing and interview are conversations: you send turns, the NPC answers in persona, and ending the interaction evaluates everything you said. Email and written plan are submitted once.
+- **Turn limit** 12 for RolePlays (*config* per action); the NPC can also sign off. **Minutes** per interaction are *config* (3 to 5).
+- **Interrupt:** speaking over the NPC stops it; the engine keeps only what was shown.
+- **Hint:** one coaching tip per interaction, on request by default (*config*: off, on request, after a Weak band).
+- **NPC words** come from an `NpcModel`: an AI model on the server in production, streamed to the client and labelled as AI. The mock engine uses a transparent persona stand in that follows mood, trust and what you said. A hidden concern surfaces in the person's own words (`concernLine`) when you ask about it and they trust you enough (trust 45 or more, or you acknowledged them).
+- **Live cap [G]:** 2 live or hybrid actions per period (*config* `time.liveCap`). Inbox replies and sponsor briefings do not count.
+- **Sponsor briefings [G]:** scheduled in weeks 4 and 8 (*config* `sponsor.briefings`) as an urgent inbox item due by the end of the period. Skipping one costs sponsor confidence −10 (an issue escalated to the CEO).
+- **Interview [G]:** Hire interviews 2 candidates whose home stage has room, then you choose one or pass. How the interviews went sets the new hire's first trust in you (+6, +2, −3, −8).
+
+### 5.1 The evaluator returns [G]
 | Field | Meaning |
 |---|---|
-| `styleUsed` | D, G, P or E: the leadership style your words expressed, with a confidence value |
-| `band` | Strong, Adequate, Weak or Harmful, from the format's rubric. Never shown to the participant [S]. |
-| `evidence` | Verbatim quotes from your words behind the judgement |
-| `flags` | `openQuestions` (count), `acknowledged`, `invitedContribution`, `specificNextStep`, `promise {text, dueSubPeriod, fulfilledBy}`, `concernSurfaced`, `abusive` |
+| `dimensions` | A band (Strong, Adequate, Weak, Harmful) per rubric dimension, 2 to 4 per interaction, with the quotes behind each |
+| `redFlags` | Abuse, blame, discrimination, policy breach. Any one forces Harmful. |
+| `band` | Overall: Harmful on any red flag; otherwise the median of the dimension bands, ties to the lower band (scoring-and-report.md 4, your call D49) |
+| `styleUsed` | D, G, P or E: the style your words showed, with a confidence value |
+| `evidence`, `flags` | Verbatim quotes; open questions, acknowledgement, invitation, next step, concern surfaced, promise |
 
-Rubric per format, scored 0 to 2 each:
-- **1:1, coach, feedback:** acknowledges the person, asks open questions, listens before directing, agrees a specific next step, matches the style they need.
-- **Team meeting:** sets direction, invites quiet members, handles objections, closes with ownership.
-- **Email:** clear purpose, specific, appropriate tone for the recipient's trend.
-- **Sponsor briefing:** leads with the three points, honest about risk, asks for what the team needs.
-- **Interview:** probes for fit, sells the role honestly.
-- **Written plan:** goals, measures, owner, due day and support needed are all present and specific.
+Default rubric dimensions per format (*config* per action):
 
-Band from the total: Strong ≥ 80%, Adequate 50 to 79%, Weak under 50%. Harmful whenever `abusive` is set or the words demean the person, regardless of score.
+| Format | Dimensions |
+|---|---|
+| 1:1 RolePlay | listening, clarity, involvement |
+| Chat | responsiveness, clarity, listening |
+| Email | specificity, tone, fairness |
+| Team meeting | agenda, inclusion, clarity |
+| Sponsor briefing | ownership, honesty, plan |
+| Interview | structure, probing, fairness |
+| Written plan | specific, measurable, involvement |
 
 ### 5.2 Consequences
-1. Style difference = `styleUsed` against each affected member's needed style, giving a mismatch type (section 2).
-2. The band adjusts it:
+- **Authored table [G]:** when an action has a consequence table, the band's deltas apply: skill, morale, result and trust for the target, a ripple for everyone else present, and sponsor confidence.
+- **Default [M]:** without a table, 1.0's maths generates the consequences (D35): the style difference gives a mismatch type, and the band adjusts it:
 
 | Band | Effect |
 |---|---|
@@ -280,8 +294,8 @@ Band from the total: Strong ≥ 80%, Adequate 50 to 79%, Weak under 50%. Harmful
 | Weak | Mismatch one step worse (maximum 2) |
 | Harmful | Mismatch 2 and trust −8 |
 
-3. The action's effect table (section 4.2) applies, then the trust multiplier, then the trust band change (section 3.1).
-4. If `styleUsed` confidence is under 0.5, the evaluator's best guess is used and the outcome's rule text says "your approach read as mostly Guiding".
+- **Style tags [G]:** only a conversation with one person counts as a style choice. Team meetings, sponsor briefings, interviews and multi recipient emails carry no style.
+- **Intent vs action [G]:** when the style you show someone in conversation differs from the style you declared for them, two periods running, their trust drops by 4 (*config* `trustRules.intentGap`).
 
 ### 5.3 What every metric change carries (brief, rule 5)
 Each change in the outcome is a `MetricChange` with a `Reason`:
@@ -304,7 +318,7 @@ The rubric band name never appears [S].
 | Sponsor briefing | Affects sponsor confidence (section 7.5), not members. |
 | Email | Replies arrive in the inbox over the next sub-period [S]. |
 | Inappropriate input | The NPC responds in role. A second `abusive` flag in the same interaction ends it with a neutral message, Harmful band, and the event is logged [S]. |
-| Hint | One coaching tip per interaction, if the author allows hints [S]. Using it caps the band at Strong (no extra effect) and is recorded for the report. |
+| Hint | One coaching tip per interaction, if the author allows hints [S]. Recorded for the report. |
 
 ---
 

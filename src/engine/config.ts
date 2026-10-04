@@ -54,7 +54,9 @@ export const Time = z.object({
   period: z.object({ unit: z.enum(PERIOD_UNITS), count: z.number().int().min(1).max(MAX_PERIODS) }),
   subPeriod: z.object({ unit: z.enum(SUB_PERIOD_UNITS), perPeriod: z.number().int().min(2).max(12) }).optional(),
   /** Smallest action cost, in sub-periods. Whole days by default (DECISIONS D32). */
-  costStep: z.union([z.literal(0.5), z.literal(1)]).default(1)
+  costStep: z.union([z.literal(0.5), z.literal(1)]).default(1),
+  /** Live interactions per period (Configuration Spec, Time and pacing). Replies and sponsor briefings do not count. */
+  liveCap: z.number().int().min(1).max(10).default(2)
 }).transform(t => ({ ...t, subPeriod: t.subPeriod ?? SUB_PERIOD_DEFAULTS[t.period.unit] }));
 
 export const Stage = z.object({
@@ -75,11 +77,14 @@ export const Person = z.object({
   title: z.string().min(1),
   pronoun: z.enum(['he', 'she', 'they']),
   homeStage: z.string(),
-  start: Stats.extend({ trust: Score }),
+  /** Trust is optional: it defaults to `trustRules.start` (50), lower for wary archetypes (Configuration Spec). */
+  start: Stats.extend({ trust: Score.optional() }),
   /** Values in every stage, used by swap and assess (docs/SIMULATION.md 4.3). */
   byStage: z.record(z.string(), Stats),
   profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: z.string(), relations: z.string().default('') }),
   hiddenConcern: Copy.optional(),
+  /** What the person says, in their own words, when a conversation surfaces the concern. */
+  concernLine: Copy.optional(),
   /** Revealed together with the hidden concern, once a conversation surfaces it (spec, profile). */
   careerGoal: Copy.optional(),
   /** Default portrait. `portraits` may override it per mood. */
@@ -133,6 +138,30 @@ export const ActionOption = z.object({
   pickStage: z.boolean().default(false)
 });
 
+/** Band names in engine order. Participants never see them (spec, outcome panel). */
+export const BANDS = ['strong', 'adequate', 'weak', 'harmful'] as const;
+const BandDeltas = z.object({
+  /** Skill, morale, result, trust for the person (or people) the interaction is with. */
+  target: z.tuple([z.number().int(), z.number().int(), z.number().int(), z.number().int()]),
+  /** Ripple on everyone else present. */
+  bystanders: z.tuple([z.number().int(), z.number().int(), z.number().int(), z.number().int()]).optional(),
+  sponsor: z.number().int().default(0)
+});
+
+/** The interaction record of a live or hybrid action (Configuration Spec, Per live interaction). */
+export const LiveSettings = z.object({
+  /** What the participant sees before starting. */
+  goal: Copy.optional(),
+  /** 2 to 4 rubric dimensions; the evaluator returns a band for each. Defaults per format. */
+  rubric: z.array(z.object({ key: Key, label: Copy })).min(2).max(4).optional(),
+  /** Deltas per band. Without it, 1.0's mismatch maths generates the consequences (D35). */
+  consequences: z.object({ strong: BandDeltas, adequate: BandDeltas, weak: BandDeltas, harmful: BandDeltas }).optional(),
+  turnLimit: z.number().int().min(1).max(30).default(12),
+  minutes: z.number().min(1).max(15).default(5),
+  opening: z.enum(['npc', 'participant']).default('npc'),
+  hints: z.enum(['off', 'onRequest', 'afterWeak']).default('onRequest')
+});
+
 export const Action = z.object({
   key: Key,
   name: Copy,
@@ -148,6 +177,8 @@ export const Action = z.object({
   targets: z.tuple([z.number().int().min(0), z.number().int().min(0)]).default([0, 0]),
   /** Soft prerequisite: the drawer nudges, the penalty still applies (spec). */
   prerequisite: Key.optional(),
+  /** Live and hybrid actions: the interaction record. */
+  live: LiveSettings.default({ turnLimit: 12, minutes: 5, opening: 'npc', hints: 'onRequest' }),
   options: z.array(ActionOption).min(1)
 });
 
@@ -185,6 +216,8 @@ export const StorylineConfig = z.object({
   /** The participant's sponsor: sends notes, takes briefings, holds confidence. */
   sponsor: z.object({
     name: z.string().min(1), title: z.string().min(1), portrait: z.string().optional(),
+    /** Periods with a sponsor briefing (Design doc: weeks 4 and 8). Later than the run are dropped. */
+    briefings: z.array(z.number().int().min(1)).default([4, 8]),
     /** The one line prompt over weekly style setting (spec). */
     styleLine: Copy.default('To each their own. Your people need different things from you this week.')
   }),
@@ -197,6 +230,23 @@ export const StorylineConfig = z.object({
   weeklyStyle: EffectTable,
   events: z.array(GeneralEvent).default([]),
   triggers: z.array(Trigger).default([]),
+  /**
+   * Trust rules (D30), configurable defaults. GenieKreator sets the start (50) and the intent vs
+   * action gap; the rest were designed for 2.0 and kept on your call (D49).
+   */
+  trustRules: z.object({
+    start: Score.default(50),
+    /** Changing someone's style when their needs did not change. */
+    erraticStyleChange: z.number().int().max(0).default(-2),
+    /** Declared style and shown style differ for one person two periods running (Design doc, Consistency). */
+    intentGap: z.number().int().max(0).default(-4),
+    /** Positive changes scale from `min` at trust 0 to `max` at trust 100. 1 and 1 switch it off. */
+    multiplier: z.object({ min: z.number().min(0.5).max(1), max: z.number().min(1).max(1.5) }).default({ min: 0.8, max: 1.2 }),
+    /** Below this trust, a partial style miss shows more often. */
+    lowTrust: z.object({ below: Score, chance: z.number().min(0).max(1) }).default({ below: 30, chance: 0.75 }),
+    /** Largest net trust move per sub-period. */
+    capPerSubPeriod: z.number().int().min(1).default(12)
+  }).default({ start: 50, erraticStyleChange: -2, intentGap: -4, multiplier: { min: 0.8, max: 1.2 }, lowTrust: { below: 30, chance: 0.75 }, capPerSubPeriod: 12 }),
   /** Role coverage (Teardown hidden rule 6, Configuration Spec eligibility): at most this many people per stage. */
   maxPerStage: z.number().int().min(1).default(2),
   /** Weekly drift (Configuration Spec, Targets and KPIs): what someone loses in a period nobody acted with them. */

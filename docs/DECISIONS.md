@@ -223,7 +223,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - `docs/genie/RECONCILIATION.md` lists 22 differences. Each lands in the milestone that builds that part of the game: gamification and Team Pulse in M5, live consequences, hire and the sponsor briefings in M4, ranges in M7.
 - Done in M3 because the drawer and style setting need them: role coverage (at most 2 per stage, nobody leaves a stage empty, training needs a peer to cover, no hiring into a full team), GK costs (team building and one week workshop 2 days) and cooldowns (energize 10 days), weekly style deltas of about +3 and −1 to −2, weekly drift of 3 morale, averages over available people, team feedback by share, and $30,000 per conversion.
 - The storyline was recalibrated: doing nothing reaches 55% of target, random play 52%, good play 107% (`calibration/sales-elevator.md`). D29 stands (a period can end with no stars); D33 is superseded.
-- Two questions for you: is the GenieKreator repo's `scoring-and-report.md` binding where it goes beyond the Design doc (trust starts at 50 for everyone, median banding)? And should the D30 trust rules that have no GK source stay as configurable defaults?
+- Both questions answered in D49.
 
 **D45. Swap and reassign are options with their own pick rules.** Decided. "Swap roles" picks 2 people in different stages; "Reassign role" picks 1 person and a stage to move them to. The engine refuses a move into a full stage or out of a stage that would be left empty. The drawer shows the rules and the prerequisite nudge ("You have not assessed Justin for Conversion. Assess first, 1 day?").
 
@@ -242,6 +242,13 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - An away member's profile shows "In training" and a grey portrait, matching the card.
 
 **D48. Pushing to the GenieKreator repo.** Decided. `maverick-nair/Macro_sim_iLead_GK` holds the GenieKreator authoring monorepo on its own history (Next.js, pnpm, Prisma). The participant app is pushed to its own branch, `ilead-participant`, without touching that history. Moving it into that monorepo as `apps/participant`, with the engine as a shared package, is a later step to agree with that team.
+
+**D49. Scoring rules and trust rules.** Decided (your answers, 4 Oct).
+- `scoring-and-report.md` is binding where it goes beyond the Design doc. Everyone starts at trust 50 (a storyline may set a lower start per person, as the Configuration Spec allows for wary archetypes). A live interaction's band is Harmful on any red flag, otherwise the median of the dimension bands, ties to the lower band.
+- The D30 trust rules stay as configurable defaults in `trustRules`: erratic style change −2, the 0.8 to 1.2 multiplier on positive changes, more misreads below trust 30, the ±12 cap per sub-period. The GenieKreator intent vs action rule (−4) joins them.
+- Recalibrated: doing nothing reaches 57% of target, random play 59%, good play 112%.
+
+**D50. Live interactions are conversations.** Decided. See SIMULATION.md 5.0. The engine keeps the turns; the NPC's words come from an `NpcModel` (an AI model on the server, a persona stand in for the mock); ending the interaction evaluates everything the participant said. Email and written plan are submitted once. The live cap, the week 4 and 8 sponsor briefings and the two candidate interview follow the GenieKreator docs.
 
 ## Blocked on missing docs
 

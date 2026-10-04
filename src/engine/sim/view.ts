@@ -1,4 +1,5 @@
 import { blockedReason } from './actions';
+import { ONE_SHOT, speakerFor, turnLimit } from './live';
 import { finalScore, pillarMax, RUN_MAX } from './period';
 import { capacity, capacityLeft, idealThroughput, person, teamAverage } from './sim';
 import type { InboxMessage, MemberSim, Mood, Sim } from './types';
@@ -26,6 +27,44 @@ export const BADGES: Array<{ key: string; hint: string | null }> = [
   { key: 'turnaround', hint: 'Help someone bounce back' }, { key: 'clear_voice', hint: 'A whole period in voice' },
   { key: 'promise_keeper', hint: 'Keep three promises' }, { key: 'right_style', hint: 'Lead everyone the right way for a period' }
 ];
+
+/** The open live interaction, everything the shell shows (spec, Live interaction screens). */
+function liveView(sim: Sim) {
+  const entries = Object.entries(sim.interactions);
+  if (!entries.length) return null;
+  const [id, it] = entries[entries.length - 1];
+  const c = sim.config;
+  const a = c.actions.find(x => x.key === it.actionKey);
+  const option = a?.options.find(o => o.key === it.optionKey);
+  const main = it.memberIds[0] ? sim.members.find(m => m.id === it.memberIds[0]) : undefined;
+  const p = main ? person(sim, main.id) : undefined;
+  const who = (pid: string) => pid === 'sponsor' ? { id: 'sponsor', name: c.sponsor.name, img: c.sponsor.portrait ?? null } : { id: pid, name: person(sim, pid).name, img: person(sim, pid).portrait ?? null };
+  const yours = it.turns.filter(t => t.by === 'you').length;
+  const mode = a?.live.hints ?? 'onRequest';
+  return {
+    id, format: it.format, actionKey: it.actionKey, actionName: a?.name ?? null, optionLabel: option && a && a.options.length > 1 ? option.label : null,
+    oneShot: ONE_SHOT.has(it.format),
+    people: (it.format === 'meeting' ? sim.members.filter(m => m.away === 0).map(m => m.id) : it.memberIds).map(who),
+    speaker: who(speakerFor(sim, it)),
+    brief: {
+      goal: a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? null),
+      known: [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
+      mood: main ? moodOf(main, sim) : null,
+      promises: sim.promises.filter(x => x.state === 'open' && it.memberIds.includes(x.memberId)).map(x => x.text),
+      declaredStyle: main?.style ?? null
+    },
+    turns: it.turns.map(t => ({ id: t.id, by: t.by, text: t.text, voice: !!t.voice, interrupted: !!t.interrupted, aiGenerated: t.by !== 'you' })),
+    turnLimit: turnLimit(sim, it), turnsLeft: Math.max(0, turnLimit(sim, it) - yours), minutes: a?.live.minutes ?? 3,
+    closed: it.closed,
+    hint: { mode: mode === 'afterWeak' ? 'onRequest' : mode, text: it.hint },
+    candidates: it.candidates?.map(cid => {
+      const cp = person(sim, cid);
+      return { id: cid, name: cp.name, title: cp.title, img: cp.portrait ?? null, cv: { previous: cp.profile.previous, experience: cp.profile.experience, skills: cp.profile.skills, remarks: cp.profile.remarks } };
+    }) ?? null,
+    candidate: it.candidate ?? null,
+    replyTo: it.replyTo ?? null
+  };
+}
 
 export function buildView(sim: Sim) {
   const c = sim.config;
@@ -87,7 +126,9 @@ export function buildView(sim: Sim) {
     badges: BADGES.map(b => ({ key: b.key, earned: sim.badges.includes(b.key), hint: b.hint })),
     sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, styleLine: c.sponsor.styleLine, level: SPONSOR_LEVELS[Math.min(4, Math.floor(sim.sponsor.value / 20))], causes: sim.sponsor.causes },
     pendingReward: sim.pendingReward,
-    history: sim.log
+    history: sim.log,
+    live: liveView(sim),
+    liveCap: { cap: sim.config.time.liveCap, used: sim.liveTaken[sim.period] ?? 0 }
   };
 }
 

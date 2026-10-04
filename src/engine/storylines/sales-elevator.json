@@ -8,7 +8,7 @@
     "target": 240000,
     "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      15
+      24
     ]
   },
   "time": {
@@ -65,8 +65,7 @@
       "start": {
         "skill": 30,
         "morale": 22,
-        "result": 49,
-        "trust": 46
+        "result": 49
       },
       "byStage": {
         "leads": {
@@ -104,7 +103,8 @@
         "relations": ""
       },
       "hiddenConcern": "He expected a lot more from this job, and feels it is not what he was promised.",
-      "portrait": "/assets/npc/kent.png"
+      "portrait": "/assets/npc/kent.png",
+      "concernLine": "Honestly? This job is not what I was promised. I expected a lot more when I joined, and nobody seems to remember that."
     },
     {
       "id": "beth",
@@ -115,8 +115,7 @@
       "start": {
         "skill": 25,
         "morale": 73,
-        "result": 45,
-        "trust": 66
+        "result": 45
       },
       "byStage": {
         "leads": {
@@ -154,7 +153,8 @@
         "relations": ""
       },
       "hiddenConcern": "She left Beta Elevators over how she was managed, and watches closely how you lead.",
-      "portrait": "/assets/npc/beth.png"
+      "portrait": "/assets/npc/beth.png",
+      "concernLine": "I left Beta Elevators because of how I was managed there. So yes, I watch closely how things are run here."
     },
     {
       "id": "justin",
@@ -165,8 +165,7 @@
       "start": {
         "skill": 22,
         "morale": 40,
-        "result": 52,
-        "trust": 54
+        "result": 52
       },
       "byStage": {
         "leads": {
@@ -204,7 +203,8 @@
         "relations": ""
       },
       "hiddenConcern": "He has been in Lead Qualification for 3 years and wants to move to Sales Conversion.",
-      "portrait": "/assets/npc/justin.png"
+      "portrait": "/assets/npc/justin.png",
+      "concernLine": "I have been in Lead Qualification for three years. I really want a shot at Sales Conversion."
     },
     {
       "id": "derick",
@@ -215,8 +215,7 @@
       "start": {
         "skill": 70,
         "morale": 71,
-        "result": 62,
-        "trust": 68
+        "result": 62
       },
       "byStage": {
         "leads": {
@@ -264,8 +263,7 @@
       "start": {
         "skill": 89,
         "morale": 56,
-        "result": 69,
-        "trust": 63
+        "result": 69
       },
       "byStage": {
         "leads": {
@@ -313,8 +311,7 @@
       "start": {
         "skill": 80,
         "morale": 45,
-        "result": 67,
-        "trust": 58
+        "result": 67
       },
       "byStage": {
         "leads": {
@@ -352,7 +349,8 @@
         "relations": ""
       },
       "hiddenConcern": "He feels his technical depth goes unnoticed.",
-      "portrait": "/assets/npc/lowe.png"
+      "portrait": "/assets/npc/lowe.png",
+      "concernLine": "I put a lot of technical depth into my proposals, and it never seems to get noticed."
     },
     {
       "id": "jack",
@@ -363,8 +361,7 @@
       "start": {
         "skill": 92,
         "morale": 85,
-        "result": 95,
-        "trust": 78
+        "result": 95
       },
       "byStage": {
         "leads": {
@@ -412,8 +409,7 @@
       "start": {
         "skill": 10,
         "morale": 15,
-        "result": 16,
-        "trust": 38
+        "result": 16
       },
       "byStage": {
         "leads": {
@@ -451,7 +447,8 @@
         "relations": ""
       },
       "hiddenConcern": "His appraisals have gone downhill and he needs encouragement, but he will not ask for it.",
-      "portrait": "/assets/npc/peter.png"
+      "portrait": "/assets/npc/peter.png",
+      "concernLine": "My last appraisals have not gone well. I am trying, but some encouragement would go a long way."
     },
     {
       "id": "ruth",
@@ -462,8 +459,7 @@
       "start": {
         "skill": 80,
         "morale": 50,
-        "result": 65,
-        "trust": 60
+        "result": 65
       },
       "byStage": {
         "leads": {
@@ -511,8 +507,7 @@
       "start": {
         "skill": 60,
         "morale": 80,
-        "result": 71,
-        "trust": 73
+        "result": 71
       },
       "byStage": {
         "leads": {
@@ -562,8 +557,7 @@
       "start": {
         "skill": 90,
         "morale": 69,
-        "result": 82,
-        "trust": 70
+        "result": 82
       },
       "byStage": {
         "leads": {
@@ -610,8 +604,7 @@
       "start": {
         "skill": 57,
         "morale": 27,
-        "result": 30,
-        "trust": 45
+        "result": 30
       },
       "byStage": {
         "leads": {
@@ -658,8 +651,7 @@
       "start": {
         "skill": 82,
         "morale": 99,
-        "result": 95,
-        "trust": 84
+        "result": 95
       },
       "byStage": {
         "leads": {
@@ -706,8 +698,7 @@
       "start": {
         "skill": 54,
         "morale": 40,
-        "result": 42,
-        "trust": 52
+        "result": 42
       },
       "byStage": {
         "leads": {
@@ -754,8 +745,7 @@
       "start": {
         "skill": 40,
         "morale": 45,
-        "result": 40,
-        "trust": 54
+        "result": 40
       },
       "byStage": {
         "leads": {
@@ -802,8 +792,7 @@
       "start": {
         "skill": 34,
         "morale": 32,
-        "result": 35,
-        "trust": 48
+        "result": 35
       },
       "byStage": {
         "leads": {
@@ -850,8 +839,7 @@
       "start": {
         "skill": 78,
         "morale": 58,
-        "result": 72,
-        "trust": 64
+        "result": 72
       },
       "byStage": {
         "leads": {
@@ -898,8 +886,7 @@
       "start": {
         "skill": 45,
         "morale": 90,
-        "result": 60,
-        "trust": 75
+        "result": 60
       },
       "byStage": {
         "leads": {
@@ -946,8 +933,7 @@
       "start": {
         "skill": 40,
         "morale": 83,
-        "result": 63,
-        "trust": 73
+        "result": 63
       },
       "byStage": {
         "leads": {
@@ -994,8 +980,7 @@
       "start": {
         "skill": 80,
         "morale": 65,
-        "result": 72,
-        "trust": 67
+        "result": 72
       },
       "byStage": {
         "leads": {
@@ -2326,6 +2311,6 @@
       }
     }
   ],
-  "performanceThreshold": 132,
+  "performanceThreshold": 78,
   "calibrated": true
 }
