@@ -3,6 +3,7 @@
   "live.turn.ai": "AI persona",
   "live.turn.replay": "Replay",
   "live.turn.replayAria": "Replay this line",
+  "live.turn.interrupted": "Interrupted",
   "live.caption.label": "{name} · captions",
   "live.caption.ai": "AI persona voice",
   "live.mic.aria": "{state, select, listening {Stop and review} denied {Mic blocked} other {Start speaking}}",

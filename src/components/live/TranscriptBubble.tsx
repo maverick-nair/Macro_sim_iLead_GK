@@ -9,6 +9,10 @@ export interface TranscriptBubbleProps {
   name?: string;
   /** True while the NPC line is still streaming in word by word. */
   streaming?: boolean;
+  /** The participant cut the NPC off: the line stops where it was and says so. */
+  interrupted?: boolean;
+  /** NPC lines written by the AI model carry the visible "AI persona" label (D27). Scripted lines can turn it off. */
+  ai?: boolean;
   /** Replays the NPC line with captions. Only NPC turns offer it. */
   onReplay?: () => void;
 }
@@ -23,7 +27,7 @@ const Sparkle = () => (
  * One turn in a live conversation transcript. NPC turns sit on the left with the speaker's name,
  * the visible "AI persona" label and a replay control; your turns sit on the right on the brand fill.
  */
-export function TranscriptBubble({ speaker, text, name = '', streaming = false, onReplay }: TranscriptBubbleProps) {
+export function TranscriptBubble({ speaker, text, name = '', streaming = false, interrupted = false, ai = true, onReplay }: TranscriptBubbleProps) {
   const { t } = useI18n();
   const npc = speaker === 'npc';
   return (
@@ -33,7 +37,8 @@ export function TranscriptBubble({ speaker, text, name = '', streaming = false, 
         <span>{npc ? name : t('live.turn.you')}</span>
         {npc && (
           <>
-            <span className="flex items-center gap-0.75"><Sparkle />{t('live.turn.ai')}</span>
+            {ai && <span className="flex items-center gap-0.75"><Sparkle />{t('live.turn.ai')}</span>}
+            {interrupted && <span className="italic">{t('live.turn.interrupted')}</span>}
             {onReplay && (
               <button
                 type="button"

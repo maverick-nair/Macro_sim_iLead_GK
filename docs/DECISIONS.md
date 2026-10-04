@@ -243,6 +243,16 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 
 **D48. Pushing to the GenieKreator repo.** Decided. `maverick-nair/Macro_sim_iLead_GK` holds the GenieKreator authoring monorepo on its own history (Next.js, pnpm, Prisma). The participant app is pushed to its own branch, `ilead-participant`, without touching that history. Moving it into that monorepo as `apps/participant`, with the engine as a shared package, is a later step to agree with that team.
 
+**D49. Live shell components.** Decided. The live screen renders `src/components/liveshell/` (LiveShell, LiveBriefCard, LiveInputBar, RolePlayStage, EmailStage, MeetingStage, SponsorStage, ReactingScreen). All 67 parity frames are unchanged.
+- One component per piece with a `layout: 'desktop' | 'phone'` prop, not separate phone components: the 390 frames differ only in sizes and in what the header shows.
+- The brief is data with optional rows (agenda, what you know, mood, open promises, declared style, tone). The row labels follow the format ("Watch for" in a meeting, "She cares about" for the sponsor), so the design's per format briefs come from one shape.
+- The 1:1 mood ring has three steps (frustrated, guarded, more open), as designed, separate from the five member moods.
+- NPC turns can stream (`streaming`) and be cut off (`interrupted`, shown as "Interrupted" beside the AI persona label). Pressing the mic or Escape while the NPC speaks calls `onInterrupt`.
+- The transcript is a polite live region only while captions are hidden, so screen readers do not hear each line twice.
+- A long transcript now scrolls inside the window (capped at the window height minus the header and reply bar) instead of growing the page. At 900 tall the cap is above the designed height.
+- The mood ring's 600ms colour change is snapped to `duration.slow` (300ms), per D24.
+- Still open: Space as push to talk (D18), and chat in the shell (D14). `LiveTranscript` and `LiveInputBar` are ready for chat.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
