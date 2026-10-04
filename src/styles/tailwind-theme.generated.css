@@ -50,6 +50,14 @@
   --color-member-mood-thinking: var(--il-color-member-mood-thinking);
   --color-member-mood-concerned: var(--il-color-member-mood-concerned);
   --color-member-mood-frustrated: var(--il-color-member-mood-frustrated);
+  --color-metrics-pulse-upbeat: var(--il-color-metrics-pulse-upbeat);
+  --color-metrics-pulse-steady: var(--il-color-metrics-pulse-steady);
+  --color-metrics-pulse-struggling: var(--il-color-metrics-pulse-struggling);
+  --color-metrics-popover-shadow: var(--il-color-metrics-popover-shadow);
+  --color-hud-capacity-full: var(--il-color-hud-capacity-full);
+  --color-hud-capacity-half: var(--il-color-hud-capacity-half);
+  --color-hud-capacity-empty: var(--il-color-hud-capacity-empty);
+  --color-hud-streak: var(--il-color-hud-streak);
   --background-image-brand: var(--il-fill-brand);
   --background-image-product: var(--il-fill-product);
   --background-image-spectrum: var(--il-fill-spectrum);

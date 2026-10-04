@@ -1,0 +1,10 @@
+{
+  "metrics": {
+    "strip": {
+      "columns": { "value": "repeat(4,minmax(0,1fr)) minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,1fr)", "$description": "Four KPI tiles, Team Pulse, target, sponsor confidence" }
+    },
+    "popover": {
+      "shadow": { "value": "0 16px 40px {color.metrics.popover-shadow}" }
+    }
+  }
+}

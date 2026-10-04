@@ -1,0 +1,16 @@
+{
+  "hud.logo": "iLead",
+  "hud.clientLogo": "Halden Group logo",
+  "hud.nav.aria": "Game menu",
+  "hud.nav.item": "{key, select, objective {Objective} funnel {Funnel} history {History} badges {Badges} more {More} other {}}",
+  "hud.clock": "{period} · {subPeriod}",
+  "hud.pause.aria": "Pause the simulation",
+  "hud.score.aria": "Leadership score {total}. Show breakdown",
+  "hud.score.title": "Leadership Score",
+  "hud.score.body": "Built from three parts. Every point is earned, nothing is taken away for being slow.",
+  "hud.score.pillar": "{pillar, select, business {Business} people {People} leadership {Leadership} other {}}",
+  "hud.streak": "{n} {unit, select, year {year} month {month} week {week} day {day} other {period}} streak",
+  "hud.palette.key": "⌘K",
+  "hud.palette.aria": "Search members and actions",
+  "hud.settings.aria": "Settings"
+}
