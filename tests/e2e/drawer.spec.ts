@@ -55,7 +55,7 @@ test('profile: stats revealed, timeline from the engine, actions for that person
 test('keyboard: the inbox comes after the actions in tab order', async ({ page }) => {
   await toBoard(page);
   const order = await page.evaluate(() => {
-    const all = [...document.querySelectorAll<HTMLElement>('button, [tabindex="0"]')].filter(el => !el.hasAttribute('disabled'));
+    const all = Array.from(document.querySelectorAll<HTMLElement>('button, [tabindex="0"]')).filter(el => !el.hasAttribute('disabled'));
     const actions = all.findIndex(el => el.closest('aside[aria-label="Actions"]'));
     const inbox = all.findIndex(el => /inbox/i.test(el.getAttribute('aria-label') ?? ''));
     return { actions, inbox };
