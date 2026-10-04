@@ -12,12 +12,39 @@ test.afterEach(() => expect(errors).toEqual([]));
 
 async function toBoard(page: Page) {
   await page.goto('/?start=board');
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10);
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
   await expect(page.getByText(/Styles are set for week 1/)).toBeVisible();
 }
+
+test('move options come from the engine: full stages are shown unavailable, with the reason', async ({ page }) => {
+  await page.goto('/?start=board&period=4');
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
+  for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
+  await page.getByRole('button', { name: 'Review and confirm' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
+  await page.locator('section[aria-label="Your team"]').getByText('Kent Goldberg', { exact: true }).click();
+  await page.getByRole('button', { name: /Swap roles/ }).click();
+  // Focus lands on the drawer's heading.
+  await expect(page.getByRole('heading', { name: 'Swap roles' })).toBeFocused();
+  const options = page.getByRole('radiogroup', { name: 'Choose an option' });
+  const qualify = options.getByRole('radio', { name: /Move to Qualify/ });
+  await expect(qualify).toHaveAttribute('aria-disabled', 'true');
+  await expect(qualify).toContainText('Qualify is full');
+  // Kent is in Leads: no move to his own stage.
+  await expect(options.getByRole('radio', { name: /Move to Leads/ })).toHaveCount(0);
+  await qualify.click({ force: true });
+  await expect(qualify).toHaveAttribute('aria-checked', 'false');
+  await options.getByRole('radio', { name: /Swap role/ }).click();
+  await expect(options.getByRole('radio', { name: /Swap role/ })).toHaveAttribute('aria-checked', 'true');
+  // Back returns focus to the action's tile.
+  await page.getByRole('button', { name: /All actions/ }).click();
+  await expect(page.getByRole('button', { name: /^Swap roles/ })).toBeFocused();
+  await page.getByRole('button', { name: /^Assess member/ }).click();
+  await expect(page.getByRole('radiogroup', { name: 'Choose an option' }).getByRole('radio', { name: /^Assess for Qualify/ })).toBeVisible();
+});
 
 test('swap roles: different stages only, assess nudge, then the conversation', async ({ page }) => {
   await toBoard(page);

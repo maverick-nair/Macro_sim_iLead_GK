@@ -89,14 +89,14 @@ export function OutcomePanel(p: OutcomePanelProps) {
             <b className="text-18 leading-(--il-outcome-headline-leading)">{p.headline}</b>
           </div>
         </div>
-        <div className="flex items-start gap-2.5 rounded-14 bg-surface-raised p-3">
+        {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5 rounded-14 bg-surface-raised p-3">
           {p.onReplay && (
             <button type="button" onClick={p.onReplay} aria-label={t('outcome.replayShort')} className={`size-8 flex-none cursor-pointer rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}>
               <span aria-hidden="true">{PLAY_GLYPH}</span>
             </button>
           )}
           <span className="text-14">{quote}</span>
-        </div>
+        </div>}
         <div className="flex flex-wrap gap-1.5">{chips}</div>
         <span className="text-13 text-fg-secondary">{p.ripple}</span>
         {changed.map((c, i) => <span key={i} className="text-14">{c}</span>)}
@@ -117,13 +117,14 @@ export function OutcomePanel(p: OutcomePanelProps) {
       <div className="flex min-w-0 flex-col gap-2">
         <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
         <h3 className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking)">{p.headline}</h3>
-        <div className="flex items-start gap-2.5">
+        {/* A decision with no words (energize, training, assess) has no reply to quote. */}
+        {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5">
           {p.onReplay && (
             <button type="button" onClick={p.onReplay} aria-label={t('outcome.replay', { name: p.person.shortName })}
               className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}><PlayIcon /></button>
           )}
           <span className="text-14 text-pretty">{quote}</span>
-        </div>
+        </div>}
         {p.whyOpen && <div id={whyId} className="contents">{details()}</div>}
       </div>
       <div className="flex min-w-0 flex-col gap-2.5">
