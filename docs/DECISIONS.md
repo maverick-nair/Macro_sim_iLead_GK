@@ -156,7 +156,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **UI copy** with a unit in it ("Week 2", "End week", "½ day") becomes ICU messages with the unit as an argument (M2).
 - **Stage limit:** 6 is the most the board fits at 1280 wide. Tell me if you need more.
 
-**D29. Stars can be 0 to 3 per period.** Proposed. The spec says "stars earned (1 to 3)", but each star has its own rule (People, Leadership, Business), and the design shows "Business star, not yet". To guarantee 1, the period's best progress could always earn its star. Your call.
+**D29. Stars can be 0 to 3 per period.** Decided (your call, 4 Oct). Each star has its own rule (People, Leadership, Business), so a period can end with none. This supersedes the spec's "1 to 3".
 
 **D30. Trust rules are new.** Proposed (SIMULATION.md section 3).
 - It moves with style match, how a conversation lands, promises kept or broken, responsiveness, and fairness.
@@ -167,7 +167,10 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - Repeat limits: the Model doc's (Hire 8 days, Team building 8 days), not the workbook's.
 - The workbook's style sheet lists Partnering as high skill and high morale. The Model doc says high skill and low morale, which is followed.
 
-**D32. Action costs follow the 2.0 design.** Proposed. The workbook charges whole days. The design charges half days for face to face, feedback, goals, reward and energize, and 2 days for training. Costs are config either way.
+**D32. Action costs are whole days.** Decided (your call, 4 Oct).
+- The workbook's costs: 1 day for every action, 2 for Hire member. `costStep` defaults to 1.
+- The design's half day labels ("½ day") stay only in the `/screens` design fixtures (D34). The playable app shows whole days.
+- A storyline can still opt into half days through config.
 
 **D33. Weekly style values are new defaults.** Proposed. The Model doc defines the weekly style rule but gives no numbers, so SIMULATION.md 4.4 sets defaults inside the workbook's bounds. Calibration may tune them.
 

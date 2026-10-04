@@ -35,9 +35,9 @@ Amounts are stored in the currency's major unit. The decimals follow the currenc
 | `period.count` | 1 to 10. |
 | `subPeriod.unit` | The unit actions are paid in. Defaults: year → quarter (4), month → week (4), week → day (5), day → hour (8). |
 | `subPeriod.perPeriod` | Capacity per period, in sub-periods. |
-| `costStep` | Smallest cost, 0.5 by default ("½ day"). |
+| `costStep` | Smallest cost: 1 by default (whole days, per your decision). 0.5 is allowed for storylines that want half days. |
 
-Every string that shows a unit ("Week 2", "2½ days left", "End week") comes from ICU messages with the unit as an argument, so a month based storyline reads "Month 2", "2½ weeks left", "End month". Events and triggers are scheduled per period (section 6), so they fit any count.
+Every string that shows a unit ("Week 2", "3 days left", "End week") comes from ICU messages with the unit as an argument, so a month based storyline reads "Month 2", "3 weeks left", "End month". Events and triggers are scheduled per period (section 6), so they fit any count.
 
 Sales Elevator default: 8 weeks of 5 days.
 
@@ -162,23 +162,26 @@ Trust is how much a member believes in you as their leader. It is the 2.0 metric
 
 ### 4.1 Costs and repeat limits
 
-Costs are in sub-periods and repeat limits are in days; both are *config*. Defaults are below. Repeat limits follow the Model doc where it differs from the workbook. Costs follow the 2.0 design (half day steps); the workbook charged whole days.
+Costs are in sub-periods and repeat limits are in days; both are *config*. Defaults are below.
+- **Costs** are the workbook's whole days [W], per your decision (D32).
+- **Repeat limits** follow the Model doc where it differs from the workbook [M].
+- **Replying in the inbox** is not an action and costs nothing [S].
 
 | Action | Scope | Kind | Cost | Repeat limit | Limits |
 |---|---|---|---|---|---|
 | Meet the team | team | live (meeting) | 1 | 10 days | |
-| Energize the team: Team lunch | team | static | ½ | 20 days | |
-| Energize the team: Team building | team | static | ½ | 8 days | |
-| Send email | 1 to 3 people | live (email) | 0 | | max 3 recipients [M] |
-| Send for training: 3 day / 1 week | 1 to 3 people | static | 2 | | away 3 or 5 days |
+| Energize the team: Team lunch | team | static | 1 | 20 days | |
+| Energize the team: Team building | team | static | 1 | 8 days | |
+| Send email | 1 to 3 people | live (email) | 1 | | max 3 recipients [M] |
+| Send for training: 3 day / 1 week | 1 to 3 people | static | 1 | | away 3 or 5 days |
 | Swap or reassign roles | 2 people / 1 person | hybrid | 1 | | prerequisite: Assess (nudge) |
-| Hire member | team | live (interview) | 1 | 8 days | unlocks in period 3 (config) |
-| Meet face to face | 1 person | live (1:1) | ½ | | |
+| Hire member | team | live (interview) | 2 | 8 days | unlocks in period 3 (config) |
+| Meet face to face | 1 person | live (1:1) | 1 | | |
 | Coach member | 1 person | live (1:1) | 1 | | |
-| Give feedback | 1 person | live (chat) | ½ | | |
-| Set goals | 1 person | live (written plan) | ½ | | |
+| Give feedback | 1 person | live (chat) | 1 | | |
+| Set goals | 1 person | live (written plan) | 1 | | |
 | Assess member | 1 person | static | 1 | | information only |
-| Reward member | 1 person | hybrid | ½ | 20 days | |
+| Reward member | 1 person | hybrid | 1 | 20 days | |
 | Let go | 1 person | hybrid | 1 | | |
 
 ### 4.2 Effect tables
@@ -401,7 +404,7 @@ Three pillars, accumulated per period. Each pillar can earn up to `2400 / period
 | Leadership | Style accuracy is 70% or more |
 | Business | Cumulative value is at or above target pace |
 
-The spec says "stars earned (1 to 3)". See DECISIONS D29: a period can end with 0 stars unless you prefer a guaranteed first star.
+A period can end with 0 stars (your decision, D29). The spec's "1 to 3" is superseded.
 
 ### 7.3 Streak and badges
 **Streak:** consecutive periods with 2 or more stars.
@@ -445,7 +448,7 @@ A hidden value from 0 to 100. It starts at 50 and shows as 5 levels on the meter
 Tapping the meter lists the last 3 causes [S].
 
 **Unlock offer** [S]: the first time confidence rises through 60, and again through 80, the period end sequence offers 3 rewards, choose one (*config*):
-- Extra half day of capacity next period
+- An extra day of capacity next period
 - A quiet word: reveals one member's hidden concern without needing trust
 - Team lunch at no cost, once
 

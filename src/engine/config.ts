@@ -49,8 +49,8 @@ export const MAX_PERIODS = 10;
 export const Time = z.object({
   period: z.object({ unit: z.enum(PERIOD_UNITS), count: z.number().int().min(1).max(MAX_PERIODS) }),
   subPeriod: z.object({ unit: z.enum(SUB_PERIOD_UNITS), perPeriod: z.number().int().min(2).max(12) }).optional(),
-  /** Smallest action cost, in sub-periods. */
-  costStep: z.union([z.literal(0.5), z.literal(1)]).default(0.5)
+  /** Smallest action cost, in sub-periods. Whole days by default (DECISIONS D32). */
+  costStep: z.union([z.literal(0.5), z.literal(1)]).default(1)
 }).transform(t => ({ ...t, subPeriod: t.subPeriod ?? SUB_PERIOD_DEFAULTS[t.period.unit] }));
 
 export const Stage = z.object({

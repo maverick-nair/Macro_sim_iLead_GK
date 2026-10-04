@@ -30,7 +30,7 @@ describe('storyline config', () => {
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.config.time.subPeriod).toEqual({ unit: 'day', perPeriod: 5 });
-    expect(r.config.time.costStep).toBe(0.5);
+    expect(r.config.time.costStep).toBe(1);
     expect(r.config.thresholds.high).toBe(70);
   });
 
