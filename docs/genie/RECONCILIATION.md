@@ -29,6 +29,10 @@ Where each item lands is in the last column of the summary table; DECISIONS.md D
 | 21 | Dials | 4 metrics | 7 dials (Engagement, Quality, Safety off by default); KPI dials renameable; team averages over available members only | Units | M5 (averages M3) |
 | 22 | Moods | Upbeat, Steady labels | Expressions happy, neutral | Naming only | none |
 
+## Status after M5
+- Resolved in the engine (D62): 1 Leadership Score, 2 stars, 3 streak, 4 tiers, 5 badges, 6 sponsor confidence and unlocks (briefings since M4), 10 Team Pulse, 15 events (types, timing, targets, delivery, responses, escalation).
+- Still open: 14 funnel inputs (authored ideal throughput per stage, Skill/Morale/Result weights, carry over); 17 play modes (Full, Standard, Lite), save and resume, practice week; 21 the Engagement, Quality and Safety dials and renameable KPI labels; the leaderboard and celebration level settings.
+
 ## What the participant UI must show
 - Stats hidden until the profile is first opened (D39 matches).
 - Trust as the ring and in Team Pulse.

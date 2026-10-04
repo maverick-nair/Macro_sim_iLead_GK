@@ -338,6 +338,15 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 
 **D61. Still open after the review.** The engine HUD has no Pause button (the prototype HUD does); the onboarding mic test is simulated; the resume recap uses fixture data; phones keep the prototype board (D43) until the 390 board is designed; the trust ring number overflows at 200% text; Halden's second accent is 4.03:1 on raised surfaces (Halden is a sample client theme; a real client theme is checked by the token build when it is added); the onboarding step dots carry `aria-label` on a plain div; the /screens and /states intro links are 4.3:1 (review tools, not participant screens).
 
+**D62. M5 game rules on the GenieKreator formulas.** Decided. `docs/genie/scoring-and-report.md` section 6 replaces the 2.0 scoring designed here (SIMULATION 7, rewritten). The engine computes everything; `npm run calibrate` now also reports the score and tier spread per player type (good play: Platinum in 60 of 60 runs; passive and random: Bronze, with 2 Silver runs for random).
+- **Week score with no live interaction:** the doc says "0.8 × weekly style fit %". Read literally, the funnel part would vanish too. The engine moves only the live weight to style fit (0.8 × fit + 0.2 × funnel), the same way L falls back to capability % with no live interaction. Say if you meant the literal reading.
+- **Badges:** the 8 badges designed for 2.0 (First word, Listener, Pipeline builder, Clear voice, Right style and others) are replaced by the 10 badge library. Change Champion counts Strong team meetings, emails, swap talks and exit talks, from the linkage matrix (5.2), since actions do not yet carry their rated skills.
+- **Unlock rewards:** the design's three (an extra half day, a quiet word, team lunch) become GenieKreator's: a bonus day, extra hire budget (one seat past a full team, before Hire unlocks, no days) and a team activity without cooldown. The design's reward cards keep their look.
+- **Sponsor meter:** shows its value (Configuration Spec, CEO meter). Level words follow the rule lines: Low under 30, Wavering, Steady from 50, Confident from 70, Champion from 85. The −5 for an unanswered sponsor message stays as a configurable default with no GenieKreator source.
+- **Team Pulse:** the mean of morale and trust with a trend, as GenieKreator says; the design's mood counts stay beside it.
+- **Events:** six card types, fixed, random and conditional timing, stage and sponsor targets, delivery as card, bulletin, chat, email or sponsor call, expected responses with a window and a bonus, escalation to the sponsor and follow up events. Sales Elevator keeps its 12 workbook events with delivery set per event and gains two GenieKreator style ones (a random opportunity and a conditional sponsor call). The importer carries these settings, so a re-import keeps them.
+- **Week end text:** the banner headline and sentence are worded by the engine (D60).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

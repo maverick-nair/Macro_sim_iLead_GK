@@ -350,8 +350,8 @@ The Model doc divides by 100. With a positive buffer that lets a stage output mo
 
 **Bottleneck stage** [S]: the stage with the lowest ratio of actual to ideal throughput this period.
 
-### 6.3 General events [W]
-Scheduled per period, with skill / morale / result applied to the whole team, adjusted by the style you set with each member:
+### 6.3 General events [W][G]
+An event's impact (skill / morale / result) lands on its target, adjusted by the style you set with each person:
 
 | Style mismatch | Share of the event's impact |
 |---|---|
@@ -359,30 +359,37 @@ Scheduled per period, with skill / morale / result applied to the whole team, ad
 | 1 | Full |
 | 2 | 1.5× |
 
-Sales Elevator schedule, 12 week workbook mapped to 8 weeks as `round(period × 8 / 12)`:
+Every event setting is *config* (Configuration Spec, Events and NPC initiated moments):
 
-| Event | Workbook week | Impact (S / M / R) |
+| Setting | Options | Engine behaviour |
 |---|---|---|
-| New CRM system | 2 | −1 / −4 / −7 |
-| Performance declines | 3 | 0 / −6 / −10 |
-| Review site criticizes | 3 | 0 / −4 / −4 |
-| 360 degree feedback | 4 | 0 / −4 / 0 |
-| Recession strikes | 5 | 0 / −5 / −5 |
-| Rumors of being acquired | 6 | 0 / −5 / 0 |
-| Job offer | 7 | 0 / −5 / −5 |
-| Sales conference | 8 | 0 / −4 / −2 |
-| Tragic accident | 9 | 0 / −8 / −7 |
-| Business process change | 10 | 0 / −9 / −10 |
-| Insider trading scandal | 10 | 0 / −5 / 0 |
-| Supplier strike | 11 | 0 / −2 / −3 |
+| Card type | Impact, signal, capacity, diagnostic, opportunity, crisis | Shown on the card |
+| Timing | Fixed period and sub-period; random within a window of periods, with a probability; conditional | Random timing is drawn once per run from the seed, on its own stream, so adding an event changes nothing else. Conditions (team morale below, team trust below, someone's morale below, revenue behind pace, each for N period ends in a row) are checked at each period start and fire once. An event with no timing fires only as a follow up |
+| Target | Team, everyone in a stage (`stage:<key>`), a named member, one member the engine picks, the sponsor | The engine picks the top performer for an opportunity or a job offer, otherwise someone mid table |
+| Delivery | Board card, bulletin, chat, email, sponsor call | A bulletin is read in the week end before its period (its See impact text is authored) and lands with no card; in period 1 it shows as a card. A chat or email arrives in the inbox from the target. A sponsor call rings on the board and leaves an urgent sponsor message |
+| Capacity loss | Sub-periods the target is away | |
+| Label | Optional text on the card | Hidden unless authored (labels can mislead) |
+| Expected response | Actions that count, the window in sub-periods, a bonus when on time | Replying to the event's message, or taking a listed action with the target, answers it. In time, the bonus applies to the target |
+| Escalation | A follow up event, and whether the sponsor hears of it | Past the window, the sponsor loses confidence (escalation, −10) and the follow up event fires |
 
-A period holds up to two events (first and third sub-period). A third moves to the next period with room, so no event is dropped.
+Sales Elevator: the 12 workbook events, mapped from 12 weeks to 8 as `round(period × 8 / 12)` with up to two a period (first and third sub-period), plus two that GenieKreator would generate from the context:
 
-Each event has a 2.0 card type [S]:
-- **Impact:** business consequence, shown with "See impact".
-- **Signal:** a hint about a person.
-- **Capacity:** someone becomes unavailable.
-- **Diagnostic:** new data.
+| Event | Period | Impact (S / M / R) | Delivery and response |
+|---|---|---|---|
+| New CRM system | 1 | −1 / −4 / −7 | Card |
+| Review site criticizes | 2 | 0 / −4 / −4 | Bulletin |
+| Performance declines | 2 | 0 / −6 / −10 | Card, one member; a 1:1, coaching or feedback within 2 days, else the sponsor hears |
+| 360 degree feedback | 3 | 0 / −4 / 0 | Bulletin |
+| Recession strikes | 3 | 0 / −5 / −5 | Sponsor call, crisis; a reply or a team meeting within 2 days |
+| Rumors of being acquired | 4 | 0 / −5 / 0 | Bulletin |
+| Job offer | 5 | 0 / −5 / −5 | Chat from the top performer; a reply, 1:1, reward or coaching within 2 days |
+| Sales conference | 5 | 0 / −4 / −2 | Bulletin |
+| Tragic accident | 6 | 0 / −8 / −7 | Card |
+| Business process change | 7 | 0 / −9 / −10 | Bulletin |
+| Insider trading scandal | 7 | 0 / −5 / 0 | Card, one member |
+| Supplier strike | 8 | 0 / −2 / −3 | Bulletin |
+| A big client referral | random, periods 3 to 6, 60% | 0 / +3 / +4 to the proposal stage | Card, opportunity |
+| Paula has heard the team is struggling | when team morale is below 40 at two period ends | none | Sponsor call, crisis; a reply within 2 days, else the sponsor hears |
 
 ### 6.4 Trigger events [W][M]
 Conditions are checked each sub-period. Weeks are expressed as fractions of the run, so they scale with `period.count`.
@@ -404,76 +411,69 @@ Every event and trigger pauses the clock while its card is open [S].
 
 ---
 
-## 7. 2.0 gamification [N][S]
+## 7. 2.0 gamification [G]
 
-All gamification values come from engine state; the UI only renders them. Points are earned, never taken away [S: "nothing is taken away for being slow"].
+The GenieKreator rules (`docs/genie/scoring-and-report.md` section 6, D62). Formulas are engine behaviour; every number is *config* under `gamification`, with these defaults. The UI only renders them. The game score never changes a skill rating.
 
 ### 7.1 Leadership Score
-Three pillars, accumulated per period. Each pillar can earn up to `2400 / period.count` per period (300 for 8 periods), so the maximum run score is 7,200 whatever the period count.
+**Score = 9 × (0.3 B + 0.3 P + 0.4 L) + streak bonus**, rounded half up, 0 to 1,000. The 9 is (scale − streak cap) ÷ 100.
 
-| Pillar | Points earned per period |
+| Pillar | 0 to 100 |
 |---|---|
-| Business | max × min(1, periodValue / periodTargetPace), plus a bonus of 10% of max when pace is 110% or more |
-| People | max × (0.5 × average morale + 0.5 × average trust) / 100, at period end |
-| Leadership | max × style accuracy this period |
+| Business (B) | min(100, revenue ÷ target × 100) |
+| People (P) | 50 + change in team morale + 0.5 × change in team trust, since the start of the run, kept in 0 to 100 |
+| Leadership (L) | 0.5 × contextual capability % + 0.5 × the mean band score of all live interactions; with no live interaction, the capability % |
 
-- **Style accuracy** = decisions with mismatch 0 ÷ all style decisions. Decisions are weekly styles, plus the style used in live conversations [M].
-- **Period target pace** = target × (period ÷ period count).
+- **Contextual capability %** = style tagged choices that matched what the person needed ÷ all style tagged choices, whole run. Style tagged: weekly style setting, and live conversations with one person (meetings, briefings, interviews and multi person emails carry no style).
+- **Band scores:** Strong 100, Adequate 70, Weak 35, Harmful 0.
 
 ### 7.2 Stars, per period
-| Star | Earned when |
-|---|---|
-| People | Average team morale at period end is at or above period start |
-| Leadership | Style accuracy is 70% or more |
-| Business | Cumulative value is at or above target pace |
+**Week score** = 0.5 × weekly style fit % + 0.3 × mean band score of the period's live interactions + 0.2 × min(100, final stage output ÷ the period's ideal × 100). With no live interaction in the period, 0.8 × weekly style fit % + 0.2 × the funnel part (D62).
 
-A period can end with 0 stars (your decision, D29). The spec's "1 to 3" is superseded.
+1 star at 50, 2 at 70, 3 at 85. A period can end with 0 stars (D29).
 
 ### 7.3 Streak and badges
-**Streak:** consecutive periods with 2 or more stars.
-- Every third period of a streak adds a bonus of 10% of one period's maximum (90 points with 8 periods) to the Leadership Score.
-- A broken streak shows as "paused", never as lost or with a countdown [brief, humane gamification].
+**Streak:** periods in a row at 2 stars or more. The third adds +25 to the score, each period after it another +25, up to +100 for the run. A broken streak resets the count at no cost.
 
-**Badges** (rules are hidden; locked badges show the hint [S]):
+**Badges** (each earned once, with its reason in words; unearned badges show their description):
 
-| Badge | Rule | Hint shown when locked |
+| Badge | Checked | Earned when |
 |---|---|---|
-| First word | Complete your first live interaction | |
-| Listener | 3 or more open questions in one 1:1 | |
-| Pipeline builder | Any stage at or over its ideal throughput (6.2) for a whole period | Push one stage past ideal |
-| Steady hand | Every available member at morale 40 or more for a whole period | Keep everyone above 40 |
-| Turnaround | A member's result goes from under 30 to 60 or more | Help someone bounce back |
-| Clear voice | Every live interaction in a period done by voice | A whole week in voice |
-| Promise keeper | 3 promises kept, none broken | |
-| Right style | 100% style accuracy in a period | |
+| First Close | each sub-period | The team's first conversion |
+| Read the Room | period end | 90% or more of weekly style settings fit |
+| Flex Master | period end | Every style used correctly at least twice in the run |
+| Concern Uncovered | after a conversation | min(5, team size) people have opened up |
+| Promise Keeper | run end | 3 or more promises made and none broken (promises still open and not yet due are not counted) |
+| Fair Hand | after a conversation, period end | 3 rewards that nobody felt passed over by |
+| Turnaround | period end | Someone's morale went from under 30 to over 60 |
+| Change Champion | after a conversation | 2 Strong conversations that communicate change: a team meeting, an email, a swap or an exit talk |
+| Steady Hand | run end | No Harmful band in the run |
+| Target Crusher | period end | Revenue reaches the target |
+
+Authors can rename, describe, remove or add badges by picking one of these rules.
 
 ### 7.4 Tiers
-At the end, the final Leadership Score as a share of the maximum gives the tier (thresholds are *config*):
-
-| Tier | Share of maximum |
-|---|---|
-| Bronze | under 40% |
-| Silver | 40 to 59% |
-| Gold | 60 to 79% |
-| Platinum | 80% and up |
+From the final Leadership Score: Platinum 850 and up, Gold 700 to 849, Silver 500 to 699, Bronze under 500. Two to five tiers, names and thresholds *config*.
 
 ### 7.5 Sponsor confidence
-A hidden value from 0 to 100. It starts at 50 and shows as 5 levels on the meter: Low (0 to 19), Wavering (20 to 39), Steady (40 to 59), Confident (60 to 79), Champion (80 to 100).
+0 to 100, starting at 50. The meter shows the value and a level: Low (under 30, the check in line), Wavering (30 to 49), Steady (50 to 69), Confident (70 to 84, from the unlock line), Champion (85 and up).
 
 | Cause | Change |
 |---|---|
-| Period end, at or above pace | +10 |
-| Period end, under 80% of pace | −8 |
-| Sponsor briefing band: Strong / Adequate / Weak / Harmful | +8 / +3 / −4 / −10 |
-| Sponsor message unanswered past due | −5 |
-| Impact event resolved well (per event config) | +5 |
+| Sponsor briefing band: Strong / Adequate / Weak / Harmful | +20 / +5 / −10 / −25 |
+| Period end: revenue at or above the period's share of the target, or below | +5 / −5 |
+| Escalation: a missed briefing, or an event ignored past its window | −10 |
+| Sponsor message unanswered past due | −5 [N] |
+| An authored consequence table entry | as authored |
 
 Tapping the meter lists the last 3 causes [S].
 
-**Unlock offer** [S]: the first time confidence rises through 60, and again through 80, the period end sequence offers 3 rewards, choose one (*config*):
-- An extra day of capacity next period
-- A quiet word: reveals one member's hidden concern without needing trust
-- Team lunch at no cost, once
+**Unlock offer:** when confidence ends a period at or above 70 having started it below, the period end offers one reward (*config*, default all three):
+- **A bonus day** next period.
+- **Extra hire budget:** the next hire is allowed one seat past a full team, before Hire unlocks, and costs no days.
+- **A team activity without cooldown:** the next team wide static action (Energize the team) skips its wait and sets none.
+
+**CEO check in:** when confidence ends a period below 30 having started it at or above, the CEO asks for a check in that takes one sub-period of the next period's capacity. A news message says so.
 
 ### 7.6 Mood, Team Pulse
 Portrait mood is derived per member and recomputed after every change:
@@ -488,7 +488,9 @@ Portrait mood is derived per member and recomputed after every change:
 
 Away members show "In training" or "On leave".
 
-**Team Pulse** [S] counts members as upbeat (Upbeat), steady (Steady and Thinking) and struggling (Concerned and Frustrated).
+**Team Pulse** [G] is the mean of team morale and team trust, with its trend since the period start. The mood counts [S] stay alongside it: upbeat (Upbeat), steady (Steady and Thinking) and struggling (Concerned and Frustrated).
+
+**Week end summary:** the engine words a headline (someone who bounced back, else by stars) and one sentence on people and business, and reports the funnel per stage against the period's ideal and the cumulative ideal, the bottleneck (the stage furthest below its ideal), KPI start and end, Team Pulse, sponsor confidence, the streak with the next bonus, new badges, any unlock offer or check in, and next period's bulletins.
 
 **KPI trend** [S]: for 3 seconds after a change, the KPI tile shows the change; then rising, easing or steady, by comparing the team average with the start of the period.
 
