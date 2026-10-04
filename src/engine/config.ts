@@ -80,6 +80,8 @@ export const Person = z.object({
   byStage: z.record(z.string(), Stats),
   profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: z.string(), relations: z.string().default('') }),
   hiddenConcern: Copy.optional(),
+  /** Revealed together with the hidden concern, once a conversation surfaces it (spec, profile). */
+  careerGoal: Copy.optional(),
   /** Default portrait. `portraits` may override it per mood. */
   portrait: z.string().optional(),
   portraits: z.record(z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']), z.string()).optional(),
@@ -120,7 +122,15 @@ export const ActionOption = z.object({
   /** For email: what the message does. */
   intent: z.enum(['congratulate', 'warn']).optional(),
   /** Overrides the action's repeat limit for this option (Model doc: team lunch 20 days, team building 8). */
-  cooldownDays: z.number().int().min(0).optional()
+  cooldownDays: z.number().int().min(0).optional(),
+  /** Overrides the action's cost for this option (team building takes 2 days, team lunch 1). */
+  cost: z.number().min(0).optional(),
+  /** Overrides the action's people to pick for this option (swap two people, reassign one). */
+  targets: z.tuple([z.number().int().min(0), z.number().int().min(0)]).optional(),
+  /** The people picked must be in different stages (swap roles). */
+  distinctStages: z.boolean().default(false),
+  /** The participant picks a stage to move the person to (reassign role). */
+  pickStage: z.boolean().default(false)
 });
 
 export const Action = z.object({
@@ -183,6 +193,10 @@ export const StorylineConfig = z.object({
   weeklyStyle: EffectTable,
   events: z.array(GeneralEvent).default([]),
   triggers: z.array(Trigger).default([]),
+  /** Role coverage (Teardown hidden rule 6, Configuration Spec eligibility): at most this many people per stage. */
+  maxPerStage: z.number().int().min(1).default(2),
+  /** Weekly drift (Configuration Spec, Targets and KPIs): what someone loses in a period nobody acted with them. */
+  drift: z.object({ morale: z.number().min(0).default(3), result: z.number().min(0).default(0) }).default({ morale: 3, result: 0 }),
   /** Funnel buffer from the Model doc, set by calibration. */
   performanceThreshold: z.number().min(-50).max(400),
   calibrated: z.boolean().default(false)

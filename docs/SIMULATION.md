@@ -7,6 +7,7 @@ The authoritative rule set for the iLead 2.0 engine. The mock engine (`src/engin
 - **[W]**: iLead 1.0 content workbook (`docs/ilead-1/iLead International Sales Elevator - Full content.xlsx`).
 - **[S]**: iLead 2.0 Participant Interface Spec and the design.
 - **[N]**: new in 2.0, designed here. Needs your review.
+- **[G]**: GenieKreator source docs (`docs/genie/`): the Configuration Spec, the 2.0 Design doc and the Teardown. They outrank the 1.0 sources on 2.0 behaviour. `docs/genie/RECONCILIATION.md` lists every difference and the milestone that resolves it (D44).
 
 Every number marked *config* comes from the GenieKreator storyline config (section 1). The values given are the defaults of the Sales Elevator storyline.
 
@@ -163,26 +164,26 @@ Trust is how much a member believes in you as their leader. It is the 2.0 metric
 ### 4.1 Costs and repeat limits
 
 Costs are in sub-periods and repeat limits are in days; both are *config*. Defaults are below.
-- **Costs** are the workbook's whole days [W], per your decision (D32).
+- **Costs** are the workbook's whole days [W], per your decision (D32), except where the GenieKreator docs set a different cost [G]: team building and the one week workshop take 2 days. An option may carry its own cost.
 - **Repeat limits** follow the Model doc where it differs from the workbook [M].
 - **Replying in the inbox** is not an action and costs nothing [S].
 
 | Action | Scope | Kind | Cost | Repeat limit | Limits |
 |---|---|---|---|---|---|
 | Meet the team | team | live (meeting) | 1 | 10 days | |
-| Energize the team: Team lunch | team | static | 1 | 20 days | |
-| Energize the team: Team building | team | static | 1 | 8 days | |
+| Energize the team: Team lunch | team | static | 1 | 10 days [G] | |
+| Energize the team: Team building | team | static | 2 [G] | 10 days [G] | |
 | Send email | 1 to 3 people | live (email) | 1 | | max 3 recipients [M] |
-| Send for training: 3 day / 1 week | 1 to 3 people | static | 1 | | away 3 or 5 days |
-| Swap or reassign roles | 2 people / 1 person | hybrid | 1 | | prerequisite: Assess (nudge) |
-| Hire member | team | live (interview) | 2 | 8 days | unlocks in period 3 (config) |
+| Send for training: 3 day / 1 week | 1 to 3 people | static | 1 / 2 [G] | | away 3 or 5 days; a peer in the same stage must be available to cover [G] |
+| Swap or reassign roles | 2 people in different stages / 1 person to a stage you pick | hybrid | 1 | | prerequisite: Assess (nudge); at most 2 per stage, nobody leaves a stage empty [G] |
+| Hire member | team | live (interview) | 2 | 8 days | unlocks in period 3 (config); not while every stage is full [G] |
 | Meet face to face | 1 person | live (1:1) | 1 | | |
 | Coach member | 1 person | live (1:1) | 1 | | |
 | Give feedback | 1 person | live (chat) | 1 | | |
 | Set goals | 1 person | live (written plan) | 1 | | |
 | Assess member | 1 person | static | 1 | | information only |
 | Reward member | 1 person | hybrid | 1 | 20 days | |
-| Let go | 1 person | hybrid | 1 | | |
+| Let go | 1 person | hybrid | 1 | | not the last person in a stage [G] |
 
 ### 4.2 Effect tables
 
@@ -231,11 +232,15 @@ At the start of each period you set a style per member; the Model doc calls thes
 
 | Mismatch | Skill / morale / result per period |
 |---|---|
-| 0 | +2 / +4 / +5 |
-| 1 | 0 / −3 / −4 |
-| 2 | −1 / −6 / −8 |
+| 0 | 0 / +3 / +3 |
+| 1 | 0 / −1 / −1 |
+| 2 | 0 / −2 / −2 |
 
-The Model doc gives the rule but no values; these are *config* defaults inside the workbook's stated bounds (result at most +10 and at least −18).
+The Model doc gives the rule but no values. The Configuration Spec sets the size [G]: "About +2 to +3, −1 to −2" for morale and result. These are *config* defaults.
+
+- After you confirm, the sponsor sends a team message with each person's reaction and a reason chip for every change [S]. The message words the share of good reactions as the Configuration Spec's four bands: fewer than half, half, most, the whole team [G].
+- **Weekly drift [G]:** at the end of a period, anyone nobody acted with loses 3 morale (*config*, `drift`). Team wide actions count for everyone; the weekly style does not.
+- **Team averages [G]** count the people who are available, not those away.
 
 - Members who are away still get a style. It applies when they return [S].
 - The optional reason note per member feeds the report's intent vs action insight [S].

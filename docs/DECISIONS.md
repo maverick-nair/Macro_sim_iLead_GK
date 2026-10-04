@@ -218,6 +218,15 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 
 **D43. Phones keep the prototype board.** Decided, until the 390 board is designed (D15). Desktop plays on the engine. `?engine=off` opens the prototype's fixed board, and `?start=board` skips onboarding.
 
+**D44. The GenieKreator docs join the sources.** Decided.
+- The Configuration Spec, the 2.0 Design doc, the Teardown and the GenieKreator repo's scoring rules are in `docs/genie/`. They describe 2.0 behaviour, so they outrank the 1.0 Model doc where they differ (tag [G] in SIMULATION.md).
+- `docs/genie/RECONCILIATION.md` lists 22 differences. Each lands in the milestone that builds that part of the game: gamification and Team Pulse in M5, live consequences, hire and the sponsor briefings in M4, ranges in M7.
+- Done in M3 because the drawer and style setting need them: role coverage (at most 2 per stage, nobody leaves a stage empty, training needs a peer to cover, no hiring into a full team), GK costs (team building and one week workshop 2 days) and cooldowns (energize 10 days), weekly style deltas of about +3 and −1 to −2, weekly drift of 3 morale, averages over available people, team feedback by share, and $30,000 per conversion.
+- The storyline was recalibrated: doing nothing reaches 55% of target, random play 52%, good play 107% (`calibration/sales-elevator.md`). D29 stands (a period can end with no stars); D33 is superseded.
+- Two questions for you: is the GenieKreator repo's `scoring-and-report.md` binding where it goes beyond the Design doc (trust starts at 50 for everyone, median banding)? And should the D30 trust rules that have no GK source stay as configurable defaults?
+
+**D45. Swap and reassign are options with their own pick rules.** Decided. "Swap roles" picks 2 people in different stages; "Reassign role" picks 1 person and a stage to move them to. The engine refuses a move into a full stage or out of a stage that would be left empty. The drawer shows the rules and the prerequisite nudge ("You have not assessed Justin for Conversion. Assess first, 1 day?").
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

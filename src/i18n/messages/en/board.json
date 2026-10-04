@@ -30,5 +30,8 @@
   "board.ended.title": "The run is over",
   "board.ended.score": "Leadership Score {total} of {max}",
   "board.ended.tier": "{tier, select, bronze {Bronze} silver {Silver} gold {Gold} platinum {Platinum} other {}} tier",
-  "board.loading": "Getting your team ready"
+  "board.loading": "Getting your team ready",
+  "board.block.lastInStage": "The only person left in {stage}",
+  "board.block.noCover": "Nobody else in {stage} can cover the role",
+  "board.block.teamFull": "The team is full"
 }

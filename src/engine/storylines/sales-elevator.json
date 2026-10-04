@@ -6,9 +6,9 @@
     "locale": "en-US",
     "display": "symbol",
     "target": 240000,
-    "valuePerConversion": 8400,
+    "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      47
+      15
     ]
   },
   "time": {
@@ -1164,7 +1164,7 @@
               -4
             ]
           },
-          "cooldownDays": 20
+          "cooldownDays": 10
         },
         {
           "key": "team_building",
@@ -1186,7 +1186,8 @@
               -8
             ]
           },
-          "cooldownDays": 8
+          "cooldownDays": 10,
+          "cost": 2
         }
       ]
     },
@@ -1305,7 +1306,8 @@
               -7
             ]
           },
-          "away": 5
+          "away": 5,
+          "cost": 2
         }
       ]
     },
@@ -1343,7 +1345,12 @@
               0,
               0
             ]
-          }
+          },
+          "targets": [
+            1,
+            1
+          ],
+          "pickStage": true
         },
         {
           "key": "swap",
@@ -1364,7 +1371,12 @@
               0,
               0
             ]
-          }
+          },
+          "targets": [
+            2,
+            2
+          ],
+          "distinctStages": true
         }
       ]
     },
@@ -1928,19 +1940,19 @@
   ],
   "weeklyStyle": {
     "m0": [
-      2,
-      4,
-      5
+      0,
+      3,
+      3
     ],
     "m1": [
       0,
-      -3,
-      -4
+      -1,
+      -1
     ],
     "m2": [
-      -1,
-      -6,
-      -8
+      0,
+      -2,
+      -2
     ]
   },
   "events": [
@@ -2313,6 +2325,6 @@
       }
     }
   ],
-  "performanceThreshold": 159,
+  "performanceThreshold": 132,
   "calibrated": true
 }

@@ -43,6 +43,7 @@ export function buildView(sim: Sim) {
       style: m.style, lastStyle: m.lastStyle, lastReaction: m.lastReaction,
       mood, img: p.portraits?.[mood] ?? p.portrait ?? null, away: m.away, awayReason: m.awayReason,
       statsRevealed: m.revealed, shared: m.concernShared ? p.hiddenConcern ?? null : null,
+      careerGoal: m.concernShared ? p.careerGoal ?? null : null, assessedStages: m.assessedStages,
       unread: sim.inbox.some(x => x.from === m.id && x.state === 'open'),
       promise: sim.promises.find(x => x.memberId === m.id && x.state === 'open')?.text ?? null,
       profile: p.profile
@@ -63,15 +64,17 @@ export function buildView(sim: Sim) {
       const moods = sim.members.map(m => moodOf(m, sim));
       return { upbeat: moods.filter(x => x === 'happy').length, steady: moods.filter(x => x === 'neutral' || x === 'thinking').length, struggling: moods.filter(x => x === 'concerned' || x === 'frustrated').length };
     })(),
+    maxPerStage: c.maxPerStage,
     funnel: c.stages.map((st, i) => ({ key: st.key, name: st.name, members: sim.members.filter(m => m.stage === st.key).length, ideal: st.ideal,
       throughput: Math.round(sim.funnel.stageOutPeriod[i] * 10) / 10, idealThroughput: Math.round(ideal[i] * 10) / 10, bottleneck: i === bottleneck })),
     actions: c.actions.map(a => ({
       key: a.key, name: a.name, description: a.description, scope: a.scope, kind: a.kind, format: a.format ?? null, cost: a.cost, targets: a.targets,
       prerequisite: a.prerequisite ?? null,
-      options: a.options.map(o => ({ key: o.key, label: o.label, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
+      options: a.options.map(o => ({ key: o.key, label: o.label, cost: o.cost ?? a.cost, away: o.away, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,
       blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {}
     })),
+    promises: sim.promises.map(x => ({ id: x.id, memberId: x.memberId, text: x.text, state: x.state, dueInSubPeriods: Math.max(0, x.dueAbsSub - sim.absSub) })),
     inbox: sim.inbox.filter(x => x.state === 'open').map(message),
     cards: sim.cards,
     outcome: sim.outcome,

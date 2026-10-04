@@ -89,12 +89,13 @@ function randomStep(v: EngineView, rng: Rng): Step | null {
   for (let i = 0; i < 6; i++) {
     const a = rng.pick(candidates);
     if (a.scope === 'team') {
-      const opts = a.options.filter(o => !o.blocked);
+      const opts = a.options.filter(o => !o.blocked && o.cost <= v.clock.capacityLeft);
       if (!a.blocked && opts.length) return { intent: { action: a.key, option: rng.pick(opts).key, memberIds: [] }, say: rng.pick([PLAIN, SAY.D, SAY.E]) };
       continue;
     }
     const m = rng.pick(v.members);
-    if (!a.blockedFor[m.id]) return { intent: { action: a.key, option: rng.pick(a.options).key, memberIds: [m.id] }, say: rng.pick([PLAIN, SAY[rng.pick(STYLES)]]) };
+    const opts = a.options.filter(o => o.cost <= v.clock.capacityLeft && !o.targets && !o.pickStage);
+    if (!a.blockedFor[m.id] && opts.length) return { intent: { action: a.key, option: rng.pick(opts).key, memberIds: [m.id] }, say: rng.pick([PLAIN, SAY[rng.pick(STYLES)]]) };
   }
   return null;
 }

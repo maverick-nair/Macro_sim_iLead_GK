@@ -163,6 +163,12 @@ for r in list(WB['General Events'].iter_rows(values_only=True))[1:]:
     if clean(r[0]) == 'Training Request':
         triggers.append(dict(kind='trainingRequest', message={'he': tpl(clean(r[1])), 'she': tpl(clean(r[2]))}, maxTimes=2, params={'trust': 4}))
 
+for a in actions:
+    if a['key'] == 'swap':
+        for o in a['options']:
+            if o['key'] == 'reassign': o.update(targets=[1, 1], pickStage=True)
+            if o['key'] == 'swap': o.update(targets=[2, 2], distinctStages=True)
+
 storyline = dict(
     id='sales_elevator', name='Sales Elevator, Innov8 Elevators',
     money=dict(currency='USD', locale='en-US', display='symbol', target=240000, valuePerConversion=8400, inputPerSubPeriod=[8]),

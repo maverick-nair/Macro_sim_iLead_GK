@@ -48,7 +48,11 @@ export const pronoun = (sim: Sim, id: string) => person(sim, id).pronoun;
 export const stageName = (sim: Sim, key: string) => sim.config.stages.find(s => s.key === key)?.name ?? key;
 export const needed = (sim: Sim, m: MemberSim) => neededStyle(m, sim.config.thresholds.high);
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-export const teamAverage = (sim: Sim, k: MetricKey) => Math.round(avg(sim.members.map(m => m[k])));
+/** Team averages count the people who are available (Configuration Spec dials); everyone, if nobody is. */
+export const teamAverage = (sim: Sim, k: MetricKey) => {
+  const here = sim.members.filter(m => m.away === 0);
+  return Math.round(avg((here.length ? here : sim.members).map(m => m[k])));
+};
 
 export const STYLE_NAMES: Record<Style, string> = { D: 'Directing', G: 'Guiding', P: 'Partnering', E: 'Entrusting' };
 const METRIC_NAMES: Record<MetricKey, string> = { skill: 'skill', morale: 'morale', result: 'result', trust: 'trust' };

@@ -125,6 +125,8 @@ export interface LogEntry {
 export interface Outcome {
   id: string;
   actionKey: string;
+  /** Who the reply is from: a member id or 'sponsor'. */
+  speaker: string;
   headline: string;
   reply: string;
   affected: string[];

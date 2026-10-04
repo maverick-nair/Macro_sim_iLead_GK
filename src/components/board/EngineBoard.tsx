@@ -104,6 +104,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const member = (id: string) => v.members.find(m => m.id === id);
   const action = (key: string) => v.actions.find(a => a.key === key);
   const img = (m: { img: string | null } | undefined) => m?.img ?? PLACEHOLDER;
+  const stageName = (key: string) => v.funnel.find(st => st.key === key)?.name ?? key;
 
   /** Words an engine block reason in the storyline's units. */
   const blockText = (b: Exclude<Block, { reason: 'capacity' }>): string => {
@@ -113,6 +114,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       case 'away': return t('board.block.away', { kind: b.kind, amount: amount(b.for) });
       case 'rewarded': return t('board.block.rewarded', { amount: amount(b.in) });
       case 'gone': return t('board.block.gone');
+      case 'lastInStage': return t('board.block.lastInStage', { stage: stageName(b.stage) });
+      case 'noCover': return t('board.block.noCover', { stage: stageName(b.stage) });
+      case 'teamFull': return t('board.block.teamFull');
     }
   };
   const block = (b: Block | null): ActionBlock | undefined => {

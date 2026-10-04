@@ -47,6 +47,8 @@ export const MetricChange = z.object({
 export const Outcome = z.object({
   id: Id,
   actionKey: Id,
+  /** Who the reply is from: a member id or 'sponsor'. */
+  speaker: Id,
   headline: Text,
   reply: Text,
   affected: z.array(Id),
@@ -66,6 +68,10 @@ export const MemberView = z.object({
   statsRevealed: z.boolean(),
   /** A hidden concern, only once it surfaced in conversation (spec). */
   shared: Text.nullable(),
+  /** Career goal, once a conversation has surfaced it. */
+  careerGoal: Text.nullable(),
+  /** Stages this person has been assessed for (the swap prerequisite). */
+  assessedStages: z.array(Id),
   unread: z.boolean(),
   promise: Text.nullable(),
   profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: Text.or(z.literal('')), relations: z.string() })
@@ -84,13 +90,25 @@ export const Block = z.discriminatedUnion('reason', [
   z.object({ reason: z.literal('cooldown'), in: z.number().int().min(1) }),
   z.object({ reason: z.literal('away'), kind: z.enum(['training', 'leave']), for: z.number().int().min(1) }),
   z.object({ reason: z.literal('rewarded'), in: z.number().int().min(1) }),
-  z.object({ reason: z.literal('gone') })
+  z.object({ reason: z.literal('gone') }),
+  z.object({ reason: z.literal('lastInStage'), stage: Id }),
+  z.object({ reason: z.literal('noCover'), stage: Id }),
+  z.object({ reason: z.literal('teamFull') })
 ]);
 
 export const ActionView = z.object({
   key: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
   format: z.string().nullable(), cost: Num, targets: z.tuple([z.number(), z.number()]), prerequisite: Id.nullable(),
-  options: z.array(z.object({ key: Id, label: Text, blocked: Block.nullable() })),
+  options: z.array(z.object({
+    key: Id, label: Text, blocked: Block.nullable(),
+    /** Cost of this option, when it differs from the action's. */
+    cost: Num,
+    /** Sub-periods the person is away afterwards (training). */
+    away: z.number().int().min(0),
+    /** Overrides the action's people to pick. */
+    targets: z.tuple([z.number(), z.number()]).nullable(),
+    distinctStages: z.boolean(), pickStage: z.boolean()
+  })),
   /** Why a team action is unavailable, or null. */
   blocked: Block.nullable(),
   /** Why a member action is unavailable for each member, or null. */
@@ -121,8 +139,11 @@ export const EngineView = z.object({
   members: z.array(MemberView),
   kpis: z.array(z.object({ metric: MetricKey, value: Num, start: Num })),
   pulse: z.object({ upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
+  /** Role coverage: at most this many people per stage. */
+  maxPerStage: z.number().int().min(1),
   funnel: z.array(z.object({ key: Id, name: Text, members: z.number().int(), ideal: z.number().int(), throughput: Num, idealThroughput: Num, bottleneck: z.boolean() })),
   actions: z.array(ActionView),
+  promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0) })),
   inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), dueInSubPeriods: z.number().int().nullable() })),
   cards: z.array(z.object({ id: Id, key: Id, card: z.enum(['impact', 'signal', 'capacity', 'diagnostic']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange) })),
   outcome: Outcome.nullable(),

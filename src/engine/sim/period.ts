@@ -1,7 +1,7 @@
 import type { Rng } from './rng';
 import { award } from './actions';
 import { idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
-import type { PeriodSummary, Sim } from './types';
+import type { Change, PeriodSummary, Sim } from './types';
 
 /** Period end, gamification and the move to the next period (docs/SIMULATION.md section 7). */
 
@@ -12,6 +12,7 @@ const UNLOCK_REWARDS = ['extra_day', 'quiet_word', 'free_lunch'];
 export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   if (sim.phase !== 'board') throw new Error('The period can only end from the board');
   runRemaining(sim, rng);
+  drift(sim);
   const count = sim.config.time.period.count;
   const max = pillarMax(sim);
   const target = sim.config.money.target;
@@ -118,3 +119,27 @@ export function finalScore(sim: Sim) {
 }
 
 export { perPeriod };
+
+/**
+ * Weekly drift (Configuration Spec, Targets and KPIs): anyone nobody acted with this period loses a
+ * little morale and result. Team wide actions count for everyone; weekly style setting does not.
+ */
+function drift(sim: Sim) {
+  const { morale, result } = sim.config.drift;
+  if (!morale && !result) return;
+  const acted = sim.log.filter(l => l.period === sim.period && (l.kind === 'action' || l.kind === 'interaction'));
+  if (acted.some(l => l.memberIds.length === 0)) return;
+  const touched = new Set(acted.flatMap(l => l.memberIds));
+  const unit = sim.config.time.period.unit;
+  const changes: Change[] = [];
+  for (const m of sim.members) {
+    if (touched.has(m.id) || m.away > 0) continue;
+    const reason = { label: 'Left alone', cause: `Nobody spent time with ${firstName(sim, m.id)} this ${unit}.`, rule: `Without any attention, people lose ${morale} morale${result ? ` and ${result} result` : ''} a ${unit}.`, evidence: [] };
+    for (const [k, by] of [['morale', morale], ['result', result]] as const) {
+      if (!by) continue;
+      const from = m[k], to = Math.max(0, from - by);
+      if (to !== from) { m[k] = to; changes.push({ subject: m.id, metric: k, from, to, delta: to - from, reason }); }
+    }
+  }
+  if (changes.length) log(sim, { kind: 'periodEnd', title: 'Some people were left alone', memberIds: [...new Set(changes.map(c => c.subject))], changes });
+}

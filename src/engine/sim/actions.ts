@@ -62,6 +62,21 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
   }
   sim.phase = 'board';
   log(sim, { kind: 'style', title: 'Styles set for the period', memberIds: sim.members.map(m => m.id), changes });
+  // The sponsor's team message, with each person's reaction (spec, weekly style setting: Result).
+  const affected = [...new Set(changes.map(c => c.subject))];
+  const net = (id: string) => changes.filter(c => c.subject === id).reduce((s, c) => s + c.delta, 0);
+  const upbeat = affected.filter(id => net(id) > 0).length;
+  sim.outcome = {
+    id: nextId(sim, 'o'), actionKey: 'styles', speaker: 'sponsor',
+    headline: `Styles are set for ${sim.config.time.period.unit} ${sim.period}`,
+    reply: `Thanks for setting the tone. ${sim.config.sponsor.name.split(' ')[0]} will be watching how the team responds.`,
+    affected,
+    reactions: Object.fromEntries(affected.map(id => [id, net(id) > 0 ? 'Feels led the way they need.' : net(id) < 0 ? 'Does not feel led the way they need.' : 'Taking it in.'])),
+    changes,
+    ripple: null,
+    // Team feedback by share of matches (Configuration Spec, Leadership model).
+    changed: [`${upbeat === sim.members.length ? 'The whole team' : upbeat * 2 > sim.members.length ? 'Most of the team' : upbeat * 2 === sim.members.length ? 'Half the team' : 'Fewer than half the team'} responded well to how you plan to lead them.`]
+  };
   return changes;
 }
 
@@ -79,17 +94,27 @@ export type Block =
   | { reason: 'cooldown'; in: number }
   | { reason: 'away'; kind: 'training' | 'leave'; for: number }
   | { reason: 'rewarded'; in: number }
-  | { reason: 'gone' };
+  | { reason: 'gone' }
+  | { reason: 'lastInStage'; stage: string }
+  | { reason: 'noCover'; stage: string }
+  | { reason: 'teamFull' };
 
 export function blockedReason(sim: Sim, a: Action, memberId: string | null, optionKey?: string): Block | null {
   if (sim.period < a.unlockPeriod) return { reason: 'locked', period: a.unlockPeriod };
-  if (a.cost > capacityLeft(sim)) return { reason: 'capacity', need: a.cost, have: capacityLeft(sim) };
+  const cost = (optionKey ? a.options.find(o => o.key === optionKey)?.cost : undefined) ?? a.cost;
+  if (cost > capacityLeft(sim)) return { reason: 'capacity', need: cost, have: capacityLeft(sim) };
+  // Role coverage (Teardown hidden rule 6): a full team hires nobody.
+  if (a.rule === 'hire' && sim.members.length >= sim.config.stages.length * sim.config.maxPerStage) return { reason: 'teamFull' };
   if (memberId) {
     const m = member(sim, memberId);
     if (!m) return { reason: 'gone' };
     if (m.away > 0 && a.key !== 'email' && a.key !== 'feedback') return { reason: 'away', kind: m.awayReason ?? 'leave', for: m.away };
     const rewarded = sim.availableAt[`${a.key}@${m.id}`] ?? 0;
     if (a.rule === 'reward' && rewarded > sim.absSub) return { reason: 'rewarded', in: rewarded - sim.absSub };
+    // Role coverage: someone stays in every stage, and training needs a peer to cover the role.
+    const peers = sim.members.filter(x => x.id !== m.id && x.stage === m.stage);
+    if (a.rule === 'fire' && peers.length === 0) return { reason: 'lastInStage', stage: m.stage };
+    if (a.rule === 'training' && !peers.some(x => x.away === 0)) return { reason: 'noCover', stage: m.stage };
   }
   const keys = [a.key, optionKey ? `${a.key}:${optionKey}` : null, memberId ? `${a.key}@${memberId}` : null].filter(Boolean) as string[];
   const until = Math.max(...keys.map(k => sim.availableAt[k] ?? 0));
@@ -105,6 +130,9 @@ export function blockedText(b: Block): string {
     case 'away': return b.kind === 'training' ? 'Away in training' : 'On leave';
     case 'rewarded': return 'Recently rewarded';
     case 'gone': return 'No longer on the team';
+    case 'lastInStage': return 'The only person left in this stage';
+    case 'noCover': return 'Nobody else in this stage can cover the role';
+    case 'teamFull': return 'The team is full';
   }
 }
 
@@ -115,12 +143,19 @@ function setCooldown(sim: Sim, a: Action, o: Option | undefined, memberIds: stri
   else sim.availableAt[o?.cooldownDays !== undefined ? `${a.key}:${o.key}` : a.key] = sim.absSub + days;
 }
 
-function validate(sim: Sim, a: Action, memberIds: string[], optionKey?: string): Option {
+function validate(sim: Sim, a: Action, memberIds: string[], optionKey?: string, stage?: string): Option {
   if (sim.phase !== 'board') throw new IntentError('Actions are taken on the board', 'wrongPhase');
   const o = optionKey ? a.options.find(x => x.key === optionKey) : a.options[0];
   if (!o) throw new IntentError(`Unknown option ${optionKey}`, 'unknownOption');
-  const [min, max] = a.targets;
+  const [min, max] = o.targets ?? a.targets;
   if (memberIds.length < min || memberIds.length > max) throw new IntentError(`${a.name} needs ${min === max ? min : `${min} to ${max}`} people`, 'targets');
+  const picked = memberIds.map(id => member(sim, id)).filter(Boolean) as MemberSim[];
+  if (o.distinctStages && new Set(picked.map(m => m.stage)).size !== picked.length) throw new IntentError('Pick people from different stages', 'sameStage');
+  if (o.pickStage && (!stage || !sim.config.stages.some(st => st.key === stage) || picked.some(m => m.stage === stage))) throw new IntentError('Pick a stage to move to', 'stage');
+  if (o.pickStage && stage) {
+    if (sim.members.filter(m => m.stage === stage).length >= sim.config.maxPerStage) throw new IntentError('That stage is full', 'stageFull');
+    if (picked.some(m => sim.members.filter(x => x.stage === m.stage).length <= 1)) throw new IntentError('Someone has to stay in every stage', 'lastInStage');
+  }
   for (const id of memberIds.length ? memberIds : [null]) {
     const why = blockedReason(sim, a, id, o.key);
     if (why) throw new IntentError(blockedText(why), why.reason === 'capacity' ? 'noCapacity' : 'blocked');
@@ -138,7 +173,7 @@ export interface PlanResult { changes: Change[]; interactionId: string | null; s
  */
 export function planAction(sim: Sim, rng: Rng, input: { action: string; option?: string; memberIds: string[]; stage?: string }): PlanResult {
   const a = action(sim, input.action);
-  const o = validate(sim, a, input.memberIds, input.option);
+  const o = validate(sim, a, input.memberIds, input.option, input.stage);
   const targets = input.memberIds.map(id => member(sim, id)!);
   const changes: Change[] = [];
 
@@ -178,7 +213,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     if (a.rule === 'swap' || a.rule === 'reward' || a.rule === 'fire') changes.push(...hybridDecision(sim, rng, a, targets, input.stage));
   }
   setCooldown(sim, a, o, input.memberIds);
-  spend(sim, rng, a.cost);
+  spend(sim, rng, o.cost ?? a.cost);
   return { changes, interactionId, summary: a.name };
 }
 
@@ -332,7 +367,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
 
   const affected = [...new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject))];
   const outcome: Outcome = {
-    id: nextId(sim, 'o'), actionKey: it.actionKey,
+    id: nextId(sim, 'o'), actionKey: it.actionKey, speaker: main?.id ?? 'sponsor',
     headline: main ? `${a?.name ?? 'Conversation'} with ${firstName(sim, main.id)} ${BAND_WORDS[ev.band]}` : `${a?.name ?? 'Conversation'} ${BAND_WORDS[ev.band]}`,
     reply: npcReply,
     affected,
