@@ -13,11 +13,8 @@ test.afterEach(() => expect(errors).toEqual([]));
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 /** Axe on what is on screen now. @axe-core/playwright is typed against a slightly different Playwright version. */
-async function axe(page: Page, opts: { light?: boolean } = {}) {
-  let b = new AxeBuilder({ page: page as never }).withTags(TAGS);
-  // Light theme contrast tokens are being fixed separately; every other rule still applies in light.
-  if (opts.light) b = b.disableRules(['color-contrast']);
-  const r = await b.analyze();
+async function axe(page: Page) {
+  const r = await new AxeBuilder({ page: page as never }).withTags(TAGS).analyze();
   return r.violations.map(v => `${v.id}: ${v.nodes.length}`);
 }
 
@@ -226,12 +223,12 @@ test('the end of the run: one modal, then the board read only', async ({ page })
   await expect(page.getByRole('dialog', { name: 'The run is over' })).toBeVisible();
 });
 
-test('light theme: no accessibility issues other than the contrast tokens being fixed', async ({ page }) => {
+test('light theme: no accessibility issues, contrast included', async ({ page }) => {
   await page.goto('/?start=board&theme=light');
   await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
-  expect(await axe(page, { light: true })).toEqual([]);
+  expect(await axe(page)).toEqual([]);
   await setStyles(page);
-  expect(await axe(page, { light: true })).toEqual([]);
+  expect(await axe(page)).toEqual([]);
 });
 
 test('a whole week by keyboard only', async ({ page }) => {
