@@ -1,0 +1,21 @@
+{
+  "$description": "Event cards and the incoming sponsor call. The art is light in both modes, as the design draws it; the type tag sits on the portrait shade.",
+  "fill": {
+    "event": {
+      "impact": { "value": "linear-gradient(135deg,{color.brand.cyber-cyan},{color.brand.mint-green})", "$description": "Impact event art (design)" },
+      "signal": { "value": "linear-gradient(135deg,{color.portrait.sky-100},{color.portrait.sky-300})", "$description": "Signal event art (design)" },
+      "capacity": { "value": "linear-gradient(135deg,{color.portrait.sand-100},{color.portrait.sand-300})", "$description": "Capacity event art (design)" },
+      "diagnostic": { "value": "linear-gradient(135deg,{color.brand.electric-blue},{color.brand.cyber-cyan})", "$description": "Diagnostic event art (design)" },
+      "opportunity": { "value": "linear-gradient(135deg,{color.event.lime-100},{color.brand.mint-green})", "$description": "Opportunity event art: not in the design, built in its language" },
+      "crisis": { "value": "linear-gradient(135deg,{color.event.rose-100},{color.event.rose-300})", "$description": "Crisis event art: not in the design, built in its language" }
+    }
+  },
+  "color": {
+    "event": {
+      "tag": { "light": { "ref": "color.portrait.shade", "alpha": 0.8 }, "dark": { "ref": "color.portrait.shade", "alpha": 0.8 }, "$description": "The type tag on the event art" },
+      "on-tag": { "light": "{color.white}", "dark": "{color.white}", "$description": "Text on the type tag" },
+      "shadow": { "light": { "ref": "color.member-elevation.ink", "alpha": 0.5 }, "dark": { "ref": "color.member-elevation.ink", "alpha": 0.5 }, "$description": "Drop shadow of the event card" },
+      "call-glow": { "light": { "ref": "color.blue.620", "alpha": 0.35 }, "dark": { "ref": "color.blue.620", "alpha": 0.35 }, "$description": "Glow around the incoming sponsor call" }
+    }
+  }
+}

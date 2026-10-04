@@ -205,7 +205,9 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   await page.getByRole('button', { name: /Energize the team/ }).click();
   await page.getByRole('radio', { name: 'Team Lunch' }).click();
   await page.getByRole('button', { name: /^Confirm/ }).click();
+  // Sponsor confidence fell below the check in line in week 3 of this run: the CEO check in took a day of week 4.
   await expect(left).not.toHaveText(before);
+  await expect(page.getByText('The CEO check in took a day this week')).toBeVisible();
   await expect(page.getByRole('button', { name: /Briefing with Paula/ })).toBeVisible();
 });
 
@@ -231,7 +233,7 @@ test('the end of the run: the last week end, one modal, then the board read only
   const panel = page.getByRole('dialog', { name: 'The run is over' });
   await expect(panel).toBeVisible();
   await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(1);
-  await expect(panel.getByText(/Leadership Score \d{1,3}(,\d{3})* of [\d,]+/)).toBeVisible();
+  await expect(panel.getByText(/Leadership Score \d{1,3}(,\d{3})* of 1,000/)).toBeVisible();
   expect(await axe(page)).toEqual([]);
   await panel.getByRole('button', { name: 'Look at the board' }).click();
   await expect(panel).toHaveCount(0);

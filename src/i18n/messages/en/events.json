@@ -1,0 +1,8 @@
+{
+  "events.call.title": "{name} is calling",
+  "events.call.line": "{title}. {about}",
+  "events.call.answer": "Take the call",
+  "events.call.later": "Call back within {amount}",
+  "events.call.laterNow": "Later",
+  "events.call.waiting": "{name}'s call is waiting in your inbox"
+}

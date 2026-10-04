@@ -14,10 +14,10 @@ export interface InboxDrawerItem {
   preview: string;
   /** Pinned: attention border and the pinned line. */
   urgent: boolean;
-  /** Deadline on a pinned item: "Reply by Day 3". */
+  /** Deadline: "Reply by Day 3". Pinned items show it with the pinned line, others on their own. */
   due: string | null;
-  /** `reply` opens the conversation, `impact` opens the news event. */
-  cta: 'reply' | 'impact';
+  /** `reply` opens the conversation, `impact` opens the news event, `read` marks news that needs no answer as read. */
+  cta: 'reply' | 'impact' | 'read';
   /** False hides Later: setting the item aside would carry it past its due point. Defaults to true. */
   later?: boolean;
 }
@@ -56,6 +56,7 @@ function Item({ it, onOpen, onLater }: { it: InboxDrawerItem; onOpen: () => void
       </div>
       <div className="flex items-center gap-2">
         {it.urgent && <span className="text-12 font-700 text-status-attention">{it.due ? t('inbox.pinnedDue', { due: it.due }) : t('inbox.pinned')}</span>}
+        {!it.urgent && it.due && <span className="text-12 text-fg-secondary">{it.due}</span>}
         <span className="flex-1" />
         {it.later !== false && <button type="button" onClick={onLater} className={`${pill} border border-solid border-line-default bg-transparent text-fg-primary`}>{t('inbox.later')}</button>}
         <button type="button" onClick={onOpen} className={`${pill} border-0 bg-brand text-brand-deep-space`}>{t('inbox.cta', { cta: it.cta })}</button>

@@ -123,7 +123,8 @@ export const LiveView = z.object({
 
 export const ActionView = z.object({
   key: Id, rule: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
-  format: z.string().nullable(), cost: Num, targets: z.tuple([z.number(), z.number()]), prerequisite: Id.nullable(),
+  /** `cost` is what it costs now (0 on the extra hire budget). `perk` names an unlock reward that applies to it. */
+  format: z.string().nullable(), cost: Num, perk: z.enum(['hireBudget', 'noCooldown']).nullable(), targets: z.tuple([z.number(), z.number()]), prerequisite: Id.nullable(),
   options: z.array(z.object({
     key: Id, label: Text, blocked: Block.nullable(),
     /** Cost of this option, when it differs from the action's. */

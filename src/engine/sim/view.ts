@@ -1,4 +1,4 @@
-import { blockedReason } from './actions';
+import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, speakerFor, turnLimit } from './live';
 import { finalScore } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
@@ -132,10 +132,13 @@ export function buildView(sim: Sim) {
     funnel: c.stages.map((st, i) => ({ key: st.key, name: st.name, members: sim.members.filter(m => m.stage === st.key).length, ideal: st.ideal,
       throughput: Math.round(sim.funnel.stageOutPeriod[i] * 10) / 10, idealThroughput: Math.round(ideal[i] * 10) / 10, bottleneck: i === bottleneck })),
     actions: c.actions.map(a => ({
-      key: a.key, name: a.name, description: a.description, scope: a.scope, kind: a.kind, format: a.format ?? null, cost: a.cost, targets: a.targets,
+      key: a.key, name: a.name, description: a.description, scope: a.scope, kind: a.kind, format: a.format ?? null,
+      cost: a.rule === 'hire' && sim.hireBudget ? 0 : a.cost,
+      perk: a.rule === 'hire' && sim.hireBudget ? 'hireBudget' as const : freeActivity(sim, a) ? 'noCooldown' as const : null,
+      targets: a.targets,
       prerequisite: a.prerequisite ?? null,
       rule: a.rule,
-      options: a.options.map(o => ({ key: o.key, label: o.label, cost: o.cost ?? a.cost, away: o.away,
+      options: a.options.map(o => ({ key: o.key, label: o.label, cost: a.rule === 'hire' && sim.hireBudget ? 0 : o.cost ?? a.cost, away: o.away,
         // Stages a move can go to, with a reason where the stage has no room (role coverage).
         stages: o.pickStage ? c.stages.map(st => ({ key: st.key, blocked: a.rule === 'swap' && sim.members.filter(m => m.stage === st.key).length >= c.maxPerStage ? { reason: 'stageFull' as const, stage: st.key } : null })) : null, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,

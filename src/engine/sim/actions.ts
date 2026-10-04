@@ -150,7 +150,7 @@ export function blockedText(b: Block): string {
 const DAYS_PER_SUB: Record<string, number> = { hour: 1 / 8, day: 1, week: 5, month: 21, quarter: 63 };
 
 /** Team activities are static team wide actions, such as Energize the team. */
-const freeActivity = (sim: Sim, a: Action) => sim.freeTeamActivity && a.scope === 'team' && a.kind === 'static';
+export const freeActivity = (sim: Sim, a: Action) => sim.freeTeamActivity && a.scope === 'team' && a.kind === 'static';
 
 function setCooldown(sim: Sim, a: Action, o: Option | undefined, memberIds: string[]) {
   if (freeActivity(sim, a)) { sim.freeTeamActivity = false; return; }

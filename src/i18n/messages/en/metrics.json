@@ -12,5 +12,12 @@
   "metrics.sponsor.level": "{level, select, low {Low} wavering {Wavering} steady {Steady} confident {Confident} champion {Champion} other {}}",
   "metrics.sponsor.causes": "Recent causes",
   "metrics.sponsor.mark": "{dir, select, up {▲} down {▼} other {●}}",
-  "metrics.sponsor.dir": "{dir, select, up {Raised confidence:} down {Lowered confidence:} other {No change:}}"
+  "metrics.sponsor.dir": "{dir, select, up {Raised confidence:} down {Lowered confidence:} other {No change:}}",
+  "metrics.pulse.valueAria": "Team pulse {value}, {dir, select, up {rising} down {easing} other {steady}} since the start of the {unit, select, year {year} month {month} day {day} other {week}}. {upbeat} upbeat, {steady} steady, {struggling} struggling",
+  "metrics.pulse.tip": "The mean of team morale and trust. {upbeat} upbeat, {steady} steady, {struggling} struggling.",
+  "metrics.sponsor.levelValue": "{level, select, low {Low} wavering {Wavering} steady {Steady} confident {Confident} champion {Champion} other {}}, {value}",
+  "metrics.sponsor.lines": "The lines",
+  "metrics.sponsor.unlock": "Rise to {at} and {name} offers you a reward.",
+  "metrics.sponsor.checkIn": "Drop below {below} and the CEO asks for a check in. It takes a {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} of your time.",
+  "metrics.sponsor.none": "Nothing has moved it yet."
 }

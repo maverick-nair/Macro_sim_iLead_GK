@@ -25,6 +25,8 @@ export interface ActionTileProps {
   duration?: string;
   /** Present when the action is unavailable. */
   block?: ActionBlock;
+  /** A sponsor reward that applies to this action now ("No days, one seat past a full team"). Shown in place of the sub line, unless blocked. */
+  perk?: string;
   onPick: () => void;
   /** `panel`: the Actions panel, with the live, instant or lock icon. `compact`: the profile's "Take an action" column. */
   layout?: 'panel' | 'compact';
@@ -50,7 +52,7 @@ const LockIcon = () => (
  * so keyboard and screen reader users reach it and hear the reason as its description; mouse users
  * also get it as a tooltip.
  */
-export function ActionTile({ name, kind, days, duration, block, onPick, layout = 'panel' }: ActionTileProps) {
+export function ActionTile({ name, kind, days, duration, block, perk, onPick, layout = 'panel' }: ActionTileProps) {
   const { t } = useI18n();
   const fmt = useDays();
   const reasonId = useId();
@@ -61,6 +63,7 @@ export function ActionTile({ name, kind, days, duration, block, onPick, layout =
   else if (block?.reason === 'planned') sub = t('action.blocked.planned');
   else if (block?.reason === 'away') sub = t('action.blocked.away', { day: block.untilDay });
   else if (block?.reason === 'days') sub = t('action.blocked.days', { need: fmt(block.need), have: fmt(block.have) });
+  else if (perk) sub = perk;
   else if (kind === 'live' && duration) sub = t('action.sub.liveDuration', { duration: duration.toLowerCase() });
   else sub = t('action.sub', { kind });
   // "Planned today" is its own explanation; the other reasons are repeated as a tooltip.
@@ -75,7 +78,7 @@ export function ActionTile({ name, kind, days, duration, block, onPick, layout =
     <>
       <span className={`flex flex-col ${layout === 'panel' ? 'min-w-0' : ''}`}>
         <b className="text-13">{name}</b>
-        <span id={reasonId} className="text-12 text-fg-secondary">{sub}</span>
+        <span id={reasonId} className={`text-12 ${perk && !block ? 'font-700 text-status-gain' : 'text-fg-secondary'}`}>{sub}</span>
       </span>
       <span className="text-12 font-700 text-fg-secondary">{fmt(days)}</span>
     </>

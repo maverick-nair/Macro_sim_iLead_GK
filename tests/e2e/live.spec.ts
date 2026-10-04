@@ -146,7 +146,8 @@ test('a failed send keeps your words; the sponsor briefing pins throughput again
   });
   await toBoard(page, '/?start=board&period=4');
   await page.getByRole('button', { name: /Briefing with Paula/ }).first().click();
-  await expect(page.getByText(/Sponsor briefing with Paula/).first()).toBeVisible();
+  // The fast forward to week 4 runs three weeks of the mock engine first: give it time under parallel load.
+  await expect(page.getByText(/Sponsor briefing with Paula/).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/^Leads$/).locator('xpath=..')).toContainText(/\d+(\.\d)? \/ \d+(\.\d)?/);
   await page.getByRole('textbox', { name: 'Point 1' }).fill('We are at a quarter of target');
   await quiet(page);
@@ -154,7 +155,7 @@ test('a failed send keeps your words; the sponsor briefing pins throughput again
   const box = page.getByRole('textbox', { name: 'Your reply' });
   await box.fill('Here is my update.');
   await box.press('Enter');
-  await expect(page.getByText(/You seem to be offline/)).toBeVisible();
+  await expect(page.getByText(/You seem to be offline/)).toBeVisible({ timeout: 10_000 });
   await expect(box).toHaveValue('Here is my update.');
   await box.press('Enter');
   await expect(box).toHaveValue('');

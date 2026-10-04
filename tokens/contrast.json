@@ -25,6 +25,14 @@
     { "fg": "color.celebration.star", "bg": ["color.surface.card", "color.surface.material"], "min": 3, "why": "Earned star in the weekly report" },
     { "fg": "switch.track-off", "bg": ["color.surface.solid", "color.surface.card", "color.surface.raised"], "min": 3, "modes": ["light"], "why": "Off switch track against its surface. In dark the light thumb carries the boundary (next pair)" },
     { "fg": "switch.thumb-off", "bg": "switch.track-off", "min": 3, "why": "Off switch thumb against its track" },
-    { "fg": "switch.thumb-on", "bg": "switch.track-on", "min": 3, "why": "On switch thumb against the brand gradient" }
+    { "fg": "switch.thumb-on", "bg": "switch.track-on", "min": 3, "why": "On switch thumb against the brand gradient" },
+
+    { "fg": "color.event.on-tag", "bg": "color.event.tag", "min": 4.5, "over": "fill.event.signal", "why": "Event type tag on the lightest event art" },
+    { "fg": "color.event.on-tag", "bg": "color.event.tag", "min": 4.5, "over": "fill.event.opportunity", "why": "Event type tag on the opportunity art" },
+    { "fg": "color.event.on-tag", "bg": "color.event.tag", "min": 4.5, "over": "fill.event.crisis", "why": "Event type tag on the crisis art" },
+    { "fg": "color.brand.deep-space", "bg": ["fill.event.impact", "fill.event.signal", "fill.event.capacity", "fill.event.diagnostic", "fill.event.opportunity", "fill.event.crisis"], "min": 3, "why": "The event art against the card's dark ink, for the portrait edge" },
+    { "fg": "color.fg.secondary", "bg": "color.track", "min": 3, "why": "Icon of a badge not earned yet, on its empty medal" },
+    { "fg": "color.brand.deep-space", "bg": "fill.spectrum", "min": 3, "why": "Icon of an earned badge on its medal" },
+    { "fg": "color.accent.default", "bg": ["color.surface.material", "color.surface.solid"], "min": 3, "why": "Border of the incoming sponsor call, the current score marker on the tier scale" }
   ]
 }

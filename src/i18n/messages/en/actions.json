@@ -8,5 +8,11 @@
   "actions.member.none": "For one person",
   "actions.member.empty": "Select a person on the board to see what you can do with them.",
   "actions.legend.live": "Live, voice or text",
-  "actions.legend.instant": "Instant decision"
+  "actions.legend.instant": "Instant decision",
+  "actions.perk.hire": "No {unit, select, quarter {quarters} month {months} week {weeks} hour {hours} other {days}}, one seat past a full team",
+  "actions.perk.activity": "No cooldown this time",
+  "actions.costNothing": "nothing",
+  "actions.perk.drawer": "{perk, select, hire {Extra hire budget from your sponsor: no {unit, select, quarter {quarters} month {months} week {weeks} hour {hours} other {days}}, and one seat past a full team.} other {A reward from your sponsor: no cooldown after this one.}}",
+  "actions.note.checkIn": "The CEO check in took a {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} this {period, select, year {year} month {month} day {day} other {week}}",
+  "actions.note.bonusDay": "Bonus {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} added this {period, select, year {year} month {month} day {day} other {week}}"
 }

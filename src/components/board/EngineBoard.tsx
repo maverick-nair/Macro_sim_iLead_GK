@@ -29,6 +29,10 @@ const EngineLive = lazy(() => import('./EngineLive').then(m => ({ default: m.Eng
 const EngineWeekEnd = lazy(() => import('./EngineWeekEnd').then(m => ({ default: m.EngineWeekEnd })));
 import { PeriodPanel } from './PeriodPanel';
 import { EventCard } from './EventCard';
+import { SponsorCall } from './SponsorCall';
+import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
+import { BadgeShelfDialog } from '../gamification/BadgeShelfDialog';
+import { initials, streakText } from '../gamification/display';
 import { teamChips, type Chip } from './chips';
 
 /**
@@ -139,6 +143,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const [legend, setLegend] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [sponsorOpen, setSponsorOpen] = useState(false);
+  const [badgesOpen, setBadgesOpen] = useState(false);
   const [pal, setPal] = useState(false);
   const [query, setQuery] = useState('');
   /** Whose reaction is showing, for which outcome: a new outcome starts with none. */
@@ -266,12 +271,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const choices = choicesOf(a, picks).filter(c => !c.stageBlocked);
     setFlow({ key, choice: choices.length === 1 ? choices[0].id : null, picks, nudgeOk: false });
   };
+  // Sponsor rewards in hand, per action from the engine (`action.perk`): the hire on the extra budget
+  // costs nothing and may take one seat past a full team; a team activity skips its cooldown.
+  const hireFree = (a: ActionV) => a.perk === 'hireBudget';
+  const freeActivity = (a: ActionV) => a.perk === 'noCooldown';
+  const perkLine = (a: ActionV) => (hireFree(a) ? t('actions.perk.hire', { unit }) : freeActivity(a) ? t('actions.perk.activity') : undefined);
   const tile = (key: string, memberId: string | null): ActionTileProps => {
     const a = action(key)!;
     const b = ended ? { reason: 'locked' as const, text: t('board.ended.locked') }
       : styling ? { reason: 'locked' as const, text: t('board.error', { code: 'wrongPhase' }) }
       : block(memberId ? a.blockedFor[memberId] ?? null : a.blocked);
-    return { name: a.name, kind: a.kind, days: a.cost, block: b, onPick: () => { if (!b) pick(key, memberId); } };
+    return { name: a.name, kind: a.kind, days: hireFree(a) ? 0 : a.cost, block: b, perk: b ? undefined : perkLine(a), onPick: () => { if (!b) pick(key, memberId); } };
   };
 
   const f = flow, fa = f ? action(f.key) : undefined;
@@ -377,7 +387,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   if (f && fa) {
     const names = f.picks.map(id => first(member(id)?.name ?? ''));
     const list = names.length > 1 ? t('action.list.pair', { rest: names.slice(0, -1).join(', '), last: names[names.length - 1] }) : names[0] ?? '';
-    const cost = choice?.option.cost ?? fa.cost;
+    const cost = hireFree(fa) ? 0 : choice?.option.cost ?? fa.cost;
     const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
     const detail = (c: Choice) => [
       c.stageBlocked ? blockLine(c.stageBlocked) : '',
@@ -399,6 +409,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const isStatic = fa.kind !== 'live';
     drawer = {
       name: fa.name, kind: fa.kind, days: cost, description: fa.description,
+      perk: hireFree(fa) ? t('actions.perk.drawer', { perk: 'hire', unit }) : freeActivity(fa) ? t('actions.perk.drawer', { perk: 'activity', unit }) : undefined,
       options: choices.length > 1 ? choices.map(c => ({ name: label(c), detail: detail(c), disabled: !!c.stageBlocked })) : undefined,
       option: choice ? choices.indexOf(choice) : null,
       onOption: i => { if (!choices[i].stageBlocked) setFlow({ ...f, choice: choices[i].id, nudgeOk: false }); },
@@ -412,7 +423,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         },
         onContinue: () => setFlow({ ...f, nudgeOk: true })
       } : undefined,
-      summary: t('board.summary', { action: fa.name, option: isStatic && choice && choices.length > 1 ? label(choice) : 'none', list: list || 'none', cost: amount(cost) }),
+      summary: t('board.summary', { action: fa.name, option: isStatic && choice && choices.length > 1 ? label(choice) : 'none', list: list || 'none', cost: cost === 0 ? t('actions.costNothing') : amount(cost) }),
       cta: fa.kind === 'static' ? 'confirm' : fa.format === 'email' ? 'composer' : 'start',
       canConfirm: !busy && !unassessed && f.picks.length >= minPick && f.picks.length <= maxPick && (choices.length <= 1 || !!choice) && !choice?.option.blocked && !choice?.stageBlocked,
       onConfirm: async () => {
@@ -449,29 +460,43 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const railItems: InboxRailItem[] = inbox.map(x => ({ id: x.id, label: x.title, sender: sender(x.from), urgent: x.urgent }));
   const drawerItems: InboxDrawerItem[] = inbox.map(x => ({
     id: x.id, sender: sender(x.from), title: x.title, preview: x.body, meta: '', urgent: x.urgent,
-    due: x.dueInSubPeriods === null ? null : t('board.due', { amount: amount(x.dueInSubPeriods) }),
+    due: x.dueInSubPeriods === null ? null : x.dueInSubPeriods === 0 ? t('inbox.dueNow', { unit }) : t('board.due', { amount: amount(x.dueInSubPeriods) }),
     tag: t('inbox.tag', { type: x.kind, name: x.from === 'sponsor' ? first(v.sponsor.name) : x.from === 'news' ? '' : first(member(x.from)?.name ?? '') }),
-    cta: x.kind === 'news' ? 'impact' : 'reply', later: canLater(x)
+    // News (a CEO check in) needs no answer: it is marked as read, and never set aside.
+    cta: x.kind === 'news' ? 'read' : 'reply', later: x.kind !== 'news' && canLater(x)
   }));
 
   // ---- HUD and strip ----
   const periods = v.clock.periods;
+  const lastPeriod = v.periods[v.periods.length - 1];
+  const streak = streakText(t, { count: v.streak, next: lastPeriod ? lastPeriod.streak.next : undefined, periodUnit, rule: v.gamification.streak });
   const hud: HudProps = {
     clientLogo: app.client, nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
     sessionClock: null, onPause: app.onPause,
-    // Pillars are 0 to 100 each (scoring-and-report.md 6).
-    score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership, periodMax: 100 },
-    pillarScale: 100, scoreOpen, onScoreOpenChange: setScoreOpen,
-    streak: v.streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
+    // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6).
+    score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership },
+    breakdown: (
+      <ScoreBreakdown
+        total={v.score.total} max={v.score.max}
+        pillars={(['business', 'people', 'leadership'] as const).map(k => ({ key: k, value: v.score[k], weight: v.gamification.weights[k] }))}
+        capability={v.score.capability} live={v.score.live} bonus={v.score.bonus} bonusCap={v.gamification.streak.cap}
+        streak={streak} tiers={v.gamification.tiers} tier={v.score.tier}
+        badges={{ earned: v.badges.filter(b => b.earned).length, total: v.badges.length }}
+        onBadges={() => { setScoreOpen(false); setBadgesOpen(true); }}
+      />
+    ),
+    scoreOpen, onScoreOpenChange: setScoreOpen,
+    streak: v.streak, streakLabel: streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
     onEndPeriod: () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
   const strip: MetricsStripProps = {
     kpis: v.kpis.map(k => ({ metric: k.metric, value: k.value, trend: { kind: 'direction', direction: k.trend } })),
-    pulse: v.pulse,
+    pulse: { ...v.pulse, periodUnit },
     target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: v.clock.runShare, pacePeriod: { unit: periodUnit, n: v.clock.period } },
-    sponsor: { level: v.sponsor.level, causes: v.sponsor.causes, open: sponsorOpen, onToggle: () => setSponsorOpen(o => !o) }
+    sponsor: { level: v.sponsor.level, causes: v.sponsor.causes, open: sponsorOpen, onToggle: () => setSponsorOpen(o => !o),
+      meter: { value: v.sponsor.value, unlockAt: v.sponsor.unlockAt, checkInBelow: v.sponsor.checkInBelow, sponsorName: first(v.sponsor.name), subPeriodUnit: unit } }
   };
 
   // ---- outcome ----
@@ -522,11 +547,42 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const hint: TeamBoardHint = picking ? { kind: 'picking' } : sm ? { kind: 'selected', name: sm.name } : { kind: 'idle' };
 
   // One modal at a time: an event card first (after the outcome has been read), then the period end.
-  const card = !oc ? v.cards[0] : undefined;
+  // A sponsor call is not a modal: it rings over the board until it is answered or put off.
+  const card = !oc ? v.cards.find(c => c.delivery === 'modal') : undefined;
+  const callCard = v.phase === 'board' ? v.cards.find(c => c.delivery === 'sponsorCall' && (c.messageId === null || v.inbox.some(m => m.id === c.messageId))) : undefined;
   // The week end replaces the board at a period end, and once more at the end of the run before the results.
   const weekEnd = !card && !v.live && !reacting && (v.phase === 'periodEnd' || (ended && !lastWeekSeen));
   const periodPanel = !card && ended && lastWeekSeen && resultsOpen;
   const plainBoard = !v.live && !reacting && !styling && !card && !periodPanel && !weekEnd;
+
+  // ---- sponsor call ----
+  let call: ReactNode = null;
+  if (callCard) {
+    const msg = callCard.messageId ? v.inbox.find(m => m.id === callCard.messageId) : undefined;
+    const due = msg?.dueInSubPeriods ?? null;
+    call = (
+      <SponsorCall
+        name={v.sponsor.name} initials={initials(v.sponsor.name)} img={v.sponsor.img}
+        line={t('events.call.line', { title: v.sponsor.title, about: callCard.title })}
+        laterLabel={due !== null && due >= 1 ? t('events.call.later', { amount: amount(due) }) : t('events.call.laterNow')}
+        // Answer: the conversation opens as for any reply (then the live screen), and the call is done.
+        onAnswer={async () => {
+          ui.openPanel('none');
+          if (callCard.messageId) {
+            const r = await send({ type: 'openConversation', kind: 'reply', messageId: callCard.messageId });
+            if (!r) return;
+            setFlow(null);
+          }
+          await send({ type: 'dismissCard', cardId: callCard.id });
+        }}
+        // Later: the call stops ringing; its message stays in the inbox, urgent, with its due.
+        onLater={async () => {
+          focusHint.current = () => h1Ref.current;
+          if (await send({ type: 'dismissCard', cardId: callCard.id })) say(t('events.call.waiting', { name: first(v.sponsor.name) }));
+        }}
+      />
+    );
+  }
 
   // ---- live interactions: the board owns "The team is reacting" ----
   const finishLive: FinishLive = async (i, people) => {
@@ -643,6 +699,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     body = (
       <>
         <Hud {...hud} />
+        {call}
         <MetricsStrip {...strip} />
         {ended && !resultsOpen && (
           <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13">
@@ -658,6 +715,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           </TeamScroll>
           <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><ActionsPanel
             capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
+            notes={v.phase === 'board' ? [
+              ...(v.perks.bonusDay ? [{ text: t('actions.note.bonusDay', { unit, period: periodUnit }), tone: 'gain' as const }] : []),
+              ...(v.perks.checkIn ? [{ text: t('actions.note.checkIn', { unit, period: periodUnit }), tone: 'neutral' as const }] : [])
+            ] : undefined}
             team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
             member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
             drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
@@ -667,8 +728,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <InboxDrawer open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
             onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />
         </div>
-        {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
+        {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
         {periodPanel && <PeriodPanel view={v} money={money.format} onClose={() => setResultsOpen(false)} onCloseFocus={() => rescue(true)} />}
+        {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
+          returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-expanded]')} />}
         <CommandPalette open={pal && plainBoard} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
       </>
     );

@@ -41,6 +41,9 @@
   --il-color-coral-530: oklch(0.53 0.17 25);
   --il-color-coral-780: oklch(0.78 0.13 25);
   --il-color-coral-960: oklch(0.96 0.025 25);
+  --il-color-event-lime-100: #ECFBC4;
+  --il-color-event-rose-100: #FFD6CF;
+  --il-color-event-rose-300: #F5848C;
   --il-color-azure-750: oklch(0.75 0.14 220);
   --il-color-portrait-sky-100: #DEE9FF;
   --il-color-portrait-sky-300: #9FDCEB;
@@ -187,6 +190,10 @@
   --il-color-control-track-off: light-dark(var(--il-color-mist-600), oklch(1 0 0 / 0.12));
   --il-color-elevation-drawer: light-dark(oklch(0.05 0.03 280 / 0.45), oklch(0.05 0.03 280 / 0.45));
   --il-color-elevation-panel: light-dark(oklch(0.05 0.03 280 / 0.5), oklch(0.05 0.03 280 / 0.5));
+  --il-color-event-tag: light-dark(oklch(0.13 0.03 285 / 0.8), oklch(0.13 0.03 285 / 0.8));
+  --il-color-event-on-tag: light-dark(var(--il-color-white), var(--il-color-white));
+  --il-color-event-shadow: light-dark(oklch(0.05 0.03 280 / 0.5), oklch(0.05 0.03 280 / 0.5));
+  --il-color-event-call-glow: light-dark(oklch(0.62 0.17 250 / 0.35), oklch(0.62 0.17 250 / 0.35));
   --il-color-celebration-glow: light-dark(oklch(0.75 0.14 200 / 0.35), oklch(0.75 0.14 200 / 0.35));
   --il-color-celebration-ring: light-dark(oklch(1 0 0 / 0.08), oklch(1 0 0 / 0.08));
   --il-color-celebration-star: light-dark(var(--il-color-cyan-520), var(--il-color-brand-cyber-cyan));
@@ -238,6 +245,12 @@
   --il-fill-brand: var(--client-grad, var(--il-gradient-brand));
   --il-fill-product: var(--il-gradient-product);
   --il-fill-spectrum: var(--il-gradient-spectrum);
+  --il-fill-event-impact: linear-gradient(135deg,var(--il-color-brand-cyber-cyan),var(--il-color-brand-mint-green));
+  --il-fill-event-signal: linear-gradient(135deg,var(--il-color-portrait-sky-100),var(--il-color-portrait-sky-300));
+  --il-fill-event-capacity: linear-gradient(135deg,var(--il-color-portrait-sand-100),var(--il-color-portrait-sand-300));
+  --il-fill-event-diagnostic: linear-gradient(135deg,var(--il-color-brand-electric-blue),var(--il-color-brand-cyber-cyan));
+  --il-fill-event-opportunity: linear-gradient(135deg,var(--il-color-event-lime-100),var(--il-color-brand-mint-green));
+  --il-fill-event-crisis: linear-gradient(135deg,var(--il-color-event-rose-100),var(--il-color-event-rose-300));
   --il-fill-meter: linear-gradient(90deg, var(--il-color-accent-default), var(--il-color-accent-secondary));
   --il-fill-portrait-calm: linear-gradient(160deg,var(--il-color-portrait-sky-100),var(--il-color-portrait-sky-300));
   --il-fill-portrait-warm: linear-gradient(160deg,var(--il-color-portrait-sand-100),var(--il-color-portrait-sand-300));
@@ -278,6 +291,14 @@
   --il-button-secondary-border: var(--il-color-line-strong);
   --il-button-ghost-fg: var(--il-color-fg-link);
   --il-button-ghost-fg-hover: var(--il-color-fg-link-hover);
+  --il-event-card-shadow: 0 30px 80px var(--il-color-event-shadow);
+  --il-event-card-enter: ilIn var(--il-duration-slow) var(--il-easing-settle);
+  --il-event-card-art-height: 170px;
+  --il-event-card-portrait: 150px;
+  --il-event-card-tag-tracking: var(--il-tracking-label);
+  --il-event-call-shadow: 0 0 30px var(--il-color-event-call-glow);
+  --il-event-call-enter: ilIn var(--il-duration-slow) ease;
+  --il-event-call-ring: ilRing 1.4s ease-out infinite;
   --il-gamification-eyebrow-tracking: var(--il-tracking-eyebrow-wide);
   --il-gamification-badge-award-shadow: 0 0 80px var(--il-color-celebration-glow);
   --il-gamification-badge-award-enter: ilIn var(--il-duration-slow) var(--il-easing-overshoot);
@@ -288,6 +309,7 @@
   --il-hud-capacity-pulse: ilPulse 1.6s ease-in-out infinite;
   --il-hud-score-columns: 80px 1fr 40px;
   --il-hud-score-shadow: var(--il-metrics-popover-shadow);
+  --il-hud-breakdown-columns: minmax(80px, max-content) 1fr 32px;
   --il-inbox-rail-ring-urgent: var(--il-color-amber-840);
   --il-inbox-drawer-width: 360px;
   --il-inbox-drawer-offset: 72px;
