@@ -16,7 +16,7 @@ async function settle(page: Page) {
   await page.waitForLoadState('networkidle');
   await page.evaluate(async () => {
     await document.fonts.ready;
-    await Promise.all([...document.images].map(i => (i.complete ? null : new Promise(r => { i.onload = i.onerror = r; }))));
+    await Promise.all(Array.from(document.images).map(i => (i.complete ? null : new Promise(r => { i.onload = i.onerror = r; }))));
   });
 }
 
@@ -49,7 +49,7 @@ test.skip(!existsSync(`${import.meta.dirname}/visual.spec.ts-snapshots`) && !pro
 
 for (const [theme, q] of Object.entries(THEMES)) {
   test.describe(theme, () => {
-    test.use({ reducedMotion: 'reduce' });
+    test.use({ contextOptions: { reducedMotion: 'reduce' } });
 
     for (const width of [...DESK, 390]) {
       test(`onboarding at ${width}`, async ({ page }) => {
