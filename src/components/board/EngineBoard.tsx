@@ -42,7 +42,7 @@ export const REACTING_MS = 1600;
 const first = (n: string) => n.split(' ')[0];
 /** The outcome panel's headline, made focusable, when the outcome is on screen. */
 const headlineIn = (panel: HTMLElement | null) => {
-  const h = panel?.querySelector<HTMLElement>('h3');
+  const h = panel?.querySelector<HTMLElement>('h2, h3');
   if (h && !h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
   return h ?? null;
 };
@@ -609,6 +609,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     // Weekly style setting opens before any action (spec), as its own screen.
     body = (
       <StyleSettingView
+        embedded
         periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
         sponsorName={v.sponsor.name} sponsorLine={v.sponsor.styleLine}
         view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}

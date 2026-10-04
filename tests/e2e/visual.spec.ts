@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -30,9 +29,10 @@ async function confirmStyles(page: Page) {
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
-  await expect(page.getByText(/Styles are set for week 1/)).toBeVisible();
-  // Let the toast leave so it is not in the shot.
-  await expect(page.getByText(/Styles are set for week 1/)).toBeHidden({ timeout: 10_000 });
+  // Confirming styles shows its outcome; dismiss it so the shot is the plain board.
+  await expect(page.getByRole('heading', { name: /Styles are set for week 1/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+  await expect(page.getByRole('region', { name: 'Outcome' })).toHaveCount(0);
 }
 
 async function dismissEvents(page: Page) {
@@ -43,9 +43,6 @@ async function dismissEvents(page: Page) {
     await expect(b).toHaveCount(0);
   }
 }
-
-// Until the baselines are captured (`--update-snapshots`) there is nothing to compare against.
-test.skip(!existsSync(`${import.meta.dirname}/visual.spec.ts-snapshots`) && !process.argv.includes('--update-snapshots'), 'No baselines yet');
 
 for (const [theme, q] of Object.entries(THEMES)) {
   test.describe(theme, () => {
@@ -62,7 +59,8 @@ for (const [theme, q] of Object.entries(THEMES)) {
       test(`style setting at ${width}`, async ({ page }) => {
         await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
         await page.goto(url('start=board', q));
-        await expect(page.getByRole('main')).toBeVisible();
+        // Phones keep the prototype board (D43), which has no main landmark.
+        if (width !== 390) await expect(page.getByRole('main')).toBeVisible();
         await shot(page, `${theme}-${width}-styles`);
       });
     }
@@ -88,7 +86,8 @@ for (const [theme, q] of Object.entries(THEMES)) {
         await expect(page.getByText('1:1 with Kent Goldberg')).toBeVisible();
         // The opening line has finished streaming once the reply box takes input.
         await expect(page.getByRole('textbox').last()).toBeEditable({ timeout: 15_000 });
-        await expect(page.getByRole('button', { name: /^Stop/ })).toHaveCount(0, { timeout: 15_000 });
+        // And the opening line has finished: the speaking hint gives way to the reply prompt.
+        await expect(page.getByText(/is speaking\. Talk to interrupt/)).toHaveCount(0, { timeout: 15_000 });
         await shot(page, `${theme}-${width}-live`);
       });
     }

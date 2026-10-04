@@ -81,8 +81,9 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
         <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-5">
           {groups.map(g => <div key={g.group} className={g.bg} style={{ flex: g.n }} />)}
         </div>
-        <div className="flex gap-2.5 text-12 text-fg-secondary">
-          {groups.map(g => <span key={g.group}><b className="text-fg-primary">{number(g.n)}</b> {t('metrics.pulse.group', { group: g.group })}</span>)}
+        {/* Counts wrap as a whole ("4 struggling") when the tile is narrow, never mid count. */}
+        <div className="flex flex-wrap gap-x-2.5 text-12 text-fg-secondary">
+          {groups.map(g => <span key={g.group} className="whitespace-nowrap"><b className="text-fg-primary">{number(g.n)}</b> {t('metrics.pulse.group', { group: g.group })}</span>)}
         </div>
       </div>
       <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} className={tile}>

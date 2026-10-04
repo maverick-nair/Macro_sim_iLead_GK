@@ -1,6 +1,7 @@
 import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import type { StyleKey } from '../../data/types';
 import { NoWrapButton } from '../../ds/Button';
+import { Heading } from '../Heading';
 import { useI18n } from '../../i18n';
 import { STYLE_KEYS } from '../style/StyleControl';
 import { mark, rich } from './rich';
@@ -49,6 +50,11 @@ export interface StyleSettingViewProps {
   rationaleAddon?: (id: string) => ReactNode;
   /** The app shell's frame height, so the screen fills it. */
   minHeight?: string;
+  /**
+   * Standalone (the default) the view is the page's `main` and its "Week 2 of 8" line is the `h1`.
+   * Inside a page that has its own `main` and `h1` (the engine board), it renders a plain region and an `h2`.
+   */
+  embedded?: boolean;
 }
 
 const LAYOUTS: readonly StyleSettingLayout[] = ['cards', 'list'];
@@ -139,14 +145,15 @@ export function StyleSettingView(p: StyleSettingViewProps) {
   const where = t('stylesetting.where', { period: mark(0), total: number(p.periodCount) });
   const tipFor = (id: string) => (p.tooltip === undefined ? undefined : p.tooltip?.id === id ? p.tooltip.style : null);
 
+  const Root = p.embedded ? 'div' : 'main';
   return (
-    <main className="flex flex-1 flex-col gap-4.5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
+    <Root className="flex flex-1 flex-col gap-4.5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
       <header className="flex items-center gap-4">
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-stylesetting-logo-tracking) text-transparent">{t('hud.logo')}</span>
         {/* The screen's heading is the visible "Week 2 of 8 · Style setting", styled as designed. */}
-        <h1 className="m-0 text-13 font-400 whitespace-nowrap text-fg-secondary">
+        <Heading level={p.embedded ? 2 : 1} className="m-0 text-13 font-400 whitespace-nowrap text-fg-secondary">
           {rich(where, [<b key="p" className="text-fg-primary">{t('time.period', { unit: periodUnit, n: p.period })}</b>])}
-        </h1>
+        </Heading>
         <span className="flex-1" />
         <span role="status" className={complete ? 'sr-only' : 'text-13 whitespace-nowrap text-fg-secondary'}>
           {t('stylesetting.progress', { set: number(set), total: number(members.length) })}
@@ -173,6 +180,6 @@ export function StyleSettingView(p: StyleSettingViewProps) {
       {view === 'summary' && (
         <StyleSummary members={members} periodUnit={periodUnit} period={p.period} onBack={p.onBack} onConfirm={p.onConfirm} confirmDisabled={confirmDisabled} focusOnOpen={focusSummary} />
       )}
-    </main>
+    </Root>
   );
 }

@@ -51,7 +51,7 @@ async function setStyles(page: Page, index = 1) {
 
 test('a week on the engine, from styles to the next week', async ({ page }) => {
   await page.goto('/?start=board');
-  await expect(page.getByText('Open the profile to see stats').first()).toBeVisible();
+  await expect(page.getByText('Stats show once you open their profile on the board').first()).toBeVisible();
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Set your leadership styles for week 1');
   await setStyles(page);
@@ -78,7 +78,7 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   // The board owns "The team is reacting" and holds the outcome behind it.
   await expect(page.getByText('The team is reacting')).toBeVisible();
   await expect(page.getByText('How it landed')).toBeVisible({ timeout: 10000 });
-  await expect(page.getByRole('heading', { level: 3 }).first()).toBeFocused();
+  await expect(page.getByRole('region', { name: 'Outcome' }).getByRole('heading', { level: 2 })).toBeFocused();
   await expect(page.getByText(/Kent (skill|morale|result|trust) (up|down)/).first()).toBeVisible();
   await expect(page.getByText(/4 days left/).first()).toBeVisible();
   await dismissOutcome(page);
@@ -129,8 +129,8 @@ test('toasts hide on time, even when the board changes underneath', async ({ pag
   await page.goto('/?start=board');
   await setStyles(page);
   // Styles are locked on the board: a toast says so. Selecting people changes the UI store meanwhile.
-  await page.getByRole('radiogroup', { name: /^Leadership style for Kent/ }).getByRole('radio').nth(2).click();
-  const toast = page.getByText(/Styles are set until the next week/);
+  await page.getByRole('radiogroup', { name: /^Leadership style for Kent/ }).getByRole('radio').nth(2).click({ force: true }); // Locked letters are aria-disabled; picking one still explains why.
+  const toast = page.getByRole('status').filter({ hasText: /Styles are set until the next week/ });
   await expect(toast).toBeVisible();
   await page.getByText('Beth Killiney', { exact: true }).click();
   await page.getByText('Justin Keel', { exact: true }).click();
@@ -251,7 +251,10 @@ test('a whole week by keyboard only', async ({ page }) => {
     await tabTo(new RegExp(`radio\\|.*Leadership style for ${n}`));
     await page.keyboard.press('ArrowRight');
     await page.keyboard.press('Space');
+    // Wait for the pick to land before tabbing on, so a fast run cannot skip a card.
+    await expect(page.getByRole('radiogroup', { name: `Leadership style for ${n}` }).getByRole('radio', { checked: true })).toHaveCount(1);
   }
+  await expect(page.getByText('10 of 10 styles set')).toBeAttached();
   await tabTo(/Review and confirm/, true);
   await page.keyboard.press('Enter');
   await tabTo(/^BUTTON\|\|Confirm styles/);

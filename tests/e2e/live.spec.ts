@@ -81,7 +81,7 @@ test('1:1: the NPC opens, streams labelled AI replies, opens up when asked, and 
   await page.getByRole('button', { name: 'Hint' }).click();
   await expect(page.getByText(/open question/).first()).toBeVisible();
   await end(page);
-  await expect(page.getByRole('heading', { level: 3 }).first()).toBeFocused();
+  await expect(page.getByRole('region', { name: 'Outcome' }).getByRole('heading', { level: 2 })).toBeFocused();
   await expect(page.getByText(/not what I was promised/).first()).toBeVisible();
 });
 
