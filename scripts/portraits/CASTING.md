@@ -2,7 +2,7 @@
 
 The Configuration Spec sets NPC portraits to photographic stock photos by default, with an optional
 set of five mood expressions (neutral, happy, thinking, concerned, frustrated). The ten team
-members already have photos. These ten hire candidates need them too: real people, no cartoons or
+members already have photos. These ten hire candidates and the sponsor need them too: real people, no cartoons or
 illustrated avatars.
 
 Match the existing team photos: head and shoulders, facing the camera, plain light or softly blurred
@@ -21,6 +21,7 @@ paid stock library), and keep the source links with the files.
 | ben.jpg | Ben Lowinsky | Negotiation Specialist | Man, mid 30s, seasoned and self assured |
 | nico.jpg | Nico Arnas | Negotiation Specialist | Man, mid 20s, fresh MBA graduate |
 | patrick.jpg | Patrick Kent | Conversion Specialist | Man, early 20s, fresh commerce graduate |
+| paula.jpg | Paula Jacob | Sponsor, Regional Sales Director | Woman, late 40s, senior and composed; she also needs a short welcome video later (Configuration Spec, sponsor welcome) |
 | terrence.jpg | Terrence Paddington | Conversion Specialist | Man, late 40s, a business school professor turning to sales |
 
 Then run:

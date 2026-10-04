@@ -34,7 +34,7 @@ export const ComposerSending: StoryObj = { render: () => <div style={{ width: 33
 export const Event: StoryObj = {
   render: () => (
     <EventCard
-      busy={false} onDismiss={noop} nameOf={id => id[0].toUpperCase() + id.slice(1)}
+      busy={false} onDismiss={noop} everyone={10} nameOf={c => (c.count > 1 ? `${c.count} people` : c.subject[0].toUpperCase() + c.subject.slice(1))}
       card={{ id: 'c1', key: 'crm', card: 'impact', title: 'New CRM system', body: 'Your firm has adopted a new CRM system and employees are forced to input leads electronically.', memberId: null,
         changes: [...['kent', 'beth', 'justin', 'ruth'].map((subject): MetricChange => ({ subject, metric: 'morale', from: 50, to: 47, delta: -3, reason: REASON })),
           { subject: 'kent', metric: 'skill', from: 40, to: 42, delta: 2, reason: REASON }] }}

@@ -23,6 +23,7 @@ import type { MetricKey } from '../../engine/contract';
 import { Composer } from './Composer';
 import { PeriodPanel } from './PeriodPanel';
 import { EventCard } from './EventCard';
+import { teamChips, type Chip } from './chips';
 
 /**
  * The main board, rendered only from the engine view (brief, rule 1). Every button sends an intent;
@@ -33,7 +34,8 @@ const PLACEHOLDER = '/assets/npc/placeholder.svg';
 const TOAST_MS = 3400;
 const first = (n: string) => n.split(' ')[0];
 
-interface Flow { key: string; option: string | null; picks: string[]; member: boolean }
+/** The action being planned: which drawer card is chosen, who is picked, and whether the nudge was waved off. */
+interface Flow { key: string; choice: string | null; picks: string[]; nudgeOk: boolean }
 
 export interface EngineBoardProps {
   /** Client theme: the HUD shows the client's logo. */
@@ -104,6 +106,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const member = (id: string) => v.members.find(m => m.id === id);
   const action = (key: string) => v.actions.find(a => a.key === key);
   const img = (m: { img: string | null } | undefined) => m?.img ?? PLACEHOLDER;
+  const chipName = (c: Chip) => (c.subject === 'team' ? t('board.chip.team') : c.subject === 'group' ? t('board.chip.people', { n: c.count }) : first(member(c.subject)?.name ?? ''));
   const stageName = (key: string) => v.funnel.find(st => st.key === key)?.name ?? key;
 
   /** Words an engine block reason in the storyline's units. */
@@ -126,11 +129,23 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
   const blockLine = (b: Block | null) => (!b ? '' : b.reason === 'capacity' ? t('action.blocked.days', { need: amount(b.need), have: amount(b.have) }) : blockText(b));
 
+  type ActionV = EngineView['actions'][number];
+  /**
+   * What the drawer offers: one card per option, except an option where you pick a stage
+   * (reassign), which becomes one card per stage it could move to.
+   */
+  const choicesOf = (a: ActionV, picks: string[]) => a.options.flatMap(o => o.pickStage
+    ? v.funnel.filter(st => !picks.some(id => member(id)?.stage === st.key)).map(st => ({ id: `${o.key}@${st.key}`, option: o, stage: st.key as string | null }))
+    : [{ id: o.key, option: o, stage: null as string | null }]);
+  const limits = (a: ActionV, choice: { option: ActionV['options'][number] } | undefined) => choice?.option.targets ?? a.targets;
+
   const pick = (key: string, memberId: string | null) => {
     const a = action(key);
     if (!a || styling) return;
     ui.openPanel('none');
-    setFlow({ key, option: a.options.length > 1 ? null : a.options[0]?.key ?? null, picks: memberId ? [memberId] : [], member: !!memberId });
+    const picks = memberId ? [memberId] : [];
+    const choices = choicesOf(a, picks);
+    setFlow({ key, choice: choices.length === 1 ? choices[0].id : null, picks, nudgeOk: false });
   };
   const tile = (key: string, memberId: string | null): ActionTileProps => {
     const a = action(key)!;
@@ -139,16 +154,31 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
 
   const f = flow, fa = f ? action(f.key) : undefined;
-  const picking = !!(f && fa && !f.member && fa.targets[1] > 0);
+  const choices = f && fa ? choicesOf(fa, f.picks) : [];
+  const choice = f && f.choice !== null ? choices.find(c => c.id === f.choice) : undefined;
+  const [minPick, maxPick] = fa ? limits(fa, choice) : [0, 0];
+  const picking = !!(f && fa && maxPick > 0 && (fa.scope === 'team' || maxPick > 1 || f.picks.length === 0));
   const selected = ui.selectedIds[0] ?? null;
+
+  /** Why someone cannot be picked for the action being planned, worded, or undefined. */
+  const ineligible = (m: MemberView): string | undefined => {
+    if (!f || !fa) return undefined;
+    const b = fa.scope === 'member' ? fa.blockedFor[m.id] ?? null : m.away ? { reason: 'away' as const, kind: m.awayReason ?? 'leave', for: m.away } : null;
+    if (b) return blockLine(b);
+    if (choice?.option.distinctStages && !f.picks.includes(m.id)) {
+      const same = f.picks.map(id => member(id)).find(p => p?.stage === m.stage);
+      if (same) return t('board.pick.sameStage', { name: first(same.name) });
+    }
+    return undefined;
+  };
 
   const clickCard = (m: MemberView) => {
     if (picking && f && fa) {
-      if (m.away) return;
+      if (ineligible(m)) return;
       const has = f.picks.includes(m.id);
       let picks = has ? f.picks.filter(x => x !== m.id) : [...f.picks, m.id];
-      if (picks.length > fa.targets[1]) picks = picks.slice(picks.length - fa.targets[1]);
-      setFlow({ ...f, picks });
+      if (picks.length > maxPick) picks = picks.slice(picks.length - maxPick);
+      setFlow({ ...f, picks, nudgeOk: false });
       return;
     }
     setFlow(null);
@@ -163,7 +193,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       skill: m.skill, morale: m.morale, result: m.result, trust: m.trust, statsHidden: !m.statsRevealed,
       style: styleOf(m), unread: m.unread, promise: m.promise ?? undefined,
       selected: picking && f ? f.picks.includes(m.id) : selected === m.id,
-      unavailableReason: picking && m.away ? blockText({ reason: 'away', kind: m.awayReason ?? 'leave', for: m.away }) : undefined,
+      unavailableReason: picking ? ineligible(m) : undefined,
       onSelect: () => clickCard(m),
       onOpenProfile: () => { void send({ type: 'openProfile', memberId: m.id }); if (selected !== m.id) ui.toggleMember(m.id); },
       onStyleChange: (k: StyleKey) => { if (styling) setDraft(d => ({ ...d, [m.id]: k })); else say(t('board.style.locked', { unit: periodUnit })); }
@@ -178,18 +208,44 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   if (f && fa) {
     const names = f.picks.map(id => first(member(id)?.name ?? ''));
     const list = names.length > 1 ? t('action.list.pair', { rest: names.slice(0, -1).join(', '), last: names[names.length - 1] }) : names[0] ?? '';
-    const optIndex = f.option ? fa.options.findIndex(o => o.key === f.option) : null;
+    const cost = choice?.option.cost ?? fa.cost;
+    const label = (c: (typeof choices)[number]) => (c.stage ? t('board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
+    const detail = (c: (typeof choices)[number]) => [
+      c.option.blocked ? blockLine(c.option.blocked) : '',
+      c.option.cost !== fa.cost ? t('board.option.cost', { cost: amount(c.option.cost) }) : '',
+      c.option.away ? t('board.option.away', { amount: amount(c.option.away) }) : '',
+      c.option.targets ? t('board.option.people', { n: c.option.targets[1], distinct: c.option.distinctStages ? 'yes' : 'no' }) : ''
+    ].filter(Boolean).join(' ');
+
+    // Prerequisite nudge (spec): where each picked person would move, and whether they were assessed for it.
+    const pre = fa.prerequisite ? action(fa.prerequisite) : undefined;
+    const destination = (id: string): string | null => {
+      if (choice?.stage) return choice.stage;
+      if (choice?.option.distinctStages && f.picks.length === 2) return member(f.picks.find(x => x !== id)!)?.stage ?? null;
+      return null;
+    };
+    const unassessed = pre && !f.nudgeOk ? f.picks.map(id => ({ m: member(id)!, to: destination(id) })).find(x => x.m && x.to && !x.m.assessedStages.includes(x.to)) : undefined;
+
+    const isStatic = fa.kind !== 'live';
     drawer = {
-      name: fa.name, kind: fa.kind, days: fa.cost, description: fa.description,
-      options: fa.options.length > 1 ? fa.options.map(o => ({ name: o.label, detail: blockLine(o.blocked) })) : undefined,
-      option: optIndex, onOption: i => setFlow({ ...f, option: fa.options[i].key }),
-      people: f.member ? { mode: 'with' } : fa.targets[1] > 0 ? { mode: 'pick', max: fa.targets[1], limit: '' } : { mode: 'who' },
+      name: fa.name, kind: fa.kind, days: cost, description: fa.description,
+      options: choices.length > 1 ? choices.map(c => ({ name: label(c), detail: detail(c) })) : undefined,
+      option: choice ? choices.indexOf(choice) : null, onOption: i => setFlow({ ...f, choice: choices[i].id, nudgeOk: false }),
+      people: picking ? { mode: 'pick', max: maxPick, limit: minPick === maxPick ? t('board.pick.exact', { n: maxPick }) : t('board.pick.range', { min: minPick, max: maxPick }) } : f.picks.length ? { mode: 'with' } : { mode: 'who' },
       picks: f.picks.map(id => { const m = member(id); return { id, name: m?.name ?? '', img: img(m) }; }),
-      summary: t('board.summary', { action: fa.name, list: list || 'none', cost: amount(fa.cost) }),
+      nudge: unassessed && pre ? {
+        name: first(unassessed.m.name), area: stageName(unassessed.to!), days: pre.cost,
+        onAssess: async () => {
+          const r = await send({ type: 'planAction', action: pre.key, memberIds: [unassessed.m.id], stage: unassessed.to! });
+          if (r) say(t('action.toast.assessed', { name: first(unassessed.m.name), area: stageName(unassessed.to!), cost: amount(pre.cost) }));
+        },
+        onContinue: () => setFlow({ ...f, nudgeOk: true })
+      } : undefined,
+      summary: t('board.summary', { action: fa.name, option: isStatic && choice && choices.length > 1 ? label(choice) : 'none', list: list || 'none', cost: amount(cost) }),
       cta: fa.kind === 'static' ? 'confirm' : fa.format === 'email' ? 'composer' : 'start',
-      canConfirm: !busy && f.picks.length >= fa.targets[0] && f.picks.length <= fa.targets[1] && (fa.options.length <= 1 || !!f.option),
+      canConfirm: !busy && !unassessed && f.picks.length >= minPick && f.picks.length <= maxPick && (choices.length <= 1 || !!choice) && !choice?.option.blocked,
       onConfirm: async () => {
-        const r = await send({ type: 'planAction', action: fa.key, option: f.option ?? undefined, memberIds: f.picks });
+        const r = await send({ type: 'planAction', action: fa.key, option: choice?.option.key, memberIds: f.picks, stage: choice?.stage ?? undefined });
         if (!r) return;
         setFlow(null);
         if (r.interactionId) { setLiveTitle(t('board.composer.title', { action: fa.name, name: names.length === 1 ? names[0] : 'none' })); ui.setInteraction(r.interactionId); }
@@ -254,7 +310,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     return m ? { id, name: m.name, shortName: first(m.name), img: img(m) } : { id, name: v.sponsor.name, shortName: first(v.sponsor.name), img: v.sponsor.img ?? PLACEHOLDER };
   };
   const outcome = oc && (() => {
-    const who = person(oc.affected[0] ?? 'sponsor');
+    const who = person(oc.speaker);
     const lead = oc.changes.find(c => c.reason.evidence.length) ?? oc.changes[0];
     const shown = oc.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence' && !!member(c.subject));
     return (
@@ -265,7 +321,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         affected={oc.affected.map(person)} revealed={reveal}
         reaction={reveal && oc.reactions[reveal] ? { name: first(person(reveal).name), text: oc.reactions[reveal] } : undefined}
         onReveal={id => setReveal(r => (r === id ? null : id))}
-        changes={shown.map(c => ({ name: first(member(c.subject)!.name), metric: c.metric, delta: c.delta }))}
+        changes={teamChips(shown, v.members.length).map(c => ({ name: chipName(c), metric: c.metric, delta: c.delta }))}
         showNumbers={ui.showNumbers} onToggleNumbers={() => ui.setShowNumbers(!ui.showNumbers)}
         ripple={oc.ripple ?? ''} changed={oc.changed}
         onDismiss={() => { setReveal(null); void send({ type: 'clearOutcome' }); }} onOpenHistory={() => undefined}
@@ -301,18 +357,19 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       )}
       {outcome}
       <div className="relative grid min-h-0 flex-1 grid-cols-(--il-board-columns)">
-        <InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} />
-        <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
-        <ActionsPanel
+        {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
+        <div className="col-start-2 row-start-1 flex min-h-0 min-w-0 flex-col"><TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} /></div>
+        <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><ActionsPanel
           capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
           team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
           member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
           drawer={composer ?? (drawer ? <ActionDrawer {...drawer} /> : undefined)}
-        />
+        /></div>
+        <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
         <InboxDrawer open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
           onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={id => setReadIds(r => [...r, id])} />
       </div>
-      {card && !oc && <EventCard card={card} busy={busy} nameOf={id => first(member(id)?.name ?? '')} onDismiss={() => void send({ type: 'dismissCard', cardId: card.id })} />}
+      {card && !oc && <EventCard card={card} busy={busy} nameOf={chipName} everyone={v.members.length} onDismiss={() => void send({ type: 'dismissCard', cardId: card.id })} />}
       {(v.phase === 'periodEnd' || v.phase === 'ended') && <PeriodPanel view={v} busy={busy} money={money.format} onIntent={i => void send(i)} />}
       <CommandPalette open={pal} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
       <Toast message={toast} />

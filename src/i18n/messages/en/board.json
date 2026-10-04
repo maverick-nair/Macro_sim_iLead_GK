@@ -10,7 +10,7 @@
   "board.block.away": "{kind, select, training {In training} other {On leave}} for {amount}",
   "board.block.rewarded": "Rewarded recently, again in {amount}",
   "board.block.gone": "No longer on the team",
-  "board.summary": "{action}{list, select, none {} other { with {list}}}. Costs {cost}.",
+  "board.summary": "{action}{option, select, none {} other {: {option}}}{list, select, none {} other {, with {list}}}. Costs {cost}.",
   "board.planned": "Done: {action}.",
   "board.due": "Due in {amount}",
   "board.error": "{code, select, noCapacity {Not enough time left for that.} wrongPhase {Set everyone's style first.} targets {Pick the right number of people first.} blocked {That is not available right now.} network {You seem to be offline. Try again in a moment.} other {That did not go through. Try again.}}",
@@ -33,5 +33,14 @@
   "board.loading": "Getting your team ready",
   "board.block.lastInStage": "The only person left in {stage}",
   "board.block.noCover": "Nobody else in {stage} can cover the role",
-  "board.block.teamFull": "The team is full"
+  "board.block.teamFull": "The team is full",
+  "board.option.moveTo": "Move to {stage}",
+  "board.option.cost": "Takes {cost}.",
+  "board.option.away": "Away for {amount} afterwards.",
+  "board.option.people": "{n, plural, =1 {One person} other {# people}}{distinct, select, yes { in different stages} other {}}.",
+  "board.pick.sameStage": "Same stage as {name}",
+  "board.pick.exact": "{n, plural, =1 {One person} other {# people}}",
+  "board.pick.range": "{min, plural, =0 {Up to {max} people} other {{min} to {max} people}}",
+  "board.chip.team": "The team",
+  "board.chip.people": "{n} people"
 }

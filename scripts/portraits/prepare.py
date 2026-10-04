@@ -37,7 +37,8 @@ def main():
     story = ROOT / 'src/engine/storylines' / f"{sys.argv[2] if len(sys.argv) > 2 else 'sales-elevator'}.json"
     data = json.loads(story.read_text())
     people = data['members'] + data['candidates']
-    ids = {p['id'] for p in people}
+    sponsor_id = data['sponsor']['name'].split(' ')[0].lower()
+    ids = {p['id'] for p in people} | {sponsor_id}
     done = {}
     for f in sorted(photos.iterdir()):
         if f.suffix.lower() not in ('.jpg', '.jpeg', '.png', '.webp'):
@@ -48,6 +49,8 @@ def main():
         name = f'{pid}.{mood}.jpg' if mood else f'{pid}.jpg'
         prepare(f, OUT / name)
         done.setdefault(pid, {})[mood or ''] = f'/assets/npc/{name}'
+    if sponsor_id in done and '' in done[sponsor_id]:
+        data['sponsor']['portrait'] = done[sponsor_id]['']
     for p in people:
         got = done.get(p['id'])
         if not got: continue
