@@ -1,0 +1,21 @@
+{
+  "profile": {
+    "panel": {
+      "columns": { "value": "minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr)", "$description": "Profile, your interactions, take an action" },
+      "shadow": { "value": "0 24px 64px oklch(0.05 0.03 280 / 0.5)" },
+      "enter": { "value": "ilIn 260ms ease" }
+    },
+    "portrait": {
+      "ring": { "value": "0 0 0 3px {color.line.strong}", "$description": "Ring around the 120px portrait" }
+    },
+    "name": {
+      "tracking": { "value": "-0.02em" }
+    },
+    "fact": {
+      "columns": { "value": "110px 1fr", "$description": "Fact label, value" }
+    },
+    "timeline": {
+      "columns": { "value": "12px 1fr", "$description": "Dot and rail, entry" }
+    }
+  }
+}

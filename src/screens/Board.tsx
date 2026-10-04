@@ -18,6 +18,7 @@ import { InboxDrawer, type InboxDrawerItem } from '../components/inbox/InboxDraw
 import type { InboxSender } from '../components/inbox/sender';
 import { CommandPalette, type PaletteResult, type PaletteTone } from '../components/palette/CommandPalette';
 import { OutcomePanel, type OutcomePanelProps } from '../components/outcome/OutcomePanel';
+import { ProfilePanel, type ProfilePanelProps, type ProfileTimelineEntry } from '../components/profile/ProfilePanel';
 import { useI18n, type I18n } from '../i18n';
 
 /**
@@ -76,7 +77,6 @@ function fmt(d: number): string {
   return w + h + (d === 1 ? ' day' : ' days');
 }
 const first = (n: string) => n.split(' ')[0];
-const cap1 = (k: string) => k[0].toUpperCase() + k.slice(1);
 function backdrop(m: MemberView): string {
   return m.away ? 'linear-gradient(160deg,#E4E6F0,#C9CEDF)' : (m.mood === 'frustrated' || m.mood === 'concerned') ? 'linear-gradient(160deg,#FFE7C2,#F7C17E)' : 'linear-gradient(160deg,#DEE9FF,#9FDCEB)';
 }
@@ -243,30 +243,31 @@ export function Board(props: BoardProps) {
   }
 
   const pm = members.find(m => m.id === s.profile);
-  let pf: {
-    name: string; title: string; img: string; backdrop: string; moodN: string; aria: string;
-    stats: { n: string; v: number; c: string }[]; hasShared: boolean; shared: string; facts: { k: string; v: string }[];
-    timeline: { when: string; t: string; quote: string; delta: string; dc: string; dot: string; hasQuote: boolean }[];
-    hasPromise: boolean; promise: string; actions: Tile[];
-  } | null = null;
+  let pf: ProfilePanelProps | null = null;
   if (pm) {
-    const mood = D.moods[pm.mood];
     const kent = pm.id === 'kent';
     const styleName = (k: StyleKey) => D.styles.find(x => x.k === k)?.n ?? '';
-    pf = { name: pm.name, title: pm.title, img: pm.img, backdrop: backdrop(pm), moodN: mood.n, aria: `Profile for ${pm.name}`,
-      stats: METRICS.map(k => ({ n: cap1(k), v: pm[k], c: pm[k] < 30 ? 'var(--ik-warn)' : 'var(--ik-text)' })),
-      hasShared: kent && outcome, shared: 'feels overlooked since the territory split moved his best leads to Beth.',
-      facts: [{ k: 'Style this week', v: styleName(pm.style) }, { k: 'Previous company', v: pm.prev }, { k: 'Tenure', v: pm.tenure }, { k: 'Experience', v: pm.exp }, { k: 'Skills', v: pm.skills }, { k: 'Remarks', v: pm.remarks },
-        { k: 'Career goal', v: kent && outcome ? 'Wants to mentor new hires' : 'Not shared yet. It may come up in conversation.' }, { k: 'Relationships', v: pm.relations }],
-      timeline: (kent ? [
-        ...(outcome ? [{ when: 'Week 2, Day 3', t: '1:1 conversation', quote: 'Since the territory split, my best leads go to Beth. Nobody asked me.', delta: 'Morale +8, Trust +6', dc: 'var(--ik-pos)', dot: 'var(--ik-pos)' }] : []),
-        { when: 'Week 2, Day 2', t: 'Chat request went unanswered', quote: 'Do you have 15 minutes today? Something has been bothering me.', delta: 'Morale −6', dc: 'var(--ik-neg)', dot: 'var(--ik-neg)' },
-        { when: 'Week 1, Day 4', t: 'Style: Directing', quote: '', delta: 'Reaction: felt micromanaged. Morale −4', dc: 'var(--ik-neg)', dot: 'var(--ik-neg)' },
-        { when: 'Week 1, Day 1', t: 'Meet the team', quote: 'Happy to be here. Busy week ahead.', delta: 'No change', dc: 'var(--ik-text-2)', dot: 'var(--ik-line-strong)' }
-      ] : [{ when: 'Week 1, Day 4', t: 'Style: ' + styleName(pm.last), quote: '', delta: pm.lastReact === 'pos' ? 'Reaction: positive' : 'Reaction: negative', dc: pm.lastReact === 'pos' ? 'var(--ik-pos)' : 'var(--ik-neg)', dot: pm.lastReact === 'pos' ? 'var(--ik-pos)' : 'var(--ik-neg)' },
-        { when: 'Week 1, Day 1', t: 'Meet the team', quote: '', delta: 'No change', dc: 'var(--ik-text-2)', dot: 'var(--ik-line-strong)' }]).map(t => ({ ...t, hasQuote: !!t.quote })),
-      hasPromise: !!pm.promise || (kent && outcome), promise: kent && outcome ? 'Review lead routing with Kent by Friday' : pm.promise || '',
-      actions: D.memberActions.map(a => tileFor(a, pm)) };
+    // TODO(M2): the engine supplies the timeline, the surfaced concern, career goal and promises; these are the prototype's fixture.
+    const timeline: ProfileTimelineEntry[] = kent ? [
+      ...(outcome ? [{ id: 'oneOnOne', when: { period: 2, sub: 3 }, title: '1:1 conversation', quote: 'Since the territory split, my best leads go to Beth. Nobody asked me.', tone: 'pos' as const,
+        changes: [{ metric: 'morale' as const, delta: 8 }, { metric: 'trust' as const, delta: 6 }] }] : []),
+      { id: 'chat', when: { period: 2, sub: 2 }, title: 'Chat request went unanswered', quote: 'Do you have 15 minutes today? Something has been bothering me.', tone: 'neg', changes: [{ metric: 'morale', delta: -6 }] },
+      { id: 'style', when: { period: 1, sub: 4 }, title: 'Style: Directing', tone: 'neg', reaction: 'felt micromanaged', changes: [{ metric: 'morale', delta: -4 }] },
+      { id: 'meet', when: { period: 1, sub: 1 }, title: 'Meet the team', quote: 'Happy to be here. Busy week ahead.', tone: 'neutral', changes: [] }
+    ] : [
+      { id: 'style', when: { period: 1, sub: 4 }, title: 'Style: ' + styleName(pm.last), tone: pm.lastReact, reaction: pm.lastReact === 'pos' ? 'positive' : 'negative', changes: null },
+      { id: 'meet', when: { period: 1, sub: 1 }, title: 'Meet the team', tone: 'neutral', changes: [] }
+    ];
+    const promise = kent && outcome ? 'Review lead routing with Kent by Friday' : pm.promise;
+    pf = { name: pm.name, title: pm.title, img: pm.img, mood: pm.mood, away: !!pm.away,
+      stats: { skill: pm.skill, morale: pm.morale, result: pm.result, trust: pm.trust }, style: pm.style,
+      shared: kent && outcome ? 'feels overlooked since the territory split moved his best leads to Beth.' : null,
+      facts: [{ key: 'previous', value: pm.prev }, { key: 'tenure', value: pm.tenure }, { key: 'experience', value: pm.exp }, { key: 'skills', value: pm.skills }, { key: 'remarks', value: pm.remarks },
+        { key: 'careerGoal', value: kent && outcome ? 'Wants to mentor new hires' : null }, { key: 'relationships', value: pm.relations }],
+      periodUnit, subPeriodUnit, timeline,
+      promises: promise ? [{ text: promise, status: 'open' }] : [],
+      actions: D.memberActions.map(a => tileFor(a, pm)),
+      onClose: () => setState({ profile: null }) };
   }
 
   const oc = D.outcome;
@@ -373,36 +374,7 @@ export function Board(props: BoardProps) {
             <InboxDrawer open={s.inbox} subPeriodUnit={subPeriodUnit} items={inboxItems} sponsorName={sponsorFirst} onClose={toggleInbox} onOpen={openById}
               onLater={id => setState(x => ({ readIds: [...x.readIds, id] }))} />
 
-            {pf && (
-              <div role="dialog" aria-label={pf.aria} style={css('position:absolute; top:0; left:16px; right:24px; bottom:24px; border-radius:24px; background:var(--ik-mat); backdrop-filter:blur(24px); border:1px solid var(--ik-line-strong); box-shadow:0 24px 64px oklch(0.05 0.03 280 / 0.5); z-index:35; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr); overflow:hidden; animation:ilIn 260ms ease')}>
-                <div style={css('display:flex; flex-direction:column; overflow:auto; border-right:1px solid var(--ik-line)')}>
-                  <div style={css('display:flex; align-items:center; gap:18px; padding:22px 20px 6px')}><div style={css(`width:120px; height:120px; flex:none; border-radius:50%; overflow:hidden; background:${pf.backdrop}; box-shadow:0 0 0 3px var(--ik-line-strong)`)}><img src={pf.img} alt={pf.name} style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} /></div><div style={css('display:flex; flex-direction:column; gap:2px')}><b style={css('font-size:24px; letter-spacing:-0.02em')}>{pf.name}</b><span style={css('font-size:13px; color:var(--ik-text-2)')}>{pf.title}</span><span style={css('font-size:13px; font-weight:700')}>{pf.moodN}</span></div></div>
-                  <div style={css('padding:18px 20px; display:flex; flex-direction:column; gap:14px')}>
-                    <div style={css('display:grid; grid-template-columns:repeat(4,1fr); gap:8px')}>{pf.stats.map(st => <div key={st.n} style={css('padding:10px; border-radius:12px; background:var(--ik-raised); display:flex; flex-direction:column')}><span style={css('font-size:12px; color:var(--ik-text-2)')}>{st.n}</span><b style={css(`font-size:20px; color:${st.c}`)}>{st.v}</b></div>)}</div>
-                    {pf.hasShared && <div style={css('padding:10px 12px; border-radius:12px; background:var(--ik-acc-soft); font-size:13px')}><b>Shared:</b> {pf.shared}</div>}
-                    {pf.facts.map(fa => <div key={fa.k} style={css('display:grid; grid-template-columns:110px 1fr; gap:10px; font-size:13px')}><span style={css('color:var(--ik-text-2)')}>{fa.k}</span><span>{fa.v}</span></div>)}
-                  </div>
-                </div>
-                <div style={css('display:flex; flex-direction:column; overflow:auto; padding:20px; gap:12px; border-right:1px solid var(--ik-line)')}>
-                  <h3 style={css('margin:0; font-size:18px; font-weight:700')}>Your interactions</h3>
-                  {pf.timeline.map((tl, i) => (
-                    <div key={i} style={css('display:grid; grid-template-columns:12px 1fr; gap:12px')}>
-                      <div style={css('display:flex; flex-direction:column; align-items:center')}><span style={css(`width:10px; height:10px; border-radius:50%; background:${tl.dot}; margin-top:5px`)}></span><span style={css('flex:1; width:2px; background:var(--ik-line)')}></span></div>
-                      <div style={css('display:flex; flex-direction:column; gap:4px; padding-bottom:12px')}>
-                        <span style={css('font-size:12px; color:var(--ik-text-2)')}>{tl.when}</span><b style={css('font-size:14px')}>{tl.t}</b>
-                        {tl.hasQuote && <span style={css('font-size:13px; padding:8px 10px; border-radius:10px; background:var(--ik-raised)')}>“{tl.quote}”</span>}
-                        <span style={css(`font-size:12px; font-weight:700; color:${tl.dc}`)}>{tl.delta}</span>
-                      </div>
-                    </div>
-                  ))}
-                  {pf.hasPromise && <div style={css('padding:10px 12px; border-radius:12px; border:1px dashed var(--ik-line-strong); font-size:13px')}><b>Open promise:</b> {pf.promise}</div>}
-                </div>
-                <div style={css('display:flex; flex-direction:column; overflow:auto; padding:20px; gap:10px')}>
-                  <div style={css('display:flex; justify-content:space-between; align-items:center')}><h3 style={css('margin:0; font-size:18px; font-weight:700')}>Take an action</h3><button onClick={() => setState({ profile: null })} aria-label="Close profile" style={css('width:32px; height:32px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer')}>✕</button></div>
-                  {pf.actions.map((a, i) => <ActionTile key={i} layout="compact" {...a} />)}
-                </div>
-              </div>
-            )}
+            {pf && <ProfilePanel {...pf} />}
           </div>
         </>
       )}
