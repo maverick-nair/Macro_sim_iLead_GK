@@ -113,6 +113,7 @@ export function MemberCard(props: MemberCardProps) {
   // button (WCAG 4.1.2). A visually hidden toggle carries selection for keyboard and screen readers;
   // a click anywhere on the card selects too, and the card draws the toggle's focus ring.
   return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- pointer convenience; keyboard selection is the hidden toggle below
     <div
       onClick={onSelect}
       title={unavailable ? unavailableReason : undefined}

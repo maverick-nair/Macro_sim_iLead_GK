@@ -19,7 +19,8 @@ export function Switch({ label, checked, onChange, disabled = false, style }: Sw
   };
   return (
     <label
-      role="switch"
+      // Kept as the design's label element until the settings dialog moves to components.
+      role="switch" // eslint-disable-line jsx-a11y/no-noninteractive-element-to-interactive-role
       aria-checked={on}
       aria-disabled={disabled || undefined}
       tabIndex={disabled ? -1 : 0}

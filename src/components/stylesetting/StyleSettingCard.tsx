@@ -77,7 +77,8 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
         </span>
         {editing ? (
           <input
-            autoFocus
+            // The field appears because the participant asked to add a reason.
+            autoFocus // eslint-disable-line jsx-a11y/no-autofocus
             value={m.rationale}
             onChange={e => onRationale(e.target.value)}
             onBlur={() => close(false)}

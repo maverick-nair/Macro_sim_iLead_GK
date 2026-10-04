@@ -54,7 +54,6 @@ const pick = <T,>(list: T[], n: number) => list[n % list.length];
 export const personaNpc: NpcModel = {
   reply(ctx) {
     const { speaker: sp, said, format } = ctx;
-    const first = sp.name.split(' ')[0];
     if (said === null) {
       if (ctx.replyTo) return { text: ctx.replyTo };
       if (format === 'sponsor') return { text: `Thanks for making time. Give me your update: where are we against target, and what is your plan?` };

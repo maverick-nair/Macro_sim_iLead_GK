@@ -12,7 +12,8 @@ const DEFAULT: MoneyConfig = { currency: 'USD', locale: 'en-US', display: 'symbo
 const MoneyContext = createContext<Money>(moneyFormatter(DEFAULT));
 
 export function MoneyProvider({ money, children }: { money: Pick<MoneyConfig, 'currency' | 'locale' | 'display'>; children: ReactNode }) {
-  const value = useMemo(() => moneyFormatter({ ...DEFAULT, ...money }), [money.currency, money.locale, money.display]);
+  const { currency, locale, display } = money;
+  const value = useMemo(() => moneyFormatter({ currency, locale, display }), [currency, locale, display]);
   return <MoneyContext.Provider value={value}>{children}</MoneyContext.Provider>;
 }
 

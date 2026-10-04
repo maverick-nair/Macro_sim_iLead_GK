@@ -301,7 +301,6 @@ function usePlayable(layout: LiveLayout) {
     speak(0);
     return () => clearInterval(stream.current);
     // Start the first line once.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     if (paused) return;

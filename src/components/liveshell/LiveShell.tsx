@@ -95,7 +95,7 @@ function ModeSwitch({ mode, onChange }: { mode: LiveMode; onChange: (m: LiveMode
     refs.current[next]?.focus();
   };
   return (
-    <div role="radiogroup" aria-label={t('liveshell.mode.aria')} onKeyDown={onKey}
+    <div role="radiogroup" tabIndex={-1} aria-label={t('liveshell.mode.aria')} onKeyDown={onKey}
       className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.75">
       {MODES.map((m, i) => {
         const on = mode === m;
@@ -129,6 +129,8 @@ export function LiveShell(p: LiveShellProps) {
     }
   };
   return (
+    // Escape anywhere in the shell interrupts the NPC; the controls inside stay the interactive elements.
+    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div onKeyDown={onKeyDown} className="flex flex-1 flex-col">
       <header className={`flex items-center border-b border-line-default bg-surface-material backdrop-blur-(--il-liveshell-header-blur) ${phone ? 'gap-2.5 px-3.5 py-2.5' : 'gap-4 px-6 py-3'}`}>
         <span aria-hidden="true" className="flex size-9 flex-none items-center justify-center rounded-12 bg-(image:--il-fill-brand) text-liveshell-on-signal">

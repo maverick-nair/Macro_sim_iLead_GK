@@ -5,7 +5,6 @@ import { useEngineView, useIntent } from '../../engine/react';
 import { useUi } from '../../app/uiStore';
 import { MoneyProvider, useMoney } from '../../i18n/money';
 import { useI18n } from '../../i18n';
-import { Button } from '../../ds/Button';
 import { Hud, type HudProps } from '../hud/Hud';
 import { MetricsStrip, type MetricsStripProps } from '../metrics/MetricsStrip';
 import { TeamBoard, type StageColumn, type TeamBoardHint } from '../team/TeamBoard';

@@ -169,7 +169,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
       {layout === 'list' && <StyleSettingList members={members} periodUnit={periodUnit} onStyle={p.onStyle} />}
 
       {view === 'summary' && (
-        <StyleSummary members={members} periodUnit={periodUnit} period={p.period} onBack={p.onBack} onConfirm={p.onConfirm} confirmDisabled={confirmDisabled} autoFocus={focusSummary} />
+        <StyleSummary members={members} periodUnit={periodUnit} period={p.period} onBack={p.onBack} onConfirm={p.onConfirm} confirmDisabled={confirmDisabled} focusOnOpen={focusSummary} />
       )}
     </div>
   );

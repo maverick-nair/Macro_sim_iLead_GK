@@ -171,6 +171,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
   );
 
   return (
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the dialog
     <div ref={ref} role="dialog" aria-label={t('profile.aria', { name })} tabIndex={-1} onKeyDown={onKeyDown}
       className="absolute top-0 right-6 bottom-6 left-4 z-35 grid animate-(--il-profile-panel-enter) grid-cols-(--il-profile-panel-columns) overflow-hidden rounded-24 border border-line-strong bg-surface-material shadow-(--il-profile-panel-shadow) outline-none backdrop-blur-24">
       <div className="flex flex-col overflow-auto border-r border-line-default">

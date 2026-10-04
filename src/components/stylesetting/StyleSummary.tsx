@@ -12,7 +12,7 @@ export interface StyleSummaryProps {
   onConfirm: () => void;
   confirmDisabled: boolean;
   /** Moves focus into the dialog when it opens. Off when the screen starts on the summary. */
-  autoFocus?: boolean;
+  focusOnOpen?: boolean;
 }
 
 /**
@@ -20,10 +20,10 @@ export interface StyleSummaryProps {
  * differs from last period's), when away members' styles apply, then Go back or Confirm.
  * Escape goes back.
  */
-export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, confirmDisabled, autoFocus = true }: StyleSummaryProps) {
+export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, confirmDisabled, focusOnOpen = true }: StyleSummaryProps) {
   const { t } = useI18n();
   const dialog = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (autoFocus) dialog.current?.focus({ preventScroll: true }); }, [autoFocus]);
+  useEffect(() => { if (focusOnOpen) dialog.current?.focus({ preventScroll: true }); }, [focusOnOpen]);
 
   const missing = members.filter(m => m.style === null).length;
   const notes = [
@@ -34,6 +34,7 @@ export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, c
 
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-(--il-stylesetting-summary-scrim-blur)">
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape goes back */}
       <div ref={dialog} role="dialog" aria-modal="true" aria-label={t('stylesetting.summary.aria')} tabIndex={-1}
         onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); onBack(); } }}
         className="flex w-180 max-w-full animate-(--il-stylesetting-summary-enter) flex-col gap-4 rounded-26 border border-line-strong bg-surface-material p-6.5 outline-none">

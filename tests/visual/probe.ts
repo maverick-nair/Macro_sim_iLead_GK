@@ -7,7 +7,7 @@ import fs from 'node:fs'; import path from 'node:path'; import http from 'node:h
 import { chromium } from '@playwright/test'; import { createServer } from 'vite';
 const root = path.resolve(import.meta.dirname, '../..'), deps = path.join(root, '.visual-cache/deps/node_modules');
 const [id, sel, ...props] = process.argv.slice(2);
-const srv = http.createServer((q, r) => { const f = path.join(root, 'project', decodeURIComponent(new URL(q.url!, 'http://x').pathname)); fs.existsSync(f) && fs.statSync(f).isFile() ? r.writeHead(200, { 'Content-Type': f.endsWith('.html') ? 'text/html' : f.endsWith('.js') ? 'text/javascript' : f.endsWith('.css') ? 'text/css' : '' }).end(fs.readFileSync(f)) : r.writeHead(404).end(); }).listen(8011);
+const srv = http.createServer((q, r) => { const f = path.join(root, 'project', decodeURIComponent(new URL(q.url!, 'http://x').pathname)); if (fs.existsSync(f) && fs.statSync(f).isFile()) r.writeHead(200, { 'Content-Type': f.endsWith('.html') ? 'text/html' : f.endsWith('.js') ? 'text/javascript' : f.endsWith('.css') ? 'text/css' : '' }).end(fs.readFileSync(f)); else r.writeHead(404).end(); }).listen(8011);
 const vite = await createServer({ root, server: { port: 8012 }, logLevel: 'error' }); await vite.listen();
 const b = await chromium.launch(); const ctx = await b.newContext({ viewport: { width: 1600, height: 1000 } });
 await ctx.route('https://unpkg.com/**', r => { const u = r.request().url(); r.fulfill({ body: fs.readFileSync(path.join(deps, u.includes('react-dom') ? 'react-dom/umd/react-dom.production.min.js' : u.includes('babel') ? '@babel/standalone/babel.min.js' : 'react/umd/react.production.min.js')), contentType: 'text/javascript' }); });
