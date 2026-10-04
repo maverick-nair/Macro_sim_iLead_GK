@@ -69,5 +69,5 @@ Edit `tokens/*.json`, then run `npm run tokens`. The pipeline writes `src/styles
 
 ## Styling approach
 
-The screens keep the design's inline CSS as strings passed through `css()`, which converts them to React style objects (memoised). This keeps every value diffable against the design source. Hover and focus styles use `pseudo('hover', '...')`, which generates a class, matching how the design runtime applied `style-hover`.
+The screens keep the design's inline CSS as strings passed through `css()`, which converts them to React style objects (memoised). Pixel font sizes follow the text size setting (`--il-text-scale` on the app root, like the font size tokens; D56). This keeps every value diffable against the design source. Hover and focus styles use `pseudo('hover', '...')`, which generates a class, matching how the design runtime applied `style-hover`.
 Color tokens are `--ik-*` custom properties defined on the app root with `light-dark()`, so light and dark modes share one set of styles. A client theme only overrides the `--client-acc*` and `--client-grad` accent tokens.

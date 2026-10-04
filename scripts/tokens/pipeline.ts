@@ -19,6 +19,8 @@ export interface ContrastResult { token: string; mode: 'light' | 'dark'; against
 export interface BuildOutput { tokensCss: string; tailwindCss: string; manifestTs: string; contrast: ContrastResult[] }
 
 const PREFIX = '--il-';
+/** Set on the app root from the text size setting (1, 1.25, 1.5, 2). */
+export const TEXT_SCALE = '--il-text-scale';
 const REF = /\{([a-z0-9.-]+)\}/gi;
 
 export class TokenError extends Error {}
@@ -111,6 +113,10 @@ export function build(src: TokenSources): BuildOutput {
   for (const { path, node } of prim) rootLines.push(`  ${cssVar(path)}: ${node.$value};`);
 
   const themeLines: string[] = [];
+  // Text size setting: font sizes are redeclared inside the app root, scaled by --il-text-scale
+  // (1 by default, 2 at 200%). Declared here, not on :root, so the root's value is the one that
+  // resolves; every utility and component token that reads a font size grows, layout does not.
+  for (const { path, node } of prim) if (path.startsWith('font.size.')) themeLines.push(`  ${cssVar(path)}: calc(${node.$value as string} * var(${TEXT_SCALE}, 1));`);
   const contrast: ContrastResult[] = [];
   for (const { path, node } of sem) {
     let css: string;

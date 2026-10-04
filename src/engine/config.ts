@@ -210,6 +210,8 @@ export const Trigger = z.object({
 export const StorylineConfig = z.object({
   id: z.string(),
   name: z.string(),
+  /** The organisation the participant joins (Configuration Spec, Organisation name), as the sponsor and consent screens name it. */
+  organisation: z.string().min(1).optional(),
   money: Money,
   time: Time,
   stages: z.array(Stage).min(MIN_STAGES).max(MAX_STAGES),

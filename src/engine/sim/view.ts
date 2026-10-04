@@ -100,6 +100,8 @@ export function buildView(sim: Sim) {
   const score = finalScore(sim);
   return {
     phase: sim.phase,
+    /** Read only storyline identity, for onboarding. */
+    storyline: { name: c.name, organisation: c.organisation ?? null },
     clock: {
       period: sim.period, periods: c.time.period.count, periodUnit: c.time.period.unit,
       subPeriod: Math.min(sim.sub + 1, c.time.subPeriod.perPeriod), subPeriodUnit: c.time.subPeriod.unit,

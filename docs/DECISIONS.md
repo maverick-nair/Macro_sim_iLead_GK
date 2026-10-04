@@ -274,6 +274,22 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - `?period=N` opens the mock engine at a later period, for demos and tests (the week 4 sponsor briefing). The real engine ignores it.
 - Hiring needs an open seat: with 10 people in 5 stages of 2, the team starts full (role coverage, D44), so the interview appears once someone leaves. The `Board/Engine board/Interview open` story shows it with room in every stage.
 
+**D54. Onboarding on the engine.** Decided.
+- Onboarding is components (`src/components/onboarding/`): one flow component holds the step, tab and mic check state; the storyline arrives as props. The `/screens` frames (o1 to o6, p1) render it from the design fixture (`src/data/fixtures.ts`), pixel identical. The playable app renders it from the engine view (`src/app/EngineOnboarding.tsx`): Paula Jacob, Innov8 Elevators, the storyline's stages, team and profiles.
+- The view gains `storyline: { name, organisation }`, and the storyline config an optional `organisation` (Configuration Spec, Organisation name). Nothing else in the view changed.
+- Sales Elevator has no authored welcome letter, so the letter is worded from the view: organisation, team size, stages, role coverage, target, run length and days per week. When GenieKreator sends a welcome message, it replaces these paragraphs.
+- No welcome video is configured, so the sponsor step shows initials on the brand fill (or the portrait, when the storyline has one) with no play button, caption bar or "avatar video" annotation. Next unlocks after 4 seconds, as in the prototype.
+- One language is configured, so the language picker is hidden (spec: shown only if more than one language is configured). The welcome text on that step stays.
+- Reading a profile in "Meet your team" sends `openProfile`, so its stats show on the board afterwards (D39).
+- Each new step moves focus to its heading. Tabs and radio groups follow the arrow keys.
+- Still simulated: the mic test and the sample voice (a toast with the caption). The speech layer (`src/speech/`) can take them over.
+
+**D55. App dialogs on Radix.** Decided. Settings, pause, resume and session timed out are `src/components/settings/`, on a shared non modal Radix dialog (as D23) with `aria-modal`, while everything behind it is `inert`. Focus moves in, Tab loops inside, Escape and a click on the scrim close it, and focus returns to the opener. The session timed out dialog is an alert dialog that only "Sign in again" closes. Frames x1 to x4 are unchanged.
+- Settings offers the voice consent switch in the playable app, where the live screen points to it. The design frame x1 has no such row, so the gallery leaves it out.
+- The design system Switch is a button with `role="switch"` and `aria-checked`, pixel identical.
+
+**D56. Text size scales fonts, not the layout.** Decided. CSS zoom on the app root scaled the layout too. Now the token pipeline redeclares every font size inside the app root as `calc(<size> * var(--il-text-scale, 1))`, the app sets `--il-text-scale` from the setting, and `css()` does the same for the ported screens' pixel font sizes. Spacing, widths and heights stay put, so text wraps instead of pushing layouts off screen. Onboarding and the dialogs fit at 200% (measured at 1440 wide, no horizontal scroll). Still overflowing at 200%, all fixed heights or fixed columns sized for 100%: the style radios on member cards (`style/StyleControl`), the mood pill on the card portrait and the metric labels and values (`member/MemberCard`, `metric/MetricBar`), the reason chips (`reason/ReasonChip`), HUD pills (score, Cmd K), the outcome panel's close button, the style setting view toggle, letter avatars and "No style last week" tag (`stylesetting/`), and the legend button (`team/TeamBoard`). Text spills out of the pill or into the next column; nothing is clipped. Each needs `min-h` in place of `h`, or a column that grows, in the board work.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

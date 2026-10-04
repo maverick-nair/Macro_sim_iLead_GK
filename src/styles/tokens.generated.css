@@ -2,6 +2,10 @@
 
 /* Primitive layer, plus Genie design system names the ported screens still read. */
 :root {
+  --il-backdrop-office: #0A081B url(/assets/bg-1.png) center / cover no-repeat;
+  --il-backdrop-daylight: radial-gradient(1200px 600px at 85% 100%, oklch(0.9 0.06 230), transparent 70%), oklch(0.97 0.012 270);
+  --il-frame-desktop-min-height: 900px;
+  --il-frame-phone-min-height: 844px;
   --il-color-brand-electric-blue: #249DFF;
   --il-color-brand-cyber-cyan: #43D6E8;
   --il-color-brand-mint-green: #00F2AD;
@@ -131,6 +135,31 @@
    (--client-acc and friends) is visible when var() fallbacks resolve, and so color-scheme
    on the root picks the light-dark() branch. */
 .il-theme {
+  --il-font-size-11: calc(11px * var(--il-text-scale, 1));
+  --il-font-size-12: calc(12px * var(--il-text-scale, 1));
+  --il-font-size-13: calc(13px * var(--il-text-scale, 1));
+  --il-font-size-14: calc(14px * var(--il-text-scale, 1));
+  --il-font-size-15: calc(15px * var(--il-text-scale, 1));
+  --il-font-size-16: calc(16px * var(--il-text-scale, 1));
+  --il-font-size-17: calc(17px * var(--il-text-scale, 1));
+  --il-font-size-18: calc(18px * var(--il-text-scale, 1));
+  --il-font-size-20: calc(20px * var(--il-text-scale, 1));
+  --il-font-size-22: calc(22px * var(--il-text-scale, 1));
+  --il-font-size-24: calc(24px * var(--il-text-scale, 1));
+  --il-font-size-26: calc(26px * var(--il-text-scale, 1));
+  --il-font-size-28: calc(28px * var(--il-text-scale, 1));
+  --il-font-size-30: calc(30px * var(--il-text-scale, 1));
+  --il-font-size-32: calc(32px * var(--il-text-scale, 1));
+  --il-font-size-34: calc(34px * var(--il-text-scale, 1));
+  --il-font-size-36: calc(36px * var(--il-text-scale, 1));
+  --il-font-size-40: calc(40px * var(--il-text-scale, 1));
+  --il-font-size-44: calc(44px * var(--il-text-scale, 1));
+  --il-font-size-48: calc(48px * var(--il-text-scale, 1));
+  --il-font-size-54: calc(54px * var(--il-text-scale, 1));
+  --il-font-size-60: calc(60px * var(--il-text-scale, 1));
+  --il-font-size-64: calc(64px * var(--il-text-scale, 1));
+  --il-font-size-110: calc(110px * var(--il-text-scale, 1));
+  --il-font-size-120: calc(120px * var(--il-text-scale, 1));
   --il-color-fg-primary: light-dark(var(--il-color-ink-200), var(--il-color-lavender-940));
   --il-color-fg-secondary: light-dark(var(--il-color-ink-450), var(--il-color-lavender-780));
   --il-color-fg-on-accent: light-dark(var(--il-color-white), var(--il-color-brand-deep-space));
@@ -195,6 +224,9 @@
   --il-color-hud-capacity-half: light-dark(oklch(0.85 0.1 205 / 0.45), oklch(0.85 0.1 205 / 0.45));
   --il-color-hud-capacity-empty: light-dark(var(--il-color-line-strong), var(--il-color-line-strong));
   --il-color-hud-streak: light-dark(oklch(0.8 0.15 60), oklch(0.8 0.15 60));
+  --il-color-onboarding-caption-bar: light-dark(oklch(0.13 0.03 285 / 0.82), oklch(0.13 0.03 285 / 0.82));
+  --il-color-onboarding-mic-glow: light-dark(oklch(0.75 0.14 220 / 0.35), oklch(0.75 0.14 220 / 0.35));
+  --il-color-onboarding-mic-glow-listening: light-dark(oklch(0.75 0.14 220 / 0.7), oklch(0.75 0.14 220 / 0.7));
   --il-color-stylesetting-portrait-shade: light-dark(oklch(0.13 0.03 285 / 0.8), oklch(0.13 0.03 285 / 0.8));
   --il-fill-brand: var(--client-grad, var(--il-gradient-brand));
   --il-fill-product: var(--il-gradient-product);
@@ -211,6 +243,14 @@
   --il-action-drawer-enter: ilIn 240ms ease;
   --il-action-drawer-title-tracking: -0.02em;
   --il-action-option-border-width: 1.5px;
+  --il-appdialog-enter: ilIn 240ms ease;
+  --il-appdialog-scrim-blur: 6px;
+  --il-appdialog-eyebrow-tracking: 0.08em;
+  --il-app-leading: 1.5;
+  --il-app-logo-tracking: -0.03em;
+  --il-app-loading-track: linear-gradient(90deg, var(--il-color-track) 0%, var(--il-color-accent-soft) 50%, var(--il-color-track) 100%);
+  --il-app-loading-track-size: 400px 6px;
+  --il-app-loading-shimmer: ilShimmer 1.4s linear infinite;
   --il-board-columns: 64px minmax(0, 1fr) 330px;
   --il-board-panel-max-width: 560px;
   --il-button-radius: var(--il-radius-pill);
@@ -310,6 +350,33 @@
   --il-metric-bar-transition: width var(--il-duration-slow) var(--il-easing-spring);
   --il-metrics-strip-columns: repeat(4,minmax(0,1fr)) minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,1fr);
   --il-metrics-popover-shadow: 0 16px 40px var(--il-color-metrics-popover-shadow);
+  --il-onboarding-enter: ilIn var(--il-duration-slow) ease;
+  --il-onboarding-logo-tracking: -0.03em;
+  --il-onboarding-eyebrow-tracking: 0.12em;
+  --il-onboarding-display-leading: 1.05;
+  --il-onboarding-display-tracking: -0.03em;
+  --il-onboarding-title-tracking: -0.02em;
+  --il-onboarding-dot-transition: width var(--il-duration-base) ease;
+  --il-onboarding-choice-border: 1.5px;
+  --il-onboarding-choice-columns: repeat(3,1fr);
+  --il-onboarding-sponsor-columns: minmax(0,1fr) minmax(0,1.1fr);
+  --il-onboarding-sponsor-fill: linear-gradient(160deg,var(--il-color-brand-electric-blue),var(--il-color-brand-cyber-cyan) 60%,var(--il-color-brand-mint-green));
+  --il-onboarding-sponsor-leading: 1.65;
+  --il-onboarding-consent-columns: 1fr 1fr;
+  --il-onboarding-mic-glow: 0 0 24px var(--il-color-onboarding-mic-glow);
+  --il-onboarding-mic-glow-listening: 0 0 50px var(--il-color-onboarding-mic-glow-listening);
+  --il-onboarding-mic-ring: ilRing 1.4s ease-out infinite;
+  --il-onboarding-wave-transition: height 90ms linear;
+  --il-onboarding-how-lift: translateY(-6px);
+  --il-onboarding-how-transition: transform var(--il-duration-base) ease, border-color var(--il-duration-base) ease;
+  --il-onboarding-how-art-calm: linear-gradient(135deg,var(--il-color-portrait-sky-100),var(--il-color-portrait-sky-300));
+  --il-onboarding-team-columns: minmax(0,1fr) 380px;
+  --il-onboarding-team-portrait-position: center 12%;
+  --il-onboarding-team-card-lift: translateY(-3px);
+  --il-onboarding-team-card-transition: transform 200ms ease;
+  --il-onboarding-profile-enter: ilIn 240ms ease;
+  --il-onboarding-profile-stats-columns: repeat(4,1fr);
+  --il-onboarding-profile-fact-columns: minmax(100px,max-content) 1fr;
   --il-outcome-band-columns: auto minmax(0,1.4fr) minmax(0,1fr) auto;
   --il-outcome-band-shadow: var(--il-shadow-outcome-glow);
   --il-outcome-band-enter: ilIn var(--il-duration-slow) var(--il-easing-settle);

@@ -6,7 +6,7 @@ export type Overlay = 'settings' | 'paused' | 'resume' | 'expired';
 export type InputMode = 'text' | 'ptt' | 'open';
 
 export interface Settings {
-  /** Text size in percent: 100, 125, 150 or 200. Applied as CSS zoom on the app root. */
+  /** Text size in percent: 100, 125, 150 or 200. Scales every font size from the app root (`--il-text-scale`). */
   text: number;
   captions: boolean;
   reduced: boolean;

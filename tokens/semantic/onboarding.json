@@ -1,0 +1,10 @@
+{
+  "$description": "Onboarding. New tokens only. The caption bar sits on the sponsor media, so it is the same in both themes.",
+  "color": {
+    "onboarding": {
+      "caption-bar": { "light": { "ref": "color.portrait.shade", "alpha": 0.82 }, "dark": { "ref": "color.portrait.shade", "alpha": 0.82 }, "$description": "Caption bar over the sponsor video" },
+      "mic-glow": { "light": { "ref": "color.azure.750", "alpha": 0.35 }, "dark": { "ref": "color.azure.750", "alpha": 0.35 }, "$description": "Halo around the mic test button" },
+      "mic-glow-listening": { "light": { "ref": "color.azure.750", "alpha": 0.7 }, "dark": { "ref": "color.azure.750", "alpha": 0.7 }, "$description": "Halo around the mic test button while it listens" }
+    }
+  }
+}

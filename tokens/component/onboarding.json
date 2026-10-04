@@ -1,0 +1,57 @@
+{
+  "onboarding": {
+    "enter": { "value": "ilIn {duration.slow} ease", "$description": "Each onboarding step rises in" },
+    "logo": {
+      "tracking": { "value": "-0.03em" }
+    },
+    "eyebrow": {
+      "tracking": { "value": "0.12em", "$description": "Uppercase step eyebrows (WELCOME ABOARD)" }
+    },
+    "display": {
+      "leading": { "value": "1.05", "$description": "The 48px welcome headline" },
+      "tracking": { "value": "-0.03em", "$description": "Welcome headline and sponsor name" }
+    },
+    "title": {
+      "tracking": { "value": "-0.02em", "$description": "Step headings" }
+    },
+    "dot": {
+      "transition": { "value": "width {duration.base} ease", "$description": "The current step dot widens" }
+    },
+    "choice": {
+      "border": { "value": "1.5px", "$description": "Language choices and how to play cards" },
+      "columns": { "value": "repeat(3,1fr)", "$description": "Three language choices" }
+    },
+    "sponsor": {
+      "columns": { "value": "minmax(0,1fr) minmax(0,1.1fr)", "$description": "Sponsor media, then the welcome tabs" },
+      "fill": { "value": "linear-gradient(160deg,{color.brand.electric-blue},{color.brand.cyber-cyan} 60%,{color.brand.mint-green})", "$description": "Behind the sponsor portrait or initials" },
+      "leading": { "value": "1.65", "$description": "Welcome letter paragraphs" }
+    },
+    "consent": {
+      "columns": { "value": "1fr 1fr" }
+    },
+    "mic": {
+      "glow": { "value": "0 0 24px {color.onboarding.mic-glow}" },
+      "glow-listening": { "value": "0 0 50px {color.onboarding.mic-glow-listening}" },
+      "ring": { "value": "ilRing 1.4s ease-out infinite", "$description": "Ripple around the mic while listening" }
+    },
+    "wave": {
+      "transition": { "value": "height 90ms linear", "$description": "Mic test waveform bars follow the input level" }
+    },
+    "how": {
+      "lift": { "value": "translateY(-6px)", "$description": "The first how to play card sits raised" },
+      "transition": { "value": "transform {duration.base} ease, border-color {duration.base} ease" },
+      "art-calm": { "value": "linear-gradient(135deg,{color.portrait.sky-100},{color.portrait.sky-300})", "$description": "Art of the third card, the clock" }
+    },
+    "team": {
+      "columns": { "value": "minmax(0,1fr) 380px", "$description": "Team grid, then the profile" },
+      "portrait-position": { "value": "center 12%", "$description": "Keeps faces in frame in the 150px card portrait" },
+      "card-lift": { "value": "translateY(-3px)", "$description": "Team card on hover" },
+      "card-transition": { "value": "transform 200ms ease" }
+    },
+    "profile": {
+      "enter": { "value": "ilIn 240ms ease" },
+      "stats-columns": { "value": "repeat(4,1fr)", "$description": "Skill, morale, result, trust" },
+      "fact-columns": { "value": "minmax(100px,max-content) 1fr", "$description": "Fact label, value" }
+    }
+  }
+}
