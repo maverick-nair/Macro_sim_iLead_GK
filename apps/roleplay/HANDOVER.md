@@ -4,16 +4,23 @@
 Premium AI RolePlay training product. Scenario: **Renewal Negotiation with Margaret Hale** (VP Procurement, Northwind Freight). The player is a Cloudline account executive defending a $1.2M/yr renewal against a competitor quote 22% lower with a Friday deadline. One attempt per roleplay (no retries, no "New Call"). No emojis. Dark and light themes, WCAG AA 2.2.
 
 ## Run
+The app lives at `apps/roleplay` inside the GenieKreator monorepo (pnpm workspace). Install once from the repo root, then run from this folder:
 ```
-pnpm install
-pnpm dev        # Vite dev server
-pnpm build      # production build
-npx tsc --noEmit
+pnpm install              # at the repo root
+pnpm dev                  # Vite dev server (PORT env var, default 8443)
+pnpm build                # production build
+pnpm typecheck            # tsc --noEmit
 ```
+The root `pnpm lint`, `pnpm lint:copy` and `pnpm format:check` (Prettier) also cover this folder.
 Stack: React 19, TypeScript, Vite 8, Tailwind CSS v4 (`@tailwindcss/vite`, no config file), jsPDF (lazy-loaded).
 
 ## Files
-- `src/App.tsx` - everything: `LandingPage`, `SessionPage`, `SummaryPage`, and helpers (`TenPointScale`, `SkillScore`, `SkillRadar`, `VoiceWave`, `BoxField`, `ConfettiBurst`, `BadgeMedal`, `RollingNumber`, `EmailDialog`, `buildReportPdf`). All mock data is constants near the top (`SKILLS`, `ASSESSED_SKILLS`, `LANDING_OBJECTIVES`, `BADGES`, `PEERS`, `NPC_REPLIES`, `FULL_TRANSCRIPT`, `CEFR`, `SENTIMENT`, `TONE`, `CLARITY`).
+- `src/App.tsx` - shell only: theme context provider and the landing, session, summary page switch.
+- `src/pages/` - `LandingPage`, `SessionPage`, `SummaryPage`.
+- `src/components/` - shared pieces: `TenPointScale`, `SkillScore`, `SkillRadar`, `ScoreRing`, `VoiceWave`, `BoxField`, `ConfettiBurst`, `BadgeMedal`, `FlameIcon`, `RollingNumber`, `EmailDialog`, `ThemeToggle`, `ToolButton`, `CountdownTimer`, `SectionLabel`, `LeaderboardIcon`.
+- `src/data/` - all mock constants: `scenario.ts` (titles, briefing copy, `ASSESSED_SKILLS`, `LANDING_OBJECTIVES`, `OBJECTIVES`, peer threshold, image URLs), `skills.ts` (`SKILLS`, `RAW_SCORE`), `report.ts` (`REPORT_META`, `KPIS`, `STRENGTHS`, `DEVELOPMENT`, `PDF_NAME`), `communication.ts` (`CEFR`, `SENTIMENT`, `TONE`, `CLARITY`), `transcript.ts` (`TRANSCRIPT`, `FULL_TRANSCRIPT`), `npc.ts` (`LIVE_PHRASE`, `NPC_REPLIES`), `scoring.ts` (`TOPIC_RX`, `OBJECTIVE_TESTS`), `badges.ts`, `peers.ts`, `bands.ts` (`KNOLSKAPE_BANDS`).
+- `src/lib/` - helpers: `score.ts` (`bandFor`, `scoreColor`, `scoreLabel`, `cefrColor`), `color.ts` (`readableOn`), `motion.ts` (`reduceMotion`), `useCountUp.ts`, `buildReportPdf.ts`, `theme.ts` (`ThemeContext`).
+- `src/types.ts` - shared types (`Page`, `Skill`, `Evidence`, `Line`, `SessionStats`, `ReportTab`).
 - `src/index.css` - theme tokens, box pattern, animations, reduced-motion rules.
 - `src/main.tsx` - entrypoint.
 
@@ -44,9 +51,8 @@ Novice 1-2 `#b5472f`, Emerging 3-4 `#e07b2e`, Competent 5-6 `#efc23a`, Proficien
 4. Email uses `mailto:`; real sending with the PDF attached needs a server.
 
 ## Suggested next steps
-- Split `App.tsx` into `pages/` and `components/`, and move mock data to `data/`.
 - Add an API layer for scenarios, sessions, scoring and reports.
 - Run a screen-reader and keyboard audit, and check mobile layout of the session screen.
 
 ## Code rules
-Default exports; double quotes for strings with apostrophes; global CSS and fonts in `index.css`; respect `prefers-reduced-motion`.
+Default exports for components; double quotes for strings with apostrophes; global CSS and fonts in `index.css`; respect `prefers-reduced-motion`. Formatting is Prettier with the repo root config. No em or en dashes anywhere (the root copy lint fails on them).

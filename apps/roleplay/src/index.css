@@ -1,64 +1,64 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-@import 'tailwindcss';
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
+@import "tailwindcss";
 
 @font-face {
-  font-family: 'Inter:Semi Bold';
+  font-family: "Inter:Semi Bold";
   font-style: normal;
   font-weight: 600;
-  src: url('https://static.figma.com/font/Inter_1') format('woff2');
+  src: url("https://static.figma.com/font/Inter_1") format("woff2");
 }
 @font-face {
-  font-family: 'SF Pro:Bold';
+  font-family: "SF Pro:Bold";
   font-style: normal;
   font-weight: 700;
-  src: url('https://static.figma.com/font/SF-Pro_1') format('woff2');
+  src: url("https://static.figma.com/font/SF-Pro_1") format("woff2");
 }
 @font-face {
-  font-family: 'SF Pro:Semibold';
+  font-family: "SF Pro:Semibold";
   font-style: normal;
   font-weight: 590;
-  src: url('https://static.figma.com/font/SF-Pro_1') format('woff2');
+  src: url("https://static.figma.com/font/SF-Pro_1") format("woff2");
 }
 @font-face {
-  font-family: 'Inter:Regular';
+  font-family: "Inter:Regular";
   font-style: normal;
   font-weight: 400;
-  src: url('https://static.figma.com/font/Inter_1') format('woff2');
+  src: url("https://static.figma.com/font/Inter_1") format("woff2");
 }
 @font-face {
-  font-family: 'SF Pro:Regular';
+  font-family: "SF Pro:Regular";
   font-style: normal;
   font-weight: 400;
-  src: url('https://static.figma.com/font/SF-Pro_1') format('woff2');
+  src: url("https://static.figma.com/font/SF-Pro_1") format("woff2");
 }
 @font-face {
-  font-family: 'SF Pro:Medium';
+  font-family: "SF Pro:Medium";
   font-style: normal;
   font-weight: 510;
-  src: url('https://static.figma.com/font/SF-Pro_1') format('woff2');
+  src: url("https://static.figma.com/font/SF-Pro_1") format("woff2");
 }
 @font-face {
-  font-family: 'Sacramento:Regular';
+  font-family: "Sacramento:Regular";
   font-style: normal;
   font-weight: 400;
-  src: url('https://static.figma.com/font/Sacramento-Regular_1') format('woff2');
+  src: url("https://static.figma.com/font/Sacramento-Regular_1") format("woff2");
 }
 @font-face {
-  font-family: 'Inter:Medium';
+  font-family: "Inter:Medium";
   font-style: normal;
   font-weight: 500;
-  src: url('https://static.figma.com/font/Inter_1') format('woff2');
+  src: url("https://static.figma.com/font/Inter_1") format("woff2");
 }
 
 html,
 body,
 #root {
   height: 100%;
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
 }
 
-/* WCAG 2.2 — 2.4.7 Focus Visible & 2.4.13 Focus Appearance: a strong, consistent
+/* WCAG 2.2, 2.4.7 Focus Visible & 2.4.13 Focus Appearance: a strong, consistent
    focus indicator on every interactive element, with an offset so it is never obscured. */
 :where(a, button, textarea, input, select, [tabindex]):focus-visible {
   outline: 3px solid var(--brand);
@@ -66,7 +66,7 @@ body,
   border-radius: 2px;
 }
 
-/* 2.3.3 / 2.2.2 — respect users who reduce motion. */
+/* 2.3.3 / 2.2.2: respect users who reduce motion. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -78,17 +78,17 @@ body,
   }
 }
 
-/* Theme tokens — dark is the default. `.light` on <html> flips them. */
+/* Theme tokens: dark is the default. `.light` on <html> flips them. */
 :root {
-  --ink: 255 255 255;         /* foreground channels, used as rgb(var(--ink) / a) */
-  --bg: #0e0d0c;              /* warm near-black ground */
-  --surface: #161412;         /* panels / cards */
-  --surface-2: #1d1a17;       /* nested cells */
-  --surface-3: #110f0e;       /* video frames */
-  --brand: #ff8a4c;           /* accent text: 7.9:1 on surface */
-  --accent: #c2410c;          /* solid fills behind white text: 5.2:1 */
+  --ink: 255 255 255; /* foreground channels, used as rgb(var(--ink) / a) */
+  --bg: #0e0d0c; /* warm near-black ground */
+  --surface: #161412; /* panels / cards */
+  --surface-2: #1d1a17; /* nested cells */
+  --surface-3: #110f0e; /* video frames */
+  --brand: #ff8a4c; /* accent text: 7.9:1 on surface */
+  --accent: #c2410c; /* solid fills behind white text: 5.2:1 */
   --accent-hover: #9a3412;
-  --accent-2: #b8320f;        /* gradient partner, also passes with white text */
+  --accent-2: #b8320f; /* gradient partner, also passes with white text */
   --accent-rgb: 234 88 12;
   --tile: #ff7a2e;
   --tile-opacity: 0.16;
@@ -107,7 +107,7 @@ body,
   --surface: rgba(255, 255, 255, 0.95);
   --surface-2: rgba(250, 247, 244, 0.97);
   --surface-3: rgba(252, 249, 246, 0.92);
-  --brand: #b8320f;           /* accent text: 5.4:1 on ground */
+  --brand: #b8320f; /* accent text: 5.4:1 on ground */
   --accent: #c2410c;
   --accent-hover: #9a3412;
   --accent-2: #b8320f;
@@ -119,7 +119,7 @@ body,
   /* Warm daylight: soft apricot and peach washes, kept pale so ink stays legible. */
   --bg-gradient:
     radial-gradient(1000px 680px at 50% -14%, rgba(255, 159, 94, 0.34), transparent 60%),
-    radial-gradient(820px 600px at 108% 2%, rgba(255, 196, 150, 0.30), transparent 56%),
+    radial-gradient(820px 600px at 108% 2%, rgba(255, 196, 150, 0.3), transparent 56%),
     radial-gradient(900px 760px at -8% 112%, rgba(254, 215, 170, 0.28), transparent 58%),
     linear-gradient(170deg, #fbf4ee 0%, #f6f1ec 50%, #f4f2ef 100%);
 }
@@ -129,7 +129,9 @@ body {
   background-image: var(--bg-gradient);
   background-repeat: no-repeat;
   color: rgb(var(--ink));
-  transition: background-color 0.4s ease, color 0.4s ease;
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
 }
 
 @theme inline {
@@ -147,7 +149,7 @@ body {
   --color-emerald: #10b981;
   --color-amber: #f59e0b;
   --color-rose: #f43f5e;
-  --font-display: 'Outfit', sans-serif;
+  --font-display: "Outfit", sans-serif;
 }
 
 * {
@@ -167,29 +169,59 @@ body {
 }
 
 @keyframes pulse-ring {
-  0% { transform: scale(1); opacity: 0.6; }
-  70% { transform: scale(1.18); opacity: 0; }
-  100% { transform: scale(1.18); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
 }
 
 @keyframes wave {
-  0%, 100% { scaleY: 0.5; }
-  50% { scaleY: 1; }
+  0%,
+  100% {
+    scaley: 0.5;
+  }
+  50% {
+    scaley: 1;
+  }
 }
 
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes confetti-burst {
-  0% { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--tx), var(--ty)) scale(0.4); opacity: 0; }
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0.4);
+    opacity: 0;
+  }
 }
 
 .animate-pulse-ring {
@@ -198,7 +230,11 @@ body {
 
 /* Micro-interactions: springy press + hover lift for tactile, sticky controls. */
 .tool-btn {
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 .tool-btn:hover {
   transform: translateY(-1px) scale(1.06);
@@ -212,21 +248,43 @@ body {
 }
 
 @keyframes badge-pop {
-  0% { transform: scale(0.4); opacity: 0; }
-  60% { transform: scale(1.25); }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
-.badge-pop { animation: badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.badge-pop {
+  animation: badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
 @keyframes tip-in {
-  from { opacity: 0; transform: translate(-50%, 4px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
 
-/* Row entrance for leaderboard reshuffles — subtle stickiness cue. */
+/* Row entrance for leaderboard reshuffles, a subtle stickiness cue. */
 @keyframes row-rise {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in-up {
@@ -262,11 +320,15 @@ body {
 }
 
 .glow-violet {
-  box-shadow: 0 0 40px rgb(var(--accent-rgb) / 0.35), 0 0 80px rgb(var(--accent-rgb) / 0.15);
+  box-shadow:
+    0 0 40px rgb(var(--accent-rgb) / 0.35),
+    0 0 80px rgb(var(--accent-rgb) / 0.15);
 }
 
 .glow-emerald {
-  box-shadow: 0 0 40px rgba(16,185,129,0.3), 0 0 80px rgba(16,185,129,0.1);
+  box-shadow:
+    0 0 40px rgba(16, 185, 129, 0.3),
+    0 0 80px rgba(16, 185, 129, 0.1);
 }
 
 /* Soft mosaic of boxes behind hero and report content, after the orange reference.
@@ -330,21 +392,42 @@ body {
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
 }
-.box-cell--live { animation-name: box-breathe, box-wave; }
+.box-cell--live {
+  animation-name: box-breathe, box-wave;
+}
 @keyframes box-breathe {
-  0%, 100% { opacity: 0; transform: scale(0.92); }
-  45%, 60% { opacity: calc(var(--tile-opacity) * 2.2); transform: scale(1); }
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  45%,
+  60% {
+    opacity: calc(var(--tile-opacity) * 2.2);
+    transform: scale(1);
+  }
 }
 @keyframes box-wave {
-  0%, 82%, 100% { box-shadow: none; }
-  90% { opacity: calc(var(--tile-opacity) * 1.4); box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.35); }
+  0%,
+  82%,
+  100% {
+    box-shadow: none;
+  }
+  90% {
+    opacity: calc(var(--tile-opacity) * 1.4);
+    box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.35);
+  }
 }
 .box-spot {
   position: absolute;
   inset: 0;
   opacity: var(--spot);
   transition: opacity 0.4s ease;
-  background: radial-gradient(220px circle at var(--mx) var(--my), rgb(var(--accent-rgb) / 0.22), transparent 70%);
+  background: radial-gradient(
+    220px circle at var(--mx) var(--my),
+    rgb(var(--accent-rgb) / 0.22),
+    transparent 70%
+  );
   -webkit-mask-image:
     repeating-linear-gradient(90deg, transparent 0 2px, #000 2px 70px, transparent 70px 72px),
     repeating-linear-gradient(0deg, transparent 0 2px, #000 2px 70px, transparent 70px 72px);
@@ -355,15 +438,27 @@ body {
   mask-composite: intersect;
 }
 @media (prefers-reduced-motion: reduce) {
-  .box-cell { animation: none; }
-  .box-spot { display: none; }
+  .box-cell {
+    animation: none;
+  }
+  .box-spot {
+    display: none;
+  }
 }
 
 /* ---------- Gamification motion ---------- */
 @keyframes confetti-fly {
-  0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-  70% { opacity: 1; }
-  100% { transform: translate(var(--dx), calc(var(--dy) + 520px)) rotate(var(--rot)); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), calc(var(--dy) + 520px)) rotate(var(--rot));
+    opacity: 0;
+  }
 }
 .confetti-piece {
   animation-name: confetti-fly;
@@ -371,24 +466,59 @@ body {
   animation-fill-mode: both;
 }
 @keyframes xp-float {
-  0% { transform: translateY(0) scale(0.7); opacity: 0; }
-  20% { transform: translateY(8px) scale(1.15); opacity: 1; }
-  100% { transform: translateY(34px) scale(1); opacity: 0; }
+  0% {
+    transform: translateY(0) scale(0.7);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(8px) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(34px) scale(1);
+    opacity: 0;
+  }
 }
-.xp-float { animation: xp-float 1.3s ease-out forwards; white-space: nowrap; }
+.xp-float {
+  animation: xp-float 1.3s ease-out forwards;
+  white-space: nowrap;
+}
 @keyframes unlock-pop {
-  0% { transform: translateY(-16px) scale(0.85); opacity: 0; }
-  12% { transform: translateY(0) scale(1.04); opacity: 1; }
-  20% { transform: scale(1); }
-  85% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-10px); }
+  0% {
+    transform: translateY(-16px) scale(0.85);
+    opacity: 0;
+  }
+  12% {
+    transform: translateY(0) scale(1.04);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 }
-.unlock-pop { animation: unlock-pop 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.unlock-pop {
+  animation: unlock-pop 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
 @keyframes shine {
-  from { transform: translateX(-120%) skewX(-20deg); }
-  to { transform: translateX(220%) skewX(-20deg); }
+  from {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(220%) skewX(-20deg);
+  }
 }
-.shine { position: relative; overflow: hidden; }
+.shine {
+  position: relative;
+  overflow: hidden;
+}
 .shine::after {
   content: "";
   position: absolute;
