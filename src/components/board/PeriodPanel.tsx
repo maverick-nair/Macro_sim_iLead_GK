@@ -30,7 +30,7 @@ export function PeriodPanel({ view: v, busy, money, onIntent, onClose, onCloseFo
   const title = useRef<HTMLHeadingElement>(null);
   const last = v.periods[v.periods.length - 1];
   const unit = v.clock.periodUnit;
-  const stars = last ? Object.values(last.stars).filter(Boolean).length : 0;
+  const stars = last?.week.stars ?? 0;
   const ended = v.phase === 'ended';
   const close = ended ? onClose : undefined;
   return (
@@ -54,7 +54,7 @@ export function PeriodPanel({ view: v, busy, money, onIntent, onClose, onCloseFo
           {ended && (
             <div className="flex flex-col gap-1">
               <b className="text-18">{t('board.ended.score', { total: Math.round(v.score.total), max: Math.round(v.score.max) })}</b>
-              {v.score.tier && <span className="text-14 text-fg-secondary">{t('board.ended.tier', { tier: v.score.tier })}</span>}
+              {v.score.tier && <span className="text-14 text-fg-secondary">{t('board.ended.tier', { tier: v.score.tier.name })}</span>}
             </div>
           )}
           {v.pendingReward && (

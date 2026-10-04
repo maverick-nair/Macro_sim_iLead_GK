@@ -434,7 +434,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     ui.openPanel('none');
     if (!msg || ended) return;
     if (msg.kind === 'news') { setReadIds(r => [...r, id]); return; }
-    const r = await send({ type: 'openConversation', kind: msg.from === 'sponsor' ? 'sponsor' : 'reply', messageId: id });
+    const r = await send({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: id });
     if (r?.interactionId) setFlow(null);
   };
   const later = (id: string) => {
@@ -457,8 +457,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     clientLogo: app.client, nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
     sessionClock: null, onPause: app.onPause,
-    score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership, periodMax: v.score.periodMax },
-    pillarScale: v.score.periodMax * periods, scoreOpen, onScoreOpenChange: setScoreOpen,
+    // Pillars are 0 to 100 each (scoring-and-report.md 6).
+    score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership, periodMax: 100 },
+    pillarScale: 100, scoreOpen, onScoreOpenChange: setScoreOpen,
     streak: v.streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
     onEndPeriod: () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling || ended ? 'secondary' : 'primary'

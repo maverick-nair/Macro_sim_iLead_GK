@@ -95,8 +95,10 @@ export interface MemberSim {
   /** Training request open in this period. */
   trainingRequestedPeriod: number | null;
   roleChangeRequestedPeriod: number | null;
-  /** Lowest result seen, for the Turnaround badge. */
+  /** Lowest result seen. */
   lowestResult: number;
+  /** Lowest morale seen, for the Turnaround badge. */
+  lowestMorale: number;
 }
 
 export interface Turn {
@@ -124,6 +126,8 @@ export interface Interaction {
   /** Interview: the candidates, and which one is in the room. */
   candidates?: string[];
   candidate?: number;
+  /** A hire on the extra hire budget: one seat past a full stage. */
+  budget?: boolean;
 }
 
 export interface InboxMessage {
@@ -140,15 +144,43 @@ export interface InboxMessage {
   briefing?: boolean;
 }
 
+export type CardKind = 'impact' | 'signal' | 'capacity' | 'diagnostic' | 'opportunity' | 'crisis';
+
 export interface EventCard {
   id: string;
   key: string;
-  card: 'impact' | 'signal' | 'capacity' | 'diagnostic';
+  card: CardKind;
+  /** `modal` shows on the board; `sponsorCall` rings first. Chat, email and bulletin events make no card. */
+  delivery: 'modal' | 'sponsorCall';
   title: string;
   body: string;
   memberId: string | null;
   changes: Change[];
+  label: string | null;
+  /** The message to answer, when the event expects a reply. */
+  messageId: string | null;
 }
+
+/** An event waiting for its expected response (Configuration Spec, Expected response and Response window). */
+export interface PendingResponse {
+  eventKey: string;
+  memberId: string | null;
+  messageId: string | null;
+  actions: string[];
+  dueAbsSub: number;
+}
+
+/** One finished live interaction, for the week score, the Leadership pillar and badges. */
+export interface LiveRecord {
+  period: number;
+  actionKey: string;
+  format: string;
+  band: Band;
+  memberIds: string[];
+}
+
+/** A bulletin for the coming period, shown at the week end (Configuration Spec, Delivery). */
+export interface NewsItem { key: string; card: CardKind; title: string; body: string; impact: string | null }
 
 export interface Decision { memberId: string; chosen: Style; needed: Style; mismatch: Mismatch; source: string }
 
@@ -177,20 +209,41 @@ export interface Outcome {
   changed: string[];
 }
 
+/** How the period went (scoring-and-report.md 6, week score and stars). */
 export interface PeriodSummary {
   period: number;
-  stars: { people: boolean; leadership: boolean; business: boolean };
+  /** One line headline and a sentence on the week, worded by the engine. */
+  headline: string;
+  line: string;
+  week: {
+    score: number;
+    stars: number;
+    /** Weekly style setting that matched what people needed. */
+    styleFit: { correct: number; total: number; pct: number };
+    /** Mean band score of the period's live interactions, or null when there were none. */
+    live: { count: number; mean: number } | null;
+    /** Final stage output against the period's ideal. */
+    funnel: { output: number; ideal: number; pct: number };
+  };
   kpis: Record<'skill' | 'morale' | 'result' | 'trust', { start: number; end: number }>;
   valueThisPeriod: number;
+  /** The period's share of the target. */
+  valueIdeal: number;
   cumulativeValue: number;
   pace: number;
-  accuracy: number;
-  points: { business: number; people: number; leadership: number; streakBonus: number };
-  streak: number;
-  newBadges: string[];
+  /** Periods in a row at the streak's star level, and the bonus it earned this period. */
+  streak: { count: number; bonus: number; total: number; next: number | null };
+  newBadges: Array<{ key: string; reason: string }>;
   sponsor: { from: number; to: number };
-  funnel: Array<{ stage: string; throughput: number; ideal: number }>;
+  pulse: { from: number; to: number };
+  funnel: Array<{ stage: string; throughput: number; ideal: number; cumulative: number; cumulativeIdeal: number }>;
+  /** The stage furthest below its ideal this period. */
+  bottleneck: string | null;
   unlockOffer: string[] | null;
+  /** Sponsor confidence fell below the check in line: next period has a day less. */
+  checkIn: boolean;
+  /** Bulletins for the next period. */
+  news: NewsItem[];
 }
 
 export interface Sim {
@@ -213,11 +266,29 @@ export interface Sim {
   funnel: { conversions: number; value: number; periodValue: number; stageOut: number[]; stageOutPeriod: number[] };
   decisions: { period: Decision[]; run: Decision[] };
   styleUses: Record<Style, number>;
-  score: { business: number; people: number; leadership: number; bonus: number };
   periods: PeriodSummary[];
   streak: number;
-  badges: string[];
-  sponsor: { value: number; causes: Array<{ text: string; delta: number }>; crossed: number[] };
+  /** Streak bonus earned so far, up to the cap. */
+  streakBonus: number;
+  /** Badge keys in the order earned, with when and why. */
+  badges: Array<{ key: string; period: number; reason: string }>;
+  sponsor: { value: number; causes: Array<{ text: string; delta: number }> };
+  /** Team means at the start of the run, for the People pillar. */
+  runStart: { morale: number; trust: number };
+  liveRecords: LiveRecord[];
+  /** Recognitions nobody else felt passed over by (Fair Hand). */
+  fairRecognitions: number;
+  /** Unlock rewards in hand: the next hire is allowed past a full team and costs no days; the next team activity has no cooldown. */
+  hireBudget: boolean;
+  freeTeamActivity: boolean;
+  /** Period that loses a day to a CEO check in. */
+  checkInPeriod: number | null;
+  events: {
+    /** Fixed and drawn timing per event key; null when a random event did not come up. */
+    schedule: Record<string, { period: number; sub: number } | null>;
+    fired: string[];
+    pending: PendingResponse[];
+  };
   pendingReward: string[] | null;
   promises: PromiseRecord[];
   inbox: InboxMessage[];
@@ -238,6 +309,8 @@ export interface Sim {
   touchedTeam: boolean;
   /** Sponsor confidence at the start of the period, for unlock thresholds. */
   sponsorAtStart: number;
+  /** Team Pulse at the start of the period, for its trend. */
+  pulseAtStart: number;
   /** Periods in which someone's shown style differed from the declared one (intent vs action). */
   intentGaps: Record<string, number[]>;
 }

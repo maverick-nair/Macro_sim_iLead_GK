@@ -98,8 +98,10 @@ describe('engine', () => {
     const r = await play(config, 'good', 8);
     expect(r.view.phase).toBe('ended');
     expect(r.view.periods).toHaveLength(config.time.period.count);
-    expect(r.view.score.tier).toMatch(/bronze|silver|gold|platinum/);
-    expect(r.view.periods.every(p => p.points.leadership >= 0 && p.points.people >= 0 && p.points.business >= 0)).toBe(true);
+    expect(r.view.score.tier?.key).toMatch(/bronze|silver|gold|platinum/);
+    expect(r.view.score.total).toBeGreaterThanOrEqual(0);
+    expect(r.view.score.total).toBeLessThanOrEqual(1000);
+    expect(r.view.periods.every(p => p.week.score >= 0 && p.week.score <= 100 && p.week.stars >= 0 && p.week.stars <= 3)).toBe(true);
   });
 
   it('keeps every engine string inside the copy rules over a whole run', async () => {

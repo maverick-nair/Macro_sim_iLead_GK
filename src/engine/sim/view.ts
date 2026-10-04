@@ -1,6 +1,7 @@
 import { blockedReason } from './actions';
 import { ONE_SHOT, speakerFor, turnLimit } from './live';
-import { finalScore, pillarMax, RUN_MAX } from './period';
+import { finalScore } from './period';
+import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import type { InboxMessage, MemberSim, Mood, Sim } from './types';
 
@@ -21,12 +22,11 @@ export function moodOf(m: MemberSim, sim: Sim): Mood {
 
 const SPONSOR_LEVELS = ['low', 'wavering', 'steady', 'confident', 'champion'] as const;
 
-export const BADGES: Array<{ key: string; hint: string | null }> = [
-  { key: 'first_word', hint: null }, { key: 'listener', hint: null },
-  { key: 'pipeline_builder', hint: 'Push one stage past ideal' }, { key: 'steady_hand', hint: 'Keep everyone above 40' },
-  { key: 'turnaround', hint: 'Help someone bounce back' }, { key: 'clear_voice', hint: 'A whole period in voice' },
-  { key: 'promise_keeper', hint: 'Keep three promises' }, { key: 'right_style', hint: 'Lead everyone the right way for a period' }
-];
+/** Sponsor level words from confidence: below the check in line is low, at the unlock line confident. */
+function sponsorLevel(sim: Sim): (typeof SPONSOR_LEVELS)[number] {
+  const v = sim.sponsor.value, s = sim.config.gamification.sponsor;
+  return v < s.checkInBelow ? 'low' : v < 50 ? 'wavering' : v < s.unlockAt ? 'steady' : v < 85 ? 'confident' : 'champion';
+}
 
 /** Name and portrait for a member, a departed member, a candidate, or the sponsor. */
 function who(sim: Sim, id: string) {
@@ -87,7 +87,7 @@ export function buildView(sim: Sim) {
   const ideal = idealThroughput(sim);
   const ratios = sim.funnel.stageOutPeriod.map((v, i) => (ideal[i] ? v / ideal[i] : 1));
   const bottleneck = sim.sub > 0 ? ratios.indexOf(Math.min(...ratios)) : -1;
-  const message = (x: InboxMessage) => ({ id: x.id, from: x.from, kind: x.kind, title: x.title, body: x.body, urgent: x.urgent, state: x.state,
+  const message = (x: InboxMessage) => ({ id: x.id, from: x.from, kind: x.kind, title: x.title, body: x.body, urgent: x.urgent, state: x.state, briefing: !!x.briefing,
     dueInSubPeriods: x.dueAbsSub === null ? null : Math.max(0, x.dueAbsSub - sim.absSub) });
   const member = (m: MemberSim) => {
     const p = person(sim, m.id);
@@ -125,7 +125,9 @@ export function buildView(sim: Sim) {
     }),
     pulse: (() => {
       const moods = sim.members.map(m => moodOf(m, sim));
-      return { upbeat: moods.filter(x => x === 'happy').length, steady: moods.filter(x => x === 'neutral' || x === 'thinking').length, struggling: moods.filter(x => x === 'concerned' || x === 'frustrated').length };
+      const value = roundHalfUp(pulseOf(sim)), start = roundHalfUp(sim.pulseAtStart);
+      return { value, start, trend: (value > start ? 'up' : value < start ? 'down' : 'flat') as 'up' | 'down' | 'flat',
+        upbeat: moods.filter(x => x === 'happy').length, steady: moods.filter(x => x === 'neutral' || x === 'thinking').length, struggling: moods.filter(x => x === 'concerned' || x === 'frustrated').length };
     })(),
     maxPerStage: c.maxPerStage,
     funnel: c.stages.map((st, i) => ({ key: st.key, name: st.name, members: sim.members.filter(m => m.stage === st.key).length, ideal: st.ideal,
@@ -145,14 +147,21 @@ export function buildView(sim: Sim) {
     cards: sim.cards,
     outcome: sim.outcome ? { ...sim.outcome, from: who(sim, sim.outcome.speaker) } : null,
     score: {
-      business: sim.score.business, people: sim.score.people, leadership: sim.score.leadership, bonus: sim.score.bonus,
-      total: score.total, max: RUN_MAX, periodMax: pillarMax(sim), tier: sim.phase === 'ended' ? score.tier : null
+      total: score.total, max: score.max, business: roundHalfUp(score.business), people: roundHalfUp(score.people), leadership: roundHalfUp(score.leadership),
+      capability: roundHalfUp(score.capability), live: score.live === null ? null : roundHalfUp(score.live), bonus: score.bonus,
+      tier: sim.phase === 'ended' ? { key: score.tier.key, name: score.tier.name } : null
     },
     streak: sim.streak,
+    gamification: { weights: c.gamification.weights, stars: c.gamification.stars, streak: c.gamification.streak, tiers: c.gamification.tiers },
     periods: sim.periods,
-    badges: BADGES.map(b => ({ key: b.key, earned: sim.badges.includes(b.key), hint: b.hint })),
-    sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, styleLine: c.sponsor.styleLine, level: SPONSOR_LEVELS[Math.min(4, Math.floor(sim.sponsor.value / 20))], causes: sim.sponsor.causes },
+    badges: c.gamification.badges.map(b => {
+      const got = sim.badges.find(x => x.key === b.key);
+      return { key: b.key, rule: b.rule, name: b.name, description: b.description, earned: !!got, period: got?.period ?? null, reason: got?.reason ?? null };
+    }),
+    sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, styleLine: c.sponsor.styleLine, value: sim.sponsor.value,
+      unlockAt: c.gamification.sponsor.unlockAt, checkInBelow: c.gamification.sponsor.checkInBelow, level: sponsorLevel(sim), causes: sim.sponsor.causes },
     pendingReward: sim.pendingReward,
+    perks: { bonusDay: sim.bonusPeriod !== null && sim.bonusPeriod >= sim.period, hireBudget: sim.hireBudget, teamActivity: sim.freeTeamActivity, checkIn: sim.checkInPeriod === sim.period },
     history: sim.log,
     live: liveView(sim),
     liveCap: { cap: sim.config.time.liveCap, used: sim.liveTaken[sim.period] ?? 0 }

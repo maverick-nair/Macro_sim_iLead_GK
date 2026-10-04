@@ -97,7 +97,7 @@ describe('live interactions', () => {
     await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'Today we have three things. First the pipeline, then the CRM. What do you all think?' });
     expect(e.view().history.length).toBeGreaterThan(before);
     const end = await e.dispatch({ type: 'endPeriod' });
-    expect(end.summary!.accuracy).toBe(1);
+    expect(end.summary!.week.styleFit.pct).toBe(100);
   });
 
   it('interviews two candidates, then hires the one you choose', async () => {

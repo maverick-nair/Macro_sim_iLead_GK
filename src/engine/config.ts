@@ -99,11 +99,83 @@ export const Thresholds = z.object({
   low: Score.default(30)
 });
 
-export const Tiers = z.object({
-  silver: Ratio.default(0.4),
-  gold: Ratio.default(0.6),
-  platinum: Ratio.default(0.8)
-}).refine(t => t.silver < t.gold && t.gold < t.platinum, 'Tier thresholds must rise: silver < gold < platinum');
+/** Band scores for live interactions (scoring-and-report.md 4.3). */
+const BandScores = z.object({ strong: Score, adequate: Score, weak: Score, harmful: Score });
+
+/** Badge rules the engine knows (scoring-and-report.md 6.1). Authors pick a rule and name the badge. */
+export const BADGE_RULES = ['first_close', 'read_the_room', 'flex_master', 'concern_uncovered', 'promise_keeper', 'fair_hand', 'turnaround', 'change_champion', 'steady_hand', 'target_crusher'] as const;
+export const Badge = z.object({
+  key: Key,
+  rule: z.enum(BADGE_RULES),
+  name: Copy,
+  /** What earns it, shown on the shelf before it is earned. */
+  description: Copy
+});
+
+/** Rewards offered when sponsor confidence crosses its unlock line (Configuration Spec, Unlock rewards). */
+export const UNLOCK_KINDS = ['bonus_day', 'hire_budget', 'team_activity'] as const;
+
+const DEFAULT_BADGES: Array<z.input<typeof Badge>> = [
+  { key: 'first_close', rule: 'first_close', name: 'First Close', description: 'Your team converts its first deal.' },
+  { key: 'read_the_room', rule: 'read_the_room', name: 'Read the Room', description: 'Give at least 9 in 10 people the style they need in one week.' },
+  { key: 'flex_master', rule: 'flex_master', name: 'Flex Master', description: 'Use every style correctly at least twice.' },
+  { key: 'concern_uncovered', rule: 'concern_uncovered', name: 'Concern Uncovered', description: 'Help five people open up about what is bothering them.' },
+  { key: 'promise_keeper', rule: 'promise_keeper', name: 'Promise Keeper', description: 'Make three promises and break none.' },
+  { key: 'fair_hand', rule: 'fair_hand', name: 'Fair Hand', description: 'Recognize people three times without anyone feeling passed over.' },
+  { key: 'turnaround', rule: 'turnaround', name: 'Turnaround', description: 'Bring someone from morale below 30 to above 60.' },
+  { key: 'change_champion', rule: 'change_champion', name: 'Change Champion', description: 'Explain a change really well twice.' },
+  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Finish the run without a conversation going badly.' },
+  { key: 'target_crusher', rule: 'target_crusher', name: 'Target Crusher', description: 'Reach the revenue target.' }
+];
+
+/**
+ * Game scores (scoring-and-report.md 6, Configuration Spec, Gamification settings). Formulas are engine
+ * behaviour; the numbers here are the authored inputs, with the iLead 2.0 defaults.
+ */
+export const Gamification = z.object({
+  /** Leadership Score weights for Business, People and Leadership. They must sum to 1. */
+  weights: z.object({ business: Ratio, people: Ratio, leadership: Ratio }).default({ business: 0.3, people: 0.3, leadership: 0.4 }),
+  /** Top of the Leadership Score scale; the streak cap is part of it (1000 = 900 from the pillars + 100 streak). */
+  scale: z.number().int().min(100).max(10000).default(1000),
+  liveBandScores: BandScores.default({ strong: 100, adequate: 70, weak: 35, harmful: 0 }),
+  /** Week score needed for 1, 2 and 3 stars. */
+  stars: z.tuple([Score, Score, Score]).default([50, 70, 85]),
+  streak: z.object({
+    /** Periods in a row at `minStars` or more before the first bonus. */
+    length: z.number().int().min(2).max(10).default(3),
+    minStars: z.number().int().min(1).max(3).default(2),
+    bonus: z.number().int().min(0).default(25),
+    cap: z.number().int().min(0).default(100)
+  }).default({ length: 3, minStars: 2, bonus: 25, cap: 100 }),
+  /** Highest first. Each tier starts at `min` points. 2 to 5 tiers. */
+  tiers: z.array(z.object({ key: Key, name: Copy, min: z.number().int().min(0) })).min(2).max(5).default([
+    { key: 'platinum', name: 'Platinum', min: 850 }, { key: 'gold', name: 'Gold', min: 700 },
+    { key: 'silver', name: 'Silver', min: 500 }, { key: 'bronze', name: 'Bronze', min: 0 }
+  ]),
+  sponsor: z.object({
+    start: Score.default(50),
+    briefing: BandScores.extend({ weak: z.number().int(), harmful: z.number().int() }).default({ strong: 20, adequate: 5, weak: -10, harmful: -25 }),
+    /** Each period: revenue at or above the period's share of the target, or below it. */
+    periodPace: z.object({ met: z.number().int(), missed: z.number().int() }).default({ met: 5, missed: -5 }),
+    /** An ignored event or message that escalates to the sponsor. */
+    escalation: z.number().int().max(0).default(-10),
+    /** Crossing this upward offers one unlock. */
+    unlockAt: Score.default(70),
+    /** Dropping below this schedules a CEO check in that costs one day next period. */
+    checkInBelow: Score.default(30)
+  }).default({ start: 50, briefing: { strong: 20, adequate: 5, weak: -10, harmful: -25 }, periodPace: { met: 5, missed: -5 }, escalation: -10, unlockAt: 70, checkInBelow: 30 }),
+  unlocks: z.array(z.enum(UNLOCK_KINDS)).min(1).max(3).default(['bonus_day', 'hire_budget', 'team_activity']),
+  badges: z.array(Badge).default(DEFAULT_BADGES)
+}).superRefine((g, ctx) => {
+  const sum = g.weights.business + g.weights.people + g.weights.leadership;
+  if (Math.abs(sum - 1) > 0.001) ctx.addIssue({ code: 'custom', path: ['weights'], message: `Weights must add up to 100% (they add up to ${Math.round(sum * 100)}%)` });
+  if (!(g.stars[0] < g.stars[1] && g.stars[1] < g.stars[2])) ctx.addIssue({ code: 'custom', path: ['stars'], message: 'Star thresholds must rise' });
+  if (g.streak.cap >= g.scale) ctx.addIssue({ code: 'custom', path: ['streak', 'cap'], message: 'The streak cap must be below the score scale' });
+  const mins = g.tiers.map(t => t.min);
+  if (mins.some((m, i) => i > 0 && m >= mins[i - 1])) ctx.addIssue({ code: 'custom', path: ['tiers'], message: 'List tiers from highest to lowest, each starting below the one before' });
+  if (mins[mins.length - 1] !== 0) ctx.addIssue({ code: 'custom', path: ['tiers'], message: 'The lowest tier must start at 0' });
+  if (new Set(g.badges.map(b => b.key)).size !== g.badges.length) ctx.addIssue({ code: 'custom', path: ['badges'], message: 'Badge keys must be unique' });
+});
 
 export const STYLES = ['D', 'G', 'P', 'E'] as const;
 
@@ -184,16 +256,49 @@ export const Action = z.object({
 
 const Gendered = z.object({ he: Copy, she: Copy, they: Copy.optional() });
 
+export const EVENT_CARDS = ['impact', 'signal', 'capacity', 'diagnostic', 'opportunity', 'crisis'] as const;
+/**
+ * How an event reaches the participant (Configuration Spec, Delivery): a modal card on the board, a
+ * news bulletin in the week end before it lands, a chat or email from the person it is about, or a
+ * call from the sponsor.
+ */
+export const EVENT_DELIVERY = ['modal', 'bulletin', 'chat', 'email', 'sponsorCall'] as const;
+export const EVENT_CONDITIONS = ['teamMoraleBelow', 'teamTrustBelow', 'memberMoraleBelow', 'behindPace'] as const;
+
 export const GeneralEvent = z.object({
   key: Key,
   title: Copy,
   body: Gendered,
-  card: z.enum(['impact', 'signal', 'capacity', 'diagnostic']),
-  period: z.number().int().min(1),
+  card: z.enum(EVENT_CARDS),
+  /** Fixed timing: this period and sub-period. Random and conditional events leave it out. */
+  period: z.number().int().min(1).optional(),
   subPeriod: z.number().int().min(1).default(1),
+  /** Random timing: some sub-period in these periods, with this chance (0 to 100). Drawn once per run from the seed. */
+  window: z.object({ from: z.number().int().min(1), to: z.number().int().min(1), probability: z.number().int().min(0).max(100).default(100) }).optional(),
+  /** Conditional: checked at each period start, fires the first time it holds for `periods` period ends in a row. */
+  when: z.object({ condition: z.enum(EVENT_CONDITIONS), value: z.number().min(0).max(100).default(30), periods: z.number().int().min(1).max(4).default(1) }).optional(),
   impact: Effect,
-  /** Whole team, or one member picked by the engine. */
-  target: z.enum(['team', 'member']).default('team')
+  /** Sub-periods the target is away (capacity loss). */
+  away: z.number().int().min(0).max(10).default(0),
+  /** `team`; `member` (the engine picks); `sponsor`; `stage:<key>` for everyone in a stage; or a member id. */
+  target: z.string().regex(/^(team|member|sponsor|stage:[a-z][a-z0-9_]*|[a-z][a-z0-9_]*)$/).default('team'),
+  delivery: z.enum(EVENT_DELIVERY).default('modal'),
+  /** What a bulletin's See impact says. */
+  impactText: Copy.optional(),
+  /** A label on the card, such as "No impact on result". Hidden unless authored (labels can mislead). */
+  label: Copy.optional(),
+  /**
+   * The response the engine rewards: any of these actions with the target (`reply` answers the
+   * message), within this many sub-periods. Answered in time, `onTime` applies to the target.
+   */
+  response: z.object({ actions: z.array(Key).min(1), within: z.number().int().min(1).max(5).default(2), onTime: Effect.default([0, 2, 0]) }).optional(),
+  /** If the response does not come in time: a follow up event, and whether it reaches the sponsor. */
+  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true) }).optional()
+}).superRefine((e, ctx) => {
+  const kinds = [e.period !== undefined, !!e.window, !!e.when].filter(Boolean).length;
+  if (kinds > 1) ctx.addIssue({ code: 'custom', path: ['period'], message: 'Give a fixed period, a random window or a condition, not more than one' });
+  if (e.window && e.window.from > e.window.to) ctx.addIssue({ code: 'custom', path: ['window'], message: 'The window must start before it ends' });
+  if ((e.delivery === 'chat' || e.delivery === 'email') && e.target === 'team') ctx.addIssue({ code: 'custom', path: ['delivery'], message: 'A chat or email comes from one person: target a member' });
 });
 
 export const TRIGGER_KINDS = ['casualLeave', 'medicalLeave', 'clueless', 'demoralized', 'lackOfTraining', 'moraleDrops', 'resignation', 'roleChangeRequest', 'complains', 'trainingRequest'] as const;
@@ -226,7 +331,7 @@ export const StorylineConfig = z.object({
   members: z.array(Person).min(6).max(12),
   candidates: z.array(Person).default([]),
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),
-  tiers: Tiers.default({ silver: 0.4, gold: 0.6, platinum: 0.8 }),
+  gamification: Gamification.default(() => Gamification.parse({})),
   actions: z.array(Action).min(1),
   /** Weekly style setting effect per period (docs/SIMULATION.md 4.4). */
   weeklyStyle: EffectTable,
@@ -281,8 +386,16 @@ export const StorylineConfig = z.object({
     if (a.unlockPeriod > c.time.period.count) ctx.addIssue({ code: 'custom', path: ['actions', i, 'unlockPeriod'], message: 'Unlocks after the last period' });
   });
   c.actions.forEach((a, i) => { if (a.prerequisite && !actionKeys.has(a.prerequisite)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'prerequisite'], message: `Unknown action ${a.prerequisite}` }); });
+  const eventKeys = new Set(c.events.map(e => e.key));
+  const memberIds = new Set(c.members.map(m => m.id));
   c.events.forEach((e, i) => {
-    if (e.period > c.time.period.count) ctx.addIssue({ code: 'custom', path: ['events', i, 'period'], message: `Period ${e.period} is after the last period (${c.time.period.count})` });
+    const last = c.time.period.count;
+    if (e.period !== undefined && e.period > last) ctx.addIssue({ code: 'custom', path: ['events', i, 'period'], message: `Period ${e.period} is after the last period (${last})` });
+    if (e.window && e.window.to > last) ctx.addIssue({ code: 'custom', path: ['events', i, 'window'], message: `The window ends after the last period (${last})` });
+    if (e.escalation?.event && !eventKeys.has(e.escalation.event)) ctx.addIssue({ code: 'custom', path: ['events', i, 'escalation', 'event'], message: `No event called ${e.escalation.event}` });
+    const t = e.target;
+    if (t.startsWith('stage:') && !stageKeys.has(t.slice(6))) ctx.addIssue({ code: 'custom', path: ['events', i, 'target'], message: `No stage called ${t.slice(6)}` });
+    if (!['team', 'member', 'sponsor'].includes(t) && !t.startsWith('stage:') && !memberIds.has(t)) ctx.addIssue({ code: 'custom', path: ['events', i, 'target'], message: `No team member called ${t}` });
     if (c.time.subPeriod && e.subPeriod > c.time.subPeriod.perPeriod) ctx.addIssue({ code: 'custom', path: ['events', i, 'subPeriod'], message: 'Sub-period out of range' });
   });
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))

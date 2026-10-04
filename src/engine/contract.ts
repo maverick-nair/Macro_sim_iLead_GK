@@ -147,15 +147,33 @@ export const LogEntry = z.object({
   title: Text, memberIds: z.array(Id), changes: z.array(MetricChange), quote: Text.optional()
 });
 
+export const CardKind = z.enum(['impact', 'signal', 'capacity', 'diagnostic', 'opportunity', 'crisis']);
+
+/** How a period went (scoring-and-report.md 6): the week score behind the stars, and what changed. */
 export const PeriodSummary = z.object({
   period: z.number().int(),
-  stars: z.object({ people: z.boolean(), leadership: z.boolean(), business: z.boolean() }),
+  /** The week end banner's headline and sentence, worded by the engine. */
+  headline: Text, line: Text,
+  week: z.object({
+    score: Num, stars: z.number().int().min(0).max(3),
+    styleFit: z.object({ correct: z.number().int(), total: z.number().int(), pct: Num }),
+    live: z.object({ count: z.number().int(), mean: Num }).nullable(),
+    funnel: z.object({ output: Num, ideal: Num, pct: Num })
+  }),
   kpis: z.record(MetricKey, z.object({ start: Num, end: Num })),
-  valueThisPeriod: Num, cumulativeValue: Num, pace: Num, accuracy: Num,
-  points: z.object({ business: Num, people: Num, leadership: Num, streakBonus: Num }),
-  streak: z.number().int(), newBadges: z.array(Id), sponsor: z.object({ from: Num, to: Num }),
-  funnel: z.array(z.object({ stage: Id, throughput: Num, ideal: Num })),
-  unlockOffer: z.array(Id).nullable()
+  valueThisPeriod: Num, valueIdeal: Num, cumulativeValue: Num, pace: Num,
+  /** `next`: periods still needed for the next bonus, null once the cap is reached. */
+  streak: z.object({ count: z.number().int(), bonus: Num, total: Num, next: z.number().int().nullable() }),
+  newBadges: z.array(z.object({ key: Id, reason: Text })),
+  sponsor: z.object({ from: Num, to: Num }),
+  pulse: z.object({ from: Num, to: Num }),
+  funnel: z.array(z.object({ stage: Id, throughput: Num, ideal: Num, cumulative: Num, cumulativeIdeal: Num })),
+  bottleneck: Id.nullable(),
+  unlockOffer: z.array(Id).nullable(),
+  /** Sponsor confidence fell below the check in line: next period has a day less. */
+  checkIn: z.boolean(),
+  /** Bulletins for the next period. `impact` is what See impact says. */
+  news: z.array(z.object({ key: Id, card: CardKind, title: Text, body: Text, impact: Text.nullable() }))
 });
 
 /** Everything the participant may see. Never includes a member's needed style. */
@@ -167,22 +185,41 @@ export const EngineView = z.object({
   money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
   members: z.array(MemberView),
   kpis: z.array(z.object({ metric: MetricKey, value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']) })),
-  pulse: z.object({ upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
+  /** Team Pulse (scoring-and-report.md 6): the mean of team morale and trust, its trend this period, and the mood counts. */
+  pulse: z.object({ value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']), upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
   /** Role coverage: at most this many people per stage. */
   maxPerStage: z.number().int().min(1),
   funnel: z.array(z.object({ key: Id, name: Text, members: z.number().int(), ideal: z.number().int(), throughput: Num, idealThroughput: Num, bottleneck: z.boolean() })),
   actions: z.array(ActionView),
   promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0) })),
-  inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), dueInSubPeriods: z.number().int().nullable() })),
-  cards: z.array(z.object({ id: Id, key: Id, card: z.enum(['impact', 'signal', 'capacity', 'diagnostic']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange) })),
+  /** `briefing`: a scheduled sponsor briefing, opened with `openConversation` kind `sponsor`; other messages are replies. News needs no answer. */
+  inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() })),
+  /** Event cards. `sponsorCall` rings before it shows; `messageId` is the message to answer, if any. */
+  cards: z.array(z.object({ id: Id, key: Id, card: CardKind, delivery: z.enum(['modal', 'sponsorCall']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange), label: Text.nullable(), messageId: Id.nullable() })),
   /** `from` resolves the speaker for display: a member, a departed member, a candidate or the sponsor. */
   outcome: Outcome.extend({ from: z.object({ id: Id, name: Text, img: z.string().nullable() }) }).nullable(),
-  score: z.object({ business: Num, people: Num, leadership: Num, bonus: Num, total: Num, max: Num, periodMax: Num, tier: z.enum(['bronze', 'silver', 'gold', 'platinum']).nullable() }),
+  /**
+   * Leadership Score, 0 to `max` (scoring-and-report.md 6): the three pillars 0 to 100, contextual
+   * capability %, the mean live band score (null with no live interaction), and the streak bonus.
+   * The tier shows once the run has ended.
+   */
+  score: z.object({ total: Num, max: Num, business: Num, people: Num, leadership: Num, capability: Num, live: Num.nullable(), bonus: Num, tier: z.object({ key: Id, name: Text }).nullable() }),
   streak: z.number().int().min(0),
+  /** The authored rules behind stars, streaks and tiers, so the UI can explain them. */
+  gamification: z.object({
+    weights: z.object({ business: Num, people: Num, leadership: Num }),
+    stars: z.tuple([Num, Num, Num]),
+    streak: z.object({ length: z.number().int(), minStars: z.number().int(), bonus: Num, cap: Num }),
+    tiers: z.array(z.object({ key: Id, name: Text, min: Num }))
+  }),
   periods: z.array(PeriodSummary),
-  badges: z.array(z.object({ key: Id, earned: z.boolean(), hint: Text.nullable() })),
-  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
+  badges: z.array(z.object({ key: Id, rule: Id, name: Text, description: Text, earned: z.boolean(), period: z.number().int().nullable(), reason: Text.nullable() })),
+  /** The sponsor meter may show its value (Configuration Spec, CEO meter 0 to 100). */
+  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, value: Num, unlockAt: Num, checkInBelow: Num, level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
+  /** Unlock rewards on offer: `bonus_day`, `hire_budget`, `team_activity`. */
   pendingReward: z.array(Id).nullable(),
+  /** Unlock rewards in hand, not yet used. */
+  perks: z.object({ bonusDay: z.boolean(), hireBudget: z.boolean(), teamActivity: z.boolean(), checkIn: z.boolean() }),
   history: z.array(LogEntry),
   live: LiveView.nullable(),
   liveCap: z.object({ cap: z.number().int(), used: z.number().int() })

@@ -20,7 +20,9 @@ describe('storyline config', () => {
     if (!r.ok) return;
     expect(r.config.members).toHaveLength(10);
     expect(r.config.actions).toHaveLength(13);
-    expect(r.config.events).toHaveLength(12);
+    // 12 events from iLead 1.0, plus a random opportunity and a conditional sponsor call (GenieKreator).
+    expect(r.config.events).toHaveLength(14);
+    expect(new Set(r.config.events.map(e => e.delivery))).toEqual(new Set(['modal', 'bulletin', 'chat', 'sponsorCall']));
   });
 
   it('cleans authored copy on the way in', () => {

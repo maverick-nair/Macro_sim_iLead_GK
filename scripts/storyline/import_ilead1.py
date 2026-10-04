@@ -149,6 +149,32 @@ for wk, name, he, she, imp in evs:
     events.append(dict(key=key, title=name.replace('360-degree', '360 degree'), body={'he': tpl(he), 'she': tpl(she)},
                        card=CARD[name], period=p, subPeriod=sub, impact=imp, target='member' if name in TARGETED else 'team'))
 
+# GenieKreator event settings (Configuration Spec, Events): delivery, the expected response and its
+# window, escalation, and what a bulletin's See impact says. Events not listed are board cards.
+DELIVERY = {
+    'elevator_review_website_criticizes': dict(delivery='bulletin', impactText='Proposal and negotiation conversations get harder unless the team sells value.'),
+    'event_360_degree_feedback': dict(delivery='bulletin', impactText='Team morale dips. A team activity this week would land well.'),
+    'rumors_of_being_acquired': dict(delivery='bulletin', impactText='Morale dips while the rumors last. Clear, honest updates help.'),
+    'sales_conference_announcement': dict(delivery='bulletin', impactText='A small dent in morale and result across the team.'),
+    'business_process_change': dict(delivery='bulletin', impactText='More approvals slow every stage. Morale and result fall unless you help the team adjust.'),
+    'strike_at_supplier_s_factories': dict(delivery='bulletin', impactText='Delayed orders make closing harder for a few days.'),
+    'performance_declines': dict(response=dict(actions=['f2f', 'coach', 'feedback'], within=2, onTime=[0, 3, 2]), escalation=dict(sponsor=True)),
+    'recession_strikes': dict(delivery='sponsorCall', card='crisis', response=dict(actions=['meet'], within=2, onTime=[0, 2, 0]), escalation=dict(sponsor=True)),
+    'job_offer': dict(delivery='chat', response=dict(actions=['f2f', 'reward', 'coach'], within=2, onTime=[0, 4, 0]), escalation=dict(sponsor=False)),
+}
+for e in events:
+    e.update(DELIVERY.get(e['key'], {}))
+# Two events GenieKreator generates from the context: a random opportunity, and a conditional crisis.
+events += [
+    dict(key='big_client_referral', title='A big client referral',
+         body={'he': 'A happy customer refers a hospital group planning twelve new elevators. The proposal team gets a warm lead.', 'she': 'A happy customer refers a hospital group planning twelve new elevators. The proposal team gets a warm lead.'},
+         card='opportunity', window=dict(**{'from': 3, 'to': 6, 'probability': 60}), impact=[0, 3, 4], target='stage:proposal'),
+    dict(key='team_morale_alarm', title='Paula has heard the team is struggling',
+         body={'he': 'Paula calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it.', 'she': 'Paula calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it.'},
+         card='crisis', when=dict(condition='teamMoraleBelow', value=40, periods=2), impact=[0, 0, 0], target='sponsor', delivery='sponsorCall',
+         response=dict(actions=['reply'], within=2, onTime=[0, 0, 0]), escalation=dict(sponsor=True)),
+]
+
 # Trigger events: messages from the workbook; conditions are engine code with these parameters.
 TRIG = {'Casual leave': ('casualLeave', 1, {'resultAbove': 70, 'away': 5, 'atFractions': 0}),
         'Medical leave': ('medicalLeave', 1, {'resultAbove': 70, 'away': 2}),

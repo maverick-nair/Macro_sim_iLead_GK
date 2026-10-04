@@ -1,13 +1,11 @@
 import type { Rng } from './rng';
-import { award, IntentError } from './actions';
-import { idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
+import { IntentError } from './actions';
+import { upcomingNews } from './events';
+import { advanceStreak, checkBadges, leadershipScore, nextStreakBonus, pulse, roundHalfUp, tierFor, weekScore } from './score';
+import { addMessage, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
 import type { Change, PeriodSummary, Sim } from './types';
 
 /** Period end, gamification and the move to the next period (docs/SIMULATION.md section 7). */
-
-export const RUN_MAX = 7200;
-export const pillarMax = (sim: Sim) => 2400 / sim.config.time.period.count;
-const UNLOCK_REWARDS = ['extra_day', 'quiet_word', 'free_lunch'];
 
 export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
@@ -18,54 +16,31 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   }
   runRemaining(sim, rng);
   drift(sim);
+  const g = sim.config.gamification;
   const count = sim.config.time.period.count;
-  const max = pillarMax(sim);
   const target = sim.config.money.target;
-  const pace = sim.funnel.value / (target * sim.period / count);
-  const periodPace = sim.funnel.periodValue / (target / count);
-  const decisions = sim.decisions.period;
-  const accuracy = decisions.length ? decisions.filter(d => d.mismatch === 0).length / decisions.length : 0;
+  const valueIdeal = target / count;
+  const pace = sim.funnel.value / (valueIdeal * sim.period);
 
-  const business = Math.round(max * Math.min(1, periodPace) + (periodPace >= 1.1 ? 0.1 * max : 0));
-  const people = Math.round(max * (0.5 * teamAverage(sim, 'morale') + 0.5 * teamAverage(sim, 'trust')) / 100);
-  const leadership = Math.round(max * accuracy);
-  const stars = {
-    people: teamAverage(sim, 'morale') >= sim.periodStart.morale,
-    leadership: accuracy >= 0.7,
-    business: pace >= 1
-  };
-  const starCount = Object.values(stars).filter(Boolean).length;
-  sim.streak = starCount >= 2 ? sim.streak + 1 : 0;
-  const streakBonus = sim.streak > 0 && sim.streak % 3 === 0 ? Math.round(0.1 * 3 * max) : 0;
-  sim.score.business += business;
-  sim.score.people += people;
-  sim.score.leadership += leadership;
-  sim.score.bonus += streakBonus;
+  // Week score, stars and streak (scoring-and-report.md 6).
+  const week = weekScore(sim);
+  const streakBonus = advanceStreak(sim, week.stars);
 
-  // Badges (7.3).
-  const before = new Set(sim.badges);
-  const ideal = idealThroughput(sim);
-  if (sim.funnel.stageOutPeriod.some((v, i) => v >= ideal[i])) award(sim, 'pipeline_builder');
-  if (sim.members.every(m => m.away > 0 || m.morale >= 40)) award(sim, 'steady_hand');
-  if (sim.members.some(m => m.lowestResult < 30 && m.result >= 60)) award(sim, 'turnaround');
-  const vp = sim.voicePeriods[sim.period];
-  if (vp && vp.total > 0 && vp.voice === vp.total) award(sim, 'clear_voice');
-  if (sim.promises.filter(p => p.state === 'kept').length >= 3 && !sim.promises.some(p => p.state === 'broken')) award(sim, 'promise_keeper');
-  if (accuracy === 1 && decisions.length) award(sim, 'right_style');
-  const newBadges = sim.badges.filter(b => !before.has(b));
-
-  // Sponsor confidence and unlock offers (7.5).
-  const sFrom = sim.sponsor.value;
-  if (pace >= 1) sponsorChange(sim, 10, 'On pace for the target');
-  else if (pace < 0.8) sponsorChange(sim, -8, 'Behind pace on the target');
-  let unlockOffer: string[] | null = null;
-  for (const t of [60, 80]) {
-    if (sim.sponsorAtStart < t && sim.sponsor.value >= t && !sim.sponsor.crossed.includes(t)) {
-      sim.sponsor.crossed.push(t);
-      unlockOffer = UNLOCK_REWARDS;
-    }
-  }
+  // Sponsor confidence: the period's revenue against its share of the target.
+  const sFrom = sim.sponsorAtStart;
+  const unit = sim.config.time.period.unit;
+  const onPace = sim.funnel.periodValue >= valueIdeal;
+  const paceChanges = sponsorChange(sim, onPace ? g.sponsor.periodPace.met : g.sponsor.periodPace.missed, onPace ? `Revenue on pace this ${unit}` : `Revenue behind pace this ${unit}`);
+  if (paceChanges.length) log(sim, { kind: 'periodEnd', title: onPace ? `Revenue on pace this ${unit}` : `Revenue behind pace this ${unit}`, memberIds: [], changes: paceChanges });
+  // Crossing the unlock line upward offers one reward; dropping below the check in line costs a day next period.
+  const unlockOffer = sFrom < g.sponsor.unlockAt && sim.sponsor.value >= g.sponsor.unlockAt ? [...g.unlocks] : null;
   sim.pendingReward = unlockOffer;
+  const checkIn = sFrom >= g.sponsor.checkInBelow && sim.sponsor.value < g.sponsor.checkInBelow && sim.period < count;
+  if (checkIn) {
+    sim.checkInPeriod = sim.period + 1;
+    const first = sim.config.sponsor.name.split(' ')[0];
+    addMessage(sim, { from: 'sponsor', kind: 'news', title: 'CEO check in', body: `${first}'s confidence has dropped. The CEO wants a check in, which takes a ${sim.config.time.subPeriod.unit} of your time next ${unit}.`, dueIn: null, urgent: true });
+  }
 
   // Role change requests ignored through the period cost trust (6.4).
   for (const m of sim.members) {
@@ -76,29 +51,66 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
     m.periodEnds.push({ result: m.result, morale: m.morale, trust: m.trust });
   }
 
+  checkBadges(sim, 'periodEnd');
+  if (sim.period >= count) checkBadges(sim, 'runEnd');
+  const newBadges = sim.badges.filter(b => b.period === sim.period).map(b => ({ key: b.key, reason: b.reason }));
+
   const kpis = Object.fromEntries((['skill', 'morale', 'result', 'trust'] as const).map(k => [k, { start: sim.periodStart.kpis[k], end: teamAverage(sim, k) }])) as PeriodSummary['kpis'];
+  const ideal = idealThroughput(sim);
+  const cumulativeIdeal = sim.config.stages.map((_, i) => ideal[i] + sim.periods.reduce((acc, p) => acc + p.funnel[i].ideal, 0));
+  const funnel = sim.config.stages.map((st, i) => ({ stage: st.key, throughput: sim.funnel.stageOutPeriod[i], ideal: ideal[i], cumulative: sim.funnel.stageOut[i], cumulativeIdeal: cumulativeIdeal[i] }));
+  const ratios = funnel.map(f => (f.ideal > 0 ? f.throughput / f.ideal : 1));
+  const worst = ratios.indexOf(Math.min(...ratios));
+  const bottleneck = ratios[worst] < 1 ? funnel[worst].stage : null;
+  const story = storyOf(sim, week, kpis, pace, bottleneck);
   const summary: PeriodSummary = {
-    period: sim.period, stars, kpis, valueThisPeriod: sim.funnel.periodValue, cumulativeValue: sim.funnel.value, pace, accuracy,
-    points: { business, people, leadership, streakBonus }, streak: sim.streak, newBadges, sponsor: { from: sFrom, to: sim.sponsor.value },
-    funnel: sim.config.stages.map((st, i) => ({ stage: st.key, throughput: sim.funnel.stageOutPeriod[i], ideal: ideal[i] })), unlockOffer
+    period: sim.period, headline: story.headline, line: story.line, week, kpis,
+    valueThisPeriod: sim.funnel.periodValue, valueIdeal, cumulativeValue: sim.funnel.value, pace,
+    streak: { count: sim.streak, bonus: streakBonus, total: sim.streakBonus, next: nextStreakBonus(sim) },
+    newBadges, sponsor: { from: sFrom, to: sim.sponsor.value },
+    pulse: { from: roundHalfUp(sim.pulseAtStart), to: roundHalfUp(pulse(sim)) },
+    funnel, bottleneck, unlockOffer, checkIn, news: sim.period < count ? upcomingNews(sim) : []
   };
   sim.periods.push(summary);
-  log(sim, { kind: 'periodEnd', title: `End of ${sim.config.time.period.unit} ${sim.period}`, memberIds: [], changes: [] });
+  log(sim, { kind: 'periodEnd', title: `End of ${unit} ${sim.period}`, memberIds: [], changes: [] });
   sim.phase = sim.period >= count ? 'ended' : 'periodEnd';
   return summary;
 }
 
-/** Applies a chosen unlock reward (7.5). */
+/**
+ * The week end banner, worded from what happened: someone who bounced back, else the stars; then one
+ * sentence on people and one on the business (D60: engine text is server content).
+ */
+function storyOf(sim: Sim, week: PeriodSummary['week'], kpis: PeriodSummary['kpis'], pace: number, bottleneck: string | null) {
+  const unit = sim.config.time.period.unit;
+  const start = new Map(sim.members.map(m => [m.id, m.periodEnds.length > 1 ? m.periodEnds[m.periodEnds.length - 2].morale : sim.config.members.find(p => p.id === m.id)?.start.morale ?? m.morale]));
+  const back = sim.members.map(m => ({ m, gain: m.morale - (start.get(m.id) ?? m.morale) })).filter(x => x.gain >= 8 && (start.get(x.m.id) ?? 100) < 50).sort((a, b) => b.gain - a.gain)[0];
+  const headline = back ? `${firstName(sim, back.m.id)} is back in the game.`
+    : week.stars === 3 ? `A ${unit} to remember.`
+    : week.stars === 2 ? `A solid ${unit}.`
+    : week.stars === 1 ? `A mixed ${unit}.`
+    : `A hard ${unit}.`;
+  const people = week.styleFit.total
+    ? `You gave ${week.styleFit.correct} of ${week.styleFit.total} people the style they needed${kpis.morale.end > kpis.morale.start ? ', and team morale rose' : kpis.morale.end < kpis.morale.start ? ', but team morale slipped' : ''}.`
+    : '';
+  const stage = bottleneck ? sim.config.stages.find(s => s.key === bottleneck)?.name ?? bottleneck : null;
+  const business = pace >= 1
+    ? `Revenue is on pace${stage ? `; ${stage} is the stage to watch next ${unit}` : ''}.`
+    : `Revenue is behind pace${stage ? `, so next ${unit} is about ${stage}` : ''}.`;
+  return { headline, line: [people, business].filter(Boolean).join(' ') };
+}
+
+/** Applies a chosen unlock reward (Configuration Spec, Unlock rewards). */
 export function chooseReward(sim: Sim, key: string) {
   if (!sim.pendingReward?.includes(key)) throw new IntentError('No such reward on offer', 'noReward');
   sim.pendingReward = null;
-  if (key === 'extra_day') sim.bonusPeriod = sim.period + 1;
-  if (key === 'quiet_word') {
-    const m = sim.members.find(x => !x.concernShared && sim.config.members.find(p => p.id === x.id)?.hiddenConcern);
-    if (m) m.concernShared = true;
-  }
-  if (key === 'free_lunch') sim.availableAt['energize:team_lunch'] = 0;
+  if (key === 'bonus_day') sim.bonusPeriod = sim.period + 1;
+  if (key === 'hire_budget') sim.hireBudget = true;
+  if (key === 'team_activity') sim.freeTeamActivity = true;
+  log(sim, { kind: 'periodEnd', title: `Reward taken: ${REWARD_NAMES[key] ?? key}`, memberIds: [], changes: [] });
 }
+
+const REWARD_NAMES: Record<string, string> = { bonus_day: 'a bonus day', hire_budget: 'extra hire budget', team_activity: 'a team activity without cooldown' };
 
 export function startNextPeriod(sim: Sim) {
   if (sim.phase !== 'periodEnd') throw new IntentError('The period has not ended', 'wrongPhase');
@@ -116,11 +128,8 @@ export function startNextPeriod(sim: Sim) {
 }
 
 export function finalScore(sim: Sim) {
-  const total = sim.score.business + sim.score.people + sim.score.leadership + sim.score.bonus;
-  const share = total / RUN_MAX;
-  const t = sim.config.tiers;
-  const tier = share >= t.platinum ? 'platinum' : share >= t.gold ? 'gold' : share >= t.silver ? 'silver' : 'bronze';
-  return { total, share, tier };
+  const score = leadershipScore(sim);
+  return { ...score, tier: tierFor(sim, score.total) };
 }
 
 export { perPeriod };

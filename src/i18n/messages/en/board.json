@@ -21,7 +21,7 @@
   "board.reward": "{key, select, extra_day {One extra day next period} quiet_word {A quiet word: hear a concern someone has kept to themselves} free_lunch {Team lunch available again now} other {A reward}}",
   "board.ended.title": "The run is over",
   "board.ended.score": "Leadership Score {total, number, integer} of {max, number, integer}",
-  "board.ended.tier": "{tier, select, bronze {Bronze} silver {Silver} gold {Gold} platinum {Platinum} other {}} tier",
+  "board.ended.tier": "{tier} tier",
   "board.loading": "Getting your team ready",
   "board.block.lastInStage": "The only person left in {stage}",
   "board.block.noCover": "Nobody else in {stage} can cover the role",

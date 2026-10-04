@@ -2,6 +2,8 @@ import { blank, UNTAGGED } from './live';
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
 import { mismatchType, styleDifference, trainingMismatch, type Mismatch, type Style, type Triple } from './rules';
+import { respond } from './events';
+import { checkBadges } from './score';
 import {
   addMessage, capacityLeft, effectChanges, firstName, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
   STYLE_NAMES, stageName, trustChange
@@ -102,11 +104,13 @@ export type Block =
   | { reason: 'liveCap'; cap: number };
 
 export function blockedReason(sim: Sim, a: Action, memberId: string | null, optionKey?: string): Block | null {
-  if (sim.period < a.unlockPeriod) return { reason: 'locked', period: a.unlockPeriod };
-  const cost = (optionKey ? a.options.find(o => o.key === optionKey)?.cost : undefined) ?? a.cost;
+  const budget = a.rule === 'hire' && sim.hireBudget;
+  if (sim.period < a.unlockPeriod && !budget) return { reason: 'locked', period: a.unlockPeriod };
+  const cost = budget ? 0 : (optionKey ? a.options.find(o => o.key === optionKey)?.cost : undefined) ?? a.cost;
   if (cost > capacityLeft(sim)) return { reason: 'capacity', need: cost, have: capacityLeft(sim) };
   // Role coverage (Teardown hidden rule 6): a full team hires nobody.
-  if (a.rule === 'hire' && (sim.members.length >= sim.config.stages.length * sim.config.maxPerStage || interviewees(sim).length === 0)) return { reason: 'teamFull' };
+  // Extra hire budget (an unlock) allows one seat past a full team.
+  if (a.rule === 'hire' && (sim.members.length >= sim.config.stages.length * sim.config.maxPerStage + (budget ? 1 : 0) || interviewees(sim).length === 0)) return { reason: 'teamFull' };
   // Live interaction cap per period (Configuration Spec, Time and pacing).
   if (a.kind !== 'static' && (sim.liveTaken[sim.period] ?? 0) >= sim.config.time.liveCap) return { reason: 'liveCap', cap: sim.config.time.liveCap };
   if (memberId) {
@@ -121,7 +125,8 @@ export function blockedReason(sim: Sim, a: Action, memberId: string | null, opti
     if (a.rule === 'training' && !peers.some(x => x.away === 0)) return { reason: 'noCover', stage: m.stage };
   }
   const keys = [a.key, optionKey ? `${a.key}:${optionKey}` : null, memberId ? `${a.key}@${memberId}` : null].filter(Boolean) as string[];
-  const until = Math.max(...keys.map(k => sim.availableAt[k] ?? 0));
+  // A team activity without cooldown (an unlock) skips the wait once.
+  const until = freeActivity(sim, a) ? 0 : Math.max(...keys.map(k => sim.availableAt[k] ?? 0));
   if (until > sim.absSub) return { reason: 'cooldown', in: until - sim.absSub };
   return null;
 }
@@ -144,7 +149,11 @@ export function blockedText(b: Block): string {
 /** Working days per sub-period, to turn the Model doc's repeat limits in days into the storyline's unit. */
 const DAYS_PER_SUB: Record<string, number> = { hour: 1 / 8, day: 1, week: 5, month: 21, quarter: 63 };
 
+/** Team activities are static team wide actions, such as Energize the team. */
+const freeActivity = (sim: Sim, a: Action) => sim.freeTeamActivity && a.scope === 'team' && a.kind === 'static';
+
 function setCooldown(sim: Sim, a: Action, o: Option | undefined, memberIds: string[]) {
+  if (freeActivity(sim, a)) { sim.freeTeamActivity = false; return; }
   const raw = o?.cooldownDays ?? a.cooldownDays;
   if (!raw) return;
   const days = Math.max(1, Math.ceil(raw / (DAYS_PER_SUB[sim.config.time.subPeriod.unit] ?? 1)));
@@ -230,6 +239,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   let interactionId: string | null = null;
   if (a.kind === 'static') {
     changes.push(...keepPromises(sim, a.key, input.memberIds));
+    changes.push(...respond(sim, rng, a.key, a.scope === 'team' ? sim.members.map(m => m.id) : input.memberIds));
     const title = o.label === a.description ? a.name : `${a.name}: ${o.label}`;
     if (a.rule !== 'assess') log(sim, { kind: 'action', title, memberIds: input.memberIds, changes });
     // Static decisions show what they changed, with reasons, like conversations do (rule 5).
@@ -249,14 +259,17 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     sim.liveTaken[sim.period] = (sim.liveTaken[sim.period] ?? 0) + 1;
     sim.interactions[interactionId] = blank({ actionKey: a.key, optionKey: o.key, memberIds: input.memberIds, format: a.format!, startedAt: sim.absSub,
       // Interview two candidates, then choose (Design doc, Hire member).
-      candidates: a.rule === 'hire' ? interviewees(sim) : undefined, candidate: a.rule === 'hire' ? 0 : undefined });
+      candidates: a.rule === 'hire' ? interviewees(sim) : undefined, candidate: a.rule === 'hire' ? 0 : undefined,
+      budget: a.rule === 'hire' && sim.hireBudget ? true : undefined });
     // Hybrid decisions are locked before the conversation (spec).
     if (a.rule === 'swap' || a.rule === 'reward' || a.rule === 'fire') changes.push(...hybridDecision(sim, rng, a, targets, input.stage));
   }
   if (a.scope === 'team') sim.touchedTeam = true;
   sim.touched.push(...input.memberIds);
+  const budget = a.rule === 'hire' && sim.hireBudget;
+  if (budget) sim.hireBudget = false;
   setCooldown(sim, a, o, input.memberIds);
-  spend(sim, rng, o.cost ?? a.cost);
+  spend(sim, rng, budget ? 0 : o.cost ?? a.cost);
   return { changes, interactionId, summary: a.name };
 }
 
@@ -283,6 +296,7 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
     const o = a.options[0];
     changes.push(...effectChanges(sim, rng, m, o.effects.m0, { label: 'Rewarded', cause: `You rewarded ${firstName(sim, m.id)}.`, rule: ruleText(a, o), evidence: [] }));
     m.recognizedAt = sim.absSub;
+    if (!top || top === m) sim.fairRecognitions += 1;
     if (top && top !== m) {
       const reason: Reason = { label: 'Passed over', cause: `${firstName(sim, top.id)} is the top performer and saw ${firstName(sim, m.id)} rewarded instead.`, rule: 'Rewarding anyone but the top performer upsets the top performer (Model doc).', evidence: [] };
       changes.push(...effectChanges(sim, rng, top, o.effects.m1, reason, { useTrust: false }));
@@ -308,7 +322,6 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
 
 const BAND_TRUST: Record<Band, number> = { strong: 6, adequate: 2, weak: -3, harmful: -8 };
 const BAND_CHAT_MORALE: Record<Band, number> = { strong: 3, adequate: 1, weak: -1, harmful: -4 };
-const BAND_SPONSOR: Record<Band, number> = { strong: 8, adequate: 3, weak: -4, harmful: -10 };
 const BAND_WORDS: Record<Band, string> = { strong: 'went well', adequate: 'landed', weak: 'did not land', harmful: 'went badly' };
 
 function adjust(mt: Mismatch, band: Band): Mismatch {
@@ -342,7 +355,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   if (it.actionKey === 'sponsor') {
     const msg = sim.inbox.find(x => x.id === it.replyTo);
     if (msg) msg.state = 'answered';
-    changes.push(...sponsorChange(sim, BAND_SPONSOR[ev.band], `Sponsor briefing ${BAND_WORDS[ev.band]}`));
+    changes.push(...sponsorChange(sim, sim.config.gamification.sponsor.briefing[ev.band], `Sponsor briefing ${BAND_WORDS[ev.band]}`));
     sponsorLine = changes.some(c => c.subject === 'sponsor' && c.delta > 0) ? `${sim.config.sponsor.name.split(' ')[0]} is more confident in you now.` : changes.some(c => c.subject === 'sponsor' && c.delta < 0) ? `${sim.config.sponsor.name.split(' ')[0]} is less confident in you now.` : null;
   } else if (a && table && a.rule !== 'hire') {
     // Authored consequence table for the band (Configuration Spec, Consequence table).
@@ -359,6 +372,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     }
     if (table.sponsor) changes.push(...sponsorChange(sim, table.sponsor, `${a.name} ${BAND_WORDS[ev.band]}`));
   } else if (it.actionKey === 'reply') {
+    if (replyMsg && !targets.length) replyMsg.state = 'answered';
     for (const m of targets) {
       const msg = sim.inbox.find(x => x.id === it.replyTo);
       const onTime = msg && msg.state === 'open';
@@ -409,7 +423,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     // The participant chose after interviewing (Design doc, Hire member). How the interviews went
     // sets the new hire's first trust in you.
     const cid = it.memberIds[0];
-    const room = cid ? sim.members.filter(m => m.stage === person(sim, cid).homeStage).length < sim.config.maxPerStage : false;
+    const room = cid ? sim.members.filter(m => m.stage === person(sim, cid).homeStage).length < sim.config.maxPerStage + (it.budget ? 1 : 0) : false;
     // SIMULATION 4.3: a Weak interview lands the candidate half the time, a Harmful one never.
     const accepts = ev.band === 'strong' || ev.band === 'adequate' || (ev.band === 'weak' && rng.chance(0.5));
     if (cid && room && !accepts) {
@@ -450,8 +464,10 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     main.concernShared = true;
     changes.push(...trustChange(main, 4, { label: 'Opened up', cause: `${firstName(sim, main.id)} shared what is really on ${pr(sim, main.id) === 'she' ? 'her' : pr(sim, main.id) === 'they' ? 'their' : 'his'} mind.`, rule: 'When someone trusts you enough to share a concern, trust rises by 4.', evidence: quotes(ev) }));
   }
-  award(sim, 'first_word');
-  if (ev.flags.openQuestions >= 3 && (a?.format === 'roleplay' || a?.format === 'chat')) award(sim, 'listener');
+  // Live interaction record for the week score and the Leadership pillar; an expected response to an event; badges.
+  sim.liveRecords.push({ period: sim.period, actionKey: it.actionKey, format: it.format, band: ev.band, memberIds: it.memberIds });
+  changes.push(...respond(sim, rng, it.actionKey, it.memberIds, it.replyTo));
+  checkBadges(sim, 'interaction');
 
   const affected = [...new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject))];
   const outcome: Outcome = {
@@ -474,7 +490,8 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
 
 /** Up to two candidates whose home stage has room (role coverage), in storyline order. */
 export function interviewees(sim: Sim): string[] {
-  const room = (stage: string) => sim.members.filter(m => m.stage === stage).length < sim.config.maxPerStage;
+  // Extra hire budget (an unlock) allows one seat past a full stage.
+  const room = (stage: string) => sim.members.filter(m => m.stage === stage).length < sim.config.maxPerStage + (sim.hireBudget ? 1 : 0);
   return sim.candidates.filter(id => room(person(sim, id).homeStage)).slice(0, 2);
 }
 
@@ -503,7 +520,7 @@ function createMemberFrom(sim: Sim, id: string): MemberSim {
     id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? sim.config.trustRules.start, trustCap: sim.config.trustRules.capPerSubPeriod, trustMovedThisSub: 0, style: null, lastStyle: null, lastReaction: null,
     neededAtStart: n.skill >= sim.config.thresholds.high ? (n.morale >= sim.config.thresholds.high ? 'E' : 'P') : n.morale >= sim.config.thresholds.high ? 'G' : 'D',
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: sim.period, revealed: false, concernShared: false, lastChange: 0,
-    recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result
+    recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale
   };
 }
 
@@ -523,6 +540,3 @@ export function openConversation(sim: Sim, kind: 'reply' | 'sponsor', messageId?
   return id;
 }
 
-export function award(sim: Sim, badge: string) {
-  if (!sim.badges.includes(badge)) sim.badges.push(badge);
-}

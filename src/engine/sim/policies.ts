@@ -24,6 +24,8 @@ const SAY: Record<Style, string> = {
   E: 'Thank you, I trust you with this. It is your call how you want to run the account; I will step back. What do you need from me? Let me know your next step this week.'
 };
 const PLAIN = 'Please do better this week.';
+/** A sponsor briefing as the good player gives it: owns the number, names the risk, asks for what is needed. */
+const BRIEF = 'Honestly, we are behind on 2 stages and I own that. The biggest risk is the proposal stage. I will coach the team through it, and here is the plan: first the call lists, then the demos by Friday. What I need from you is support with two key accounts.';
 
 /**
  * Opens every profile not opened yet, as a participant reading the cards would, then works out each
@@ -65,10 +67,10 @@ export async function play(config: StorylineConfig, policy: Policy, seed: number
         v = r.view;
         if (r.interactionId) v = (await engine.dispatch({ type: 'submitInteraction', interactionId: r.interactionId, text: step.say })).view;
       }
-      for (const msg of v.inbox.filter(x => x.from !== 'news')) {
+      for (const msg of v.inbox.filter(x => x.from !== 'news' && x.kind !== 'news')) {
         if (policy === 'random' && rng.chance(0.5)) continue;
-        const o = await engine.dispatch({ type: 'openConversation', kind: msg.from === 'sponsor' ? 'sponsor' : 'reply', messageId: msg.id });
-        v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: policy === 'good' ? SAY.P : PLAIN })).view;
+        const o = await engine.dispatch({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: msg.id });
+        v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: policy === 'good' ? (msg.briefing ? BRIEF : SAY.P) : PLAIN })).view;
       }
     }
     const end = await engine.dispatch({ type: 'endPeriod' });

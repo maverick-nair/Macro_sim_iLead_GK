@@ -1,7 +1,9 @@
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
 import { applyEffect, applyTrust, clamp, mismatchType, neededStyle, styleDifference, type Mismatch, type Style, type Triple } from './rules';
-import type { Change, EventCard, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
+import { runEvents, scheduleEvents } from './events';
+import { checkBadges } from './score';
+import type { Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
 
 /**
  * Simulation state and the passage of time: funnel, scheduled events, triggers, promises and
@@ -16,19 +18,23 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     style: null, lastStyle: null, lastReaction: null, neededAtStart: neededStyle(p.start, high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: 1,
     revealed: false, concernShared: false, lastChange: 0, recognizedAt: null, reassignedInPeriod: null,
-    trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result
+    trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale
   }));
   const sim: Sim = {
     config, seed, period: 1, sub: 0, spent: 0, bonusPeriod: null, absSub: 0, phase: 'style', members, departed: [],
     candidates: config.candidates.map(c => c.id), availableAt: {},
     funnel: { conversions: 0, value: 0, periodValue: 0, stageOut: config.stages.map(() => 0), stageOutPeriod: config.stages.map(() => 0) },
     decisions: { period: [], run: [] }, styleUses: { D: 0, G: 0, P: 0, E: 0 },
-    score: { business: 0, people: 0, leadership: 0, bonus: 0 }, periods: [], streak: 0, badges: [],
-    sponsor: { value: 50, causes: [], crossed: [] }, pendingReward: null, promises: [], inbox: [], cards: [],
+    periods: [], streak: 0, streakBonus: 0, badges: [],
+    sponsor: { value: config.gamification.sponsor.start, causes: [] }, pendingReward: null, promises: [], inbox: [], cards: [],
+    runStart: { morale: 0, trust: 0 }, liveRecords: [], fairRecognitions: 0, hireBudget: false, freeTeamActivity: false, checkInPeriod: null,
+    events: { schedule: {}, fired: [], pending: [] }, pulseAtStart: 0,
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
-    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: 50
+    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start
   };
+  sim.events.schedule = scheduleEvents(sim);
   markPeriodStart(sim);
+  sim.runStart = { morale: sim.periodStart.kpis.morale, trust: sim.periodStart.kpis.trust };
   return sim;
 }
 
@@ -36,7 +42,8 @@ export const perPeriod = (sim: Sim) => sim.config.time.subPeriod.perPeriod;
 export const totalSubs = (sim: Sim) => perPeriod(sim) * sim.config.time.period.count;
 /** Share of the run completed, 0 to 1. */
 export const runFraction = (sim: Sim) => sim.absSub / totalSubs(sim);
-export const capacity = (sim: Sim) => perPeriod(sim) + (sim.bonusPeriod === sim.period ? 1 : 0);
+/** Sub-periods of time this period: one more after a bonus day, one less after a CEO check in. */
+export const capacity = (sim: Sim) => perPeriod(sim) + (sim.bonusPeriod === sim.period ? 1 : 0) - (sim.checkInPeriod === sim.period ? 1 : 0);
 export const capacityLeft = (sim: Sim) => Math.max(0, capacity(sim) - sim.spent);
 export const nextId = (sim: Sim, prefix: string) => `${prefix}${++sim.seq}`;
 export const present = (sim: Sim) => sim.members;
@@ -83,6 +90,7 @@ export function effectChanges(sim: Sim, rng: Rng, m: MemberSim, effect: Triple, 
   m.lastChange = applied[1] + applied[2];
   if (applied[1] + applied[2] !== 0) m.lastReaction = applied[1] + applied[2] > 0 ? 'pos' : 'neg';
   m.lowestResult = Math.min(m.lowestResult, m.result);
+  m.lowestMorale = Math.min(m.lowestMorale, m.morale);
   return out;
 }
 
@@ -92,13 +100,19 @@ export function trustChange(m: MemberSim, delta: number, reason: Reason): Change
   return d === 0 ? [] : [{ subject: m.id, metric: 'trust', from, to: m.trust, delta: d, reason }];
 }
 
+/** The sponsor meter's rule in words, from the authored numbers (scoring-and-report.md 6). */
+function sponsorRule(sim: Sim) {
+  const s = sim.config.gamification.sponsor, f = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`), unit = sim.config.time.period.unit;
+  return `Sponsor confidence moves with briefings (${f(s.briefing.strong)}, ${f(s.briefing.adequate)}, ${f(s.briefing.weak)} or ${f(s.briefing.harmful)} by how they land), revenue against each ${unit}'s share of the target (${f(s.periodPace.met)} or ${f(s.periodPace.missed)}) and escalations (${f(s.escalation)}).`;
+}
+
 export function sponsorChange(sim: Sim, delta: number, text: string): Change[] {
   const from = sim.sponsor.value;
   sim.sponsor.value = clamp(from + delta);
   const d = sim.sponsor.value - from;
   if (d === 0) return [];
   sim.sponsor.causes = [{ text, delta: d }, ...sim.sponsor.causes].slice(0, 3);
-  return [{ subject: 'sponsor', metric: 'confidence', from, to: sim.sponsor.value, delta: d, reason: { label: text, cause: text, rule: 'Sponsor confidence follows pace against target, sponsor conversations and replies.', evidence: [] } }];
+  return [{ subject: 'sponsor', metric: 'confidence', from, to: sim.sponsor.value, delta: d, reason: { label: text, cause: text, rule: sponsorRule(sim), evidence: [] } }];
 }
 
 export function log(sim: Sim, entry: Omit<LogEntry, 'id' | 'period' | 'sub'>) {
@@ -124,6 +138,7 @@ function markPeriodStart(sim: Sim) {
   sim.touched = [];
   sim.touchedTeam = false;
   sim.sponsorAtStart = sim.sponsor.value;
+  sim.pulseAtStart = (sim.periodStart.kpis.morale + sim.periodStart.kpis.trust) / 2;
 }
 
 export { markPeriodStart };
@@ -147,7 +162,8 @@ export function runSubPeriod(sim: Sim, rng: Rng) {
   sim.absSub += 1;
   if (sim.sub === 1) triggersAtPeriodStart(sim, rng);
   runFunnel(sim);
-  scheduledEvents(sim, rng);
+  checkBadges(sim, 'conversion');
+  runEvents(sim, rng);
   triggersEverySub(sim, rng);
   dueChecks(sim);
   for (const m of sim.members) {
@@ -184,35 +200,6 @@ export function idealThroughput(sim: Sim): number[] {
 }
 
 // ---------------------------------------------------------------- events (6.3)
-
-const EVENT_SHARE: Record<Mismatch, number> = { 0: 0.5, 1: 1, 2: 1.5 };
-
-function scheduledEvents(sim: Sim, rng: Rng) {
-  for (const ev of sim.config.events) {
-    if (ev.period !== sim.period || ev.subPeriod !== sim.sub) continue;
-    const changes: Change[] = [];
-    let target: string | null = null;
-    if (ev.target === 'member' && sim.members.length) {
-      // The engine picks who it lands on: the top performer for an offer, otherwise someone mid table.
-      const byResult = [...sim.members].sort((a, b) => b.result - a.result);
-      target = (ev.key === 'job_offer' ? byResult[0] : byResult[Math.floor(byResult.length / 2)]).id;
-    }
-    const affected = target ? sim.members.filter(m => m.id === target) : sim.members;
-    for (const m of affected) {
-      const mt = m.style ? mismatchType(styleDifference(m.style, m.neededAtStart), rng, misread(sim, m)) : 1;
-      const reason: Reason = {
-        label: ev.title,
-        cause: gendered(ev.body, sim, target),
-        evidence: [{ quote: ev.title, by: 'News', judgedByAI: false }],
-        rule: `Events hit harder when you lead someone in a style that does not fit them: ${mt === 0 ? 'half' : mt === 1 ? 'full' : 'one and a half times'} impact here.`
-      };
-      changes.push(...effectChanges(sim, rng, m, ev.impact, reason, { scale: EVENT_SHARE[mt], useTrust: false }));
-    }
-    const card: EventCard = { id: nextId(sim, 'ev'), key: ev.key, card: ev.card, title: ev.title, body: gendered(ev.body, sim, target), memberId: target, changes };
-    sim.cards.push(card);
-    log(sim, { kind: 'event', title: ev.title, memberIds: affected.map(m => m.id), changes });
-  }
-}
 
 // ---------------------------------------------------------------- triggers (6.4)
 
@@ -359,7 +346,7 @@ function dueChecks(sim: Sim) {
       log(sim, { kind: 'trigger', title: 'Message went unanswered', memberIds: [m.id], changes });
     } else if (msg.briefing) {
       // A skipped briefing escalates (Design doc: issue escalated to the CEO, −10).
-      log(sim, { kind: 'trigger', title: 'Sponsor briefing missed', memberIds: [], changes: sponsorChange(sim, -10, 'Missed the sponsor briefing') });
+      log(sim, { kind: 'trigger', title: 'Sponsor briefing missed', memberIds: [], changes: sponsorChange(sim, sim.config.gamification.sponsor.escalation, 'Missed the sponsor briefing') });
     } else if (msg.from === 'sponsor') {
       log(sim, { kind: 'trigger', title: 'Sponsor message unanswered', memberIds: [], changes: sponsorChange(sim, -5, 'No reply yet to the sponsor') });
     }

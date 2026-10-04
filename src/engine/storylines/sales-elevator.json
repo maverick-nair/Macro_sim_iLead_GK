@@ -1976,7 +1976,9 @@
         -4,
         -4
       ],
-      "target": "team"
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "Proposal and negotiation conversations get harder unless the team sells value."
     },
     {
       "key": "performance_declines",
@@ -1993,7 +1995,23 @@
         -6,
         -10
       ],
-      "target": "member"
+      "target": "member",
+      "response": {
+        "actions": [
+          "f2f",
+          "coach",
+          "feedback"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          3,
+          2
+        ]
+      },
+      "escalation": {
+        "sponsor": true
+      }
     },
     {
       "key": "event_360_degree_feedback",
@@ -2010,7 +2028,9 @@
         -4,
         0
       ],
-      "target": "team"
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "Team morale dips. A team activity this week would land well."
     },
     {
       "key": "recession_strikes",
@@ -2019,7 +2039,7 @@
         "he": "Recession strikes. Salaries across the company are lowered and you (the Sales Director) are asked to lower salaries of your team members.",
         "she": "Recession strikes. Salaries across the company are lowered and you (the Sales Director) are asked to lower salaries of your team members."
       },
-      "card": "impact",
+      "card": "crisis",
       "period": 3,
       "subPeriod": 3,
       "impact": [
@@ -2027,7 +2047,22 @@
         -5,
         -5
       ],
-      "target": "team"
+      "target": "team",
+      "delivery": "sponsorCall",
+      "response": {
+        "actions": [
+          "meet"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          2,
+          0
+        ]
+      },
+      "escalation": {
+        "sponsor": true
+      }
     },
     {
       "key": "rumors_of_being_acquired",
@@ -2044,7 +2079,9 @@
         -5,
         0
       ],
-      "target": "team"
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "Morale dips while the rumors last. Clear, honest updates help."
     },
     {
       "key": "job_offer",
@@ -2061,7 +2098,24 @@
         -5,
         -5
       ],
-      "target": "member"
+      "target": "member",
+      "delivery": "chat",
+      "response": {
+        "actions": [
+          "f2f",
+          "reward",
+          "coach"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          4,
+          0
+        ]
+      },
+      "escalation": {
+        "sponsor": false
+      }
     },
     {
       "key": "sales_conference_announcement",
@@ -2078,7 +2132,9 @@
         -4,
         -2
       ],
-      "target": "team"
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "A small dent in morale and result across the team."
     },
     {
       "key": "tragic_accident",
@@ -2112,7 +2168,9 @@
         -9,
         -10
       ],
-      "target": "team"
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "More approvals slow every stage. Morale and result fall unless you help the team adjust."
     },
     {
       "key": "insider_trading_scandal",
@@ -2146,7 +2204,64 @@
         -2,
         -3
       ],
-      "target": "team"
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "Delayed orders make closing harder for a few days."
+    },
+    {
+      "key": "big_client_referral",
+      "title": "A big client referral",
+      "body": {
+        "he": "A happy customer refers a hospital group planning twelve new elevators. The proposal team gets a warm lead.",
+        "she": "A happy customer refers a hospital group planning twelve new elevators. The proposal team gets a warm lead."
+      },
+      "card": "opportunity",
+      "window": {
+        "from": 3,
+        "to": 6,
+        "probability": 60
+      },
+      "impact": [
+        0,
+        3,
+        4
+      ],
+      "target": "stage:proposal"
+    },
+    {
+      "key": "team_morale_alarm",
+      "title": "Paula has heard the team is struggling",
+      "body": {
+        "he": "Paula calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it.",
+        "she": "Paula calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it."
+      },
+      "card": "crisis",
+      "when": {
+        "condition": "teamMoraleBelow",
+        "value": 40,
+        "periods": 2
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "target": "sponsor",
+      "delivery": "sponsorCall",
+      "response": {
+        "actions": [
+          "reply"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          0,
+          0
+        ]
+      },
+      "escalation": {
+        "sponsor": true
+      }
     }
   ],
   "triggers": [
