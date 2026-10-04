@@ -2,29 +2,33 @@ import { describe, expect, it } from 'vitest';
 import { copyViolations } from '../i18n/copy';
 import { moneyFormatter, parseStoryline, type StorylineInput } from './config';
 
-const STAGES = ['leads', 'qualify', 'proposal', 'negotiation', 'conversion'];
+import salesElevator from './storylines/sales-elevator.json';
+
+const base = () => structuredClone(salesElevator) as unknown as StorylineInput;
 const stats = { skill: 50, morale: 50, result: 50 };
-const person = (id: string, home = 'leads') => ({
-  id, name: id, title: 'Rep', pronoun: 'they' as const, homeStage: home,
-  start: { ...stats, trust: 50 }, byStage: Object.fromEntries(STAGES.map(s => [s, stats])),
-  profile: { previous: '', tenure: '', experience: '', skills: '', remarks: '' }
-});
 
 function storyline(over: Partial<StorylineInput> = {}): StorylineInput {
-  return {
-    id: 'sales_elevator', name: 'Sales Elevator',
-    money: { currency: 'USD', locale: 'en-US', target: 240000, valuePerConversion: 4200, inputPerSubPeriod: [8] },
-    time: { period: { unit: 'week', count: 8 } },
-    stages: STAGES.map((key, i) => ({ key, name: key, conversionRatio: [0.62, 0.5, 0.3, 0.5, 0.5][i], ideal: 2 })),
-    members: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'].map((id, i) => person(id, STAGES[Math.floor(i / 2)])),
-    performanceThreshold: 10,
-    ...over
-  };
+  return { ...base(), ...over };
 }
 
 const issues = (s: StorylineInput) => { const r = parseStoryline(s); return r.ok ? [] : r.issues; };
 
 describe('storyline config', () => {
+  it('accepts the imported Sales Elevator storyline', () => {
+    const r = parseStoryline(base());
+    expect(r.ok ? [] : r.issues).toEqual([]);
+    if (!r.ok) return;
+    expect(r.config.members).toHaveLength(10);
+    expect(r.config.actions).toHaveLength(13);
+    expect(r.config.events).toHaveLength(12);
+  });
+
+  it('cleans authored copy on the way in', () => {
+    const r = parseStoryline(base());
+    const texts = r.ok ? [...r.config.events.flatMap(e => [e.title, e.body.he, e.body.she]), ...r.config.actions.flatMap(a => [a.name, a.description, ...a.options.map(o => o.label)])] : ['parse failed'];
+    expect(texts.filter(t => /[\u002D\p{Pd}]/u.test(t))).toEqual([]);
+  });
+
   it('accepts the default shape and fills defaults', () => {
     const r = parseStoryline(storyline());
     expect(r.ok).toBe(true);
@@ -36,34 +40,46 @@ describe('storyline config', () => {
 
   it('derives sub-periods from the period unit', () => {
     for (const [unit, sub, per] of [['year', 'quarter', 4], ['month', 'week', 4], ['week', 'day', 5], ['day', 'hour', 8]] as const) {
-      const r = parseStoryline(storyline({ time: { period: { unit, count: 6 } } }));
+      const r = parseStoryline(storyline({ time: { period: { unit, count: 8 } } }));
       expect(r.ok && r.config.time.subPeriod).toEqual({ unit: sub, perPeriod: per });
     }
   });
 
-  it('allows 1 to 10 periods', () => {
-    expect(issues(storyline({ time: { period: { unit: 'month', count: 10 } } }))).toEqual([]);
+  it('allows 1 to 10 periods, and keeps events inside the run', () => {
+    expect(issues(storyline({ time: { period: { unit: 'month', count: 10 } }, money: { ...base().money, inputPerSubPeriod: [8] } }))).toEqual([]);
+    expect(issues(storyline({ time: { period: { unit: 'month', count: 6 } } })).join()).toMatch(/events.*after the last period/);
     expect(issues(storyline({ time: { period: { unit: 'month', count: 11 } } })).join()).toMatch(/time.period.count/);
     expect(issues(storyline({ time: { period: { unit: 'month', count: 0 } } })).join()).toMatch(/time.period.count/);
   });
 
   it('allows 3 to 6 stages, unique keys, and every person valued in every stage', () => {
-    expect(issues(storyline({ stages: storyline().stages!.slice(0, 2) })).join()).toMatch(/stages/);
-    const seven = [...storyline().stages!, { key: 'renewal', name: 'Renewal', conversionRatio: 0.5, ideal: 1 }, { key: 'upsell', name: 'Upsell', conversionRatio: 0.5, ideal: 1 }];
+    expect(issues(storyline({ stages: base().stages.slice(0, 2) })).join()).toMatch(/stages/);
+    const seven = [...base().stages, { key: 'renewal', name: 'Renewal', conversionRatio: 0.5, ideal: 1 }, { key: 'upsell', name: 'Upsell', conversionRatio: 0.5, ideal: 1 }];
     expect(issues(storyline({ stages: seven })).join()).toMatch(/stages/);
-    const m = storyline().members!.map(p => ({ ...p }));
+    const m = base().members.map(p => ({ ...p }));
     m[0] = { ...m[0], byStage: { leads: stats } };
     expect(issues(storyline({ members: m })).join()).toMatch(/Missing values for stage qualify/);
   });
 
+  it('checks action costs, formats and prerequisites', () => {
+    const a = base().actions.map(x => ({ ...x }));
+    a[0] = { ...a[0], cost: 1.5 };
+    a[1] = { ...a[1], kind: 'live', format: undefined };
+    a[2] = { ...a[2], prerequisite: 'nope' };
+    const out = issues(storyline({ actions: a })).join();
+    expect(out).toMatch(/actions.0.cost: Cost must be a multiple of 1/);
+    expect(out).toMatch(/actions.1.format/);
+    expect(out).toMatch(/Unknown action nope/);
+  });
+
   it('wants one lead input, or one per period', () => {
-    expect(issues(storyline({ money: { ...storyline().money!, inputPerSubPeriod: [8, 9, 10] } })).join()).toMatch(/one per period \(8\)/);
-    expect(issues(storyline({ money: { ...storyline().money!, inputPerSubPeriod: [6, 7, 8, 8, 9, 9, 10, 10] } }))).toEqual([]);
+    expect(issues(storyline({ money: { ...base().money, inputPerSubPeriod: [8, 9, 10] } })).join()).toMatch(/one per period \(8\)/);
+    expect(issues(storyline({ money: { ...base().money, inputPerSubPeriod: [6, 7, 8, 8, 9, 9, 10, 10] } }))).toEqual([]);
   });
 
   it('rejects unknown currencies and locales', () => {
-    expect(issues(storyline({ money: { ...storyline().money!, currency: 'XXQ' } })).join()).toMatch(/currency/);
-    expect(issues(storyline({ money: { ...storyline().money!, currency: 'usd' } })).join()).toMatch(/ISO 4217/);
+    expect(issues(storyline({ money: { ...base().money, currency: 'XXQ' } })).join()).toMatch(/currency/);
+    expect(issues(storyline({ money: { ...base().money, currency: 'usd' } })).join()).toMatch(/ISO 4217/);
   });
 });
 

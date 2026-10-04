@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { sanitizeCopy } from '../i18n/copy';
 
 /**
  * Storyline configuration authored in GenieKreator. The engine only runs on a config that passes
@@ -6,6 +7,9 @@ import { z } from 'zod';
  */
 
 const Score = z.number().int().min(0).max(100);
+/** Participant facing text authored in GenieKreator, made safe for the copy rules on the way in. */
+const Copy = z.string().min(1).transform(sanitizeCopy);
+const Key = z.string().regex(/^[a-z][a-z0-9_]*$/);
 const Ratio = z.number().min(0).max(1);
 
 /** ISO 4217 code known to the runtime, for example USD, GBP, JPY, SGD, INR, MYR, AED. */
@@ -75,7 +79,7 @@ export const Person = z.object({
   /** Values in every stage, used by swap and assess (docs/SIMULATION.md 4.3). */
   byStage: z.record(z.string(), Stats),
   profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: z.string(), relations: z.string().default('') }),
-  hiddenConcern: z.string().optional(),
+  hiddenConcern: Copy.optional(),
   portraits: z.record(z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']), z.string()).optional(),
   voice: z.string().optional()
 });
@@ -92,6 +96,74 @@ export const Tiers = z.object({
   platinum: Ratio.default(0.8)
 }).refine(t => t.silver < t.gold && t.gold < t.platinum, 'Tier thresholds must rise: silver < gold < platinum');
 
+export const STYLES = ['D', 'G', 'P', 'E'] as const;
+
+/** Skill, morale and result change. */
+const Effect = z.tuple([z.number().int(), z.number().int(), z.number().int()]);
+/** Change for mismatch type 0, 1 and 2 (docs/SIMULATION.md 4.2). */
+export const EffectTable = z.object({ m0: Effect, m1: Effect, m2: Effect.optional() });
+
+/** How an action decides its mismatch type (docs/SIMULATION.md 4.3). */
+export const ACTION_RULES = ['styleOption', 'weeklyStyle', 'trend', 'training', 'swap', 'assess', 'reward', 'fire', 'hire'] as const;
+export const LIVE_FORMATS = ['meeting', 'email', 'roleplay', 'chat', 'plan', 'interview', 'sponsor'] as const;
+
+export const ActionOption = z.object({
+  key: Key,
+  label: Copy,
+  /** The leadership style this option expresses, for style based rules. */
+  style: z.enum(STYLES).optional(),
+  effects: EffectTable,
+  /** Sub-periods the member is away (training). */
+  away: z.number().int().min(0).default(0),
+  /** For email: what the message does. */
+  intent: z.enum(['congratulate', 'warn']).optional(),
+  /** Overrides the action's repeat limit for this option (Model doc: team lunch 20 days, team building 8). */
+  cooldownDays: z.number().int().min(0).optional()
+});
+
+export const Action = z.object({
+  key: Key,
+  name: Copy,
+  description: Copy,
+  scope: z.enum(['team', 'member']),
+  kind: z.enum(['live', 'static', 'hybrid']),
+  format: z.enum(LIVE_FORMATS).optional(),
+  rule: z.enum(ACTION_RULES),
+  cost: z.number().min(0),
+  cooldownDays: z.number().int().min(0).default(0),
+  unlockPeriod: z.number().int().min(1).default(1),
+  /** People to pick on the board. [0, 0] means the whole team. */
+  targets: z.tuple([z.number().int().min(0), z.number().int().min(0)]).default([0, 0]),
+  /** Soft prerequisite: the drawer nudges, the penalty still applies (spec). */
+  prerequisite: Key.optional(),
+  options: z.array(ActionOption).min(1)
+});
+
+const Gendered = z.object({ he: Copy, she: Copy, they: Copy.optional() });
+
+export const GeneralEvent = z.object({
+  key: Key,
+  title: Copy,
+  body: Gendered,
+  card: z.enum(['impact', 'signal', 'capacity', 'diagnostic']),
+  period: z.number().int().min(1),
+  subPeriod: z.number().int().min(1).default(1),
+  impact: Effect,
+  /** Whole team, or one member picked by the engine. */
+  target: z.enum(['team', 'member']).default('team')
+});
+
+export const TRIGGER_KINDS = ['casualLeave', 'medicalLeave', 'clueless', 'demoralized', 'lackOfTraining', 'moraleDrops', 'resignation', 'roleChangeRequest', 'complains', 'trainingRequest'] as const;
+
+export const Trigger = z.object({
+  kind: z.enum(TRIGGER_KINDS),
+  message: Gendered,
+  impact: Effect.default([0, 0, 0]),
+  maxTimes: z.number().int().min(1).default(1),
+  /** Kind specific numbers (thresholds, durations, run fractions). Engine defaults fill the rest. */
+  params: z.record(z.string(), z.number()).default({})
+});
+
 export const StorylineConfig = z.object({
   id: z.string(),
   name: z.string(),
@@ -102,6 +174,11 @@ export const StorylineConfig = z.object({
   candidates: z.array(Person).default([]),
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),
   tiers: Tiers.default({ silver: 0.4, gold: 0.6, platinum: 0.8 }),
+  actions: z.array(Action).min(1),
+  /** Weekly style setting effect per period (docs/SIMULATION.md 4.4). */
+  weeklyStyle: EffectTable,
+  events: z.array(GeneralEvent).default([]),
+  triggers: z.array(Trigger).default([]),
   /** Funnel buffer from the Model doc, set by calibration. */
   performanceThreshold: z.number().min(-50).max(50),
   calibrated: z.boolean().default(false)
@@ -119,6 +196,21 @@ export const StorylineConfig = z.object({
       for (const s of stageKeys) if (!p.byStage[s]) ctx.addIssue({ code: 'custom', path: [list, i, 'byStage', s], message: `Missing values for stage ${s}` });
     });
   }
+  const actionKeys = new Set<string>();
+  c.actions.forEach((a, i) => {
+    if (actionKeys.has(a.key)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'key'], message: `Duplicate action ${a.key}` });
+    actionKeys.add(a.key);
+    if (Math.abs(a.cost / c.time.costStep - Math.round(a.cost / c.time.costStep)) > 1e-9)
+      ctx.addIssue({ code: 'custom', path: ['actions', i, 'cost'], message: `Cost must be a multiple of ${c.time.costStep}` });
+    if (a.kind !== 'static' && !a.format) ctx.addIssue({ code: 'custom', path: ['actions', i, 'format'], message: 'Live and hybrid actions need a format' });
+    if (a.targets[0] > a.targets[1]) ctx.addIssue({ code: 'custom', path: ['actions', i, 'targets'], message: 'Minimum targets above maximum' });
+    if (a.unlockPeriod > c.time.period.count) ctx.addIssue({ code: 'custom', path: ['actions', i, 'unlockPeriod'], message: 'Unlocks after the last period' });
+  });
+  c.actions.forEach((a, i) => { if (a.prerequisite && !actionKeys.has(a.prerequisite)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'prerequisite'], message: `Unknown action ${a.prerequisite}` }); });
+  c.events.forEach((e, i) => {
+    if (e.period > c.time.period.count) ctx.addIssue({ code: 'custom', path: ['events', i, 'period'], message: `Period ${e.period} is after the last period (${c.time.period.count})` });
+    if (c.time.subPeriod && e.subPeriod > c.time.subPeriod.perPeriod) ctx.addIssue({ code: 'custom', path: ['events', i, 'subPeriod'], message: 'Sub-period out of range' });
+  });
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))
     ctx.addIssue({ code: 'custom', path: ['thresholds'], message: 'Thresholds must rise: low < amber < high' });
 });

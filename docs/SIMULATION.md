@@ -353,7 +353,7 @@ Sales Elevator schedule, 12 week workbook mapped to 8 weeks as `round(period × 
 | Insider trading scandal | 10 | 0 / −5 / 0 |
 | Supplier strike | 11 | 0 / −2 / −3 |
 
-If two events land in the same period, the second moves to the next free period.
+A period holds up to two events (first and third sub-period). A third moves to the next period with room, so no event is dropped.
 
 Each event has a 2.0 card type [S]:
 - **Impact:** business consequence, shown with "See impact".

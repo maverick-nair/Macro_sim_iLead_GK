@@ -1,0 +1,2304 @@
+{
+  "id": "sales_elevator",
+  "name": "Sales Elevator, Innov8 Elevators",
+  "money": {
+    "currency": "USD",
+    "locale": "en-US",
+    "display": "symbol",
+    "target": 240000,
+    "valuePerConversion": 8400,
+    "inputPerSubPeriod": [
+      8
+    ]
+  },
+  "time": {
+    "period": {
+      "unit": "week",
+      "count": 8
+    },
+    "costStep": 1
+  },
+  "stages": [
+    {
+      "key": "leads",
+      "name": "Leads",
+      "conversionRatio": 0.62,
+      "ideal": 2
+    },
+    {
+      "key": "qualify",
+      "name": "Qualify",
+      "conversionRatio": 0.5,
+      "ideal": 2
+    },
+    {
+      "key": "proposal",
+      "name": "Proposal",
+      "conversionRatio": 0.3,
+      "ideal": 2
+    },
+    {
+      "key": "negotiation",
+      "name": "Negotiation",
+      "conversionRatio": 0.5,
+      "ideal": 2
+    },
+    {
+      "key": "conversion",
+      "name": "Conversion",
+      "conversionRatio": 0.5,
+      "ideal": 2
+    }
+  ],
+  "members": [
+    {
+      "id": "kent",
+      "name": "Kent Goldberg",
+      "title": "Lead Generation Executive",
+      "pronoun": "he",
+      "homeStage": "leads",
+      "start": {
+        "skill": 30,
+        "morale": 22,
+        "result": 49,
+        "trust": 46
+      },
+      "byStage": {
+        "leads": {
+          "skill": 30,
+          "morale": 22,
+          "result": 49
+        },
+        "qualify": {
+          "skill": 14,
+          "morale": 15,
+          "result": 14
+        },
+        "proposal": {
+          "skill": 22,
+          "morale": 24,
+          "result": 24
+        },
+        "negotiation": {
+          "skill": 43,
+          "morale": 38,
+          "result": 40
+        },
+        "conversion": {
+          "skill": 29,
+          "morale": 28,
+          "result": 21
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "1 month ago",
+        "experience": "3 years",
+        "skills": "Lead Generation, Negotiation",
+        "remarks": "He expected a lot more from his current job and has already started complaining to others about his job.",
+        "relations": ""
+      },
+      "hiddenConcern": "He expected a lot more from this job, and feels it is not what he was promised."
+    },
+    {
+      "id": "beth",
+      "name": "Beth Killiney",
+      "title": "Lead Generation Executive",
+      "pronoun": "she",
+      "homeStage": "leads",
+      "start": {
+        "skill": 25,
+        "morale": 73,
+        "result": 45,
+        "trust": 66
+      },
+      "byStage": {
+        "leads": {
+          "skill": 25,
+          "morale": 73,
+          "result": 45
+        },
+        "qualify": {
+          "skill": 40,
+          "morale": 41,
+          "result": 40
+        },
+        "proposal": {
+          "skill": 34,
+          "morale": 35,
+          "result": 35
+        },
+        "negotiation": {
+          "skill": 28,
+          "morale": 29,
+          "result": 28
+        },
+        "conversion": {
+          "skill": 25,
+          "morale": 27,
+          "result": 25
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "6 months ago",
+        "experience": "3 years",
+        "skills": "Lead Generation, Lead Qualification",
+        "remarks": "Beta Elevators is Innov8's closest rival. She decided to switch companies mainly due to her unhappiness with the management of Beta Elevators.",
+        "relations": ""
+      },
+      "hiddenConcern": "She left Beta Elevators over how she was managed, and watches closely how you lead."
+    },
+    {
+      "id": "justin",
+      "name": "Justin Keel",
+      "title": "Lead Qualifier",
+      "pronoun": "he",
+      "homeStage": "qualify",
+      "start": {
+        "skill": 22,
+        "morale": 40,
+        "result": 52,
+        "trust": 54
+      },
+      "byStage": {
+        "leads": {
+          "skill": 18,
+          "morale": 17,
+          "result": 17
+        },
+        "qualify": {
+          "skill": 22,
+          "morale": 40,
+          "result": 52
+        },
+        "proposal": {
+          "skill": 32,
+          "morale": 39,
+          "result": 25
+        },
+        "negotiation": {
+          "skill": 10,
+          "morale": 40,
+          "result": 20
+        },
+        "conversion": {
+          "skill": 20,
+          "morale": 88,
+          "result": 40
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "5 years ago",
+        "experience": "5 years",
+        "skills": "Lead Qualification, Sales Conversion",
+        "remarks": "Justin is a Finance Major and is looking for a shift to the Sales Conversion role. He has been in the Lead Qualification role for the past 3 years and wants a change.",
+        "relations": ""
+      },
+      "hiddenConcern": "He has been in Lead Qualification for 3 years and wants to move to Sales Conversion."
+    },
+    {
+      "id": "derick",
+      "name": "Derick Kaynes",
+      "title": "Lead Qualifier",
+      "pronoun": "he",
+      "homeStage": "qualify",
+      "start": {
+        "skill": 70,
+        "morale": 71,
+        "result": 62,
+        "trust": 68
+      },
+      "byStage": {
+        "leads": {
+          "skill": 65,
+          "morale": 66,
+          "result": 61
+        },
+        "qualify": {
+          "skill": 70,
+          "morale": 71,
+          "result": 62
+        },
+        "proposal": {
+          "skill": 22,
+          "morale": 25,
+          "result": 25
+        },
+        "negotiation": {
+          "skill": 28,
+          "morale": 29,
+          "result": 31
+        },
+        "conversion": {
+          "skill": 47,
+          "morale": 49,
+          "result": 35
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "3 years",
+        "experience": "6 years",
+        "skills": "Lead Qualification, Lead Generation",
+        "remarks": "",
+        "relations": ""
+      }
+    },
+    {
+      "id": "green",
+      "name": "Green Bell",
+      "title": "Proposal Specialist",
+      "pronoun": "he",
+      "homeStage": "proposal",
+      "start": {
+        "skill": 89,
+        "morale": 56,
+        "result": 69,
+        "trust": 63
+      },
+      "byStage": {
+        "leads": {
+          "skill": 65,
+          "morale": 56,
+          "result": 57
+        },
+        "qualify": {
+          "skill": 24,
+          "morale": 22,
+          "result": 23
+        },
+        "proposal": {
+          "skill": 89,
+          "morale": 56,
+          "result": 69
+        },
+        "negotiation": {
+          "skill": 91,
+          "morale": 81,
+          "result": 80
+        },
+        "conversion": {
+          "skill": 12,
+          "morale": 13,
+          "result": 12
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "3 years",
+        "experience": "10 years",
+        "skills": "Proposal Design, Negotiation",
+        "remarks": "Green Bell has influential contacts to make his proposals work and is the go-to guy in the team for anything proposal related.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "lowe",
+      "name": "Lowe Rex",
+      "title": "Proposal Specialist",
+      "pronoun": "he",
+      "homeStage": "proposal",
+      "start": {
+        "skill": 80,
+        "morale": 45,
+        "result": 67,
+        "trust": 58
+      },
+      "byStage": {
+        "leads": {
+          "skill": 46,
+          "morale": 48,
+          "result": 49
+        },
+        "qualify": {
+          "skill": 78,
+          "morale": 72,
+          "result": 71
+        },
+        "proposal": {
+          "skill": 80,
+          "morale": 45,
+          "result": 67
+        },
+        "negotiation": {
+          "skill": 72,
+          "morale": 35,
+          "result": 57
+        },
+        "conversion": {
+          "skill": 62,
+          "morale": 25,
+          "result": 47
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "3 years ago",
+        "experience": "3 years",
+        "skills": "Proposal Design, Lead Qualification, Negotiation",
+        "remarks": "",
+        "relations": ""
+      },
+      "hiddenConcern": "He feels his technical depth goes unnoticed."
+    },
+    {
+      "id": "jack",
+      "name": "Jack Holt",
+      "title": "Negotiation Specialist",
+      "pronoun": "he",
+      "homeStage": "negotiation",
+      "start": {
+        "skill": 92,
+        "morale": 85,
+        "result": 95,
+        "trust": 78
+      },
+      "byStage": {
+        "leads": {
+          "skill": 40,
+          "morale": 45,
+          "result": 43
+        },
+        "qualify": {
+          "skill": 19,
+          "morale": 31,
+          "result": 20
+        },
+        "proposal": {
+          "skill": 20,
+          "morale": 22,
+          "result": 21
+        },
+        "negotiation": {
+          "skill": 92,
+          "morale": 85,
+          "result": 95
+        },
+        "conversion": {
+          "skill": 71,
+          "morale": 78,
+          "result": 72
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "2 years ago",
+        "experience": "15 years",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Jack Holt is a top performer at Innov8 and has received a multitude of positive appraisals from his superiors.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "peter",
+      "name": "Peter Higgins",
+      "title": "Negotiation Specialist",
+      "pronoun": "he",
+      "homeStage": "negotiation",
+      "start": {
+        "skill": 10,
+        "morale": 15,
+        "result": 16,
+        "trust": 38
+      },
+      "byStage": {
+        "leads": {
+          "skill": 22,
+          "morale": 23,
+          "result": 20
+        },
+        "qualify": {
+          "skill": 41,
+          "morale": 43,
+          "result": 44
+        },
+        "proposal": {
+          "skill": 30,
+          "morale": 31,
+          "result": 31
+        },
+        "negotiation": {
+          "skill": 10,
+          "morale": 15,
+          "result": 16
+        },
+        "conversion": {
+          "skill": 63,
+          "morale": 30,
+          "result": 41
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "6 years ago",
+        "experience": "6 years",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Peter Higgins is a lawyer by education and switched careers to work for Innov8 in the sales team. His appraisals for the past 2 years have gone down hill. He has been loyal to his job and his managers, but has not added any value and needs encouragement often.",
+        "relations": ""
+      },
+      "hiddenConcern": "His appraisals have gone downhill and he needs encouragement, but he will not ask for it."
+    },
+    {
+      "id": "ruth",
+      "name": "Ruth Ether",
+      "title": "Conversion Specialist",
+      "pronoun": "she",
+      "homeStage": "conversion",
+      "start": {
+        "skill": 80,
+        "morale": 50,
+        "result": 65,
+        "trust": 60
+      },
+      "byStage": {
+        "leads": {
+          "skill": 24,
+          "morale": 28,
+          "result": 32
+        },
+        "qualify": {
+          "skill": 29,
+          "morale": 29,
+          "result": 31
+        },
+        "proposal": {
+          "skill": 33,
+          "morale": 31,
+          "result": 35
+        },
+        "negotiation": {
+          "skill": 11,
+          "morale": 12,
+          "result": 12
+        },
+        "conversion": {
+          "skill": 80,
+          "morale": 50,
+          "result": 65
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "2 years ago",
+        "experience": "2 years",
+        "skills": "Sales Conversion",
+        "remarks": "Ruth is a perfectionist and highly skilled in conversion and order processing.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "mandy",
+      "name": "Mandy Lobert",
+      "title": "Conversion Specialist",
+      "pronoun": "she",
+      "homeStage": "conversion",
+      "start": {
+        "skill": 60,
+        "morale": 80,
+        "result": 71,
+        "trust": 73
+      },
+      "byStage": {
+        "leads": {
+          "skill": 46,
+          "morale": 35,
+          "result": 42
+        },
+        "qualify": {
+          "skill": 40,
+          "morale": 60,
+          "result": 45
+        },
+        "proposal": {
+          "skill": 65,
+          "morale": 50,
+          "result": 70
+        },
+        "negotiation": {
+          "skill": 55,
+          "morale": 75,
+          "result": 66
+        },
+        "conversion": {
+          "skill": 60,
+          "morale": 80,
+          "result": 71
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "6 years",
+        "skills": "Sales Conversion, Negotiation",
+        "remarks": "Mandy Lobert is popular among her ex-employees to have closed tough deals with clients who had opted for competitor's products.",
+        "relations": ""
+      }
+    }
+  ],
+  "candidates": [
+    {
+      "id": "ron",
+      "name": "Ron Hackman",
+      "title": "Lead Generation Executive",
+      "pronoun": "he",
+      "homeStage": "leads",
+      "start": {
+        "skill": 90,
+        "morale": 69,
+        "result": 82,
+        "trust": 70
+      },
+      "byStage": {
+        "leads": {
+          "skill": 90,
+          "morale": 69,
+          "result": 82
+        },
+        "qualify": {
+          "skill": 30,
+          "morale": 42,
+          "result": 20
+        },
+        "proposal": {
+          "skill": 34,
+          "morale": 45,
+          "result": 40
+        },
+        "negotiation": {
+          "skill": 40,
+          "morale": 32,
+          "result": 35
+        },
+        "conversion": {
+          "skill": 10,
+          "morale": 12,
+          "result": 20
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "1 month",
+        "skills": "Lead Generation, Proposal Design",
+        "remarks": "Ron is new to Innov8 Inc. Previously, he was working with a telemarketing agency and has 7 years in collecting sales leads.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "sheila",
+      "name": "Sheila Frederick",
+      "title": "Lead Generation Executive",
+      "pronoun": "she",
+      "homeStage": "leads",
+      "start": {
+        "skill": 57,
+        "morale": 27,
+        "result": 30,
+        "trust": 45
+      },
+      "byStage": {
+        "leads": {
+          "skill": 57,
+          "morale": 27,
+          "result": 30
+        },
+        "qualify": {
+          "skill": 11,
+          "morale": 12,
+          "result": 11
+        },
+        "proposal": {
+          "skill": 16,
+          "morale": 18,
+          "result": 15
+        },
+        "negotiation": {
+          "skill": 13,
+          "morale": 14,
+          "result": 11
+        },
+        "conversion": {
+          "skill": 22,
+          "morale": 24,
+          "result": 25
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "5 years",
+        "skills": "Lead Generation",
+        "remarks": "Sheila's previous manager felt she needed to perform better and spend less time chatting in the common area.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "ajit",
+      "name": "Ajit Ram",
+      "title": "Lead Qualifier",
+      "pronoun": "he",
+      "homeStage": "qualify",
+      "start": {
+        "skill": 82,
+        "morale": 99,
+        "result": 95,
+        "trust": 84
+      },
+      "byStage": {
+        "leads": {
+          "skill": 43,
+          "morale": 56,
+          "result": 40
+        },
+        "qualify": {
+          "skill": 82,
+          "morale": 99,
+          "result": 95
+        },
+        "proposal": {
+          "skill": 25,
+          "morale": 27,
+          "result": 30
+        },
+        "negotiation": {
+          "skill": 14,
+          "morale": 15,
+          "result": 15
+        },
+        "conversion": {
+          "skill": 10,
+          "morale": 12,
+          "result": 11
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "8 years",
+        "skills": "Lead Qualification, Lead Generation",
+        "remarks": "Ajit Ram has recommendations from the top management of his previous company and is said to have started the Energize club and is extremely motivated to perform.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "nate",
+      "name": "Nate Benjamin",
+      "title": "Lead Qualifier",
+      "pronoun": "he",
+      "homeStage": "qualify",
+      "start": {
+        "skill": 54,
+        "morale": 40,
+        "result": 42,
+        "trust": 52
+      },
+      "byStage": {
+        "leads": {
+          "skill": 49,
+          "morale": 47,
+          "result": 45
+        },
+        "qualify": {
+          "skill": 54,
+          "morale": 40,
+          "result": 42
+        },
+        "proposal": {
+          "skill": 21,
+          "morale": 10,
+          "result": 10
+        },
+        "negotiation": {
+          "skill": 14,
+          "morale": 19,
+          "result": 19
+        },
+        "conversion": {
+          "skill": 60,
+          "morale": 70,
+          "result": 70
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "8 years",
+        "skills": "Lead Qualification, Negotiation",
+        "remarks": "Nate has strong negotiation skills, but wants to try out a new career in qualifying sales leads.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "desmond",
+      "name": "Desmond Mart",
+      "title": "Proposal Specialist",
+      "pronoun": "he",
+      "homeStage": "proposal",
+      "start": {
+        "skill": 40,
+        "morale": 45,
+        "result": 40,
+        "trust": 54
+      },
+      "byStage": {
+        "leads": {
+          "skill": 60,
+          "morale": 60,
+          "result": 71
+        },
+        "qualify": {
+          "skill": 22,
+          "morale": 21,
+          "result": 22
+        },
+        "proposal": {
+          "skill": 40,
+          "morale": 45,
+          "result": 40
+        },
+        "negotiation": {
+          "skill": 10,
+          "morale": 11,
+          "result": 19
+        },
+        "conversion": {
+          "skill": 19,
+          "morale": 19,
+          "result": 21
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "5 years",
+        "skills": "Proposal Design, Lead Generation",
+        "remarks": "Desmond Mart is sought after for his proposal drafting skills and is known for striking a chord with clients. He has worked with Innov8's competitors previously and can get the job done.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "rita",
+      "name": "Rita Sandersky",
+      "title": "Proposal Specialist",
+      "pronoun": "she",
+      "homeStage": "proposal",
+      "start": {
+        "skill": 34,
+        "morale": 32,
+        "result": 35,
+        "trust": 48
+      },
+      "byStage": {
+        "leads": {
+          "skill": 19,
+          "morale": 18,
+          "result": 15
+        },
+        "qualify": {
+          "skill": 16,
+          "morale": 20,
+          "result": 21
+        },
+        "proposal": {
+          "skill": 34,
+          "morale": 32,
+          "result": 35
+        },
+        "negotiation": {
+          "skill": 38,
+          "morale": 50,
+          "result": 40
+        },
+        "conversion": {
+          "skill": 35,
+          "morale": 32,
+          "result": 33
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "None (5 years of work experience with China Bank)",
+        "skills": "Proposal Design, Negotiation",
+        "remarks": "Rita Sandersky has been working as an assistant to the Vice President at an MNC for the past 5 years and has received medium-to-high scores in her appraisals.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "ben",
+      "name": "Ben Lowinsky",
+      "title": "Negotiation Specialist",
+      "pronoun": "he",
+      "homeStage": "negotiation",
+      "start": {
+        "skill": 78,
+        "morale": 58,
+        "result": 72,
+        "trust": 64
+      },
+      "byStage": {
+        "leads": {
+          "skill": 39,
+          "morale": 30,
+          "result": 27
+        },
+        "qualify": {
+          "skill": 28,
+          "morale": 30,
+          "result": 31
+        },
+        "proposal": {
+          "skill": 33,
+          "morale": 33,
+          "result": 31
+        },
+        "negotiation": {
+          "skill": 78,
+          "morale": 58,
+          "result": 72
+        },
+        "conversion": {
+          "skill": 21,
+          "morale": 22,
+          "result": 22
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "7 years",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Ben Lowinsky has had 7 years' experience in negotiations and client transactions and has worked with three of Innov8's competitors.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "nico",
+      "name": "Nico Arnas",
+      "title": "Negotiation Specialist",
+      "pronoun": "he",
+      "homeStage": "negotiation",
+      "start": {
+        "skill": 45,
+        "morale": 90,
+        "result": 60,
+        "trust": 75
+      },
+      "byStage": {
+        "leads": {
+          "skill": 23,
+          "morale": 22,
+          "result": 21
+        },
+        "qualify": {
+          "skill": 33,
+          "morale": 39,
+          "result": 39
+        },
+        "proposal": {
+          "skill": 30,
+          "morale": 32,
+          "result": 32
+        },
+        "negotiation": {
+          "skill": 45,
+          "morale": 90,
+          "result": 60
+        },
+        "conversion": {
+          "skill": 43,
+          "morale": 82,
+          "result": 70
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "MBA Freshman",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Nico Arnas is a freshman out of business school. He was part of the debate and negotiation clubs and is looking for a role in the Negotiation department.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "patrick",
+      "name": "Patrick Kent",
+      "title": "Conversion Specialist",
+      "pronoun": "he",
+      "homeStage": "conversion",
+      "start": {
+        "skill": 40,
+        "morale": 83,
+        "result": 63,
+        "trust": 73
+      },
+      "byStage": {
+        "leads": {
+          "skill": 30,
+          "morale": 31,
+          "result": 30
+        },
+        "qualify": {
+          "skill": 70,
+          "morale": 79,
+          "result": 81
+        },
+        "proposal": {
+          "skill": 70,
+          "morale": 78,
+          "result": 70
+        },
+        "negotiation": {
+          "skill": 31,
+          "morale": 39,
+          "result": 30
+        },
+        "conversion": {
+          "skill": 40,
+          "morale": 83,
+          "result": 63
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "Graduate (Freshman)",
+        "skills": "Sales Conversion, Lead Qualification, Negotiation",
+        "remarks": "Patrick Kent is a freshman having just completed his Bachelors in Commerce. He is talented in closing deals and following up with order management processes. He has technical skills and has experience in Tally accounting software.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "terrence",
+      "name": "Terrence Paddington",
+      "title": "Conversion Specialist",
+      "pronoun": "he",
+      "homeStage": "conversion",
+      "start": {
+        "skill": 80,
+        "morale": 65,
+        "result": 72,
+        "trust": 67
+      },
+      "byStage": {
+        "leads": {
+          "skill": 41,
+          "morale": 45,
+          "result": 45
+        },
+        "qualify": {
+          "skill": 55,
+          "morale": 56,
+          "result": 59
+        },
+        "proposal": {
+          "skill": 79,
+          "morale": 71,
+          "result": 71
+        },
+        "negotiation": {
+          "skill": 62,
+          "morale": 58,
+          "result": 59
+        },
+        "conversion": {
+          "skill": 80,
+          "morale": 65,
+          "result": 72
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "None (10 years of work experience with Manchester Business School)",
+        "skills": "Sales Conversion, Proposal Design",
+        "remarks": "Terrence Paddington is currently working as a professor of leadership at a business school. He now wants to switch to sales and is expecting a role in the conversion team.",
+        "relations": ""
+      }
+    }
+  ],
+  "actions": [
+    {
+      "key": "meet",
+      "name": "Meet the team",
+      "description": "Team meeting enables you to meet the team in person and outline your goals for the weeks ahead. You could use the opportunity to gauge feedback from the team members as well. This action will take 1 day to complete.",
+      "scope": "team",
+      "kind": "live",
+      "format": "meeting",
+      "rule": "styleOption",
+      "cost": 1,
+      "cooldownDays": 10,
+      "options": [
+        {
+          "key": "directing",
+          "label": "Present the overall strategy, get into details of the execution plan and explain the responsibilities of the teams.",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Energize the team by giving a pep talk. At the same time, you try to get a buy-in for your strategy and execution plan.",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Present the overall strategy and ask for feedback.",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask the team to brainstorm on the strategy and the execution plan",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "energize",
+      "name": "Energize the team",
+      "description": "Energize your team by either taking them out for a team lunch or organize a 2-day team building activity.",
+      "scope": "team",
+      "kind": "static",
+      "rule": "weeklyStyle",
+      "cost": 1,
+      "options": [
+        {
+          "key": "team_lunch",
+          "label": "Team Lunch",
+          "effects": {
+            "m0": [
+              0,
+              3,
+              4
+            ],
+            "m1": [
+              0,
+              -3,
+              -2
+            ],
+            "m2": [
+              0,
+              -5,
+              -4
+            ]
+          },
+          "cooldownDays": 20
+        },
+        {
+          "key": "team_building",
+          "label": "Team building activity",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "cooldownDays": 8
+        }
+      ]
+    },
+    {
+      "key": "email",
+      "name": "Send email",
+      "description": "Write to up to 3 people. Congratulate or warn; replies arrive in your inbox.",
+      "scope": "member",
+      "kind": "live",
+      "format": "email",
+      "rule": "trend",
+      "cost": 1,
+      "targets": [
+        1,
+        3
+      ],
+      "options": [
+        {
+          "key": "warning",
+          "label": "Send warning mail",
+          "effects": {
+            "m0": [
+              1,
+              3,
+              3
+            ],
+            "m1": [
+              -1,
+              -6,
+              -7
+            ],
+            "m2": [
+              -7,
+              -5,
+              -3
+            ]
+          },
+          "intent": "warn"
+        },
+        {
+          "key": "congratulatory",
+          "label": "Send congratulatory mail",
+          "effects": {
+            "m0": [
+              1,
+              8,
+              8
+            ],
+            "m1": [
+              0,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -2,
+              -4
+            ]
+          },
+          "intent": "congratulate"
+        }
+      ]
+    },
+    {
+      "key": "training",
+      "name": "Send for training",
+      "description": "Build skill away from the desk. Up to 3 people.",
+      "scope": "member",
+      "kind": "static",
+      "rule": "training",
+      "cost": 1,
+      "targets": [
+        1,
+        3
+      ],
+      "options": [
+        {
+          "key": "three_day",
+          "label": "Send for 3-day training",
+          "effects": {
+            "m0": [
+              9,
+              6,
+              8
+            ],
+            "m1": [
+              5,
+              3,
+              2
+            ],
+            "m2": [
+              -4,
+              -8,
+              -3
+            ]
+          },
+          "away": 3
+        },
+        {
+          "key": "one_week",
+          "label": "Send for 1 week workshop",
+          "effects": {
+            "m0": [
+              8,
+              7,
+              6
+            ],
+            "m1": [
+              5,
+              6,
+              4
+            ],
+            "m2": [
+              -3,
+              -5,
+              -7
+            ]
+          },
+          "away": 5
+        }
+      ]
+    },
+    {
+      "key": "swap",
+      "name": "Swap roles",
+      "description": "Move people between stages, then explain the decision to them.",
+      "scope": "member",
+      "kind": "hybrid",
+      "format": "roleplay",
+      "rule": "swap",
+      "cost": 1,
+      "targets": [
+        1,
+        2
+      ],
+      "prerequisite": "assess",
+      "options": [
+        {
+          "key": "reassign",
+          "label": "Reassign role",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "key": "swap",
+          "label": "Swap role",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "hire",
+      "name": "Hire member",
+      "description": "Interview candidates for an open seat.",
+      "scope": "team",
+      "kind": "live",
+      "format": "interview",
+      "rule": "hire",
+      "cost": 2,
+      "cooldownDays": 8,
+      "unlockPeriod": 3,
+      "options": [
+        {
+          "key": "interview",
+          "label": "You decide to hire fresh talent into the team. We have provided you with the following options. Choose wisely.",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "fire",
+      "name": "Let go",
+      "description": "Remove someone from the team, then have the exit conversation.",
+      "scope": "member",
+      "kind": "hybrid",
+      "format": "roleplay",
+      "rule": "fire",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "let_go",
+          "label": "Use this action to fire a member from a role. Please note that you are required to have atleast one member in the role after the Fire action is taken.",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "f2f",
+      "name": "Meet face to face",
+      "description": "A one to one conversation.",
+      "scope": "member",
+      "kind": "live",
+      "format": "roleplay",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Get into details of the execution plan and explain the tasks in detail.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Energize the person by providing emotional support and try to seek an agreement on your execution plan.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Discuss the role and performance of the person and ask for feedback.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Encourage the person to follow own processes.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "assess",
+      "name": "Assess member",
+      "description": "See how this person would do in another stage. No effect on them.",
+      "scope": "member",
+      "kind": "static",
+      "rule": "assess",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "assess",
+          "label": "Assess action helps you to evaluate a team member's expertise and motivation levels with respect to a new role. Prior to reassigning a member, you may use the Assess action to determine the most suited role for him / her.",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "reward",
+      "name": "Reward member",
+      "description": "Recognize someone, then tell them why.",
+      "scope": "member",
+      "kind": "hybrid",
+      "format": "roleplay",
+      "rule": "reward",
+      "cost": 1,
+      "cooldownDays": 20,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "reward",
+          "label": "Awarding bonus to your team members may boost their morale and enhance their performance.",
+          "effects": {
+            "m0": [
+              0,
+              6,
+              9
+            ],
+            "m1": [
+              0,
+              -12,
+              -18
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "goals",
+      "name": "Set goals",
+      "description": "Agree goals, measures and support for the week.",
+      "scope": "member",
+      "kind": "live",
+      "format": "plan",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Send team member's tasks and the milestones for the upcoming week.",
+          "effects": {
+            "m0": [
+              3,
+              6,
+              7
+            ],
+            "m1": [
+              -1,
+              -2,
+              -4
+            ],
+            "m2": [
+              -2,
+              -3,
+              -3
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Seek buy-in from team member for the current week's plan and be available for any help required.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              6
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Send the plan for the week and seek inputs on it.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              5
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask team member what he / she is focusing on this week.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              5
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "coach",
+      "name": "Coach member",
+      "description": "Work through the job with them.",
+      "scope": "member",
+      "kind": "live",
+      "format": "roleplay",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Handhold the person with the execution plan and provide detailed instructions to deal with the task at hand.",
+          "effects": {
+            "m0": [
+              6,
+              3,
+              7
+            ],
+            "m1": [
+              -2,
+              -1,
+              -4
+            ],
+            "m2": [
+              -5,
+              -2,
+              -3
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Provide detailed guidance on execution and help the person see the importance of your instructions.",
+          "effects": {
+            "m0": [
+              5,
+              3,
+              6
+            ],
+            "m1": [
+              -2,
+              -1,
+              -3
+            ],
+            "m2": [
+              -5,
+              -2,
+              -2
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Work closely with the person to solve problems collaboratively.",
+          "effects": {
+            "m0": [
+              3,
+              2,
+              5
+            ],
+            "m1": [
+              -1,
+              -1,
+              -3
+            ],
+            "m2": [
+              -4,
+              -2,
+              -2
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask questions to provide clarity to the person.",
+          "effects": {
+            "m0": [
+              2,
+              2,
+              4
+            ],
+            "m1": [
+              -1,
+              -1,
+              -2
+            ],
+            "m2": [
+              -2,
+              -2,
+              -1
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "feedback",
+      "name": "Give feedback",
+      "description": "Tell them how it is going and agree what changes.",
+      "scope": "member",
+      "kind": "live",
+      "format": "chat",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Provide step-by-step feedback on things that have gone well and things that haven't.",
+          "effects": {
+            "m0": [
+              3,
+              6,
+              7
+            ],
+            "m1": [
+              -1,
+              -2,
+              -4
+            ],
+            "m2": [
+              -2,
+              -3,
+              -3
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Provide detailed feedback on performance and encourage the person to stick to your action plan.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              6
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Collaboratively assess the performance and come up with an action plan.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              5
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask the person to do self assessment and validate it.",
+          "effects": {
+            "m0": [
+              1,
+              3,
+              4
+            ],
+            "m1": [
+              -1,
+              -1,
+              -2
+            ],
+            "m2": [
+              -1,
+              -2,
+              -1
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    }
+  ],
+  "weeklyStyle": {
+    "m0": [
+      2,
+      4,
+      5
+    ],
+    "m1": [
+      0,
+      -3,
+      -4
+    ],
+    "m2": [
+      -1,
+      -6,
+      -8
+    ]
+  },
+  "events": [
+    {
+      "key": "new_crm_system",
+      "title": "New CRM system",
+      "body": {
+        "he": "Your firm has adopted a new CRM system and employees are forced to input leads electronically. Some are not tech savvy and do not like the change.",
+        "she": "Your firm has adopted a new CRM system and employees are forced to input leads electronically. Some are not tech savvy and do not like the change."
+      },
+      "card": "impact",
+      "period": 1,
+      "subPeriod": 1,
+      "impact": [
+        -1,
+        -4,
+        -7
+      ],
+      "target": "team"
+    },
+    {
+      "key": "elevator_review_website_criticizes",
+      "title": "Elevator review website criticizes",
+      "body": {
+        "he": "An elevator review website criticizes the features of Levo. It claims that the features already exist in competitor's products and are not innovative.",
+        "she": "An elevator review website criticizes the features of Levo. It claims that the features already exist in competitor's products and are not innovative."
+      },
+      "card": "impact",
+      "period": 2,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -4,
+        -4
+      ],
+      "target": "team"
+    },
+    {
+      "key": "performance_declines",
+      "title": "Performance declines",
+      "body": {
+        "he": "{name}'s performance suddenly declines. You find out that due to personal reasons, he's not been performing well and could be a roadblock for others to act on their leads.",
+        "she": "{name}'s performance suddenly declines. You find out that due to personal reasons, she's not been performing well and could be a roadblock for others to act on their leads."
+      },
+      "card": "diagnostic",
+      "period": 2,
+      "subPeriod": 3,
+      "impact": [
+        0,
+        -6,
+        -10
+      ],
+      "target": "member"
+    },
+    {
+      "key": "event_360_degree_feedback",
+      "title": "360 degree feedback",
+      "body": {
+        "he": "In your 360-degree feedback, employees have mentioned that they're out of energy and are in dire need of a break.",
+        "she": "In your 360-degree feedback, employees have mentioned that they're out of energy and are in dire need of a break."
+      },
+      "card": "signal",
+      "period": 3,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -4,
+        0
+      ],
+      "target": "team"
+    },
+    {
+      "key": "recession_strikes",
+      "title": "Recession strikes",
+      "body": {
+        "he": "Recession strikes. Salaries across the company are lowered and you (the Sales Director) are asked to lower salaries of your team members.",
+        "she": "Recession strikes. Salaries across the company are lowered and you (the Sales Director) are asked to lower salaries of your team members."
+      },
+      "card": "impact",
+      "period": 3,
+      "subPeriod": 3,
+      "impact": [
+        0,
+        -5,
+        -5
+      ],
+      "target": "team"
+    },
+    {
+      "key": "rumors_of_being_acquired",
+      "title": "Rumors of being acquired",
+      "body": {
+        "he": "There are some serious rumors that Levo might be acquired by Uplift. The sales team finds it hard to convince customers that there is no risk of products getting abandoned even in case an acquisition might go through.",
+        "she": "There are some serious rumors that Levo might be acquired by Uplift. The sales team finds it hard to convince customers that there is no risk of products getting abandoned even in case an acquisition might go through."
+      },
+      "card": "signal",
+      "period": 4,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -5,
+        0
+      ],
+      "target": "team"
+    },
+    {
+      "key": "job_offer",
+      "title": "Job offer",
+      "body": {
+        "he": "{name} gets a job offer from your competitor, Uplift. The fabulous pay package and promotion makes it hard for him to refuse the offer.",
+        "she": "{name} gets a job offer from your competitor, Uplift. The fabulous pay package and promotion makes it hard for her to refuse the offer."
+      },
+      "card": "capacity",
+      "period": 5,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -5,
+        -5
+      ],
+      "target": "member"
+    },
+    {
+      "key": "sales_conference_announcement",
+      "title": "Sales conference announcement",
+      "body": {
+        "he": "CEO announces that this year's sales conference will happen in a local resort, as opposed to the usual exotic destinations. Sales professionals expecting to cool their heels in Hawaii this year are terribly disappointed.",
+        "she": "CEO announces that this year's sales conference will happen in a local resort, as opposed to the usual exotic destinations. Sales professionals expecting to cool their heels in Hawaii this year are terribly disappointed."
+      },
+      "card": "signal",
+      "period": 5,
+      "subPeriod": 3,
+      "impact": [
+        0,
+        -4,
+        -2
+      ],
+      "target": "team"
+    },
+    {
+      "key": "tragic_accident",
+      "title": "Tragic accident",
+      "body": {
+        "he": "Tragic accident strikes passengers in a Levo elevator in a high-rise in New York. This does damage to the brand, making it hard for the sales team to close sales.",
+        "she": "Tragic accident strikes passengers in a Levo elevator in a high-rise in New York. This does damage to the brand, making it hard for the sales team to close sales."
+      },
+      "card": "impact",
+      "period": 6,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -8,
+        -7
+      ],
+      "target": "team"
+    },
+    {
+      "key": "business_process_change",
+      "title": "Business process change",
+      "body": {
+        "he": "A business process change in the company necessitates stringent sales compliance measures. This has introduced multiple approvals before sales can be closed. The sales team finds itself encumbered with needless paperwork, making them inefficient.",
+        "she": "A business process change in the company necessitates stringent sales compliance measures. This has introduced multiple approvals before sales can be closed. The sales team finds itself encumbered with needless paperwork, making them inefficient."
+      },
+      "card": "impact",
+      "period": 7,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -9,
+        -10
+      ],
+      "target": "team"
+    },
+    {
+      "key": "insider_trading_scandal",
+      "title": "Insider trading scandal",
+      "body": {
+        "he": "Levo's long-time board member, Aaron king, gets embroiled in an insider trading scandal. This brings a lot of disrepute to the company. {name} tells you that he is embarrassed to meet clients who often ask him about the latest developments in the scandal.",
+        "she": "Levo's long-time board member, Aaron king, gets embroiled in an insider trading scandal. This brings a lot of disrepute to the company. {name} tells you that she is embarrassed to meet clients who often ask her about the latest developments in the scandal."
+      },
+      "card": "signal",
+      "period": 7,
+      "subPeriod": 3,
+      "impact": [
+        0,
+        -5,
+        0
+      ],
+      "target": "member"
+    },
+    {
+      "key": "strike_at_supplier_s_factories",
+      "title": "Strike at supplier's factories",
+      "body": {
+        "he": "The sales team is finding it hard to answer customers whose orders have been delayed due to a strike at one of Levo B10's supplier's factories.",
+        "she": "The sales team is finding it hard to answer customers whose orders have been delayed due to a strike at one of Levo B10's supplier's factories."
+      },
+      "card": "impact",
+      "period": 8,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -2,
+        -3
+      ],
+      "target": "team"
+    }
+  ],
+  "triggers": [
+    {
+      "kind": "casualLeave",
+      "message": {
+        "he": "{name}: As informed earlier to the HR department, I will be on leave for the whole of this week.",
+        "she": "{name}: As informed earlier to the HR department, I will be on leave for the whole of this week."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {
+        "resultAbove": 70,
+        "away": 5
+      }
+    },
+    {
+      "kind": "clueless",
+      "message": {
+        "he": "You've reassigned {name} to {stage} but he's totally clueless on how to perform tasks in his current role.",
+        "she": "You've reassigned {name} to {stage} but she's totally clueless on how to perform tasks in her current role."
+      },
+      "impact": [
+        -10,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {}
+    },
+    {
+      "kind": "demoralized",
+      "message": {
+        "he": "{name}: I cannot work with my team mate anymore. I feel betrayed and coming to work everyday is demoralizing. Please reassign me to a different role or I would have no choice but to leave the company.",
+        "she": "{name}: I cannot work with my team mate anymore. I feel betrayed and coming to work everyday is demoralizing. Please reassign me to a different role or I would have no choice but to leave the company."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {
+        "resultBelow": 20,
+        "fromFraction": 0.3
+      }
+    },
+    {
+      "kind": "lackOfTraining",
+      "message": {
+        "he": "{name}'s performance has been on the decline for the past 6 weeks. He blames lack of training in Sales as the primary reason. Innov8's HR Head is at the meeting and recommends that you should send him for a training and give him another chance, before firing him.",
+        "she": "{name}'s performance has been on the decline for the past 6 weeks. She blames lack of training in Sales as the primary reason. Innov8's HR Head is at the meeting and recommends that you should send her for a training and give her another chance, before firing her."
+      },
+      "impact": [
+        -2,
+        -6,
+        -8
+      ],
+      "maxTimes": 2,
+      "params": {
+        "decliningFraction": 0.5
+      }
+    },
+    {
+      "kind": "medicalLeave",
+      "message": {
+        "he": "{name}: I am writing to you to let you know that I am down with flu and would like to take a 2-day medical break.",
+        "she": "{name}: I am writing to you to let you know that I am down with flu and would like to take a 2-day medical break."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {
+        "resultAbove": 70,
+        "away": 2
+      }
+    },
+    {
+      "kind": "moraleDrops",
+      "message": {
+        "he": "{name}'s morale suddenly drops due to lack of recognition / awards. You find that his performance had been tremendous, but you realize that you hadn't congratulated him and he is feeling left out.",
+        "she": "{name}'s morale suddenly drops due to lack of recognition / awards. You find that her performance had been tremendous, but you realize that you hadn't congratulated her and she is feeling left out."
+      },
+      "impact": [
+        0,
+        -5,
+        0
+      ],
+      "maxTimes": 3,
+      "params": {
+        "resultAbove": 60,
+        "sustainedFraction": 0.25
+      }
+    },
+    {
+      "kind": "resignation",
+      "message": {
+        "he": "{name}: I have lost faith in your leadership and am tendering my resignation effective immediately. I wish you and the team the best of luck in achieving your targets.",
+        "she": "{name}: I have lost faith in your leadership and am tendering my resignation effective immediately. I wish you and the team the best of luck in achieving your targets."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 2,
+      "params": {
+        "resultBelow": 10,
+        "trustBelow": 15,
+        "moraleBelow": 20,
+        "fromFraction": 0.2
+      }
+    },
+    {
+      "kind": "roleChangeRequest",
+      "message": {
+        "he": "{name} has been in the same role of {stage} for the past 4 weeks and wants a change.",
+        "she": "{name} has been in the same role of {stage} for the past 4 weeks and wants a change."
+      },
+      "impact": [
+        0,
+        -2,
+        2
+      ],
+      "maxTimes": 3,
+      "params": {
+        "sameStageFraction": 0.33,
+        "ignoredTrust": -4
+      }
+    },
+    {
+      "kind": "complains",
+      "message": {
+        "he": "Your leadership style with {name} needs to change. He has not been performing well and has been complaining about you to others. You probably need to supervise, set role and goals better.",
+        "she": "Your leadership style with {name} needs to change. She has not been performing well and has been complaining about you to others. You probably need to supervise, set role and goals better."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 2,
+      "params": {
+        "decliningFraction": 0.25,
+        "trustBelow": 25
+      }
+    },
+    {
+      "kind": "trainingRequest",
+      "message": {
+        "he": "With new advances in technology, {name} approaches you and has expressed interest in being trained in these skills so as to perform better in {stage}.",
+        "she": "With new advances in technology, {name} approaches you and has expressed interest in being trained in these skills so as to perform better in {stage}."
+      },
+      "maxTimes": 2,
+      "params": {
+        "trust": 4
+      }
+    }
+  ],
+  "performanceThreshold": 10,
+  "calibrated": false
+}
