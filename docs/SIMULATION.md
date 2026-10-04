@@ -219,7 +219,7 @@ Skill / morale / result change for mismatch 0, 1 and 2 [W]:
 | Team lunch and team building | The style you set for each member this period against their needed style at the start of the period. |
 | Email | Each recipient's result now against 10 sub-periods ago. Congratulating someone whose result held or rose gives mismatch 0, otherwise 1. Warning someone whose result fell gives mismatch 0, otherwise 1. The evaluator classifies the email as congratulatory, warning or neutral; neutral uses the congratulatory row at half value. |
 | Training | The style set this period against the needed style, using the training table (section 2). The member is away for the training's length. |
-| Swap or reassign | No mismatch. The member takes their configured values for the new stage, ±6 at random [M]. |
+| Swap or reassign | No mismatch. The member takes their configured values for the new stage, ±6 at random [M]. Skipping the Assess prerequisite costs the moved members 3 morale [N]: the spec says the penalty still applies, and 1.0 gives none. |
 | Assess | No effect. Reveals the member's values for a chosen stage, ±6 [M]. Satisfies the swap prerequisite. |
 | Reward | The top performer (highest result among available members) gets mismatch 0. Rewarding anyone else gives that person mismatch 0, and the top performer gets mismatch 1, always negative [M]. |
 | Fire | The member leaves. Every other member gets mismatch 1, always negative [M], plus the trust rule. |
@@ -227,7 +227,7 @@ Skill / morale / result change for mismatch 0, 1 and 2 [W]:
 
 ### 4.4 Weekly style setting [M]
 
-At the start of each period you set a style per member. For each member, the mismatch type of that style against their needed style sets a change spread across the period's sub-periods:
+At the start of each period you set a style per member; the Model doc calls these the actions a leader takes at the start of the week. When you confirm, each member's mismatch (their set style against their needed style) applies this change once:
 
 | Mismatch | Skill / morale / result per period |
 |---|---|
@@ -325,6 +325,8 @@ output = input × conversionRatio × (averageResult(stage) + performanceThreshol
 - Conversions = the last stage's output, carried as fractions and shown rounded.
 - Business value = conversions × `valuePerConversion`.
 
+**Ideal throughput** of a stage: what it would produce if everyone in the funnel performed at the High threshold (70).
+
 **Bottleneck stage** [S]: the stage with the lowest ratio of actual to ideal throughput this period.
 
 ### 6.3 General events [W]
@@ -408,7 +410,7 @@ A period can end with 0 stars (your decision, D29). The spec's "1 to 3" is super
 
 ### 7.3 Streak and badges
 **Streak:** consecutive periods with 2 or more stars.
-- Every third period of a streak adds a 5% bonus (of the maximum) to the Leadership Score.
+- Every third period of a streak adds a bonus of 10% of one period's maximum (90 points with 8 periods) to the Leadership Score.
 - A broken streak shows as "paused", never as lost or with a countdown [brief, humane gamification].
 
 **Badges** (rules are hidden; locked badges show the hint [S]):
@@ -417,7 +419,7 @@ A period can end with 0 stars (your decision, D29). The spec's "1 to 3" is super
 |---|---|---|
 | First word | Complete your first live interaction | |
 | Listener | 3 or more open questions in one 1:1 | |
-| Pipeline builder | Any stage at or over its ideal throughput for a whole period | Push one stage past ideal |
+| Pipeline builder | Any stage at or over its ideal throughput (6.2) for a whole period | Push one stage past ideal |
 | Steady hand | Every available member at morale 40 or more for a whole period | Keep everyone above 40 |
 | Turnaround | A member's result goes from under 30 to 60 or more | Help someone bounce back |
 | Clear voice | Every live interaction in a period done by voice | A whole week in voice |
