@@ -2,27 +2,26 @@ import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
 
 /**
- * The engine contract. The simulation engine is authoritative and server side: the UI renders
- * these payloads and sends intents, and never computes outcomes, scores or state changes itself.
- * Every payload is parsed with these schemas at the boundary (real engine and mock alike).
- *
- * Skeleton from M1. Fields marked TODO wait on the Simulation Design and Teardown (docs/DECISIONS.md D19).
+ * The engine contract: the payloads the engine sends and the intents it accepts. The engine is
+ * authoritative and server side; the UI renders these and never computes outcomes, scores or
+ * state changes itself (brief, rule 1). Every payload is parsed here at the boundary, for the real
+ * engine and the mock alike, which also applies the copy rules to all engine and AI text.
  */
 
 /** Text from the engine or an AI model, made safe for the copy rules on the way in. */
 export const Text = z.string().transform(sanitizeCopy);
+const Id = z.string().min(1);
+const Num = z.number().finite();
 
 export const MetricKey = z.enum(['skill', 'morale', 'result', 'trust']);
 export const StyleKey = z.enum(['D', 'G', 'P', 'E']);
 export const Mood = z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']);
 export const Score = z.number().min(0).max(100);
+export const PeriodUnit = z.enum(['year', 'month', 'week', 'day']);
+export const SubPeriodUnit = z.enum(['quarter', 'month', 'week', 'day', 'hour']);
 
 /** A quote behind a judgement. `judgedByAI` drives the "Read by AI" label. */
-export const Evidence = z.object({
-  quote: Text,
-  by: Text,
-  judgedByAI: z.boolean()
-});
+export const Evidence = z.object({ quote: Text, by: Text, judgedByAI: z.boolean() });
 
 /** Why a number moved. Every metric change carries one (brief, rule 5). */
 export const Reason = z.object({
@@ -36,110 +35,134 @@ export const Reason = z.object({
 });
 
 export const MetricChange = z.object({
-  subject: z.discriminatedUnion('type', [z.object({ type: z.literal('member'), id: z.string() }), z.object({ type: z.literal('team') })]),
-  metric: MetricKey,
-  from: z.number(),
-  to: z.number(),
-  delta: z.number(),
+  /** Member id, 'team' or 'sponsor'. */
+  subject: Id,
+  metric: z.union([MetricKey, z.literal('confidence')]),
+  from: Num,
+  to: Num,
+  delta: Num,
   reason: Reason
 });
 
-export const MemberState = z.object({
-  id: z.string(),
-  stage: z.number().int().min(0),
-  skill: Score,
-  morale: Score,
-  result: Score,
-  trust: Score,
-  style: StyleKey,
-  lastStyle: StyleKey,
-  lastReaction: z.enum(['pos', 'neg']),
-  mood: Mood,
-  /** Hidden until the participant first opens the profile (spec, member card). */
-  statsRevealed: z.boolean(),
-  tags: z.array(Text),
-  away: z.boolean(),
-  unread: z.boolean(),
-  promise: Text.nullable(),
-  /** Concern surfaced in conversation, shown as "Shared: ...". Never shown before it surfaces. */
-  shared: Text.nullable(),
-  changes: z.array(MetricChange)
-});
-
-export const ActionAvailability = z.discriminatedUnion('state', [
-  z.object({ state: z.literal('available') }),
-  z.object({ state: z.literal('disabled'), why: Text }),
-  z.object({ state: z.literal('locked'), why: Text }),
-  z.object({ state: z.literal('cooldown'), why: Text, daysLeft: z.number() })
-]);
-
-export const ActionState = z.object({
-  key: z.string(),
-  scope: z.enum(['team', 'member']),
-  kind: z.enum(['live', 'static', 'hybrid']),
-  cost: z.number().min(0),
-  availability: ActionAvailability,
-  // TODO(D19): options, selection limits, prerequisites from the Simulation Design.
-});
-
 export const Outcome = z.object({
-  id: z.string(),
-  interactionId: z.string(),
+  id: Id,
+  actionKey: Id,
   headline: Text,
   reply: Text,
-  affected: z.array(z.string()),
-  reactions: z.record(z.string(), Text),
+  affected: z.array(Id),
+  reactions: z.record(Id, Text),
   changes: z.array(MetricChange),
   ripple: Text.nullable(),
   /** Up to two lines of consequence. Never the rubric band name (spec, outcome panel). */
   changed: z.array(Text).max(2)
 });
 
+export const MemberView = z.object({
+  id: Id, name: Text, title: Text, pronoun: z.enum(['he', 'she', 'they']), stage: Id,
+  skill: Score, morale: Score, result: Score, trust: Score,
+  style: StyleKey.nullable(), lastStyle: StyleKey.nullable(), lastReaction: z.enum(['pos', 'neg']).nullable(),
+  mood: Mood, away: z.number().int().min(0), awayReason: z.enum(['training', 'leave']).nullable(),
+  /** Stats are hidden in the UI until the profile is first opened (spec). */
+  statsRevealed: z.boolean(),
+  /** A hidden concern, only once it surfaced in conversation (spec). */
+  shared: Text.nullable(),
+  unread: z.boolean(),
+  promise: Text.nullable(),
+  profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: Text.or(z.literal('')), relations: z.string() })
+});
+
 export const Clock = z.object({
-  week: z.number().int().min(1),
-  weeks: z.number().int().min(1),
-  day: z.number().int().min(1),
-  daysLeft: z.number().min(0),
-  secondsLeft: z.number().min(0),
-  paused: z.boolean()
+  period: z.number().int().min(1), periods: z.number().int().min(1).max(10), periodUnit: PeriodUnit,
+  subPeriod: z.number().int().min(1), subPeriodUnit: SubPeriodUnit,
+  capacity: Num, capacityLeft: Num, costStep: Num
 });
 
-/** Snapshot of everything the board renders. */
-export const EngineState = z.object({
+export const ActionView = z.object({
+  key: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
+  format: z.string().nullable(), cost: Num, targets: z.tuple([z.number(), z.number()]), prerequisite: Id.nullable(),
+  options: z.array(z.object({ key: Id, label: Text, blocked: Text.nullable() })),
+  /** Why a team action is unavailable, or null. */
+  blocked: Text.nullable(),
+  /** Why a member action is unavailable for each member, or null. */
+  blockedFor: z.record(Id, Text.nullable())
+});
+
+export const LogEntry = z.object({
+  id: Id, period: z.number().int(), sub: z.number().int(), kind: z.enum(['style', 'action', 'interaction', 'event', 'trigger', 'periodEnd']),
+  title: Text, memberIds: z.array(Id), changes: z.array(MetricChange), quote: Text.optional()
+});
+
+export const PeriodSummary = z.object({
+  period: z.number().int(),
+  stars: z.object({ people: z.boolean(), leadership: z.boolean(), business: z.boolean() }),
+  kpis: z.record(MetricKey, z.object({ start: Num, end: Num })),
+  valueThisPeriod: Num, cumulativeValue: Num, pace: Num, accuracy: Num,
+  points: z.object({ business: Num, people: Num, leadership: Num, streakBonus: Num }),
+  streak: z.number().int(), newBadges: z.array(Id), sponsor: z.object({ from: Num, to: Num }),
+  funnel: z.array(z.object({ stage: Id, throughput: Num, ideal: Num })),
+  unlockOffer: z.array(Id).nullable()
+});
+
+/** Everything the participant may see. Never includes a member's needed style. */
+export const EngineView = z.object({
+  phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
   clock: Clock,
-  members: z.array(MemberState),
-  actions: z.array(ActionState),
+  money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
+  members: z.array(MemberView),
+  kpis: z.array(z.object({ metric: MetricKey, value: Num, start: Num })),
+  pulse: z.object({ upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
+  funnel: z.array(z.object({ key: Id, name: Text, members: z.number().int(), ideal: z.number().int(), throughput: Num, idealThroughput: Num, bottleneck: z.boolean() })),
+  actions: z.array(ActionView),
+  inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), dueInSubPeriods: z.number().int().nullable() })),
+  cards: z.array(z.object({ id: Id, key: Id, card: z.enum(['impact', 'signal', 'capacity', 'diagnostic']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange) })),
   outcome: Outcome.nullable(),
-  leadershipScore: z.number(),
+  score: z.object({ business: Num, people: Num, leadership: Num, bonus: Num, total: Num, max: Num, periodMax: Num, tier: z.enum(['bronze', 'silver', 'gold', 'platinum']).nullable() }),
   streak: z.number().int().min(0),
-  // TODO(D19): funnel, team pulse, sponsor confidence, inbox, events, week end, report.
+  periods: z.array(PeriodSummary),
+  badges: z.array(z.object({ key: Id, earned: z.boolean(), hint: Text.nullable() })),
+  sponsor: z.object({ level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
+  pendingReward: z.array(Id).nullable(),
+  history: z.array(LogEntry)
 });
 
-/** Things the participant can ask for. The engine answers with a new EngineState. */
+/** What the participant asks for. The engine answers with a new view. */
 export const Intent = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('setStyle'), memberId: z.string(), style: StyleKey, rationale: z.string().optional() }),
-  z.object({ type: z.literal('planAction'), action: z.string(), memberIds: z.array(z.string()), option: z.number().int().optional() }),
-  z.object({ type: z.literal('openProfile'), memberId: z.string() }),
-  z.object({ type: z.literal('pause') }),
-  z.object({ type: z.literal('resume') }),
-  z.object({ type: z.literal('endWeek') })
+  z.object({ type: z.literal('confirmStyles'), styles: z.record(Id, StyleKey), notes: z.record(Id, z.string()).optional() }),
+  z.object({ type: z.literal('openProfile'), memberId: Id }),
+  z.object({ type: z.literal('planAction'), action: Id, option: Id.optional(), memberIds: z.array(Id), stage: Id.optional() }),
+  z.object({ type: z.literal('openConversation'), kind: z.enum(['reply', 'sponsor']), messageId: Id.optional() }),
+  z.object({ type: z.literal('submitInteraction'), interactionId: Id, text: z.string().min(1), usedVoice: z.boolean().optional(), npcReply: z.string().optional() }),
+  z.object({ type: z.literal('dismissCard'), cardId: Id }),
+  z.object({ type: z.literal('clearOutcome') }),
+  z.object({ type: z.literal('endPeriod') }),
+  z.object({ type: z.literal('chooseReward'), reward: Id }),
+  z.object({ type: z.literal('startNextPeriod') })
 ]);
+
+export const IntentResult = z.object({
+  view: EngineView,
+  changes: z.array(MetricChange),
+  outcome: Outcome.optional(),
+  interactionId: Id.optional(),
+  summary: PeriodSummary.optional()
+});
 
 /** One chunk of a streamed AI reply. `done` closes the stream. */
 export const StreamChunk = z.discriminatedUnion('type', [
   z.object({ type: z.literal('token'), text: z.string() }),
-  z.object({ type: z.literal('done'), turnId: z.string() }),
+  z.object({ type: z.literal('done'), turnId: Id }),
   z.object({ type: z.literal('error'), retryable: z.boolean() })
 ]);
 
-export type Text = z.output<typeof Text>;
-export type MetricKey = z.infer<typeof MetricKey>;
-export type Evidence = z.infer<typeof Evidence>;
-export type Reason = z.infer<typeof Reason>;
-export type MetricChange = z.infer<typeof MetricChange>;
-export type MemberState = z.infer<typeof MemberState>;
-export type ActionState = z.infer<typeof ActionState>;
-export type Outcome = z.infer<typeof Outcome>;
-export type EngineState = z.infer<typeof EngineState>;
-export type Intent = z.infer<typeof Intent>;
-export type StreamChunk = z.infer<typeof StreamChunk>;
+export type MetricChange = z.output<typeof MetricChange>;
+export type Reason = z.output<typeof Reason>;
+export type Outcome = z.output<typeof Outcome>;
+export type EngineView = z.output<typeof EngineView>;
+export type MemberView = z.output<typeof MemberView>;
+export type ActionView = z.output<typeof ActionView>;
+export type Intent = z.input<typeof Intent>;
+export type IntentResult = z.output<typeof IntentResult>;
+export type StreamChunk = z.output<typeof StreamChunk>;
+export type MetricKey = z.output<typeof MetricKey>;
+export type StyleKey = z.output<typeof StyleKey>;
+export type Mood = z.output<typeof Mood>;
