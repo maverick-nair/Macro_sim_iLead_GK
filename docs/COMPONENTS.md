@@ -6,12 +6,21 @@ How components in `src/components` are built. The reference implementations are 
 
 1. **Find it in the ported screens** (`src/screens/*`). The ported markup is the visual spec: its inline CSS strings are exactly what the design renders.
 2. **Build it** in `src/components/<area>/<Name>.tsx` with Tailwind utilities on tokens. It is presentational: props in, events out, no game logic and no engine calls.
-3. **Replace the ported markup** in the screen with the component, keeping the screen's own data shaping as it is for now (M2 moves that onto the engine).
+3. **Replace the ported markup** in the screen with the component, keeping the screen's own data shaping: the ported screens serve the design fixtures for `/screens` and `?engine=off`. On the playable board, `src/components/board/` shapes the engine view into the same props.
 4. **Prove parity** with `npm run parity` (or `npm run parity -- b1 b4` for the frames that show it). Every frame must still pass. `tests/visual/probe.ts <frame> '<selector>'` prints computed style differences against the prototype when one fails.
 5. **Write stories** in `<Name>.stories.tsx` next to the component, covering every state and variant (default, hover or focus where it matters, selected, disabled, low or empty values, mobile size, long text).
-6. `npm test` and `npx tsc -b` pass. The guard test (`src/components/guard.test.ts`) rejects hardcoded values and inline strings.
+6. `npm test` and `npx tsc -b` pass. The guard test (`src/components/guard.test.ts`) catches the common hardcoded values and inline strings (see below for what it does not catch).
 
-## Rules the guard test enforces
+## Rules
+
+The guard test checks some of these rules, not all. It scans `src/components` only (not stories or tests, and not `src/ds`, `src/screens` or `src/app`), one line at a time, with regular expressions for:
+- hex colours and colour functions (`#fff`, `oklch(`, `rgba(`, `color-mix(`)
+- `px`, `rem` and `em` values, and arbitrary Tailwind values (`w-[46px]`)
+- the legacy `css()` helper and `--ik-` variables
+- numeric style values for common box and type properties (`fontSize: 12`, `padding: '4px'`)
+- visible text written inside JSX on one line, and literal `aria-label`, `title`, `placeholder` and `alt` attributes
+
+It does not see text split across lines, strings held in variables or passed as props, `aria-*` values in expressions, or arbitrary properties such as `[transition:200ms]` (only the `name-[value]` form is caught). Review those by hand. The copy rules (no dashes, no emoji, "skills") are checked on the catalog by `src/i18n/catalog.test.ts`.
 
 - **No literal colors, pixel values or arbitrary Tailwind values** (`w-[46px]`, `#fff`, `oklch(...)`, `fontSize: 12`). Use token utilities:
   - colors: `text-fg-primary`, `bg-surface-raised`, `border-line-default`, `text-status-gain`, `bg-brand-deep-space`

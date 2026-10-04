@@ -62,6 +62,51 @@ describe('token pipeline', () => {
     expect(res.filter(r => r.token === 'color.faint').every(r => !r.pass && r.ratio === 1)).toBe(true);
   });
 
+  it('checks extra pairs against component tokens, gradient stops and translucent layers', () => {
+    const src = tiny({
+      primitive: { color: { ink: { '200': { $value: 'oklch(0.2 0.03 280)' } }, white: { $value: 'oklch(1 0 0)' } }, gradient: { g: { $value: 'linear-gradient(135deg,#ffffff,#777777 60%)' } } },
+      semantic: { color: {
+        fg: { light: '{color.ink.200}', dark: '{color.white}' },
+        surface: { solid: { light: '{color.white}', dark: '{color.ink.200}' } },
+        veil: { light: { ref: 'color.ink.200', alpha: 0.5 }, dark: { ref: 'color.white', alpha: 0.1 } }
+      } },
+      component: { btn: { bg: { value: '{gradient.g}' }, fg: { value: '{color.ink.200}' } } },
+      contrast: [
+        { fg: 'btn.fg', bg: 'btn.bg', min: 4.5 },
+        { fg: 'color.fg', bg: 'color.veil', min: 4.5, modes: ['dark'] },
+        { fg: 'color.fg', bg: 'color.surface.solid', min: 4.5, modes: ['dark'] }
+      ]
+    });
+    const res = build(src).contrast;
+    // The button is checked at its worst stop (#777), not its best (#fff).
+    const btn = res.filter(r => r.token === 'btn.fg');
+    expect(btn.map(r => r.mode)).toEqual(['light', 'dark']);
+    expect(btn[0].ratio).toBeLessThan(4.5);
+    // A 10% white veil over the dark solid surface is composited first: white text on it loses some contrast.
+    const [veil, solid] = res.filter(r => r.token === 'color.fg');
+    expect([veil.against, veil.mode]).toEqual(['color.veil', 'dark']);
+    expect(veil.ratio).toBeLessThan(solid.ratio);
+    expect(veil.ratio).toBeGreaterThan(solid.ratio * 0.6);
+    expect(() => build(tiny({ contrast: [{ fg: 'color.fg', bg: 'color.nope', min: 3 }] }))).toThrow(/unknown token color.nope/);
+  });
+
+  it('checks pairs again under a client theme only when it changes them', () => {
+    const src = tiny({
+      semantic: { color: {
+        bg: { light: '{color.white}', dark: '{color.ink.200}' },
+        accent: { light: '{color.ink.200}', dark: '{color.white}', overridableBy: 'client-acc', contrast: { against: 'color.bg', min: 4.5 } },
+        fg: { light: '{color.ink.200}', dark: '{color.white}', contrast: { against: 'color.bg', min: 4.5 } }
+      } },
+      themes: { pale: { 'client-acc': { light: 'oklch(0.95 0 0)', dark: 'oklch(0.25 0 0)' } } }
+    });
+    const out = build(src);
+    const accent = out.contrast.filter(r => r.token === 'color.accent');
+    expect(accent.map(r => r.mode)).toEqual(['light', 'dark', 'pale light', 'pale dark']);
+    expect(accent.filter(r => r.mode.startsWith('pale')).every(r => !r.pass)).toBe(true);
+    expect(out.contrast.filter(r => r.token === 'color.fg').map(r => r.mode)).toEqual(['light', 'dark']);
+    expect(out.manifestTs).toContain('"--client-acc": "light-dark(oklch(0.95 0 0), oklch(0.25 0 0))"');
+  });
+
   it('merges per component files and rejects a path defined twice', () => {
     const merged = mergeTrees([{ file: 'a.json', tree: { button: { h: { value: '1' } } } }, { file: 'b.json', tree: { button: { w: { value: '2' } } } }]);
     expect(Object.keys(merged.button as object)).toEqual(['h', 'w']);

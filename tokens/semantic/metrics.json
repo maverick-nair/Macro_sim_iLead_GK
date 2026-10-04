@@ -1,5 +1,5 @@
 {
-  "$description": "HUD and metrics strip meanings. These sit on the board's own art and keep one value in both modes, as the design renders them. The two literal values have no primitive yet (primitives are owned elsewhere); move them to tokens/primitive when that file is opened.",
+  "$description": "HUD and metrics strip meanings. These sit on the board's own art and keep one value in both modes, as the design renders them.",
   "color": {
     "metrics": {
       "pulse": {
@@ -11,9 +11,9 @@
     },
     "hud": {
       "capacity-full": { "light": "{color.brand.cyber-cyan}", "dark": "{color.brand.cyber-cyan}", "$description": "A whole sub period of capacity left: fill and outline of the bolt" },
-      "capacity-half": { "light": "oklch(0.85 0.1 205 / 0.45)", "dark": "oklch(0.85 0.1 205 / 0.45)", "$description": "Half a sub period of capacity left: bolt fill" },
+      "capacity-half": { "light": { "ref": "color.cyan.850", "alpha": 0.45 }, "dark": { "ref": "color.cyan.850", "alpha": 0.45 }, "$description": "Half a sub period of capacity left: bolt fill" },
       "capacity-empty": { "light": "{color.line.strong}", "dark": "{color.line.strong}", "$description": "Spent capacity: bolt outline" },
-      "streak": { "light": "oklch(0.8 0.15 60)", "dark": "oklch(0.8 0.15 60)", "$description": "Streak flame" }
+      "streak": { "light": "{color.orange.800}", "dark": "{color.orange.800}", "$description": "Streak flame" }
     }
   }
 }

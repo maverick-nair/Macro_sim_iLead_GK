@@ -12,6 +12,7 @@ export const tokens = {
     "color.ink.450": "oklch(0.45 0.025 278)",
     "color.lavender.780": "oklch(0.78 0.03 268)",
     "color.lavender.940": "oklch(0.94 0.03 265)",
+    "color.mist.600": "oklch(0.6 0.015 270)",
     "color.mist.820": "oklch(0.82 0.015 270)",
     "color.mist.900": "oklch(0.9 0.012 270)",
     "color.mist.920": "oklch(0.92 0.01 270)",
@@ -19,12 +20,14 @@ export const tokens = {
     "color.night.160": "oklch(0.16 0.035 284)",
     "color.night.170": "oklch(0.17 0.035 283)",
     "color.night.050": "oklch(0.05 0.02 285)",
+    "color.blue.450": "oklch(0.45 0.17 252)",
     "color.blue.530": "oklch(0.53 0.17 252)",
     "color.blue.620": "oklch(0.62 0.17 250)",
     "color.blue.950": "oklch(0.95 0.03 250)",
-    "color.cyan.600": "oklch(0.6 0.12 205)",
+    "color.cyan.520": "oklch(0.52 0.12 205)",
     "color.cyan.750": "oklch(0.75 0.14 200)",
-    "color.amber.550": "oklch(0.55 0.13 62)",
+    "color.cyan.850": "oklch(0.85 0.1 205)",
+    "color.amber.530": "oklch(0.53 0.13 62)",
     "color.amber.840": "oklch(0.84 0.14 78)",
     "color.amber.960": "oklch(0.96 0.04 80)",
     "color.mint.500": "oklch(0.5 0.11 165)",
@@ -43,6 +46,7 @@ export const tokens = {
     "color.portrait.shade": "oklch(0.13 0.03 285)",
     "color.member-elevation.ink": "oklch(0.05 0.03 280)",
     "color.member-elevation.glow": "oklch(0.75 0.14 220)",
+    "color.orange.800": "oklch(0.8 0.15 60)",
     "gradient.brand": "linear-gradient(135deg,#249DFF,#43D6E8)",
     "gradient.product": "linear-gradient(135deg,#43D6E8,#00F2AD)",
     "gradient.spectrum": "linear-gradient(135deg,#249DFF 0%,#43D6E8 50%,#00F2AD 100%)",
@@ -103,17 +107,28 @@ export const tokens = {
     "easing.brand": "cubic-bezier(.4,0,.2,1)",
     "easing.spring": "cubic-bezier(.34,1.4,.64,1)",
     "easing.settle": "cubic-bezier(.2,.9,.3,1.08)",
+    "easing.overshoot": "cubic-bezier(.2,.9,.3,1.2)",
+    "easing.overshoot-strong": "cubic-bezier(.2,.9,.3,1.3)",
     "shadow.glow": "0 0 24px rgba(36,157,255,.25)",
     "shadow.outcome-glow": "0 0 0 1px oklch(0.75 0.14 220 / 0.25), 0 16px 48px oklch(0.05 0.03 280 / 0.35)",
     "blur.12": "12px",
     "blur.14": "14px",
     "blur.20": "20px",
-    "blur.24": "24px"
+    "blur.24": "24px",
+    "tracking.logo": "-0.03em",
+    "tracking.title": "-0.02em",
+    "tracking.headline": "-0.01em",
+    "tracking.label": "0.06em",
+    "tracking.eyebrow": "0.08em",
+    "tracking.eyebrow-wide": "0.12em"
   },
   "semantic": [
     "color.fg.primary",
     "color.fg.secondary",
     "color.fg.on-accent",
+    "color.fg.link",
+    "color.fg.link-hover",
+    "color.fg.inverse",
     "color.surface.card",
     "color.surface.solid",
     "color.surface.raised",
@@ -131,6 +146,9 @@ export const tokens = {
     "color.status.gain-soft",
     "color.status.decline",
     "color.status.decline-soft",
+    "color.control.track-off",
+    "color.elevation.drawer",
+    "color.elevation.panel",
     "color.celebration.glow",
     "color.celebration.ring",
     "color.celebration.star",
@@ -213,9 +231,6 @@ export const tokens = {
     "button.secondary.border",
     "button.ghost.fg",
     "button.ghost.fg-hover",
-    "dialog.radius",
-    "dialog.bg",
-    "dialog.border",
     "gamification.eyebrow.tracking",
     "gamification.badge.award-shadow",
     "gamification.badge.award-enter",
@@ -288,7 +303,6 @@ export const tokens = {
     "member.hidden-stats.height",
     "metric.bar.columns",
     "metric.bar.fill",
-    "metric.bar.fill-low",
     "metric.bar.transition",
     "metrics.strip.columns",
     "metrics.popover.shadow",
@@ -340,6 +354,16 @@ export const tokens = {
     "toast.enter"
   ]
 } as const;
+
+/** Client themes from tokens/themes, as the style object to spread on an ancestor of the app root. */
+export const clientThemes = {
+  "halden": {
+    "--client-acc": "light-dark(oklch(0.5 0.17 0), oklch(0.72 0.17 0))",
+    "--client-acc-2": "light-dark(oklch(0.58 0.15 30), oklch(0.8 0.12 30))",
+    "--client-acc-soft": "light-dark(oklch(0.95 0.025 0), oklch(0.6 0.18 0 / 0.18))",
+    "--client-grad": "linear-gradient(135deg, oklch(0.66 0.19 2), oklch(0.78 0.13 30))"
+  }
+} as const satisfies Record<string, Record<string, string>>;
 
 export type PrimitiveToken = keyof typeof tokens.primitive;
 export type SemanticToken = (typeof tokens.semantic)[number];

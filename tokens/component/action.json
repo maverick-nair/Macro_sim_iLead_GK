@@ -9,11 +9,11 @@
       "instant": { "value": "{fill.product}", "$description": "Instant decisions" }
     },
     "section": {
-      "tracking": { "value": "0.08em", "$description": "Uppercase section labels" }
+      "tracking": { "value": "{tracking.eyebrow}", "$description": "Uppercase section labels" }
     },
     "drawer": {
-      "enter": { "value": "ilIn 240ms ease" },
-      "title-tracking": { "value": "-0.02em" }
+      "enter": { "value": "ilIn {duration.base} ease", "$description": "The design's 240ms, snapped to duration.base (D24)" },
+      "title-tracking": { "value": "{tracking.title}" }
     },
     "option": {
       "border-width": { "value": "1.5px" }

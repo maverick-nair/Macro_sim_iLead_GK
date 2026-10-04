@@ -8,7 +8,7 @@
       "columns-collapsed": { "value": "auto minmax(0,1fr)", "$description": "Show brief button, then the stage" }
     },
     "eyebrow": {
-      "tracking": { "value": "0.08em", "$description": "\"Your brief\" eyebrow" }
+      "tracking": { "value": "{tracking.eyebrow}", "$description": "\"Your brief\" eyebrow" }
     },
     "tip": {
       "enter": { "value": "ilIn {duration.base} ease", "$description": "Coaching tip appearing in the brief" }
@@ -44,8 +44,8 @@
       "listening-ring": { "value": "0 0 0 3px {color.liveshell.listening-ring}", "$description": "Reply bar while the mic listens" }
     },
     "reacting": {
-      "title-tracking": { "value": "-0.02em" },
-      "ring": { "value": "ilRing 1.6s ease-out infinite", "$description": "Pulse around each reacting face" },
+      "title-tracking": { "value": "{tracking.title}" },
+      "ring": { "value": "{liveshell.roleplay.speaking-ring}", "$description": "Pulse around each reacting face, as the speaking ring" },
       "stagger": { "value": "0.3s", "$description": "Delay between the faces' pulses" }
     }
   }
