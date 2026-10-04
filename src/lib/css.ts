@@ -23,11 +23,19 @@ export function css(text: string): CSSProperties {
     const key = prop.startsWith('--')
       ? prop
       : prop.replace(/^-(webkit|moz|ms)-/, (_, v: string) => v[0].toUpperCase() + v.slice(1) + '-').replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
-    out[key] = value;
+    out[key] = key === 'fontSize' ? scaleFontSize(value) : value;
   }
   if (cache.size > 5000) cache.clear();
   cache.set(text, out as CSSProperties);
   return out as CSSProperties;
+}
+
+/**
+ * Pixel font sizes follow the text size setting, as the font size tokens do: `--il-text-scale` is
+ * set on the app root (1 at 100%, 2 at 200%). Without it, the value is unchanged.
+ */
+function scaleFontSize(value: string): string {
+  return /^\d+(\.\d+)?px$/.test(value) ? `calc(${value} * var(--il-text-scale, 1))` : value;
 }
 
 /** Splits on `;` that are not inside parentheses or quotes (url(), oklch(), data URIs). */

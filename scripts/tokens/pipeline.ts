@@ -5,20 +5,27 @@
  * become CSS custom properties, a Tailwind v4 theme that only exposes tokens,
  * and a typed TypeScript manifest. Pure functions, so tests can drive them.
  */
-import { wcagContrast } from 'culori';
+import { contrastChecks, type ClientTheme, type ContrastPair, type ContrastResult } from './contrast';
+
+export type { ClientTheme, ContrastPair, ContrastResult };
 
 export interface TokenSources {
   primitive: Record<string, unknown>;
   semantic: Record<string, unknown>;
   component: Record<string, unknown>;
   legacy: { root: Record<string, string>; theme: Record<string, string> };
+  /** Extra contrast pairs (tokens/contrast.json), on top of the `contrast` declared on semantic tokens. */
+  contrast?: ContrastPair[];
+  /** Client themes (tokens/themes/*.json), checked for contrast and exported in the manifest. */
+  themes?: Record<string, ClientTheme>;
 }
 
 export interface Leaf { path: string; node: Record<string, unknown> }
-export interface ContrastResult { token: string; mode: 'light' | 'dark'; against: string; ratio: number; min: number; pass: boolean }
 export interface BuildOutput { tokensCss: string; tailwindCss: string; manifestTs: string; contrast: ContrastResult[] }
 
 const PREFIX = '--il-';
+/** Set on the app root from the text size setting (1, 1.25, 1.5, 2). */
+export const TEXT_SCALE = '--il-text-scale';
 const REF = /\{([a-z0-9.-]+)\}/gi;
 
 export class TokenError extends Error {}
@@ -76,18 +83,6 @@ function modeCss(v: ModeValue, reg: Registry, where: string): string {
   return withAlpha(v.ref, v.alpha, reg, where);
 }
 
-/** Literal color for contrast maths. Returns null for translucent values. */
-function modeLiteral(v: ModeValue, reg: Registry, semantic: Map<string, Leaf>, mode: 'light' | 'dark', where: string): string | null {
-  if (typeof v !== 'string') return null;
-  const m = /^\{([a-z0-9.-]+)\}$/i.exec(v.trim());
-  if (!m) return null;
-  const ref = m[1];
-  if (reg.primitives.has(ref)) return reg.primitives.get(ref)!;
-  const s = semantic.get(ref);
-  if (s) return modeLiteral(s.node[mode] as ModeValue, reg, semantic, mode, where);
-  throw new TokenError(`${where}: cannot resolve {${ref}} to a color`);
-}
-
 export function build(src: TokenSources): BuildOutput {
   const prim = leaves(src.primitive);
   const sem = leaves(src.semantic);
@@ -105,13 +100,16 @@ export function build(src: TokenSources): BuildOutput {
     if (reg.known.has(l.path)) throw new TokenError(`${l.path}: defined twice`);
     reg.known.add(l.path);
   }
-  const semByPath = new Map(sem.map(l => [l.path, l]));
 
   const rootLines: string[] = [];
   for (const { path, node } of prim) rootLines.push(`  ${cssVar(path)}: ${node.$value};`);
 
   const themeLines: string[] = [];
-  const contrast: ContrastResult[] = [];
+  const pairs: ContrastPair[] = [];
+  // Text size setting: font sizes are redeclared inside the app root, scaled by --il-text-scale
+  // (1 by default, 2 at 200%). Declared here, not on :root, so the root's value is the one that
+  // resolves; every utility and component token that reads a font size grows, layout does not.
+  for (const { path, node } of prim) if (path.startsWith('font.size.')) themeLines.push(`  ${cssVar(path)}: calc(${node.$value as string} * var(${TEXT_SCALE}, 1));`);
   for (const { path, node } of sem) {
     let css: string;
     if ('light' in node) {
@@ -126,23 +124,30 @@ export function build(src: TokenSources): BuildOutput {
     if (typeof node.overridableBy === 'string') css = `var(--${node.overridableBy}, ${css})`;
     themeLines.push(`  ${cssVar(path)}: ${css};`);
 
-    const c = node.contrast as { against: string; min: number } | undefined;
-    if (c) {
-      const bg = semByPath.get(c.against);
-      if (!bg) throw new TokenError(`${path}: contrast target ${c.against} is not a semantic token`);
-      for (const mode of ['light', 'dark'] as const) {
-        const fg = modeLiteral(node[mode] as ModeValue, reg, semByPath, mode, path);
-        const b = modeLiteral(bg.node[mode] as ModeValue, reg, semByPath, mode, c.against);
-        if (!fg || !b) throw new TokenError(`${path}: contrast pairs must be opaque references`);
-        const ratio = Math.round(wcagContrast(fg, b) * 100) / 100;
-        contrast.push({ token: path, mode, against: c.against, ratio, min: c.min, pass: ratio >= c.min });
+    // `contrast` on a semantic token: one pair or a list, against other tokens.
+    type Declared = Omit<ContrastPair, 'fg' | 'bg'> & { against: string | string[] };
+    const declared = node.contrast as Declared | Declared[] | undefined;
+    for (const c of declared ? (Array.isArray(declared) ? declared : [declared]) : []) {
+      const { against, ...rest } = c;
+      for (const bg of Array.isArray(against) ? against : [against]) {
+        if (!reg.known.has(bg)) throw new TokenError(`${path}: contrast target ${bg} is not a token`);
       }
+      pairs.push({ ...rest, fg: path, bg: against });
     }
   }
   for (const { path, node } of comp) {
     if (typeof node.value !== 'string') throw new TokenError(`${path}: component tokens need a string value`);
     themeLines.push(`  ${cssVar(path)}: ${interpolate(node.value, reg, path)};`);
   }
+
+  for (const [i, pr] of (src.contrast ?? []).entries()) {
+    for (const t of [pr.fg, ...(Array.isArray(pr.bg) ? pr.bg : [pr.bg]), ...(pr.over ? [pr.over] : [])]) {
+      if (!reg.known.has(t)) throw new TokenError(`contrast pair ${i + 1} (${pr.fg}): unknown token ${t}`);
+    }
+    pairs.push(pr);
+  }
+  const themes = src.themes ?? {};
+  const contrast = contrastChecks(pairs, { prim, sem, comp }, themes);
 
   const alias = (scope: Record<string, string>, where: string) =>
     Object.entries(scope).map(([name, v]) => `  --${name}: ${interpolate(v, reg, `legacy.${where}.${name}`)};`);
@@ -187,8 +192,13 @@ ${alias(src.legacy.theme, 'theme').join('\n')}
     semantic: sem.map(l => l.path),
     component: comp.map(l => l.path)
   };
+  const clientThemes = Object.fromEntries(Object.entries(themes).map(([name, t]) => [name, Object.fromEntries(Object.entries(t).map(([k, v]) =>
+    [`--${k}`, 'value' in v ? v.value : `light-dark(${v.light}, ${v.dark})`]))]));
   const manifestTs = `// GENERATED by scripts/tokens/build.ts. Do not edit.
 export const tokens = ${JSON.stringify(manifest, null, 2)} as const;
+
+/** Client themes from tokens/themes, as the style object to spread on an ancestor of the app root. */
+export const clientThemes = ${JSON.stringify(clientThemes, null, 2)} as const satisfies Record<string, Record<string, string>>;
 
 export type PrimitiveToken = keyof typeof tokens.primitive;
 export type SemanticToken = (typeof tokens.semantic)[number];

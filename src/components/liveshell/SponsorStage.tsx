@@ -67,7 +67,7 @@ export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, on
           <span className="text-12 text-fg-secondary">{t('liveshell.sponsor.notes.lead', { name: shortNameOf(sponsor) })}</span>
           {notes.map((n, i) => (
             <input key={i} value={n.value} onChange={e => onNoteChange(i, e.target.value)} placeholder={n.prompt} aria-label={t('liveshell.sponsor.notes.aria', { n: i + 1 })}
-              className="h-10 rounded-12 border border-solid border-line-strong bg-surface-raised px-3 py-0 text-14 text-fg-primary focus-visible:outline-2 focus-visible:outline-accent-secondary" />
+              className="h-10 rounded-12 border border-solid border-line-control bg-surface-raised px-3 py-0 text-14 text-fg-primary focus-visible:outline-2 focus-visible:outline-accent-secondary" />
           ))}
         </div>
         <div className="flex flex-col gap-2 rounded-20 border border-line-default bg-surface-card p-4">

@@ -47,6 +47,10 @@
       }
     },
     "mist": {
+      "600": {
+        "$value": "oklch(0.6 0.015 270)",
+        "$description": "Off switch track and control borders in light mode, 3:1 against white and the raised surface (D8, WCAG 1.4.11)"
+      },
       "820": {
         "$value": "oklch(0.82 0.015 270)"
       },
@@ -72,6 +76,10 @@
       }
     },
     "blue": {
+      "450": {
+        "$value": "oklch(0.45 0.17 252)",
+        "$description": "Link text on hover in light mode (D8)"
+      },
       "530": {
         "$value": "oklch(0.53 0.17 252)"
       },
@@ -83,13 +91,15 @@
       }
     },
     "cyan": {
-      "600": {
-        "$value": "oklch(0.6 0.12 205)"
+      "520": {
+        "$value": "oklch(0.52 0.12 205)",
+        "$description": "Secondary accent in light mode. Was L 0.60 (3.75:1 on white), darkened so it passes as text (D8)"
       }
     },
     "amber": {
-      "550": {
-        "$value": "oklch(0.55 0.13 62)"
+      "530": {
+        "$value": "oklch(0.53 0.13 62)",
+        "$description": "Attention in light mode. Was L 0.55 (4.48:1 on its soft chip), darkened so 12px labels pass (D8)"
       },
       "840": {
         "$value": "oklch(0.84 0.14 78)"

@@ -39,9 +39,20 @@ Preflight resets borders, images, headings and buttons, which would move the inl
 
 ## Accessibility vs design
 
-**D8. Light mode `accent.secondary` is 3.75:1.** Proposed.
-That passes the 3:1 bar for UI and large text. But the design also uses it for 12px uppercase eyebrows ("WELCOME ABOARD", "FOR KENT"), and text needs 4.5:1 under WCAG 2.2 AA.
-Proposal: darken the light value from L 0.60 to about L 0.52 (around 4.6:1) in M8, or use `fg.secondary` for eyebrows in light mode. This is a visible change, so it needs your approval.
+**D8. Light theme contrast: contrast wins.** Decided (4 Oct 2026; it was Proposed).
+WCAG 2.2 AA is a hard bar in the brief, and the docs win on behaviour, so the light theme takes darker values where axe found text under 4.5:1 or a control under 3:1. Dark mode and the Halden client theme are unchanged. Only the token layer changed; no component needed a new class.
+
+| Token (light mode) | Before | After | Contrast before | Contrast after |
+|---|---|---|---|---|
+| `accent.secondary`: eyebrows, "Add a reason", the brief's "Hide", "See why", the award count, "Changed" | `cyan.600`, L 0.60 | `cyan.520`, L 0.52 | 3.75:1 on white, 3.29:1 on `surface.raised` | 5.23:1 on white, 4.58:1 on `surface.raised` |
+| `status.attention`: "Bottleneck this week", the urgent inbox label | `amber.550`, L 0.55 | `amber.530`, L 0.53 | 4.48:1 on its soft chip, 4.42:1 on `surface.raised` | 4.88:1 and 4.81:1 |
+| `button.ghost.fg` (new `fg.link`): "Continue" on the prerequisite nudge | `#249DFF` | `blue.530` | 2.54:1 on the attention chip, 2.86:1 on white | 4.73:1 and 5.33:1 |
+| `button.ghost.fg-hover` (new `fg.link-hover`) | `#43D6E8` | `blue.450` | 1.75:1 on white | 7.55:1 |
+| `switch.track-off` (new `control.track-off`, WCAG 1.4.11) | white at 12% | `mist.600` | 1:1 on white; the thumb 1.22:1 on the track | 3.95:1 on white, 3.46:1 on `surface.raised`; the thumb 3.24:1 on the track |
+
+- `status.gain`, `status.decline` and `status.attention` are now checked at 4.5:1, not 3:1, because they are used as 12px text. Gain and decline already passed.
+- The token build checks many more pairs (`tokens/contrast.json`): text on every surface and on the status chips, the primary button label at every stop of the gradient, the switch, and the focus ring at 3:1, in light, dark and the Halden client theme (`tokens/themes/halden.json`).
+- Parity: frame b14 (light theme) moves by up to 25/255 per channel on about 0.5% of its pixels. That is under the harness's per pixel tolerance (40/255), so b14 still measures 0.00% and needs no allowance. `tests/visual/parity.ts` now has an `ACCEPTED` list for frames that must differ, each with a reason that names its decision. Every other frame stays at the strict 0.05%.
 
 ## Copy rules vs spec
 
@@ -73,7 +84,9 @@ Following the spec would visibly change the main board. I need a product call.
 The spec asks for "Week x of 8". The design shows "Week 2 · Day 3". Proposal: keep the design's layout and use the string "Week 2 of 8 · Day 3", which takes about 30px more in the HUD.
 
 **D13. Clock pausing.** Decided, following the spec.
-The spec pauses the clock in live screens, modals, event cards and tours. The prototype only pauses it for overlays. The engine owns the clock (rule 1), and the UI sends pause and resume intents.
+The spec pauses the clock in live screens, modals, event cards and tours. There are two clocks:
+- **Simulation time** (period, sub-period, the days an action costs) is the engine's clock (rule 1). It only moves when the engine applies an intent, so it never runs while the participant reads or talks.
+- **The session clock** is the app shell's wall time (`src/app/App.tsx`), the countdown in the HUD. Pausing and resuming it is client side: it runs while the board is on screen and stops while an overlay (pause, settings) is open. The spec's other pauses (live screens and event cards on the engine board, tours) are not wired to it yet.
 
 **D14. Live formats without a design.** Resolved in M4, see D52.
 The spec defines 7 formats. The design covers 4: 1:1 RolePlay, email, team meeting and sponsor briefing.
@@ -114,7 +127,7 @@ Each is fixed when its milestone rebuilds the component: Space as a push to talk
 `npm run parity` renders every frame of the prototype and of the app and diffs them.
 - A pixel counts as different only when no pixel within 1px in the other image matches it. That absorbs subpixel compositing under `backdrop-filter`, but not a 2px shift.
 - A frame fails above 0.05% of its pixels, which is less than one short label.
-- p1 (live clock), z5 and z14 (random waveform) and x2 (blurred board behind a dialog) allow 0.4%.
+- p1 (live clock), z5 and z14 (random waveform) and x2 (blurred board behind a dialog) allow 0.4%. They are listed, with these reasons, in the harness's `ACCEPTED` list (D8).
 - `--prod` checks the production bundle.
 
 I confirmed it catches a 2px wider chip and a 2px smaller font.
@@ -136,6 +149,7 @@ Modal mode sets `pointer-events: none` on the body, which changes the board's gr
 In M8 I'll make the board behind `inert` while the palette is open, which keeps the pixels and restores the modal semantics.
 
 **D24. Motion durations snapped to tokens.** Decided. Durations of 160, 200 and 320ms became 150, 220 and 300ms (`duration.fast`, `base` and `slow`), inside the brief's 150 to 300ms range. No frame changes.
+Later component tokens followed the same rule (4 Oct 2026): the action and inbox drawers (240ms), the profile panel (260ms), the team legend and the toast (200ms) use `duration.base`; the badge award (400ms) and the stars (500ms) use `duration.slow`, keeping their overshoot curves as `easing.overshoot` and `easing.overshoot-strong`. Parity stops animations, so no frame changes. Looping pulses (rings, dots, the caret) and the waveform's 90ms follow of mic levels are not transitions and keep their timing.
 
 **D25. Copy duplicated until M2.** Decided. Style names and descriptions, and mood names, are now in the catalog. The legend, profile, style setting definitions and some toasts still read the scenario data until the engine takes over in M2.
 
@@ -199,7 +213,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - Until M4 streams AI replies, the heuristic evaluator supplies a short, in-character reply line that fits how the words landed.
 - Events show as a plain card with reason chips; M5 brings the designed event art. When more than three people move on one metric, the chips collapse to one team chip per metric showing the average change.
 - Week end and run end are a plain panel with stars, value earned, the sponsor's reward offer and the next step. M5 and M6 bring the designed screens.
-- The HUD nav (objective, funnel, history, badges) is hidden on the engine board until its panels exist (M3).
+- The HUD nav (objective, funnel, history, badges) is hidden on the engine board until its panels exist. They are planned with M5 (events, gamification) and M6 (the report).
 
 **D39. Stats stay hidden until the profile is first opened.** Decided, from the spec. Before that, the card shows "Open the profile to see stats" in place of the three bars, and hides the trust ring. The card keeps its height so cards still line up. Opening the profile sends the `openProfile` intent; the engine reveals the stats.
 
@@ -255,7 +269,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The brief is data with optional rows (agenda, what you know, mood, open promises, declared style, tone). The row labels follow the format ("Watch for" in a meeting, "She cares about" for the sponsor), so the design's per format briefs come from one shape.
 - The 1:1 mood ring has three steps (frustrated, guarded, more open), as designed, separate from the five member moods.
 - NPC turns can stream (`streaming`) and be cut off (`interrupted`, shown as "Interrupted" beside the AI persona label). Pressing the mic or Escape while the NPC speaks calls `onInterrupt`.
-- Screen readers hear each NPC line once, when it has finished: the captions announce it, or the transcript does while captions are hidden (D54).
+- Screen readers hear each NPC line once, when it has finished: the captions announce it, or the transcript does while captions are hidden (D57).
 - A long transcript now scrolls inside the window (capped at the window height minus the header and reply bar) instead of growing the page. At 900 tall the cap is above the designed height.
 - The mood ring's 600ms colour change is snapped to `duration.slow` (300ms), per D24.
 - Still open: Space as push to talk (D18), and chat in the shell (D14). `LiveTranscript` and `LiveInputBar` are ready for chat.
@@ -274,7 +288,23 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - `?period=N` opens the mock engine at a later period, for demos and tests (the week 4 sponsor briefing). The real engine ignores it.
 - Hiring needs an open seat: with 10 people in 5 stages of 2, the team starts full (role coverage, D44), so the interview appears once someone leaves. The `Board/Engine board/Interview open` story shows it with room in every stage.
 
-**D54. Accessibility review fixes.** Decided. All 67 parity frames are unchanged.
+**D54. Onboarding on the engine.** Decided.
+- Onboarding is components (`src/components/onboarding/`): one flow component holds the step, tab and mic check state; the storyline arrives as props. The `/screens` frames (o1 to o6, p1) render it from the design fixture (`src/data/fixtures.ts`), pixel identical. The playable app renders it from the engine view (`src/app/EngineOnboarding.tsx`): Paula Jacob, Innov8 Elevators, the storyline's stages, team and profiles.
+- The view gains `storyline: { name, organisation }`, and the storyline config an optional `organisation` (Configuration Spec, Organisation name). Nothing else in the view changed.
+- Sales Elevator has no authored welcome letter, so the letter is worded from the view: organisation, team size, stages, role coverage, target, run length and days per week. When GenieKreator sends a welcome message, it replaces these paragraphs.
+- No welcome video is configured, so the sponsor step shows initials on the brand fill (or the portrait, when the storyline has one) with no play button, caption bar or "avatar video" annotation. Next unlocks after 4 seconds, as in the prototype.
+- One language is configured, so the language picker is hidden (spec: shown only if more than one language is configured). The welcome text on that step stays.
+- Reading a profile in "Meet your team" sends `openProfile`, so its stats show on the board afterwards (D39).
+- Each new step moves focus to its heading. Tabs and radio groups follow the arrow keys.
+- Still simulated: the mic test and the sample voice (a toast with the caption). The speech layer (`src/speech/`) can take them over.
+
+**D55. App dialogs on Radix.** Decided. Settings, pause, resume and session timed out are `src/components/settings/`, on a shared non modal Radix dialog (as D23) with `aria-modal`, while everything behind it is `inert`. Focus moves in, Tab loops inside, Escape and a click on the scrim close it, and focus returns to the opener. The session timed out dialog is an alert dialog that only "Sign in again" closes. Frames x1 to x4 are unchanged.
+- Settings offers the voice consent switch in the playable app, where the live screen points to it. The design frame x1 has no such row, so the gallery leaves it out.
+- The design system Switch is a button with `role="switch"` and `aria-checked`, pixel identical.
+
+**D56. Text size scales fonts, not the layout.** Decided. CSS zoom on the app root scaled the layout too. Now the token pipeline redeclares every font size inside the app root as `calc(<size> * var(--il-text-scale, 1))`, the app sets `--il-text-scale` from the setting, and `css()` does the same for the ported screens' pixel font sizes. Spacing, widths and heights stay put, so text wraps instead of pushing layouts off screen. Onboarding and the dialogs fit at 200% (measured at 1440 wide, no horizontal scroll). Still overflowing at 200%, all fixed heights or fixed columns sized for 100%: the style radios on member cards (`style/StyleControl`), the mood pill on the card portrait and the metric labels and values (`member/MemberCard`, `metric/MetricBar`), the reason chips (`reason/ReasonChip`), HUD pills (score, Cmd K), the outcome panel's close button, the style setting view toggle, letter avatars and "No style last week" tag (`stylesetting/`), and the legend button (`team/TeamBoard`). Text spills out of the pill or into the next column; nothing is clipped. Each needs `min-h` in place of `h`, or a column that grows, in the board work.
+
+**D57. Accessibility review fixes.** Decided. All 67 parity frames are unchanged.
 - Streamed text is never inside a live region. Captions, the 1:1 transcript, the chat thread and the interview transcript keep their visible text out of live regions and announce each finished NPC line once ("Kent, AI persona: ...") from a visually hidden polite region; a line you interrupt is not read out. One streamed reply went from one announcement per token to one.
 - Meeting and sponsor stages have no transcript; with captions off the page can pass `spokenLine` so the line is still announced.
 - Tiles and meters that were named with `aria-label` on a plain div are now groups (KPI tiles, Team Pulse, target, HUD days left) or images (metric bars, trust ring, streak, report meters), named in words with the trend ("Team skill 57, rising"). Arrow and dot glyphs are hidden from screen readers.

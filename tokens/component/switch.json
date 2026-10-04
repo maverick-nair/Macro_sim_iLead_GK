@@ -4,7 +4,7 @@
       "value": "{fill.brand}"
     },
     "track-off": {
-      "value": "rgba(255,255,255,.12)"
+      "value": "{color.control.track-off}"
     },
     "thumb-on": {
       "value": "{color.brand.deep-space}"

@@ -1,13 +1,13 @@
 {
   "team": {
     "title": {
-      "tracking": { "value": "-0.02em", "$description": "\"Your team\" heading" }
+      "tracking": { "value": "{tracking.title}", "$description": "\"Your team\" heading" }
     },
     "legend": {
       "width": { "value": "360px" },
       "columns": { "value": "32px 1fr", "$description": "Style letter, name and description" },
-      "shadow": { "value": "0 16px 40px {color.member.shadow-raised}" },
-      "enter": { "value": "ilIn 200ms ease" }
+      "shadow": { "value": "{metrics.popover.shadow}", "$description": "Same as the other popovers" },
+      "enter": { "value": "ilIn {duration.base} ease", "$description": "The design's 200ms, snapped to duration.base (D24)" }
     }
   }
 }

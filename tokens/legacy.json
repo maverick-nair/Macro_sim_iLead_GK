@@ -2,26 +2,13 @@
   "$description": "Migration aliases. Variable names the ported screens and the Genie design system still read, mapped onto the token layers. Removed screen by screen as M1 to M6 move components to Tailwind utilities; must be empty by M8. `root` aliases are global defaults (the Genie dark brand); `theme` aliases are scoped to .il-theme, like the prototype's app root.",
   "root": {
     "font-sans": "{font.family.sans}",
-    "type-body": "{font.weight.400} {font.size.15}/1.65 {font.family.sans}",
     "grad-brand": "{gradient.brand}",
-    "grad-spectrum": "{gradient.spectrum}",
-    "ease-brand": "{easing.brand}",
-    "electric-blue": "{color.brand.electric-blue}",
-    "cyber-cyan": "{color.brand.cyber-cyan}",
-    "mint-green": "{color.brand.mint-green}",
-    "deep-space": "{color.brand.deep-space}",
-    "pale-lavender": "{color.brand.pale-lavender}",
-    "surface-1": "{color.brand.surface-1}",
-    "surface-2": "rgba(255,255,255,.04)",
-    "surface-border-strong": "rgba(255,255,255,.14)",
-    "text-body": "{color.brand.pale-lavender}",
-    "radius-pill": "{radius.pill}"
+    "grad-spectrum": "{gradient.spectrum}"
   },
   "theme": {
     "ik-text": "{color.fg.primary}",
     "ik-text-2": "{color.fg.secondary}",
     "ik-card": "{color.surface.card}",
-    "ik-solid": "{color.surface.solid}",
     "ik-raised": "{color.surface.raised}",
     "ik-line": "{color.line.default}",
     "ik-line-strong": "{color.line.strong}",
@@ -35,12 +22,8 @@
     "ik-pos": "{color.status.gain}",
     "ik-pos-soft": "{color.status.gain-soft}",
     "ik-neg": "{color.status.decline}",
-    "ik-neg-soft": "{color.status.decline-soft}",
     "ik-mat": "{color.surface.material}",
     "ik-scrim": "{color.surface.scrim}",
-    "text-body": "{color.fg.primary}",
-    "surface-2": "{color.surface.raised}",
-    "surface-border-strong": "{color.line.strong}",
     "grad-brand": "{fill.brand}"
   }
 }

@@ -1,0 +1,11 @@
+{
+  "$description": "Raw colours of the HUD art. One value in both modes, as the design renders them.",
+  "color": {
+    "cyan": {
+      "850": { "$value": "oklch(0.85 0.1 205)", "$description": "Half capacity bolt fill" }
+    },
+    "orange": {
+      "800": { "$value": "oklch(0.8 0.15 60)", "$description": "Streak flame" }
+    }
+  }
+}

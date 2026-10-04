@@ -1,0 +1,30 @@
+{
+  "$description": "WCAG 2.2 AA contrast pairs checked by the token build, on top of the `contrast` declared on semantic tokens (those are all against surface.solid). Every pair runs in light and dark, and again under each client theme in tokens/themes when that theme changes one of its colours. Text needs 4.5:1 (1.4.3; the app's 12px and 13px labels are never large text); controls, focus rings and graphics need 3:1 (1.4.11). `bg` may be a list. Translucent backgrounds are composited over `over`, by default surface.solid. Gradients are checked at every stop.",
+  "pairs": [
+    { "fg": "color.fg.primary", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.accent.soft", "color.status.attention-soft", "color.status.gain-soft", "color.status.decline-soft"], "min": 4.5, "why": "Body text on every surface, selected rows and status chips" },
+    { "fg": "color.fg.secondary", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material"], "min": 4.5, "why": "Labels and metadata" },
+
+    { "fg": "color.accent.secondary", "bg": ["color.surface.card", "color.surface.material"], "min": 4.5, "why": "Accent text: eyebrows, Add a reason, Hide, See why, award count, Changed" },
+    { "fg": "color.live.replay", "bg": ["color.surface.card", "color.surface.raised"], "min": 4.5, "why": "Replay link under NPC turns" },
+    { "fg": "color.fg.link", "bg": ["color.surface.solid", "color.surface.card", "color.surface.material", "color.status.attention-soft"], "min": 4.5, "why": "Ghost buttons, including Continue on the prerequisite nudge" },
+    { "fg": "color.fg.link-hover", "bg": ["color.surface.solid", "color.surface.card", "color.surface.material", "color.status.attention-soft"], "min": 4.5, "why": "Ghost buttons on hover" },
+
+    { "fg": "color.status.attention", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.status.attention-soft"], "min": 4.5, "why": "12px attention text: Bottleneck this week, urgent inbox label" },
+    { "fg": "color.status.gain", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.status.gain-soft"], "min": 4.5, "why": "12px gain deltas and chips" },
+    { "fg": "color.status.decline", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.status.decline-soft"], "min": 4.5, "why": "12px decline deltas and chips" },
+
+    { "fg": "color.fg.on-accent", "bg": "color.accent.default", "min": 4.5, "why": "Text on accent fills, such as the selected style letter" },
+    { "fg": "button.primary.fg", "bg": "button.primary.bg", "min": 4.5, "why": "Primary button label, at every stop of the brand gradient" },
+    { "fg": "button.secondary.fg", "bg": "button.secondary.bg", "min": 4.5, "why": "Secondary button label" },
+    { "fg": "toast.fg", "bg": "toast.bg", "min": 4.5, "why": "Toast text on its inverted fill" },
+    { "fg": "style.tooltip.fg", "bg": "style.tooltip.bg", "min": 4.5, "why": "Style tooltip text on its inverted fill" },
+
+    { "fg": "color.accent.secondary", "bg": ["color.surface.raised"], "min": 3, "why": "Focus ring (outline-accent-secondary) and selected borders" },
+    { "fg": "color.accent.default", "bg": ["color.surface.card", "color.surface.raised"], "min": 3, "why": "Bars, selected state" },
+    { "fg": "color.line.control", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material"], "min": 3, "why": "Text fields, composers and choice chips identified by their border" },
+    { "fg": "color.celebration.star", "bg": ["color.surface.card", "color.surface.material"], "min": 3, "why": "Earned star in the weekly report" },
+    { "fg": "switch.track-off", "bg": ["color.surface.solid", "color.surface.card", "color.surface.raised"], "min": 3, "modes": ["light"], "why": "Off switch track against its surface. In dark the light thumb carries the boundary (next pair)" },
+    { "fg": "switch.thumb-off", "bg": "switch.track-off", "min": 3, "why": "Off switch thumb against its track" },
+    { "fg": "switch.thumb-on", "bg": "switch.track-on", "min": 3, "why": "On switch thumb against the brand gradient" }
+  ]
+}

@@ -139,6 +139,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       case 'noCover': return t('board.block.noCover', { stage: stageName(b.stage) });
       case 'teamFull': return t('board.block.teamFull');
       case 'liveCap': return t('board.block.liveCap', { cap: b.cap, unit: periodUnit });
+      case 'stageFull': return t('board.error', { code: 'stageFull' });
     }
   };
   const block = (b: Block | null): ActionBlock | undefined => {

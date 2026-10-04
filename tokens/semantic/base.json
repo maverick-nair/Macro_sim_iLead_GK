@@ -86,7 +86,15 @@
           "ref": "color.white",
           "alpha": 0.2
         },
-        "$description": "Control borders"
+        "$description": "Container borders: panels, dialogs, popovers. Decorative, the fill and shadow carry the edge"
+      },
+      "control": {
+        "light": "{color.mist.600}",
+        "dark": {
+          "ref": "color.white",
+          "alpha": 0.36
+        },
+        "$description": "Borders that identify a control: text fields, composers, choice chips, unearned star outlines. 3:1 against their surface (WCAG 1.4.11)"
       }
     },
     "track": {
@@ -109,14 +117,14 @@
         "$description": "Bars, selected state, links"
       },
       "secondary": {
-        "light": "{color.cyan.600}",
+        "light": "{color.cyan.520}",
         "dark": "{color.brand.cyber-cyan}",
         "overridableBy": "client-acc-2",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
-        "$description": "Eyebrows, icons, focus"
+        "$description": "Eyebrows, text links, icons, focus. Used as 12px text, so it needs 4.5:1 (D8)"
       },
       "soft": {
         "light": "{color.blue.950}",
@@ -130,11 +138,11 @@
     },
     "status": {
       "attention": {
-        "light": "{color.amber.550}",
+        "light": "{color.amber.530}",
         "dark": "{color.amber.840}",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
         "$description": "Needs attention, under 30"
       },
@@ -150,7 +158,7 @@
         "dark": "{color.brand.mint-green}",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
         "$description": "Positive delta"
       },
@@ -166,7 +174,7 @@
         "dark": "{color.coral.780}",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
         "$description": "Negative delta"
       },

@@ -1,14 +1,14 @@
 {
   "hud": {
     "logo": {
-      "tracking": { "value": "-0.03em" }
+      "tracking": { "value": "{tracking.logo}" }
     },
     "capacity": {
       "pulse": { "value": "ilPulse 1.6s ease-in-out infinite", "$description": "Capacity bolts pulse while one sub period or less is left" }
     },
     "score": {
       "columns": { "value": "80px 1fr 40px", "$description": "Pillar name, bar, value in the score breakdown" },
-      "shadow": { "value": "0 16px 40px {color.metrics.popover-shadow}" }
+      "shadow": { "value": "{metrics.popover.shadow}", "$description": "Same as the sponsor popover" }
     }
   }
 }

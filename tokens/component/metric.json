@@ -3,7 +3,6 @@
     "bar": {
       "columns": { "value": "46px minmax(0,1fr) 22px", "$description": "Label, track, value" },
       "fill": { "value": "{fill.meter}" },
-      "fill-low": { "value": "{color.status.attention}" },
       "transition": { "value": "width {duration.slow} {easing.spring}" }
     }
   }

@@ -76,7 +76,7 @@ function Composer({ c, npcName, mobile }: { c: ChatComposer; npcName: string; mo
   };
   return (
     <div className="flex flex-col gap-2">
-      <div className={`flex items-end gap-2.5 rounded-20 border bg-surface-material p-2 ${c.recording ? 'border-voice-listening shadow-(--il-liveformats-composer-listening)' : 'border-line-strong'}`}>
+      <div className={`flex items-end gap-2.5 rounded-20 border bg-surface-material p-2 ${c.recording ? 'border-voice-listening shadow-(--il-liveformats-composer-listening)' : 'border-line-control'}`}>
         <div className="flex min-w-0 flex-1 flex-col">
           <label htmlFor={id} className="sr-only">{t('liveformats.chat.draft.label', { name: npcName })}</label>
           {c.recording && (

@@ -1,15 +1,15 @@
 {
   "gamification": {
     "eyebrow": {
-      "tracking": { "value": "0.12em" }
+      "tracking": { "value": "{tracking.eyebrow-wide}" }
     },
     "badge": {
       "award-shadow": { "value": "0 0 80px {color.celebration.glow}" },
-      "award-enter": { "value": "ilIn 400ms cubic-bezier(.2,.9,.3,1.2)" },
+      "award-enter": { "value": "ilIn {duration.slow} {easing.overshoot}", "$description": "The design's 400ms, snapped to duration.slow (D24)" },
       "medal-ring": { "value": "0 0 0 8px {color.celebration.ring}" }
     },
     "star": {
-      "enter": { "value": "ilIn 500ms cubic-bezier(.2,.9,.3,1.3) both" },
+      "enter": { "value": "ilIn {duration.slow} {easing.overshoot-strong} both", "$description": "The design's 500ms, snapped to duration.slow (D24)" },
       "stagger": { "value": "180ms", "$description": "Delay between stars appearing" }
     }
   }

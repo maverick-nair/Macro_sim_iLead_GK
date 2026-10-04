@@ -85,7 +85,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
             onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); close(true); } }}
             placeholder={t('stylesetting.rationale.placeholder')}
             aria-label={t('stylesetting.rationale.aria', { name: m.name })}
-            className="h-8.5 rounded-10 border border-solid border-line-strong bg-surface-raised px-2.5 py-0 text-13 text-fg-primary"
+            className="h-8.5 rounded-10 border border-solid border-line-control bg-surface-raised px-2.5 py-0 text-13 text-fg-primary"
           />
         ) : (
           <button ref={opener} type="button" onClick={() => setEditing(true)}

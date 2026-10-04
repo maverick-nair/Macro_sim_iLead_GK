@@ -97,7 +97,7 @@ export function LiveInputBar(p: LiveInputBarProps) {
           <b>{t('liveshell.partial.title')}</b> {t('liveshell.partial.body')}
         </div>
       )}
-      <div className={`flex items-end gap-2.5 rounded-24 border border-solid bg-surface-material p-2.5 ${listening ? 'border-voice-listening shadow-(--il-liveshell-reply-listening-ring)' : 'border-line-strong'}`}>
+      <div className={`flex items-end gap-2.5 rounded-24 border border-solid bg-surface-material p-2.5 ${listening ? 'border-voice-listening shadow-(--il-liveshell-reply-listening-ring)' : 'border-line-control'}`}>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <MicStatus status={micStatusFor(p)} speaker={p.speakerName} />
           {listening ? (

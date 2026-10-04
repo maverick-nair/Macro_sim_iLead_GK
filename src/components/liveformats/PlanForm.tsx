@@ -134,7 +134,7 @@ export function PlanForm(props: PlanFormProps) {
       <div className="flex min-w-0 flex-col gap-1.5">
         <div role="radiogroup" aria-labelledby={id('due', 'label')} aria-describedby={describedBy} aria-invalid={missing.includes('due') || undefined} className="flex flex-wrap gap-2">
           {dueOptions.map(n => (
-            <label key={n} className={`flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-strong px-3.5 text-13 font-700 has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-brand-deep-space has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary`}>
+            <label key={n} className={`flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-control px-3.5 text-13 font-700 has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-brand-deep-space has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary`}>
               <input type="radio" name={id('due')} value={n} checked={fields.due === n} onChange={() => onChange('due', n)} className="sr-only" />
               {t('time.subPeriod', { unit: subPeriodUnit, n })}
             </label>

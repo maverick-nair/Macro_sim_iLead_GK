@@ -10,6 +10,9 @@
   --color-fg-primary: var(--il-color-fg-primary);
   --color-fg-secondary: var(--il-color-fg-secondary);
   --color-fg-on-accent: var(--il-color-fg-on-accent);
+  --color-fg-link: var(--il-color-fg-link);
+  --color-fg-link-hover: var(--il-color-fg-link-hover);
+  --color-fg-inverse: var(--il-color-fg-inverse);
   --color-surface-card: var(--il-color-surface-card);
   --color-surface-solid: var(--il-color-surface-solid);
   --color-surface-raised: var(--il-color-surface-raised);
@@ -17,6 +20,7 @@
   --color-surface-scrim: var(--il-color-surface-scrim);
   --color-line-default: var(--il-color-line-default);
   --color-line-strong: var(--il-color-line-strong);
+  --color-line-control: var(--il-color-line-control);
   --color-track: var(--il-color-track);
   --color-accent-default: var(--il-color-accent-default);
   --color-accent-secondary: var(--il-color-accent-secondary);
@@ -27,6 +31,9 @@
   --color-status-gain-soft: var(--il-color-status-gain-soft);
   --color-status-decline: var(--il-color-status-decline);
   --color-status-decline-soft: var(--il-color-status-decline-soft);
+  --color-control-track-off: var(--il-color-control-track-off);
+  --color-elevation-drawer: var(--il-color-elevation-drawer);
+  --color-elevation-panel: var(--il-color-elevation-panel);
   --color-celebration-glow: var(--il-color-celebration-glow);
   --color-celebration-ring: var(--il-color-celebration-ring);
   --color-celebration-star: var(--il-color-celebration-star);
@@ -71,6 +78,9 @@
   --color-hud-capacity-half: var(--il-color-hud-capacity-half);
   --color-hud-capacity-empty: var(--il-color-hud-capacity-empty);
   --color-hud-streak: var(--il-color-hud-streak);
+  --color-onboarding-caption-bar: var(--il-color-onboarding-caption-bar);
+  --color-onboarding-mic-glow: var(--il-color-onboarding-mic-glow);
+  --color-onboarding-mic-glow-listening: var(--il-color-onboarding-mic-glow-listening);
   --color-stylesetting-portrait-shade: var(--il-color-stylesetting-portrait-shade);
   --background-image-brand: var(--il-fill-brand);
   --background-image-product: var(--il-fill-product);
@@ -139,6 +149,8 @@
   --ease-brand: var(--il-easing-brand);
   --ease-spring: var(--il-easing-spring);
   --ease-settle: var(--il-easing-settle);
+  --ease-overshoot: var(--il-easing-overshoot);
+  --ease-overshoot-strong: var(--il-easing-overshoot-strong);
   --shadow-glow: var(--il-shadow-glow);
   --shadow-outcome-glow: var(--il-shadow-outcome-glow);
   --blur-12: var(--il-blur-12);

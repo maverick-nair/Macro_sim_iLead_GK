@@ -86,7 +86,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
       <fieldset className="m-0 flex flex-wrap gap-2 border-0 p-0">
         <legend className="sr-only">{t('liveformats.compare.decisionFor', { name: c.name })}</legend>
         {(['hire', 'pass'] as HireMark[]).map(m => (
-          <label key={m} className={`flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-strong px-4 text-13 font-700 ${MARK_ON[m]} ${FOCUS_WITHIN}`}>
+          <label key={m} className={`flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-control px-4 text-13 font-700 ${MARK_ON[m]} ${FOCUS_WITHIN}`}>
             <input type="radio" name={`${uid}-${c.id}`} value={m} checked={marks[c.id] === m} onChange={() => setMarks(x => applyMark(x, c.id, m, ids))} className="sr-only" />
             {t('liveformats.compare.mark', { mark: m })}
           </label>

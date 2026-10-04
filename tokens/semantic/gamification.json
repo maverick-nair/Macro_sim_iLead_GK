@@ -12,9 +12,9 @@
         "$description": "Soft ring around a badge medal"
       },
       "star": {
-        "light": "{color.brand.cyber-cyan}",
+        "light": "{color.cyan.520}",
         "dark": "{color.brand.cyber-cyan}",
-        "$description": "An earned star in the weekly report"
+        "$description": "An earned star in the weekly report. Light uses the darker cyan so the star reaches 3:1 on white (WCAG 1.4.11)"
       }
     }
   }

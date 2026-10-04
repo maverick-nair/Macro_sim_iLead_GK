@@ -97,7 +97,8 @@ export const Block = z.discriminatedUnion('reason', [
   z.object({ reason: z.literal('lastInStage'), stage: Id }),
   z.object({ reason: z.literal('noCover'), stage: Id }),
   z.object({ reason: z.literal('teamFull') }),
-  z.object({ reason: z.literal('liveCap'), cap: z.number().int().min(1) })
+  z.object({ reason: z.literal('liveCap'), cap: z.number().int().min(1) }),
+  z.object({ reason: z.literal('stageFull'), stage: Id })
 ]);
 
 const Who = z.object({ id: Id, name: Text, img: z.string().nullable() });
@@ -131,7 +132,9 @@ export const ActionView = z.object({
     away: z.number().int().min(0),
     /** Overrides the action's people to pick. */
     targets: z.tuple([z.number(), z.number()]).nullable(),
-    distinctStages: z.boolean(), pickStage: z.boolean()
+    distinctStages: z.boolean(), pickStage: z.boolean(),
+    /** For options where you pick a stage: each stage and why it cannot take someone, if so. */
+    stages: z.array(z.object({ key: Id, blocked: Block.nullable() })).nullable()
   })),
   /** Why a team action is unavailable, or null. */
   blocked: Block.nullable(),
@@ -158,10 +161,12 @@ export const PeriodSummary = z.object({
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
+  /** The storyline's name and the organisation the participant joins, for onboarding. */
+  storyline: z.object({ name: Text, organisation: Text.nullable() }),
   clock: Clock,
   money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
   members: z.array(MemberView),
-  kpis: z.array(z.object({ metric: MetricKey, value: Num, start: Num })),
+  kpis: z.array(z.object({ metric: MetricKey, value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']) })),
   pulse: z.object({ upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
   /** Role coverage: at most this many people per stage. */
   maxPerStage: z.number().int().min(1),
@@ -170,7 +175,8 @@ export const EngineView = z.object({
   promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0) })),
   inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), dueInSubPeriods: z.number().int().nullable() })),
   cards: z.array(z.object({ id: Id, key: Id, card: z.enum(['impact', 'signal', 'capacity', 'diagnostic']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange) })),
-  outcome: Outcome.nullable(),
+  /** `from` resolves the speaker for display: a member, a departed member, a candidate or the sponsor. */
+  outcome: Outcome.extend({ from: z.object({ id: Id, name: Text, img: z.string().nullable() }) }).nullable(),
   score: z.object({ business: Num, people: Num, leadership: Num, bonus: Num, total: Num, max: Num, periodMax: Num, tier: z.enum(['bronze', 'silver', 'gold', 'platinum']).nullable() }),
   streak: z.number().int().min(0),
   periods: z.array(PeriodSummary),

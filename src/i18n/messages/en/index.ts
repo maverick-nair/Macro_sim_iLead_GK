@@ -16,13 +16,15 @@ import liveshell from './liveshell.json';
 import member from './member.json';
 import metric from './metric.json';
 import metrics from './metrics.json';
+import onboarding from './onboarding.json';
 import outcome from './outcome.json';
 import palette from './palette.json';
 import profile from './profile.json';
 import reason from './reason.json';
+import settings from './settings.json';
 import style from './style.json';
 import stylesetting from './stylesetting.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...outcome, ...palette, ...profile, ...reason, ...style, ...stylesetting, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...settings, ...style, ...stylesetting, ...team, ...time };

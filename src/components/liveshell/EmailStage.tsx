@@ -62,7 +62,7 @@ export function EmailStage(p: EmailStageProps) {
               {(field === 'to' ? p.to : p.cc).map(person => <Chip key={person.id} person={person} />)}
               {p.onAddRecipient && (
                 <button type="button" onClick={() => p.onAddRecipient?.(field)} aria-label={t('liveshell.email.addAria', { field })}
-                  className={`h-7.5 cursor-pointer rounded-pill border border-dashed border-line-strong bg-transparent px-2.5 py-0 text-12 font-700 whitespace-nowrap text-fg-secondary ${FOCUS}`}>
+                  className={`h-7.5 cursor-pointer rounded-pill border border-dashed border-line-control bg-transparent px-2.5 py-0 text-12 font-700 whitespace-nowrap text-fg-secondary ${FOCUS}`}>
                   {t('liveshell.email.add')}
                 </button>
               )}

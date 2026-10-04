@@ -28,6 +28,14 @@ export const BADGES: Array<{ key: string; hint: string | null }> = [
   { key: 'promise_keeper', hint: 'Keep three promises' }, { key: 'right_style', hint: 'Lead everyone the right way for a period' }
 ];
 
+/** Name and portrait for a member, a departed member, a candidate, or the sponsor. */
+function who(sim: Sim, id: string) {
+  const c = sim.config;
+  if (id === 'sponsor') return { id, name: c.sponsor.name, img: c.sponsor.portrait ?? null };
+  const p = c.members.find(x => x.id === id) ?? c.candidates.find(x => x.id === id);
+  return p ? { id, name: p.name, img: p.portrait ?? null } : { id, name: c.sponsor.name, img: c.sponsor.portrait ?? null };
+}
+
 /** The goal of a conversation that is not an action: the sponsor briefing, or a reply to a message. */
 function goalFor(sim: Sim, it: Sim['interactions'][string]): string | null {
   const first = sim.config.sponsor.name.split(' ')[0];
@@ -100,6 +108,8 @@ export function buildView(sim: Sim) {
   const score = finalScore(sim);
   return {
     phase: sim.phase,
+    /** Read only storyline identity, for onboarding. */
+    storyline: { name: c.name, organisation: c.organisation ?? null },
     clock: {
       period: sim.period, periods: c.time.period.count, periodUnit: c.time.period.unit,
       subPeriod: Math.min(sim.sub + 1, c.time.subPeriod.perPeriod), subPeriodUnit: c.time.subPeriod.unit,
@@ -109,7 +119,10 @@ export function buildView(sim: Sim) {
     },
     money: { currency: c.money.currency, locale: c.money.locale, display: c.money.display, target: c.money.target, value: Math.round(sim.funnel.value), valueThisPeriod: Math.round(sim.funnel.periodValue) },
     members: sim.members.map(member),
-    kpis: (['skill', 'morale', 'result', 'trust'] as const).map(k => ({ metric: k, value: teamAverage(sim, k), start: sim.periodStart.kpis[k] })),
+    kpis: (['skill', 'morale', 'result', 'trust'] as const).map(k => {
+      const value = teamAverage(sim, k), start = sim.periodStart.kpis[k];
+      return { metric: k, value, start, trend: (value > start ? 'up' : value < start ? 'down' : 'flat') as 'up' | 'down' | 'flat' };
+    }),
     pulse: (() => {
       const moods = sim.members.map(m => moodOf(m, sim));
       return { upbeat: moods.filter(x => x === 'happy').length, steady: moods.filter(x => x === 'neutral' || x === 'thinking').length, struggling: moods.filter(x => x === 'concerned' || x === 'frustrated').length };
@@ -121,14 +134,16 @@ export function buildView(sim: Sim) {
       key: a.key, name: a.name, description: a.description, scope: a.scope, kind: a.kind, format: a.format ?? null, cost: a.cost, targets: a.targets,
       prerequisite: a.prerequisite ?? null,
       rule: a.rule,
-      options: a.options.map(o => ({ key: o.key, label: o.label, cost: o.cost ?? a.cost, away: o.away, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
+      options: a.options.map(o => ({ key: o.key, label: o.label, cost: o.cost ?? a.cost, away: o.away,
+        // Stages a move can go to, with a reason where the stage has no room (role coverage).
+        stages: o.pickStage ? c.stages.map(st => ({ key: st.key, blocked: a.rule === 'swap' && sim.members.filter(m => m.stage === st.key).length >= c.maxPerStage ? { reason: 'stageFull' as const, stage: st.key } : null })) : null, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,
       blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {}
     })),
     promises: sim.promises.map(x => ({ id: x.id, memberId: x.memberId, text: x.text, state: x.state, dueInSubPeriods: Math.max(0, x.dueAbsSub - sim.absSub) })),
     inbox: sim.inbox.filter(x => x.state === 'open').map(message),
     cards: sim.cards,
-    outcome: sim.outcome,
+    outcome: sim.outcome ? { ...sim.outcome, from: who(sim, sim.outcome.speaker) } : null,
     score: {
       business: sim.score.business, people: sim.score.people, leadership: sim.score.leadership, bonus: sim.score.bonus,
       total: score.total, max: RUN_MAX, periodMax: pillarMax(sim), tier: sim.phase === 'ended' ? score.tier : null

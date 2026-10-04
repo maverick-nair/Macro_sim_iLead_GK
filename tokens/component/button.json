@@ -8,10 +8,12 @@
     },
     "sm": {
       "height": {
-        "value": "32px"
+        "value": "calc({space.unit} * 8)",
+        "$description": "32px"
       },
       "padding-x": {
-        "value": "14px"
+        "value": "calc({space.unit} * 3.5)",
+        "$description": "14px"
       },
       "font-size": {
         "value": "{font.size.13}"
@@ -19,10 +21,12 @@
     },
     "md": {
       "height": {
-        "value": "40px"
+        "value": "calc({space.unit} * 10)",
+        "$description": "40px"
       },
       "padding-x": {
-        "value": "20px"
+        "value": "calc({space.unit} * 5)",
+        "$description": "20px"
       },
       "font-size": {
         "value": "{font.size.14}"
@@ -30,10 +34,12 @@
     },
     "lg": {
       "height": {
-        "value": "48px"
+        "value": "calc({space.unit} * 12)",
+        "$description": "48px"
       },
       "padding-x": {
-        "value": "26px"
+        "value": "calc({space.unit} * 6.5)",
+        "$description": "26px"
       },
       "font-size": {
         "value": "{font.size.15}"
@@ -60,10 +66,11 @@
     },
     "ghost": {
       "fg": {
-        "value": "{color.brand.electric-blue}"
+        "value": "{color.fg.link}",
+        "$description": "Light mode is darker than the brand blue so it passes on white and on the attention chip (D8)"
       },
       "fg-hover": {
-        "value": "{color.brand.cyber-cyan}"
+        "value": "{color.fg.link-hover}"
       }
     }
   }
