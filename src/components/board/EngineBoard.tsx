@@ -20,6 +20,7 @@ import { OutcomePanel, type OutcomePerson } from '../outcome/OutcomePanel';
 import { CommandPalette, type PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
+import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { Composer } from './Composer';
 import { PeriodPanel } from './PeriodPanel';
 import { EventCard } from './EventCard';
@@ -195,10 +196,43 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       selected: picking && f ? f.picks.includes(m.id) : selected === m.id,
       unavailableReason: picking ? ineligible(m) : undefined,
       onSelect: () => clickCard(m),
-      onOpenProfile: () => { void send({ type: 'openProfile', memberId: m.id }); if (selected !== m.id) ui.toggleMember(m.id); },
+      onOpenProfile: () => openProfile(m.id),
       onStyleChange: (k: StyleKey) => { if (styling) setDraft(d => ({ ...d, [m.id]: k })); else say(t('board.style.locked', { unit: periodUnit })); }
     }))
   }));
+
+  const openProfile = (id: string) => {
+    setFlow(null);
+    if (selected !== id) ui.toggleMember(id);
+    ui.openPanel('profile', id);
+    if (!member(id)?.statsRevealed) void send({ type: 'openProfile', memberId: id });
+  };
+
+  // ---- profile: everything the engine logged with this person, newest first ----
+  const pm = ui.panel === 'profile' && ui.profileId ? member(ui.profileId) : undefined;
+  let profile: ProfilePanelProps | null = null;
+  if (pm) {
+    const fact = (x: string | null | undefined) => (x && x.trim() ? x : null);
+    profile = {
+      name: pm.name, title: pm.title, img: img(pm), mood: pm.mood, away: pm.away > 0,
+      stats: { skill: pm.skill, morale: pm.morale, result: pm.result, trust: pm.trust }, style: pm.style,
+      facts: [
+        { key: 'previous', value: fact(pm.profile.previous) }, { key: 'tenure', value: fact(pm.profile.tenure) },
+        { key: 'experience', value: fact(pm.profile.experience) }, { key: 'skills', value: fact(pm.profile.skills) },
+        { key: 'remarks', value: fact(pm.profile.remarks) }, { key: 'careerGoal', value: pm.careerGoal },
+        { key: 'relationships', value: fact(pm.profile.relations) }
+      ],
+      shared: pm.shared, periodUnit, subPeriodUnit: unit,
+      timeline: v.history.filter(l => l.memberIds.includes(pm.id) || (l.memberIds.length === 0 && l.kind !== 'periodEnd')).slice().reverse().map(l => {
+        const mine = l.changes.filter((c): c is typeof c & { metric: MetricKey } => c.subject === pm.id && c.metric !== 'confidence');
+        const net = mine.reduce((a, c) => a + c.delta, 0);
+        return { id: l.id, when: { period: l.period, sub: Math.min(l.sub + 1, v.clock.capacity) }, title: l.title, quote: l.quote, tone: net > 0 ? 'pos' : net < 0 ? 'neg' : 'neutral', changes: mine.map(c => ({ metric: c.metric, delta: c.delta })) };
+      }),
+      promises: v.promises.filter(x => x.memberId === pm.id).map(x => ({ text: x.text, status: x.state })),
+      actions: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, pm.id)),
+      onClose: () => ui.openPanel('none')
+    };
+  }
 
   const chosen = v.members.filter(m => draft[m.id]).length;
   const confirmStyles = () => { if (chosen === v.members.length) void send({ type: 'confirmStyles', styles: draft }); };
@@ -366,6 +400,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           drawer={composer ?? (drawer ? <ActionDrawer {...drawer} /> : undefined)}
         /></div>
         <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
+        {profile && <ProfilePanel {...profile} />}
         <InboxDrawer open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
           onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={id => setReadIds(r => [...r, id])} />
       </div>

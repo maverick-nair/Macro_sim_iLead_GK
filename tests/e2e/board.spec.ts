@@ -35,9 +35,9 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
 
   // Actions open once styles are set; costs read in days.
   // Keyboard selection: the card's toggle is visually hidden, the card draws its focus ring.
-  await page.getByRole('button', { name: /^Kent Goldberg/ }).focus();
+  await page.getByRole('button', { name: /^Kent Goldberg, Lead/ }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: /^Kent Goldberg/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /^Kent Goldberg, Lead/ })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: /Meet face to face/ }).click();
   await page.getByText('Energize the person').click();
   await page.getByRole('button', { name: /Confirm and start/ }).click();
