@@ -1,4 +1,5 @@
-import { EngineView, Intent, IntentResult } from './contract';
+import { readSse } from '../ai/sse';
+import { EngineView, Intent, IntentResult, type StreamChunk } from './contract';
 
 /**
  * The one way the UI talks to the engine. Two adapters: the in-browser mock, which runs the same
@@ -8,6 +9,11 @@ import { EngineView, Intent, IntentResult } from './contract';
 export interface EngineClient {
   view(): Promise<EngineView>;
   send(intent: Intent): Promise<IntentResult>;
+  /**
+   * Streams an NPC turn's words as the AI writes them (brief: streaming AI, cancellable). Abort the
+   * signal to stop it; then send `interruptTurn` with how much was shown.
+   */
+  streamTurn(interactionId: string, turn: { id: string; text: string }, signal: AbortSignal): AsyncIterable<StreamChunk>;
 }
 
 /** An intent the engine refused. `code` is stable; the UI maps it to a catalog message. */
@@ -42,6 +48,17 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
     },
     async send(intent) {
       return parse(IntentResult, await call('/intents', { method: 'POST', body: JSON.stringify(parse(Intent, intent)) }));
+    },
+    async *streamTurn(interactionId, turn, signal) {
+      let res: Response;
+      try {
+        res = await fetchImpl(`${root}/interactions/${encodeURIComponent(interactionId)}/turns/${encodeURIComponent(turn.id)}/stream`, { headers: { accept: 'text/event-stream' }, signal });
+      } catch {
+        if (signal.aborted) return;
+        yield { type: 'error', retryable: true };
+        return;
+      }
+      yield* readSse(res, signal);
     }
   };
 }
@@ -50,7 +67,11 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
 export function lazyClient(load: () => Promise<EngineClient>): EngineClient {
   let client: Promise<EngineClient> | null = null;
   const get = () => (client ??= load());
-  return { view: async () => (await get()).view(), send: async i => (await get()).send(i) };
+  return {
+    view: async () => (await get()).view(),
+    send: async i => (await get()).send(i),
+    async *streamTurn(id, turn, signal) { yield* (await get()).streamTurn(id, turn, signal); }
+  };
 }
 
 /** HTTP when `VITE_ILEAD_ENGINE_URL` is set, otherwise the mock engine, loaded on first use. */

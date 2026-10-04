@@ -1,5 +1,6 @@
 import { parseStoryline, type StorylineConfig } from './config';
 import { EngineView, Intent, IntentResult } from './contract';
+import { mockStream } from '../ai/mockStream';
 import { EngineError, parse, type EngineClient } from './client';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
@@ -15,7 +16,7 @@ export function defaultStoryline(): StorylineConfig {
   return r.config;
 }
 
-export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number } = {}): EngineClient {
+export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number } = {}): EngineClient {
   const engine = createEngine(opts.config ?? defaultStoryline(), { seed: opts.seed ?? 1, evaluator: opts.evaluator });
   const wait = () => (opts.latencyMs ? new Promise(r => setTimeout(r, opts.latencyMs)) : Promise.resolve());
   return {
@@ -32,7 +33,9 @@ export function createMockClient(opts: { config?: StorylineConfig; seed?: number
         if (e instanceof IntentError) throw new EngineError(e.message, e.code);
         throw e;
       }
-    }
+    },
+    // The mock engine already has the NPC's words; it streams them at a speaking pace.
+    streamTurn: (_id, turn, signal) => mockStream(turn.text, { signal, turnId: turn.id, tokensPerSecond: opts.tokensPerSecond ?? 14 })
   };
 }
 
