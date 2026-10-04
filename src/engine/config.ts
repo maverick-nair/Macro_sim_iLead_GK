@@ -80,6 +80,8 @@ export const Person = z.object({
   byStage: z.record(z.string(), Stats),
   profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: z.string(), relations: z.string().default('') }),
   hiddenConcern: Copy.optional(),
+  /** Default portrait. `portraits` may override it per mood. */
+  portrait: z.string().optional(),
   portraits: z.record(z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']), z.string()).optional(),
   voice: z.string().optional()
 });
@@ -170,6 +172,8 @@ export const StorylineConfig = z.object({
   money: Money,
   time: Time,
   stages: z.array(Stage).min(MIN_STAGES).max(MAX_STAGES),
+  /** The participant's sponsor: sends notes, takes briefings, holds confidence. */
+  sponsor: z.object({ name: z.string().min(1), title: z.string().min(1), portrait: z.string().optional() }),
   members: z.array(Person).min(6).max(12),
   candidates: z.array(Person).default([]),
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),

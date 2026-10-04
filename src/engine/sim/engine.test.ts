@@ -38,13 +38,13 @@ describe('engine', () => {
     const m = await e.dispatch({ type: 'planAction', action: 'meet', memberIds: [] });
     await e.dispatch({ type: 'submitInteraction', interactionId: m.interactionId!, text: 'Let us work on this together. What do you think?' });
     expect(e.view().clock.capacityLeft).toBe(4);
-    expect(e.view().actions.find(a => a.key === 'meet')!.blocked).toMatch(/Available again/);
+    expect(e.view().actions.find(a => a.key === 'meet')!.blocked).toMatchObject({ reason: 'cooldown' });
     for (const id of ['beth', 'justin', 'peter', 'lowe']) {
       const r = await e.dispatch({ type: 'planAction', action: 'assess', memberIds: [id] });
       expect(r.changes).toEqual([]);
     }
     expect(e.view().clock.capacityLeft).toBe(0);
-    await expect(e.dispatch({ type: 'planAction', action: 'assess', memberIds: ['kent'] })).rejects.toThrow(/Not enough days/);
+    await expect(e.dispatch({ type: 'planAction', action: 'assess', memberIds: ['kent'] })).rejects.toMatchObject({ code: 'noCapacity' });
   });
 
   it('reads the style of a live conversation and applies the Model doc maths, with evidence', async () => {

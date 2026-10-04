@@ -23,7 +23,7 @@ const Col = ({ children, width = 230 }: { children: ReactNode; width?: number })
 /** A card with working selection and style state, as on the board. */
 function Live(p: MemberCardProps) {
   const [selected, setSelected] = useState(!!p.selected);
-  const [style, setStyle] = useState<StyleKey>(p.style);
+  const [style, setStyle] = useState<StyleKey | null>(p.style);
   return <MemberCard {...p} selected={selected} style={style} onSelect={() => setSelected(s => !s)} onStyleChange={setStyle} />;
 }
 
@@ -34,7 +34,7 @@ export const Selected: StoryObj = { render: () => <Col><MemberCard {...KENT} sel
 /** Tab to the card: the focus ring sits 3px outside the border. Tab again for the profile button, then the style letters (arrow keys move between them). */
 function Focused() {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => { ref.current?.querySelector<HTMLElement>('[role="button"]')?.focus({ focusVisible: true } as FocusOptions); }, []);
+  useEffect(() => { ref.current?.querySelector<HTMLElement>('.il-select')?.focus({ focusVisible: true } as FocusOptions); }, []);
   return <div ref={ref}><Col><Live {...MANDY} /></Col></div>;
 }
 export const KeyboardFocus: StoryObj = { render: () => <Focused /> };
@@ -94,3 +94,6 @@ export const TrustRings: StoryObj = {
     </div>
   )
 };
+
+/** Before the profile is first opened (spec): no bars and no trust ring. No style chosen yet. */
+export const StatsHidden: StoryObj = { render: () => <Col><Live {...MANDY} statsHidden style={null} /><Live {...KENT} /></Col> };

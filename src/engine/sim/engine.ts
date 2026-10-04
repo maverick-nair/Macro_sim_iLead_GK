@@ -66,7 +66,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         const it = sim.interactions[intent.interactionId];
         if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
         const ev = await evaluator.evaluate({ format: it.format, text: intent.text, usedVoice: intent.usedVoice });
-        const outcome = submitInteraction(sim, rng, intent.interactionId, ev, intent.npcReply ?? '');
+        const reply = intent.npcReply ?? (await evaluator.reply?.({ format: it.format, text: intent.text, band: ev.band })) ?? '';
+        const outcome = submitInteraction(sim, rng, intent.interactionId, ev, reply);
         return { view: buildView(sim), changes: outcome.changes, outcome };
       }
       case 'dismissCard':

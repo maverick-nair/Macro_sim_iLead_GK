@@ -197,6 +197,8 @@
   --il-action-drawer-enter: ilIn 240ms ease;
   --il-action-drawer-title-tracking: -0.02em;
   --il-action-option-border-width: 1.5px;
+  --il-board-columns: 64px minmax(0, 1fr) 330px;
+  --il-board-panel-max-width: 560px;
   --il-button-radius: var(--il-radius-pill);
   --il-button-font-weight: var(--il-font-weight-700);
   --il-button-sm-height: 32px;
@@ -247,6 +249,7 @@
   --il-member-card-shadow: 0 6px 20px var(--il-color-member-shadow-rest);
   --il-member-card-shadow-selected: 0 0 0 1px var(--il-color-accent-secondary), 0 12px 36px var(--il-color-member-glow);
   --il-member-card-transition: translate var(--il-duration-base) var(--il-easing-settle), box-shadow var(--il-duration-base) var(--il-easing-brand), opacity var(--il-duration-base) var(--il-easing-brand);
+  --il-member-hidden-stats-height: 64px;
   --il-metric-bar-columns: 46px minmax(0,1fr) 22px;
   --il-metric-bar-fill: var(--il-fill-meter);
   --il-metric-bar-fill-low: var(--il-color-status-attention);

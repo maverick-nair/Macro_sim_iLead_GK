@@ -1,0 +1,12 @@
+{
+  "board": {
+    "columns": {
+      "value": "64px minmax(0, 1fr) 330px",
+      "$description": "Inbox rail, team board, actions panel"
+    },
+    "panel-max-width": {
+      "value": "560px",
+      "$description": "Period end and run end panels"
+    }
+  }
+}

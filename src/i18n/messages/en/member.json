@@ -1,8 +1,9 @@
 {
   "member.mood": "{mood, select, happy {Upbeat} neutral {Steady} thinking {Thinking} concerned {Concerned} frustrated {Frustrated} other {}}",
   "member.mood.away": "In training",
-  "member.card.aria": "{name}, {title}. {mood}. Skill {skill}, Morale {morale}, Result {result}, Trust {trust}.{available, select, false { Not available: {reason}} other {}}",
+  "member.card.aria": "{name}, {title}. {mood}.{hidden, select, true { Open the profile to see stats.} other { Skill {skill}, Morale {morale}, Result {result}, Trust {trust}.}}{available, select, false { Not available: {reason}} other {}}",
   "member.unread": "Unread message",
   "member.trust": "Trust {value}",
-  "member.profile.open": "Open profile for {name}"
+  "member.profile.open": "Open profile for {name}",
+  "member.stats.hidden": "Open the profile to see stats"
 }

@@ -5,3 +5,5 @@ dist
 .visual-cache
 .claude/worktrees
 storybook-static
+test-results/
+playwright-report/

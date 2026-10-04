@@ -63,6 +63,7 @@ def to_person(name, d):
     out = dict(id=pid, name=name, title=TITLES[d['home']], pronoun='she' if name in SHE else 'he', homeStage=d['home'],
                start=dict(h, trust=trust_start(h['morale'], h['result'])), byStage=d['byStage'], profile=prof)
     if pid in CONCERNS: out['hiddenConcern'] = CONCERNS[pid]
+    if (ROOT / 'public' / 'assets' / 'npc' / f'{pid}.png').exists(): out['portrait'] = f'/assets/npc/{pid}.png'
     return out
 
 members = [to_person(n, d) for n, d in people.items() if d['active']]
@@ -167,6 +168,7 @@ storyline = dict(
     money=dict(currency='USD', locale='en-US', display='symbol', target=240000, valuePerConversion=8400, inputPerSubPeriod=[8]),
     time=dict(period=dict(unit='week', count=8), costStep=1),
     stages=[dict(key=k, name=n, conversionRatio=c, ideal=2) for k, n, c, _ in STAGES],
+    sponsor=dict(name='Priya Nair', title='Regional Sales Director'),
     members=members, candidates=candidates,
     actions=actions,
     weeklyStyle=dict(m0=[2, 4, 5], m1=[0, -3, -4], m2=[-1, -6, -8]),

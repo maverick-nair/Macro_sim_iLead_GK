@@ -194,6 +194,28 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - Random styles and random actions mostly mismatch, and the Model doc punishes mismatches, so random play ends below passive play.
 - I set the random band to 35 to 65% (it was 55 to 80%). If you want busy play to be gentler than idle play, the lever is the size of the mismatch penalties in the effect tables.
 
+**D38. Stand-ins on the engine board until their milestones.** Decided.
+- Live interactions use a plain text composer in the actions panel. M4 replaces it with the live shell (voice, streaming AI, the designed screens). The engine contract is the same either way.
+- Until M4 streams AI replies, the heuristic evaluator supplies a short, in-character reply line that fits how the words landed.
+- Events show as a plain card with reason chips; M5 brings the designed event art. When more than three people move on one metric, the chips collapse to one team chip per metric showing the average change.
+- Week end and run end are a plain panel with stars, value earned, the sponsor's reward offer and the next step. M5 and M6 bring the designed screens.
+- The HUD nav (objective, funnel, history, badges) is hidden on the engine board until its panels exist (M3).
+
+**D39. Stats stay hidden until the profile is first opened.** Decided, from the spec. Before that, the card shows "Open the profile to see stats" in place of the three bars, and hides the trust ring. The card keeps its height so cards still line up. Opening the profile sends the `openProfile` intent; the engine reveals the stats.
+
+**D40. Member card selection moved off the card root.** Decided.
+- Axe flagged `nested-interactive` (WCAG 4.1.2): the card was a `role="button"` with the profile button and style control inside it.
+- The card is now a plain container. A visually hidden toggle button carries selection, `aria-pressed` and the card's label, and the card draws that button's focus ring. A click anywhere on the card still selects it.
+- The change is pixel-identical: all 67 parity frames still match.
+
+**D41. Why an action is unavailable is data, not text.** Decided. The engine returns a reason code with values (locked until period 3, cooldown 4 days, away for 2 days, and so on). The board words it from the catalog in the storyline's units, so a monthly storyline reads "Available again in 2 weeks".
+
+**D42. Sponsor and portraits come from the storyline config.** Proposed.
+- The 1.0 documents name no sponsor. Sales Elevator uses the design's Priya Nair, Regional Sales Director.
+- Portraits are optional per person, with an optional portrait per mood. Hired candidates have no art yet and show a neutral placeholder. GenieKreator supplies the art in M7.
+
+**D43. Phones keep the prototype board.** Decided, until the 390 board is designed (D15). Desktop plays on the engine. `?engine=off` opens the prototype's fixed board, and `?start=board` skips onboarding.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

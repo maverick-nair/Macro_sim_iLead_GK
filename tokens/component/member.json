@@ -32,6 +32,12 @@
         "value": "translate {duration.base} {easing.settle}, box-shadow {duration.base} {easing.brand}, opacity {duration.base} {easing.brand}",
         "$description": "Hover lift, selection glow, picking dim"
       }
+    },
+    "hidden-stats": {
+      "height": {
+        "value": "64px",
+        "$description": "Height of the three metric bars, kept while stats are hidden so cards line up"
+      }
     }
   }
 }

@@ -36,11 +36,12 @@ export function buildView(sim: Sim) {
     dueInSubPeriods: x.dueAbsSub === null ? null : Math.max(0, x.dueAbsSub - sim.absSub) });
   const member = (m: MemberSim) => {
     const p = person(sim, m.id);
+    const mood = moodOf(m, sim);
     return {
       id: m.id, name: p.name, title: p.title, pronoun: p.pronoun, stage: m.stage,
       skill: m.skill, morale: m.morale, result: m.result, trust: m.trust,
       style: m.style, lastStyle: m.lastStyle, lastReaction: m.lastReaction,
-      mood: moodOf(m, sim), away: m.away, awayReason: m.awayReason,
+      mood, img: p.portraits?.[mood] ?? p.portrait ?? null, away: m.away, awayReason: m.awayReason,
       statsRevealed: m.revealed, shared: m.concernShared ? p.hiddenConcern ?? null : null,
       unread: sim.inbox.some(x => x.from === m.id && x.state === 'open'),
       promise: sim.promises.find(x => x.memberId === m.id && x.state === 'open')?.text ?? null,
@@ -81,7 +82,7 @@ export function buildView(sim: Sim) {
     streak: sim.streak,
     periods: sim.periods,
     badges: BADGES.map(b => ({ key: b.key, earned: sim.badges.includes(b.key), hint: b.hint })),
-    sponsor: { level: SPONSOR_LEVELS[Math.min(4, Math.floor(sim.sponsor.value / 20))], causes: sim.sponsor.causes },
+    sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, level: SPONSOR_LEVELS[Math.min(4, Math.floor(sim.sponsor.value / 20))], causes: sim.sponsor.causes },
     pendingReward: sim.pendingReward,
     history: sim.log
   };

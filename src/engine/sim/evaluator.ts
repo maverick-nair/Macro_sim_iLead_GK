@@ -10,7 +10,19 @@ import type { Style } from './rules';
  */
 export interface Evaluator {
   evaluate(input: { format: string; text: string; usedVoice?: boolean }): Evaluation | Promise<Evaluation>;
+  /**
+   * The other person's reply when the client sent none. The real one is an AI model streamed to the
+   * client (M4); the heuristic gives a short line that fits how the words landed.
+   */
+  reply?(input: { format: string; text: string; band: Band }): string | Promise<string>;
 }
+
+const REPLIES: Record<Band, string[]> = {
+  strong: ['That really helps. Thank you for hearing me out.', 'Okay, I can work with that. Thanks for making time.', 'Good, that is clear. I know what to do now.'],
+  adequate: ['Alright, I will give it a go.', 'Fair enough. Let us see how it goes.', 'Okay. I think I understand what you need.'],
+  weak: ['Okay. If you say so.', 'I am not sure that solves it, but fine.', 'Right. I will try.'],
+  harmful: ['Right. I will just get on with it then.', 'That is not really what I needed to hear.', 'Fine.']
+};
 
 const CUES: Record<Style, RegExp[]> = {
   D: [/\bi need you to\b/i, /\bstep by step\b/i, /\bhere(?:'s| is) (?:the|my) plan\b/i, /\bin detail\b/i, /\bfirst,? .*then\b/i, /\bexactly\b/i, /\bcheck in (?:daily|every day)\b/i, /\bdo (?:this|it) (?:by|today|now)\b/i],
@@ -35,6 +47,10 @@ function sentences(text: string) {
 }
 
 export const heuristicEvaluator: Evaluator = {
+  reply({ text, band }) {
+    const lines = REPLIES[band];
+    return lines[text.length % lines.length];
+  },
   evaluate({ format, text, usedVoice }) {
     const scores = (Object.keys(CUES) as Style[]).map(s => [s, CUES[s].filter(rx => rx.test(text)).length] as const);
     const total = scores.reduce((a, [, n]) => a + n, 0);

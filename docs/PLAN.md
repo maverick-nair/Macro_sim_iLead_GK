@@ -58,16 +58,17 @@
 - The catalog lint (DECISIONS D9) runs in Vitest, and `npm run build` runs it too.
 
 **Performance:**
-- The board route stays under 200 KB gzipped by code splitting the live, week end, report and gallery routes.
-- The current single bundle is 119 KB gzipped with every screen.
+- The board route stays under 200 KB gzipped. The mock engine, the galleries and every screen past onboarding load on demand.
+- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It is 166 KB gzipped at M2.
 
 ## Status
 
 | Milestone | Status |
 |---|---|
 | M0 | Done |
-| M1 | Done, awaiting approval |
-| M2 to M8 | Not started |
+| M1 | Done |
+| M2 | Done, awaiting approval |
+| M3 to M8 | Not started |
 
 ## Milestones
 

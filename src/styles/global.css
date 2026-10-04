@@ -7,6 +7,9 @@
 @import './fonts.css';
 @import './tokens.generated.css';
 
+/* A container that draws the focus ring of its visually hidden control (member card selection). */
+@custom-variant focus-within-select (&:has(> .il-select:focus-visible));
+
 /* App globals, from the iLeadApp design component helmet. In the base layer so utilities win. */
 @layer base {
   body { margin: 0; background: var(--il-color-brand-deep-space); }

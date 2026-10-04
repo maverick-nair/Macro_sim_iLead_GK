@@ -69,19 +69,43 @@ const pr = (sim: Sim, id: string) => { const p = person(sim, id).pronoun; return
 
 // ---------------------------------------------------------------- availability
 
-export function blockedReason(sim: Sim, a: Action, memberId: string | null, optionKey?: string): string | null {
-  if (sim.period < a.unlockPeriod) return `Unlocks in period ${a.unlockPeriod}`;
-  if (a.cost > capacityLeft(sim)) return 'Not enough days left';
-  const keys = [a.key, optionKey ? `${a.key}:${optionKey}` : null, memberId ? `${a.key}@${memberId}` : null].filter(Boolean) as string[];
-  const until = Math.max(...keys.map(k => sim.availableAt[k] ?? 0));
-  if (until > sim.absSub) return `Available again in ${until - sim.absSub} days`;
+/**
+ * Why an action is unavailable, as data. The UI words it from the catalog in the storyline's units;
+ * `blockedText` words it for engine errors and logs.
+ */
+export type Block =
+  | { reason: 'locked'; period: number }
+  | { reason: 'capacity'; need: number; have: number }
+  | { reason: 'cooldown'; in: number }
+  | { reason: 'away'; kind: 'training' | 'leave'; for: number }
+  | { reason: 'rewarded'; in: number }
+  | { reason: 'gone' };
+
+export function blockedReason(sim: Sim, a: Action, memberId: string | null, optionKey?: string): Block | null {
+  if (sim.period < a.unlockPeriod) return { reason: 'locked', period: a.unlockPeriod };
+  if (a.cost > capacityLeft(sim)) return { reason: 'capacity', need: a.cost, have: capacityLeft(sim) };
   if (memberId) {
     const m = member(sim, memberId);
-    if (!m) return 'No longer on the team';
-    if (m.away > 0 && a.key !== 'email' && a.key !== 'feedback') return m.awayReason === 'training' ? `Away in training for ${m.away} more days` : `On leave for ${m.away} more days`;
-    if (a.rule === 'reward' && (sim.availableAt[`${a.key}@${m.id}`] ?? 0) > sim.absSub) return 'Recently rewarded';
+    if (!m) return { reason: 'gone' };
+    if (m.away > 0 && a.key !== 'email' && a.key !== 'feedback') return { reason: 'away', kind: m.awayReason ?? 'leave', for: m.away };
+    const rewarded = sim.availableAt[`${a.key}@${m.id}`] ?? 0;
+    if (a.rule === 'reward' && rewarded > sim.absSub) return { reason: 'rewarded', in: rewarded - sim.absSub };
   }
+  const keys = [a.key, optionKey ? `${a.key}:${optionKey}` : null, memberId ? `${a.key}@${memberId}` : null].filter(Boolean) as string[];
+  const until = Math.max(...keys.map(k => sim.availableAt[k] ?? 0));
+  if (until > sim.absSub) return { reason: 'cooldown', in: until - sim.absSub };
   return null;
+}
+
+export function blockedText(b: Block): string {
+  switch (b.reason) {
+    case 'locked': return `Unlocks in period ${b.period}`;
+    case 'capacity': return 'Not enough time left';
+    case 'cooldown': return `Available again in ${b.in}`;
+    case 'away': return b.kind === 'training' ? 'Away in training' : 'On leave';
+    case 'rewarded': return 'Recently rewarded';
+    case 'gone': return 'No longer on the team';
+  }
 }
 
 function setCooldown(sim: Sim, a: Action, o: Option | undefined, memberIds: string[]) {
@@ -99,7 +123,7 @@ function validate(sim: Sim, a: Action, memberIds: string[], optionKey?: string):
   if (memberIds.length < min || memberIds.length > max) throw new IntentError(`${a.name} needs ${min === max ? min : `${min} to ${max}`} people`, 'targets');
   for (const id of memberIds.length ? memberIds : [null]) {
     const why = blockedReason(sim, a, id, o.key);
-    if (why) throw new IntentError(why, 'blocked');
+    if (why) throw new IntentError(blockedText(why), why.reason === 'capacity' ? 'noCapacity' : 'blocked');
   }
   return o;
 }

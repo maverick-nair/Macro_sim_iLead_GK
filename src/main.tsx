@@ -1,10 +1,13 @@
-import { StrictMode, useEffect, useMemo, useState } from 'react';
+import { lazy, StrictMode, Suspense, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApiContext, createDefaultApi } from './api';
 import { App } from './app/App';
-import { ScreensGallery } from './gallery/ScreensGallery';
-import { StatesGallery } from './gallery/StatesGallery';
+import { EngineProvider } from './engine/react';
 import './styles/global.css';
+
+// The galleries are review tools; they stay out of the participant's bundle.
+const ScreensGallery = lazy(() => import('./gallery/ScreensGallery').then(m => ({ default: m.ScreensGallery })));
+const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ default: m.StatesGallery })));
 
 /** Phones get the 390 layouts the design defines for live interactions, outcomes and the report. */
 function useIsPhone(): boolean {
@@ -21,7 +24,9 @@ function useIsPhone(): boolean {
 
 /**
  * Full screen participant app.
- * `?theme=light` opens the light theme, `?client=halden` the sample client theme.
+ * `?theme=light` opens the light theme, `?client=halden` the sample client theme, `?engine=off` the
+ * design prototype's fixed board instead of the engine, `?start=board` skips onboarding.
+ * Phones keep the prototype until the 390 board is designed (D15).
  */
 function Play() {
   const api = useMemo(createDefaultApi, []);
@@ -29,15 +34,17 @@ function Play() {
   const q = new URLSearchParams(location.search);
   return (
     <ApiContext.Provider value={api}>
-      <App key={phone ? 'phone' : 'desk'} theme={q.get('theme') === 'light' ? 'light' : 'dark'} clientTheme={q.get('client') === 'halden'} mobile={phone} minHeight="100vh" />
+      <EngineProvider>
+        <App key={phone ? 'phone' : 'desk'} screen={q.get('start') === 'board' ? 'board' : undefined} engine={!phone && q.get('engine') !== 'off'} theme={q.get('theme') === 'light' ? 'light' : 'dark'} clientTheme={q.get('client') === 'halden'} mobile={phone} minHeight="100vh" />
+      </EngineProvider>
     </ApiContext.Provider>
   );
 }
 
 function Root() {
   const path = location.pathname.replace(/\/+$/, '');
-  if (path === '/screens') return <ScreensGallery />;
-  if (path === '/states') return <StatesGallery />;
+  if (path === '/screens') return <Suspense><ScreensGallery /></Suspense>;
+  if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
   return <Play />;
 }
 

@@ -7,7 +7,7 @@
     "tokens": "tsx scripts/tokens/build.ts",
     "tokens:check": "tsx scripts/tokens/build.ts --check",
     "dev": "npm run tokens && vite",
-    "build": "npm run tokens:check && npm run lint:copy && tsc -b && vite build",
+    "build": "npm run tokens:check && npm run lint:copy && tsc -b && vite build && tsx scripts/budget.ts",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -17,7 +17,8 @@
     "parity": "tsx tests/visual/parity.ts",
     "lint:copy": "vitest run src/i18n/catalog.test.ts",
     "storybook:smoke": "storybook build -o storybook-static --quiet && tsx tests/visual/stories-smoke.ts storybook-static",
-    "calibrate": "tsx scripts/calibrate.ts"
+    "calibrate": "tsx scripts/calibrate.ts",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@formatjs/icu-messageformat-parser": "^3.5.20",

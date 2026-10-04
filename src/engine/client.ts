@@ -1,8 +1,4 @@
-import { parseStoryline, type StorylineConfig } from './config';
 import { EngineView, Intent, IntentResult } from './contract';
-import type { Evaluator } from './sim/evaluator';
-import { createEngine, IntentError } from './sim/engine';
-import salesElevator from './storylines/sales-elevator.json';
 
 /**
  * The one way the UI talks to the engine. Two adapters: the in-browser mock, which runs the same
@@ -21,37 +17,10 @@ export class EngineError extends Error {
   }
 }
 
-function parse<T>(schema: { safeParse(v: unknown): { success: true; data: T } | { success: false; error: { message: string } } }, value: unknown): T {
+export function parse<T>(schema: { safeParse(v: unknown): { success: true; data: T } | { success: false; error: { message: string } } }, value: unknown): T {
   const r = schema.safeParse(value);
   if (!r.success) throw new EngineError(r.error.message, 'badPayload');
   return r.data;
-}
-
-export function defaultStoryline(): StorylineConfig {
-  const r = parseStoryline(salesElevator);
-  if (!r.ok) throw new Error(r.issues.join('\n'));
-  return r.config;
-}
-
-export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number } = {}): EngineClient {
-  const engine = createEngine(opts.config ?? defaultStoryline(), { seed: opts.seed ?? 1, evaluator: opts.evaluator });
-  const wait = () => (opts.latencyMs ? new Promise(r => setTimeout(r, opts.latencyMs)) : Promise.resolve());
-  return {
-    async view() {
-      await wait();
-      return parse(EngineView, engine.view());
-    },
-    async send(intent) {
-      const checked = parse(Intent, intent);
-      await wait();
-      try {
-        return parse(IntentResult, await engine.dispatch(checked));
-      } catch (e) {
-        if (e instanceof IntentError) throw new EngineError(e.message, e.code);
-        throw e;
-      }
-    }
-  };
 }
 
 export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: typeof fetch = fetch): EngineClient {
@@ -77,8 +46,15 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
   };
 }
 
-/** HTTP when `VITE_ILEAD_ENGINE_URL` is set, otherwise the mock engine. */
+/** Defers loading a client until first use, so the mock engine stays out of the initial bundle. */
+export function lazyClient(load: () => Promise<EngineClient>): EngineClient {
+  let client: Promise<EngineClient> | null = null;
+  const get = () => (client ??= load());
+  return { view: async () => (await get()).view(), send: async i => (await get()).send(i) };
+}
+
+/** HTTP when `VITE_ILEAD_ENGINE_URL` is set, otherwise the mock engine, loaded on first use. */
 export function createDefaultClient(sessionId = 'local'): EngineClient {
   const url = import.meta.env.VITE_ILEAD_ENGINE_URL as string | undefined;
-  return url ? createHttpClient(url, sessionId) : createMockClient();
+  return url ? createHttpClient(url, sessionId) : lazyClient(() => import('./mock').then(m => m.createMockClient()));
 }

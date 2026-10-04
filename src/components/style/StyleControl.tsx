@@ -31,7 +31,8 @@ export function StyleTooltip({ style, align, size = 'sm' }: StyleTooltipProps) {
 }
 
 export interface StyleControlProps {
-  value: StyleKey;
+  /** Null before a style is chosen for this period. */
+  value: StyleKey | null;
   onChange: (style: StyleKey) => void;
   /** Names the group for screen readers: "Leadership style for Kent Goldberg". */
   memberName: string;
@@ -65,7 +66,7 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
   return (
     <ToggleGroup.Root
       type="single"
-      value={value}
+      value={value ?? ''}
       onValueChange={v => { if (v && v !== value) onChange(v as StyleKey); }}
       aria-label={t('style.group.aria', { name: memberName })}
       onClick={stop}

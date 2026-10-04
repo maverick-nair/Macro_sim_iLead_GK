@@ -50,6 +50,10 @@
       "ideal": 2
     }
   ],
+  "sponsor": {
+    "name": "Priya Nair",
+    "title": "Regional Sales Director"
+  },
   "members": [
     {
       "id": "kent",
@@ -98,7 +102,8 @@
         "remarks": "He expected a lot more from his current job and has already started complaining to others about his job.",
         "relations": ""
       },
-      "hiddenConcern": "He expected a lot more from this job, and feels it is not what he was promised."
+      "hiddenConcern": "He expected a lot more from this job, and feels it is not what he was promised.",
+      "portrait": "/assets/npc/kent.png"
     },
     {
       "id": "beth",
@@ -147,7 +152,8 @@
         "remarks": "Beta Elevators is Innov8's closest rival. She decided to switch companies mainly due to her unhappiness with the management of Beta Elevators.",
         "relations": ""
       },
-      "hiddenConcern": "She left Beta Elevators over how she was managed, and watches closely how you lead."
+      "hiddenConcern": "She left Beta Elevators over how she was managed, and watches closely how you lead.",
+      "portrait": "/assets/npc/beth.png"
     },
     {
       "id": "justin",
@@ -196,7 +202,8 @@
         "remarks": "Justin is a Finance Major and is looking for a shift to the Sales Conversion role. He has been in the Lead Qualification role for the past 3 years and wants a change.",
         "relations": ""
       },
-      "hiddenConcern": "He has been in Lead Qualification for 3 years and wants to move to Sales Conversion."
+      "hiddenConcern": "He has been in Lead Qualification for 3 years and wants to move to Sales Conversion.",
+      "portrait": "/assets/npc/justin.png"
     },
     {
       "id": "derick",
@@ -244,7 +251,8 @@
         "skills": "Lead Qualification, Lead Generation",
         "remarks": "",
         "relations": ""
-      }
+      },
+      "portrait": "/assets/npc/derick.png"
     },
     {
       "id": "green",
@@ -292,7 +300,8 @@
         "skills": "Proposal Design, Negotiation",
         "remarks": "Green Bell has influential contacts to make his proposals work and is the go-to guy in the team for anything proposal related.",
         "relations": ""
-      }
+      },
+      "portrait": "/assets/npc/green.png"
     },
     {
       "id": "lowe",
@@ -341,7 +350,8 @@
         "remarks": "",
         "relations": ""
       },
-      "hiddenConcern": "He feels his technical depth goes unnoticed."
+      "hiddenConcern": "He feels his technical depth goes unnoticed.",
+      "portrait": "/assets/npc/lowe.png"
     },
     {
       "id": "jack",
@@ -389,7 +399,8 @@
         "skills": "Negotiation, Sales Conversion",
         "remarks": "Jack Holt is a top performer at Innov8 and has received a multitude of positive appraisals from his superiors.",
         "relations": ""
-      }
+      },
+      "portrait": "/assets/npc/jack.png"
     },
     {
       "id": "peter",
@@ -438,7 +449,8 @@
         "remarks": "Peter Higgins is a lawyer by education and switched careers to work for Innov8 in the sales team. His appraisals for the past 2 years have gone down hill. He has been loyal to his job and his managers, but has not added any value and needs encouragement often.",
         "relations": ""
       },
-      "hiddenConcern": "His appraisals have gone downhill and he needs encouragement, but he will not ask for it."
+      "hiddenConcern": "His appraisals have gone downhill and he needs encouragement, but he will not ask for it.",
+      "portrait": "/assets/npc/peter.png"
     },
     {
       "id": "ruth",
@@ -486,7 +498,8 @@
         "skills": "Sales Conversion",
         "remarks": "Ruth is a perfectionist and highly skilled in conversion and order processing.",
         "relations": ""
-      }
+      },
+      "portrait": "/assets/npc/ruth.png"
     },
     {
       "id": "mandy",
@@ -534,7 +547,8 @@
         "skills": "Sales Conversion, Negotiation",
         "remarks": "Mandy Lobert is popular among her ex-employees to have closed tough deals with clients who had opted for competitor's products.",
         "relations": ""
-      }
+      },
+      "portrait": "/assets/npc/mandy.png"
     }
   ],
   "candidates": [

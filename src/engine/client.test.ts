@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { createHttpClient, createMockClient, EngineError } from './client';
+import { createHttpClient, EngineError, lazyClient } from './client';
+import { createMockClient } from './mock';
 
 describe('engine client', () => {
   it('mock: runs the engine and returns parsed views', async () => {
@@ -28,5 +29,14 @@ describe('engine client', () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ message: 'No days left', code: 'noCapacity' }), { status: 409 }));
     const c = createHttpClient('https://engine.test', 'abc', fetchImpl as unknown as typeof fetch);
     await expect(c.send({ type: 'endPeriod' })).rejects.toMatchObject({ code: 'noCapacity', retryable: false });
+  });
+
+  it('lazy: loads the client once, on first use', async () => {
+    const load = vi.fn(async () => createMockClient());
+    const c = lazyClient(load);
+    expect(load).not.toHaveBeenCalled();
+    await c.view();
+    await c.view();
+    expect(load).toHaveBeenCalledTimes(1);
   });
 });

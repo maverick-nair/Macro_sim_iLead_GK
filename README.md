@@ -13,15 +13,17 @@ npm test                 # Vitest
 npm run build            # token check, copy lint, typecheck, production build to dist/
 npm run parity           # every frame vs the Claude Design prototype (add --prod for the build)
 npm run storybook:smoke  # every story in dark, light and client theme, fails on render errors
+npm run e2e              # Playwright flows on the mock engine, with axe (WCAG 2.2 AA)
+npm run calibrate -- sales-elevator   # tune a storyline so it plays well (add --check to verify)
 ```
 
 Component rules: `docs/COMPONENTS.md`.
 
-Plan and status: `docs/PLAN.md`. Design and spec conflicts: `docs/DECISIONS.md`.
+Plan and status: `docs/PLAN.md`. Simulation rules: `docs/SIMULATION.md`. Design and spec conflicts: `docs/DECISIONS.md`.
 
 | Route      | What it is |
 |------------|------------|
-| `/`        | The playable app, full screen. Starts at onboarding. `?theme=light` for the light theme, `?client=halden` for the sample client theme. Phones (600px and below) get the 390 layouts. |
+| `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?start=board` skips onboarding, `?engine=off` shows the prototype's fixed board, `?theme=light` the light theme, `?client=halden` the sample client theme. Phones (600px and below) get the 390 layouts. |
 | `/screens` | Every screen, each frame the live app opened at that state. Port of `project/iLead Screens.dc.html`. Frame ids (`b4`, `l1`, ...) match the design and are linkable, for example `/screens#b4`. |
 | `/states`  | Edge states: loading, empty, offline, mic denied, slow AI. Port of `project/iLead States.dc.html`. |
 
@@ -31,7 +33,10 @@ Plan and status: `docs/PLAN.md`. Design and spec conflicts: `docs/DECISIONS.md`.
 src/
   api/        Typed API layer: IleadApi interface, mock adapter (default), HTTP adapter
   app/        App shell (port of iLeadApp): state, navigation, overlays, toast, contract types
-  data/       Scenario types and the default scenario (port of ilead-data.js)
+  components/ Token and catalog only components; `board/` is the engine driven board
+  data/       Scenario types and the design fixture scenario (port of ilead-data.js), for the galleries
+  engine/     Engine contract (Zod), client (mock and HTTP adapters), React hooks, the simulation (`sim/`) and storylines
+  i18n/       ICU message catalog, copy rules, money formatting
   ds/         Genie design system components used by the screens (Button, Switch)
   gallery/    /screens and /states review canvases
   lib/css.ts  css() and pseudo() helpers, see below

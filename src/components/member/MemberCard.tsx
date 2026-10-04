@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent, type MouseEvent } from 'react';
+import { useState, type MouseEvent } from 'react';
 import type { MoodKey, StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 import { LOW_BELOW, MetricBar } from '../metric/MetricBar';
@@ -68,7 +68,10 @@ export interface MemberCardProps {
   morale: number;
   result: number;
   trust: number;
-  style: StyleKey;
+  /** Null while the participant has not chosen a style for this period. */
+  style: StyleKey | null;
+  /** Stats stay hidden until the participant first opens the profile (spec, member card). */
+  statsHidden?: boolean;
   /** Status tags from the engine, such as "New hire". */
   tags?: readonly string[];
   /** Shows the unread message chip. */
@@ -92,7 +95,7 @@ export interface MemberCardProps {
  * three metric bars and the style control. The whole card is one button that selects the member.
  */
 export function MemberCard(props: MemberCardProps) {
-  const { name, title, img, mood, away = false, skill, morale, result, trust, style, tags = [], unread = false, promise, selected = false, unavailableReason, onSelect, onOpenProfile, onStyleChange, styleTooltip, onStyleTooltipChange } = props;
+  const { name, title, img, mood, away = false, skill, morale, result, trust, style, statsHidden = false, tags = [], unread = false, promise, selected = false, unavailableReason, onSelect, onOpenProfile, onStyleChange, styleTooltip, onStyleTooltipChange } = props;
   const { t } = useI18n();
   const [ownTip, setOwnTip] = useState<StyleKey | null>(null);
   const tip = styleTooltip === undefined ? ownTip : styleTooltip;
@@ -103,25 +106,19 @@ export function MemberCard(props: MemberCardProps) {
 
   const unavailable = unavailableReason !== undefined && unavailableReason !== '';
   const moodName = t('member.mood', { mood });
-  const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, available: String(!unavailable), reason: unavailableReason ?? '' });
-  // Only keys pressed on the card itself select it; the profile button and style letters handle their own.
-  const onKey = (e: KeyboardEvent) => {
-    if (e.target !== e.currentTarget) return;
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(); }
-  };
+  const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
   const profile = (e: MouseEvent) => { e.stopPropagation(); onOpenProfile(); };
 
+  // The card is a plain container so the profile button and style control are not nested inside a
+  // button (WCAG 4.1.2). A visually hidden toggle carries selection for keyboard and screen readers;
+  // a click anywhere on the card selects too, and the card draws the toggle's focus ring.
   return (
     <div
-      role="button"
-      tabIndex={0}
-      aria-pressed={selected}
-      aria-label={aria}
-      title={unavailable ? unavailableReason : undefined}
       onClick={onSelect}
-      onKeyDown={onKey}
-      className={`relative flex flex-col rounded-18 border-2 bg-surface-card backdrop-blur-12 outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-visible:outline-2 focus-visible:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
+      title={unavailable ? unavailableReason : undefined}
+      className={`relative flex flex-col rounded-18 border-2 bg-surface-card backdrop-blur-12 outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-2 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
     >
+      <button type="button" aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} onClick={e => { e.stopPropagation(); onSelect(); }} className="il-select sr-only" />
       <div className={`relative h-29.5 overflow-hidden rounded-t-16 ${backdrop(mood, away)}`}>
         <img src={img} alt="" className={`absolute inset-0 size-full object-cover object-(--il-member-portrait-position) mix-blend-multiply ${away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-member-portrait-overlay)" />
@@ -134,7 +131,7 @@ export function MemberCard(props: MemberCardProps) {
           <span className={`size-1.75 rounded-round ${MOOD_DOT[mood]}`} />
           {away ? t('member.mood.away') : moodName}
         </span>
-        <TrustRing value={trust} />
+        {!statsHidden && <TrustRing value={trust} />}
       </div>
       <div className="flex flex-col gap-2 px-3 pt-2.5 pb-3">
         <div className="flex items-start justify-between gap-1.5">
@@ -156,11 +153,15 @@ export function MemberCard(props: MemberCardProps) {
             {tags.map((tag, i) => <span key={i} className="flex h-5 items-center rounded-pill border border-line-default bg-surface-raised px-2 text-12 font-600 whitespace-nowrap">{tag}</span>)}
           </div>
         )}
-        <div className="flex flex-col gap-1.25">
-          <MetricBar metric="skill" value={skill} />
-          <MetricBar metric="morale" value={morale} />
-          <MetricBar metric="result" value={result} />
-        </div>
+        {statsHidden ? (
+          <p className="m-0 flex min-h-(--il-member-hidden-stats-height) items-center text-12 text-fg-secondary">{t('member.stats.hidden')}</p>
+        ) : (
+          <div className="flex flex-col gap-1.25">
+            <MetricBar metric="skill" value={skill} />
+            <MetricBar metric="morale" value={morale} />
+            <MetricBar metric="result" value={result} />
+          </div>
+        )}
         <StyleControl value={style} onChange={onStyleChange} memberName={name} tooltip={tip} onTooltipChange={setTip} />
       </div>
     </div>

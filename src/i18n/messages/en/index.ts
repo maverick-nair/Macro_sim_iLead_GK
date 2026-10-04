@@ -5,6 +5,7 @@
  */
 import action from './action.json';
 import actions from './actions.json';
+import board from './board.json';
 import common from './common.json';
 import gamification from './gamification.json';
 import inbox from './inbox.json';
@@ -20,4 +21,4 @@ import style from './style.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...common, ...gamification, ...hud, ...inbox, ...live, ...member, ...metric, ...metrics, ...outcome, ...palette, ...reason, ...style, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...member, ...metric, ...metrics, ...outcome, ...palette, ...reason, ...style, ...team, ...time };

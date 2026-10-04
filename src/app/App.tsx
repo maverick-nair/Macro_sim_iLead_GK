@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useApi } from '../api';
 import { Toast } from '../components/feedback/Toast';
 import { I18nProvider } from '../i18n';
@@ -6,13 +6,16 @@ import type { LiveVariant, MetricKey, Outcome, Scenario, StyleKey, EventType } f
 import { NoWrapButton } from '../ds/Button';
 import { Switch } from '../ds/Switch';
 import { css } from '../lib/css';
-import { Board } from '../screens/Board';
-import { End } from '../screens/End';
-import { Live } from '../screens/Live';
+import { EngineBoard } from '../components/board/EngineBoard';
 import { Onboarding } from '../screens/Onboarding';
-import { Report } from '../screens/Report';
-import { StyleSetting } from '../screens/StyleSetting';
-import { WeekEnd } from '../screens/WeekEnd';
+/** Screens past onboarding load on demand, so the board's first load stays inside its budget. */
+const Board = lazy(() => import('../screens/Board').then(m => ({ default: m.Board })));
+const End = lazy(() => import('../screens/End').then(m => ({ default: m.End })));
+const Live = lazy(() => import('../screens/Live').then(m => ({ default: m.Live })));
+const Report = lazy(() => import('../screens/Report').then(m => ({ default: m.Report })));
+const StyleSetting = lazy(() => import('../screens/StyleSetting').then(m => ({ default: m.StyleSetting })));
+const WeekEnd = lazy(() => import('../screens/WeekEnd').then(m => ({ default: m.WeekEnd })));
+
 import type { AppActions, AppModel, Overlay, PlannedAction, Screen, Settings } from './types';
 
 /**
@@ -38,6 +41,8 @@ export interface AppProps {
   frozen?: boolean;
   capacity?: number;
   minHeight?: string;
+  /** Play on the engine: after onboarding the board renders engine state, styles are set on it. */
+  engine?: boolean;
 }
 
 type Stats = Record<string, Record<MetricKey, number>>;
@@ -253,15 +258,20 @@ export function App(p: AppProps) {
         )}
 
         {screenProps && (
-          <>
+          <Suspense>
             {scr === 'onboarding' && p.uiState !== 'loading' && <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>}
-            {scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
-            {scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} mobile={mobile} /></div>}
+            {p.engine && (scr === 'style' || scr === 'board') && (
+              <div style={css(`flex:1; display:flex; flex-direction:column; min-height:${minH}`)}>
+                <EngineBoard client={!!p.clientTheme} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
+              </div>
+            )}
+            {!p.engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
+            {!p.engine && scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} mobile={mobile} /></div>}
             {scr === 'live' && <div><Live {...screenProps} variant={s.variant} uiState={uiState} mobile={mobile} /></div>}
             {scr === 'weekend' && <div><WeekEnd {...screenProps} step={step} /></div>}
             {scr === 'end' && <div><End {...screenProps} /></div>}
             {scr === 'report' && <div><Report {...screenProps} print={!!p.print} mobile={mobile} /></div>}
-          </>
+          </Suspense>
         )}
 
         {scr === 'reacting' && (

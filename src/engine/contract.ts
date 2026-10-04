@@ -61,7 +61,7 @@ export const MemberView = z.object({
   id: Id, name: Text, title: Text, pronoun: z.enum(['he', 'she', 'they']), stage: Id,
   skill: Score, morale: Score, result: Score, trust: Score,
   style: StyleKey.nullable(), lastStyle: StyleKey.nullable(), lastReaction: z.enum(['pos', 'neg']).nullable(),
-  mood: Mood, away: z.number().int().min(0), awayReason: z.enum(['training', 'leave']).nullable(),
+  mood: Mood, img: z.string().nullable(), away: z.number().int().min(0), awayReason: z.enum(['training', 'leave']).nullable(),
   /** Stats are hidden in the UI until the profile is first opened (spec). */
   statsRevealed: z.boolean(),
   /** A hidden concern, only once it surfaced in conversation (spec). */
@@ -77,14 +77,24 @@ export const Clock = z.object({
   capacity: Num, capacityLeft: Num, costStep: Num
 });
 
+/** Why an action is unavailable. The UI words it from the catalog. */
+export const Block = z.discriminatedUnion('reason', [
+  z.object({ reason: z.literal('locked'), period: z.number().int() }),
+  z.object({ reason: z.literal('capacity'), need: Num, have: Num }),
+  z.object({ reason: z.literal('cooldown'), in: z.number().int().min(1) }),
+  z.object({ reason: z.literal('away'), kind: z.enum(['training', 'leave']), for: z.number().int().min(1) }),
+  z.object({ reason: z.literal('rewarded'), in: z.number().int().min(1) }),
+  z.object({ reason: z.literal('gone') })
+]);
+
 export const ActionView = z.object({
   key: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
   format: z.string().nullable(), cost: Num, targets: z.tuple([z.number(), z.number()]), prerequisite: Id.nullable(),
-  options: z.array(z.object({ key: Id, label: Text, blocked: Text.nullable() })),
+  options: z.array(z.object({ key: Id, label: Text, blocked: Block.nullable() })),
   /** Why a team action is unavailable, or null. */
-  blocked: Text.nullable(),
+  blocked: Block.nullable(),
   /** Why a member action is unavailable for each member, or null. */
-  blockedFor: z.record(Id, Text.nullable())
+  blockedFor: z.record(Id, Block.nullable())
 });
 
 export const LogEntry = z.object({
@@ -120,7 +130,7 @@ export const EngineView = z.object({
   streak: z.number().int().min(0),
   periods: z.array(PeriodSummary),
   badges: z.array(z.object({ key: Id, earned: z.boolean(), hint: Text.nullable() })),
-  sponsor: z.object({ level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
+  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
   pendingReward: z.array(Id).nullable(),
   history: z.array(LogEntry)
 });
@@ -159,6 +169,7 @@ export type Reason = z.output<typeof Reason>;
 export type Outcome = z.output<typeof Outcome>;
 export type EngineView = z.output<typeof EngineView>;
 export type MemberView = z.output<typeof MemberView>;
+export type Block = z.output<typeof Block>;
 export type ActionView = z.output<typeof ActionView>;
 export type Intent = z.input<typeof Intent>;
 export type IntentResult = z.output<typeof IntentResult>;
