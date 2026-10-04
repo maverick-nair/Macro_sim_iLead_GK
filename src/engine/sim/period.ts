@@ -1,5 +1,5 @@
 import type { Rng } from './rng';
-import { award } from './actions';
+import { award, IntentError } from './actions';
 import { idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
 import type { Change, PeriodSummary, Sim } from './types';
 
@@ -10,7 +10,12 @@ export const pillarMax = (sim: Sim) => 2400 / sim.config.time.period.count;
 const UNLOCK_REWARDS = ['extra_day', 'quiet_word', 'free_lunch'];
 
 export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
-  if (sim.phase !== 'board') throw new Error('The period can only end from the board');
+  if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
+  // Conversations left open when the period ends are closed unfinished: they never score later.
+  for (const [id, it] of Object.entries(sim.interactions)) {
+    delete sim.interactions[id];
+    log(sim, { kind: 'interaction', title: `${sim.config.actions.find(a => a.key === it.actionKey)?.name ?? 'Conversation'} left unfinished`, memberIds: it.memberIds, changes: [] });
+  }
   runRemaining(sim, rng);
   drift(sim);
   const count = sim.config.time.period.count;
@@ -55,7 +60,7 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   else if (pace < 0.8) sponsorChange(sim, -8, 'Behind pace on the target');
   let unlockOffer: string[] | null = null;
   for (const t of [60, 80]) {
-    if (sFrom < t && sim.sponsor.value >= t && !sim.sponsor.crossed.includes(t)) {
+    if (sim.sponsorAtStart < t && sim.sponsor.value >= t && !sim.sponsor.crossed.includes(t)) {
       sim.sponsor.crossed.push(t);
       unlockOffer = UNLOCK_REWARDS;
     }
@@ -78,14 +83,14 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
     funnel: sim.config.stages.map((st, i) => ({ stage: st.key, throughput: sim.funnel.stageOutPeriod[i], ideal: ideal[i] })), unlockOffer
   };
   sim.periods.push(summary);
-  log(sim, { kind: 'periodEnd', title: `End of period ${sim.period}`, memberIds: [], changes: [] });
+  log(sim, { kind: 'periodEnd', title: `End of ${sim.config.time.period.unit} ${sim.period}`, memberIds: [], changes: [] });
   sim.phase = sim.period >= count ? 'ended' : 'periodEnd';
   return summary;
 }
 
 /** Applies a chosen unlock reward (7.5). */
 export function chooseReward(sim: Sim, key: string) {
-  if (!sim.pendingReward?.includes(key)) throw new Error('No such reward on offer');
+  if (!sim.pendingReward?.includes(key)) throw new IntentError('No such reward on offer', 'noReward');
   sim.pendingReward = null;
   if (key === 'extra_day') sim.bonusPeriod = sim.period + 1;
   if (key === 'quiet_word') {
@@ -96,7 +101,7 @@ export function chooseReward(sim: Sim, key: string) {
 }
 
 export function startNextPeriod(sim: Sim) {
-  if (sim.phase !== 'periodEnd') throw new Error('The period has not ended');
+  if (sim.phase !== 'periodEnd') throw new IntentError('The period has not ended', 'wrongPhase');
   sim.period += 1;
   sim.sub = 0;
   sim.spent = 0;
@@ -127,9 +132,8 @@ export { perPeriod };
 function drift(sim: Sim) {
   const { morale, result } = sim.config.drift;
   if (!morale && !result) return;
-  const acted = sim.log.filter(l => l.period === sim.period && (l.kind === 'action' || l.kind === 'interaction'));
-  if (acted.some(l => l.memberIds.length === 0)) return;
-  const touched = new Set(acted.flatMap(l => l.memberIds));
+  if (sim.touchedTeam) return;
+  const touched = new Set(sim.touched);
   const unit = sim.config.time.period.unit;
   const changes: Change[] = [];
   for (const m of sim.members) {

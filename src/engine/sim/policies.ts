@@ -25,6 +25,17 @@ const SAY: Record<Style, string> = {
 };
 const PLAIN = 'Please do better this week.';
 
+/**
+ * Opens every profile not opened yet, as a participant reading the cards would, then works out each
+ * needed style from the stats the view now shows. The view never shows stats before that (D39).
+ */
+export async function neededStyles(engine: Engine, high = 70): Promise<Record<string, Style>> {
+  for (const m of engine.view().members) if (!m.statsRevealed) await engine.dispatch({ type: 'openProfile', memberId: m.id });
+  return Object.fromEntries(engine.view().members.map(m => [m.id, neededStyle({ skill: m.skill ?? 0, morale: m.morale ?? 0 }, high)]));
+}
+
+const statsOf = (m: EngineView['members'][number]) => ({ skill: m.skill ?? 0, morale: m.morale ?? 0, result: m.result ?? 0 });
+
 async function setStyles(engine: Engine, v: EngineView, pick: (m: EngineView['members'][number]) => Style) {
   return engine.dispatch({ type: 'confirmStyles', styles: Object.fromEntries(v.members.map(m => [m.id, pick(m)])) });
 }
@@ -37,8 +48,10 @@ export async function play(config: StorylineConfig, policy: Policy, seed: number
   const high = config.thresholds.high;
   while (v.phase !== 'ended') {
     if (v.phase === 'style') {
+      const good = policy === 'good' ? await neededStyles(engine, high) : {};
+      v = engine.view();
       v = (await setStyles(engine, v, m => {
-        if (policy === 'good') return neededStyle(m, high);
+        if (policy === 'good') return good[m.id];
         if (policy === 'passive') return (first[m.id] ??= rng.pick(STYLES));
         return rng.pick(STYLES);
       })).view;
@@ -74,10 +87,10 @@ function goodStep(v: EngineView, high: number): Step | null {
     return a && (id ? !a.blockedFor[id] : !a.blocked);
   };
   // Help the weakest available member with a fitting one to one.
-  const weakest = [...v.members].filter(m => m.away === 0).sort((a, b) => (a.morale + a.result) - (b.morale + b.result))[0];
+  const weakest = [...v.members].filter(m => m.away === 0).sort((a, b) => (statsOf(a).morale + statsOf(a).result) - (statsOf(b).morale + statsOf(b).result))[0];
   if (!weakest) return null;
-  const style = neededStyle(weakest, high);
-  if (weakest.skill < 50 && free('coach', weakest.id)) return { intent: { action: 'coach', memberIds: [weakest.id] }, say: SAY[style] };
+  const style = neededStyle(statsOf(weakest), high);
+  if (statsOf(weakest).skill < 50 && free('coach', weakest.id)) return { intent: { action: 'coach', memberIds: [weakest.id] }, say: SAY[style] };
   if (free('f2f', weakest.id)) return { intent: { action: 'f2f', memberIds: [weakest.id] }, say: SAY[style] };
   if (free('meet')) return { intent: { action: 'meet', memberIds: [] }, say: SAY.P };
   if (free('goals', weakest.id)) return { intent: { action: 'goals', memberIds: [weakest.id] }, say: SAY[style] };

@@ -66,7 +66,8 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
 /** Defers loading a client until first use, so the mock engine stays out of the initial bundle. */
 export function lazyClient(load: () => Promise<EngineClient>): EngineClient {
   let client: Promise<EngineClient> | null = null;
-  const get = () => (client ??= load());
+  // A failed load is not cached: the next call tries again.
+  const get = () => (client ??= load().catch(e => { client = null; throw e; }));
   return {
     view: async () => (await get()).view(),
     send: async i => (await get()).send(i),

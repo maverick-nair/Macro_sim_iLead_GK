@@ -104,17 +104,17 @@ def desc(name, fallback=''):
 actions = [
     dict(key='meet', name='Meet the team', description=desc('Meet the team'), scope='team', kind='live', format='meeting', rule='styleOption', cost=1, cooldownDays=10, options=styled('Meet the team')),
     dict(key='energize', name='Energize the team', description=desc('Energise the team'), scope='team', kind='static', rule='weeklyStyle', cost=1,
-         options=opts('Energise the team', ['team_lunch', 'team_building'], team_lunch={'cooldownDays': 20}, team_building={'cooldownDays': 8})),
+         options=opts('Energise the team', ['team_lunch', 'team_building'], team_lunch={'cooldownDays': 10}, team_building={'cooldownDays': 10, 'cost': 2})),
     dict(key='email', name='Send email', description='Write to up to 3 people. Congratulate or warn; replies arrive in your inbox.', scope='member', kind='live', format='email', rule='trend', cost=1, targets=[1, 3],
          options=opts('Send email', ['warning', 'congratulatory'], warning={'intent': 'warn'}, congratulatory={'intent': 'congratulate'})),
     dict(key='training', name='Send for training', description='Build skill away from the desk. Up to 3 people.', scope='member', kind='static', rule='training', cost=1, targets=[1, 3],
-         options=opts('Send For Training', ['three_day', 'one_week'], three_day={'away': 3}, one_week={'away': 5})),
+         options=opts('Send For Training', ['three_day', 'one_week'], three_day={'away': 3}, one_week={'away': 5, 'cost': 2})),
     dict(key='swap', name='Swap roles', description='Move people between stages, then explain the decision to them.', scope='member', kind='hybrid', format='roleplay', rule='swap', cost=1, targets=[1, 2], prerequisite='assess',
          options=opts('Swap / Reassign roles', ['reassign', 'swap'])),
     dict(key='hire', name='Hire member', description='Interview candidates for an open seat.', scope='team', kind='live', format='interview', rule='hire', cost=2, cooldownDays=8, unlockPeriod=3, options=opts('Hire member', ['interview'])),
     dict(key='fire', name='Let go', description='Remove someone from the team, then have the exit conversation.', scope='member', kind='hybrid', format='roleplay', rule='fire', cost=1, targets=[1, 1], options=opts('Fire member', ['let_go'])),
     dict(key='f2f', name='Meet face to face', description='A one to one conversation.', scope='member', kind='live', format='roleplay', rule='styleOption', cost=1, targets=[1, 1], options=styled('Meet Face to Face')),
-    dict(key='assess', name='Assess member', description='See how this person would do in another stage. No effect on them.', scope='member', kind='static', rule='assess', cost=1, targets=[1, 1], options=opts('Assess member', ['assess'])),
+    dict(key='assess', name='Assess member', description='See how this person would do in another stage. No effect on them.', scope='member', kind='static', rule='assess', cost=1, targets=[1, 1], options=opts('Assess member', ['assess'], assess={'pickStage': True})),
     dict(key='reward', name='Reward member', description='Recognize someone, then tell them why.', scope='member', kind='hybrid', format='roleplay', rule='reward', cost=1, cooldownDays=20, targets=[1, 1], options=opts('Reward member', ['reward'])),
     dict(key='goals', name='Set goals', description='Agree goals, measures and support for the week.', scope='member', kind='live', format='plan', rule='styleOption', cost=1, targets=[1, 1], options=styled('Set Goals')),
     dict(key='coach', name='Coach member', description='Work through the job with them.', scope='member', kind='live', format='roleplay', rule='styleOption', cost=1, targets=[1, 1], options=styled('Coach member')),
@@ -177,15 +177,17 @@ for a in actions:
             if o['key'] == 'reassign': o.update(targets=[1, 1], pickStage=True)
             if o['key'] == 'swap': o.update(targets=[2, 2], distinctStages=True)
 
+# GenieKreator values (docs/genie/RECONCILIATION.md) are set above; calibration values come from
+# `npm run calibrate`, so run it after importing.
 storyline = dict(
     id='sales_elevator', name='Sales Elevator, Innov8 Elevators',
-    money=dict(currency='USD', locale='en-US', display='symbol', target=240000, valuePerConversion=8400, inputPerSubPeriod=[8]),
+    money=dict(currency='USD', locale='en-US', display='symbol', target=240000, valuePerConversion=30000, inputPerSubPeriod=[8]),
     time=dict(period=dict(unit='week', count=8), costStep=1),
     stages=[dict(key=k, name=n, conversionRatio=c, ideal=2) for k, n, c, _ in STAGES],
     sponsor=dict(name='Paula Jacob', title='Regional Sales Director', styleLine='To each their own. Your people need different things from you this week.'),
     members=members, candidates=candidates,
     actions=actions,
-    weeklyStyle=dict(m0=[2, 4, 5], m1=[0, -3, -4], m2=[-1, -6, -8]),
+    weeklyStyle=dict(m0=[0, 3, 3], m1=[0, -1, -1], m2=[0, -2, -2]),
     events=events, triggers=triggers,
     performanceThreshold=10, calibrated=False)
 OUT.write_text(json.dumps(storyline, indent=2, ensure_ascii=False) + '\n')

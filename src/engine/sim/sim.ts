@@ -16,7 +16,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     style: null, lastStyle: null, lastReaction: null, neededAtStart: neededStyle(p.start, high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: 1,
     revealed: false, concernShared: false, lastChange: 0, recognizedAt: null, reassignedInPeriod: null,
-    trainedInPeriod: null, assessedStages: [], trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result
+    trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result
   }));
   const sim: Sim = {
     config, seed, period: 1, sub: 0, spent: 0, bonusPeriod: null, absSub: 0, phase: 'style', members, departed: [],
@@ -26,7 +26,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     score: { business: 0, people: 0, leadership: 0, bonus: 0 }, periods: [], streak: 0, badges: [],
     sponsor: { value: 50, causes: [], crossed: [] }, pendingReward: null, promises: [], inbox: [], cards: [],
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
-    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}
+    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: 50
   };
   markPeriodStart(sim);
   return sim;
@@ -120,7 +120,10 @@ function markPeriodStart(sim: Sim) {
     morale: teamAverage(sim, 'morale'),
     kpis: { skill: teamAverage(sim, 'skill'), morale: teamAverage(sim, 'morale'), result: teamAverage(sim, 'result'), trust: teamAverage(sim, 'trust') }
   };
-  for (const m of sim.members) m.neededAtStart = needed(sim, m);
+  for (const m of sim.members) { m.neededPrevStart = sim.period > 1 ? m.neededAtStart : null; m.neededAtStart = needed(sim, m); }
+  sim.touched = [];
+  sim.touchedTeam = false;
+  sim.sponsorAtStart = sim.sponsor.value;
 }
 
 export { markPeriodStart };
@@ -148,7 +151,7 @@ export function runSubPeriod(sim: Sim, rng: Rng) {
   triggersEverySub(sim, rng);
   dueChecks(sim);
   for (const m of sim.members) {
-    if (m.away > 0 && --m.away === 0) m.awayReason = null;
+    if (m.away > 0 && m.awaySetAt !== sim.absSub && --m.away === 0) m.awayReason = null;
     m.resultHistory.push(m.result);
     m.lowestResult = Math.min(m.lowestResult, m.result);
   }
@@ -225,7 +228,7 @@ function fire(sim: Sim, rng: Rng, kind: string, m: MemberSim, extra: { away?: nu
   const text = gendered(t.message, sim, m.id);
   const reason: Reason = { label: TRIGGER_LABELS[kind] ?? kind, cause: text, rule: TRIGGER_RULES[kind] ?? '', evidence: [] };
   const changes = t.impact.some(v => v !== 0) ? effectChanges(sim, rng, m, t.impact, reason, { useTrust: false }) : [];
-  if (extra.away) { m.away = extra.away; m.awayReason = 'leave'; }
+  if (extra.away) { m.away = extra.away; m.awayReason = 'leave'; m.awaySetAt = sim.absSub; }
   if (extra.leave) {
     sim.members = sim.members.filter(x => x !== m);
     sim.departed.push(m);
@@ -324,12 +327,19 @@ function triggersEverySub(sim: Sim, rng: Rng) {
 
 // ---------------------------------------------------------------- messages and promises
 
-/** A sponsor briefing opens in the periods the storyline names (Design doc: weeks 4 and 8). */
+/** Briefing periods: as authored, or the mid point and the last period (Design doc: weeks 4 and 8 of 8). */
+export function briefingPeriods(sim: Sim): number[] {
+  const count = sim.config.time.period.count;
+  const set = sim.config.sponsor.briefings ?? (count < 2 ? [count] : [Math.ceil(count / 2), count]);
+  return set.filter(n => n <= count);
+}
+
+/** A sponsor briefing opens in the briefing periods, due by the end of that period. */
 function scheduleBriefing(sim: Sim) {
-  if (!sim.config.sponsor.briefings.includes(sim.period)) return;
+  if (!briefingPeriods(sim).includes(sim.period)) return;
   if (sim.inbox.some(m => m.briefing && m.atAbsSub === sim.absSub)) return;
   const first = sim.config.sponsor.name.split(' ')[0];
-  addMessage(sim, { from: 'sponsor', kind: 'sponsor', title: `Briefing with ${first}`, body: `${first} wants your update on the team and the target this ${sim.config.time.period.unit}.`, dueIn: perPeriod(sim), urgent: true });
+  addMessage(sim, { from: 'sponsor', kind: 'sponsor', title: `Briefing with ${first}`, body: `${first} wants your update on the team and the target this ${sim.config.time.period.unit}.`, dueIn: perPeriod(sim) - 1, urgent: true });
   sim.inbox[sim.inbox.length - 1].briefing = true;
 }
 

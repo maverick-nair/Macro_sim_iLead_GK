@@ -199,7 +199,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     key: st.key, name: st.name, count: st.members, ideal: st.ideal, bottleneck: st.bottleneck,
     cards: v.members.filter(m => m.stage === st.key).map(m => ({
       id: m.id, name: m.name, title: m.title, img: img(m), mood: m.mood, away: m.away > 0,
-      skill: m.skill, morale: m.morale, result: m.result, trust: m.trust, statsHidden: !m.statsRevealed,
+      // The engine sends no stats until the profile is opened; the card shows its hidden state then.
+      skill: m.skill ?? 0, morale: m.morale ?? 0, result: m.result ?? 0, trust: m.trust ?? 0, statsHidden: !m.statsRevealed || m.skill === null,
       style: styleOf(m), unread: m.unread, promise: m.promise ?? undefined,
       selected: picking && f ? f.picks.includes(m.id) : selected === m.id,
       unavailableReason: picking ? ineligible(m) : undefined,
@@ -217,9 +218,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
 
   // ---- profile: everything the engine logged with this person, newest first ----
+  // The profile opens once the engine has revealed this person's stats.
   const pm = ui.panel === 'profile' && ui.profileId ? member(ui.profileId) : undefined;
   let profile: ProfilePanelProps | null = null;
-  if (pm) {
+  if (pm && pm.skill !== null && pm.morale !== null && pm.result !== null && pm.trust !== null) {
     const fact = (x: string | null | undefined) => (x && x.trim() ? x : null);
     profile = {
       name: pm.name, title: pm.title, img: img(pm), mood: pm.mood, away: pm.away > 0,
@@ -255,7 +257,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const names = f.picks.map(id => first(member(id)?.name ?? ''));
     const list = names.length > 1 ? t('action.list.pair', { rest: names.slice(0, -1).join(', '), last: names[names.length - 1] }) : names[0] ?? '';
     const cost = choice?.option.cost ?? fa.cost;
-    const label = (c: (typeof choices)[number]) => (c.stage ? t('board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
+    const label = (c: (typeof choices)[number]) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
     const detail = (c: (typeof choices)[number]) => [
       c.option.blocked ? blockLine(c.option.blocked) : '',
       c.option.cost !== fa.cost ? t('board.option.cost', { cost: amount(c.option.cost) }) : '',
@@ -403,7 +405,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           members={v.members.map(m => ({
             id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
             away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
-            stats: m.statsRevealed ? { skill: m.skill, morale: m.morale, trust: m.trust } : null,
+            stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, trust: m.trust } : null,
             lastStyle: m.lastStyle, lastReaction: m.lastReaction, style: draft[m.id] ?? null, rationale: notes[m.id] ?? ''
           }))}
           onStyle={(id, k) => setDraft(d => ({ ...d, [id]: k }))}

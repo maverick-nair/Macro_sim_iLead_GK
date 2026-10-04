@@ -86,6 +86,12 @@ export interface MemberSim {
   reassignedInPeriod: number | null;
   trainedInPeriod: number | null;
   assessedStages: string[];
+  /** Role fit found by Assess, per stage (SIMULATION 4.3). */
+  assessments: Record<string, { skill: number; morale: number; result: number }>;
+  /** Needed style at the start of the previous period, for the erratic style change rule. */
+  neededPrevStart: Style | null;
+  /** Absolute sub-period when `away` was set, so leave starting mid sub-period lasts its full length. */
+  awaySetAt: number;
   /** Training request open in this period. */
   trainingRequestedPeriod: number | null;
   roleChangeRequestedPeriod: number | null;
@@ -227,6 +233,11 @@ export interface Sim {
   interactions: Record<string, Interaction>;
   /** Live and hybrid actions taken per period, for the live cap. */
   liveTaken: Record<number, number>;
+  /** People someone acted with this period, for weekly drift; `touchedTeam` when a team wide action ran. */
+  touched: string[];
+  touchedTeam: boolean;
+  /** Sponsor confidence at the start of the period, for unlock thresholds. */
+  sponsorAtStart: number;
   /** Periods in which someone's shown style differed from the declared one (intent vs action). */
   intentGaps: Record<string, number[]>;
 }

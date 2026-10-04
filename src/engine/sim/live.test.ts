@@ -3,7 +3,7 @@ import { parseStoryline, type StorylineConfig } from '../config';
 import salesElevator from '../storylines/sales-elevator.json';
 import { createEngine, IntentError } from './engine';
 import { overallBand } from './evaluator';
-import { neededStyle, type Style } from './rules';
+import { neededStyles } from './policies';
 
 const parsed = parseStoryline(salesElevator);
 if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
@@ -11,7 +11,7 @@ const config: StorylineConfig = parsed.config;
 
 async function onBoard(seed = 1, cfg = config) {
   const e = createEngine(cfg, { seed });
-  await e.dispatch({ type: 'confirmStyles', styles: Object.fromEntries(e.view().members.map(m => [m.id, neededStyle(m)])) as Record<string, Style> });
+  await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
   return e;
 }
 
@@ -21,7 +21,7 @@ async function toPeriod(e: Awaited<ReturnType<typeof onBoard>>, n: number) {
     const v = e.view();
     if (v.pendingReward) await e.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] });
     await e.dispatch({ type: 'startNextPeriod' });
-    await e.dispatch({ type: 'confirmStyles', styles: Object.fromEntries(e.view().members.map(m => [m.id, neededStyle(m)])) as Record<string, Style> });
+    await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
   }
 }
 
@@ -131,9 +131,11 @@ describe('live interactions', () => {
 
   it('starts everyone at trust 50 (scoring-and-report.md) and reads trust rules from config', async () => {
     const e = createEngine(config, { seed: 4 });
+    await neededStyles(e);
     expect(new Set(e.view().members.map(m => m.trust))).toEqual(new Set([50]));
-    const strict = { ...config, trustRules: { ...config.trustRules, start: 40 } };
-    expect(createEngine(strict, { seed: 4 }).view().members[0].trust).toBe(40);
+    const strict = createEngine({ ...config, trustRules: { ...config.trustRules, start: 40 } }, { seed: 4 });
+    await neededStyles(strict);
+    expect(strict.view().members[0].trust).toBe(40);
   });
 
   it('costs trust when the style you show differs from the one you declared, two periods running', async () => {

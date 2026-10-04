@@ -1574,7 +1574,8 @@
               0,
               0
             ]
-          }
+          },
+          "pickStage": true
         }
       ]
     },
@@ -2311,6 +2312,6 @@
       }
     }
   ],
-  "performanceThreshold": 78,
+  "performanceThreshold": 79,
   "calibrated": true
 }

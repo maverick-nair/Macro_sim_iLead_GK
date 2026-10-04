@@ -86,11 +86,12 @@ export function buildView(sim: Sim) {
     const mood = moodOf(m, sim);
     return {
       id: m.id, name: p.name, title: p.title, pronoun: p.pronoun, stage: m.stage,
-      skill: m.skill, morale: m.morale, result: m.result, trust: m.trust,
+      // Stats stay hidden until the profile is first opened (spec, D39): the engine never sends them early.
+      skill: m.revealed ? m.skill : null, morale: m.revealed ? m.morale : null, result: m.revealed ? m.result : null, trust: m.revealed ? m.trust : null,
       style: m.style, lastStyle: m.lastStyle, lastReaction: m.lastReaction,
       mood, img: p.portraits?.[mood] ?? p.portrait ?? null, away: m.away, awayReason: m.awayReason,
       statsRevealed: m.revealed, shared: m.concernShared ? p.hiddenConcern ?? null : null,
-      careerGoal: m.concernShared ? p.careerGoal ?? null : null, assessedStages: m.assessedStages,
+      careerGoal: m.concernShared ? p.careerGoal ?? null : null, assessedStages: m.assessedStages, assessments: m.assessments,
       unread: sim.inbox.some(x => x.from === m.id && x.state === 'open'),
       promise: sim.promises.find(x => x.memberId === m.id && x.state === 'open')?.text ?? null,
       profile: p.profile
@@ -117,6 +118,7 @@ export function buildView(sim: Sim) {
     actions: c.actions.map(a => ({
       key: a.key, name: a.name, description: a.description, scope: a.scope, kind: a.kind, format: a.format ?? null, cost: a.cost, targets: a.targets,
       prerequisite: a.prerequisite ?? null,
+      rule: a.rule,
       options: a.options.map(o => ({ key: o.key, label: o.label, cost: o.cost ?? a.cost, away: o.away, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,
       blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {}

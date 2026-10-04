@@ -3,7 +3,7 @@ import { parseStoryline } from './config';
 import { EngineView, Intent, IntentResult, MetricChange, Outcome } from './contract';
 import { createEngine } from './sim/engine';
 import { play } from './sim/policies';
-import { neededStyle } from './sim/rules';
+import { neededStyles } from './sim/policies';
 import salesElevator from './storylines/sales-elevator.json';
 
 const parsed = parseStoryline(salesElevator);
@@ -41,7 +41,7 @@ describe('engine contract', () => {
   it('accepts everything the engine produces, from first view to the end of a run', async () => {
     const e = createEngine(config, { seed: 1 });
     expect(EngineView.safeParse(e.view()).error?.issues ?? []).toEqual([]);
-    const styles = Object.fromEntries(e.view().members.map(m => [m.id, neededStyle(m)]));
+    const styles = await neededStyles(e);
     expect(IntentResult.safeParse(await e.dispatch({ type: 'confirmStyles', styles })).error?.issues ?? []).toEqual([]);
     const a = await e.dispatch({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });
     const r = await e.dispatch({ type: 'submitInteraction', interactionId: a.interactionId!, text: 'Here is the plan, step by step. What is getting in the way?' });

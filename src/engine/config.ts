@@ -216,8 +216,8 @@ export const StorylineConfig = z.object({
   /** The participant's sponsor: sends notes, takes briefings, holds confidence. */
   sponsor: z.object({
     name: z.string().min(1), title: z.string().min(1), portrait: z.string().optional(),
-    /** Periods with a sponsor briefing (Design doc: weeks 4 and 8). Later than the run are dropped. */
-    briefings: z.array(z.number().int().min(1)).default([4, 8]),
+    /** Periods with a sponsor briefing. Default: the mid point and the last period (Design doc: weeks 4 and 8 of 8). */
+    briefings: z.array(z.number().int().min(1)).optional(),
     /** The one line prompt over weekly style setting (spec). */
     styleLine: Copy.default('To each their own. Your people need different things from you this week.')
   }),

@@ -5,7 +5,7 @@ import { EngineError, parse, type EngineClient } from './client';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
-import { neededStyle, type Style } from './sim/rules';
+import { neededStyles } from './sim/policies';
 
 /**
  * The mock engine adapter: the same engine code the server runs, in the browser, on a storyline
@@ -18,13 +18,12 @@ export function defaultStoryline(): StorylineConfig {
 }
 
 /**
- * Demo and test aid, mock only: plays the periods before `period` with the needed styles and no
- * actions, so a later period (interviews from week 3, the week 4 sponsor briefing) can be opened.
+ * Demo and test aid, mock only: opens every profile, then plays the periods before `period` with the
+ * needed styles and no actions, so a later period (interviews from week 3, the week 4 sponsor briefing) can be opened.
  */
 async function fastForward(engine: ReturnType<typeof createEngine>, period: number) {
-  const styles = () => Object.fromEntries(engine.view().members.map(m => [m.id, neededStyle(m)])) as Record<string, Style>;
   while (engine.view().clock.period < period && engine.view().phase !== 'ended') {
-    if (engine.view().phase === 'style') await engine.dispatch({ type: 'confirmStyles', styles: styles() });
+    if (engine.view().phase === 'style') await engine.dispatch({ type: 'confirmStyles', styles: await neededStyles(engine) });
     await engine.dispatch({ type: 'endPeriod' });
     const v = engine.view();
     if (v.pendingReward) await engine.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] });

@@ -61,7 +61,8 @@ export const Outcome = z.object({
 
 export const MemberView = z.object({
   id: Id, name: Text, title: Text, pronoun: z.enum(['he', 'she', 'they']), stage: Id,
-  skill: Score, morale: Score, result: Score, trust: Score,
+  /** Null until the profile has been opened (D39). */
+  skill: Score.nullable(), morale: Score.nullable(), result: Score.nullable(), trust: Score.nullable(),
   style: StyleKey.nullable(), lastStyle: StyleKey.nullable(), lastReaction: z.enum(['pos', 'neg']).nullable(),
   mood: Mood, img: z.string().nullable(), away: z.number().int().min(0), awayReason: z.enum(['training', 'leave']).nullable(),
   /** Stats are hidden in the UI until the profile is first opened (spec). */
@@ -72,9 +73,11 @@ export const MemberView = z.object({
   careerGoal: Text.nullable(),
   /** Stages this person has been assessed for (the swap prerequisite). */
   assessedStages: z.array(Id),
+  /** Role fit found by Assess, per stage. */
+  assessments: z.record(Id, z.object({ skill: Score, morale: Score, result: Score })),
   unread: z.boolean(),
   promise: Text.nullable(),
-  profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: Text.or(z.literal('')), relations: z.string() })
+  profile: z.object({ previous: Text, tenure: Text, experience: Text, skills: Text, remarks: Text, relations: Text })
 });
 
 export const Clock = z.object({
@@ -112,13 +115,13 @@ export const LiveView = z.object({
   turnLimit: z.number().int().min(1), turnsLeft: z.number().int().min(0), minutes: Num,
   closed: z.boolean(),
   hint: z.object({ mode: z.enum(['off', 'onRequest']), text: Text.nullable() }),
-  candidates: z.array(Who.extend({ title: Text, cv: z.object({ previous: z.string(), experience: z.string(), skills: z.string(), remarks: Text.or(z.literal('')) }) })).nullable(),
+  candidates: z.array(Who.extend({ title: Text, cv: z.object({ previous: Text, experience: Text, skills: Text, remarks: Text }) })).nullable(),
   candidate: z.number().int().min(0).nullable(),
   replyTo: Id.nullable()
 });
 
 export const ActionView = z.object({
-  key: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
+  key: Id, rule: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
   format: z.string().nullable(), cost: Num, targets: z.tuple([z.number(), z.number()]), prerequisite: Id.nullable(),
   options: z.array(z.object({
     key: Id, label: Text, blocked: Block.nullable(),
