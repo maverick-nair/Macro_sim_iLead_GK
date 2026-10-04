@@ -210,14 +210,16 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 
 **D41. Why an action is unavailable is data, not text.** Decided. The engine returns a reason code with values (locked until period 3, cooldown 4 days, away for 2 days, and so on). The board words it from the catalog in the storyline's units, so a monthly storyline reads "Available again in 2 weeks".
 
-**D42. Sponsor and portraits come from the storyline config.** Proposed.
-- The 1.0 documents name no sponsor. Sales Elevator uses the design's Priya Nair, Regional Sales Director.
-- Portraits are optional per person, with an optional portrait per mood. Hired candidates have no art yet and show a neutral placeholder. GenieKreator supplies the art in M7.
+**D42. Sponsor and portraits come from the storyline config.** Decided.
+- The Sales Elevator sponsor is Paula Jacob, Regional Sales Director (your call; the 1.0 documents name none). The `/screens` design fixtures keep the design's Priya Nair (D34).
+- Portraits are real photographs, per the Configuration Spec (art style Photographic, portrait source Stock photo by default, an optional five mood expression set). Hire candidates get faces like everyone else, not 1.0's placeholder avatars.
+- Portraits are optional per person, with an optional portrait per mood. `scripts/portraits/prepare.py` crops any photo to the card frame and links it into the storyline without touching calibration. `scripts/portraits/CASTING.md` describes the ten candidate photos needed.
+- Until those photos are in the repo, candidates show a neutral silhouette. This environment cannot reach stock photo sites.
 
 **D43. Phones keep the prototype board.** Decided, until the 390 board is designed (D15). Desktop plays on the engine. `?engine=off` opens the prototype's fixed board, and `?start=board` skips onboarding.
 
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
-- The GenieKreator Configuration Spec for theme config (brand, logo, avatars, illustrations, voices). Needed in M7.
+- Resolved: the GenieKreator Configuration Spec and the other GenieKreator source docs are in `docs/genie/`, copied from the GenieKreator authoring repo.
 - Sales Elevator money values (target, value per deal, lead input). Calibration will propose them; confirm or replace.

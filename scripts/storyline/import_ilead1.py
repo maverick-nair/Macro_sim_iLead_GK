@@ -168,7 +168,7 @@ storyline = dict(
     money=dict(currency='USD', locale='en-US', display='symbol', target=240000, valuePerConversion=8400, inputPerSubPeriod=[8]),
     time=dict(period=dict(unit='week', count=8), costStep=1),
     stages=[dict(key=k, name=n, conversionRatio=c, ideal=2) for k, n, c, _ in STAGES],
-    sponsor=dict(name='Priya Nair', title='Regional Sales Director'),
+    sponsor=dict(name='Paula Jacob', title='Regional Sales Director'),
     members=members, candidates=candidates,
     actions=actions,
     weeklyStyle=dict(m0=[2, 4, 5], m1=[0, -3, -4], m2=[-1, -6, -8]),
