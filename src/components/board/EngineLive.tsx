@@ -231,7 +231,10 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   });
   // The caption follows the line being spoken (a replay included), else the latest NPC line.
   const current = turns.find(x => x.streaming) ?? turns.filter(x => x.speaker !== 'you').pop();
-  const caption = captions && current && current.speaker !== 'you' ? { name: current.speaker.name.split(' ')[0], text: current.text, streaming: current.streaming, aiGenerated: current.aiGenerated } : null;
+  const npcLine = current && current.speaker !== 'you' ? { name: current.speaker.name.split(' ')[0], text: current.text, streaming: current.streaming, aiGenerated: current.aiGenerated } : null;
+  const caption = captions ? npcLine : null;
+  // With captions off, stages without a transcript still have the line read out once it has finished.
+  const spokenLine = captions ? undefined : npcLine;
   // At 0:00 time is up: the reply bar closes and End leads (soft stop). Written formats keep going.
   const timeUp = !lv.oneShot && seconds <= 0;
   const conversation: LiveConversation = ai.streaming ? 'npcSpeaking' : intent.isPending ? 'npcThinking' : lv.closed || lv.turnsLeft === 0 || timeUp ? 'closed' : 'yourTurn';
@@ -343,7 +346,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         return (
           <MeetingStage
             attendees={lv.people.map(p => ({ ...person(p), speaking: !!current && current.speaker !== 'you' && current.speaker.id === p.id && conversation === 'npcSpeaking', raisedHand: false }))}
-            caption={caption} onCallOn={id => setDraft(t('board.live.callOn', { name: (byId.get(id)?.name ?? '').split(' ')[0] }))}
+            caption={caption} spokenLine={spokenLine} onCallOn={id => setDraft(t('board.live.callOn', { name: (byId.get(id)?.name ?? '').split(' ')[0] }))}
           />
         );
       case 'sponsor': {
@@ -352,7 +355,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         const stages = v.funnel.map(st => ({ key: st.key, name: st.name, count: round1(st.throughput), ideal: round1(st.idealThroughput) }));
         return (
           <SponsorStage
-            sponsor={speaker} speaking={conversation === 'npcSpeaking'} caption={caption}
+            sponsor={speaker} speaking={conversation === 'npcSpeaking'} caption={caption} spokenLine={spokenLine}
             notes={prompts.map((prompt, i) => ({ value: notes[i], prompt })) as [SponsorNote, SponsorNote, SponsorNote]}
             onNoteChange={(i, value) => setNotes(n => n.map((x, j) => (j === i ? value : x)))}
             funnel={{ periodUnit: v.clock.periodUnit, stages, scale: Math.max(1, ...stages.map(st => Math.max(st.ideal, st.count) * 1.25)) }}

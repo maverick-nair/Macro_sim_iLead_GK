@@ -3,8 +3,8 @@
   "metric.nameLower": "{metric, select, skill {skill} morale {morale} result {result} trust {trust} other {}}",
   "metric.bar.aria": "{metric} {value}{low, select, true {, low} other {}}",
   "metric.team": "Team {metric}",
-  "metric.team.aria": "Team {metric} {value}",
-  "metric.trend.rising": "▲ rising",
-  "metric.trend.easing": "▼ easing",
-  "metric.trend.steady": "● steady"
+  "metric.team.aria": "Team {metric} {value}, {trend}",
+  "metric.trend.glyph": "{dir, select, up {▲} down {▼} other {●}}",
+  "metric.trend.word": "{dir, select, up {rising} down {easing} other {steady}}",
+  "metric.trend.delta": "{dir, select, up {up {n}} other {down {n}}}"
 }

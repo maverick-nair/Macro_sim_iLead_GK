@@ -1,7 +1,7 @@
 {
   "metric": {
     "bar": {
-      "columns": { "value": "46px minmax(0,1fr) 22px", "$description": "Label, track, value" },
+      "columns": { "value": "minmax(46px,max-content) minmax(0,1fr) minmax(22px,max-content)", "$description": "Label, track, value. Label and value grow with larger text (200%), so they never run into the track" },
       "fill": { "value": "{fill.meter}" },
       "transition": { "value": "width {duration.slow} {easing.spring}" }
     }

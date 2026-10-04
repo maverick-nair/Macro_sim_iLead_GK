@@ -76,7 +76,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   return (
     <section aria-label={t('metrics.strip.aria')} className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 px-6 pt-0 pb-3.5">
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
-      <div aria-label={t('metrics.pulse.aria', { upbeat: pulse.upbeat, steady: pulse.steady, struggling: pulse.struggling })} className={tile}>
+      <div role="group" aria-label={t('metrics.pulse.aria', { upbeat: pulse.upbeat, steady: pulse.steady, struggling: pulse.struggling })} className={tile}>
         <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
         <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-5">
           {groups.map(g => <div key={g.group} className={g.bg} style={{ flex: g.n }} />)}
@@ -85,7 +85,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
           {groups.map(g => <span key={g.group}><b className="text-fg-primary">{number(g.n)}</b> {t('metrics.pulse.group', { group: g.group })}</span>)}
         </div>
       </div>
-      <div aria-label={t('metrics.target.aria', { value, target: goal })} className={tile}>
+      <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} className={tile}>
         <span className="text-12 text-fg-secondary">{target.label ?? t('metrics.target.label')}</span>
         <div className="flex items-baseline gap-1.5"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
         <div className="relative h-1.5 rounded-3 bg-track">
@@ -108,7 +108,8 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
             {sponsor.causes.map((c, i) => {
               const dir = c.delta > 0 ? 'up' : c.delta < 0 ? 'down' : 'flat';
               const tone = dir === 'up' ? 'text-status-gain' : dir === 'down' ? 'text-status-decline' : 'text-fg-secondary';
-              return <span key={i}><span className={tone}>{t('metrics.sponsor.mark', { dir })}</span> {c.text}</span>;
+              // The arrow is decorative; the direction is read out in words.
+              return <span key={i}><span aria-hidden="true" className={tone}>{t('metrics.sponsor.mark', { dir })}</span><span className="sr-only">{t('metrics.sponsor.dir', { dir })}</span> {c.text}</span>;
             })}
           </div>
         )}

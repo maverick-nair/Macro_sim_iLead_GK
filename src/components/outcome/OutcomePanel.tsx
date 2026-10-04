@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { Button, NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
+import { Heading, type HeadingLevel } from '../Heading';
 import { ReasonChip, type ReasonChipProps } from '../reason/ReasonChip';
 import { ReasonDetail, type ReasonDetailProps } from '../reason/ReasonDetail';
 
@@ -53,6 +54,11 @@ export interface OutcomePanelProps {
   onDismiss: () => void;
   /** Opens the full entry in History. Leave it out when there is nowhere to open it. */
   onOpenHistory?: () => void;
+  /**
+   * Level of the headline heading, so the page sets the outline. Defaults to 3; on the board, where
+   * the band sits directly under the page heading, pass 2.
+   */
+  headingLevel?: HeadingLevel;
 }
 
 const PlayIcon = () => <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>;
@@ -86,7 +92,7 @@ export function OutcomePanel(p: OutcomePanelProps) {
           </div>
           <div className="flex flex-col">
             <span className={eyebrow}>{t('outcome.eyebrow')}</span>
-            <b className="text-18 leading-(--il-outcome-headline-leading)">{p.headline}</b>
+            <Heading level={p.headingLevel ?? 3} className="m-0 text-18 font-700 leading-(--il-outcome-headline-leading)">{p.headline}</Heading>
           </div>
         </div>
         {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5 rounded-14 bg-surface-raised p-3">
@@ -116,7 +122,7 @@ export function OutcomePanel(p: OutcomePanelProps) {
       </div>
       <div className="flex min-w-0 flex-col gap-2">
         <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
-        <h3 className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking)">{p.headline}</h3>
+        <Heading level={p.headingLevel ?? 3} className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking)">{p.headline}</Heading>
         {/* A decision with no words (energize, training, assess) has no reply to quote. */}
         {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5">
           {p.onReplay && (

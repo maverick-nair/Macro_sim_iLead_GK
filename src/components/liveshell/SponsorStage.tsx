@@ -1,6 +1,7 @@
 import { useI18n } from '../../i18n';
 import { useMoney } from '../../i18n/money';
 import type { PeriodUnit } from '../action/days';
+import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { LiveCaption } from '../live/LiveCaption';
 import { initialsOf, shortNameOf, type LiveCaptionLine, type LiveLayout, type LivePerson } from './types';
 
@@ -23,6 +24,11 @@ export interface SponsorStageProps {
   /** The sponsor is talking: a pulse ring around the avatar. */
   speaking: boolean;
   caption: LiveCaptionLine | null;
+  /**
+   * The current NPC line while captions are off (`caption` null). Nothing shows; screen readers hear
+   * the line once it has finished. Ignored while a caption shows, since the caption announces it.
+   */
+  spokenLine?: LiveCaptionLine | null;
   /** The three bullet notes, written before you speak. */
   notes: [SponsorNote, SponsorNote, SponsorNote];
   onNoteChange: (index: number, value: string) => void;
@@ -39,7 +45,7 @@ const pct = (n: number, scale: number) => `${Math.round((n / Math.max(1, scale))
  * Sponsor briefing workspace: the sponsor avatar with captions, your three points (filled first),
  * and the funnel and revenue snapshot pinned for reference.
  */
-export function SponsorStage({ sponsor, speaking, caption, notes, onNoteChange, funnel, kpi, layout = 'desktop' }: SponsorStageProps) {
+export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, onNoteChange, funnel, kpi, layout = 'desktop' }: SponsorStageProps) {
   const { t, number } = useI18n();
   const money = useMoney();
   return (
@@ -53,6 +59,7 @@ export function SponsorStage({ sponsor, speaking, caption, notes, onNoteChange, 
           {speaking && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-liveshell-roleplay-speaking-ring) rounded-32 border-2 border-solid border-liveshell-sponsor-ring" />}
         </div>
         {caption && <LiveCaption variant="panel" centered name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} />}
+        {!caption && spokenLine !== undefined && <LineAnnouncer line={spokenLine} />}
       </div>
       <div className="flex flex-col gap-3">
         <div className="flex flex-col gap-2.5 rounded-20 border border-line-default bg-surface-card p-4">

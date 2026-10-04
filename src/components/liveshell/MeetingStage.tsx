@@ -1,4 +1,5 @@
 import { useI18n } from '../../i18n';
+import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { LiveCaption } from '../live/LiveCaption';
 import { FOCUS, shortNameOf, type LiveCaptionLine, type LiveLayout, type LivePerson } from './types';
 
@@ -14,6 +15,11 @@ export interface MeetingStageProps {
   attendees: MeetingAttendee[];
   /** The current speaker's line, under the grid. Null hides it. */
   caption: LiveCaptionLine | null;
+  /**
+   * The current NPC line while captions are off (`caption` null). Nothing shows; screen readers hear
+   * the line once it has finished. Ignored while a caption shows, since the caption announces it.
+   */
+  spokenLine?: LiveCaptionLine | null;
   /** Calls on someone by name (their raised hand). */
   onCallOn: (id: string) => void;
   layout?: LiveLayout;
@@ -23,7 +29,7 @@ export interface MeetingStageProps {
  * Team meeting workspace: the attendee grid with the active speaker and raised hands, then the
  * caption of whoever is speaking. Renders two siblings of the stage column.
  */
-export function MeetingStage({ attendees, caption, onCallOn, layout = 'desktop' }: MeetingStageProps) {
+export function MeetingStage({ attendees, caption, spokenLine, onCallOn, layout = 'desktop' }: MeetingStageProps) {
   const { t } = useI18n();
   return (
     <>
@@ -48,6 +54,7 @@ export function MeetingStage({ attendees, caption, onCallOn, layout = 'desktop' 
         })}
       </div>
       {caption && <LiveCaption variant="panel" name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} />}
+      {!caption && spokenLine !== undefined && <LineAnnouncer line={spokenLine} />}
     </>
   );
 }

@@ -1,6 +1,7 @@
 {
   "reason.chip.words": "{name} {metric} {direction, select, up {up} other {down}}",
   "reason.chip.numbers": "{name} {metric} {delta}",
+  "reason.chip.direction": "{direction, select, up {up} other {down}}",
   "reason.chip.aria": "{name} {metric} {delta}. {reason}",
   "reason.why.cause": "What happened",
   "reason.why.rule": "The rule",

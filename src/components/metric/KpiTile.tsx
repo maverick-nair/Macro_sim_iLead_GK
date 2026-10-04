@@ -14,15 +14,22 @@ export interface KpiTileProps {
   trend: KpiTrend;
 }
 
+/**
+ * A group named in words ("Team skill 62, rising"; "Team morale 54, down 3" while a delta shows).
+ * The trend glyph is decorative and hidden from screen readers.
+ */
 export function KpiTile({ metric, value, trend }: KpiTileProps) {
   const { t, delta, number } = useI18n();
   const sign = trend.kind === 'delta' ? Math.sign(trend.delta) : trend.direction === 'up' ? 1 : trend.direction === 'down' ? -1 : 0;
-  const trendText = trend.kind === 'delta' && trend.delta !== 0 ? delta(trend.delta)
-    : sign > 0 ? t('metric.trend.rising') : sign < 0 ? t('metric.trend.easing') : t('metric.trend.steady');
+  const dir = sign > 0 ? 'up' : sign < 0 ? 'down' : 'flat';
+  const showDelta = trend.kind === 'delta' && trend.delta !== 0;
+  const word = t('metric.trend.word', { dir });
+  const trendText = showDelta ? delta(trend.delta) : <><span aria-hidden="true">{t('metric.trend.glyph', { dir })}</span>{' '}{word}</>;
+  const trendWords = showDelta ? t('metric.trend.delta', { dir, n: number(Math.abs(trend.delta)) }) : word;
   const tone = sign > 0 ? 'text-status-gain' : sign < 0 ? 'text-status-decline' : 'text-fg-secondary';
   const name = t('metric.nameLower', { metric });
   return (
-    <div aria-label={t('metric.team.aria', { metric: name, value })} className="flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12">
+    <div role="group" aria-label={t('metric.team.aria', { metric: name, value: number(value), trend: trendWords })} className="flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12">
       <span className="text-12 text-fg-secondary">{t('metric.team', { metric: name })}</span>
       <div className="flex items-baseline gap-2">
         <b className="text-22 font-700">{number(value)}</b>

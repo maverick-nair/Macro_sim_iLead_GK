@@ -26,7 +26,7 @@ export interface StyleSettingCardProps {
 /** "Skill 35 · Morale 9 · Trust 30", numbers bold; or the hidden stats line. */
 export function StatsLine({ member, short = false }: { member: StyleSettingMember; short?: boolean }) {
   const { t, number } = useI18n();
-  if (statsHidden(member) || !member.stats) return <>{t('member.stats.hidden')}</>;
+  if (statsHidden(member) || !member.stats) return <>{t('stylesetting.stats.hidden')}</>;
   const { skill, morale, trust } = member.stats;
   if (short) return <>{t('stylesetting.stats.short', { skill: number(skill), morale: number(morale), trust: number(trust) })}</>;
   const b = (v: number, k: string) => <b key={k} className="text-fg-primary">{number(v)}</b>;

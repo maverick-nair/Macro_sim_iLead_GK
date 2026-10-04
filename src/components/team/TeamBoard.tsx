@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import type { PeriodUnit } from '../action/days';
+import { Heading, type HeadingLevel } from '../Heading';
 import { MemberCard, type MemberCardProps } from '../member/MemberCard';
 import { STYLE_KEYS } from '../style/StyleControl';
 
@@ -28,6 +29,8 @@ export interface TeamBoardProps {
   periodUnit: PeriodUnit;
   /** One per funnel stage, in order (3 to 6). */
   columns: StageColumn[];
+  /** Level of the "Your team" heading, so the page sets the outline. Defaults to 2. */
+  headingLevel?: HeadingLevel;
 }
 
 /** Tailwind needs whole class names in the source; storylines have 3 to 6 stages. */
@@ -62,7 +65,7 @@ function StageHeader({ name, count, ideal, bottleneck, periodUnit }: Omit<StageC
   const { t, number } = useI18n();
   return (
     <div className={`flex flex-col gap-0.5 rounded-12 border px-3 py-2 ${bottleneck ? 'border-status-attention bg-status-attention-soft' : 'border-line-default bg-surface-card'}`}>
-      <div className="flex items-baseline justify-between gap-1.5"><b className="truncate text-13">{name}</b><b className="text-15">{number(count)}</b></div>
+      <div className="flex items-baseline justify-between gap-1.5"><b title={name} className="min-w-0 truncate text-13">{name}</b><b className="text-15">{number(count)}</b></div>
       <span className={`text-12 ${bottleneck ? 'font-700 text-status-attention' : 'font-400 text-fg-secondary'}`}>
         {bottleneck ? t('team.stage.bottleneck', { unit: periodUnit }) : t('team.stage.ideal', { ideal })}
       </span>
@@ -74,7 +77,7 @@ function StageHeader({ name, count, ideal, bottleneck, periodUnit }: Omit<StageC
  * "Your team": the heading with what a click does now, the style legend, and one column of member
  * cards per funnel stage. The grid has as many equal columns as the storyline has stages.
  */
-export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns }: TeamBoardProps) {
+export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2 }: TeamBoardProps) {
   const { t } = useI18n();
   const legendId = useId();
   const hintText = t('team.hint', { kind: hint.kind, name: hint.kind === 'selected' ? hint.name : '' });
@@ -82,12 +85,12 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
     <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-3 px-5 pt-1 pb-6">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-baseline gap-3">
-          <h2 className="m-0 text-20 font-700 tracking-(--il-team-title-tracking)">{t('team.title')}</h2>
+          <Heading level={headingLevel} className="m-0 text-20 font-700 tracking-(--il-team-title-tracking)">{t('team.title')}</Heading>
           <span aria-live="polite" className="text-13 text-fg-secondary">{hintText}</span>
         </div>
         <div className="relative">
           <button type="button" onClick={onToggleLegend} aria-expanded={legendOpen} aria-controls={legendOpen ? legendId : undefined}
-            className="flex h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+            className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
             <HelpIcon />{t('team.legend.button')}
           </button>
           {legendOpen && <StyleLegend id={legendId} periodUnit={periodUnit} />}

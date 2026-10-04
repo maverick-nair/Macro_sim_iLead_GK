@@ -6,6 +6,7 @@
   "live.turn.interrupted": "Interrupted",
   "live.caption.label": "{name} · captions",
   "live.caption.ai": "AI persona voice",
+  "live.announce.line": "{name}{ai, select, true {, AI persona} other {}}: {text}",
   "live.mic.aria": "{state, select, listening {Stop and review} denied {Mic blocked} other {Start speaking}}",
   "live.mic.redo": "Record again",
   "live.mic.status": "{status, select, denied {Text mode} listening {Listening} review {Edit if you like, then send} partial {Partial transcript} speaking {{name} is speaking. Talk to interrupt.} thinking {Waiting for a reply} done {Conversation has reached a natural close} readyPtt {Press the mic and speak} readyOpen {Speak when you are ready} other {Type your reply}}",

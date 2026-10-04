@@ -1,9 +1,10 @@
 import { Fragment, useId, type KeyboardEvent, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import type { PeriodUnit, SubPeriodUnit } from '../action/days';
+import { LineAnnouncer, LiveAnnouncer } from '../live/LiveAnnouncer';
 import { TranscriptBubble } from '../live/TranscriptBubble';
 import { Waveform } from '../live/Waveform';
-import { CARD, DictateButton, FOCUS, MoodPill, Portrait, sameTime, TypingIndicator, useSimTime, useStickToBottom, type StageLayout, type StageNpc, type StageTurn } from './shared';
+import { CARD, DictateButton, FOCUS, lastNpcLine, MoodPill, Portrait, sameTime, TypingIndicator, useSimTime, useStickToBottom, type StageLayout, type StageNpc, type StageTurn } from './shared';
 
 /** Who ended the thread: you closed it, or the NPC signed off. */
 export type ChatEnded = 'you' | 'npc';
@@ -101,7 +102,7 @@ function Composer({ c, npcName, mobile }: { c: ChatComposer; npcName: string; mo
 
 /**
  * A Teams or Slack like chat with one NPC: a thread header with the persona, the messages in a
- * polite log grouped under sim time dividers, a typing line while the NPC composes, voice notes as
+ * log grouped under sim time dividers (each finished NPC message is announced once), a typing line while the NPC composes, voice notes as
  * transcripts with a play control, and the thread's own composer. It ends when you close it or the
  * NPC signs off, with a quiet line in the thread. Fills its parent.
  */
@@ -131,7 +132,8 @@ export function ChatStage({ npc, turns, ended, periodUnit, subPeriodUnit, compos
         )}
       </header>
 
-      <div ref={log} role="log" aria-label={t('liveformats.chat.log', { name: npc.firstName })} tabIndex={0}
+      {/* Not a live region: a streaming turn grows token by token. The announcers below speak each finished NPC turn, and the end of the thread, once. */}
+      <div ref={log} role="log" aria-label={t('liveformats.chat.log', { name: npc.firstName })} aria-live="off" tabIndex={0}
         className={`min-h-0 flex-1 overflow-auto ${pad} ${mobile ? 'py-3' : 'py-4'} ${FOCUS} focus-visible:-outline-offset-2`}>
         <div className={`flex flex-col gap-2.5 ${column}`}>
           {shown.map((x, i) => (
@@ -149,6 +151,8 @@ export function ChatStage({ npc, turns, ended, periodUnit, subPeriodUnit, compos
 
       {composing && <div className={`${pad} pb-3`}><div className={column}><TypingIndicator name={npc.firstName} state="typing" /></div></div>}
       {composer && !ended && <div className={`border-t border-line-default ${pad} py-3`}><div className={column}><Composer c={composer} npcName={npc.firstName} mobile={mobile} /></div></div>}
+      <LineAnnouncer line={lastNpcLine(turns, npc.firstName)} />
+      <LiveAnnouncer text={ended ? t('liveformats.chat.ended', { by: ended, name: npc.firstName }) : ''} />
     </section>
   );
 }

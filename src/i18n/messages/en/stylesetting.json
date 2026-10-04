@@ -9,6 +9,7 @@
   "stylesetting.definitions.aria": "Leadership styles",
   "stylesetting.member.aria": "{name}, {title}, {mood}",
   "stylesetting.stats": "Skill {skill} · Morale {morale} · Trust {trust}",
+  "stylesetting.stats.hidden": "Stats show once you open their profile on the board",
   "stylesetting.stats.short": "{skill} · {morale} · {trust}",
   "stylesetting.last.tag": "Last {unit, select, year {year} month {month} week {week} day {day} other {period}}: {style}",
   "stylesetting.last.list": "{style}, {reaction}",

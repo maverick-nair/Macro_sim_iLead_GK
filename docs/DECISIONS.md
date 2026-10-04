@@ -269,7 +269,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The brief is data with optional rows (agenda, what you know, mood, open promises, declared style, tone). The row labels follow the format ("Watch for" in a meeting, "She cares about" for the sponsor), so the design's per format briefs come from one shape.
 - The 1:1 mood ring has three steps (frustrated, guarded, more open), as designed, separate from the five member moods.
 - NPC turns can stream (`streaming`) and be cut off (`interrupted`, shown as "Interrupted" beside the AI persona label). Pressing the mic or Escape while the NPC speaks calls `onInterrupt`.
-- The transcript is a polite live region only while captions are hidden, so screen readers do not hear each line twice.
+- Screen readers hear each NPC line once, when it has finished: the captions announce it, or the transcript does while captions are hidden (D57).
 - A long transcript now scrolls inside the window (capped at the window height minus the header and reply bar) instead of growing the page. At 900 tall the cap is above the designed height.
 - The mood ring's 600ms colour change is snapped to `duration.slow` (300ms), per D24.
 - Still open: Space as push to talk (D18), and chat in the shell (D14). `LiveTranscript` and `LiveInputBar` are ready for chat.
@@ -303,6 +303,15 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The design system Switch is a button with `role="switch"` and `aria-checked`, pixel identical.
 
 **D56. Text size scales fonts, not the layout.** Decided. CSS zoom on the app root scaled the layout too. Now the token pipeline redeclares every font size inside the app root as `calc(<size> * var(--il-text-scale, 1))`, the app sets `--il-text-scale` from the setting, and `css()` does the same for the ported screens' pixel font sizes. Spacing, widths and heights stay put, so text wraps instead of pushing layouts off screen. Onboarding and the dialogs fit at 200% (measured at 1440 wide, no horizontal scroll). Still overflowing at 200%, all fixed heights or fixed columns sized for 100%: the style radios on member cards (`style/StyleControl`), the mood pill on the card portrait and the metric labels and values (`member/MemberCard`, `metric/MetricBar`), the reason chips (`reason/ReasonChip`), HUD pills (score, Cmd K), the outcome panel's close button, the style setting view toggle, letter avatars and "No style last week" tag (`stylesetting/`), and the legend button (`team/TeamBoard`). Text spills out of the pill or into the next column; nothing is clipped. Each needs `min-h` in place of `h`, or a column that grows, in the board work.
+
+**D57. Accessibility review fixes.** Decided. All 67 parity frames are unchanged.
+- Streamed text is never inside a live region. Captions, the 1:1 transcript, the chat thread and the interview transcript keep their visible text out of live regions and announce each finished NPC line once ("Kent, AI persona: ...") from a visually hidden polite region; a line you interrupt is not read out. One streamed reply went from one announcement per token to one.
+- Meeting and sponsor stages have no transcript; with captions off the page can pass `spokenLine` so the line is still announced.
+- Tiles and meters that were named with `aria-label` on a plain div are now groups (KPI tiles, Team Pulse, target, HUD days left) or images (metric bars, trust ring, streak, report meters), named in words with the trend ("Team skill 57, rising"). Arrow and dot glyphs are hidden from screen readers.
+- The style setting screen is the main landmark, headed by its visible "Week 2 of 8 · Style setting" line. Components that render headings on the board take a `headingLevel`.
+- The HUD score is a disclosure: Enter or Space toggles the breakdown (focus no longer opens it). The style control can be locked (`disabled`, aria-disabled with the reason as description). The palette search box has a focus ring.
+- On narrow cards (a 1024 wide board) the trust ring moves above the mood pill instead of covering it, and the profile button moves under the name so the name keeps the card's width.
+- At 200% text (D56) the member card's style letters, mood pill and tags, the reason chips, the HUD pills (clock, score, Cmd K, nav) and the legend button use minimum heights instead of fixed ones, and the metric bar's label and value columns grow (`minmax(46px, max-content)`), so text no longer spills out of pills or into the bar. At 100% they render exactly as before. The trust ring's number still runs past its 38px ring at 200%.
 
 ## Blocked on missing docs
 

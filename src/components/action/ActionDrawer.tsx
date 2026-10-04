@@ -1,6 +1,7 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { Button, NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
+import { Heading, type HeadingLevel } from '../Heading';
 import type { ActionKind } from './ActionTile';
 import { useDays } from './days';
 
@@ -99,6 +100,8 @@ export interface ActionDrawerProps {
   cta: 'confirm' | 'start' | 'composer';
   canConfirm: boolean;
   onConfirm: () => void;
+  /** Level of the action name heading, so the page sets the outline. Defaults to 2 (it replaces the Actions panel's own heading). */
+  headingLevel?: HeadingLevel;
   onBack: () => void;
 }
 
@@ -117,7 +120,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
       <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-1.5"><span className={`${pill} bg-accent-soft`}>{t('action.kind', { kind: p.kind })}</span><span className={`${pill} bg-surface-raised`}>{fmt(p.days)}</span></div>
-        <h2 ref={heading} tabIndex={-1} className="m-0 text-22 font-700 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</h2>
+        <Heading ref={heading} tabIndex={-1} level={p.headingLevel ?? 2} className="m-0 text-22 font-700 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</Heading>
         <span className="text-13 text-pretty text-fg-secondary">{p.description}</span>
       </div>
       {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} />}

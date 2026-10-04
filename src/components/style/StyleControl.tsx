@@ -1,5 +1,5 @@
 import * as ToggleGroup from '@radix-ui/react-toggle-group';
-import { useState, type KeyboardEvent, type MouseEvent } from 'react';
+import { useId, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import type { StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 
@@ -7,8 +7,8 @@ export const STYLE_KEYS: readonly StyleKey[] = ['D', 'G', 'P', 'E'];
 
 /** Board cards use the compact control; the style setting screen uses the roomier one. */
 const SIZES = {
-  sm: { segment: 'h-6.5 text-12', tip: 'w-52.5 shadow-(--il-style-tooltip-shadow)' },
-  md: { segment: 'h-7.5 text-13', tip: 'w-50' }
+  sm: { segment: 'min-h-6.5 text-12', tip: 'w-52.5 shadow-(--il-style-tooltip-shadow)' },
+  md: { segment: 'min-h-7.5 text-13', tip: 'w-50' }
 } as const;
 
 export interface StyleTooltipProps {
@@ -43,6 +43,16 @@ export interface StyleControlProps {
    */
   tooltip?: StyleKey | null;
   onTooltipChange?: (style: StyleKey | null) => void;
+  /**
+   * The style can no longer change (the period's styles are locked). The letters stay focusable and
+   * keep their tooltips, so screen reader users find the control and hear why, but picking does
+   * nothing. Marked with aria-disabled, dimmed, and described by `disabledReason`.
+   */
+  disabled?: boolean;
+  /** Why the style cannot change ("Styles are set until the next week."), read as each letter's description. */
+  disabledReason?: string;
+  /** A letter was picked (click, Enter or Space) while disabled, so the page can say why, for example in a toast. */
+  onDisabledPick?: () => void;
 }
 
 /**
@@ -50,8 +60,10 @@ export interface StyleControlProps {
  * stop, arrow keys move between letters (showing each tooltip on focus), Enter or Space picks.
  * Picking never clears the choice, and clicks never reach a parent card.
  */
-export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip, onTooltipChange }: StyleControlProps) {
+export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip, onTooltipChange, disabled = false, disabledReason, onDisabledPick }: StyleControlProps) {
   const { t } = useI18n();
+  const reasonId = useId();
+  const described = disabled && disabledReason ? reasonId : undefined;
   const [own, setOwn] = useState<StyleKey | null>(null);
   const tip = tooltip === undefined ? own : tooltip;
   const setTip = (next: StyleKey | null) => {
@@ -67,10 +79,14 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
     <ToggleGroup.Root
       type="single"
       value={value ?? ''}
-      onValueChange={v => { if (v && v !== value) onChange(v as StyleKey); }}
+      onValueChange={v => {
+        if (disabled) onDisabledPick?.();
+        else if (v && v !== value) onChange(v as StyleKey);
+      }}
       aria-label={t('style.group.aria', { name: memberName })}
+      aria-disabled={disabled || undefined}
       onClick={stop}
-      className="grid grid-cols-4 gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.5"
+      className={`grid grid-cols-4 gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.5 ${disabled ? 'opacity-60' : ''}`}
     >
       {STYLE_KEYS.map((k, i) => {
         const on = value === k;
@@ -79,12 +95,14 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
             <ToggleGroup.Item
               value={k}
               aria-label={t('style.option.aria', { style: t('style.name', { style: k }), description: t('style.description', { style: k }) })}
+              aria-disabled={disabled || undefined}
+              aria-describedby={described}
               onMouseEnter={show(k)}
               onMouseLeave={hide(k)}
               onFocus={show(k)}
               onBlur={hide(k)}
               onKeyDown={onKey}
-              className={`w-full cursor-pointer rounded-pill border-0 p-0 font-700 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}
+              className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-pill border-0 p-0 font-700 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}
             >
               {t('style.letter', { style: k })}
             </ToggleGroup.Item>
@@ -92,6 +110,7 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
           </div>
         );
       })}
+      {described && <span id={reasonId} className="sr-only">{disabledReason}</span>}
     </ToggleGroup.Root>
   );
 }

@@ -320,7 +320,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       unavailableReason: picking ? ineligible(m) : undefined,
       onSelect: () => clickCard(m),
       onOpenProfile: () => openProfile(m.id),
-      onStyleChange: (k: StyleKey) => { if (styling) setDraft(d => ({ ...d, [m.id]: k })); else say(t('board.style.locked', { unit: periodUnit })); }
+      onStyleChange: (k: StyleKey) => { if (styling) setDraft(d => ({ ...d, [m.id]: k })); },
+      // Outside style setting the letters stay focusable but read as locked, with the reason.
+      styleDisabled: !styling,
+      styleDisabledReason: styling ? undefined : t('board.style.locked', { unit: periodUnit }),
+      onStyleDisabledPick: () => say(t('board.style.locked', { unit: periodUnit }))
     }))
   }));
 
@@ -485,7 +489,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     return (
       <div ref={outcomeRef} className="contents">
         <OutcomePanel
-          person={who} headline={oc.headline} reply={oc.reply}
+          person={who} headline={oc.headline} reply={oc.reply} headingLevel={2}
           why={whys(oc.changes)}
           whyOpen={ui.whyOpen === oc.id} onToggleWhy={() => ui.setWhy(ui.whyOpen === oc.id ? null : oc.id)}
           affected={affected} revealed={revealed}
