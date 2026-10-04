@@ -13,7 +13,7 @@ const base: HudProps = {
   nav: NAV, onNav: noop,
   clock: { period: 2, periodUnit: 'week', subPeriod: 3, subPeriodUnit: 'day', capacity: 5, capacityLeft: 2.5 },
   sessionClock: '38:12', onPause: noop,
-  score: { total: 1240, business: 420, people: 510, leadership: 310, periodMax: 125 },
+  score: { total: 1240, business: 420, people: 510, leadership: 310 }, pillarScale: 1000,
   streak: 3, onPalette: noop, onSettings: noop, onEndPeriod: noop, endEmphasis: 'primary'
 };
 const clock = (c: Partial<HudProps['clock']>) => ({ ...base.clock, ...c });

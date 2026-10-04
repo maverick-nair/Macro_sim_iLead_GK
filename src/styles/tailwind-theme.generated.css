@@ -34,6 +34,10 @@
   --color-control-track-off: var(--il-color-control-track-off);
   --color-elevation-drawer: var(--il-color-elevation-drawer);
   --color-elevation-panel: var(--il-color-elevation-panel);
+  --color-event-tag: var(--il-color-event-tag);
+  --color-event-on-tag: var(--il-color-event-on-tag);
+  --color-event-shadow: var(--il-color-event-shadow);
+  --color-event-call-glow: var(--il-color-event-call-glow);
   --color-celebration-glow: var(--il-color-celebration-glow);
   --color-celebration-ring: var(--il-color-celebration-ring);
   --color-celebration-star: var(--il-color-celebration-star);
@@ -85,6 +89,12 @@
   --background-image-brand: var(--il-fill-brand);
   --background-image-product: var(--il-fill-product);
   --background-image-spectrum: var(--il-fill-spectrum);
+  --background-image-event-impact: var(--il-fill-event-impact);
+  --background-image-event-signal: var(--il-fill-event-signal);
+  --background-image-event-capacity: var(--il-fill-event-capacity);
+  --background-image-event-diagnostic: var(--il-fill-event-diagnostic);
+  --background-image-event-opportunity: var(--il-fill-event-opportunity);
+  --background-image-event-crisis: var(--il-fill-event-crisis);
   --background-image-meter: var(--il-fill-meter);
   --background-image-portrait-calm: var(--il-fill-portrait-calm);
   --background-image-portrait-warm: var(--il-fill-portrait-warm);

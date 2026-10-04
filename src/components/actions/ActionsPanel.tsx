@@ -28,6 +28,11 @@ export interface ActionsPanelProps {
   drawer?: ReactNode;
   /** Level of the "Actions" heading, so the page sets the outline. Defaults to 2. */
   headingLevel?: HeadingLevel;
+  /**
+   * Short lines under the capacity left about what changed it this period: a bonus day from the
+   * sponsor (`gain`), a CEO check in that took one (`neutral`). The design frames pass none.
+   */
+  notes?: Array<{ text: string; tone: 'gain' | 'neutral' }>;
 }
 
 const MicIcon = () => (
@@ -46,7 +51,7 @@ const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-f
  * and a key to the icons. While an action is being planned the card shows that flow instead.
  * Every cost inside, including the drawer's, reads in the storyline's sub-period unit.
  */
-export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2 }: ActionsPanelProps) {
+export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2, notes }: ActionsPanelProps) {
   const { t } = useI18n();
   const fmt = useDays(subPeriodUnit);
   return (
@@ -59,6 +64,11 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
                 <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>
                 <span className="text-12 text-fg-secondary">{t('time.left', { amount: fmt(capacityLeft) })}</span>
               </div>
+              {notes && notes.length > 0 && (
+                <div className="-mt-2 flex flex-col items-end text-12">
+                  {notes.map(n => <span key={n.text} className={n.tone === 'gain' ? 'font-700 text-status-gain' : 'text-fg-secondary'}>{n.text}</span>)}
+                </div>
+              )}
               {outOfCapacity && (
                 <div role="status" className="flex flex-col gap-1 rounded-14 bg-surface-raised p-3 text-13">
                   <b>{t('actions.out.title', { amount: fmt(capacity) })}</b>

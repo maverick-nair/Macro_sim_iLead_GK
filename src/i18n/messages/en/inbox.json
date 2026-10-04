@@ -9,7 +9,8 @@
   "inbox.pinned": "Pinned",
   "inbox.pinnedDue": "Pinned · {due}",
   "inbox.later": "Later",
-  "inbox.cta": "{cta, select, impact {See impact} other {Reply now}}",
+  "inbox.cta": "{cta, select, impact {See impact} read {Mark as read} other {Reply now}}",
   "inbox.footer": "Replying costs no {unit, select, quarter {quarters} month {months} week {weeks} hour {hours} other {days}}, and still counts with that person.",
-  "inbox.tag": "{type, select, chat {Chat from {name}} sponsor {{name}, sponsor note} news {News} other {Email from {name}}}"
+  "inbox.tag": "{type, select, chat {Chat from {name}} sponsor {{name}, sponsor note} news {News} other {Email from {name}}}",
+  "inbox.dueNow": "Due {unit, select, quarter {this quarter} month {this month} week {this week} hour {this hour} other {today}}"
 }

@@ -9,6 +9,9 @@
     "score": {
       "columns": { "value": "80px 1fr 40px", "$description": "Pillar name, bar, value in the score breakdown" },
       "shadow": { "value": "{metrics.popover.shadow}", "$description": "Same as the sponsor popover" }
+    },
+    "breakdown": {
+      "columns": { "value": "minmax(80px, max-content) 1fr 32px", "$description": "Pillar name with its weight, bar, value in the engine score breakdown" }
     }
   }
 }

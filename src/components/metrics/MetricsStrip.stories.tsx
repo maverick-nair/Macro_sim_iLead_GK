@@ -104,3 +104,19 @@ export const Rupee: Story = {
 
 /** A custom target heading from the storyline. */
 export const CustomTargetLabel: Story = { ...sized(), args: { ...base, target: { ...base.target, label: 'Annual bookings' } } };
+
+/** The engine's Team Pulse: the number (mean of team morale and trust) with its trend over the mood bar; the counts are in the tile's name and tooltip. */
+export const PulseValue: Story = { ...sized(), args: { ...base, pulse: { upbeat: 4, steady: 5, struggling: 1, value: 62, trend: 'up', periodUnit: 'week' } } };
+
+export const PulseValueFalling: Story = { ...sized(), args: { ...base, pulse: { upbeat: 0, steady: 4, struggling: 6, value: 38, trend: 'down', periodUnit: 'week' } } };
+
+/** At 1024 the number stays on one line. */
+export const PulseValueAt1024: Story = { decorators: [S => <div style={{ width: 1024 }}><S /></div>], args: { ...base, pulse: { upbeat: 4, steady: 5, struggling: 1, value: 62, trend: 'flat', periodUnit: 'week' } } };
+
+const meter = { value: 72, unlockAt: 70, checkInBelow: 30, sponsorName: 'Paula', subPeriodUnit: 'day' as const };
+
+/** The meter's value beside the level ("Confident, 72"), and what its two lines mean in the popover. */
+export const SponsorValueOpen: Story = { ...sized(320), args: { ...base, sponsor: sponsor({ level: 'confident', open: true, meter }) } };
+
+/** Below the check in line, nothing logged yet. */
+export const SponsorValueLow: Story = { ...sized(260), args: { ...base, sponsor: sponsor({ level: 'low', open: true, causes: [], meter: { ...meter, value: 24 } }) } };

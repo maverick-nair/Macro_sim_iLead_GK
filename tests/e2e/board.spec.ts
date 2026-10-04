@@ -178,7 +178,8 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   await rail.click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
   await expect(inbox).toBeFocused();
-  await inbox.getByRole('button', { name: 'Later' }).click();
+  // Week 4 also brings other messages; set the briefing aside.
+  await inbox.locator('div.rounded-16').filter({ hasText: 'Briefing with Paula' }).getByRole('button', { name: 'Later' }).click();
   await expect(page.getByText('Briefing with Paula')).toHaveCount(0);
   await expect(inbox).toBeFocused();
   await page.keyboard.press('Escape');
@@ -188,7 +189,9 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   await page.getByRole('button', { name: /Energize the team/ }).click();
   await page.getByRole('radio', { name: 'Team Lunch' }).click();
   await page.getByRole('button', { name: /^Confirm/ }).click();
-  await expect(page.getByText(/4 days left/).first()).toBeVisible();
+  // Sponsor confidence fell below the check in line in week 3 of this run: the CEO check in took a day of week 4.
+  await expect(page.getByText(/3 days left/).first()).toBeVisible();
+  await expect(page.getByText('The CEO check in took a day this week')).toBeVisible();
   await expect(page.getByRole('button', { name: /Briefing with Paula/ })).toBeVisible();
 });
 
@@ -212,7 +215,7 @@ test('the end of the run: one modal, then the board read only', async ({ page })
   const panel = page.getByRole('dialog', { name: 'The run is over' });
   await expect(panel).toBeVisible();
   await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(1);
-  await expect(panel.getByText(/Leadership Score \d{1,3}(,\d{3})* of 7,200/)).toBeVisible();
+  await expect(panel.getByText(/Leadership Score \d{1,3}(,\d{3})* of 1,000/)).toBeVisible();
   expect(await axe(page)).toEqual([]);
   await panel.getByRole('button', { name: 'Look at the board' }).click();
   await expect(panel).toHaveCount(0);

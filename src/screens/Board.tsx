@@ -16,6 +16,7 @@ import { TeamBoard, type StageColumn, type TeamBoardHint } from '../components/t
 import { InboxRail, type InboxRailItem } from '../components/inbox/InboxRail';
 import { InboxDrawer, type InboxDrawerItem } from '../components/inbox/InboxDrawer';
 import type { InboxSender } from '../components/inbox/sender';
+import { SponsorCall } from '../components/board/SponsorCall';
 import { CommandPalette, type PaletteResult, type PaletteTone } from '../components/palette/CommandPalette';
 import { OutcomePanel, type OutcomePanelProps } from '../components/outcome/OutcomePanel';
 import { ProfilePanel, type ProfilePanelProps, type ProfileTimelineEntry } from '../components/profile/ProfilePanel';
@@ -293,12 +294,12 @@ export function Board(props: BoardProps) {
   };
   const capText = fmt(cap), outOfDays = cap === 0;
   // TODO(M2): the engine supplies the clock, score and streak; these are the prototype's fixed values.
-  // pillarScale is a pillar's maximum for the run: periodMax × period count (125 × 8 weeks = 1000).
+  // The prototype's fixture scores its pillars out of 1000 (125 a week over 8 weeks); the engine's are 0 to 100.
   const hud: HudProps = {
     clientLogo: app.client, nav, onNav,
     clock: { period: app.week, periodUnit: 'week', subPeriod: app.day, subPeriodUnit: 'day', capacity: 5, capacityLeft: cap },
     sessionClock: app.showClock ? app.clock : null, onPause: () => act.overlay('paused'),
-    score: { total: 1240, business: 420, people: 510, leadership: 310, periodMax: 125 }, pillarScale: 125 * 8,
+    score: { total: 1240, business: 420, people: 510, leadership: 310 }, pillarScale: 125 * 8,
     scoreOpen: s.scoreTip, onScoreOpenChange: v => setState({ scoreTip: v }),
     streak: 3, onPalette: () => openPal(), onSettings: () => act.overlay('settings'), onEndPeriod: () => act.go('weekend'),
     endEmphasis: f ? 'secondary' : 'primary'
@@ -350,13 +351,8 @@ export function Board(props: BoardProps) {
 
           {isOffline && <div role="alert" style={css('margin:0 24px 12px; padding:10px 16px; border-radius:14px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; align-items:center; gap:10px; font-size:13px')}><b>Connection lost.</b><span>Your clock is paused and actions will queue and send when you are back online.</span><span style={css('flex:1')}></span><span style={css('color:var(--ik-text-2)')}>Retrying in 4s</span></div>}
           {s.call && (
-            <div role="alert" style={css('margin:0 24px 12px; padding:10px 12px 10px 10px; border-radius:18px; background:var(--ik-mat); border:1px solid var(--ik-acc); box-shadow:0 0 30px oklch(0.62 0.17 250 / 0.35); display:flex; align-items:center; gap:14px; animation:ilIn 300ms ease')}>
-              <div style={css('position:relative; width:44px; height:44px')}><div style={css('position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--ik-acc); animation:ilRing 1.4s ease-out infinite')}></div><div style={css('width:44px; height:44px; border-radius:50%; background:var(--grad-brand); color:#0A081B; font-weight:700; display:flex; align-items:center; justify-content:center')}>PN</div></div>
-              <div style={css('display:flex; flex-direction:column')}><b>Priya Nair is calling</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>Regional Sales Director. About the Ashcroft discount.</span></div>
-              <span style={css('flex:1')}></span>
-              <NoWrapButton variant="secondary" size="sm" onClick={() => { setState({ call: false }); act.say('Call with Priya scheduled for tomorrow morning.'); }}>Call back within 1 day</NoWrapButton>
-              <NoWrapButton variant="primary" size="sm" onClick={() => act.live('sponsor')}>Take the call</NoWrapButton>
-            </div>
+            <SponsorCall name={D.sponsor.name} initials={D.sponsor.initials} line="Regional Sales Director. About the Ashcroft discount." laterLabel={t('events.call.later', { amount: days(1) })}
+              onLater={() => { setState({ call: false }); act.say('Call with Priya scheduled for tomorrow morning.'); }} onAnswer={() => act.live('sponsor')} />
           )}
 
           <MetricsStrip {...strip} />

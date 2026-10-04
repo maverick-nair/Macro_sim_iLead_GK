@@ -1,0 +1,16 @@
+{
+  "event": {
+    "card": {
+      "shadow": { "value": "0 30px 80px {color.event.shadow}" },
+      "enter": { "value": "ilIn {duration.slow} {easing.settle}", "$description": "The design's 280ms, snapped to duration.slow (D24)" },
+      "art-height": { "value": "170px", "$description": "The art band at the top of an event card" },
+      "portrait": { "value": "150px", "$description": "The NPC cut out on the art band" },
+      "tag-tracking": { "value": "{tracking.label}" }
+    },
+    "call": {
+      "shadow": { "value": "0 0 30px {color.event.call-glow}" },
+      "enter": { "value": "ilIn {duration.slow} ease", "$description": "The incoming call slides in (design, 300ms)" },
+      "ring": { "value": "ilRing 1.4s ease-out infinite", "$description": "The ring around the caller pulses while the call is waiting" }
+    }
+  }
+}

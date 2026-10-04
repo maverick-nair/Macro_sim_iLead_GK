@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 
@@ -26,11 +26,10 @@ export interface HudClock {
 
 export interface HudScore {
   total: number;
+  /** The three pillars. The bars run from 0 to `pillarScale`. */
   business: number;
   people: number;
   leadership: number;
-  /** Most a pillar can earn in one period. The bar denominator is `pillarScale`. */
-  periodMax: number;
 }
 
 export interface HudProps {
@@ -43,8 +42,14 @@ export interface HudProps {
   sessionClock: string | null;
   onPause: () => void;
   score: HudScore;
-  /** Denominator of the breakdown bars: a pillar's maximum for the whole run. */
+  /** Denominator of the simple breakdown's bars. Defaults to 100, the engine's pillar scale (scoring-and-report.md 6). */
   pillarScale?: number;
+  /**
+   * The full breakdown (ScoreBreakdown): pillars with weights and what feeds them, the streak bonus,
+   * the tiers and the badge shelf. Replaces the simple three bars when given. It holds controls, so
+   * the popover stays open while focus is inside it.
+   */
+  breakdown?: ReactNode;
   /**
    * Open score breakdown. Controlled when passed; otherwise the HUD keeps its own. Hover opens it,
    * and the score button toggles it (Enter, Space or a tap). Escape closes it.
@@ -53,6 +58,8 @@ export interface HudProps {
   onScoreOpenChange?: (open: boolean) => void;
   /** Consecutive periods on target. */
   streak: number;
+  /** The streak in words, with the next bonus ("2 weeks in a row. 1 more week for a +25 bonus."). Defaults to "3 week streak". */
+  streakLabel?: string;
   onPalette: () => void;
   onSettings: () => void;
   onEndPeriod: () => void;
@@ -123,7 +130,9 @@ const PILLARS = ['business', 'people', 'leadership'] as const;
 export function Hud(p: HudProps) {
   const { t, number } = useI18n();
   const { clock, score } = p;
-  const pillarScale = p.pillarScale ?? 1000;
+  const pillarScale = p.pillarScale ?? 100;
+  const wrap = useRef<HTMLDivElement>(null);
+  const scoreButton = useRef<HTMLButtonElement>(null);
   const [ownOpen, setOwnOpen] = useState(false);
   const open = p.scoreOpen ?? ownOpen;
   const setOpen = (v: boolean) => {
@@ -141,7 +150,8 @@ export function Hud(p: HudProps) {
 
   const periodText = t('time.period', { unit: clock.periodUnit, n: clock.period });
   const where = t('hud.clock', { period: MARK, subPeriod: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }) });
-  const streak = t('hud.streak', { n: number(p.streak), unit: clock.periodUnit });
+  const streak = p.streakLabel ?? t('hud.streak', { n: number(p.streak), unit: clock.periodUnit });
+  const rich = p.breakdown !== undefined;
 
   return (
     <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap">
@@ -174,16 +184,20 @@ export function Hud(p: HudProps) {
           <Pause />{p.sessionClock}
         </button>
       )}
-      <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
+      {/* Focus leaving the score (and the breakdown, which can hold controls) closes it; Escape inside it closes it and returns to the score. */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- hover opens the breakdown; the button is the control */}
+      <div ref={wrap} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
+        onBlur={e => { if (!wrap.current?.contains(e.relatedTarget as Node | null)) setOpen(false); }}
+        onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); scoreButton.current?.focus(); } }}>
         {/* A disclosure: Enter and Space (a click with no pointer) toggle the breakdown. A pointer click keeps it open, since hovering already opened it. */}
-        <button type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open ? tipId : undefined}
+        <button ref={scoreButton} type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
           onClick={e => setOpen(e.detail === 0 ? !open : true)}
-          onBlur={() => setOpen(false)} onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); } }}
           className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
           <Star />{number(score.total)}
         </button>
         {open && (
-          <div id={tipId} className="absolute top-full right-0 z-40 mt-2 flex w-65 flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)">
+          <div id={tipId} className={`absolute top-full right-0 z-40 mt-2 flex ${rich ? 'w-80 backdrop-blur-20' : 'w-65'} flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
+            {rich ? p.breakdown : <>
             <b>{t('hud.score.title')}</b>
             <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
             {PILLARS.map(k => (
@@ -195,6 +209,7 @@ export function Hud(p: HudProps) {
                 <b className="text-right">{number(score[k])}</b>
               </div>
             ))}
+            </>}
           </div>
         )}
       </div>

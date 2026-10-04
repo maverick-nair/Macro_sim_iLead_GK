@@ -1,0 +1,10 @@
+{
+  "$description": "Raw colours of the event card art that the design's four card types do not already use. Opportunity runs from a pale lime into the brand mint; crisis from a pale rose into coral. Art sits under multiplied NPC portraits, like the design's four.",
+  "color": {
+    "event": {
+      "lime-100": { "$value": "#ECFBC4", "$description": "Opportunity art, top left" },
+      "rose-100": { "$value": "#FFD6CF", "$description": "Crisis art, top left" },
+      "rose-300": { "$value": "#F5848C", "$description": "Crisis art, bottom right" }
+    }
+  }
+}

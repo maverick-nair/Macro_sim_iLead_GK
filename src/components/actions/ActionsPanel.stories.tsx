@@ -78,5 +78,22 @@ export const Interactive: StoryObj = {
   }
 };
 
+/**
+ * Sponsor perks: a bonus day added this week, and a CEO check in that took one. Extra hire budget makes
+ * the next hire free and lets it take a seat past a full team; a team activity skips its cooldown.
+ */
+export const Perks: StoryObj = {
+  render: () => {
+    const team = teamFor(5).map(a => (a.name === 'Hire member' ? { ...a, block: undefined, days: 0, perk: 'No days, one seat past a full team' }
+      : a.name === 'Energize the team' ? { ...a, perk: 'No cooldown this time' } : a));
+    return <Frame capacityLeft={5} capacity={6} team={team} notes={[{ text: 'Bonus day added this week', tone: 'gain' }, { text: 'The CEO check in took a day this week', tone: 'neutral' }]} />;
+  }
+};
+
+/** The drawer for a free hire: the perk under the description. */
+export const PerkInDrawer: StoryObj = {
+  render: () => <Frame drawer={<ActionDrawer name="Hire member" kind="live" days={0} description="Interview two candidates, then hire one or pass." perk="Extra hire budget from your sponsor: no days, and one seat past a full team." people={{ mode: 'who' }} picks={[]} summary="Hire member. Costs nothing." cta="start" canConfirm onConfirm={noop} onBack={noop} />} />
+};
+
 /** Phone width, 390 minus the 16px gutters; the panel keeps its own padding. */
 export const Narrow: StoryObj = { render: () => <Frame width={358} height={760} member={{ firstName: 'Kent', tiles: memberFor(3) }} /> };

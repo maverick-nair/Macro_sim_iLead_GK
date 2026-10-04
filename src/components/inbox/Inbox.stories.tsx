@@ -40,6 +40,17 @@ export const DrawerEmpty: StoryObj = { render: () => drawer({ items: [] }) };
 export const DrawerEmptyNoSponsor: StoryObj = { render: () => drawer({ items: [], sponsorName: undefined }) };
 /** Paid in weeks: "Replying costs no weeks". */
 export const DrawerUnitWeeks: StoryObj = { render: () => drawer({ subPeriodUnit: 'week' }) };
+/**
+ * Engine messages: a CEO check in is news that needs no answer (Mark as read, no Later); a sponsor
+ * call put off with Later, pinned with its due; an event chat from a team member with its due.
+ */
+export const DrawerEngineKinds: StoryObj = {
+  render: () => drawer({ items: [
+    { id: 'n1', sender: { kind: 'sponsor', initials: 'PJ' }, tag: 'News', meta: '', title: 'CEO check in', preview: "Paula's confidence has dropped. The CEO wants a check in, which takes a day of your time next week.", urgent: true, due: null, cta: 'read', later: false },
+    { id: 'c1', sender: { kind: 'sponsor', initials: 'PJ' }, tag: 'Paula, sponsor note', meta: '', title: 'Recession strikes', preview: 'Salaries across the company are lowered.', urgent: true, due: 'Due in 2 days', cta: 'reply' },
+    { id: 'm1', sender: { kind: 'member', img: '/assets/npc/kent.png' }, tag: 'Chat from Kent', meta: '', title: 'Job offer', preview: 'I have been offered a role elsewhere. Can we talk?', urgent: false, due: 'Due in 2 days', cta: 'reply' }
+  ] })
+};
 /** A pinned item with no deadline, and long text. */
 export const DrawerLongText: StoryObj = {
   render: () => drawer({ items: [{ ...ITEMS[0], due: null, title: 'Can we talk about the territory split before the pipeline review on Friday?', preview: 'Since the split my best leads go to Beth and nobody asked me. I would like to understand how it was decided.' }, ITEMS[1]] })
