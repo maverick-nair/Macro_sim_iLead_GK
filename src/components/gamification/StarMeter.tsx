@@ -32,7 +32,7 @@ export function StarMeter({ earned, total = 3 }: StarMeterProps) {
                 <stop offset="1" stopColor="var(--il-color-brand-mint-green)" />
               </linearGradient>
             </defs>
-            <polygon points={STAR_POINTS} fill={on ? `url(#${gid})` : 'transparent'} stroke={on ? 'transparent' : 'var(--il-color-line-strong)'} strokeWidth="1.2" strokeLinejoin="round" />
+            <polygon points={STAR_POINTS} fill={on ? `url(#${gid})` : 'transparent'} stroke={on ? 'transparent' : 'var(--il-color-line-control)'} strokeWidth="1.2" strokeLinejoin="round" />
           </svg>
         );
       })}
@@ -55,7 +55,7 @@ export function StarRow({ kind, earned, detail }: StarRowProps) {
   return (
     <div className="flex items-center gap-3">
       <svg className="size-6.5" viewBox="0 0 24 24" aria-hidden="true">
-        <polygon points={STAR_POINTS} fill={earned ? 'var(--il-color-celebration-star)' : 'transparent'} stroke={earned ? 'var(--il-color-celebration-star)' : 'var(--il-color-line-strong)'} strokeWidth="1.5" />
+        <polygon points={STAR_POINTS} fill={earned ? 'var(--il-color-celebration-star)' : 'transparent'} stroke={earned ? 'var(--il-color-celebration-star)' : 'var(--il-color-line-control)'} strokeWidth="1.5" />
       </svg>
       <span className="flex flex-col">
         <b className="text-14 font-700">{t('gamification.star.title', { kind, earned: String(earned) })}</b>

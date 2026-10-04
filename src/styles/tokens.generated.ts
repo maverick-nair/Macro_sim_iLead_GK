@@ -140,6 +140,7 @@ export const tokens = {
     "color.surface.scrim",
     "color.line.default",
     "color.line.strong",
+    "color.line.control",
     "color.track",
     "color.accent.default",
     "color.accent.secondary",

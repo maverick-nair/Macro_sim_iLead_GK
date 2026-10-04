@@ -40,7 +40,7 @@ export interface StageNpc {
 
 export const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 export const CARD = 'rounded-22 border border-line-default bg-surface-card backdrop-blur-12';
-export const FIELD = 'rounded-12 border border-line-strong bg-surface-raised text-fg-primary';
+export const FIELD = 'rounded-12 border border-line-control bg-surface-raised text-fg-primary';
 
 const MOOD_BORDER: Record<MoodKey, string> = {
   happy: 'border-member-mood-happy',

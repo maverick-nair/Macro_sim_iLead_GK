@@ -110,7 +110,7 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
           <div role="alert" className="flex items-center gap-2.5 text-13">
             <span className="text-fg-secondary">{t('liveshell.roleplay.slow', { name })}</span>
             {onRetry && (
-              <button type="button" onClick={onRetry} className={`h-7.5 cursor-pointer rounded-pill border border-solid border-line-strong bg-transparent px-3 py-0 font-700 text-fg-primary ${FOCUS}`}>
+              <button type="button" onClick={onRetry} className={`h-7.5 cursor-pointer rounded-pill border border-solid border-line-control bg-transparent px-3 py-0 font-700 text-fg-primary ${FOCUS}`}>
                 {t('liveshell.roleplay.retry')}
               </button>
             )}

@@ -49,7 +49,7 @@
     "mist": {
       "600": {
         "$value": "oklch(0.6 0.015 270)",
-        "$description": "Off switch track in light mode, 3:1 against white (D8)"
+        "$description": "Off switch track and control borders in light mode, 3:1 against white and the raised surface (D8, WCAG 1.4.11)"
       },
       "820": {
         "$value": "oklch(0.82 0.015 270)"

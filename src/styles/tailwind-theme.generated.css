@@ -20,6 +20,7 @@
   --color-surface-scrim: var(--il-color-surface-scrim);
   --color-line-default: var(--il-color-line-default);
   --color-line-strong: var(--il-color-line-strong);
+  --color-line-control: var(--il-color-line-control);
   --color-track: var(--il-color-track);
   --color-accent-default: var(--il-color-accent-default);
   --color-accent-secondary: var(--il-color-accent-secondary);

@@ -21,6 +21,8 @@
 
     { "fg": "color.accent.secondary", "bg": ["color.surface.raised"], "min": 3, "why": "Focus ring (outline-accent-secondary) and selected borders" },
     { "fg": "color.accent.default", "bg": ["color.surface.card", "color.surface.raised"], "min": 3, "why": "Bars, selected state" },
+    { "fg": "color.line.control", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material"], "min": 3, "why": "Text fields, composers and choice chips identified by their border" },
+    { "fg": "color.celebration.star", "bg": ["color.surface.card", "color.surface.material"], "min": 3, "why": "Earned star in the weekly report" },
     { "fg": "switch.track-off", "bg": ["color.surface.solid", "color.surface.card", "color.surface.raised"], "min": 3, "modes": ["light"], "why": "Off switch track against its surface. In dark the light thumb carries the boundary (next pair)" },
     { "fg": "switch.thumb-off", "bg": "switch.track-off", "min": 3, "why": "Off switch thumb against its track" },
     { "fg": "switch.thumb-on", "bg": "switch.track-on", "min": 3, "why": "On switch thumb against the brand gradient" }

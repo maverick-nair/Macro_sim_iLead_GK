@@ -86,7 +86,15 @@
           "ref": "color.white",
           "alpha": 0.2
         },
-        "$description": "Control borders"
+        "$description": "Container borders: panels, dialogs, popovers. Decorative, the fill and shadow carry the edge"
+      },
+      "control": {
+        "light": "{color.mist.600}",
+        "dark": {
+          "ref": "color.white",
+          "alpha": 0.36
+        },
+        "$description": "Borders that identify a control: text fields, composers, choice chips, unearned star outlines. 3:1 against their surface (WCAG 1.4.11)"
       }
     },
     "track": {

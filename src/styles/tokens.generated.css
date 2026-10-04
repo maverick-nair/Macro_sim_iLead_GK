@@ -173,6 +173,7 @@
   --il-color-surface-scrim: light-dark(oklch(0.2 0.03 280 / 0.35), oklch(0.05 0.02 285 / 0.66));
   --il-color-line-default: light-dark(var(--il-color-mist-900), oklch(1 0 0 / 0.1));
   --il-color-line-strong: light-dark(var(--il-color-mist-820), oklch(1 0 0 / 0.2));
+  --il-color-line-control: light-dark(var(--il-color-mist-600), oklch(1 0 0 / 0.36));
   --il-color-track: light-dark(var(--il-color-mist-920), oklch(1 0 0 / 0.1));
   --il-color-accent-default: var(--client-acc, light-dark(var(--il-color-blue-530), var(--il-color-brand-electric-blue)));
   --il-color-accent-secondary: var(--client-acc-2, light-dark(var(--il-color-cyan-520), var(--il-color-brand-cyber-cyan)));
@@ -188,7 +189,7 @@
   --il-color-elevation-panel: light-dark(oklch(0.05 0.03 280 / 0.5), oklch(0.05 0.03 280 / 0.5));
   --il-color-celebration-glow: light-dark(oklch(0.75 0.14 200 / 0.35), oklch(0.75 0.14 200 / 0.35));
   --il-color-celebration-ring: light-dark(oklch(1 0 0 / 0.08), oklch(1 0 0 / 0.08));
-  --il-color-celebration-star: light-dark(var(--il-color-brand-cyber-cyan), var(--il-color-brand-cyber-cyan));
+  --il-color-celebration-star: light-dark(var(--il-color-cyan-520), var(--il-color-brand-cyber-cyan));
   --il-color-live-replay: light-dark(var(--il-color-blue-530), var(--il-color-brand-cyber-cyan));
   --il-color-voice-ready-glow: light-dark(oklch(0.75 0.14 220 / 0.4), oklch(0.75 0.14 220 / 0.4));
   --il-color-voice-listening: light-dark(var(--il-color-brand-mint-green), var(--il-color-brand-mint-green));
