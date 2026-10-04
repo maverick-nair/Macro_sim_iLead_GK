@@ -1,0 +1,21 @@
+{
+  "$description": "Live interaction shell. The stage art (portraits, meeting tiles, sponsor avatar) is always light art under a dark shade, so these keep one value in both modes, as the design draws them.",
+  "color": {
+    "liveshell": {
+      "mood": {
+        "frustrated": { "light": "{color.coral.780}", "dark": "{color.coral.780}", "$description": "1:1 mood ring and pill dot: frustrated" },
+        "guarded": { "light": "{color.amber.840}", "dark": "{color.amber.840}", "$description": "1:1 mood ring and pill dot: guarded" },
+        "open": { "light": "{color.brand.mint-green}", "dark": "{color.brand.mint-green}", "$description": "1:1 mood ring and pill dot: more open" }
+      },
+      "speaking": { "light": "{color.brand.mint-green}", "dark": "{color.brand.mint-green}", "$description": "Active speaker ring and tag in the meeting grid" },
+      "speaking-glow": { "light": { "ref": "color.mint.860", "alpha": 0.45 }, "dark": { "ref": "color.mint.860", "alpha": 0.45 }, "$description": "Halo around the active speaker tile" },
+      "on-signal": { "light": "{color.brand.deep-space}", "dark": "{color.brand.deep-space}", "$description": "Text on the speaking tag, the raised hand, the header badge and the sponsor avatar" },
+      "hand": { "light": "{color.amber.840}", "dark": "{color.amber.840}", "$description": "Raised hand button on a meeting tile" },
+      "tile-shade": { "light": { "ref": "color.portrait.shade", "alpha": 0.8 }, "dark": { "ref": "color.portrait.shade", "alpha": 0.8 }, "$description": "Bottom of the meeting tile overlay, behind the name" },
+      "on-tile": { "light": "{color.white}", "dark": "{color.white}", "$description": "Name on a meeting tile" },
+      "sponsor-ring": { "light": "{color.brand.cyber-cyan}", "dark": "{color.brand.cyber-cyan}", "$description": "Pulse ring around the sponsor avatar while she speaks" },
+      "chip-avatar": { "light": "{color.portrait.sky-100}", "dark": "{color.portrait.sky-100}", "$description": "Backdrop of a recipient chip avatar" },
+      "listening-ring": { "light": { "ref": "color.mint.860", "alpha": 0.2 }, "dark": { "ref": "color.mint.860", "alpha": 0.2 }, "$description": "Ring around the reply bar while the mic listens" }
+    }
+  }
+}

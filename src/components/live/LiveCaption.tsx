@@ -16,6 +16,8 @@ export interface LiveCaptionProps {
   size?: 'md' | 'lg';
   /** Centres a panel caption (sponsor briefing). Stage captions are always centred. */
   centered?: boolean;
+  /** AI generated lines carry the visually hidden "AI persona voice" note (D27). */
+  ai?: boolean;
 }
 
 /**
@@ -23,9 +25,9 @@ export interface LiveCaptionProps {
  * they stream. The design shows no AI label here, so the AI persona note is for assistive
  * technology only.
  */
-export function LiveCaption({ name, text, streaming = false, variant = 'stage', size = 'lg', centered = false }: LiveCaptionProps) {
+export function LiveCaption({ name, text, streaming = false, variant = 'stage', size = 'lg', centered = false, ai: aiGenerated = true }: LiveCaptionProps) {
   const { t } = useI18n();
-  const ai = <span className="sr-only">{t('live.caption.ai')}</span>;
+  const ai = aiGenerated && <span className="sr-only">{t('live.caption.ai')}</span>;
   if (variant === 'panel') {
     return (
       <div aria-live="polite" className={`rounded-20 border border-line-strong bg-surface-material px-4.5 py-3.5 text-16 ${centered ? 'w-full max-w-130 text-center' : ''}`}>

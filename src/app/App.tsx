@@ -7,6 +7,7 @@ import { NoWrapButton } from '../ds/Button';
 import { Switch } from '../ds/Switch';
 import { css } from '../lib/css';
 import { EngineBoard } from '../components/board/EngineBoard';
+import { ReactingScreen } from '../components/liveshell/ReactingScreen';
 import { Onboarding } from '../screens/Onboarding';
 /** Screens past onboarding load on demand, so the board's first load stays inside its budget. */
 const Board = lazy(() => import('../screens/Board').then(m => ({ default: m.Board })));
@@ -275,35 +276,9 @@ export function App(p: AppProps) {
           </Suspense>
         )}
 
-        {scr === 'reacting' && (
-          <div role="status" aria-live="polite" style={css('flex:1; min-height:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px; padding:32px; text-align:center')}>
-            <div style={css('display:flex; gap:20px')}>
-              {['kent', 'beth', 'jack'].map((id, i) => {
-                const size = i === 0 ? '120px' : '88px';
-                return (
-                  <div key={id} style={css(`position:relative; width:${size}; height:${size}`)}>
-                    <div style={css(`position:absolute; inset:-6px; border-radius:50%; border:2px solid var(--ik-acc-2); animation:ilRing 1.6s ease-out infinite; animation-delay:${i * 0.3}s`)} />
-                    <div style={css('width:100%; height:100%; border-radius:50%; overflow:hidden; background:linear-gradient(160deg,#DEE9FF,#9FDCEB); border:2px solid var(--ik-line-strong)')}>
-                      <img src={`/assets/npc/${id}.png`} alt={id} style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            <div style={css('display:flex; flex-direction:column; gap:6px')}>
-              <h2 style={css('margin:0; font-size:28px; font-weight:700; letter-spacing:-0.02em')}>The team is reacting</h2>
-              <span style={css('font-size:15px; color:var(--ik-text-2)')}>Kent, Beth and Jack are taking in what you said.</span>
-            </div>
-            {p.uiState === 'slow' && (
-              <div style={css('display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px 20px; border-radius:16px; background:var(--ik-card); border:1px solid var(--ik-line)')}>
-                <span style={css('font-size:13px; color:var(--ik-text-2)')}>This is taking longer than usual. Your conversation is saved.</span>
-                <div style={css('display:flex; gap:8px')}>
-                  <NoWrapButton variant="secondary" size="sm" onClick={() => void toBoard()}>Keep waiting</NoWrapButton>
-                  <NoWrapButton variant="primary" size="sm" onClick={() => void toBoard()}>Retry</NoWrapButton>
-                </div>
-              </div>
-            )}
-          </div>
+        {scr === 'reacting' && D && (
+          <ReactingScreen slow={p.uiState === 'slow'} onKeepWaiting={() => void toBoard()} onRetry={() => void toBoard()}
+            people={['kent', 'beth', 'jack'].flatMap(id => D.members.filter(m => m.id === id)).map(m => ({ id: m.id, name: m.name, img: `/assets/npc/${m.id}.png` }))} />
         )}
 
         {s.overlay && (

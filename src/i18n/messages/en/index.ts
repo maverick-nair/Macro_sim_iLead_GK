@@ -11,6 +11,7 @@ import gamification from './gamification.json';
 import hud from './hud.json';
 import inbox from './inbox.json';
 import live from './live.json';
+import liveshell from './liveshell.json';
 import member from './member.json';
 import metric from './metric.json';
 import metrics from './metrics.json';
@@ -23,4 +24,4 @@ import stylesetting from './stylesetting.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...member, ...metric, ...metrics, ...outcome, ...palette, ...profile, ...reason, ...style, ...stylesetting, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...liveshell, ...member, ...metric, ...metrics, ...outcome, ...palette, ...profile, ...reason, ...style, ...stylesetting, ...team, ...time };

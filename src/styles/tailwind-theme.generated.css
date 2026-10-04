@@ -33,6 +33,18 @@
   --color-voice-ready-glow: var(--il-color-voice-ready-glow);
   --color-voice-listening: var(--il-color-voice-listening);
   --color-voice-listening-glow: var(--il-color-voice-listening-glow);
+  --color-liveshell-mood-frustrated: var(--il-color-liveshell-mood-frustrated);
+  --color-liveshell-mood-guarded: var(--il-color-liveshell-mood-guarded);
+  --color-liveshell-mood-open: var(--il-color-liveshell-mood-open);
+  --color-liveshell-speaking: var(--il-color-liveshell-speaking);
+  --color-liveshell-speaking-glow: var(--il-color-liveshell-speaking-glow);
+  --color-liveshell-on-signal: var(--il-color-liveshell-on-signal);
+  --color-liveshell-hand: var(--il-color-liveshell-hand);
+  --color-liveshell-tile-shade: var(--il-color-liveshell-tile-shade);
+  --color-liveshell-on-tile: var(--il-color-liveshell-on-tile);
+  --color-liveshell-sponsor-ring: var(--il-color-liveshell-sponsor-ring);
+  --color-liveshell-chip-avatar: var(--il-color-liveshell-chip-avatar);
+  --color-liveshell-listening-ring: var(--il-color-liveshell-listening-ring);
   --color-member-on-portrait: var(--il-color-member-on-portrait);
   --color-member-portrait-shade: var(--il-color-member-portrait-shade);
   --color-member-pill: var(--il-color-member-pill);

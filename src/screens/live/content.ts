@@ -1,4 +1,5 @@
 import type { LiveVariant } from '../../data/types';
+import type { LiveBrief, LiveMood } from '../../components/liveshell/types';
 
 /**
  * Scripted content for the live interaction shell, ported verbatim from
@@ -60,61 +61,66 @@ export function scriptsFor(variant: LiveVariant | undefined, who: string | undef
   };
 }
 
+/** The brief card and the one coaching tip per format, as the design fixture authors them. */
 export interface Brief {
-  goal: string;
-  rows: Array<{ k: string; v: string }>;
+  brief: LiveBrief;
   hint: string;
 }
 
 export const briefs: Record<LiveVariant, Brief> = {
   roleplay: {
-    goal: 'Find out what is bothering Kent and rebuild his trust.',
-    rows: [
-      { k: 'What you know', v: 'Six years on the team. Lost his best leads in the territory split. You missed his chat request yesterday.' },
-      { k: 'Current mood', v: 'Frustrated' },
-      { k: 'Open promises', v: 'None yet' },
-      { k: 'Your style for him', v: 'Directing. You set the task and check in closely.' }
-    ],
+    brief: {
+      goal: 'Find out what is bothering Kent and rebuild his trust.',
+      known: ['Six years on the team.', 'Lost his best leads in the territory split.', 'You missed his chat request yesterday.'],
+      mood: { key: 'frustrated' },
+      promises: [],
+      declaredStyle: 'D'
+    },
     hint: 'Acknowledge the missed message first. People share more once they feel heard.'
   },
   meeting: {
-    goal: 'Decide on the Ashcroft discount with the team, and hear the quieter voices.',
-    rows: [
-      { k: 'Agenda', v: '1. Ashcroft discount  2. Demo length  3. Friday review' },
-      { k: 'Watch for', v: 'Ruth rarely speaks up in meetings.' },
-      { k: 'Team mood', v: 'Mostly upbeat, two struggling' }
-    ],
+    brief: {
+      goal: 'Decide on the Ashcroft discount with the team, and hear the quieter voices.',
+      agenda: ['Ashcroft discount', 'Demo length', 'Friday review'],
+      known: ['Ruth rarely speaks up in meetings.'],
+      mood: { text: 'Mostly upbeat, two struggling' }
+    },
     hint: 'Invite people by name. A raised hand left waiting costs trust.'
   },
   sponsor: {
-    goal: 'Give Priya an honest view of the pipeline and a plan she can back.',
-    rows: [
-      { k: 'She cares about', v: 'Demo conversion and the Ashcroft deal.' },
-      { k: 'Confidence', v: 'Steady, 3 of 5' }
-    ],
+    brief: {
+      goal: 'Give Priya an honest view of the pipeline and a plan she can back.',
+      known: ['Demo conversion and the Ashcroft deal.'],
+      mood: { text: 'Steady, 3 of 5' }
+    },
     hint: 'Lead with the number, then the plan. Priya values directness.'
   },
   email: {
-    goal: 'Follow up with Kent in writing so the change sticks.',
-    rows: [
-      { k: 'Context', v: 'Your 1:1 went well. Kent agreed to help Beth.' },
-      { k: 'Tone', v: 'Warm and specific. Name a time.' }
-    ],
+    brief: {
+      goal: 'Follow up with Kent in writing so the change sticks.',
+      known: ['Your 1:1 went well. Kent agreed to help Beth.'],
+      tone: 'Warm and specific. Name a time.'
+    },
     hint: 'Put the agreement in writing, with a date.'
   }
 };
 
-export const subs: Record<LiveVariant, string> = {
-  roleplay: 'Meet face to face · ½ day',
-  meeting: 'Agenda: the Ashcroft discount · 1 day',
-  sponsor: 'Q and A · about 6 minutes',
-  email: 'No days used'
+/** The header's line under the title: cost in days, the meeting topic, the briefing's length. */
+export const metas: Record<LiveVariant, { cost: number; topic?: string; minutes?: number }> = {
+  roleplay: { cost: 0.5 },
+  meeting: { cost: 1, topic: 'the Ashcroft discount' },
+  sponsor: { cost: 0, minutes: 6 },
+  email: { cost: 0 }
 };
 
-export const moodColors = ['oklch(0.78 0.13 25)', 'oklch(0.84 0.14 78)', '#00F2AD'];
-export const moodWords = ['frustrated', 'guarded', 'more open'];
+/** The 1:1 mood ring by step: frustrated, guarded, more open. */
+export const moods: LiveMood[] = ['frustrated', 'guarded', 'open'];
 
-export const notePlaceholders = ['Where the pipeline stands', 'What is blocking demos', 'What you need from Priya'];
+/** The sponsor briefing's pinned snapshot: the bar scale and the revenue line, as the design shows them. */
+export const funnelScale = 45;
+export const sponsorKpi = { revenue: 41200, target: 240000 };
+
+export const notePlaceholders: [string, string, string] = ['Where the pipeline stands', 'What is blocking demos', 'What you need from Priya'];
 
 export const initialSubject = 'Lead routing, and thank you';
 export const initialBody =

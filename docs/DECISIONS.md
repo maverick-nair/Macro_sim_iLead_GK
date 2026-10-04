@@ -250,6 +250,16 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 
 **D50. Live interactions are conversations.** Decided. See SIMULATION.md 5.0. The engine keeps the turns; the NPC's words come from an `NpcModel` (an AI model on the server, a persona stand in for the mock); ending the interaction evaluates everything the participant said. Email and written plan are submitted once. The live cap, the week 4 and 8 sponsor briefings and the two candidate interview follow the GenieKreator docs.
 
+**D51. Live shell components.** Decided. The live screen renders `src/components/liveshell/` (LiveShell, LiveBriefCard, LiveInputBar, RolePlayStage, EmailStage, MeetingStage, SponsorStage, ReactingScreen). All 67 parity frames are unchanged.
+- One component per piece with a `layout: 'desktop' | 'phone'` prop, not separate phone components: the 390 frames differ only in sizes and in what the header shows.
+- The brief is data with optional rows (agenda, what you know, mood, open promises, declared style, tone). The row labels follow the format ("Watch for" in a meeting, "She cares about" for the sponsor), so the design's per format briefs come from one shape.
+- The 1:1 mood ring has three steps (frustrated, guarded, more open), as designed, separate from the five member moods.
+- NPC turns can stream (`streaming`) and be cut off (`interrupted`, shown as "Interrupted" beside the AI persona label). Pressing the mic or Escape while the NPC speaks calls `onInterrupt`.
+- The transcript is a polite live region only while captions are hidden, so screen readers do not hear each line twice.
+- A long transcript now scrolls inside the window (capped at the window height minus the header and reply bar) instead of growing the page. At 900 tall the cap is above the designed height.
+- The mood ring's 600ms colour change is snapped to `duration.slow` (300ms), per D24.
+- Still open: Space as push to talk (D18), and chat in the shell (D14). `LiveTranscript` and `LiveInputBar` are ready for chat.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
