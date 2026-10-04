@@ -124,4 +124,33 @@ describe('review fixes', () => {
     await expect(c.view()).resolves.toBeDefined();
     expect(n).toBe(2);
   });
+
+  it('static decisions produce an outcome with their changes and reasons', async () => {
+    const e = await onBoard();
+    await e.dispatch({ type: 'planAction', action: 'energize', option: 'team_lunch', memberIds: [] });
+    const oc = e.view().outcome!;
+    expect(oc.headline).toMatch(/Energize the team/);
+    expect(oc.changes.length).toBeGreaterThan(0);
+    expect(oc.changes.every(c => c.reason.evidence.length > 0)).toBe(true);
+  });
+
+  it('move options say which stages have no room', async () => {
+    const e = await onBoard();
+    const reassign = e.view().actions.find(a => a.key === 'swap')!.options.find(o => o.key === 'reassign')!;
+    expect(reassign.stages!.every(st => st.blocked?.reason === 'stageFull')).toBe(true);
+    const assess = e.view().actions.find(a => a.key === 'assess')!.options[0];
+    expect(assess.stages!.every(st => st.blocked === null)).toBe(true);
+  });
+
+  it('an outcome from someone no longer on the team is shown as them, not the sponsor', async () => {
+    const e = await onBoard();
+    const r = await e.dispatch({ type: 'planAction', action: 'fire', memberIds: ['peter'] });
+    await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'I am sorry. Here is what happens next, step by step.' });
+    expect(e.view().outcome!.from.name).toBe('Peter Higgins');
+  });
+
+  it('team averages carry a trend from the engine', async () => {
+    const e = await onBoard();
+    expect(e.view().kpis.every(k => ['up', 'down', 'flat'].includes(k.trend))).toBe(true);
+  });
 });

@@ -230,7 +230,20 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   let interactionId: string | null = null;
   if (a.kind === 'static') {
     changes.push(...keepPromises(sim, a.key, input.memberIds));
-    if (a.rule !== 'assess') log(sim, { kind: 'action', title: o.label === a.description ? a.name : `${a.name}: ${o.label}`, memberIds: input.memberIds, changes });
+    const title = o.label === a.description ? a.name : `${a.name}: ${o.label}`;
+    if (a.rule !== 'assess') log(sim, { kind: 'action', title, memberIds: input.memberIds, changes });
+    // Static decisions show what they changed, with reasons, like conversations do (rule 5).
+    const affected = [...new Set(changes.map(c => c.subject).filter(id => id !== 'sponsor'))];
+    const assessed = a.rule === 'assess' ? sim.log[sim.log.length - 1]?.title : undefined;
+    sim.outcome = {
+      id: nextId(sim, 'o'), actionKey: a.key, speaker: input.memberIds[0] ?? affected[0] ?? 'sponsor',
+      headline: assessed ?? title, reply: '', affected,
+      reactions: Object.fromEntries(affected.map(id => {
+        const net = changes.filter(c => c.subject === id).reduce((s, c) => s + c.delta, 0);
+        return [id, net > 0 ? 'Glad about it.' : net < 0 ? 'Not happy about it.' : 'Taking it in.'];
+      })),
+      changes, ripple: null, changed: []
+    };
   } else {
     interactionId = nextId(sim, 'i');
     sim.liveTaken[sim.period] = (sim.liveTaken[sim.period] ?? 0) + 1;
@@ -325,10 +338,12 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   vp.total++; if (ev.usedVoice) vp.voice++;
 
   const table = a?.live.consequences?.[ev.band];
+  let sponsorLine: string | null = null;
   if (it.actionKey === 'sponsor') {
     const msg = sim.inbox.find(x => x.id === it.replyTo);
     if (msg) msg.state = 'answered';
     changes.push(...sponsorChange(sim, BAND_SPONSOR[ev.band], `Sponsor briefing ${BAND_WORDS[ev.band]}`));
+    sponsorLine = changes.some(c => c.subject === 'sponsor' && c.delta > 0) ? `${sim.config.sponsor.name.split(' ')[0]} is more confident in you now.` : changes.some(c => c.subject === 'sponsor' && c.delta < 0) ? `${sim.config.sponsor.name.split(' ')[0]} is less confident in you now.` : null;
   } else if (a && table && a.rule !== 'hire') {
     // Authored consequence table for the band (Configuration Spec, Consequence table).
     const reason: Reason = { label: label(targets.length === 1 ? firstName(sim, targets[0].id) : 'the team'), cause: `How the ${a.name.toLowerCase()} landed.`, rule: `The author set what each outcome does for ${a.name}.`, evidence: quotes(ev) };
@@ -407,6 +422,14 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       sim.candidates = sim.candidates.filter(c => c !== cid);
       changes.push(...trustChange(hire, BAND_TRUST[ev.band], { label: 'First impression', cause: `${firstName(sim, cid)} joined after an interview that ${BAND_WORDS[ev.band]}.`, rule: 'How the interview went sets a new hire’s first trust in you: +6, +2, −3 or −8.', evidence: quotes(ev) }));
     }
+  } else if (a && a.rule === 'fire') {
+    // The exit conversation: the team watches how it was handled (Design doc: team morale and trust).
+    const gone = firstName(sim, it.memberIds[0]);
+    for (const m of sim.members.filter(x => x.away === 0)) {
+      const reason: Reason = { label: `Exit conversation ${BAND_WORDS[ev.band]}`, cause: `The team saw how you handled ${gone}'s exit.`, rule: 'A dignified, clear exit steadies the team: morale +3, +1, −1 or −4, and trust follows how it lands, at half strength.', evidence: quotes(ev) };
+      changes.push(...effectChanges(sim, rng, m, [0, BAND_CHAT_MORALE[ev.band], 0], reason));
+      changes.push(...trustChange(m, Math.round(BAND_TRUST[ev.band] / 2), reason));
+    }
   } else if (a) {
     // Hybrid conversation after a locked decision: how it lands moves morale and trust.
     for (const m of targets) {
@@ -432,7 +455,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
 
   const affected = [...new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject))];
   const outcome: Outcome = {
-    id: nextId(sim, 'o'), actionKey: it.actionKey, speaker: main?.id ?? 'sponsor',
+    id: nextId(sim, 'o'), actionKey: it.actionKey, speaker: main?.id ?? (it.format === 'sponsor' ? 'sponsor' : it.memberIds[0] ?? 'sponsor'),
     headline: main ? `${a?.name ?? 'Conversation'} with ${firstName(sim, main.id)} ${BAND_WORDS[ev.band]}` : `${a?.name ?? 'Conversation'} ${BAND_WORDS[ev.band]}`,
     reply: npcReply,
     affected,
@@ -442,7 +465,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     })),
     changes,
     ripple: null,
-    changed: []
+    changed: sponsorLine ? [sponsorLine] : []
   };
   sim.outcome = outcome;
   log(sim, { kind: 'interaction', title: outcome.headline, memberIds: affected, changes, quote: ev.evidence[0] });
