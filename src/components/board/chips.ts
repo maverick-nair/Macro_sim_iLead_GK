@@ -10,7 +10,15 @@ export interface Chip { subject: string; metric: MetricKey; delta: number; count
  * way on one metric become one chip with how many people moved and the average move. A chip with
  * count 1 belongs to one person.
  */
-export function teamChips(changes: Array<{ subject: string; metric: MetricKey; delta: number }>, everyone = Infinity): Chip[] {
+export function teamChips(raw: Array<{ subject: string; metric: MetricKey; delta: number }>, everyone = Infinity): Chip[] {
+  // One person's several changes on a metric (for different reasons) net to one move first.
+  const net = new Map<string, { subject: string; metric: MetricKey; delta: number }>();
+  for (const c of raw) {
+    const k = `${c.subject}|${c.metric}`;
+    const prev = net.get(k);
+    net.set(k, prev ? { ...prev, delta: prev.delta + c.delta } : { subject: c.subject, metric: c.metric, delta: c.delta });
+  }
+  const changes = [...net.values()].filter(c => c.delta !== 0);
   const out: Chip[] = [];
   for (const metric of [...new Set(changes.map(c => c.metric))]) {
     for (const sign of [1, -1]) {

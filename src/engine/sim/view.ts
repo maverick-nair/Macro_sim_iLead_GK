@@ -28,6 +28,14 @@ export const BADGES: Array<{ key: string; hint: string | null }> = [
   { key: 'promise_keeper', hint: 'Keep three promises' }, { key: 'right_style', hint: 'Lead everyone the right way for a period' }
 ];
 
+/** The goal of a conversation that is not an action: the sponsor briefing, or a reply to a message. */
+function goalFor(sim: Sim, it: Sim['interactions'][string]): string | null {
+  const first = sim.config.sponsor.name.split(' ')[0];
+  if (it.actionKey === 'sponsor') return `Give ${first} an honest update: where you stand against target, the biggest risk, and what you need.`;
+  const msg = it.replyTo ? sim.inbox.find(m => m.id === it.replyTo) : undefined;
+  return msg ? `Reply to ${msg.from === 'sponsor' ? first : person(sim, msg.from).name.split(' ')[0]} about: ${msg.title}` : null;
+}
+
 /** The open live interaction, everything the shell shows (spec, Live interaction screens). */
 function liveView(sim: Sim) {
   const entries = Object.entries(sim.interactions);
@@ -47,7 +55,7 @@ function liveView(sim: Sim) {
     people: (it.format === 'meeting' ? sim.members.filter(m => m.away === 0).map(m => m.id) : it.memberIds).map(who),
     speaker: who(speakerFor(sim, it)),
     brief: {
-      goal: a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? null),
+      goal: a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
       known: [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
       mood: main ? moodOf(main, sim) : null,
       promises: sim.promises.filter(x => x.state === 'open' && it.memberIds.includes(x.memberId)).map(x => x.text),

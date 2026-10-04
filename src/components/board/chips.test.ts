@@ -12,4 +12,8 @@ describe('teamChips', () => {
     expect(teamChips([...up, ...down], 5)).toEqual([{ subject: 'group', metric: 'trust', delta: 2, count: 4 }, { subject: 'e', metric: 'trust', delta: -2, count: 1 }]);
     expect(teamChips(up, 4)[0].subject).toBe('team');
   });
+  it('nets one person\'s changes on a metric before grouping', () => {
+    const c = [{ subject: 'kent', metric: 'trust' as const, delta: 2 }, { subject: 'kent', metric: 'trust' as const, delta: -3 }, { subject: 'beth', metric: 'trust' as const, delta: 2 }, { subject: 'beth', metric: 'trust' as const, delta: -2 }];
+    expect(teamChips(c)).toEqual([{ subject: 'kent', metric: 'trust', delta: -1, count: 1 }]);
+  });
 });

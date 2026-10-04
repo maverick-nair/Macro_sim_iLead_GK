@@ -52,10 +52,15 @@ test('interrupting the NPC cuts its line where you spoke over it', async ({ page
   await toBoard(page);
   await page.getByText('Peter Higgins', { exact: true }).click();
   await page.getByRole('button', { name: /Coach member/ }).click();
-  await page.getByRole('radio').first().click().catch(() => undefined);
+  await page.getByText(/Handhold the person/).click();
   await page.getByRole('button', { name: /Confirm and start/ }).click();
   await dismissEvents(page);
-  await expect(page.getByText(/Coach member/).first()).toBeVisible();
+  await expect(page.getByText('1:1 with Peter Higgins')).toBeVisible();
+  await page.waitForTimeout(1500);
+  const box = page.getByRole('textbox').last();
+  await box.fill('How is the pipeline looking for you this week?');
+  await box.press('Enter');
+  await expect(page.getByText(/is speaking/).first()).toBeVisible({ timeout: 5000 });
   await page.keyboard.press('Escape');
   await expect(page.getByText('Interrupted').first()).toBeVisible({ timeout: 5000 });
 });
@@ -85,4 +90,22 @@ test('email: written once, then the outcome; the live cap blocks a third live ac
   await expect(page.getByText('How it landed')).toBeVisible({ timeout: 10000 });
   await page.getByText('Ruth Ether', { exact: true }).click();
   await expect(page.getByRole('button', { name: /Meet face to face.*live conversations this week/ })).toBeVisible();
+});
+
+test('written plan: fill, submit, then the check in, then the outcome', async ({ page }) => {
+  await toBoard(page);
+  await page.getByText('Derick Kaynes', { exact: true }).click();
+  await page.getByRole('button', { name: /Set goals/ }).click();
+  await page.getByText(/Seek buy/).click();
+  await page.getByRole('button', { name: /Confirm and start/ }).click();
+  await dismissEvents(page);
+  await expect(page.getByText(/Written plan with Derick/)).toBeVisible();
+  await page.getByRole('textbox', { name: /^Goals/ }).fill('Qualify 12 leads from the Ashcroft list');
+  await page.getByRole('textbox', { name: /^Measures/ }).fill('12 qualified leads in the CRM');
+  await page.getByRole('textbox', { name: /^Owner/ }).fill('Derick, with me on Friday');
+  await page.getByRole('radio').last().check({ force: true });
+  await page.getByRole('button', { name: 'Submit plan' }).click();
+  await expect(page.getByText(/numbers make it clear/)).toBeVisible({ timeout: 10000 });
+  await page.getByRole('button', { name: /^(End|Finish)/ }).first().click();
+  await expect(page.getByText('How it landed')).toBeVisible({ timeout: 10000 });
 });

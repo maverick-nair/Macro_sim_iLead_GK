@@ -13,6 +13,11 @@ import { ReactingScreen } from '../liveshell/ReactingScreen';
 import { RolePlayStage } from '../liveshell/RolePlayStage';
 import { SponsorStage, type SponsorNote } from '../liveshell/SponsorStage';
 import type { LiveBrief, LiveConversation, LiveFormat, LiveMode, LiveMood, LivePerson, LiveTurn } from '../liveshell/types';
+import { ChatStage } from '../liveformats/ChatStage';
+import { CompareView } from '../liveformats/CompareView';
+import { InterviewStage, type Candidate } from '../liveformats/InterviewStage';
+import { PlanForm, type PlanFields, type PlanTextField } from '../liveformats/PlanForm';
+import type { StageNpc, StageTurn } from '../liveformats/shared';
 
 /**
  * A live interaction on the engine (spec, Live interaction screens). The engine holds the turns;
@@ -65,6 +70,12 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
   const [notes, setNotes] = useState(['', '', '']);
   const [notesSent, setNotesSent] = useState(false);
   const streamed = useRef(new Set<string>());
+  /** The NPC turn being streamed now (the stream store only learns its id at the end). */
+  const [streamingTurn, setStreamingTurn] = useState<string | null>(null);
+  const [cvNotes, setCvNotes] = useState<Record<string, string>>({});
+  const [comparing, setComparing] = useState(false);
+  const [plan, setPlan] = useState<PlanFields>({ goals: '', measures: '', owner: '', due: null, support: '' });
+  const [planField, setPlanField] = useState<PlanTextField | null>(null);
 
   const provider = useMemo(() => createSpeech(lv.format), [lv.format]);
   const speech = useSpeech(provider, {
@@ -85,6 +96,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
   useEffect(() => {
     if (!last || last.by === 'you' || streamed.current.has(last.id)) return;
     streamed.current.add(last.id);
+    setStreamingTurn(last.id);
     ai.start(signal => client.streamTurn(lv.id, { id: last.id, text: last.text }, signal));
     // `ai.start` is stable; streaming restarts only for a new turn.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,9 +113,9 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
 
   /** Speaking over the NPC stops it; the engine keeps what was shown (spec, Interrupt). */
   function interrupt() {
-    if (!ai.streaming || !ai.turnId) return;
+    if (!ai.streaming || !streamingTurn) return;
     const shown = ai.cancel();
-    if (shown) void send({ type: 'interruptTurn', interactionId: lv.id, turnId: shown.turnId ?? ai.turnId, shownChars: shown.rawLength });
+    if (shown) void send({ type: 'interruptTurn', interactionId: lv.id, turnId: streamingTurn, shownChars: shown.rawLength });
   }
 
   const finish = async (kind: 'end' | 'submit' | 'abandon', text?: string) => {
@@ -153,9 +165,9 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
   };
   const speaker = person(lv.speaker);
   const byId = new Map([...lv.people, lv.speaker, ...(lv.candidates ?? [])].map(p => [p.id, p]));
-  const streamingId = ai.streaming ? ai.turnId : null;
+  const streamingId = ai.streaming ? streamingTurn : null;
   const turns: LiveTurn[] = lv.turns.map(turn => {
-    const live = turn.id === streamingId || (turn.id === ai.turnId && !ai.done && !ai.cancelled);
+    const live = turn.id === streamingId;
     return {
       id: turn.id,
       speaker: turn.by === 'you' ? 'you' : person(byId.get(turn.by) ?? lv.speaker),
@@ -169,8 +181,30 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
   const caption = current ? { name: (current.speaker as LivePerson).name.split(' ')[0], text: current.text, streaming: current.streaming, aiGenerated: current.aiGenerated } : null;
   const conversation: LiveConversation = ai.streaming ? 'npcSpeaking' : intent.isPending ? 'npcThinking' : lv.closed || lv.turnsLeft === 0 ? 'closed' : 'yourTurn';
   const mic: MicState = speech.status === 'listening' || speech.status === 'finishing' ? 'listening' : speech.status === 'review' ? 'review' : speech.status === 'denied' || speech.status === 'unsupported' ? 'denied' : 'idle';
-  const shellFormat: LiveFormat = lv.format === 'email' || lv.format === 'meeting' || lv.format === 'sponsor' ? lv.format : 'roleplay';
+  const shellFormat: LiveFormat = lv.format;
   const action = v.actions.find(a => a.key === lv.actionKey);
+  const planSent = lv.format === 'plan' && lv.turns.some(x => x.by === 'you');
+  const npcOf = (p: LivePerson): StageNpc => ({ id: p.id, name: p.name, firstName: p.name.split(' ')[0], img: p.img, mood: lv.brief.mood ?? 'neutral' });
+  const stageTurns = (list: LiveTurn[]): StageTurn[] => list.map(x => ({ id: x.id, speaker: x.speaker === 'you' ? 'you' : 'npc', text: x.text, streaming: x.streaming }));
+  const candidateOf = (c: NonNullable<LiveView['candidates']>[number]): Candidate => ({
+    id: c.id, name: c.name, firstName: c.name.split(' ')[0], title: c.title, img: c.img ?? PLACEHOLDER,
+    cv: { previous: c.cv.previous, experience: c.cv.experience, skills: c.cv.skills.split(',').map(x => x.trim()).filter(Boolean), remarks: c.cv.remarks }
+  });
+  /** The turns from one candidate's interview: from their opening line to the next candidate's. */
+  const segment = (list: LiveTurn[], id: string) => {
+    const start = list.findIndex(x => x.speaker !== 'you' && x.speaker.id === id);
+    if (start < 0) return [];
+    const next = list.findIndex((x, i) => i > start && x.speaker !== 'you' && x.speaker.id !== id);
+    return list.slice(start, next < 0 ? undefined : next);
+  };
+  const finishInterview = async (id: string | null) => {
+    setReacting(true);
+    const r = await send({ type: 'chooseCandidate', interactionId: lv.id, candidateId: id });
+    await new Promise(res => setTimeout(res, REACTING_MS));
+    setReacting(false);
+    if (r) onDone();
+  };
+
   const brief: LiveBrief = {
     goal: lv.brief.goal ?? lv.actionName ?? t('board.live.goal.reply'),
     known: lv.brief.known.length ? lv.brief.known : undefined,
@@ -180,6 +214,14 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
   };
 
   // Dictation into an email field: the accepted transcript lands in that field.
+  useEffect(() => {
+    if (!planField || speech.status !== 'review') return;
+    const said = speech.transcript.trim();
+    if (said) setPlan(f => ({ ...f, [planField]: `${f[planField]} ${said}`.trim() }));
+    speech.cancel();
+    setPlanField(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [speech.status]);
   useEffect(() => {
     if (!dictating || speech.status !== 'review') return;
     const said = speech.transcript.trim();
@@ -228,6 +270,40 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
           />
         );
       }
+      case 'chat':
+        return <ChatStage npc={npcOf(speaker)} turns={stageTurns(turns)} ended={lv.closed ? 'npc' : null} periodUnit={v.clock.periodUnit} subPeriodUnit={v.clock.subPeriodUnit} />;
+      case 'interview': {
+        const cands = (lv.candidates ?? []).map(candidateOf);
+        if (comparing && cands.length === 2) {
+          return <CompareView candidates={[cands[0], cands[1]]} notes={cvNotes}
+            onHire={id => void finishInterview(id)} onPassBoth={() => void finishInterview(null)} />;
+        }
+        const cand = cands[lv.candidate ?? 0];
+        return cand ? (
+          <InterviewStage candidate={cand} position={{ n: (lv.candidate ?? 0) + 1, total: cands.length }}
+            turns={stageTurns(segment(turns, cand.id))} notes={cvNotes[cand.id] ?? ''} onNotes={n => setCvNotes(x => ({ ...x, [cand.id]: n }))} />
+        ) : null;
+      }
+      case 'plan':
+        return (
+          <PlanForm
+            fields={plan} onChange={(field, value) => setPlan(f => ({ ...f, [field]: value }))}
+            onDictate={field => {
+              if (planField === field) { speech.stop(); return; }
+              setPlanField(field);
+              void speech.start();
+            }}
+            dictating={planField} levels={speech.levels}
+            period={v.clock.period} dueOptions={Array.from({ length: Math.max(1, v.clock.capacity - v.clock.subPeriod + 1) }, (_, i) => v.clock.subPeriod + i)}
+            periodUnit={v.clock.periodUnit} subPeriodUnit={v.clock.subPeriodUnit}
+            reviewer={npcOf(speaker)} submitted={planSent} checkIn={stageTurns(turns.slice(1))}
+            onSubmit={() => void say([
+              `${t('liveformats.plan.field', { field: 'goals' })}: ${plan.goals}`, `${t('liveformats.plan.field', { field: 'measures' })}: ${plan.measures}`, `${t('liveformats.plan.field', { field: 'owner' })}: ${plan.owner}`,
+              plan.due ? `${t('liveformats.plan.due', { unit: v.clock.subPeriodUnit })}: ${t('time.subPeriod', { unit: v.clock.subPeriodUnit, n: plan.due })}` : '',
+              plan.support ? `${t('liveformats.plan.field', { field: 'support' })}: ${plan.support}` : ''
+            ].filter(Boolean).join('\n'))}
+          />
+        );
       default:
         return <RolePlayStage person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} />;
     }
@@ -246,13 +322,19 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
       hint={lv.hint.mode === 'off' ? null : { available: !lv.hint.text, text: lv.hint.text, onRequest: () => void send({ type: 'requestHint', interactionId: lv.id }) }}
       endKind={lv.oneShot ? 'discard' : conversation === 'closed' ? 'finish' : 'end'}
       onEnd={() => {
+        if (lv.format === 'interview') {
+          if ((lv.candidate ?? 0) + 1 < (lv.candidates?.length ?? 0)) void send({ type: 'nextCandidate', interactionId: lv.id });
+          else if ((lv.candidates?.length ?? 0) === 2) setComparing(true);
+          else void finishInterview(lv.candidates?.[0]?.id ?? null);
+          return;
+        }
         const said = lv.turns.some(x => x.by === 'you');
         void finish(lv.oneShot || !said ? 'abandon' : 'end');
       }}
       brief={brief}
       briefOpen={briefOpen}
       onBriefToggle={() => setBriefOpen(o => !o)}
-      input={shellFormat === 'email' ? null : {
+      input={shellFormat === 'email' || (shellFormat === 'plan' && !planSent) || comparing ? null : {
         mic, conversation, voiceInput: input === 'open' ? 'open' : 'ptt', speakerName: speaker.name.split(' ')[0],
         draft: speech.status === 'review' || speech.status === 'listening' ? speech.transcript || speech.partial : draft,
         onDraft: text => (speech.status === 'review' ? speech.setTranscript(text) : setDraft(text)),

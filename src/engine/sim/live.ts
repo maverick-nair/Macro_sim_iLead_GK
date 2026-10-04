@@ -36,8 +36,8 @@ export interface NpcModel {
   reply(ctx: NpcContext): NpcReply | Promise<NpcReply>;
 }
 
-/** One shot formats: the participant writes once, then the interaction ends. */
-export const ONE_SHOT = new Set(['email', 'plan']);
+/** One shot formats: the participant writes once, then the interaction ends. A written plan is sent as a turn, then the check in. */
+export const ONE_SHOT = new Set(['email']);
 /** Formats with no style tag (scoring-and-report.md 3): they never count as a style choice. */
 export const UNTAGGED = new Set(['meeting', 'sponsor', 'interview']);
 
@@ -76,6 +76,11 @@ export const personaNpc: NpcModel = {
     if (format === 'sponsor') {
       const probes = ['What is the biggest risk to the target, in your view?', 'And what do you need from me to get there?', 'Who on the team are you most worried about, and what are you doing about it?'];
       return { text: pick(probes, ctx.turnsSoFar) };
+    }
+    if (format === 'plan') {
+      // The 2 minute check in on the plan (spec, Written plan).
+      if (ctx.turnsSoFar <= 1) return { text: /\d/.test(said) ? 'Thanks for the plan. The numbers make it clear what good looks like, and I can commit to that.' : 'Thanks for the plan. Could we make the goals more specific? I am not sure how we will know it worked.' };
+      return { text: 'Okay, that works for me. I will get started.', signsOff: true };
     }
     if (format === 'interview') {
       const p = sp.persona;

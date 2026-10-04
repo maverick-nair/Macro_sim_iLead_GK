@@ -5,6 +5,7 @@ import { EngineError, parse, type EngineClient } from './client';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
+import { neededStyle, type Style } from './sim/rules';
 
 /**
  * The mock engine adapter: the same engine code the server runs, in the browser, on a storyline
@@ -16,9 +17,25 @@ export function defaultStoryline(): StorylineConfig {
   return r.config;
 }
 
-export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number } = {}): EngineClient {
+/**
+ * Demo and test aid, mock only: plays the periods before `period` with the needed styles and no
+ * actions, so a later period (interviews from week 3, the week 4 sponsor briefing) can be opened.
+ */
+async function fastForward(engine: ReturnType<typeof createEngine>, period: number) {
+  const styles = () => Object.fromEntries(engine.view().members.map(m => [m.id, neededStyle(m)])) as Record<string, Style>;
+  while (engine.view().clock.period < period && engine.view().phase !== 'ended') {
+    if (engine.view().phase === 'style') await engine.dispatch({ type: 'confirmStyles', styles: styles() });
+    await engine.dispatch({ type: 'endPeriod' });
+    const v = engine.view();
+    if (v.pendingReward) await engine.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] });
+    if (engine.view().phase === 'periodEnd') await engine.dispatch({ type: 'startNextPeriod' });
+  }
+}
+
+export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number } = {}): EngineClient {
   const engine = createEngine(opts.config ?? defaultStoryline(), { seed: opts.seed ?? 1, evaluator: opts.evaluator });
-  const wait = () => (opts.latencyMs ? new Promise(r => setTimeout(r, opts.latencyMs)) : Promise.resolve());
+  const ready = opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, opts.startPeriod) : Promise.resolve();
+  const wait = async () => { await ready; if (opts.latencyMs) await new Promise(r => setTimeout(r, opts.latencyMs)); };
   return {
     async view() {
       await wait();

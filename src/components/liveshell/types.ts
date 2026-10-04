@@ -5,8 +5,8 @@ import type { MoodKey, StyleKey } from '../../data/types';
  * stand in) fills it, the components only render it and report intents back.
  */
 
-/** The designed formats (spec, "Live interaction screens"). Chat, interview and plan are not designed yet (D14). */
-export type LiveFormat = 'roleplay' | 'email' | 'meeting' | 'sponsor';
+/** All seven formats (spec, "Live interaction screens"). Chat, interview and plan stages live in liveformats (D14). */
+export type LiveFormat = 'roleplay' | 'email' | 'meeting' | 'sponsor' | 'chat' | 'interview' | 'plan';
 
 /** `desktop` is the 1440 design, `phone` the 390 one. */
 export type LiveLayout = 'desktop' | 'phone';

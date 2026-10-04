@@ -12,6 +12,9 @@ import type { LiveBrief, LiveConversation, LiveFormat, LiveLayout, LiveMode, Liv
 const meta: Meta = { title: 'Components/Live shell' };
 export default meta;
 
+/** The four formats the design draws in the shell; chat, interview and plan have their own stories (D14). */
+type DesignedFormat = Exclude<LiveFormat, 'chat' | 'interview' | 'plan'>;
+
 const noop = () => {};
 const person = (id: string, name: string, pronoun: LivePerson['pronoun'] = 'he'): LivePerson => ({ id, name, img: `/assets/npc/${id}.png`, pronoun });
 const KENT = person('kent', 'Kent Goldberg');
@@ -37,7 +40,7 @@ const npc = (i: number, text = KENT_LINES[i], extra: Partial<LiveTurn> = {}): Li
 const you = (i: number, text = YOU_LINES[i]): LiveTurn => ({ id: `y${i}`, speaker: 'you', text, aiGenerated: false });
 const words = (s: string, n: number) => s.split(' ').slice(0, n).join(' ');
 
-const BRIEFS: Record<LiveFormat, LiveBrief> = {
+const BRIEFS: Record<DesignedFormat, LiveBrief> = {
   roleplay: {
     goal: 'Find out what is bothering Kent and rebuild his trust.',
     known: ['Six years on the team.', 'Lost his best leads in the territory split.', 'You missed his chat request yesterday.'],
@@ -50,16 +53,16 @@ const BRIEFS: Record<LiveFormat, LiveBrief> = {
   sponsor: { goal: 'Give Priya an honest view of the pipeline and a plan she can back.', known: ['Demo conversion and the Ashcroft deal.'], mood: { text: 'Steady, 3 of 5' } },
   email: { goal: 'Follow up with Kent in writing so the change sticks.', known: ['Your 1:1 went well. Kent agreed to help Beth.'], tone: 'Warm and specific. Name a time.' }
 };
-const TIPS: Record<LiveFormat, string> = {
+const TIPS: Record<DesignedFormat, string> = {
   roleplay: 'Acknowledge the missed message first. People share more once they feel heard.',
   meeting: 'Invite people by name. A raised hand left waiting costs trust.',
   sponsor: 'Lead with the number, then the plan. Priya values directness.',
   email: 'Put the agreement in writing, with a date.'
 };
-const META: Record<LiveFormat, LiveShellProps['meta']> = {
+const META: Record<DesignedFormat, LiveShellProps['meta']> = {
   roleplay: { cost: 0.5 }, meeting: { cost: 1, topic: 'the Ashcroft discount' }, sponsor: { cost: 0, minutes: 6 }, email: { cost: 0 }
 };
-const NAME: Record<LiveFormat, LivePerson | null> = { roleplay: KENT, meeting: null, sponsor: PRIYA, email: KENT };
+const NAME: Record<DesignedFormat, LivePerson | null> = { roleplay: KENT, meeting: null, sponsor: PRIYA, email: KENT };
 
 /** The screen at 1440 by 900, or 390 by 844 on a phone, as the app mounts it. */
 const Frame = ({ layout = 'desktop', children }: { layout?: LiveLayout; children: ReactNode }) => (
@@ -67,7 +70,7 @@ const Frame = ({ layout = 'desktop', children }: { layout?: LiveLayout; children
 );
 
 interface ShellState {
-  format?: LiveFormat;
+  format?: DesignedFormat;
   layout?: LiveLayout;
   mode?: LiveMode;
   mic?: MicState;

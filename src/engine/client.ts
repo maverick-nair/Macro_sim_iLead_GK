@@ -77,5 +77,7 @@ export function lazyClient(load: () => Promise<EngineClient>): EngineClient {
 /** HTTP when `VITE_ILEAD_ENGINE_URL` is set, otherwise the mock engine, loaded on first use. */
 export function createDefaultClient(sessionId = 'local'): EngineClient {
   const url = import.meta.env.VITE_ILEAD_ENGINE_URL as string | undefined;
-  return url ? createHttpClient(url, sessionId) : lazyClient(() => import('./mock').then(m => m.createMockClient()));
+  // `?period=N` opens the mock at a later period, for demos and tests. The real engine ignores it.
+  const period = Number(new URLSearchParams(globalThis.location?.search ?? '').get('period')) || undefined;
+  return url ? createHttpClient(url, sessionId) : lazyClient(() => import('./mock').then(m => m.createMockClient({ startPeriod: period })));
 }
