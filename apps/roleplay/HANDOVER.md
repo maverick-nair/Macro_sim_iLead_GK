@@ -1,5 +1,7 @@
 # AI RolePlay - Handover
 
+> Development of this product continues in its own repository: https://github.com/maverick-nair/AIRolePlay2.0 (standalone tooling, job based LLM routing in the backend). This copy inside the monorepo is kept as the reference import and is not updated further.
+
 ## What it is
 
 An AI RolePlay product with two deliberately different propositions on one instrument:
