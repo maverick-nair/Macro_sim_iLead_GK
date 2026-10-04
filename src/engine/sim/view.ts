@@ -3,7 +3,7 @@ import { ONE_SHOT, speakerFor, turnLimit } from './live';
 import { finalScore } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, idealThroughput, perPeriod, person, teamAverage } from './sim';
-import type { InboxMessage, MemberSim, Mood, Sim } from './types';
+import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
 
 /**
  * What the participant may see. Built from engine state, never computed by the UI. Deliberately
@@ -20,11 +20,10 @@ export function moodOf(m: MemberSim, sim: Sim): Mood {
   return 'neutral';
 }
 
-type SponsorLevel = 'low' | 'wavering' | 'steady' | 'confident' | 'champion';
 
 /** Sponsor level words from confidence: below the check in line is low, at the unlock line confident. */
-function sponsorLevel(sim: Sim): SponsorLevel {
-  const v = sim.sponsor.value, s = sim.config.gamification.sponsor;
+export function sponsorLevel(sim: Sim, v = sim.sponsor.value): SponsorLevel {
+  const s = sim.config.gamification.sponsor;
   return v < s.checkInBelow ? 'low' : v < 50 ? 'wavering' : v < s.unlockAt ? 'steady' : v < 85 ? 'confident' : 'champion';
 }
 

@@ -1,20 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createI18n } from '../../i18n';
-import { barPercent, funnelNumber, funnelRow, funnelScale, levelSteps, newsArt, sponsorLevelOf, streakNote } from './display';
+import { barPercent, funnelNumber, funnelRow, funnelScale, levelSteps, newsArt, streakNote } from './display';
 
 const i18n = createI18n();
-const lines = { checkInBelow: 30, unlockAt: 70 };
 
 describe('week end display mappings', () => {
-  it('words sponsor confidence with the engine bands', () => {
-    expect([0, 29, 30, 49, 50, 69, 70, 84, 85, 100].map(v => sponsorLevelOf(v, lines))).toEqual(
-      ['low', 'low', 'wavering', 'wavering', 'steady', 'steady', 'confident', 'confident', 'champion', 'champion']
-    );
-    // The check in and unlock lines come from the view.
-    expect(sponsorLevelOf(35, { checkInBelow: 40, unlockAt: 60 })).toBe('low');
-    expect(sponsorLevelOf(65, { checkInBelow: 40, unlockAt: 60 })).toBe('confident');
-  });
-
   it('counts the levels moved', () => {
     expect(levelSteps('steady', 'confident')).toEqual({ steps: 1, dir: 'up' });
     expect(levelSteps('confident', 'low')).toEqual({ steps: 3, dir: 'down' });

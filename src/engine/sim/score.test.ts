@@ -9,6 +9,7 @@ import { neededStyles } from './policies';
 import { createRng } from './rng';
 import { advanceStreak, checkBadges, leadershipScore, tierFor, weekScore } from './score';
 import { capacity, createSim, runSubPeriod } from './sim';
+import { sponsorLevel } from './view';
 import type { Sim } from './types';
 
 /** M5: game scores on the GenieKreator formulas (docs/genie/scoring-and-report.md 6 and 9) and events. */
@@ -94,6 +95,21 @@ describe('streak', () => {
 });
 
 describe('sponsor confidence and unlocks', () => {
+  it('words confidence by the rule lines: low under 30, wavering, steady from 50, confident from 70, champion from 85', () => {
+    const sim = fresh();
+    expect([0, 29, 30, 49, 50, 69, 70, 84, 85, 100].map(v => sponsorLevel(sim, v))).toEqual(
+      ['low', 'low', 'wavering', 'wavering', 'steady', 'steady', 'confident', 'confident', 'champion', 'champion']);
+  });
+
+  it('offers no unlock at the last period end', () => {
+    const sim = fresh();
+    sim.period = sim.config.time.period.count;
+    sim.sponsorAtStart = 66; sim.sponsor.value = 69;
+    sim.funnel.periodValue = config.money.target;
+    runSubPeriodsWithoutFunnel(sim);
+    expect(endPeriod(sim, rng()).unlockOffer).toBeNull();
+  });
+
   it('moves with each briefing band: +20 for a strong one, −10 for a weak one', async () => {
     for (const [text, delta] of [['Honestly, we are behind on 2 stages and I own that. The biggest risk is proposals. I will coach the team; here is the plan: the call lists by Friday. What I need from you is support.', 20], ['ok.', -10]] as const) {
       const e = createEngine(config, { seed: 4 });

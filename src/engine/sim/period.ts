@@ -1,6 +1,7 @@
 import type { Rng } from './rng';
 import { IntentError } from './actions';
 import { upcomingNews } from './events';
+import { sponsorLevel } from './view';
 import { advanceStreak, checkBadges, leadershipScore, nextStreakBonus, pulse, roundHalfUp, tierFor, weekScore } from './score';
 import { addMessage, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
 import type { Change, PeriodSummary, Sim } from './types';
@@ -33,7 +34,8 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   const paceChanges = sponsorChange(sim, onPace ? g.sponsor.periodPace.met : g.sponsor.periodPace.missed, onPace ? `Revenue on pace this ${unit}` : `Revenue behind pace this ${unit}`);
   if (paceChanges.length) log(sim, { kind: 'periodEnd', title: onPace ? `Revenue on pace this ${unit}` : `Revenue behind pace this ${unit}`, memberIds: [], changes: paceChanges });
   // Crossing the unlock line upward offers one reward; dropping below the check in line costs a day next period.
-  const unlockOffer = sFrom < g.sponsor.unlockAt && sim.sponsor.value >= g.sponsor.unlockAt ? [...g.unlocks] : null;
+  // No unlock at the last period end: there is no next period to use it in.
+  const unlockOffer = sim.period < count && sFrom < g.sponsor.unlockAt && sim.sponsor.value >= g.sponsor.unlockAt ? [...g.unlocks] : null;
   sim.pendingReward = unlockOffer;
   const checkIn = sFrom >= g.sponsor.checkInBelow && sim.sponsor.value < g.sponsor.checkInBelow && sim.period < count;
   if (checkIn) {
@@ -67,7 +69,7 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
     period: sim.period, headline: story.headline, line: story.line, week, kpis,
     valueThisPeriod: sim.funnel.periodValue, valueIdeal, cumulativeValue: sim.funnel.value, pace,
     streak: { count: sim.streak, bonus: streakBonus, total: sim.streakBonus, next: nextStreakBonus(sim) },
-    newBadges, sponsor: { from: sFrom, to: sim.sponsor.value },
+    newBadges, sponsor: { from: sFrom, to: sim.sponsor.value, fromLevel: sponsorLevel(sim, sFrom), toLevel: sponsorLevel(sim) },
     pulse: { from: roundHalfUp(sim.pulseAtStart), to: roundHalfUp(pulse(sim)) },
     funnel, bottleneck, unlockOffer, checkIn, news: sim.period < count ? upcomingNews(sim) : []
   };

@@ -144,6 +144,8 @@ export interface InboxMessage {
   briefing?: boolean;
 }
 
+export type SponsorLevel = 'low' | 'wavering' | 'steady' | 'confident' | 'champion';
+
 export type CardKind = 'impact' | 'signal' | 'capacity' | 'diagnostic' | 'opportunity' | 'crisis';
 
 export interface EventCard {
@@ -234,7 +236,8 @@ export interface PeriodSummary {
   /** Periods in a row at the streak's star level, and the bonus it earned this period. */
   streak: { count: number; bonus: number; total: number; next: number | null };
   newBadges: Array<{ key: string; reason: string }>;
-  sponsor: { from: number; to: number };
+  /** Confidence and its level word at the start and end of the period. */
+  sponsor: { from: number; to: number; fromLevel: SponsorLevel; toLevel: SponsorLevel };
   pulse: { from: number; to: number };
   funnel: Array<{ stage: string; throughput: number; ideal: number; cumulative: number; cumulativeIdeal: number }>;
   /** The stage furthest below its ideal this period. */

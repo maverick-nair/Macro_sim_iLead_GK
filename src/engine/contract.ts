@@ -147,6 +147,7 @@ export const LogEntry = z.object({
   title: Text, memberIds: z.array(Id), changes: z.array(MetricChange), quote: Text.optional()
 });
 
+export const SponsorLevel = z.enum(['low', 'wavering', 'steady', 'confident', 'champion']);
 export const CardKind = z.enum(['impact', 'signal', 'capacity', 'diagnostic', 'opportunity', 'crisis']);
 
 /** How a period went (scoring-and-report.md 6): the week score behind the stars, and what changed. */
@@ -165,7 +166,7 @@ export const PeriodSummary = z.object({
   /** `next`: periods still needed for the next bonus, null once the cap is reached. */
   streak: z.object({ count: z.number().int(), bonus: Num, total: Num, next: z.number().int().nullable() }),
   newBadges: z.array(z.object({ key: Id, reason: Text })),
-  sponsor: z.object({ from: Num, to: Num }),
+  sponsor: z.object({ from: Num, to: Num, fromLevel: SponsorLevel, toLevel: SponsorLevel }),
   pulse: z.object({ from: Num, to: Num }),
   funnel: z.array(z.object({ stage: Id, throughput: Num, ideal: Num, cumulative: Num, cumulativeIdeal: Num })),
   bottleneck: Id.nullable(),
@@ -215,7 +216,7 @@ export const EngineView = z.object({
   periods: z.array(PeriodSummary),
   badges: z.array(z.object({ key: Id, rule: Id, name: Text, description: Text, earned: z.boolean(), period: z.number().int().nullable(), reason: Text.nullable() })),
   /** The sponsor meter may show its value (Configuration Spec, CEO meter 0 to 100). */
-  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, value: Num, unlockAt: Num, checkInBelow: Num, level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
+  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, value: Num, unlockAt: Num, checkInBelow: Num, level: SponsorLevel, causes: z.array(z.object({ text: Text, delta: Num })) }),
   /** Unlock rewards on offer: `bonus_day`, `hire_budget`, `team_activity`. */
   pendingReward: z.array(Id).nullable(),
   /** Unlock rewards in hand, not yet used. */

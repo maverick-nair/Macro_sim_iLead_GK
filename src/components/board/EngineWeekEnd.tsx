@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { EngineView } from '../../engine/contract';
 import { useI18n, type I18n } from '../../i18n';
-import { funnelNumber, funnelScale, sponsorLevelOf, streakNote } from '../weekend/display';
+import { funnelNumber, funnelScale, streakNote } from '../weekend/display';
 import type { WeekEndBadge, WeekEndNews, WeekEndReport, WeekEndReward } from '../weekend/types';
 import { WeekEndFlow, type WeekEndFlowProps } from '../weekend/WeekEndFlow';
 
@@ -9,13 +9,12 @@ type Summary = EngineView['periods'][number];
 const METRICS = ['skill', 'morale', 'result', 'trust'] as const;
 const first = (name: string) => name.split(' ')[0];
 
-/** The weekly report from the period summary and the view's rules (stars, streak, sponsor lines). */
+/** The weekly report from the period summary and the view's rules (stars and streak). */
 export function engineReport({ t, number }: Pick<I18n, 't' | 'number'>, view: EngineView, s: Summary): WeekEndReport {
   const unit = view.clock.periodUnit;
   const name = (key: string) => view.funnel.find(f => f.key === key)?.name ?? key;
   const g = view.gamification;
   const { week } = s;
-  const lines = { checkInBelow: view.sponsor.checkInBelow, unlockAt: view.sponsor.unlockAt };
   const deals = (n: number) => number(funnelNumber(n));
   return {
     funnel: {
@@ -39,7 +38,7 @@ export function engineReport({ t, number }: Pick<I18n, 't' | 'number'>, view: En
       t('weekend.stars.funnel', { output: deals(week.funnel.output), ideal: deals(week.funnel.ideal) })
     ],
     streak: { count: s.streak.count, unit, note: streakNote({ t }, s.streak, g.streak, unit) },
-    sponsor: { from: sponsorLevelOf(s.sponsor.from, lines), to: sponsorLevelOf(s.sponsor.to, lines), values: { from: s.sponsor.from, to: s.sponsor.to } },
+    sponsor: { from: s.sponsor.fromLevel, to: s.sponsor.toLevel, values: { from: s.sponsor.from, to: s.sponsor.to } },
     pulse: { upbeat: view.pulse.upbeat, steady: view.pulse.steady, struggling: view.pulse.struggling, value: { from: s.pulse.from, to: s.pulse.to } },
     checkIn: s.checkIn ? { sponsorName: first(view.sponsor.name), line: view.sponsor.checkInBelow } : null
   };

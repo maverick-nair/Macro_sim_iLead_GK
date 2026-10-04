@@ -7,23 +7,6 @@ import type { FunnelView, PeriodUnit, SponsorLevel, WeekEndFunnel, WeekEndNews }
  */
 
 const LEVELS: SponsorLevel[] = ['low', 'wavering', 'steady', 'confident', 'champion'];
-/**
- * The sponsor level bands the engine uses (`sponsorLevel` in src/engine/sim/view.ts): below the check
- * in line low, then wavering below 50, steady below the unlock line, confident below 85, else champion.
- * The check in and unlock lines come from the view; 50 and 85 are fixed in the engine and not sent.
- */
-export const SPONSOR_WAVERING_BELOW = 50;
-export const SPONSOR_CHAMPION_FROM = 85;
-
-/** The sponsor's level word for a confidence value. */
-export function sponsorLevelOf(value: number, lines: { checkInBelow: number; unlockAt: number }): SponsorLevel {
-  if (value < lines.checkInBelow) return 'low';
-  if (value < SPONSOR_WAVERING_BELOW) return 'wavering';
-  if (value < lines.unlockAt) return 'steady';
-  if (value < SPONSOR_CHAMPION_FROM) return 'confident';
-  return 'champion';
-}
-
 /** How many levels the sponsor moved, and which way. */
 export function levelSteps(from: SponsorLevel, to: SponsorLevel): { steps: number; dir: 'up' | 'down' | 'same' } {
   const d = LEVELS.indexOf(to) - LEVELS.indexOf(from);
