@@ -1,0 +1,8 @@
+{
+  "$description": "Weekly style setting screen. The card portrait shade is a touch darker than the board card's, as the design draws it.",
+  "color": {
+    "stylesetting": {
+      "portrait-shade": { "light": { "ref": "color.portrait.shade", "alpha": 0.8 }, "dark": { "ref": "color.portrait.shade", "alpha": 0.8 }, "$description": "Bottom of the card portrait overlay, behind the name" }
+    }
+  }
+}

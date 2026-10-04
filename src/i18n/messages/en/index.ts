@@ -18,7 +18,8 @@ import outcome from './outcome.json';
 import palette from './palette.json';
 import reason from './reason.json';
 import style from './style.json';
+import stylesetting from './stylesetting.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...member, ...metric, ...metrics, ...outcome, ...palette, ...reason, ...style, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...member, ...metric, ...metrics, ...outcome, ...palette, ...reason, ...style, ...stylesetting, ...team, ...time };

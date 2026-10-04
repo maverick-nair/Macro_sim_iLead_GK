@@ -1,0 +1,23 @@
+{
+  "stylesetting": {
+    "logo": {
+      "tracking": { "value": "-0.03em" }
+    },
+    "intro": {
+      "columns": { "value": "minmax(0,1.1fr) repeat(4,minmax(0,1fr))", "$description": "Sponsor prompt, then the four style definitions" },
+      "leading": { "value": "1.4", "$description": "Style definition line height" }
+    },
+    "portrait": {
+      "overlay": { "value": "linear-gradient(180deg, transparent 50%, {color.stylesetting.portrait-shade})" },
+      "position": { "value": "center 12%", "$description": "Keeps faces in frame in the 120px card portrait" }
+    },
+    "list": {
+      "columns": { "value": "minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr)", "$description": "Member, stats, last period, four style radios, reason" },
+      "header-tracking": { "value": "0.06em" }
+    },
+    "summary": {
+      "scrim-blur": { "value": "6px", "$description": "Backdrop blur behind the summary dialog" },
+      "enter": { "value": "ilIn {duration.base} ease" }
+    }
+  }
+}
