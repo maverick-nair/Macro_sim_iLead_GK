@@ -1,0 +1,15 @@
+{
+  "metrics.strip.aria": "Team status",
+  "metrics.pulse.title": "Team Pulse",
+  "metrics.pulse.aria": "Team pulse: {upbeat} upbeat, {steady} steady, {struggling} struggling",
+  "metrics.pulse.group": "{group, select, upbeat {upbeat} steady {steady} struggling {struggling} other {}}",
+  "metrics.target.label": "Quarter target",
+  "metrics.target.of": "of {target}",
+  "metrics.target.aria": "Target. {value} of {target}",
+  "metrics.target.pace": "Pace",
+  "metrics.target.paceAt": "{period} pace",
+  "metrics.sponsor.title": "Sponsor confidence",
+  "metrics.sponsor.level": "{level, select, low {Low} wavering {Wavering} steady {Steady} confident {Confident} champion {Champion} other {}}",
+  "metrics.sponsor.causes": "Recent causes",
+  "metrics.sponsor.mark": "{dir, select, up {▲} down {▼} other {●}}"
+}

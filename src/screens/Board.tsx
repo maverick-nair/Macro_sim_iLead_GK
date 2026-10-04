@@ -1,11 +1,13 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 import type { ScreenProps, MemberView } from '../app/types';
 import type { EventType, MemberAction, MetricKey, StyleKey, TeamAction } from '../data/types';
-import { css, pseudo } from '../lib/css';
+import { css } from '../lib/css';
 import { Button, NoWrapButton } from '../ds/Button';
 import { useMergeState } from './board/useMergeState';
 import { MemberCard, type MemberCardProps } from '../components/member/MemberCard';
-import { KpiTile, type KpiTrend } from '../components/metric/KpiTile';
+import type { KpiTrend } from '../components/metric/KpiTile';
+import { Hud, type HudProps } from '../components/hud/Hud';
+import { MetricsStrip, type MetricsStripProps } from '../components/metrics/MetricsStrip';
 import { ActionTile, type ActionBlock, type ActionTileProps } from '../components/action/ActionTile';
 import { ActionDrawer, type ActionDrawerProps } from '../components/action/ActionDrawer';
 import { useDays } from '../components/action/days';
@@ -214,7 +216,6 @@ export function Board(props: BoardProps) {
     const trend: KpiTrend = s.fresh && dd ? { kind: 'delta', delta: dd } : { kind: 'direction', direction: dd > 0 ? 'up' : dd < 0 ? 'down' : 'flat' };
     return { metric: k, value: avg(k), trend }; });
   const pos = members.filter(m => m.mood === 'happy').length, neu = members.filter(m => m.mood === 'neutral' || m.mood === 'thinking').length, neg = members.length - pos - neu;
-  const pulse = [{ n: pos, label: 'upbeat', c: '#00F2AD' }, { n: neu, label: 'steady', c: '#DEE9FF' }, { n: neg, label: 'struggling', c: 'oklch(0.84 0.14 78)' }].filter(x => x.n);
   const sm = members.find(m => m.id === s.sel);
 
   // TODO(M2): the engine supplies the prerequisite; Justin and Qualification are the prototype's fixture.
@@ -276,13 +277,33 @@ export function Board(props: BoardProps) {
     .filter(i => !q || i.name.toLowerCase().includes(q)).slice(0, 9);
 
   const isOffline = props.uiState === 'offline';
-  // Faithful to the design: in client mode the nav list is plain strings, so the buttons render with no label and no handler.
-  const nav: { n?: string; go?: () => void }[] = app.client ? ['Objective', 'History', 'More'].map(() => ({})) : ['Objective', 'Funnel', 'History', 'Badges', 'More'].map(n => ({ n, go: () => act.say(n === 'More' ? 'More: Tutorial, Funnel, Leaderboard, Badges and Help.' : `${n} opens as a panel over the board.`) }));
-  const capSlots = [0, 1, 2, 3, 4].map(i => { const v = cap >= i + 1 ? 1 : cap > i ? 0.5 : 0; return { fill: v === 1 ? '#43D6E8' : v ? 'oklch(0.85 0.1 205 / 0.45)' : 'transparent', stroke: v ? '#43D6E8' : 'var(--ik-line-strong)' }; });
-  const capText = fmt(cap), capAria = `${cap} of 5 days left this week`, capPulse = cap <= 1 && cap > 0 ? 'ilPulse 1.6s ease-in-out infinite' : 'none', outOfDays = cap === 0;
-  const scoreParts = [{ n: 'Business', v: 420, w: '42%' }, { n: 'People', v: 510, w: '51%' }, { n: 'Leadership', v: 310, w: '31%' }];
-  const scoreOn = () => setState({ scoreTip: true }), scoreOff = () => setState({ scoreTip: false });
-  const sponsorBars = [0, 1, 2, 3, 4].map(i => ({ bg: i < 3 ? 'linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))' : 'var(--ik-track)' }));
+  // Faithful to the design (DECISIONS D17): in client mode the nav buttons render with no label and do nothing.
+  const navKeys = app.client ? ['objective', 'history', 'more'] : ['objective', 'funnel', 'history', 'badges', 'more'];
+  const nav = navKeys.map(key => (app.client ? { key } : { key, label: t('hud.nav.item', { key }) }));
+  const onNav = (key: string) => {
+    if (app.client) return;
+    const n = t('hud.nav.item', { key });
+    act.say(key === 'more' ? 'More: Tutorial, Funnel, Leaderboard, Badges and Help.' : `${n} opens as a panel over the board.`);
+  };
+  const capText = fmt(cap), outOfDays = cap === 0;
+  // TODO(M2): the engine supplies the clock, score and streak; these are the prototype's fixed values.
+  // pillarScale is a pillar's maximum for the run: periodMax × period count (125 × 8 weeks = 1000).
+  const hud: HudProps = {
+    clientLogo: app.client, nav, onNav,
+    clock: { period: app.week, periodUnit: 'week', subPeriod: app.day, subPeriodUnit: 'day', capacity: 5, capacityLeft: cap },
+    sessionClock: app.showClock ? app.clock : null, onPause: () => act.overlay('paused'),
+    score: { total: 1240, business: 420, people: 510, leadership: 310, periodMax: 125 }, pillarScale: 125 * 8,
+    scoreOpen: s.scoreTip, onScoreOpenChange: v => setState({ scoreTip: v }),
+    streak: 3, onPalette: () => openPal(), onSettings: () => act.overlay('settings'), onEndPeriod: () => act.go('weekend'),
+    endEmphasis: f ? 'secondary' : 'primary'
+  };
+  // TODO(M2): the engine supplies the target, pace and sponsor confidence.
+  const strip: MetricsStripProps = {
+    kpis, pulse: { upbeat: pos, steady: neu, struggling: neg },
+    target: { value: 41200, target: 240000, pace: 0.25, pacePeriod: { unit: 'week', n: app.week } },
+    sponsor: { level: 'steady', open: s.sponsor, onToggle: () => setState(x => ({ sponsor: !x.sponsor })),
+      causes: [{ text: 'Ashcroft moved to proposal', delta: 1 }, { text: 'Revenue is behind week 2 pace', delta: -1 }, { text: "No reply yet to Priya's email", delta: -1 }] }
+  };
   const person = (id: string) => { const m = memberById(members, id); return { id, name: m.name, shortName: first(m.name), img: m.img }; };
   const ocWho = person(oc.who);
   const outcomePanel: OutcomePanelProps = {
@@ -317,44 +338,7 @@ export function Board(props: BoardProps) {
 
       {!mobile && (
         <>
-          <header style={css('display:flex; align-items:center; gap:14px; padding:14px 24px; white-space:nowrap; min-width:0')}>
-            <div style={css('display:flex; align-items:center; gap:10px')}>
-              {app.client && <div style={css('height:28px; padding:0 10px; border:1px dashed var(--ik-line-strong); border-radius:6px; display:flex; align-items:center; font-size:12px; color:var(--ik-text-2)')}>Halden Group logo</div>}
-              <span style={css('font-size:22px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent')}>iLead</span>
-            </div>
-            <nav aria-label="Game menu" style={css('display:flex; gap:0; flex:0 1 auto; min-width:0; overflow:hidden')}>
-              {nav.map((n, i) => <button key={i} onClick={n.go} style={css('flex:none; height:32px; padding:0 8px; border:0; border-radius:999px; background:transparent; color:var(--ik-text-2); font-size:13px; font-weight:600; cursor:pointer')} className={pseudo('hover', 'background:var(--ik-raised); color:var(--ik-text)')}>{n.n}</button>)}
-            </nav>
-            <div style={css('flex:1 1 0; min-width:0')}></div>
-            <span style={css('flex:none; font-size:13px; color:var(--ik-text-2)')}><b style={css('color:var(--ik-text)')}>Week {app.week}</b> · Day {app.day}</span>
-            <div aria-label={capAria} style={css('display:flex; align-items:center; gap:8px')}>
-              <div style={css(`display:flex; gap:1px; animation:${capPulse}`)}>
-                {capSlots.map((c, i) => <svg key={i} width="16" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" fill={c.fill} stroke={c.stroke} strokeWidth="1.5" strokeLinejoin="round"></path></svg>)}
-              </div>
-              <span style={css('font-size:13px; color:var(--ik-text-2)')}><b style={css('color:var(--ik-text)')}>{capText}</b> left</span>
-            </div>
-            {app.showClock && (
-              <button onClick={() => act.overlay('paused')} aria-label="Pause the simulation" style={css('display:flex; align-items:center; gap:6px; height:32px; padding:0 10px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text); font-size:13px; font-weight:700; cursor:pointer')}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"></rect><rect x="14" y="4" width="5" height="16" rx="1"></rect></svg>{app.clock}
-              </button>
-            )}
-            <div style={css('position:relative')} onMouseEnter={scoreOn} onMouseLeave={scoreOff}>
-              <button aria-label="Leadership score 1,240. Show breakdown" onFocus={scoreOn} onBlur={scoreOff} style={css('display:flex; align-items:center; gap:6px; height:32px; padding:0 10px; border:0; border-radius:999px; background:transparent; color:var(--ik-text); font-size:15px; font-weight:700; cursor:pointer')}>
-                <svg width="18" height="18" viewBox="0 0 24 24"><defs><linearGradient id="sgb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#249DFF"></stop><stop offset="1" stopColor="#00F2AD"></stop></linearGradient></defs><polygon points="12 2 15.1 8.3 22 9.3 17 14.1 18.2 21 12 17.8 5.8 21 7 14.1 2 9.3 8.9 8.3" fill="url(#sgb)"></polygon></svg>1,240
-              </button>
-              {s.scoreTip && (
-                <div role="tooltip" style={css('position:absolute; top:calc(100% + 8px); right:0; width:260px; padding:14px; border-radius:16px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 16px 40px oklch(0.05 0.03 280 / 0.35); z-index:40; white-space:normal; display:flex; flex-direction:column; gap:8px')}>
-                  <b>Leadership Score</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>Built from three parts. Every point is earned, nothing is taken away for being slow.</span>
-                  {scoreParts.map(sp => <div key={sp.n} style={css('display:grid; grid-template-columns:80px 1fr 40px; gap:8px; align-items:center; font-size:12px')}><span>{sp.n}</span><div style={css('height:6px; border-radius:3px; background:var(--ik-track)')}><div style={css(`height:100%; width:${sp.w}; border-radius:3px; background:var(--grad-brand)`)}></div></div><b style={css('text-align:right')}>{sp.v}</b></div>)}
-                </div>
-              )}
-            </div>
-            <span aria-label="3 week streak" title="3 day streak. 2 more for a bonus" style={css('display:flex; align-items:center; gap:4px; font-size:15px; font-weight:700')}><svg width="16" height="16" viewBox="0 0 24 24" fill="oklch(0.8 0.15 60)" stroke="oklch(0.8 0.15 60)" strokeWidth="1.5" strokeLinejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>3</span>
-            <button onClick={openPal} aria-label="Search members and actions" style={css('height:32px; padding:0 10px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-raised); color:var(--ik-text-2); font-size:12px; font-weight:700; cursor:pointer')}>⌘K</button>
-            <button onClick={() => act.overlay('settings')} aria-label="Settings" style={css('width:32px; height:32px; border-radius:50%; border:0; background:transparent; color:var(--ik-text-2); cursor:pointer; display:flex; align-items:center; justify-content:center')} className={pseudo('hover', 'background:var(--ik-raised)')}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg></button>
-            {/* Button is inline-flex with an 8px gap: the runtime renders the interpolation as its own span, so it is a separate flex item. */}
-            <NoWrapButton variant={f ? 'secondary' : 'primary'} size="md" onClick={() => act.go('weekend')}>End week <span>{app.week}</span></NoWrapButton>
-          </header>
+          <Hud {...hud} />
 
           {isOffline && <div role="alert" style={css('margin:0 24px 12px; padding:10px 16px; border-radius:14px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; align-items:center; gap:10px; font-size:13px')}><b>Connection lost.</b><span>Your clock is paused and actions will queue and send when you are back online.</span><span style={css('flex:1')}></span><span style={css('color:var(--ik-text-2)')}>Retrying in 4s</span></div>}
           {s.call && (
@@ -367,36 +351,7 @@ export function Board(props: BoardProps) {
             </div>
           )}
 
-          <section aria-label="Team status" style={css('display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,1fr); gap:10px; padding:0 24px 14px')}>
-            {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
-            <div aria-label={`Team pulse: ${pos} upbeat, ${neu} steady, ${neg} struggling`} style={css('padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px')}>
-              <span style={css('font-size:12px; color:var(--ik-text-2)')}>Team Pulse</span>
-              <div style={css('display:flex; height:10px; border-radius:5px; overflow:hidden; gap:2px')}>
-                {pulse.map(pp => <div key={pp.label} style={css(`flex:${pp.n}; background:${pp.c}`)}></div>)}
-              </div>
-              <div style={css('display:flex; gap:10px; font-size:12px; color:var(--ik-text-2)')}>{pulse.map(pp => <span key={pp.label}><b style={css('color:var(--ik-text)')}>{pp.n}</b> {pp.label}</span>)}</div>
-            </div>
-            <div aria-label="Target. $41,200 of $240,000" style={css('padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); display:flex; flex-direction:column; gap:6px')}>
-              <span style={css('font-size:12px; color:var(--ik-text-2)')}>Quarter target</span>
-              <div style={css('display:flex; align-items:baseline; gap:6px')}><b style={css('font-size:20px')}>$41,200</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>of $240,000</span></div>
-              <div style={css('position:relative; height:6px; border-radius:3px; background:var(--ik-track)')}><div style={css('position:absolute; left:0; top:0; bottom:0; width:17.2%; border-radius:3px; background:linear-gradient(90deg,var(--ik-acc),var(--ik-acc-2))')}></div><div title="Week 2 pace" style={css('position:absolute; left:25%; top:-3px; bottom:-3px; width:2px; background:var(--ik-text)')}></div></div>
-            </div>
-            <div style={css('position:relative')}>
-              <button onClick={() => setState(x => ({ sponsor: !x.sponsor }))} aria-expanded={s.sponsor} style={css('width:100%; height:100%; text-align:left; padding:10px 14px; border-radius:16px; background:var(--ik-card); backdrop-filter:blur(12px); border:1px solid var(--ik-line); color:var(--ik-text); cursor:pointer; display:flex; flex-direction:column; gap:6px')}>
-                <span style={css('font-size:12px; color:var(--ik-text-2)')}>Sponsor confidence</span>
-                <b style={css('font-size:16px')}>Steady</b>
-                <div style={css('display:flex; gap:3px; width:100%')}>{sponsorBars.map((sb, i) => <div key={i} style={css(`flex:1; height:6px; border-radius:3px; background:${sb.bg}`)}></div>)}</div>
-              </button>
-              {s.sponsor && (
-                <div style={css('position:absolute; top:calc(100% + 8px); right:0; width:280px; padding:14px; border-radius:16px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); z-index:40; display:flex; flex-direction:column; gap:8px; font-size:13px; box-shadow:0 16px 40px oklch(0.05 0.03 280 / 0.35)')}>
-                  <b>Recent causes</b>
-                  <span><span style={css('color:var(--ik-pos)')}>▲</span> Ashcroft moved to proposal</span>
-                  <span><span style={css('color:var(--ik-neg)')}>▼</span> Revenue is behind week 2 pace</span>
-                  <span><span style={css('color:var(--ik-neg)')}>▼</span> No reply yet to Priya's email</span>
-                </div>
-              )}
-            </div>
-          </section>
+          <MetricsStrip {...strip} />
 
           {outcome && <OutcomePanel {...outcomePanel} />}
 

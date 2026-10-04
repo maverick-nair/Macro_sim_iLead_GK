@@ -174,6 +174,14 @@
   --il-color-member-mood-thinking: light-dark(var(--il-color-brand-cyber-cyan), var(--il-color-brand-cyber-cyan));
   --il-color-member-mood-concerned: light-dark(var(--il-color-amber-840), var(--il-color-amber-840));
   --il-color-member-mood-frustrated: light-dark(var(--il-color-coral-780), var(--il-color-coral-780));
+  --il-color-metrics-pulse-upbeat: light-dark(var(--il-color-brand-mint-green), var(--il-color-brand-mint-green));
+  --il-color-metrics-pulse-steady: light-dark(var(--il-color-brand-pale-lavender), var(--il-color-brand-pale-lavender));
+  --il-color-metrics-pulse-struggling: light-dark(var(--il-color-amber-840), var(--il-color-amber-840));
+  --il-color-metrics-popover-shadow: light-dark(oklch(0.05 0.03 280 / 0.35), oklch(0.05 0.03 280 / 0.35));
+  --il-color-hud-capacity-full: light-dark(var(--il-color-brand-cyber-cyan), var(--il-color-brand-cyber-cyan));
+  --il-color-hud-capacity-half: light-dark(oklch(0.85 0.1 205 / 0.45), oklch(0.85 0.1 205 / 0.45));
+  --il-color-hud-capacity-empty: light-dark(var(--il-color-line-strong), var(--il-color-line-strong));
+  --il-color-hud-streak: light-dark(oklch(0.8 0.15 60), oklch(0.8 0.15 60));
   --il-fill-brand: var(--client-grad, var(--il-gradient-brand));
   --il-fill-product: var(--il-gradient-product);
   --il-fill-spectrum: var(--il-gradient-spectrum);
@@ -216,6 +224,10 @@
   --il-gamification-badge-medal-ring: 0 0 0 8px var(--il-color-celebration-ring);
   --il-gamification-star-enter: ilIn 500ms cubic-bezier(.2,.9,.3,1.3) both;
   --il-gamification-star-stagger: 180ms;
+  --il-hud-logo-tracking: -0.03em;
+  --il-hud-capacity-pulse: ilPulse 1.6s ease-in-out infinite;
+  --il-hud-score-columns: 80px 1fr 40px;
+  --il-hud-score-shadow: 0 16px 40px var(--il-color-metrics-popover-shadow);
   --il-live-bubble-max-width: 88%;
   --il-live-caption-cursor: ilPulse 0.9s infinite;
   --il-live-mic-glow-ready: 0 0 24px var(--il-color-voice-ready-glow);
@@ -234,6 +246,8 @@
   --il-metric-bar-fill: var(--il-fill-meter);
   --il-metric-bar-fill-low: var(--il-color-status-attention);
   --il-metric-bar-transition: width var(--il-duration-slow) var(--il-easing-spring);
+  --il-metrics-strip-columns: repeat(4,minmax(0,1fr)) minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,1fr);
+  --il-metrics-popover-shadow: 0 16px 40px var(--il-color-metrics-popover-shadow);
   --il-outcome-band-columns: auto minmax(0,1.4fr) minmax(0,1fr) auto;
   --il-outcome-band-shadow: var(--il-shadow-outcome-glow);
   --il-outcome-band-enter: ilIn var(--il-duration-slow) var(--il-easing-settle);

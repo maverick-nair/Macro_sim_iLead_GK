@@ -1,0 +1,19 @@
+{
+  "$description": "HUD and metrics strip meanings. These sit on the board's own art and keep one value in both modes, as the design renders them. The two literal values have no primitive yet (primitives are owned elsewhere); move them to tokens/primitive when that file is opened.",
+  "color": {
+    "metrics": {
+      "pulse": {
+        "upbeat": { "light": "{color.brand.mint-green}", "dark": "{color.brand.mint-green}", "$description": "Team Pulse, upbeat members (the status gain hue at full strength)" },
+        "steady": { "light": "{color.brand.pale-lavender}", "dark": "{color.brand.pale-lavender}", "$description": "Team Pulse, steady members" },
+        "struggling": { "light": "{color.amber.840}", "dark": "{color.amber.840}", "$description": "Team Pulse, struggling members (the attention hue at full strength)" }
+      },
+      "popover-shadow": { "light": { "ref": "color.member-elevation.ink", "alpha": 0.35 }, "dark": { "ref": "color.member-elevation.ink", "alpha": 0.35 }, "$description": "Drop shadow of the score tooltip and the sponsor popover" }
+    },
+    "hud": {
+      "capacity-full": { "light": "{color.brand.cyber-cyan}", "dark": "{color.brand.cyber-cyan}", "$description": "A whole sub period of capacity left: fill and outline of the bolt" },
+      "capacity-half": { "light": "oklch(0.85 0.1 205 / 0.45)", "dark": "oklch(0.85 0.1 205 / 0.45)", "$description": "Half a sub period of capacity left: bolt fill" },
+      "capacity-empty": { "light": "{color.line.strong}", "dark": "{color.line.strong}", "$description": "Spent capacity: bolt outline" },
+      "streak": { "light": "oklch(0.8 0.15 60)", "dark": "oklch(0.8 0.15 60)", "$description": "Streak flame" }
+    }
+  }
+}
