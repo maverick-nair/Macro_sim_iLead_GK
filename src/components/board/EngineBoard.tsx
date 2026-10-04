@@ -21,6 +21,7 @@ import { CommandPalette, type PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
+import { StyleSettingView, type StyleSettingLayout } from '../stylesetting/StyleSettingView';
 import { Composer } from './Composer';
 import { PeriodPanel } from './PeriodPanel';
 import { EventCard } from './EventCard';
@@ -65,6 +66,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const amount = useDays(unit);
   const [flow, setFlow] = useState<Flow | null>(null);
   const [draft, setDraft] = useState<Record<string, StyleKey>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
+  const [styleView, setStyleView] = useState<{ layout: StyleSettingLayout; summary: boolean }>({ layout: 'cards', summary: false });
   const [toast, setToast] = useState<string | null>(null);
   const [readIds, setReadIds] = useState<string[]>([]);
   const [legend, setLegend] = useState(false);
@@ -100,7 +103,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }, [ui]);
 
   // A new period clears the style draft and any half planned action.
-  useEffect(() => { setDraft({}); setFlow(null); }, [v.clock.period]);
+  useEffect(() => { setDraft({}); setNotes({}); setStyleView(x => ({ ...x, summary: false })); setFlow(null); }, [v.clock.period]);
 
   const styling = v.phase === 'style';
   const busy = intent.isPending;
@@ -235,7 +238,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }
 
   const chosen = v.members.filter(m => draft[m.id]).length;
-  const confirmStyles = () => { if (chosen === v.members.length) void send({ type: 'confirmStyles', styles: draft }); };
+  const confirmStyles = () => {
+    if (chosen !== v.members.length) return;
+    const given = Object.fromEntries(Object.entries(notes).filter(([, n]) => n.trim()));
+    void send({ type: 'confirmStyles', styles: draft, notes: Object.keys(given).length ? given : undefined });
+  };
 
   // ---- action drawer ----
   let drawer: ActionDrawerProps | null = null;
@@ -376,19 +383,36 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const hint: TeamBoardHint = picking ? { kind: 'picking' } : sm ? { kind: 'selected', name: sm.name } : { kind: 'idle' };
   const card = v.cards[0];
 
+  // Weekly style setting opens before any action (spec), as its own screen.
+  if (styling) {
+    return (
+      <>
+        <StyleSettingView
+          periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
+          sponsorName={v.sponsor.name} sponsorLine={v.sponsor.styleLine}
+          view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
+          onViewChange={m => setStyleView(x => (m === 'summary' ? { ...x, summary: true } : { layout: m, summary: false }))}
+          members={v.members.map(m => ({
+            id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
+            away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
+            stats: m.statsRevealed ? { skill: m.skill, morale: m.morale, trust: m.trust } : null,
+            lastStyle: m.lastStyle, lastReaction: m.lastReaction, style: draft[m.id] ?? null, rationale: notes[m.id] ?? ''
+          }))}
+          onStyle={(id, k) => setDraft(d => ({ ...d, [id]: k }))}
+          onRationale={(id, text) => setNotes(n => ({ ...n, [id]: text }))}
+          onConfirm={confirmStyles}
+          onBack={() => setStyleView(x => ({ ...x, summary: false }))}
+          confirmDisabled={busy || chosen < v.members.length}
+        />
+        <Toast message={toast} />
+      </>
+    );
+  }
+
   return (
     <div aria-label={t('board.aria')} className="relative flex flex-1 flex-col">
       <Hud {...hud} />
       <MetricsStrip {...strip} />
-      {styling && (
-        <div role="region" aria-label={t('board.style.confirm')} className="mx-6 mb-3 flex items-center gap-4 rounded-18 border border-accent-secondary bg-surface-card px-4 py-3">
-          <div className="flex flex-1 flex-col">
-            <b className="text-15">{t('board.style.title', { unit: periodUnit })}</b>
-            <span className="text-13 text-fg-secondary">{t('board.style.body', { done: chosen, total: v.members.length })}</span>
-          </div>
-          <Button variant="primary" size="md" disabled={chosen < v.members.length || busy} onClick={confirmStyles}>{t('board.style.confirm')}</Button>
-        </div>
-      )}
       {outcome}
       <div className="relative grid min-h-0 flex-1 grid-cols-(--il-board-columns)">
         {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}

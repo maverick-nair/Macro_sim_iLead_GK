@@ -1,9 +1,6 @@
 {
   "board.aria": "Main board",
   "board.target": "{n} {unit, select, year {year} month {month} week {week} day {day} other {period}} target",
-  "board.style.title": "How will you lead each person this {unit, select, year {year} month {month} week {week} day {day} other {period}}?",
-  "board.style.body": "Pick a style on every card. {done} of {total} chosen.",
-  "board.style.confirm": "Confirm styles",
   "board.style.locked": "Styles are set until the next {unit, select, year {year} month {month} week {week} day {day} other {period}}.",
   "board.block.locked": "Unlocks in {unit, select, year {year} month {month} week {week} day {day} other {period}} {n}",
   "board.block.cooldown": "Available again in {amount}",

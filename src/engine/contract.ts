@@ -151,7 +151,7 @@ export const EngineView = z.object({
   streak: z.number().int().min(0),
   periods: z.array(PeriodSummary),
   badges: z.array(z.object({ key: Id, earned: z.boolean(), hint: Text.nullable() })),
-  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
+  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, level: z.enum(['low', 'wavering', 'steady', 'confident', 'champion']), causes: z.array(z.object({ text: Text, delta: Num })) }),
   pendingReward: z.array(Id).nullable(),
   history: z.array(LogEntry)
 });

@@ -65,7 +65,7 @@ The prototype computes state in the UI, which breaks rule 1. These calculations 
 
 ## Design vs spec (behavior follows the spec unless you say otherwise)
 
-**D11. Skill bars on the board.** Open.
+**D11. Skill bars on the board.** Resolved by D39: the bars show once the profile has been opened, as the spec's member card says. The report's skill ratings are a different thing (leadership skills, M6).
 The spec says "skill ratings appear only in the report" (principle 4), and card stats should be hidden until a profile is first opened. The design shows Skill, Morale and Result bars on every board card from the start.
 Following the spec would visibly change the main board. I need a product call.
 
@@ -226,6 +226,22 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - Two questions for you: is the GenieKreator repo's `scoring-and-report.md` binding where it goes beyond the Design doc (trust starts at 50 for everyone, median banding)? And should the D30 trust rules that have no GK source stay as configurable defaults?
 
 **D45. Swap and reassign are options with their own pick rules.** Decided. "Swap roles" picks 2 people in different stages; "Reassign role" picks 1 person and a stage to move them to. The engine refuses a move into a full stage or out of a stage that would be left empty. The drawer shows the rules and the prerequisite nudge ("You have not assessed Justin for Conversion. Assess first, 1 day?").
+
+**D46. Weekly style setting on the engine.** Decided.
+- Style setting is its own screen at the start of each period, before any action, as the spec says. It replaced the M2 banner.
+- The cards show Skill, Morale and Trust, as the design does (not Result). Stats stay hidden until that person's profile has been opened (D39).
+- "6 of 10 styles set" shows only while some are unset; when all are set it is announced to screen readers only, so the design frames do not change.
+- The link to the style definitions is visible on focus only, since the definitions are already on screen.
+- Reasons typed per person go to the engine with the styles (`notes`), ready for the report's intent vs action insight. The voice note is a slot for M4.
+- After confirming, the sponsor's team message shows how the team took it, with reason chips. Three or more people moving the same way read as one chip ("6 people morale down").
+
+**D47. Profile panel on the engine.** Decided.
+- The timeline is the engine's history for that person, newest first, with each change and the participant's own words where there were any. Promises show open, kept or broken.
+- The career goal shows "Not shared yet. It may come up in conversation." until a conversation surfaces it, together with the hidden concern.
+- Live actions in the profile keep the design's compact tile without the voice and text icon the spec mentions, to keep frame b7 identical. Proposed: add the icon when the live shell lands in M4.
+- An away member's profile shows "In training" and a grey portrait, matching the card.
+
+**D48. Pushing to the GenieKreator repo.** Decided. `maverick-nair/Macro_sim_iLead_GK` holds the GenieKreator authoring monorepo on its own history (Next.js, pnpm, Prisma). The participant app is pushed to its own branch, `ilead-participant`, without touching that history. Moving it into that monorepo as `apps/participant`, with the engine as a shared package, is a later step to agree with that team.
 
 ## Blocked on missing docs
 

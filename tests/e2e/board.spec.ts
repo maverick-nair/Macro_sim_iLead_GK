@@ -20,17 +20,23 @@ async function dismissEvents(page: Page) {
   }
 }
 
+/** Weekly style setting: pick on every card, a reason for one, review the summary, confirm. */
 async function setStyles(page: Page, index = 1) {
-  await expect(page.getByRole('button', { name: 'Confirm styles' })).toBeDisabled();
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10);
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(index).click();
-  await page.getByRole('button', { name: 'Confirm styles' }).click();
-  await expect(page.getByRole('button', { name: 'Confirm styles' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Add a reason' }).first().click();
+  await page.keyboard.type('Kent is new and unsure');
+  await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'Review and confirm' }).click();
+  const summary = page.getByRole('dialog');
+  await expect(summary.getByRole('table')).toBeVisible();
+  await summary.getByRole('button', { name: 'Confirm styles' }).click();
+  await expect(page.getByText(/Styles are set for week/)).toBeVisible();
 }
 
 test('a week on the engine, from styles to the next week', async ({ page }) => {
   await page.goto('/?start=board');
   await expect(page.getByText('Open the profile to see stats').first()).toBeVisible();
-  await expect(page.getByText('Set everyone’s style first.').first().or(page.getByText("Set everyone's style first.").first())).toBeVisible();
   await setStyles(page);
 
   // Actions open once styles are set; costs read in days.
@@ -63,6 +69,6 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   const reward = page.getByText('Your sponsor offers you something');
   if (await reward.count()) await page.getByRole('dialog').getByRole('button').first().click();
   await page.getByRole('button', { name: 'Start week 2' }).click();
-  await expect(page.getByText(/^Week 2/).first()).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Confirm styles' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Review and confirm' })).toBeVisible();
+  await expect(page.getByText(/Week 2/).first()).toBeVisible();
 });

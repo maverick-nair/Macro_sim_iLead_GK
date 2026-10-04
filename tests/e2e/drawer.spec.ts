@@ -14,7 +14,8 @@ async function toBoard(page: Page) {
   await page.goto('/?start=board');
   await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10);
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
-  await page.getByRole('button', { name: 'Confirm styles' }).click();
+  await page.getByRole('button', { name: 'Review and confirm' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
   await expect(page.getByText(/Styles are set for week 1/)).toBeVisible();
 }
 

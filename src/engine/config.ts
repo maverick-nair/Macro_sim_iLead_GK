@@ -183,7 +183,11 @@ export const StorylineConfig = z.object({
   time: Time,
   stages: z.array(Stage).min(MIN_STAGES).max(MAX_STAGES),
   /** The participant's sponsor: sends notes, takes briefings, holds confidence. */
-  sponsor: z.object({ name: z.string().min(1), title: z.string().min(1), portrait: z.string().optional() }),
+  sponsor: z.object({
+    name: z.string().min(1), title: z.string().min(1), portrait: z.string().optional(),
+    /** The one line prompt over weekly style setting (spec). */
+    styleLine: Copy.default('To each their own. Your people need different things from you this week.')
+  }),
   members: z.array(Person).min(6).max(12),
   candidates: z.array(Person).default([]),
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),

@@ -85,7 +85,7 @@ export function buildView(sim: Sim) {
     streak: sim.streak,
     periods: sim.periods,
     badges: BADGES.map(b => ({ key: b.key, earned: sim.badges.includes(b.key), hint: b.hint })),
-    sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, level: SPONSOR_LEVELS[Math.min(4, Math.floor(sim.sponsor.value / 20))], causes: sim.sponsor.causes },
+    sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, styleLine: c.sponsor.styleLine, level: SPONSOR_LEVELS[Math.min(4, Math.floor(sim.sponsor.value / 20))], causes: sim.sponsor.causes },
     pendingReward: sim.pendingReward,
     history: sim.log
   };
