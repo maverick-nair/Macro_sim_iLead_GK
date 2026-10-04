@@ -31,6 +31,7 @@ Plan and status: `docs/PLAN.md`. Simulation rules: `docs/SIMULATION.md`. Design 
 
 ```
 src/
+  ai/         Streamed AI text: SSE parsing, mock token stream, useAiStream (docs/SPEECH.md)
   api/        Typed API layer: IleadApi interface, mock adapter (default), HTTP adapter
   app/        App shell (port of iLeadApp): state, navigation, overlays, toast, contract types
   components/ Token and catalog only components; `board/` is the engine driven board
@@ -41,6 +42,7 @@ src/
   gallery/    /screens and /states review canvases
   lib/css.ts  css() and pseudo() helpers, see below
   screens/    Onboarding, StyleSetting, Board, Live, WeekEnd, End, Report
+  speech/     Voice input: SpeechProvider, MediaRecorder and mock providers, useSpeech (docs/SPEECH.md)
   styles/     Generated token CSS, Tailwind theme, fonts, global keyframes
   stories/    Storybook stories
 tokens/       Token source: primitive, semantic, component and migration alias layers
@@ -57,7 +59,7 @@ All persistence and AI judging goes through `IleadApi` (`src/api/types.ts`):
 - With no configuration the app uses `createMockApi`, which serves the design's scenario in memory.
 - Set `VITE_ILEAD_API_URL` (see `.env.example`) to switch to `createHttpApi`. Its endpoint paths are a proposal, kept in `src/api/http.ts` so they are easy to align with the real service.
 
-Voice capture, NPC speech streaming and the waveform are simulated in `src/screens/live/useLiveSession.ts` (`simulateNpcSpeechTick`, `simulateMicCapture`, `simulateWaveformTick`), ready to be replaced by a speech service.
+Voice capture, NPC speech streaming and the waveform are simulated in `src/screens/live/useLiveSession.ts` (`simulateNpcSpeechTick`, `simulateMicCapture`, `simulateWaveformTick`), ready to be replaced by the speech layer in `src/speech/` and `src/ai/` (`docs/SPEECH.md`).
 
 ## Design tokens
 
