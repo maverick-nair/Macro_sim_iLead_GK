@@ -1,0 +1,7 @@
+{
+  "$description": "Easing curves beyond the base set. Durations stay on the D24 scale (duration.fast, base and slow).",
+  "easing": {
+    "overshoot": { "$value": "cubic-bezier(.2,.9,.3,1.2)", "$description": "A badge award landing" },
+    "overshoot-strong": { "$value": "cubic-bezier(.2,.9,.3,1.3)", "$description": "A star popping in" }
+  }
+}

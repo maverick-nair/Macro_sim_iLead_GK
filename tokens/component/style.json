@@ -5,7 +5,7 @@
     },
     "tooltip": {
       "bg": { "value": "{color.fg.primary}", "$description": "Inverted: the tooltip uses the text color as its fill" },
-      "fg": { "value": "{color.fg.on-accent}" },
+      "fg": { "value": "{color.fg.inverse}" },
       "shadow": { "value": "0 10px 30px {color.member.shadow-raised}" },
       "leading": { "value": "1.4", "$description": "Description line height" }
     }

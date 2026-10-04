@@ -6,8 +6,8 @@
     "drawer": {
       "width": { "value": "360px" },
       "offset": { "value": "72px", "$description": "Opens beside the rail" },
-      "shadow": { "value": "0 24px 64px oklch(0.05 0.03 280 / 0.45)" },
-      "enter": { "value": "ilIn 240ms ease" }
+      "shadow": { "value": "0 24px 64px {color.elevation.drawer}" },
+      "enter": { "value": "ilIn {duration.base} ease", "$description": "The design's 240ms, snapped to duration.base (D24)" }
     }
   }
 }

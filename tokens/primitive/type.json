@@ -1,0 +1,11 @@
+{
+  "$description": "Letter spacing scale. Every tracking value the screens use, so component tokens alias one source.",
+  "tracking": {
+    "logo": { "$value": "-0.03em", "$description": "Wordmark" },
+    "title": { "$value": "-0.02em", "$description": "Large headings and names" },
+    "headline": { "$value": "-0.01em", "$description": "Medium headlines" },
+    "label": { "$value": "0.06em", "$description": "Small uppercase column headers" },
+    "eyebrow": { "$value": "0.08em", "$description": "Small uppercase eyebrows and section labels" },
+    "eyebrow-wide": { "$value": "0.12em", "$description": "Celebration eyebrows" }
+  }
+}

@@ -12,10 +12,10 @@
       "ring": { "value": "0 0 0 3px {color.status.gain}", "$description": "The person the outcome is about" }
     },
     "eyebrow": {
-      "tracking": { "value": "0.08em" }
+      "tracking": { "value": "{tracking.eyebrow}" }
     },
     "headline": {
-      "tracking": { "value": "-0.01em" },
+      "tracking": { "value": "{tracking.headline}" },
       "leading": { "value": "1.25", "$description": "Mobile headline, wraps to two lines" }
     }
   }

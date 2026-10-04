@@ -9,7 +9,7 @@
  *
  * Baselines are cached in .visual-cache/ (git ignored). Diff images for failing frames land in
  * .visual-cache/diff/. A pixel differs when any channel is off by more than 40/255 and no pixel
- * within 1px in the other image matches it.
+ * within 1px in the other image matches it. Frames in ACCEPTED have a documented, larger allowance.
  */
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -28,11 +28,21 @@ const PAGES = [
 ];
 /**
  * Strict by default: 0.05% of a frame is about 650 pixels at 1440x900, less than one short label.
- * Frames that are dynamic by design get 0.4%: p1 is the live prototype (clock running), z5 and z14
- * draw a random voice waveform, and x2 blurs the board behind a dialog, which rasterizes unstably.
  */
 const THRESHOLD = 0.0005;
-const DYNAMIC: Record<string, number> = { p1: 0.004, z5: 0.004, z14: 0.004, x2: 0.004 };
+
+/**
+ * Accepted deviations. A frame listed here may differ from the prototype up to `maxDiff`, and only
+ * for the decision named in `reason` (docs/DECISIONS.md). Every run prints the allowances it used,
+ * and says when one was not needed. Every other frame stays at THRESHOLD.
+ * Add an entry only with a logged decision, and keep `maxDiff` just above the measured difference.
+ */
+const ACCEPTED: Record<string, { maxDiff: number; reason: string }> = {
+  p1: { maxDiff: 0.004, reason: 'D20 dynamic: the live prototype frame, its clock keeps running' },
+  z5: { maxDiff: 0.004, reason: 'D20 dynamic: random voice waveform' },
+  z14: { maxDiff: 0.004, reason: 'D20 dynamic: random voice waveform' },
+  x2: { maxDiff: 0.004, reason: 'D20 dynamic: the board blurred behind a dialog rasterizes unstably' }
+};
 
 const args = process.argv.slice(2);
 const refresh = args.includes('--refresh');
@@ -139,21 +149,33 @@ async function main() {
   fs.mkdirSync(path.join(cache, 'diff'), { recursive: true });
 
   let failed = 0;
+  const used: string[] = [];
+  const allIds = new Set<string>();
   for (const pg of PAGES) {
     const protoDir = path.join(cache, 'proto', pg.key), appDir = path.join(cache, 'app', pg.key);
     if (refresh || !fs.existsSync(protoDir)) await shoot(page, `http://localhost:${proto.port}/${encodeURIComponent(pg.proto)}`, protoDir, null);
     const known = fs.readdirSync(protoDir).map(f => f.replace('.png', ''));
+    for (const id of known) allIds.add(id);
     const ids = only.size ? known.filter(id => only.has(id)) : known;
     if (!ids.length) continue;
     await shoot(page, appUrl + pg.app, appDir, ids);
     for (const id of ids) {
-      const limit = DYNAMIC[id] ?? THRESHOLD;
+      const accepted = ACCEPTED[id];
+      const limit = accepted?.maxDiff ?? THRESHOLD;
       const r = diff(path.join(protoDir, `${id}.png`), path.join(appDir, `${id}.png`), path.join(cache, 'diff', `${id}.png`), limit);
       const ok = r.frac <= limit;
       if (!ok) failed++;
-      console.log(`${ok ? 'ok  ' : 'FAIL'} ${id.padEnd(4)} ${(r.frac * 100).toFixed(2)}% ${r.size}`);
+      let note = '';
+      if (accepted) {
+        note = r.frac > THRESHOLD ? `accepted up to ${(limit * 100).toFixed(2)}%: ${accepted.reason}` : `within the strict threshold; allowance not needed this run: ${accepted.reason}`;
+        used.push(`  ${id.padEnd(4)} up to ${(limit * 100).toFixed(2)}%  ${accepted.reason}`);
+      }
+      console.log(`${ok ? 'ok  ' : 'FAIL'} ${id.padEnd(4)} ${(r.frac * 100).toFixed(2)}% ${r.size}${note ? ` (${note})` : ''}`);
     }
   }
+  if (used.length) console.log(`Accepted deviations (every other frame is held to ${(THRESHOLD * 100).toFixed(2)}%):\n${used.join('\n')}`);
+  const stale = Object.keys(ACCEPTED).filter(id => allIds.size && !allIds.has(id));
+  if (stale.length) console.log(`Allowances for frames that do not exist: ${stale.join(', ')}. Remove them from ACCEPTED.`);
   if (errors.length) console.log('page errors:', errors.slice(0, 5));
   await browser.close();
   await vite.close();

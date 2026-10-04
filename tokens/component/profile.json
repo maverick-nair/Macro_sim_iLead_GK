@@ -2,17 +2,17 @@
   "profile": {
     "panel": {
       "columns": { "value": "minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr)", "$description": "Profile, your interactions, take an action" },
-      "shadow": { "value": "0 24px 64px oklch(0.05 0.03 280 / 0.5)" },
-      "enter": { "value": "ilIn 260ms ease" }
+      "shadow": { "value": "0 24px 64px {color.elevation.panel}" },
+      "enter": { "value": "ilIn {duration.base} ease", "$description": "The design's 260ms, snapped to duration.base (D24)" }
     },
     "portrait": {
       "ring": { "value": "0 0 0 3px {color.line.strong}", "$description": "Ring around the 120px portrait" }
     },
     "name": {
-      "tracking": { "value": "-0.02em" }
+      "tracking": { "value": "{tracking.title}" }
     },
     "fact": {
-      "columns": { "value": "110px 1fr", "$description": "Fact label, value" }
+      "columns": { "value": "110px minmax(0,1fr)", "$description": "Fact label, value. Also the CV card in an interview (liveformats.fact.columns)" }
     },
     "timeline": {
       "columns": { "value": "12px 1fr", "$description": "Dot and rail, entry" }

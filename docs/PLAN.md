@@ -16,7 +16,9 @@
 - **Docs:**
   - The Participant Interface Spec only.
   - The Teardown, the Simulation Design and the GenieKreator Configuration Spec are missing (see DECISIONS D19).
-- **Missing from the brief's stack:** Radix, Framer Motion, Zod, TanStack Query, Zustand, visx, Playwright tests, axe and i18n.
+- **Missing from the brief's stack at M0:** Radix, Framer Motion, Zod, TanStack Query, Zustand, visx, Playwright tests, axe and i18n.
+  - Since added: Radix (dialog, toggle group), Zod, TanStack Query, Zustand, Playwright with axe, and the ICU catalog (`intl-messageformat`).
+  - Still missing: Framer Motion and visx (visx comes with the report charts in M6).
 
 **Built in M0:**
 - **Token pipeline.**
@@ -51,15 +53,19 @@
 - The UI sends intents (set style, plan action, submit turn, end week, pause) and renders engine state, including reason chips and evidence.
 - The game logic in the prototype moves into the mock (DECISIONS D10).
 
-**State:** Zustand holds UI state only: open drawer, selection, palette, input mode. Engine state lives in TanStack Query.
+**State:**
+- Zustand (`src/app/uiStore.ts`) holds UI state only: the selected people, the chosen action and option, the open panel (inbox or profile), whether the outcome's "See why" is open, and whether reason chips show numbers.
+- The command palette and the action drawer's flow (picks, the prerequisite nudge) are local state in `src/components/board/EngineBoard.tsx`. Settings, such as the input mode, live in the app shell.
+- Engine state lives in TanStack Query (`src/engine/react.tsx`).
 
 **Strings:**
-- `src/i18n/messages/en.json` holds ICU messages, read through a small `t()` with `Intl` formatting and a `dir` attribute for RTL.
+- ICU messages live in one file per feature, `src/i18n/messages/en/<area>.json`, merged in `messages/en/index.ts`. They are read through a small `t()` with `Intl` formatting.
+- The `I18nProvider` wrapper sets `lang` and `dir` (RTL locales get `rtl`).
 - The catalog lint (DECISIONS D9) runs in Vitest, and `npm run build` runs it too.
 
 **Performance:**
-- The board route stays under 200 KB gzipped. The mock engine, the galleries and every screen past onboarding load on demand.
-- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It is 178 KB gzipped at M4.
+- The board route's initial JS stays under 200 KB gzipped. The mock engine, the live screen, the galleries and every ported screen past onboarding load on demand.
+- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4 and is 176 KB now (4 Oct 2026).
 
 ## Status
 

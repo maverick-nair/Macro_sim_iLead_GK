@@ -389,8 +389,8 @@ Conditions are checked each sub-period. Weeks are expressed as fractions of the 
 
 | Trigger | Condition | Effect | At most |
 |---|---|---|---|
-| Casual leave | Result over 70 and another member in the same stage | Away 5 sub-periods | once |
-| Medical leave | Result over 70, at about 30%, 60% and 90% of the run | Away 2 sub-periods | once |
+| Casual leave | Result over 70 and another member in the same stage, in the first sub-period of the periods at about 3/8, 5/8 and 7/8 of the run | Away 5 sub-periods | once |
+| Medical leave | Result over 70, in the second sub-period of the periods at about 25%, 50% and 75% of the run | Away 2 sub-periods | once |
 | Clueless team member | Reassigned last period without training | Skill −10 | once |
 | Demoralized member | Result under 20, after 30% of the run | Message, morale risk | once |
 | Lack of training | Result falling 6 periods in a row (scaled) | −2 / −6 / −8 | twice |
@@ -521,7 +521,7 @@ The group report measures [M] are listed in `docs/ilead-1`.
 
 ## 9. Calibration ("make it playable")
 
-The starting numbers are tuned per storyline by `npm run calibrate -- <storyline>`. It runs the engine thousands of times under three policies:
+The funnel numbers are tuned per storyline by `npm run calibrate -- <storyline>` (`scripts/calibrate.ts`). It runs the engine a few thousand times under three policies:
 
 | Policy | Behaviour | Required result (share of target) |
 |---|---|---|
@@ -530,10 +530,11 @@ The starting numbers are tuned per storyline by `npm run calibrate -- <storyline
 | Good | Sets the needed style each period, picks actions that address low metrics, conversations at Adequate or better | 100 to 125%, reached in 80% or more of runs |
 
 **What it adjusts, in order:**
-1. `performanceThreshold` and `inputPerSubPeriod`, until passive play sits in its band.
-2. `target` (rounded to a clean number in the storyline's currency), until good play sits in its band.
-3. Starting member values, only when needed. It nudges values so that at least one member starts in each style quadrant and at least two members start under 30 in some metric, so there is someone to help. Each nudge is at most ±8 from the authored value.
+1. `performanceThreshold`, the Model doc's funnel buffer. It is bisected until passive play earns about half of what good play earns (medians), because the compounding across stages is what makes or breaks playability.
+2. `money.inputPerSubPeriod`, the leads entering the funnel. Value is linear in input, so it is scaled to put good play's median at about 110% of target.
 
-The output is a report (`calibration/<storyline>.md`) with the before and after values. The engine refuses an uncalibrated storyline in production builds.
+The authored `target` is the client's number and stays as it is. Starting member values are never changed: the script only reports the starting mix, which passes when all four needed styles are present and at least two members start under the low threshold in some metric, so there is someone to help.
+
+It then plays 200 runs per policy and checks every band. The output is a report (`calibration/<storyline>.md`) with the before and after values. The tuned values are written back to the storyline with `calibrated` set to whether every band and the member mix pass; when one fails, the script also exits with an error. `--check` only measures and reports. The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
 
 For the Sales Elevator default, calibration starts from the workbook's starting values; the prototype's on-screen numbers are only design fixtures for the `/screens` gallery.

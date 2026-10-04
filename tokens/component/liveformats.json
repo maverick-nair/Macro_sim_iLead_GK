@@ -1,13 +1,13 @@
 {
   "liveformats": {
     "typing": {
-      "dot": { "value": "ilDot 1.2s infinite", "$description": "Typing and thinking dots, as on the 1:1 thinking pill" },
+      "dot": { "value": "{liveshell.roleplay.dot-1}", "$description": "Typing and thinking dots, as on the 1:1 thinking pill" },
       "delay-2": { "value": "0.15s", "$description": "Second dot" },
       "delay-3": { "value": "0.3s", "$description": "Third dot" }
     },
     "enter": { "value": "ilIn {duration.base} ease", "$description": "A new divider or result line arriving" },
     "eyebrow": {
-      "tracking": { "value": "0.08em", "$description": "Small uppercase card titles, as the brief card" }
+      "tracking": { "value": "{tracking.eyebrow}", "$description": "Small uppercase card titles, as the brief card" }
     },
     "thread": {
       "max-width": { "value": "760px", "$description": "Readable chat column inside a wide stage" }
@@ -16,7 +16,7 @@
       "listening": { "value": "0 0 0 3px {color.status.gain-soft}", "$description": "Halo around the chat composer while a voice note records, as on the live reply bar" }
     },
     "fact": {
-      "columns": { "value": "110px minmax(0,1fr)", "$description": "CV card: field, value. Same as the profile facts" }
+      "columns": { "value": "{profile.fact.columns}", "$description": "CV card: field, value. Same as the profile facts" }
     },
     "interview": {
       "columns": { "value": "minmax(0,0.85fr) minmax(0,1.15fr)", "$description": "Candidate and CV, then transcript and notes" }

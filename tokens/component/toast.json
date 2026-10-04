@@ -4,15 +4,15 @@
       "value": "{color.fg.primary}"
     },
     "fg": {
-      "value": "light-dark(#fff, #0A081B)"
+      "value": "{color.fg.inverse}"
     },
     "max-width": {
       "value": "90%",
       "$description": "Long messages wrap instead of reaching the screen edges"
     },
     "enter": {
-      "value": "ilIn 200ms ease",
-      "$description": "Rises in from below"
+      "value": "ilIn {duration.base} ease",
+      "$description": "Rises in from below. The design's 200ms, snapped to duration.base (D24)"
     }
   }
 }

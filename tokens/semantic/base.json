@@ -109,14 +109,14 @@
         "$description": "Bars, selected state, links"
       },
       "secondary": {
-        "light": "{color.cyan.600}",
+        "light": "{color.cyan.520}",
         "dark": "{color.brand.cyber-cyan}",
         "overridableBy": "client-acc-2",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
-        "$description": "Eyebrows, icons, focus"
+        "$description": "Eyebrows, text links, icons, focus. Used as 12px text, so it needs 4.5:1 (D8)"
       },
       "soft": {
         "light": "{color.blue.950}",
@@ -130,11 +130,11 @@
     },
     "status": {
       "attention": {
-        "light": "{color.amber.550}",
+        "light": "{color.amber.530}",
         "dark": "{color.amber.840}",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
         "$description": "Needs attention, under 30"
       },
@@ -150,7 +150,7 @@
         "dark": "{color.brand.mint-green}",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
         "$description": "Positive delta"
       },
@@ -166,7 +166,7 @@
         "dark": "{color.coral.780}",
         "contrast": {
           "against": "color.surface.solid",
-          "min": 3
+          "min": 4.5
         },
         "$description": "Negative delta"
       },
