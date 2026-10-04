@@ -1,6 +1,6 @@
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
-import { applyEffect, applyTrust, clamp, mismatchType, neededStyle, styleDifference, type Mismatch, type Style, type Triple } from './rules';
+import { applyEffect, applyTrust, clamp, neededStyle, styleDifference, type Mismatch, type Style, type Triple } from './rules';
 import { runEvents, scheduleEvents } from './events';
 import { checkBadges } from './score';
 import type { Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';

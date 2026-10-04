@@ -20,10 +20,10 @@ export function moodOf(m: MemberSim, sim: Sim): Mood {
   return 'neutral';
 }
 
-const SPONSOR_LEVELS = ['low', 'wavering', 'steady', 'confident', 'champion'] as const;
+type SponsorLevel = 'low' | 'wavering' | 'steady' | 'confident' | 'champion';
 
 /** Sponsor level words from confidence: below the check in line is low, at the unlock line confident. */
-function sponsorLevel(sim: Sim): (typeof SPONSOR_LEVELS)[number] {
+function sponsorLevel(sim: Sim): SponsorLevel {
   const v = sim.sponsor.value, s = sim.config.gamification.sponsor;
   return v < s.checkInBelow ? 'low' : v < 50 ? 'wavering' : v < s.unlockAt ? 'steady' : v < 85 ? 'confident' : 'champion';
 }
