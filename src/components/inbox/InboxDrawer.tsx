@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useI18n } from '../../i18n';
 import type { SubPeriodUnit } from '../action/days';
 import { SENDER_TONE, SenderFace, type InboxSender } from './sender';
@@ -17,6 +18,8 @@ export interface InboxDrawerItem {
   due: string | null;
   /** `reply` opens the conversation, `impact` opens the news event. */
   cta: 'reply' | 'impact';
+  /** False hides Later: setting the item aside would carry it past its due point. Defaults to true. */
+  later?: boolean;
 }
 
 export interface InboxDrawerProps {
@@ -54,7 +57,7 @@ function Item({ it, onOpen, onLater }: { it: InboxDrawerItem; onOpen: () => void
       <div className="flex items-center gap-2">
         {it.urgent && <span className="text-12 font-700 text-status-attention">{it.due ? t('inbox.pinnedDue', { due: it.due }) : t('inbox.pinned')}</span>}
         <span className="flex-1" />
-        <button type="button" onClick={onLater} className={`${pill} border border-solid border-line-default bg-transparent text-fg-primary`}>{t('inbox.later')}</button>
+        {it.later !== false && <button type="button" onClick={onLater} className={`${pill} border border-solid border-line-default bg-transparent text-fg-primary`}>{t('inbox.later')}</button>}
         <button type="button" onClick={onOpen} className={`${pill} border-0 bg-brand text-brand-deep-space`}>{t('inbox.cta', { cta: it.cta })}</button>
       </div>
     </div>
@@ -64,13 +67,36 @@ function Item({ it, onOpen, onLater }: { it: InboxDrawerItem; onOpen: () => void
 /**
  * The inbox, opened from the rail beside the board: messages from the team, the sponsor and the
  * news feed, pinned ones first marked with their deadline. Each can be answered now or set aside.
+ * A non modal dialog: focus moves in when it opens, Escape closes it, and focus goes back to the
+ * opener (the rail) when it closes.
  */
-export function InboxDrawer({ open, subPeriodUnit, items, sponsorName, onClose, onOpen, onLater }: InboxDrawerProps) {
+export function InboxDrawer(props: InboxDrawerProps) {
+  return props.open ? <OpenDrawer {...props} /> : null;
+}
+
+function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLater }: InboxDrawerProps) {
   const { t } = useI18n();
-  if (!open) return null;
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    el?.focus({ preventScroll: true });
+    return () => {
+      // Back to the opener, unless focus already moved on (a conversation opened from the inbox).
+      const active = document.activeElement;
+      const lost = !active || active === document.body || !!el?.contains(active);
+      if (lost && opener && opener !== document.body && opener.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, []);
+  const onKeyDown = (e: { key: string; stopPropagation: () => void }) => {
+    if (e.key !== 'Escape') return;
+    e.stopPropagation();
+    onClose();
+  };
   return (
-    <div role="dialog" aria-label={t('inbox.title')}
-      className="absolute top-0 bottom-6 left-(--il-inbox-drawer-offset) z-30 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden rounded-22 border border-line-strong bg-surface-material shadow-(--il-inbox-drawer-shadow) backdrop-blur-20">
+    // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the dialog
+    <div ref={ref} role="dialog" aria-label={t('inbox.title')} tabIndex={-1} onKeyDown={onKeyDown}
+      className="absolute top-0 bottom-6 left-(--il-inbox-drawer-offset) z-30 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden rounded-22 border border-line-strong bg-surface-material shadow-(--il-inbox-drawer-shadow) outline-0 backdrop-blur-20">
       <div className="flex items-center justify-between border-b border-line-default px-4.5 py-4">
         <h2 className="m-0 text-18 font-700">{t('inbox.title')}</h2>
         <button type="button" onClick={onClose} aria-label={t('inbox.close')}

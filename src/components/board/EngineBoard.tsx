@@ -1,8 +1,9 @@
-import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Block, EngineView, Intent, MemberView, MetricChange, StyleKey } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
 import { useEngineView, useIntent } from '../../engine/react';
 import { useUi } from '../../app/uiStore';
+import { Button } from '../../ds/Button';
 import { MoneyProvider, useMoney } from '../../i18n/money';
 import { useI18n } from '../../i18n';
 import { Hud, type HudProps } from '../hud/Hud';
@@ -21,6 +22,8 @@ import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView, type StyleSettingLayout } from '../stylesetting/StyleSettingView';
+import { ReactingScreen } from '../liveshell/ReactingScreen';
+import type { LivePerson } from '../liveshell/types';
 // The live screen loads when a conversation starts, so the board's first load stays in budget.
 const EngineLive = lazy(() => import('./EngineLive').then(m => ({ default: m.EngineLive })));
 import { PeriodPanel } from './PeriodPanel';
@@ -34,10 +37,21 @@ import { teamChips, type Chip } from './chips';
  */
 const PLACEHOLDER = '/assets/npc/placeholder.svg';
 const TOAST_MS = 3400;
+/** "The team is reacting" lasts at least this long, so the evaluation reads as a moment (D53). */
+export const REACTING_MS = 1600;
 const first = (n: string) => n.split(' ')[0];
+/** The outcome panel's headline, made focusable, when the outcome is on screen. */
+const headlineIn = (panel: HTMLElement | null) => {
+  const h = panel?.querySelector<HTMLElement>('h3');
+  if (h && !h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
+  return h ?? null;
+};
 
 /** The action being planned: which drawer card is chosen, who is picked, and whether the nudge was waved off. */
 interface Flow { key: string; choice: string | null; picks: string[]; nudgeOk: boolean }
+
+/** Ends a live interaction: the board shows "The team is reacting" and holds the outcome until it has had its moment. */
+export type FinishLive = (intent: Extract<Intent, { type: 'endInteraction' | 'submitInteraction' | 'chooseCandidate' }>, people: LivePerson[]) => Promise<boolean>;
 
 export interface EngineBoardProps {
   /** Client theme: the HUD shows the client's logo. */
@@ -52,15 +66,57 @@ export interface EngineBoardProps {
   onSettings: () => void;
 }
 
+/** The catalog's words for an engine that could not be reached or answered nonsense. */
+const loadCode = (e: unknown) => (e instanceof EngineError ? (e.code === 'badPayload' ? 'badPayload' : e.code === 'network' ? 'network' : 'other') : 'network');
+
 export function EngineBoard(props: EngineBoardProps) {
   const q = useEngineView();
   const { t } = useI18n();
-  if (!q.data) return <div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>;
+  if (!q.data) {
+    return (
+      <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
+        <h1 className="sr-only">{t('board.h1', { view: 'loading' })}</h1>
+        {q.isError ? (
+          <div role="alert" className="flex flex-col items-center gap-3 text-center text-14">
+            <span>{t('board.error', { code: loadCode(q.error) })}</span>
+            <Button variant="primary" size="md" disabled={q.isFetching} onClick={() => void q.refetch()}>{t('board.retry')}</Button>
+          </div>
+        ) : <div role="status" className="text-14 text-fg-secondary">{t('board.loading')}</div>}
+      </main>
+    );
+  }
   return (
     <MoneyProvider money={q.data.money}>
       <Board view={q.data} {...props} />
     </MoneyProvider>
   );
+}
+
+/**
+ * The team board's region. When the stage columns would get narrower than a card can be (a narrow
+ * window, 200% text), they keep their width and scroll sideways inside this region, which then
+ * becomes a focusable, named scroll region. At the designed 1440 width nothing changes.
+ */
+function TeamScroll({ stages, label, children }: { stages: number; label: string; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [scrolls, setScrolls] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === 'undefined') return;
+    const check = () => setScrolls(el.scrollWidth > el.clientWidth + 1);
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    if (el.firstElementChild) ro.observe(el.firstElementChild);
+    check();
+    return () => ro.disconnect();
+  }, []);
+  // A card column at least 44 spacing units wide, the 3 unit gaps between, and the board's 5 unit padding each side.
+  const minWidth = `calc(var(--spacing) * ${44 * stages + 3 * Math.max(0, stages - 1) + 10})`;
+  const base = 'col-start-2 row-start-1 flex min-h-0 min-w-0 flex-col';
+  const inner = <div className="flex flex-1 flex-col" style={{ minWidth }}>{children}</div>;
+  return scrolls
+    ? <div ref={ref} role="region" aria-label={label} tabIndex={0} className={`${base} overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary`}>{inner}</div>
+    : <div ref={ref} className={base}>{inner}</div>;
 }
 
 function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
@@ -75,42 +131,75 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [styleView, setStyleView] = useState<{ layout: StyleSettingLayout; summary: boolean }>({ layout: 'cards', summary: false });
   const [toast, setToast] = useState<string | null>(null);
+  /** News items read here. Messages that need an answer stay with the engine. */
   const [readIds, setReadIds] = useState<string[]>([]);
+  /** Set aside with Later: hidden until the next sub-period (id to the clock it was set aside at). */
+  const [snoozed, setSnoozed] = useState<Record<string, string>>({});
   const [legend, setLegend] = useState(false);
   const [scoreOpen, setScoreOpen] = useState(false);
   const [sponsorOpen, setSponsorOpen] = useState(false);
   const [pal, setPal] = useState(false);
   const [query, setQuery] = useState('');
-  const [reveal, setReveal] = useState<string | null>(null);
+  /** Whose reaction is showing, for which outcome: a new outcome starts with none. */
+  const [reveal, setReveal] = useState<{ outcome: string; id: string } | null>(null);
+  /** "The team is reacting", for one interaction. The outcome waits behind it until its moment has passed. */
+  const [reacting, setReacting] = useState<{ id: string; people: LivePerson[] } | null>(null);
+  /** At the end of the run the results can be closed to look at the board, read only. */
+  const [resultsOpen, setResultsOpen] = useState(true);
+  /** The outcome headline, for screen readers, when focus cannot move to it (an action is being planned). */
+  const [announce, setAnnounce] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const inFlight = useRef(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const h1Ref = useRef<HTMLHeadingElement>(null);
+  const outcomeRef = useRef<HTMLDivElement>(null);
+  const lastFocus = useRef<Element | null>(null);
+  /** The dialog the last focused element was in, if any: focus stays in it when an item inside goes away. */
+  const lastDialog = useRef<HTMLElement | null>(null);
+  /** Where focus should go the next time it is lost, when somewhere better than the default is known. */
+  const focusHint = useRef<(() => HTMLElement | null | undefined) | null>(null);
+  const paletteOk = useRef(false);
 
-  const say = (msg: string) => {
+  const say = useCallback((msg: string) => {
     setToast(msg);
     clearTimeout(toastTimer.current);
     toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
-  };
+  }, []);
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  /** Sends one intent. A second click while one is on its way is ignored, so nothing is sent twice. */
   const send = async (i: Intent) => {
+    if (inFlight.current) return null;
+    inFlight.current = true;
     try {
       return await intent.mutateAsync(i);
     } catch (e) {
       say(t('board.error', { code: e instanceof EngineError ? e.code : 'other' }));
       return null;
+    } finally {
+      inFlight.current = false;
     }
   };
 
+  // Keys. The palette (Ctrl or Cmd K) is for the plain board only: not during style setting, a
+  // conversation, or with a modal open. The handler reads the store directly so it never re-binds.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setQuery(''); setPal(true); }
-      if (e.key === 'Escape') { setFlow(null); setLegend(false); ui.openPanel('none'); }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        if (!paletteOk.current) return;
+        e.preventDefault(); setQuery(''); setPal(true);
+      }
+      if (e.key === 'Escape') { setFlow(null); setLegend(false); useUi.getState().openPanel('none'); }
     };
     window.addEventListener('keydown', onKey);
-    return () => { window.removeEventListener('keydown', onKey); clearTimeout(toastTimer.current); };
-  }, [ui]);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // A new period clears the style draft and any half planned action.
   useEffect(() => { setDraft({}); setNotes({}); setStyleView(x => ({ ...x, summary: false })); setFlow(null); }, [v.clock.period]);
 
   const styling = v.phase === 'style';
+  const ended = v.phase === 'ended';
   const busy = intent.isPending;
   const member = (id: string) => v.members.find(m => m.id === id);
   const action = (key: string) => v.actions.find(a => a.key === key);
@@ -139,7 +228,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       case 'noCover': return t('board.block.noCover', { stage: stageName(b.stage) });
       case 'teamFull': return t('board.block.teamFull');
       case 'liveCap': return t('board.block.liveCap', { cap: b.cap, unit: periodUnit });
-      case 'stageFull': return t('board.error', { code: 'stageFull' });
+      case 'stageFull': return t('board.block.stageFull', { stage: stageName(b.stage) });
     }
   };
   const block = (b: Block | null): ActionBlock | undefined => {
@@ -150,26 +239,35 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const blockLine = (b: Block | null) => (!b ? '' : b.reason === 'capacity' ? t('action.blocked.days', { need: amount(b.need), have: amount(b.have) }) : blockText(b));
 
   type ActionV = EngineView['actions'][number];
+  type Choice = { id: string; option: ActionV['options'][number]; stage: string | null; stageBlocked: Block | null };
   /**
-   * What the drawer offers: one card per option, except an option where you pick a stage
-   * (reassign), which becomes one card per stage it could move to.
+   * What the drawer offers: one card per option, except an option where you pick a stage (reassign,
+   * assess), which becomes one card per stage the engine lists for it. Stages the engine says cannot
+   * take anyone stay on the list, unavailable, with the reason. The picked person's own stage is not
+   * a move, so it is left out.
    */
-  const choicesOf = (a: ActionV, picks: string[]) => a.options.flatMap(o => o.pickStage
-    ? v.funnel.filter(st => !picks.some(id => member(id)?.stage === st.key)).map(st => ({ id: `${o.key}@${st.key}`, option: o, stage: st.key as string | null }))
-    : [{ id: o.key, option: o, stage: null as string | null }]);
+  const choicesOf = (a: ActionV, picks: string[]): Choice[] => a.options.flatMap(o => o.pickStage
+    ? (o.stages ?? v.funnel.map(st => ({ key: st.key, blocked: null }))).filter(st => !picks.some(id => member(id)?.stage === st.key))
+        .map(st => ({ id: `${o.key}@${st.key}`, option: o, stage: st.key as string | null, stageBlocked: st.blocked }))
+    : [{ id: o.key, option: o, stage: null, stageBlocked: null }]);
   const limits = (a: ActionV, choice: { option: ActionV['options'][number] } | undefined) => choice?.option.targets ?? a.targets;
+
+  /** Remembers how to get back to an action's tile once its drawer closes. */
+  const tileFocus = (name: string) => () => Array.from(mainRef.current?.querySelectorAll<HTMLButtonElement>('aside button') ?? []).find(b => b.textContent?.includes(name));
 
   const pick = (key: string, memberId: string | null) => {
     const a = action(key);
-    if (!a || styling) return;
+    if (!a || styling || ended) return;
     ui.openPanel('none');
     const picks = memberId ? [memberId] : [];
-    const choices = choicesOf(a, picks);
+    const choices = choicesOf(a, picks).filter(c => !c.stageBlocked);
     setFlow({ key, choice: choices.length === 1 ? choices[0].id : null, picks, nudgeOk: false });
   };
   const tile = (key: string, memberId: string | null): ActionTileProps => {
     const a = action(key)!;
-    const b = styling ? { reason: 'locked' as const, text: t('board.error', { code: 'wrongPhase' }) } : block(memberId ? a.blockedFor[memberId] ?? null : a.blocked);
+    const b = ended ? { reason: 'locked' as const, text: t('board.ended.locked') }
+      : styling ? { reason: 'locked' as const, text: t('board.error', { code: 'wrongPhase' }) }
+      : block(memberId ? a.blockedFor[memberId] ?? null : a.blocked);
     return { name: a.name, kind: a.kind, days: a.cost, block: b, onPick: () => { if (!b) pick(key, memberId); } };
   };
 
@@ -190,6 +288,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       if (same) return t('board.pick.sameStage', { name: first(same.name) });
     }
     return undefined;
+  };
+
+  const closeFlow = () => {
+    if (fa) focusHint.current = tileFocus(fa.name);
+    setFlow(null);
   };
 
   const clickCard = (m: MemberView) => {
@@ -268,8 +371,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const names = f.picks.map(id => first(member(id)?.name ?? ''));
     const list = names.length > 1 ? t('action.list.pair', { rest: names.slice(0, -1).join(', '), last: names[names.length - 1] }) : names[0] ?? '';
     const cost = choice?.option.cost ?? fa.cost;
-    const label = (c: (typeof choices)[number]) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
-    const detail = (c: (typeof choices)[number]) => [
+    const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
+    const detail = (c: Choice) => [
+      c.stageBlocked ? blockLine(c.stageBlocked) : '',
       c.option.blocked ? blockLine(c.option.blocked) : '',
       c.option.cost !== fa.cost ? t('board.option.cost', { cost: amount(c.option.cost) }) : '',
       c.option.away ? t('board.option.away', { amount: amount(c.option.away) }) : '',
@@ -288,8 +392,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const isStatic = fa.kind !== 'live';
     drawer = {
       name: fa.name, kind: fa.kind, days: cost, description: fa.description,
-      options: choices.length > 1 ? choices.map(c => ({ name: label(c), detail: detail(c) })) : undefined,
-      option: choice ? choices.indexOf(choice) : null, onOption: i => setFlow({ ...f, choice: choices[i].id, nudgeOk: false }),
+      options: choices.length > 1 ? choices.map(c => ({ name: label(c), detail: detail(c), disabled: !!c.stageBlocked })) : undefined,
+      option: choice ? choices.indexOf(choice) : null,
+      onOption: i => { if (!choices[i].stageBlocked) setFlow({ ...f, choice: choices[i].id, nudgeOk: false }); },
       people: picking ? { mode: 'pick', max: maxPick, limit: minPick === maxPick ? t('board.pick.exact', { n: maxPick }) : t('board.pick.range', { min: minPick, max: maxPick }) } : f.picks.length ? { mode: 'with' } : { mode: 'who' },
       picks: f.picks.map(id => { const m = member(id); return { id, name: m?.name ?? '', img: img(m) }; }),
       nudge: unassessed && pre ? {
@@ -302,34 +407,44 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       } : undefined,
       summary: t('board.summary', { action: fa.name, option: isStatic && choice && choices.length > 1 ? label(choice) : 'none', list: list || 'none', cost: amount(cost) }),
       cta: fa.kind === 'static' ? 'confirm' : fa.format === 'email' ? 'composer' : 'start',
-      canConfirm: !busy && !unassessed && f.picks.length >= minPick && f.picks.length <= maxPick && (choices.length <= 1 || !!choice) && !choice?.option.blocked,
+      canConfirm: !busy && !unassessed && f.picks.length >= minPick && f.picks.length <= maxPick && (choices.length <= 1 || !!choice) && !choice?.option.blocked && !choice?.stageBlocked,
       onConfirm: async () => {
         const r = await send({ type: 'planAction', action: fa.key, option: choice?.option.key, memberIds: f.picks, stage: choice?.stage ?? undefined });
         if (!r) return;
         setFlow(null);
-        if (!r.interactionId) say(t('board.planned', { action: fa.name }));
+        // A decision shows its outcome panel (with reasons); a toast only when the engine sent none.
+        if (!r.interactionId && !r.view.outcome) say(t('board.planned', { action: fa.name }));
       },
-      onBack: () => setFlow(null)
+      onBack: closeFlow
     };
   }
 
   // ---- inbox ----
-  const inbox = v.inbox.filter(x => !readIds.includes(x.id));
+  const stamp = `${v.clock.period}:${v.clock.subPeriod}`;
+  /** Later sets a message aside until the next sub-period, never past the point it is due. */
+  const canLater = (x: EngineView['inbox'][number]) => x.dueInSubPeriods === null || x.dueInSubPeriods >= 1;
+  const inbox = v.inbox.filter(x => !readIds.includes(x.id) && !(snoozed[x.id] === stamp && canLater(x)));
   const sender = (from: string): InboxSender => (from === 'sponsor' ? { kind: 'sponsor', initials: v.sponsor.name.split(' ').map(w => w[0]).join('').slice(0, 2) } : from === 'news' ? { kind: 'news' } : { kind: 'member', img: img(member(from)) });
   const openMessage = async (id: string) => {
     const msg = v.inbox.find(x => x.id === id);
     ui.openPanel('none');
-    if (!msg) return;
+    if (!msg || ended) return;
     if (msg.kind === 'news') { setReadIds(r => [...r, id]); return; }
     const r = await send({ type: 'openConversation', kind: msg.from === 'sponsor' ? 'sponsor' : 'reply', messageId: id });
     if (r?.interactionId) setFlow(null);
+  };
+  const later = (id: string) => {
+    const msg = v.inbox.find(x => x.id === id);
+    if (!msg || !canLater(msg)) return;
+    setSnoozed(s => ({ ...s, [id]: stamp }));
+    say(t('board.snoozed', { unit }));
   };
   const railItems: InboxRailItem[] = inbox.map(x => ({ id: x.id, label: x.title, sender: sender(x.from), urgent: x.urgent }));
   const drawerItems: InboxDrawerItem[] = inbox.map(x => ({
     id: x.id, sender: sender(x.from), title: x.title, preview: x.body, meta: '', urgent: x.urgent,
     due: x.dueInSubPeriods === null ? null : t('board.due', { amount: amount(x.dueInSubPeriods) }),
     tag: t('inbox.tag', { type: x.kind, name: x.from === 'sponsor' ? first(v.sponsor.name) : x.from === 'news' ? '' : first(member(x.from)?.name ?? '') }),
-    cta: x.kind === 'news' ? 'impact' : 'reply'
+    cta: x.kind === 'news' ? 'impact' : 'reply', later: canLater(x)
   }));
 
   // ---- HUD and strip ----
@@ -341,11 +456,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership, periodMax: v.score.periodMax },
     pillarScale: v.score.periodMax * periods, scoreOpen, onScoreOpenChange: setScoreOpen,
     streak: v.streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
-    onEndPeriod: () => { if (!styling && !busy) void send({ type: 'endPeriod' }); },
-    endEmphasis: f || styling ? 'secondary' : 'primary'
+    onEndPeriod: () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
+    endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
   const strip: MetricsStripProps = {
-    kpis: v.kpis.map(k => ({ metric: k.metric, value: k.value, trend: { kind: 'direction', direction: k.value > k.start ? 'up' : k.value < k.start ? 'down' : 'flat' } })),
+    kpis: v.kpis.map(k => ({ metric: k.metric, value: k.value, trend: { kind: 'direction', direction: k.trend } })),
     pulse: v.pulse,
     target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: v.clock.runShare, pacePeriod: { unit: periodUnit, n: v.clock.period } },
     sponsor: { level: v.sponsor.level, causes: v.sponsor.causes, open: sponsorOpen, onToggle: () => setSponsorOpen(o => !o) }
@@ -353,27 +468,36 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   // ---- outcome ----
   const oc = v.outcome;
-  const person = (id: string): OutcomePerson => {
+  const person = (id: string): OutcomePerson | null => {
     const m = member(id);
-    return m ? { id, name: m.name, shortName: first(m.name), img: img(m) } : { id, name: v.sponsor.name, shortName: first(v.sponsor.name), img: v.sponsor.img ?? PLACEHOLDER };
+    if (m) return { id, name: m.name, shortName: first(m.name), img: img(m) };
+    // Someone who is no longer on the team (or a candidate): the engine resolved them as the speaker.
+    if (oc && oc.from.id === id) return { id, name: oc.from.name, shortName: first(oc.from.name), img: oc.from.img ?? PLACEHOLDER };
+    return null;
   };
+  const revealed = oc && reveal?.outcome === oc.id ? reveal.id : null;
   const outcome = oc && (() => {
-    const who = person(oc.speaker);
+    // The engine resolves who is speaking: a member, someone who left, a candidate or the sponsor.
+    const who: OutcomePerson = { id: oc.from.id, name: oc.from.name, shortName: first(oc.from.name), img: oc.from.img ?? PLACEHOLDER };
     const shown = oc.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence' && !!member(c.subject));
+    const affected = oc.affected.map(person).filter((p): p is OutcomePerson => !!p);
+    const reactor = revealed ? person(revealed) : null;
     return (
-      <OutcomePanel
-        person={who} headline={oc.headline} reply={oc.reply}
-        why={whys(oc.changes)}
-        whyOpen={ui.whyOpen === oc.id} onToggleWhy={() => ui.setWhy(ui.whyOpen === oc.id ? null : oc.id)}
-        affected={oc.affected.map(person)} revealed={reveal}
-        reaction={reveal && oc.reactions[reveal] ? { name: first(person(reveal).name), text: oc.reactions[reveal] } : undefined}
-        onReveal={id => setReveal(r => (r === id ? null : id))}
-        changes={teamChips(shown, v.members.length).map(c => ({ name: chipName(c), metric: c.metric, delta: c.delta }))}
-        showNumbers={ui.showNumbers} onToggleNumbers={() => ui.setShowNumbers(!ui.showNumbers)}
-        ripple={oc.ripple ?? ''} changed={oc.changed}
-        onDismiss={() => { setReveal(null); void send({ type: 'clearOutcome' }); }}
-        onOpenHistory={member(oc.speaker) ? () => openProfile(oc.speaker) : undefined}
-      />
+      <div ref={outcomeRef} className="contents">
+        <OutcomePanel
+          person={who} headline={oc.headline} reply={oc.reply}
+          why={whys(oc.changes)}
+          whyOpen={ui.whyOpen === oc.id} onToggleWhy={() => ui.setWhy(ui.whyOpen === oc.id ? null : oc.id)}
+          affected={affected} revealed={revealed}
+          reaction={revealed && reactor && oc.reactions[revealed] ? { name: first(reactor.name), text: oc.reactions[revealed] } : undefined}
+          onReveal={id => setReveal(r => (r?.outcome === oc.id && r.id === id ? null : { outcome: oc.id, id }))}
+          changes={teamChips(shown, v.members.length).map(c => ({ name: chipName(c), metric: c.metric, delta: c.delta }))}
+          showNumbers={ui.showNumbers} onToggleNumbers={() => ui.setShowNumbers(!ui.showNumbers)}
+          ripple={oc.ripple ?? ''} changed={oc.changed}
+          onDismiss={() => { void send({ type: 'clearOutcome' }); }}
+          onOpenHistory={member(oc.from.id) ? () => openProfile(oc.from.id) : undefined}
+        />
+      </div>
     );
   })();
 
@@ -388,70 +512,157 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   const sm = selected ? member(selected) : undefined;
   const hint: TeamBoardHint = picking ? { kind: 'picking' } : sm ? { kind: 'selected', name: sm.name } : { kind: 'idle' };
-  const card = v.cards[0];
 
-  // A live interaction takes the whole screen (spec, Live interaction screens).
-  if (v.live) {
-    return (
+  // One modal at a time: an event card first (after the outcome has been read), then the period end.
+  const card = !oc ? v.cards[0] : undefined;
+  const periodPanel = !card && (v.phase === 'periodEnd' || (ended && resultsOpen));
+  const plainBoard = !v.live && !reacting && !styling && !card && !periodPanel;
+
+  // ---- live interactions: the board owns "The team is reacting" ----
+  const finishLive: FinishLive = async (i, people) => {
+    if (inFlight.current) return false;
+    const id = i.interactionId;
+    setReacting({ id, people });
+    const started = Date.now();
+    const r = await send(i);
+    if (!r) { setReacting(null); return false; }
+    await new Promise(res => setTimeout(res, Math.max(0, REACTING_MS - (Date.now() - started))));
+    setReacting(cur => (cur?.id === id ? null : cur));
+    return true;
+  };
+
+  // ---- focus ----
+  /**
+   * When the focused control disappears (Confirm styles, Go back, Got it, Start week, the end of a
+   * conversation), focus would fall to the page. Put it somewhere sensible instead: a hint if one
+   * was left, the outcome headline, or the screen's heading. A modal handles its own focus.
+   */
+  const rescue = useCallback((closing = false) => {
+    const main = mainRef.current;
+    if (!main) return;
+    const active = document.activeElement;
+    if (active && active !== document.body) return;
+    const lost = lastFocus.current;
+    if (!lost || (lost.isConnected && (lost as HTMLElement).checkVisibility?.() !== false)) return;
+    if (main.querySelector('[role="dialog"][aria-modal="true"]')) return;
+    const dialog = lastDialog.current;
+    if (dialog?.isConnected) { dialog.focus({ preventScroll: true }); return; }
+    // A modal that just closed puts focus back itself (Radix), unless it hands that to us (`closing`).
+    if (!closing && dialog?.getAttribute('aria-modal') === 'true') return;
+    const hinted = focusHint.current?.();
+    focusHint.current = null;
+    (hinted ?? headlineIn(outcomeRef.current) ?? h1Ref.current)?.focus({ preventScroll: true });
+  }, []);
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const onFocusIn = (e: FocusEvent) => {
+      lastFocus.current = e.target as Element;
+      lastDialog.current = (e.target as Element).closest?.<HTMLElement>('[role="dialog"]') ?? null;
+    };
+    document.addEventListener('focusin', onFocusIn);
+    // Removals by child components (a stage switching, a dialog closing) are caught here.
+    const mo = new MutationObserver(() => rescue());
+    mo.observe(main, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
+    return () => { document.removeEventListener('focusin', onFocusIn); mo.disconnect(); };
+  }, [rescue]);
+
+  // A new outcome takes focus, so it is read out; while an action is being planned it is announced instead.
+  const shownOutcome = useRef<string | null>(null);
+  useEffect(() => {
+    if (!oc || reacting || v.live || styling) return;
+    if (shownOutcome.current === oc.id) return;
+    shownOutcome.current = oc.id;
+    if (flow || card || periodPanel) { setAnnounce(oc.headline); return; }
+    headlineIn(outcomeRef.current)?.focus({ preventScroll: true });
+  }, [oc, reacting, v.live, styling, flow, card, periodPanel]);
+
+  useEffect(() => { paletteOk.current = plainBoard; }, [plainBoard]);
+
+  // ---- what the screen shows ----
+  const h1 = v.live
+    ? t('liveshell.title', { format: v.live.format, name: v.live.speaker.name })
+    : t('board.h1', { view: styling ? 'style' : 'board', unit: periodUnit, n: v.clock.period });
+
+  let body: ReactNode;
+  if (v.live || reacting) {
+    // A live interaction takes the whole screen (spec, Live interaction screens). It stays mounted
+    // behind "The team is reacting", so nothing written is lost if the engine refuses the end.
+    body = (
       <>
-        <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
-          <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
-            onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
-        </Suspense>
-        <Toast message={toast} />
+        {v.live && (
+          <div className={reacting ? 'hidden' : 'flex flex-1 flex-col'}>
+            <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
+              <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
+                suspended={!!reacting} onFinish={finishLive} onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
+            </Suspense>
+          </div>
+        )}
+        {reacting && <ReactingScreen people={reacting.people} />}
       </>
     );
-  }
-
-  // Weekly style setting opens before any action (spec), as its own screen.
-  if (styling) {
-    return (
+  } else if (styling) {
+    // Weekly style setting opens before any action (spec), as its own screen.
+    body = (
+      <StyleSettingView
+        periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
+        sponsorName={v.sponsor.name} sponsorLine={v.sponsor.styleLine}
+        view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
+        onViewChange={m => setStyleView(x => (m === 'summary' ? { ...x, summary: true } : { layout: m, summary: false }))}
+        members={v.members.map(m => ({
+          id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
+          away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
+          stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, trust: m.trust } : null,
+          lastStyle: m.lastStyle, lastReaction: m.lastReaction, style: draft[m.id] ?? null, rationale: notes[m.id] ?? ''
+        }))}
+        onStyle={(id, k) => setDraft(d => ({ ...d, [id]: k }))}
+        onRationale={(id, text) => setNotes(n => ({ ...n, [id]: text }))}
+        onConfirm={confirmStyles}
+        onBack={() => setStyleView(x => ({ ...x, summary: false }))}
+        confirmDisabled={busy || chosen < v.members.length}
+      />
+    );
+  } else {
+    body = (
       <>
-        <StyleSettingView
-          periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
-          sponsorName={v.sponsor.name} sponsorLine={v.sponsor.styleLine}
-          view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
-          onViewChange={m => setStyleView(x => (m === 'summary' ? { ...x, summary: true } : { layout: m, summary: false }))}
-          members={v.members.map(m => ({
-            id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
-            away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
-            stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, trust: m.trust } : null,
-            lastStyle: m.lastStyle, lastReaction: m.lastReaction, style: draft[m.id] ?? null, rationale: notes[m.id] ?? ''
-          }))}
-          onStyle={(id, k) => setDraft(d => ({ ...d, [id]: k }))}
-          onRationale={(id, text) => setNotes(n => ({ ...n, [id]: text }))}
-          onConfirm={confirmStyles}
-          onBack={() => setStyleView(x => ({ ...x, summary: false }))}
-          confirmDisabled={busy || chosen < v.members.length}
-        />
-        <Toast message={toast} />
+        <Hud {...hud} />
+        <MetricsStrip {...strip} />
+        {ended && !resultsOpen && (
+          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13">
+            <span className="flex-1">{t('board.ended.readOnly')}</span>
+            <Button variant="secondary" size="sm" onClick={() => setResultsOpen(true)}>{t('board.ended.reopen')}</Button>
+          </div>
+        )}
+        {outcome}
+        <div className="relative grid min-h-0 flex-1 grid-cols-(--il-board-columns)">
+          {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
+          <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
+            <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
+          </TeamScroll>
+          <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><ActionsPanel
+            capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
+            team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
+            member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
+            drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
+          /></div>
+          <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
+          {profile && <ProfilePanel {...profile} />}
+          <InboxDrawer open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
+            onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />
+        </div>
+        {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
+        {periodPanel && <PeriodPanel view={v} busy={busy} money={money.format} onIntent={i => void send(i)} onClose={ended ? () => setResultsOpen(false) : undefined} onCloseFocus={() => rescue(true)} />}
+        <CommandPalette open={pal && plainBoard} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
       </>
     );
   }
 
   return (
-    <div aria-label={t('board.aria')} className="relative flex flex-1 flex-col">
-      <Hud {...hud} />
-      <MetricsStrip {...strip} />
-      {outcome}
-      <div className="relative grid min-h-0 flex-1 grid-cols-(--il-board-columns)">
-        {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
-        <div className="col-start-2 row-start-1 flex min-h-0 min-w-0 flex-col"><TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} /></div>
-        <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><ActionsPanel
-          capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
-          team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
-          member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
-          drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
-        /></div>
-        <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
-        {profile && <ProfilePanel {...profile} />}
-        <InboxDrawer open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
-          onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={id => setReadIds(r => [...r, id])} />
-      </div>
-      {card && !oc && <EventCard card={card} busy={busy} nameOf={chipName} everyone={v.members.length} onDismiss={() => void send({ type: 'dismissCard', cardId: card.id })} />}
-      {(v.phase === 'periodEnd' || v.phase === 'ended') && <PeriodPanel view={v} busy={busy} money={money.format} onIntent={i => void send(i)} />}
-      <CommandPalette open={pal} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
+    <main ref={mainRef} aria-label={plainBoard || card || periodPanel ? t('board.aria') : undefined} className="relative flex flex-1 flex-col">
+      <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>
+      {body}
+      <div role="status" className="sr-only">{announce}</div>
       <Toast message={toast} />
-    </div>
+    </main>
   );
 }

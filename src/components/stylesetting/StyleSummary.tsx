@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { StyleAvatar } from './StyleSettingList';
@@ -11,19 +11,66 @@ export interface StyleSummaryProps {
   onBack: () => void;
   onConfirm: () => void;
   confirmDisabled: boolean;
-  /** Moves focus into the dialog when it opens. Off when the screen starts on the summary. */
+  /**
+   * Opened by the participant: focus moves into the dialog, stays there (the page behind is inert)
+   * and returns to the opener when it closes. Off when the screen starts on the summary, as the
+   * design frames do.
+   */
   focusOnOpen?: boolean;
+}
+
+const TABBABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Makes everything outside `keep` inert (no focus, no pointer, hidden from assistive tech), the way
+ * a modal dialog's background should be. Returns the undo.
+ */
+function inertOutside(keep: HTMLElement): () => void {
+  const changed: HTMLElement[] = [];
+  for (let el: HTMLElement | null = keep; el && el !== document.body; el = el.parentElement) {
+    for (const sib of Array.from(el.parentElement?.children ?? [])) {
+      // Live regions stay out of it, so a message about the dialog (a failed confirm) is still announced.
+      if (sib === el || !(sib instanceof HTMLElement) || sib.inert || sib.tagName === 'SCRIPT' || sib.matches('[aria-live], [role="status"], [role="alert"]')) continue;
+      sib.inert = true;
+      changed.push(sib);
+    }
+  }
+  return () => changed.forEach(el => { el.inert = false; });
 }
 
 /**
  * Summary and confirm: a table of every choice (two members per line, with "Changed" where the style
  * differs from last period's), when away members' styles apply, then Go back or Confirm.
- * Escape goes back.
+ * A modal dialog: Tab stays inside, Escape goes back.
  */
 export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, confirmDisabled, focusOnOpen = true }: StyleSummaryProps) {
   const { t } = useI18n();
   const dialog = useRef<HTMLDivElement>(null);
-  useEffect(() => { if (focusOnOpen) dialog.current?.focus({ preventScroll: true }); }, [focusOnOpen]);
+  useEffect(() => {
+    const el = dialog.current;
+    if (!focusOnOpen || !el) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    el.focus({ preventScroll: true });
+    const undo = inertOutside(el.parentElement ?? el);
+    return () => {
+      undo();
+      // Go back returns to "Review and confirm". After Confirm the screen is gone and the board takes over.
+      const active = document.activeElement;
+      if ((!active || active === document.body || el.contains(active)) && opener && opener !== document.body && opener.isConnected) opener.focus({ preventScroll: true });
+    };
+  }, [focusOnOpen]);
+
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') { e.stopPropagation(); onBack(); return; }
+    if (e.key !== 'Tab' || !focusOnOpen) return;
+    // Keep Tab inside the dialog: wrap from the last control to the first and back.
+    const items = Array.from(dialog.current?.querySelectorAll<HTMLElement>(TABBABLE) ?? []);
+    if (!items.length) return;
+    const first = items[0], last = items[items.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === dialog.current)) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && active === last) { e.preventDefault(); first.focus(); }
+  };
 
   const missing = members.filter(m => m.style === null).length;
   const notes = [
@@ -34,9 +81,9 @@ export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, c
 
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-(--il-stylesetting-summary-scrim-blur)">
-      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape goes back */}
+      {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape goes back, Tab stays inside */}
       <div ref={dialog} role="dialog" aria-modal="true" aria-label={t('stylesetting.summary.aria')} tabIndex={-1}
-        onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); onBack(); } }}
+        onKeyDown={onKeyDown}
         className="flex w-180 max-w-full animate-(--il-stylesetting-summary-enter) flex-col gap-4 rounded-26 border border-line-strong bg-surface-material p-6.5 outline-none">
         <h2 className="m-0 text-24 font-700">{t('stylesetting.summary.title', { unit: periodUnit, n: period })}</h2>
         <div role="table" aria-label={t('stylesetting.summary.title', { unit: periodUnit, n: period })} className="grid grid-cols-2 gap-x-6 gap-y-1.5">

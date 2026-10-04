@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react';
+import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { Button, NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import type { ActionKind } from './ActionTile';
@@ -7,6 +7,8 @@ import { useDays } from './days';
 export interface ActionOption {
   name: string;
   detail: string;
+  /** The engine refuses this choice (a full stage): shown, with its reason in `detail`, but not selectable. */
+  disabled?: boolean;
 }
 
 export interface OptionCardsProps {
@@ -23,14 +25,18 @@ export interface OptionCardsProps {
 export function OptionCards({ options, value, onChange }: OptionCardsProps) {
   const { t } = useI18n();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
-  const tabStop = value ?? 0;
+  const enabled = options.map((o, i) => (o.disabled ? -1 : i)).filter(i => i >= 0);
+  const tabStop = value ?? enabled[0] ?? 0;
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
-    const n = options.length;
-    const next = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (i + 1) % n
-      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (i - 1 + n) % n
+    // Arrow keys skip options that cannot be chosen, as a native radio group skips disabled radios.
+    const at = enabled.indexOf(i), n = enabled.length;
+    if (!n) return;
+    const pos = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? (at + 1) % n
+      : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? (at - 1 + n) % n
       : e.key === 'Home' ? 0 : e.key === 'End' ? n - 1 : -1;
-    if (next < 0) return;
+    if (pos < 0) return;
     e.preventDefault();
+    const next = enabled[pos];
     onChange(next);
     refs.current[next]?.focus();
   };
@@ -41,8 +47,8 @@ export function OptionCards({ options, value, onChange }: OptionCardsProps) {
         const ring = on ? 'border-accent-secondary' : 'border-line-default';
         return (
           <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
-            onClick={() => onChange(i)} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex cursor-pointer items-start gap-2.5 rounded-14 border-(length:--il-action-option-border-width) border-solid p-3 text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : 'bg-surface-raised'}`}>
+            aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
+            className={`flex items-start ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} gap-2.5 rounded-14 border-(length:--il-action-option-border-width) p-3 text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : 'bg-surface-raised'}`}>
             <span aria-hidden="true" className={`mt-0.25 flex size-4.5 flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
               <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
             </span>
@@ -100,6 +106,9 @@ export interface ActionDrawerProps {
 export function ActionDrawer(p: ActionDrawerProps) {
   const { t } = useI18n();
   const fmt = useDays();
+  // Focus moves to the drawer's heading when it opens, so keyboard and screen reader users land in the flow.
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   const pill = 'flex h-5.5 items-center rounded-pill px-2 text-12 font-700';
   const who = p.people.mode === 'pick' ? t('action.drawer.people', { count: p.picks.length, max: p.people.max })
     : p.people.mode === 'with' ? t('action.drawer.with') : t('action.drawer.who');
@@ -108,7 +117,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
       <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-1.5"><span className={`${pill} bg-accent-soft`}>{t('action.kind', { kind: p.kind })}</span><span className={`${pill} bg-surface-raised`}>{fmt(p.days)}</span></div>
-        <h2 className="m-0 text-22 font-700 tracking-(--il-action-drawer-title-tracking)">{p.name}</h2>
+        <h2 ref={heading} tabIndex={-1} className="m-0 text-22 font-700 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</h2>
         <span className="text-13 text-pretty text-fg-secondary">{p.description}</span>
       </div>
       {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} />}

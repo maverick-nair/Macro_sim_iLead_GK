@@ -1,6 +1,7 @@
 {
   "liveshell.title": "{format, select, roleplay {1:1 with {name}} meeting {Team meeting} sponsor {Sponsor briefing with {name}} email {Email to {name}} chat {Chat with {name}} interview {Interviews for a new hire} plan {Written plan with {name}} other {{name}}}",
   "liveshell.subtitle": "{format, select, roleplay {Meet face to face · {cost}} meeting {Agenda: {topic} · {cost}} sponsor {Q and A · about {minutes, plural, one {# minute} other {# minutes}}} email {{cost} used} chat {Reply · {cost}} interview {Two candidates, then you choose · {cost}} plan {Plan, then a short check in · {cost}} other {{cost}}}",
+  "liveshell.subtitle.action": "{action} · {cost}",
   "liveshell.timer.value": "{minutes}:{seconds}",
   "liveshell.timer.aria": "{paused, select, true {Resume} other {Pause}}. {time} {direction, select, elapsed {elapsed} other {left}}",
   "liveshell.clock.paused": "Main clock paused",

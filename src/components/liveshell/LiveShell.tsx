@@ -34,9 +34,10 @@ export interface LiveShellProps {
   /**
    * The line under the title. `cost` is in the storyline's sub period (`costUnit`, days by default):
    * "Meet face to face · ½ day", "Agenda: the Ashcroft discount · 1 day", "No days used".
+   * `action` names the action a 1:1 came from ("Coach member · 1 day"); without it the 1:1 reads "Meet face to face".
    * The sponsor briefing shows `minutes` instead ("Q and A · about 6 minutes").
    */
-  meta: { cost: number; costUnit?: SubPeriodUnit; topic?: string; minutes?: number };
+  meta: { cost: number; costUnit?: SubPeriodUnit; topic?: string; minutes?: number; action?: string };
   timer: LiveTimer;
   /** Pauses or resumes the interaction clock. */
   onPause: () => void;
@@ -139,7 +140,9 @@ export function LiveShell(p: LiveShellProps) {
         <div className="flex min-w-0 flex-1 flex-col">
           <b className={`truncate ${phone ? 'text-15' : 'text-17'}`}>{t('liveshell.title', { format: p.format, name: p.personName })}</b>
           <span className="text-12 text-fg-secondary">
-            {t('liveshell.subtitle', { format: p.format, cost: days(p.meta.cost), topic: p.meta.topic ?? '', minutes: p.meta.minutes ?? 0 })}
+            {p.meta.action && p.format === 'roleplay'
+              ? t('liveshell.subtitle.action', { action: p.meta.action, cost: days(p.meta.cost) })
+              : t('liveshell.subtitle', { format: p.format, cost: days(p.meta.cost), topic: p.meta.topic ?? '', minutes: p.meta.minutes ?? 0 })}
           </span>
         </div>
         <button type="button" onClick={p.onPause} aria-label={t('liveshell.timer.aria', { paused: p.timer.paused, time, direction: p.timer.counts === 'up' ? 'elapsed' : 'left' })}

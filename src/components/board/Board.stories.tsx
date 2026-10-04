@@ -63,7 +63,7 @@ function FromRun({ ended }: { ended: boolean }) {
       setView(ended ? v : { ...v, phase: 'periodEnd', clock: { ...v.clock, period: 3 }, periods: v.periods.slice(0, 3), pendingReward: ['extra_day', 'quiet_word'] });
     })();
   }, [ended]);
-  return view ? <PeriodPanel view={view} busy={false} money={n => `$${Math.round(n).toLocaleString('en-US')}`} onIntent={noop} /> : null;
+  return view ? <PeriodPanel view={view} busy={false} money={n => `$${Math.round(n).toLocaleString('en-US')}`} onIntent={noop} onClose={ended ? noop : undefined} /> : null;
 }
 export const PeriodEndWithReward: StoryObj = { render: () => <FromRun ended={false} /> };
 export const RunEnded: StoryObj = { render: () => <FromRun ended /> };
