@@ -1,5 +1,13 @@
 {
   "color": {
+    "live": {
+      "replay": {
+        "light": "{color.blue.530}",
+        "dark": "{color.brand.cyber-cyan}",
+        "contrast": { "against": "color.surface.solid", "min": 4.5 },
+        "$description": "Replay link text under NPC turns. Text needs 4.5:1, which the secondary accent does not reach in light; dark keeps the design's cyan"
+      }
+    },
     "voice": {
       "ready-glow": {
         "light": { "ref": "color.azure.750", "alpha": 0.4 },

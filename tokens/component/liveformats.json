@@ -1,0 +1,32 @@
+{
+  "liveformats": {
+    "typing": {
+      "dot": { "value": "ilDot 1.2s infinite", "$description": "Typing and thinking dots, as on the 1:1 thinking pill" },
+      "delay-2": { "value": "0.15s", "$description": "Second dot" },
+      "delay-3": { "value": "0.3s", "$description": "Third dot" }
+    },
+    "enter": { "value": "ilIn {duration.base} ease", "$description": "A new divider or result line arriving" },
+    "eyebrow": {
+      "tracking": { "value": "0.08em", "$description": "Small uppercase card titles, as the brief card" }
+    },
+    "thread": {
+      "max-width": { "value": "760px", "$description": "Readable chat column inside a wide stage" }
+    },
+    "composer": {
+      "listening": { "value": "0 0 0 3px {color.status.gain-soft}", "$description": "Halo around the chat composer while a voice note records, as on the live reply bar" }
+    },
+    "fact": {
+      "columns": { "value": "110px minmax(0,1fr)", "$description": "CV card: field, value. Same as the profile facts" }
+    },
+    "interview": {
+      "columns": { "value": "minmax(0,0.85fr) minmax(0,1.15fr)", "$description": "Candidate and CV, then transcript and notes" }
+    },
+    "compare": {
+      "label-width": { "value": "150px", "$description": "Row header column of the comparison table on desktop" }
+    },
+    "plan": {
+      "row-columns": { "value": "120px minmax(0,1fr) auto", "$description": "Field label, editable transcript, dictation mic. Like the email composer rows" },
+      "columns": { "value": "minmax(0,1fr) minmax(0,1fr)", "$description": "Submitted plan, check in" }
+    }
+  }
+}

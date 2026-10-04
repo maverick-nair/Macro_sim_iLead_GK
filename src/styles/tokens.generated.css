@@ -154,6 +154,7 @@
   --il-color-celebration-glow: light-dark(oklch(0.75 0.14 200 / 0.35), oklch(0.75 0.14 200 / 0.35));
   --il-color-celebration-ring: light-dark(oklch(1 0 0 / 0.08), oklch(1 0 0 / 0.08));
   --il-color-celebration-star: light-dark(var(--il-color-brand-cyber-cyan), var(--il-color-brand-cyber-cyan));
+  --il-color-live-replay: light-dark(var(--il-color-blue-530), var(--il-color-brand-cyber-cyan));
   --il-color-voice-ready-glow: light-dark(oklch(0.75 0.14 220 / 0.4), oklch(0.75 0.14 220 / 0.4));
   --il-color-voice-listening: light-dark(var(--il-color-brand-mint-green), var(--il-color-brand-mint-green));
   --il-color-voice-listening-glow: light-dark(oklch(0.86 0.17 165 / 0.6), oklch(0.86 0.17 165 / 0.6));
@@ -254,6 +255,18 @@
   --il-live-mic-glow-listening: 0 0 40px var(--il-color-voice-listening-glow);
   --il-live-mic-ring: ilRing 1.4s ease-out infinite;
   --il-live-waveform-transition: height 90ms linear;
+  --il-liveformats-typing-dot: ilDot 1.2s infinite;
+  --il-liveformats-typing-delay-2: 0.15s;
+  --il-liveformats-typing-delay-3: 0.3s;
+  --il-liveformats-enter: ilIn var(--il-duration-base) ease;
+  --il-liveformats-eyebrow-tracking: 0.08em;
+  --il-liveformats-thread-max-width: 760px;
+  --il-liveformats-composer-listening: 0 0 0 3px var(--il-color-status-gain-soft);
+  --il-liveformats-fact-columns: 110px minmax(0,1fr);
+  --il-liveformats-interview-columns: minmax(0,0.85fr) minmax(0,1.15fr);
+  --il-liveformats-compare-label-width: 150px;
+  --il-liveformats-plan-row-columns: 120px minmax(0,1fr) auto;
+  --il-liveformats-plan-columns: minmax(0,1fr) minmax(0,1fr);
   --il-liveshell-header-blur: 16px;
   --il-liveshell-body-columns-brief: 300px minmax(0,1fr);
   --il-liveshell-body-columns-collapsed: auto minmax(0,1fr);
