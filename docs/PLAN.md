@@ -75,8 +75,10 @@
 | M1 | Done |
 | M2 | Done |
 | M3 | Done |
-| M4 | Done, awaiting approval |
-| M5 to M8 | Not started |
+| M4 | Done, approved |
+| Quality review | Done (D57 to D61) |
+| M5 | Done, awaiting approval |
+| M6 to M8 | Not started |
 
 ## Milestones
 

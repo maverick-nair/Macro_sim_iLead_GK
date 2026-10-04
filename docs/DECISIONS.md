@@ -347,6 +347,21 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Events:** six card types, fixed, random and conditional timing, stage and sponsor targets, delivery as card, bulletin, chat, email or sponsor call, expected responses with a window and a bonus, escalation to the sponsor and follow up events. Sales Elevator keeps its 12 workbook events with delivery set per event and gains two GenieKreator style ones (a random opportunity and a conditional sponsor call). The importer carries these settings, so a re-import keeps them.
 - **Week end text:** the banner headline and sentence are worded by the engine (D60).
 
+**D63. M5 on screen: the week end, the score and events.** Decided. Everything shown comes from the engine (D62); the design frames are unchanged (67 of 67).
+- **Week end** (`src/components/weekend/`, frames w1 to w5 from a fixture): at a period end the board gives way to banner, report, each new badge, the unlock offer, next week's bulletins, then "Set styles for week N". At the run's end: banner, report and badges, then the results panel (M6 replaces it).
+- **Stars:** the design's three named stars (people, leadership, business) become the three thresholds of one week score; under them, what made the score (style fit, live conversations, deals against ideal).
+- **Streak:** in periods, not the design's "days replied on time", with the next bonus in words.
+- **Rewards:** the design's three reward cards carry GenieKreator's unlocks (D62).
+- **Sponsor confidence:** level words with the numbers ("Steady to Confident, 62 to 71"); the engine sends the level words. The board tile reads "Confident, 72" and its popover says what 70 and 30 mean.
+- **Team Pulse:** the value and trend lead; the mood bar stays and the counts move into the tile's name and tooltip. "Up from 3 struggling last week" is not shown (the summary has no previous counts).
+- **Funnel:** "This week" (the design) and "So far" (against the cumulative ideal, GenieKreator) on a toggle.
+- **CEO check in:** a notice in the report, a note under the days left, and a news message in the inbox (Mark as read, no reply).
+- **Score breakdown:** the HUD score opens the pillars 0 to 100 with their weights, what feeds each, the streak bonus and the tiers with "You are here". The prototype's 1,240 out of a pillar scale of 1,000 stays in the frames only.
+- **Badge shelf:** opens from the score breakdown (the engine HUD has no nav); earned badges with their reason and week, the rest with their description. One UI owned icon per badge rule (`gamification/badgeIcons.tsx`) until GenieKreator sends authored icons.
+- **Events:** opportunity and crisis cards get art bands in the design's language (need a design review). The person's portrait fills the illustration slot until cards carry an image. A sponsor call rings over the board like frame b13 (not a modal): Take the call opens the reply conversation, Later leaves the urgent message in the inbox with its due.
+- **Perks:** the engine sends each action's cost now and its perk; the hire on the extra budget reads "No days, one seat past a full team", a team activity "No cooldown this time".
+- **Budget:** first load is 193.2 KB of 200 KB. The week end and the live screen load on demand; M6 must keep the report out of the first load.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
