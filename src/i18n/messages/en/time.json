@@ -1,0 +1,9 @@
+{
+  "time.period": "{unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}} {n}",
+  "time.periodOf": "{unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}} {n} of {total}",
+  "time.subPeriod": "{unit, select, quarter {Quarter} month {Month} week {Week} day {Day} hour {Hour} other {Step}} {n}",
+  "time.amount": "{unit, select, quarter {{n, plural, =0 {No quarters} one {# quarter} other {# quarters}}} month {{n, plural, =0 {No months} one {# month} other {# months}}} week {{n, plural, =0 {No weeks} one {# week} other {# weeks}}} day {{n, plural, =0 {No days} one {# day} other {# days}}} hour {{n, plural, =0 {No hours} one {# hour} other {# hours}}} other {#}}",
+  "time.left": "{amount} left",
+  "time.endPeriod": "End {unit, select, year {year} month {month} week {week} day {day} other {period}}",
+  "time.capacityAria": "{left} of {total} {unit, select, quarter {quarters} month {months} week {weeks} day {days} hour {hours} other {steps}} left this {period, select, year {year} month {month} week {week} day {day} other {period}}"
+}

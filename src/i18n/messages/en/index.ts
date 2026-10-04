@@ -13,5 +13,6 @@ import outcome from './outcome.json';
 import palette from './palette.json';
 import reason from './reason.json';
 import style from './style.json';
+import time from './time.json';
 
-export const en = { ...action, ...common, ...gamification, ...live, ...member, ...metric, ...outcome, ...palette, ...reason, ...style };
+export const en = { ...action, ...common, ...gamification, ...live, ...member, ...metric, ...outcome, ...palette, ...reason, ...style, ...time };
