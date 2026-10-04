@@ -268,6 +268,13 @@
   --il-palette-width: 560px;
   --il-palette-max-width: calc(100% - 32px);
   --il-palette-results-max-height: 340px;
+  --il-profile-panel-columns: minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr);
+  --il-profile-panel-shadow: 0 24px 64px oklch(0.05 0.03 280 / 0.5);
+  --il-profile-panel-enter: ilIn 260ms ease;
+  --il-profile-portrait-ring: 0 0 0 3px var(--il-color-line-strong);
+  --il-profile-name-tracking: -0.02em;
+  --il-profile-fact-columns: 110px 1fr;
+  --il-profile-timeline-columns: 12px 1fr;
   --il-style-segment-transition: background var(--il-duration-fast) var(--il-easing-brand);
   --il-style-tooltip-bg: var(--il-color-fg-primary);
   --il-style-tooltip-fg: var(--il-color-fg-on-accent);

@@ -16,9 +16,10 @@ import metric from './metric.json';
 import metrics from './metrics.json';
 import outcome from './outcome.json';
 import palette from './palette.json';
+import profile from './profile.json';
 import reason from './reason.json';
 import style from './style.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...member, ...metric, ...metrics, ...outcome, ...palette, ...reason, ...style, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...member, ...metric, ...metrics, ...outcome, ...palette, ...profile, ...reason, ...style, ...team, ...time };

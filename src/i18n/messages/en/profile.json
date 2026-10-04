@@ -1,0 +1,16 @@
+{
+  "profile.aria": "Profile for {name}",
+  "profile.close": "Close profile",
+  "profile.shared": "Shared:",
+  "profile.fact.label": "{key, select, style {Style this {unit, select, year {year} month {month} week {week} day {day} other {period}}} previous {Previous company} tenure {Tenure} experience {Experience} skills {Skills} remarks {Remarks} careerGoal {Career goal} relationships {Relationships} other {}}",
+  "profile.fact.empty": "{key, select, style {Not chosen yet} careerGoal {Not shared yet. It may come up in conversation.} relationships {None noted yet} other {Not known yet}}",
+  "profile.interactions.title": "Your interactions",
+  "profile.interactions.empty": "Nothing yet. Your actions, events and conversations with {name} will show here.",
+  "profile.timeline.when": "{period}, {sub}",
+  "profile.timeline.change": "{metric} {delta}",
+  "profile.timeline.noChange": "No change",
+  "profile.timeline.reaction": "Reaction: {reaction}",
+  "profile.timeline.reactionChanges": "Reaction: {reaction}. {changes}",
+  "profile.promise.label": "{status, select, open {Open promise:} kept {Promise kept:} broken {Promise broken:} other {}}",
+  "profile.actions.title": "Take an action"
+}
