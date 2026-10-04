@@ -4,7 +4,7 @@ import { heuristicEvaluator, type Evaluator } from './evaluator';
 import { chooseReward, endPeriod, startNextPeriod } from './period';
 import { createRng } from './rng';
 import type { Style } from './rules';
-import { createSim, member } from './sim';
+import { createSim, log, member } from './sim';
 import type { Change, Outcome, PeriodSummary, Turn } from './types';
 import * as live from './live';
 import { buildView, type EngineView } from './view';
@@ -25,6 +25,7 @@ export type Intent =
   | { type: 'nextCandidate'; interactionId: string }
   | { type: 'chooseCandidate'; interactionId: string; candidateId: string | null }
   | { type: 'endInteraction'; interactionId: string }
+  | { type: 'abandonInteraction'; interactionId: string }
   | { type: 'dismissCard'; cardId: string }
   | { type: 'clearOutcome' }
   | { type: 'endPeriod' }
@@ -65,6 +66,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
     const text = live.participantText(it);
     if (!text.trim()) throw new IntentError('Say something first', 'empty');
     const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey) });
+    // The person opening up in the conversation is what surfaces the concern (Design doc, Evaluation pipeline).
+    if (it.concernRevealed) ev.flags.concernSurfaced = true;
     const reply = npcReply ?? (live.lastNpcWords(it) || ((await evaluator.reply?.({ format: it.format, text, band: ev.band })) ?? ''));
     const outcome = submitInteraction(sim, rng, id, ev, reply);
     return { view: buildView(sim), changes: outcome.changes, outcome };
@@ -118,6 +121,14 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
       }
       case 'endInteraction':
         return finish(intent.interactionId);
+      case 'abandonInteraction': {
+        // Leaving without a word: the time is spent, nothing else moves.
+        const it = sim.interactions[intent.interactionId];
+        if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
+        delete sim.interactions[intent.interactionId];
+        log(sim, { kind: 'interaction', title: `${config.actions.find(a => a.key === it.actionKey)?.name ?? 'Conversation'} left unfinished`, memberIds: it.memberIds, changes: [] });
+        return { view: buildView(sim), changes: [] };
+      }
       case 'dismissCard':
         sim.cards = sim.cards.filter(c => c.id !== intent.cardId);
         return { view: buildView(sim), changes: [] };

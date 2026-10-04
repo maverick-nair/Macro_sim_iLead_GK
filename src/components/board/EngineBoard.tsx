@@ -22,7 +22,7 @@ import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView, type StyleSettingLayout } from '../stylesetting/StyleSettingView';
-import { Composer } from './Composer';
+import { EngineLive } from './EngineLive';
 import { PeriodPanel } from './PeriodPanel';
 import { EventCard } from './EventCard';
 import { teamChips, type Chip } from './chips';
@@ -42,6 +42,10 @@ interface Flow { key: string; choice: string | null; picks: string[]; nudgeOk: b
 export interface EngineBoardProps {
   /** Client theme: the HUD shows the client's logo. */
   client?: boolean;
+  /** Consent to audio capture, from onboarding or Settings. */
+  voiceConsent?: boolean;
+  /** Preferred input for live interactions. */
+  input?: 'ptt' | 'open' | 'text';
   onPause: () => void;
   onSettings: () => void;
 }
@@ -76,7 +80,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const [pal, setPal] = useState(false);
   const [query, setQuery] = useState('');
   const [reveal, setReveal] = useState<string | null>(null);
-  const [liveTitle, setLiveTitle] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const say = (msg: string) => {
@@ -290,21 +293,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         const r = await send({ type: 'planAction', action: fa.key, option: choice?.option.key, memberIds: f.picks, stage: choice?.stage ?? undefined });
         if (!r) return;
         setFlow(null);
-        if (r.interactionId) { setLiveTitle(t('board.composer.title', { action: fa.name, name: names.length === 1 ? names[0] : 'none' })); ui.setInteraction(r.interactionId); }
-        else say(t('board.planned', { action: fa.name }));
+        if (!r.interactionId) say(t('board.planned', { action: fa.name }));
       },
       onBack: () => setFlow(null)
     };
   }
-
-  // ---- live interaction (text composer until the M4 live shell) ----
-  const iid = ui.interactionId;
-  const submit = async (text: string) => {
-    if (!iid) return;
-    const r = await send({ type: 'submitInteraction', interactionId: iid, text });
-    if (r) ui.setInteraction(null);
-  };
-  const composer = iid ? <Composer key={iid} title={liveTitle} busy={busy} onSubmit={text => void submit(text)} /> : null;
 
   // ---- inbox ----
   const inbox = v.inbox.filter(x => !readIds.includes(x.id));
@@ -315,7 +308,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     if (!msg) return;
     if (msg.kind === 'news') { setReadIds(r => [...r, id]); return; }
     const r = await send({ type: 'openConversation', kind: msg.from === 'sponsor' ? 'sponsor' : 'reply', messageId: id });
-    if (r?.interactionId) { setFlow(null); setLiveTitle(t('inbox.tag', { type: msg.kind, name: msg.from === 'sponsor' ? first(v.sponsor.name) : first(member(msg.from)?.name ?? '') })); ui.setInteraction(r.interactionId); }
+    if (r?.interactionId) setFlow(null);
   };
   const railItems: InboxRailItem[] = inbox.map(x => ({ id: x.id, label: x.title, sender: sender(x.from), urgent: x.urgent }));
   const drawerItems: InboxDrawerItem[] = inbox.map(x => ({
@@ -384,6 +377,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const hint: TeamBoardHint = picking ? { kind: 'picking' } : sm ? { kind: 'selected', name: sm.name } : { kind: 'idle' };
   const card = v.cards[0];
 
+  // A live interaction takes the whole screen (spec, Live interaction screens).
+  if (v.live) {
+    return (
+      <>
+        <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'}
+          onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
+        <Toast message={toast} />
+      </>
+    );
+  }
+
   // Weekly style setting opens before any action (spec), as its own screen.
   if (styling) {
     return (
@@ -422,7 +426,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
           team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
           member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
-          drawer={composer ?? (drawer ? <ActionDrawer {...drawer} /> : undefined)}
+          drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
         /></div>
         <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
         {profile && <ProfilePanel {...profile} />}

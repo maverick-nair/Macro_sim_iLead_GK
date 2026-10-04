@@ -10,12 +10,7 @@
   "board.summary": "{action}{option, select, none {} other {: {option}}}{list, select, none {} other {, with {list}}}. Costs {cost}.",
   "board.planned": "Done: {action}.",
   "board.due": "Due in {amount}",
-  "board.error": "{code, select, noCapacity {Not enough time left for that.} wrongPhase {Set everyone's style first.} targets {Pick the right number of people first.} blocked {That is not available right now.} network {You seem to be offline. Try again in a moment.} other {That did not go through. Try again.}}",
-  "board.composer.title": "{action}{name, select, none {} other {, {name}}}",
-  "board.composer.label": "What you say",
-  "board.composer.hint": "Write it the way you would say it. The conversation reads your words.",
-  "board.composer.send": "Send",
-  "board.composer.sending": "Reading your words",
+  "board.error": "{code, select, noCapacity {Not enough time left for that.} wrongPhase {Set everyone's style first.} targets {Pick the right number of people first.} blocked {That is not available right now.} noConsent {Voice is off. You can turn it on in Settings.} network {You seem to be offline. Try again in a moment.} other {That did not go through. Try again.}}",
   "board.card.dismiss": "Got it",
   "board.card.label": "{card, select, impact {Impact} signal {Signal} capacity {Capacity} other {Diagnostic}} event",
   "board.periodEnd.title": "{unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}} {n} is done",
@@ -40,5 +35,10 @@
   "board.pick.range": "{min, plural, =0 {Up to {max} people} other {{min} to {max} people}}",
   "board.chip.team": "The team",
   "board.chip.people": "{n} people",
-  "board.block.liveCap": "You have had your {cap, plural, one {one live conversation} other {# live conversations}} this {unit, select, year {year} month {month} week {week} day {day} other {period}}"
+  "board.block.liveCap": "You have had your {cap, plural, one {one live conversation} other {# live conversations}} this {unit, select, year {year} month {month} week {week} day {day} other {period}}",
+  "board.live.goal.reply": "Reply to the message",
+  "board.live.callOn": "{name}, what do you think?",
+  "board.live.note.0": "Where we stand against target",
+  "board.live.note.1": "The biggest risk",
+  "board.live.note.2": "What I need from you"
 }

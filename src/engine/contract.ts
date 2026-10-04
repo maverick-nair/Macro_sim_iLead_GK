@@ -192,6 +192,7 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('nextCandidate'), interactionId: Id }),
   z.object({ type: z.literal('chooseCandidate'), interactionId: Id, candidateId: Id.nullable() }),
   z.object({ type: z.literal('endInteraction'), interactionId: Id }),
+  z.object({ type: z.literal('abandonInteraction'), interactionId: Id }),
   z.object({ type: z.literal('dismissCard'), cardId: Id }),
   z.object({ type: z.literal('clearOutcome') }),
   z.object({ type: z.literal('endPeriod') }),

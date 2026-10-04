@@ -4,7 +4,6 @@ import type { EngineView, MetricChange } from '../../engine/contract';
 import { EngineProvider } from '../../engine/react';
 import { play } from '../../engine/sim/policies';
 import { createMockClient, defaultStoryline } from '../../engine/mock';
-import { Composer } from './Composer';
 import { EngineBoard } from './EngineBoard';
 import { EventCard } from './EventCard';
 import { PeriodPanel } from './PeriodPanel';
@@ -26,9 +25,6 @@ export const Playable: StoryObj = {
   )
 };
 
-/** Text entry for a live interaction, until the M4 live shell. */
-export const ComposerIdle: StoryObj = { render: () => <div style={{ width: 330 }}><Composer title="Meet face to face, Kent" busy={false} onSubmit={noop} /></div> };
-export const ComposerSending: StoryObj = { render: () => <div style={{ width: 330 }}><Composer title="Meet face to face, Kent" busy onSubmit={noop} /></div> };
 
 /** A team wide event: changes to more than three people read as one team chip per metric. */
 export const Event: StoryObj = {
