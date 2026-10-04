@@ -71,7 +71,7 @@ interface State {
 
 const INITIAL: State = {
   ready: false, scenario: null, screen: null, styles: {}, stats: {}, capacity: 2.5, outcome: false, applied: false, variant: 'roleplay', who: 'kent', overlay: null, step: null,
-  settings: { text: 100, captions: true, reduced: false, input: 'ptt', clock: true }, toast: null, opened: [], week: 2, day: 3, secs: 2292, planned: []
+  settings: { text: 100, captions: true, reduced: false, input: 'ptt', clock: true, voiceConsent: null }, toast: null, opened: [], week: 2, day: 3, secs: 2292, planned: []
 };
 
 const REACTING_MS = 3200;
@@ -145,7 +145,7 @@ export function App(p: AppProps) {
         ready: true, scenario: D, styles: Object.fromEntries(D.members.map(m => [m.id, m.style])), screen: p.screen ?? 'onboarding',
         variant: p.variant ?? 'roleplay', step: p.step ?? null, overlay: p.overlay ?? null, outcome: !!p.outcome
       };
-      if (session) Object.assign(st, { week: session.week, day: session.day, capacity: session.capacity, secs: session.secs, settings: session.settings, styles: { ...st.styles, ...session.styles } });
+      if (session) Object.assign(st, { week: session.week, day: session.day, capacity: session.capacity, secs: session.secs, settings: { ...INITIAL.settings, ...session.settings }, styles: { ...st.styles, ...session.styles } });
       if (p.outcome) {
         stats = applyMoves(stats, D.outcome);
         st.applied = true;
@@ -208,14 +208,15 @@ export function App(p: AppProps) {
     live: (variant, who) => go('live', { variant, who: who || 'kent' }),
     openProfile: id => set(st => (st.opened.includes(id) ? null : { opened: [...st.opened, id] })),
     clearOutcome: () => set({ outcome: false }),
-    overlay: o => set({ overlay: o })
+    overlay: o => set({ overlay: o }),
+    settings: patch => {
+      const next = { ...sRef.current.settings, ...patch };
+      set({ settings: next });
+      persist(api.saveSettings(next));
+    }
   }), [api, go, persist, say, set]);
 
-  const updateSettings = (patch: Partial<Settings>) => {
-    const next = { ...sRef.current.settings, ...patch };
-    set({ settings: next });
-    persist(api.saveSettings(next));
-  };
+  const updateSettings = (patch: Partial<Settings>) => act.settings(patch);
 
   const D = s.scenario;
   const dark = (p.theme ?? 'dark') === 'dark';

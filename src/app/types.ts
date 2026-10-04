@@ -12,6 +12,8 @@ export interface Settings {
   reduced: boolean;
   input: InputMode;
   clock: boolean;
+  /** Consent to capture audio (Design doc, input rules): null until asked; false keeps play text only. */
+  voiceConsent: boolean | null;
 }
 
 /** A member with live stats, the style set for this week and a resolved portrait URL. */
@@ -65,6 +67,8 @@ export interface AppActions {
   openProfile: (memberId: string) => void;
   clearOutcome: () => void;
   overlay: (overlay: Overlay | null) => void;
+  /** Updates and persists the participant's settings. */
+  settings: (patch: Partial<Settings>) => void;
 }
 
 /** Common props for every screen component. */

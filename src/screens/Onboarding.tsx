@@ -104,9 +104,11 @@ export function Onboarding({ d: D, act, app, step, uiState }: OnboardingProps) {
 
   const next = () => {
     const i = STEPS.indexOf(s.step);
+    if (s.step === 'consent') act.settings({ voiceConsent: true });
     if (i < STEPS.length - 1) setState({ step: STEPS[i + 1] });
   };
   const textOnly = () => {
+    act.settings({ voiceConsent: false, input: 'text' });
     act.say('Text only it is. You can turn voice on any time in Settings.');
     setState({ step: 'how' });
   };
