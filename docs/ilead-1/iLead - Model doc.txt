@@ -1,0 +1,242 @@
+iLead Model Document
+
+1. Introduction:
+iLead is a real-life-like simulation that tests the leadership mettle of the user. In the simulation, the user steps into the role of a sales director of an elevator company that has created a market for itself through innovative products. The sales team selling a specific elevator product is under-performing and is no where close to achieving the target. The user has to inspire, motivate and turnaround the sales team to achieve the sales target.
+
+2. Learning objectives:
+Five phases in the sales process: Leads, Qualify, Proposal, Negotiation, Conversion.
+Importance of knowing your team member.
+The funnel nature of sales cycle: There can never be a 100% conversion from the leads. It is very important to make sure lead generation actors are performing at their best as that would impact others performance as well.
+The 4 different leadership styles (Executor, Influencer, Collaborator, Delegator) and importance of changing leadership styles with changing behaviour of actors.
+The importance of adopting correct leadership styles with actors, or else;
+They might respond negatively to even positive actions like team lunch or team outing.
+They might leave the company.
+The art of coaching, rewarding the members at the correct time.
+The importance of sending people for training at the right time.
+The art of responding to general events with appropriate actions, so that the team moral doesn't go down.
+
+3. Phases:
+Leads: Team members in this role are responsible for making initial contact with companies and collecting potential leads.
+Qualify: Once leads are collected, team members in this role apply certain parameters to the companies to check if they qualify to be potential customers.
+Proposal: Once companies qualify, team members in this role send out proposals with pricing and service level agreements.
+Negotiation: Negotiations with clients may happen with companies for price or for service agreements.
+Conversion: Upon successful negotiation, team members responsible for conversion take over and process the order management system.
+
+4. Leadership Styles:
+Executor/Directive: You are direct with team member and give in-depth instructions.
+Influencer/Guiding:  Seek buy-in from team member to complete the task.
+Collaborator/Partnering: Encourage team member and help in achieving task.
+Delegator/Entrusting: Delegate by providing big picture and monitor progress.
+
+5. Logic:
+The leader takes two types of actions in the simulation:
+Leadership actions
+General actions
+Impact on skill, motivation and performance based on  leadership actions (actions that the leader takes in the start of the week):
+The leadership style is judged based on two parameters:  skill, and motivation.
+Low skill, Low motivation : Executor
+Low skill, High motivation : Influencer
+High skill, Low motivation : Collaborator
+High skill, High motivation : Delegator
+If the actor seeks an Executor style leadership and
+The leader is adopting Delegator style, then he misses judging both skill and motivation.
+The leader is adopting Influencer or Collaborator style, then he misses judging either skill or motivation.
+Depending upon leadership decisions and its correctness up to skill and motivation level we calculate appropriate impact on skill, motivation and performance.
+To incorporate real world scenarios we have built 5-10% randomness in the impact.
+Impact on skill, motivation and performance based on general actions (actions that the leader takes during week days)
+Meet the team and Energize team general actions impact the skill, motivation and performance of the team.
+Other general actions are restricted to few actor, and leader need to select actor(s) based on the general action selected to proceed.
+Almost all general actions have four options, each one corresponds to one of the leadership style.
+The impact depends upon two parameters 
+Whether the leader has taken the correct option (depending upon the actor's state) out of the four or not.
+Whether they have adopted correct leadership style with the respective actor in the beginning of the week or not.
+There are few actions with restriction
+Meet the team action has 10 days restriction
+Team lunch action has 20 days restriction
+Team building activity action has 8 days restriction
+Hire member action has 8 days restriction
+Reward member action has 20 days restriction
+Again, to incorporate the real world scenarios we have built 5-10% randomness in the impact.
+See detailed information in section 7, i.e General action impacts
+There are various kinds of events that are built into the simulation.
+General events
+Trigger events
+Impact on skill, motivation and performance due to general events:
+Examples of general events includes recession strikes, actor dissatisfaction due to new CRM system, rumors of being acquired etc. and these events impact skill, motivation and performance depending upon its severity.
+Again the impact of general events depends not only on its severity but also on the leadership styles adopted with the actors at the beginning of the week.
+Trigger events are the events which occur as consequences of the decisions taken, some examples include:
+Employee morale drops if they are performing constantly for 3 weeks or more and still have not received any congratulatory mail or rewards.
+Role change request not adhered to, if the actor is in same role for more than 2 months.
+If the actor's performance is constantly decreasing for a month and still no actions are being taken by the leader. Then:
+Employee starts complaining about the leader.
+Employee would request for training etc.
+If the actor is very low in skill and motivation and still nothing is done by the leader, the actor leaves the company.
+Top performing actors, depending upon work and availability of other person in the team, sometimes take medical or casual leave.
+Each of these events impact skill, motivation and performance according to its severity, with 5-10% of randomness.
+
+6. Important Metrics:
+Conversion:
+The storyline is configured in such a way that every day there will be some input to the sales funnel and if the team is performing at their best they will be able to get the leads.
+Whether the leads get to other phases like Qualify, Proposal, Negotiation, Conversion etc. or not depends upon two things:
+generic build-in ratio like
+only 60-65% of leads will Qualify
+only 50% of Qualified deals will go to Proposal
+only 30% of Proposal will go to negotiation stage
+only 50% of negotiation gets converted etc.
+Whether the team is performing with at least 75-80% performance level or not.
+Calculation:
+output = input * phase conversion ratio * (average performance of the phase + performance threshold) / 100, where
+Phase conversion ratio: conversion ratio associated with each phase.
+Average performance of the phase = (sum of performance of all the actors in that phase / number of actors in that phase).
+Performance threshold = buffer value based on storyline.
+Input = input to the phase,
+for first phase the input is the input given to the funnel, which changes every week based on the storyline
+For other phases the input is the output of previous phase.
+Number of conversions achieved = sum of output from conversion phase for each subperiod.
+Total target achieved = number of conversion achieved * value of each conversion (depends upon storyline).
+Accuracy: Number of correct leadership style decisions taken / number of total decisions taken
+Dominant style: leadership style set with maximum number of actors.
+Team skill: (Sum of skill of all the persons in the team / number of persons in the team)
+Team motivation: (Sum of motivation of all the persons in the team / number of persons in the team)
+Team performance: (Sum of performance of all the persons in the team / number of persons in the team)
+Team skill variance: (Sum of skill variance of all the members affected / number of persons in the team)
+Team motivation variance: (Sum of motivation variance of all the members affected / number of persons in the team)
+Team performance variance: (Sum of performance variance of all the members affected / number of persons in the team)
+Range of leadership style percentages: count of particular leadership style set with actors / total number of leadership style set with the actors.
+
+
+
+
+
+
+
+7. General Action Impacts:
+Meet the team: This is a team action and has four options, each corresponds to a particular leadership style.
+Style Difference: The style difference is calculated by comparing the leadership style (based on the option selected) with actor’s actual leadership style (calculated based on his/her skill and motivation value).
+Skill Values have 2 ranges
+Low Skill
+High skill
+Morale has 2 ranges
+Low Morale
+High Morale
+Based on both skill and morale a person can fall into any one of 4 categories
+Low Skill, Low Morale
+Low Skill, High Morale
+High Skill, Low Morale
+High Skill, High Morale
+Style difference = 0, if skill and motivation values of both the styles fall in same range (i.e either both low or both high), (if you have correctly selected an option which correctly identifies both the skill and morale ranges)
+Style  difference = 1, if either of skill or motivation values of both the styles fall in same range, (if you have selected an option which correctly identifies either the skill or morale ranges)
+Style difference = 2, if both skill and motivation values of both the styles fall in opposite range (if you have selected an option which does not correctly identify the skill and the morale ranges)
+For ex: if the option selected is of executor type (low skill, low motivation) and
+If actor’s leadership style is executor (low skill, low motivation), then skill and motivation of both the styles falls in same range, hence style difference = 0
+If actor’s leadership style is influencer(low skill, high motivation) or collaborator (high skill, low motivation), then only one of skill or motivation value of the two styles falls in same range, hence style difference = 1
+If actor’s leadership style is delegator (high skill, high motivation), then skill and motivation values of both the styles falls in opposite range, hence style difference = 2.
+Mismatch Type: Same as style difference, but with some randomness associated (to incorporate real life scenario)
+If style difference = 0, then mismatch type = 0.
+If style difference = 1
+And 60% randomness, then mismatch type = 1,
+Otherwise mismatch type = 0
+If style difference = 2
+And 60% randomness, then mismatch type = 2,
+Otherwise mismatch type = 0
+Impact: 
+Each mismatch type has associated skill, motivation and performance variance value.
+The final impact is calculated by considering these values along with 80%-120% randomness.
+Team lunch/Team building activity: These are team actions.
+Style Difference: The style difference is calculated by comparing the leadership style (which the player set with actor at the start of that week) with actor’s actual leadership style at the start of week (calculated based on his/her skill and motivation value).
+Mismatch Type: Same as style difference, but with some randomness associated (to incorporate real life scenario)
+If style difference = 0, then mismatch type = 0.
+If style difference = 1
+And 60% randomness, then mismatch type = 1,
+Otherwise mismatch type = 0
+If style difference = 2
+And 60% randomness, then mismatch type = 2,
+Otherwise mismatch type = 0
+Impact: 
+Each mismatch type has associated skill, motivation and performance variance value.
+The final impact is calculated by considering these values along with 80%-120% randomness.
+
+Send congratulatory/Warning mail: This action can be taken at max for 3 actors. The mismatch type is calculated by comparing current performance value of the actor with his/her performance 10 days before from the current sub-period.
+Mismatch Type 
+If difference(current performance - performance before 10 days) is >= 0
+Mismatch type = 0 (for congratulatory mail)
+Mismatch type = 1 (for warning mail)
+If difference is < 0
+Mismatch type = 1 (for congratulatory mail)
+Mismatch type = 0 (for warning mail)
+Impact: 
+Each mismatch type has associated skill, motivation and performance variance value.
+The final impact is calculated by considering these values along with 80%-120% randomness.
+Swap/Reassign role: Each actor has associated skill, motivation and performance values for each phase. The new values are taken based on the new phase selected with a buffer of (+6, -6).
+Impact: 
+Skill variance = new skill - old skill,
+Motivation variance = new motivation - old motivation
+Performance variance = new performance - old performance
+Send for training: This action can be taken at max for 3 actors. 
+Style Difference: The style difference is calculated by comparing the leadership style (which the player set with actor at the start of that week) with actor’s actual leadership style at the start of week (calculated based on his/her skill and motivation value).
+Mismatch Type: Same as style difference, but with some randomness associated (to incorporate real life scenario)
+If style difference = 0
+And 90-100% randomness, then mismatch type = 2,
+And 80-90% randomness, then mismatch type = 1,
+Otherwise mismatch type = 0
+If style difference = 1
+And 90-100% randomness, then mismatch type = 0,
+And 60-90% randomness, then mismatch type = 2,
+Otherwise mismatch type = 1
+If style difference = 2
+And 90-100% randomness, then mismatch type = 0,
+And 60-90% randomness, then mismatch type = 1,
+Otherwise mismatch type = 2
+Impact: 
+Each mismatch type has associated skill, motivation and performance variance value.
+The final impact is calculated by considering these values along with 80%-120% randomness.
+Hire member: The hired actor will have the skill, motivation and performance value shown in the profile while hiring. None of the other actors get affected.
+Fire member: It’s an individual actor action. The actor selected for firing will be removed from the team, and all the other actors available in the team get affected. The mismatch type of all the other actors is always 1, and will always respond negatively.
+Impact:
+Each mismatch type has associated skill, motivation and performance variance value.
+The final impact is calculated by considering these values along with 80%-120% randomness.
+Assess member: This action is an information related action and does not have impact on any of the actors. Each actor has associated skill, motivation and performance values for each phase. The assessment values for skill, motivation and performance are calculated based on the new phase selected with a buffer of (+6, -6).
+Reward member: This is an individual actor action. But the impact depends upon the actor selected for rewarding.
+Mismatch type:
+if the actor selected for rewarding is the best performing actor in the team (i.e, the actor has highest performance value among all the actors in the team except the one’s who are on training or on leave), then mismatch type = 0,
+if the actor selected for rewarding is not the best performing actor in the team. In this case we get the response from two actors. One is from the actor selected for this action and the other one is from the best performing actor in the team.
+The actor selected for this action will have mismatch type = 0 and will always respond positively.
+While the best performing actor will have mismatch type = 1 and will always respond negatively.
+Impact:
+Each mismatch type has associated skill, motivation and performance variance value.
+The final impact is calculated by considering these values along with 80%-120% randomness.
+Meet face to face/Set goals/Coach member/Give feedback: These are individual actor actions and has four options, each corresponds to a particular leadership style.
+Style Difference: The style difference is calculated by comparing the leadership style (based on the option selected) with actor’s actual leadership style (calculated based on his/her skill and motivation value).
+Style difference = 0, if skill and motivation values of both the styles fall in same range,
+Style difference = 1, if either of skill or motivation values of both the styles fall in same range,
+Style difference = 2, if both skill and motivation values of both the styles fall in opposite range
+Mismatch Type: Same as style difference, but with some randomness associated (to incorporate real life scenario)
+If style difference = 0, then mismatch type = 0.
+If style difference = 1
+And 60% randomness, then mismatch type = 1,
+Otherwise mismatch type = 0
+If style difference = 2
+And 60% randomness, then mismatch type = 2,
+Otherwise mismatch type = 0
+Impact: 
+Each mismatch type has associated skill, motivation and performance variance value.
+The final impact is calculated by considering these values along with 80%-120% randomness.
+8. Report analysis:
+Individual report:
+Dominant Leadership style: Leadership style which the user adopted maximum times in the simulation.
+Range of leadership style: The percentage of times the user has chosen to adopt a particular leadership style over the course of the simulation
+Leadership capability: Number of correct leadership style adopted / total number of leadership style taken. 
+Consistency in style: The difference between the dominant intent and the dominant style adopted by the manager reflects the impact it would have on the team members.
+Dominant intent with an actor: Leadership style which user set with the actor maximum number of times.
+Dominant style with an actor: Leadership style associated with the actions like meet the team, meet face to face, set goals, coach member and give feedback, which user take with the actor maximum number of times.
+Average result: Average performance of the actor during the course of simulation.
+Delta in performance: actor’s final performance - initial performance.
+Action taken: number of general actions taken on the actor during the course of simulation.
+Group report:
+Range of leadership style: Count of users in the group with particular dominant leadership style.
+Performance: Average number of conversions achieved by the users in the group with the particular leadership style.
+Adaptive leadership capability: Number of users in the group with accuracy between the given range.
+Time spent with team members: The time spent by the user with top performers, bottom performers and others.
+Top Performers: The top 25% team members, when the team members are arranged in the decreasing order of their performance.
+Bottom Performers: The bottom 25% team members, when the team members are arranged in the decreasing order of their performance.
+Others: Remaining team members.

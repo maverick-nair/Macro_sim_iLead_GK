@@ -145,11 +145,44 @@ The design marks the first 4 badges as earned on the End screen, but the scenari
 **D27. AI labels.** Decided.
 NPC transcript turns carry the design's visible "AI persona" label. Captions in the 1:1, meeting and sponsor screens have no visible label in the design, so they carry a visually hidden "AI persona voice" note. Adding a visible label to captions would be a design change; I'll raise it in M4.
 
+## Simulation rules (your direction, 4 Oct)
+
+The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Model doc and content workbook (`docs/ilead-1/`), plus the 2.0 additions.
+
+**D28. Money, time and stages are storyline config.** Decided, per your direction. Schema: `src/engine/config.ts`.
+- **Money:** any ISO 4217 currency (USD, GBP, JPY, SGD, INR, MYR, AED and more), the locale's own formatting (₹41,20,000, ￥4,120,000), and symbol or code display.
+- **Time:** years, months, weeks or days, 1 to 10 periods.
+- **Stages:** 3 to 6, with conversion ratios.
+- **UI copy** with a unit in it ("Week 2", "End week", "½ day") becomes ICU messages with the unit as an argument (M2).
+- **Stage limit:** 6 is the most the board fits at 1280 wide. Tell me if you need more.
+
+**D29. Stars can be 0 to 3 per period.** Proposed. The spec says "stars earned (1 to 3)", but each star has its own rule (People, Leadership, Business), and the design shows "Business star, not yet". To guarantee 1, the period's best progress could always earn its star. Your call.
+
+**D30. Trust rules are new.** Proposed (SIMULATION.md section 3).
+- It moves with style match, how a conversation lands, promises kept or broken, responsiveness, and fairness.
+- It changes play three ways: it scales how well positive actions land (0.8 to 1.2), it makes misreads likelier under 30, and it gates hidden concerns.
+- It also feeds mood and the resignation and complaint triggers.
+
+**D31. iLead 1.0 sources disagree in two places; the Model doc wins.** Decided, per your direction.
+- Repeat limits: the Model doc's (Hire 8 days, Team building 8 days), not the workbook's.
+- The workbook's style sheet lists Partnering as high skill and high morale. The Model doc says high skill and low morale, which is followed.
+
+**D32. Action costs follow the 2.0 design.** Proposed. The workbook charges whole days. The design charges half days for face to face, feedback, goals, reward and energize, and 2 days for training. Costs are config either way.
+
+**D33. Weekly style values are new defaults.** Proposed. The Model doc defines the weekly style rule but gives no numbers, so SIMULATION.md 4.4 sets defaults inside the workbook's bounds. Calibration may tune them.
+
+**D34. Two data sets.** Decided.
+- The `/screens` and `/states` galleries keep the prototype's numbers, so design parity stays provable.
+- The playable app runs the calibrated Sales Elevator storyline from the workbook. Its numbers and stages will differ from the design frames by intent.
+
+**D35. Live interactions use 1.0's maths.** Proposed.
+- In 1.0 you picked one of four written options; in 2.0 you speak or write freely.
+- The AI evaluator classifies your words as one of the four styles, and 1.0's mismatch maths then applies unchanged.
+- A Strong conversation improves the mismatch by one step; a Weak one worsens it by one.
+- The evaluator only reads; authored rules decide the consequences (brief, rule 1).
+
 ## Blocked on missing docs
 
-**D19.** These are needed from the Teardown, the Simulation Design and the GenieKreator Configuration Spec:
-- 8 weeks of fixtures: events, news, inbox and metric ranges per week. The prototype only has week 2.
-- The engine rules and payload shapes for outcomes, reason chips and evidence.
-- The action list with costs, cooldowns and prerequisites. The prototype has 13 actions (6 team, 7 member), which matches the brief's count, but not their rules.
-- The theme config schema: brand, logo, avatars, illustrations, voices and strings.
-- The tier names (Bronze to Platinum) and the badge rules.
+**D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
+- The GenieKreator Configuration Spec for theme config (brand, logo, avatars, illustrations, voices). Needed in M7.
+- Sales Elevator money values (target, value per deal, lead input). Calibration will propose them; confirm or replace.
