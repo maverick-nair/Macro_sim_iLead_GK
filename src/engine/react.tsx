@@ -1,0 +1,44 @@
+import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createDefaultClient, type EngineClient } from './client';
+import type { EngineView, Intent, IntentResult } from './contract';
+
+/**
+ * React bindings for the engine. The view lives in the query cache under one key; every intent
+ * replaces it with the view the engine returns. The UI never patches the view itself.
+ */
+const ClientContext = createContext<EngineClient | null>(null);
+export const VIEW_KEY = ['engine', 'view'] as const;
+
+export function EngineProvider({ client, children }: { client?: EngineClient; children: ReactNode }) {
+  const [state] = useState(() => ({
+    client: client ?? createDefaultClient(),
+    queries: new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, refetchOnWindowFocus: false, retry: 1 }, mutations: { retry: false } } })
+  }));
+  return (
+    <QueryClientProvider client={state.queries}>
+      <ClientContext.Provider value={state.client}>{children}</ClientContext.Provider>
+    </QueryClientProvider>
+  );
+}
+
+export function useEngineClient(): EngineClient {
+  const c = useContext(ClientContext);
+  if (!c) throw new Error('useEngineClient needs an EngineProvider');
+  return c;
+}
+
+export function useEngineView() {
+  const client = useEngineClient();
+  return useQuery<EngineView>({ queryKey: VIEW_KEY, queryFn: () => client.view() });
+}
+
+/** Sends one intent. On success the cached view becomes the engine's answer. */
+export function useIntent() {
+  const client = useEngineClient();
+  const qc = useQueryClient();
+  return useMutation<IntentResult, Error, Intent>({
+    mutationFn: intent => client.send(intent),
+    onSuccess: result => qc.setQueryData(VIEW_KEY, result.view)
+  });
+}
