@@ -23,7 +23,7 @@ export function ReasonChip({ name, metric, delta, showNumbers, onToggle, size = 
   const text = showNumbers
     ? t('reason.chip.numbers', { name, metric: t('metric.name', { metric }), delta: fmt(delta) })
     : t('reason.chip.words', { name, metric: t('metric.nameLower', { metric }), direction: up ? 'up' : 'down' });
-  const sizing = size === 'md' ? 'h-7.5 px-3 text-13' : 'h-6.5 px-2.5 text-12 cursor-pointer';
+  const sizing = size === 'md' ? 'min-h-7.5 px-3 text-13' : 'min-h-6.5 px-2.5 text-12 cursor-pointer';
   // Buttons carry UA padding and font; the chip sets every box property itself.
   return (
     <button

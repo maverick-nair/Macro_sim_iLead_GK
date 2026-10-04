@@ -90,7 +90,7 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
         </div>
         <div className="relative">
           <button type="button" onClick={onToggleLegend} aria-expanded={legendOpen} aria-controls={legendOpen ? legendId : undefined}
-            className="flex h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+            className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
             <HelpIcon />{t('team.legend.button')}
           </button>
           {legendOpen && <StyleLegend id={legendId} periodUnit={periodUnit} />}

@@ -311,6 +311,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The style setting screen is the main landmark, headed by its visible "Week 2 of 8 · Style setting" line. Components that render headings on the board take a `headingLevel`.
 - The HUD score is a disclosure: Enter or Space toggles the breakdown (focus no longer opens it). The style control can be locked (`disabled`, aria-disabled with the reason as description). The palette search box has a focus ring.
 - On narrow cards (a 1024 wide board) the trust ring moves above the mood pill instead of covering it, and the profile button moves under the name so the name keeps the card's width.
+- At 200% text (D56) the member card's style letters, mood pill and tags, the reason chips, the HUD pills (clock, score, Cmd K, nav) and the legend button use minimum heights instead of fixed ones, and the metric bar's label and value columns grow (`minmax(46px, max-content)`), so text no longer spills out of pills or into the bar. At 100% they render exactly as before. The trust ring's number still runs past its 38px ring at 200%.
 
 ## Blocked on missing docs
 

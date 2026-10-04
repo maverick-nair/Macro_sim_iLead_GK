@@ -7,8 +7,8 @@ export const STYLE_KEYS: readonly StyleKey[] = ['D', 'G', 'P', 'E'];
 
 /** Board cards use the compact control; the style setting screen uses the roomier one. */
 const SIZES = {
-  sm: { segment: 'h-6.5 text-12', tip: 'w-52.5 shadow-(--il-style-tooltip-shadow)' },
-  md: { segment: 'h-7.5 text-13', tip: 'w-50' }
+  sm: { segment: 'min-h-6.5 text-12', tip: 'w-52.5 shadow-(--il-style-tooltip-shadow)' },
+  md: { segment: 'min-h-7.5 text-13', tip: 'w-50' }
 } as const;
 
 export interface StyleTooltipProps {

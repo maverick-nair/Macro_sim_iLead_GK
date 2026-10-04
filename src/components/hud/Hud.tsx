@@ -146,13 +146,13 @@ export function Hud(p: HudProps) {
   return (
     <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap">
       <div className="flex items-center gap-2.5">
-        {p.clientLogo && <div className="flex h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
+        {p.clientLogo && <div className="flex min-h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
       </div>
       {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
         {p.nav.map(n => (n.label ? (
           <button key={n.key} type="button" onClick={() => p.onNav(n.key)}
-            className={`h-8 flex-none cursor-pointer rounded-pill border-0 bg-transparent px-2 py-0 text-13 font-600 text-fg-secondary hover:bg-surface-raised hover:text-fg-primary ${focus}`}>
+            className={`min-h-8 flex-none cursor-pointer rounded-pill border-0 bg-transparent px-2 py-0 text-13 font-600 text-fg-secondary hover:bg-surface-raised hover:text-fg-primary ${focus}`}>
             {n.label}
           </button>
         ) : (
@@ -170,7 +170,7 @@ export function Hud(p: HudProps) {
       </div>
       {p.sessionClock !== null && (
         <button type="button" onClick={p.onPause} aria-label={t('hud.pause.aria')}
-          className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary ${focus}`}>
+          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary ${focus}`}>
           <Pause />{p.sessionClock}
         </button>
       )}
@@ -179,7 +179,7 @@ export function Hud(p: HudProps) {
         <button type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open ? tipId : undefined}
           onClick={e => setOpen(e.detail === 0 ? !open : true)}
           onBlur={() => setOpen(false)} onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); } }}
-          className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
+          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
           <Star />{number(score.total)}
         </button>
         {open && (
@@ -200,7 +200,7 @@ export function Hud(p: HudProps) {
       </div>
       <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700"><Flame />{number(p.streak)}</span>
       <button type="button" onClick={p.onPalette} aria-label={t('hud.palette.aria')}
-        className={`h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary ${focus}`}>
+        className={`min-h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary ${focus}`}>
         {t('hud.palette.key')}
       </button>
       <button type="button" onClick={p.onSettings} aria-label={t('hud.settings.aria')}

@@ -146,7 +146,7 @@ export function MemberCard(props: MemberCardProps) {
           above the pill instead of covering it, and a pill wider than the card truncates.
         */}
         <div className="absolute right-1.5 bottom-1.5 left-2 flex flex-wrap-reverse items-start gap-1">
-          <span title={pill} className="mb-0.5 flex h-5.5 min-w-0 items-center gap-1.25 rounded-pill bg-member-pill px-2 text-12 font-700 text-member-on-portrait">
+          <span title={pill} className="mb-0.5 flex min-h-5.5 min-w-0 items-center gap-1.25 rounded-pill bg-member-pill px-2 text-12 font-700 text-member-on-portrait">
             <span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />
             <span className="truncate">{pill}</span>
           </span>
@@ -174,7 +174,7 @@ export function MemberCard(props: MemberCardProps) {
         </div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {tags.map((tag, i) => <span key={i} className="flex h-5 items-center rounded-pill border border-line-default bg-surface-raised px-2 text-12 font-600 whitespace-nowrap">{tag}</span>)}
+            {tags.map((tag, i) => <span key={i} className="flex min-h-5 items-center rounded-pill border border-line-default bg-surface-raised px-2 text-12 font-600 whitespace-nowrap">{tag}</span>)}
           </div>
         )}
         {statsHidden ? (

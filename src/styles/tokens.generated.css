@@ -348,7 +348,7 @@
   --il-member-card-shadow-selected: 0 0 0 1px var(--il-color-accent-secondary), 0 12px 36px var(--il-color-member-glow);
   --il-member-card-transition: translate var(--il-duration-base) var(--il-easing-settle), box-shadow var(--il-duration-base) var(--il-easing-brand), opacity var(--il-duration-base) var(--il-easing-brand);
   --il-member-hidden-stats-height: 64px;
-  --il-metric-bar-columns: 46px minmax(0,1fr) 22px;
+  --il-metric-bar-columns: minmax(46px,max-content) minmax(0,1fr) minmax(22px,max-content);
   --il-metric-bar-fill: var(--il-fill-meter);
   --il-metric-bar-transition: width var(--il-duration-slow) var(--il-easing-spring);
   --il-metrics-strip-columns: repeat(4,minmax(0,1fr)) minmax(0,1.2fr) minmax(0,1.3fr) minmax(0,1fr);
