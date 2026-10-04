@@ -1,0 +1,13 @@
+{
+  "team": {
+    "title": {
+      "tracking": { "value": "-0.02em", "$description": "\"Your team\" heading" }
+    },
+    "legend": {
+      "width": { "value": "360px" },
+      "columns": { "value": "32px 1fr", "$description": "Style letter, name and description" },
+      "shadow": { "value": "0 16px 40px {color.member.shadow-raised}" },
+      "enter": { "value": "ilIn 200ms ease" }
+    }
+  }
+}

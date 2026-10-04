@@ -4,11 +4,16 @@ import type { EventType, MemberAction, MetricKey, StyleKey, TeamAction } from '.
 import { css, pseudo } from '../lib/css';
 import { Button, NoWrapButton } from '../ds/Button';
 import { useMergeState } from './board/useMergeState';
-import { MemberCard, type MemberCardProps } from '../components/member/MemberCard';
+import type { MemberCardProps } from '../components/member/MemberCard';
 import { KpiTile, type KpiTrend } from '../components/metric/KpiTile';
 import { ActionTile, type ActionBlock, type ActionTileProps } from '../components/action/ActionTile';
 import { ActionDrawer, type ActionDrawerProps } from '../components/action/ActionDrawer';
-import { useDays } from '../components/action/days';
+import { useDays, type PeriodUnit, type SubPeriodUnit } from '../components/action/days';
+import { ActionsPanel } from '../components/actions/ActionsPanel';
+import { TeamBoard, type StageColumn, type TeamBoardHint } from '../components/team/TeamBoard';
+import { InboxRail, type InboxRailItem } from '../components/inbox/InboxRail';
+import { InboxDrawer, type InboxDrawerItem } from '../components/inbox/InboxDrawer';
+import type { InboxSender } from '../components/inbox/sender';
 import { CommandPalette, type PaletteResult, type PaletteTone } from '../components/palette/CommandPalette';
 import { OutcomePanel, type OutcomePanelProps } from '../components/outcome/OutcomePanel';
 import { useI18n, type I18n } from '../i18n';
@@ -203,9 +208,10 @@ export function Board(props: BoardProps) {
       onStyleTooltipChange: k => setState(x => (k ? { tip: m.id + ':' + k } : x.tip && x.tip.startsWith(m.id + ':') ? { tip: null } : null)) };
   };
 
+  // TODO(M2): the storyline config supplies the units and capacity; Sales Elevator is weeks of 5 days.
+  const periodUnit: PeriodUnit = 'week', subPeriodUnit: SubPeriodUnit = 'day', capacityPerPeriod = 5;
   const worst = D.stages.reduce((b, st, i) => (st.count / st.ideal < D.stages[b].count / D.stages[b].ideal ? i : b), 0);
-  const columns = D.stages.map((st, i) => ({ n: st.n, count: st.count, sub: i === worst ? 'Bottleneck this week' : `Ideal ${st.ideal}`,
-    hBg: i === worst ? 'var(--ik-warn-soft)' : 'var(--ik-card)', hBorder: i === worst ? 'var(--ik-warn)' : 'var(--ik-line)', subC: i === worst ? 'var(--ik-warn)' : 'var(--ik-text-2)', subW: i === worst ? '700' : '400',
+  const columns: StageColumn[] = D.stages.map((st, i) => ({ key: st.k, name: st.n, count: st.count, ideal: st.ideal, bottleneck: i === worst,
     cards: members.filter(m => m.stage === i).map(card) }));
   const avg = (k: MetricKey) => Math.round(members.reduce((a, m) => a + m[k], 0) / members.length);
   const kd: Record<MetricKey, number> = outcome ? { skill: 0, morale: 0.6, result: 0, trust: 0.6 } : { skill: 0.3, morale: 0, result: 0.6, trust: -0.3 };
@@ -266,8 +272,7 @@ export function Board(props: BoardProps) {
   const evKey = s.event as EventType | null;
   const evData = evKey ? D.events[evKey] : null;
   const unreadItems = D.inbox.filter(i => !s.readIds.includes(i.id));
-  type Sender = { hasImg: boolean; img: string; label: string; bg: string };
-  const sender = (it: (typeof D.inbox)[number]): Sender => (it.from === 'sponsor' ? { hasImg: false, img: '', label: 'PN', bg: 'var(--grad-brand)' } : it.from === 'news' ? { hasImg: false, img: '', label: 'News', bg: 'linear-gradient(135deg,#43D6E8,#00F2AD)' } : { hasImg: true, img: `/assets/npc/${it.from}.png`, label: '', bg: 'linear-gradient(160deg,#DEE9FF,#9FDCEB)' });
+  const sender = (it: (typeof D.inbox)[number]): InboxSender => (it.from === 'sponsor' ? { kind: 'sponsor', initials: D.sponsor.initials } : it.from === 'news' ? { kind: 'news' } : { kind: 'member', img: `/assets/npc/${it.from}.png` });
   const openItem = (it: (typeof D.inbox)[number]) => { setState(x => ({ inbox: false, readIds: [...x.readIds, it.id] })); if (it.type === 'news') setState({ event: 'impact' }); else if (it.type === 'email') act.live('email', it.from); else if (it.type === 'sponsor') act.live('sponsor'); else act.live('roleplay', it.from); };
   const q = s.q.trim().toLowerCase();
   const palItems: PaletteResult[] = [
@@ -298,13 +303,15 @@ export function Board(props: BoardProps) {
   };
   const toggleInbox = () => setState(x => ({ inbox: !x.inbox }));
   const unread = unreadItems.length;
-  const inboxRail = unreadItems.map(it => ({ ...sender(it), id: it.id, aria: it.title, ring: it.urgent ? 'oklch(0.84 0.14 78)' : 'var(--ik-line)', open: () => openItem(it) }));
-  const inboxItems = unreadItems.map(it => ({ ...sender(it), ...it, tag: it.type === 'chat' ? 'Chat from ' + first(memberById(members, it.from).name) : it.type === 'sponsor' ? 'Priya, sponsor note' : it.type === 'news' ? 'News' : 'Email from ' + first(memberById(members, it.from).name),
-    urgent: !!it.urgent, border: it.urgent ? 'var(--ik-warn)' : 'var(--ik-line)', cta: it.type === 'news' ? 'See impact' : 'Reply now', open: () => openItem(it), later: () => setState(x => ({ readIds: [...x.readIds, it.id] })) }));
-  const boardHint = picking ? 'Click people to add them to the action' : sm ? `${sm.name} selected` : 'Click anyone to select them';
+  const openById = (id: string) => { const it = unreadItems.find(x => x.id === id); if (it) openItem(it); };
+  const inboxRail: InboxRailItem[] = unreadItems.map(it => ({ id: it.id, label: it.title, sender: sender(it), urgent: !!it.urgent }));
+  const sponsorFirst = first(D.sponsor.name);
+  const inboxItems: InboxDrawerItem[] = unreadItems.map(it => ({ id: it.id, sender: sender(it), title: it.title, preview: it.preview, meta: it.meta, due: it.due ?? null, urgent: !!it.urgent,
+    tag: t('inbox.tag', { type: it.type, name: it.type === 'sponsor' ? sponsorFirst : it.type === 'news' ? '' : first(memberById(members, it.from).name) }),
+    cta: it.type === 'news' ? 'impact' : 'reply' }));
+  const boardHint: TeamBoardHint = picking ? { kind: 'picking' } : sm ? { kind: 'selected', name: sm.name } : { kind: 'idle' };
   const teamTiles = D.teamActions.map(a => tileFor(a, null));
-  const indivTitle = sm ? `For ${first(sm.name)}` : 'For one person';
-  const indivTiles = sm ? D.memberActions.map(a => tileFor(a, sm)) : [];
+  const indiv = sm ? { firstName: first(sm.name), tiles: D.memberActions.map(a => tileFor(a, sm)) } : null;
   const ev = evData && evKey ? { ...evData, art: EV_ART[evKey], hasImg: !!EV_IMG[evKey], img: EV_IMG[evKey] ? `/assets/npc/${EV_IMG[evKey]}.png` : '', two: evKey === 'capacity' || evKey === 'impact',
     secondLabel: evKey === 'capacity' ? 'Talk to Ruth first' : 'Call Priya', second: () => { setState({ event: null }); if (evKey === 'capacity') act.live('roleplay', 'ruth'); else act.live('sponsor'); } } : null;
   const closeEvent = () => { setState({ event: null }); if (ev && evKey === 'capacity') act.say('Leave approved. Justin covers Brightwell on Thursday and Friday.'); };
@@ -401,92 +408,15 @@ export function Board(props: BoardProps) {
           {outcome && <OutcomePanel {...outcomePanel} />}
 
           <div style={css('flex:1; display:grid; grid-template-columns:64px minmax(0,1fr) 330px; gap:0; position:relative; min-height:0')}>
-            <aside aria-label="Inbox" style={css('display:flex; flex-direction:column; align-items:center; gap:10px; padding:4px 0 24px 16px')}>
-              <button onClick={toggleInbox} aria-label={`Inbox, ${unread} unread`} style={css('position:relative; width:44px; height:44px; border-radius:14px; border:1px solid var(--ik-line); background:var(--ik-card); color:var(--ik-text); cursor:pointer; display:flex; align-items:center; justify-content:center')}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"></path></svg>
-                {unread > 0 && <span style={css('position:absolute; top:-6px; right:-6px; min-width:20px; height:20px; padding:0 5px; border-radius:10px; background:var(--grad-brand); color:#0A081B; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center')}>{unread}</span>}
-              </button>
-              {inboxRail.map(ir => (
-                <button key={ir.id} onClick={ir.open} aria-label={ir.aria} style={css(`position:relative; width:40px; height:40px; padding:0; border-radius:50%; overflow:hidden; border:2px solid ${ir.ring}; background:${ir.bg}; color:#0A081B; font-size:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center`)}>
-                  {ir.hasImg && <img src={ir.img} alt="" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} />}{ir.label}
-                </button>
-              ))}
-            </aside>
+            <InboxRail unread={unread} items={inboxRail} onToggle={toggleInbox} onOpen={openById} />
 
-            <section aria-label="Your team" style={css('padding:4px 20px 24px; display:flex; flex-direction:column; gap:12px; min-width:0')}>
-              <div style={css('display:flex; align-items:center; justify-content:space-between; gap:12px')}>
-                <div style={css('display:flex; align-items:baseline; gap:12px')}><h2 style={css('margin:0; font-size:20px; font-weight:700; letter-spacing:-0.02em')}>Your team</h2><span style={css('font-size:13px; color:var(--ik-text-2)')}>{boardHint}</span></div>
-                <div style={css('position:relative')}>
-                  <button onClick={() => setState(x => ({ legend: !x.legend }))} aria-expanded={s.legend} style={css('display:flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:var(--ik-card); color:var(--ik-text); font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap')}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>What do D, G, P and E mean?</button>
-                  {s.legend && (
-                    <div role="dialog" aria-label="Leadership styles" style={css('position:absolute; top:calc(100% + 8px); right:0; width:360px; padding:16px; border-radius:18px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 16px 40px oklch(0.05 0.03 280 / 0.35); z-index:40; display:flex; flex-direction:column; gap:12px; animation:ilIn 200ms ease')}>
-                      <span style={css('font-size:13px; color:var(--ik-text-2)')}>Each week you choose how you lead each person. The four styles go from more support to more freedom.</span>
-                      {D.styles.map(lg => (
-                        <div key={lg.k} style={css('display:grid; grid-template-columns:32px 1fr; gap:12px; align-items:start')}><span style={css('width:32px; height:32px; border-radius:50%; background:var(--grad-brand); color:#0A081B; font-weight:700; display:flex; align-items:center; justify-content:center')}>{lg.k}</span><span style={css('display:flex; flex-direction:column')}><b>{lg.n}</b><span style={css('font-size:13px; color:var(--ik-text-2)')}>{lg.d}</span></span></div>
-                      ))}
-                      <div style={css('display:flex; justify-content:space-between; font-size:12px; color:var(--ik-text-2); padding-top:4px; border-top:1px solid var(--ik-line)')}><span>More support</span><span>More freedom</span></div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div style={css('display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px')}>
-                {columns.map((col, ci) => (
-                  <div key={ci} style={css('display:flex; flex-direction:column; gap:10px; min-width:0')}>
-                    <div style={css(`padding:8px 12px; border-radius:12px; background:${col.hBg}; border:1px solid ${col.hBorder}; display:flex; flex-direction:column; gap:2px`)}>
-                      <div style={css('display:flex; justify-content:space-between; gap:6px; align-items:baseline')}><b style={css('font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis')}>{col.n}</b><b style={css('font-size:15px')}>{col.count}</b></div>
-                      <span style={css(`font-size:12px; color:${col.subC}; font-weight:${col.subW}`)}>{col.sub}</span>
-                    </div>
-                    {col.cards.map(({ id, ...m }) => <MemberCard key={id} {...m} />)}
-                  </div>
-                ))}
-              </div>
-            </section>
+            <TeamBoard hint={boardHint} legendOpen={s.legend} onToggleLegend={() => setState(x => ({ legend: !x.legend }))} periodUnit={periodUnit} columns={columns} />
 
-            <aside aria-label="Actions" style={css('padding:4px 24px 24px 0; display:flex; flex-direction:column; min-height:0')}>
-              <div style={css('flex:1; border-radius:22px; background:var(--ik-card); backdrop-filter:blur(14px); border:1px solid var(--ik-line); display:flex; flex-direction:column; overflow:hidden')}>
-                {!fl && (
-                  <div style={css('padding:16px 18px; display:flex; flex-direction:column; gap:14px; flex:1')}>
-                    <div style={css('display:flex; justify-content:space-between; align-items:baseline')}><h2 style={css('margin:0; font-size:18px; font-weight:700')}>Actions</h2><span style={css('font-size:12px; color:var(--ik-text-2)')}>{capText} left</span></div>
-                    {outOfDays && <div style={css('padding:12px; border-radius:14px; background:var(--ik-raised); font-size:13px; display:flex; flex-direction:column; gap:4px')}><b>You have used all 5 days</b><span style={css('color:var(--ik-text-2)')}>Actions are locked until next week. Reply to messages any time, they cost no days.</span></div>}
-                    <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)')}>Team</span>
-                    <div style={css('display:flex; flex-direction:column; gap:6px')}>
-                      {teamTiles.map((a, i) => <ActionTile key={i} {...a} />)}
-                    </div>
-                    <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2); padding-top:4px')}>{indivTitle}</span>
-                    {!sm && <p style={css('margin:0; font-size:13px; color:var(--ik-text-2)')}>Select a person on the board to see what you can do with them.</p>}
-                    {sm && (
-                      <div style={css('display:flex; flex-direction:column; gap:6px')}>
-                        {indivTiles.map((a, i) => <ActionTile key={i} {...a} />)}
-                      </div>
-                    )}
-                    <div style={css('display:flex; gap:12px; font-size:12px; color:var(--ik-text-2); padding-top:6px; margin-top:auto; flex-wrap:wrap')}>
-                      <span style={css('display:flex; gap:4px; align-items:center')}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path></svg>Live, voice or text</span>
-                      <span style={css('display:flex; gap:4px; align-items:center')}><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path></svg>Instant decision</span>
-                    </div>
-                  </div>
-                )}
-                {fl && <ActionDrawer {...fl} />}
-              </div>
-            </aside>
+            <ActionsPanel capacityLeft={cap} capacity={capacityPerPeriod} subPeriodUnit={subPeriodUnit} periodUnit={periodUnit} outOfCapacity={outOfDays}
+              team={teamTiles} member={indiv} drawer={fl ? <ActionDrawer {...fl} /> : undefined} />
 
-            {s.inbox && (
-              <div role="dialog" aria-label="Inbox" style={css('position:absolute; top:0; left:72px; bottom:24px; width:360px; border-radius:22px; background:var(--ik-mat); backdrop-filter:blur(20px); border:1px solid var(--ik-line-strong); box-shadow:0 24px 64px oklch(0.05 0.03 280 / 0.45); z-index:30; display:flex; flex-direction:column; overflow:hidden; animation:ilIn 240ms ease')}>
-                <div style={css('display:flex; justify-content:space-between; align-items:center; padding:16px 18px; border-bottom:1px solid var(--ik-line)')}><h2 style={css('margin:0; font-size:18px; font-weight:700')}>Inbox</h2><button onClick={toggleInbox} aria-label="Close inbox" style={css('width:32px; height:32px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer')}>✕</button></div>
-                {unread === 0 && <div style={css('flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; padding:32px; text-align:center')}><b>All caught up</b><span style={css('font-size:13px; color:var(--ik-text-2)')}>New messages from your team and Priya will slide in here.</span></div>}
-                <div style={css('flex:1; overflow:auto; padding:10px; display:flex; flex-direction:column; gap:8px')}>
-                  {inboxItems.map(it => (
-                    <div key={it.id} style={css(`padding:12px; border-radius:16px; background:var(--ik-raised); border:1px solid ${it.border}; display:flex; flex-direction:column; gap:10px`)}>
-                      <div style={css('display:flex; gap:10px')}>
-                        <span style={css(`flex:none; width:40px; height:40px; border-radius:50%; overflow:hidden; background:${it.bg}; color:#0A081B; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center`)}>{it.hasImg && <img src={it.img} alt="" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} />}{it.label}</span>
-                        <span style={css('display:flex; flex-direction:column; min-width:0; flex:1')}><span style={css('display:flex; justify-content:space-between; gap:6px; font-size:12px; color:var(--ik-text-2)')}><b>{it.tag}</b><span>{it.meta}</span></span><b style={css('font-size:14px')}>{it.title}</b><span style={css('font-size:13px; color:var(--ik-text-2)')}>{it.preview}</span></span>
-                      </div>
-                      <div style={css('display:flex; gap:8px; align-items:center')}>{it.urgent && <span style={css('font-size:12px; font-weight:700; color:var(--ik-warn)')}>Pinned · {it.due}</span>}<span style={css('flex:1')}></span><button onClick={it.later} style={css('height:30px; padding:0 12px; border-radius:999px; border:1px solid var(--ik-line); background:transparent; color:var(--ik-text); font-size:12px; font-weight:700; cursor:pointer')}>Later</button><button onClick={it.open} style={css('height:30px; padding:0 12px; border-radius:999px; border:0; background:var(--grad-brand); color:#0A081B; font-size:12px; font-weight:700; cursor:pointer')}>{it.cta}</button></div>
-                    </div>
-                  ))}
-                </div>
-                <span style={css('padding:10px 18px; font-size:12px; color:var(--ik-text-2); border-top:1px solid var(--ik-line)')}>Replying costs no days, and still counts with that person.</span>
-              </div>
-            )}
+            <InboxDrawer open={s.inbox} subPeriodUnit={subPeriodUnit} items={inboxItems} sponsorName={sponsorFirst} onClose={toggleInbox} onOpen={openById}
+              onLater={id => setState(x => ({ readIds: [...x.readIds, id] }))} />
 
             {pf && (
               <div role="dialog" aria-label={pf.aria} style={css('position:absolute; top:0; left:16px; right:24px; bottom:24px; border-radius:24px; background:var(--ik-mat); backdrop-filter:blur(24px); border:1px solid var(--ik-line-strong); box-shadow:0 24px 64px oklch(0.05 0.03 280 / 0.5); z-index:35; display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr); overflow:hidden; animation:ilIn 260ms ease')}>
