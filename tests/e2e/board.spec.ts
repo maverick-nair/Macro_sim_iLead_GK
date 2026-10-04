@@ -49,9 +49,13 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   await page.getByRole('button', { name: /Confirm and start/ }).click();
   await dismissEvents(page);
 
-  await page.getByLabel('What you say').fill('I hear you, thanks for being honest. Here is the plan, step by step. What is getting in the way?');
-  await page.getByRole('button', { name: 'Send' }).click();
-  await expect(page.getByText('How it landed')).toBeVisible();
+  await expect(page.getByText('1:1 with Kent Goldberg')).toBeVisible();
+  const box = page.getByRole('textbox').last();
+  await box.fill('I hear you, thanks for being honest. Here is the plan, step by step. What is getting in the way?');
+  await box.press('Enter');
+  await page.waitForTimeout(1500);
+  await page.getByRole('button', { name: /^(End|Finish)/ }).first().click();
+  await expect(page.getByText('How it landed')).toBeVisible({ timeout: 10000 });
   await expect(page.getByText(/Kent (skill|morale|result|trust) (up|down)/).first()).toBeVisible();
   await expect(page.getByText(/4 days left/).first()).toBeVisible();
   await dismissEvents(page);

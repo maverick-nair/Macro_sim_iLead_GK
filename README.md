@@ -23,7 +23,7 @@ Plan and status: `docs/PLAN.md`. Simulation rules: `docs/SIMULATION.md`. Design 
 
 | Route      | What it is |
 |------------|------------|
-| `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?start=board` skips onboarding, `?engine=off` shows the prototype's fixed board, `?theme=light` the light theme, `?client=halden` the sample client theme. Phones (600px and below) get the 390 layouts. |
+| `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?start=board` skips onboarding, `?period=4` opens the mock engine at week 4, `?engine=off` shows the prototype's fixed board, `?theme=light` the light theme, `?client=halden` the sample client theme. Phones (600px and below) get the 390 layouts. |
 | `/screens` | Every screen, each frame the live app opened at that state. Port of `project/iLead Screens.dc.html`. Frame ids (`b4`, `l1`, ...) match the design and are linkable, for example `/screens#b4`. |
 | `/states`  | Edge states: loading, empty, offline, mic denied, slow AI. Port of `project/iLead States.dc.html`. |
 
@@ -36,6 +36,8 @@ src/
   app/        App shell (port of iLeadApp): state, navigation, overlays, toast, contract types
   components/ Token and catalog only components; `board/` is the engine driven board
   data/       Scenario types and the design fixture scenario (port of ilead-data.js), for the galleries
+  speech/     SpeechProvider: MediaRecorder with server transcription, mock voice, voice activity, consent (docs/SPEECH.md)
+  ai/         Streamed AI text: server sent events, mock stream, cancellable hook
   engine/     Engine contract (Zod), client (mock and HTTP adapters), React hooks, the simulation (`sim/`) and storylines
   i18n/       ICU message catalog, copy rules, money formatting
   ds/         Genie design system components used by the screens (Button, Switch)

@@ -75,7 +75,7 @@ The spec asks for "Week x of 8". The design shows "Week 2 · Day 3". Proposal: k
 **D13. Clock pausing.** Decided, following the spec.
 The spec pauses the clock in live screens, modals, event cards and tours. The prototype only pauses it for overlays. The engine owns the clock (rule 1), and the UI sends pause and resume intents.
 
-**D14. Live formats without a design.** Open.
+**D14. Live formats without a design.** Resolved in M4, see D52.
 The spec defines 7 formats. The design covers 4: 1:1 RolePlay, email, team meeting and sponsor briefing.
 - Chat is in M4 but has no screen of its own. The inbox's "Reply now" opens a 1:1 in the prototype.
 - Interview and Written plan have no design and are not in the milestones.
@@ -259,6 +259,20 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - A long transcript now scrolls inside the window (capped at the window height minus the header and reply bar) instead of growing the page. At 900 tall the cap is above the designed height.
 - The mood ring's 600ms colour change is snapped to `duration.slow` (300ms), per D24.
 - Still open: Space as push to talk (D18), and chat in the shell (D14). `LiveTranscript` and `LiveInputBar` are ready for chat.
+
+**D52. The three undesigned live formats.** Decided (built in M4 in the designed live screens' visual language; please review with design).
+- **Chat:** a thread like Teams or Slack. Sim time shows as dividers ("Week 2, Day 3") rather than a stamp per message. A streaming NPC turn with no words yet shows "Kent is typing" outside the log, so screen readers hear only finished turns. The thread ends with "Kent signed off" or "You closed the chat".
+- **Interview:** the candidate portrait has a neutral ring with no mood read, plus a CV card and private question notes. After two candidates, a comparison table with no portraits: CV fields, your notes, then Hire or Pass for each. Exactly one hire or a pass on both, confirmed with one button. A line reads "Decide on the CV and what you hear, nothing else."
+- **Written plan:** goals, measures, owner, due (the sub-periods left in this period) and support needed; each field can be dictated. Required fields are checked on submit, with focus moving to the first gap. After submitting, the plan is read only beside the NPC's short check in.
+- The TranscriptBubble's Replay link now uses its own colour token, because the light theme failed contrast (3.64:1). Dark is unchanged.
+
+**D53. The live screen on the engine.** Decided.
+- Every live and hybrid action, inbox reply and sponsor briefing opens the shell. The NPC's words stream in as the AI writes them, with the AI persona label. Speaking, pressing the mic or Escape interrupts, and the engine keeps only what was shown.
+- Voice needs the consent given in onboarding (or Settings). Without it the mic says "Voice is off. You can turn it on in Settings." and everything works in text. With a transcription server configured (`VITE_ILEAD_SPEECH_URL`) the microphone is real; otherwise a scripted mock voice stands in.
+- After the participant ends the conversation, "The team is reacting" shows for at least 1.6 seconds while the engine evaluates, then the board shows the outcome.
+- The live screen loads on demand, so the board's first load stays at 178 KB gzipped (budget 200).
+- `?period=N` opens the mock engine at a later period, for demos and tests (the week 4 sponsor briefing). The real engine ignores it.
+- Hiring needs an open seat: with 10 people in 5 stages of 2, the team starts full (role coverage, D44), so the interview appears once someone leaves. The `Board/Engine board/Interview open` story shows it with room in every stage.
 
 ## Blocked on missing docs
 

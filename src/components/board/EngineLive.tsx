@@ -209,8 +209,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
     goal: lv.brief.goal ?? lv.actionName ?? t('board.live.goal.reply'),
     known: lv.brief.known.length ? lv.brief.known : undefined,
     mood: lv.brief.mood ? { key: lv.brief.mood } : undefined,
-    promises: lv.format === 'meeting' || lv.format === 'sponsor' ? undefined : lv.brief.promises,
-    declaredStyle: lv.format === 'meeting' || lv.format === 'sponsor' ? undefined : lv.brief.declaredStyle
+    promises: lv.format === 'meeting' || lv.format === 'sponsor' || lv.format === 'interview' ? undefined : lv.brief.promises,
+    declaredStyle: lv.format === 'meeting' || lv.format === 'sponsor' || lv.format === 'interview' ? undefined : lv.brief.declaredStyle
   };
 
   // Dictation into an email field: the accepted transcript lands in that field.

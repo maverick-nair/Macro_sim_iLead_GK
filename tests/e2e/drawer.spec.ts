@@ -38,7 +38,7 @@ test('swap roles: different stages only, assess nudge, then the conversation', a
   await expect(page.getByText(/You have not assessed Ruth for Qualify/)).toBeVisible();
   await page.getByRole('button', { name: 'Continue' }).click();
   await page.getByRole('button', { name: /Confirm and start/ }).click();
-  await expect(page.getByLabel('What you say')).toBeVisible();
+  await expect(page.getByText('1:1 with Justin Keel')).toBeVisible();
 });
 
 test('profile: stats revealed, timeline from the engine, actions for that person', async ({ page }) => {

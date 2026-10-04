@@ -26,6 +26,21 @@ export const Playable: StoryObj = {
 };
 
 
+/** Hiring with room in every stage, from week 1: interview two candidates, compare, then hire or pass. */
+export const InterviewOpen: StoryObj = {
+  render: () => {
+    const base = defaultStoryline();
+    const config = { ...base, maxPerStage: 3, actions: base.actions.map(a => (a.key === 'hire' ? { ...a, unlockPeriod: 1 } : a)) };
+    return (
+      <EngineProvider client={createMockClient({ seed: 2, config })}>
+        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <EngineBoard onPause={noop} onSettings={noop} />
+        </div>
+      </EngineProvider>
+    );
+  }
+};
+
 /** A team wide event: changes to more than three people read as one team chip per metric. */
 export const Event: StoryObj = {
   render: () => (

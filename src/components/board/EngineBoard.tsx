@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import type { Block, EngineView, Intent, MemberView, StyleKey } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
 import { useEngineView, useIntent } from '../../engine/react';
@@ -22,7 +22,8 @@ import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView, type StyleSettingLayout } from '../stylesetting/StyleSettingView';
-import { EngineLive } from './EngineLive';
+// The live screen loads when a conversation starts, so the board's first load stays in budget.
+const EngineLive = lazy(() => import('./EngineLive').then(m => ({ default: m.EngineLive })));
 import { PeriodPanel } from './PeriodPanel';
 import { EventCard } from './EventCard';
 import { teamChips, type Chip } from './chips';
@@ -381,8 +382,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   if (v.live) {
     return (
       <>
-        <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'}
-          onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
+        <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
+          <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'}
+            onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
+        </Suspense>
         <Toast message={toast} />
       </>
     );
