@@ -184,6 +184,16 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - A Strong conversation improves the mismatch by one step; a Weak one worsens it by one.
 - The evaluator only reads; authored rules decide the consequences (brief, rule 1).
 
+**D36. Funnel formula normalized.** Decided.
+- The Model doc's funnel step is `input × ratio × (average result + buffer) / 100`. Performance compounds across all 5 stages, so in the uncalibrated storyline good play earned 10× what passive play did. The buffer is the Model doc's lever to soften that.
+- But with a positive buffer the factor goes above 1, and a stage outputs more than its conversion ratio allows.
+- The engine divides by `100 + buffer` instead. A buffer of 0 gives exactly the Model doc formula; any buffer keeps every stage at or below its ratio.
+
+**D37. Thoughtless play can do worse than doing nothing.** Proposed.
+- Calibrated Sales Elevator: passive play reaches 54% of target, random play 49%, good play 110%.
+- Random styles and random actions mostly mismatch, and the Model doc punishes mismatches, so random play ends below passive play.
+- I set the random band to 35 to 65% (it was 55 to 80%). If you want busy play to be gentler than idle play, the lever is the size of the mismatch penalties in the effect tables.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

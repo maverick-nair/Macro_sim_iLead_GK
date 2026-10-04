@@ -8,7 +8,7 @@
     "target": 240000,
     "valuePerConversion": 8400,
     "inputPerSubPeriod": [
-      8
+      47
     ]
   },
   "time": {
@@ -2299,6 +2299,6 @@
       }
     }
   ],
-  "performanceThreshold": 10,
-  "calibrated": false
+  "performanceThreshold": 159,
+  "calibrated": true
 }

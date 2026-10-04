@@ -16,7 +16,8 @@
     "preview": "vite preview",
     "parity": "tsx tests/visual/parity.ts",
     "lint:copy": "vitest run src/i18n/catalog.test.ts",
-    "storybook:smoke": "storybook build -o storybook-static --quiet && tsx tests/visual/stories-smoke.ts storybook-static"
+    "storybook:smoke": "storybook build -o storybook-static --quiet && tsx tests/visual/stories-smoke.ts storybook-static",
+    "calibrate": "tsx scripts/calibrate.ts"
   },
   "dependencies": {
     "@formatjs/icu-messageformat-parser": "^3.5.20",

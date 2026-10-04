@@ -153,7 +153,8 @@ export function runFunnel(sim: Sim) {
   stages.forEach((st, i) => {
     const inStage = sim.members.filter(m => m.stage === st.key);
     const average = inStage.length ? avg(inStage.map(m => (m.away > 0 ? 0 : m.result))) : 0;
-    const out = Math.max(0, input * st.conversionRatio * (average + performanceThreshold) / 100);
+    // Model doc formula, normalized so a stage never beats its conversion ratio (DECISIONS D36).
+    const out = Math.max(0, input * st.conversionRatio * (average + performanceThreshold) / (100 + performanceThreshold));
     sim.funnel.stageOut[i] += out;
     sim.funnel.stageOutPeriod[i] += out;
     input = out;
@@ -168,7 +169,7 @@ export function runFunnel(sim: Sim) {
 export function idealThroughput(sim: Sim): number[] {
   const { stages, money, performanceThreshold, thresholds } = sim.config;
   let input = money.inputPerSubPeriod[Math.min(sim.period, money.inputPerSubPeriod.length) - 1] * perPeriod(sim);
-  return stages.map(st => (input = input * st.conversionRatio * (thresholds.high + performanceThreshold) / 100));
+  return stages.map(st => (input = input * st.conversionRatio * (thresholds.high + performanceThreshold) / (100 + performanceThreshold)));
 }
 
 // ---------------------------------------------------------------- events (6.3)

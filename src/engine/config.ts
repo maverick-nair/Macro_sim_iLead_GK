@@ -180,7 +180,7 @@ export const StorylineConfig = z.object({
   events: z.array(GeneralEvent).default([]),
   triggers: z.array(Trigger).default([]),
   /** Funnel buffer from the Model doc, set by calibration. */
-  performanceThreshold: z.number().min(-50).max(50),
+  performanceThreshold: z.number().min(-50).max(400),
   calibrated: z.boolean().default(false)
 }).superRefine((c, ctx) => {
   const stageKeys = new Set(c.stages.map(s => s.key));

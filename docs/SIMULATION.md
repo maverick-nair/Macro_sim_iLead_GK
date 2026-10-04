@@ -316,12 +316,14 @@ The rubric band name never appears [S].
 Per sub-period, for each stage in order:
 
 ```
-output = input × conversionRatio × (averageResult(stage) + performanceThreshold) / 100
+output = input × conversionRatio × (averageResult(stage) + performanceThreshold) / (100 + performanceThreshold)
 ```
+
+The Model doc divides by 100. With a positive buffer that lets a stage output more than its conversion ratio allows, so the engine divides by `100 + buffer` (DECISIONS D36). With a buffer of 0 the two are identical.
 
 - `input` for the first stage is `inputPerSubPeriod`; for later stages it is the previous stage's output.
 - `averageResult(stage)` averages the result of available members in that stage. Away members count as 0, with no one covering.
-- `performanceThreshold` is a *config* buffer, set by calibration.
+- `performanceThreshold` is a *config* buffer, set by calibration. A larger buffer makes stage performance compound less across the funnel.
 - Conversions = the last stage's output, carried as fractions and shown rounded.
 - Business value = conversions × `valuePerConversion`.
 
@@ -505,7 +507,7 @@ The starting numbers are tuned per storyline by `npm run calibrate -- <storyline
 | Policy | Behaviour | Required result (share of target) |
 |---|---|---|
 | Passive | Keeps the starting styles, takes no actions | 40 to 65% |
-| Random | Random styles and affordable actions | 55 to 80% |
+| Random | Random styles and affordable actions | 35 to 65%. Acting without reading people can do more harm than doing nothing, as in the Model doc. |
 | Good | Sets the needed style each period, picks actions that address low metrics, conversations at Adequate or better | 100 to 125%, reached in 80% or more of runs |
 
 **What it adjusts, in order:**
