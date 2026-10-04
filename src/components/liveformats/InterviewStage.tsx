@@ -105,7 +105,8 @@ export function InterviewStage({ candidate, position, turns, notes, onNotes, onR
     </div>
   );
 
-  const caption = captions && speaking?.text ? <LiveCaption name={candidate.firstName} text={speaking.text} streaming size="md" /> : null;
+  // The caption only shows while the line streams; the transcript announces the finished line.
+  const caption = captions && speaking?.text ? <LiveCaption name={candidate.firstName} text={speaking.text} streaming size="md" announce={false} /> : null;
 
   const notesCard = (
     <div className={`flex flex-col gap-2 p-4 ${CARD}`}>

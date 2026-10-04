@@ -19,6 +19,9 @@ export const Card: StoryObj = { render: () => <Frame width={206}><Live /></Frame
 /** The roomier control on the style setting screen. */
 export const StyleSetting: StoryObj = { render: () => <Frame width={240}><Live size="md" value="P" /></Frame> };
 
+/** Locked for the period: dimmed and aria-disabled, the reason is each letter's description. Clicks and Enter change nothing; tooltips still show. */
+export const Disabled: StoryObj = { render: () => <Frame width={206}><Live value="G" disabled disabledReason="Styles are set until the next week." /></Frame> };
+
 export const EverySelection: StoryObj = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: 206 }}>

@@ -11,5 +11,6 @@
   "metrics.sponsor.title": "Sponsor confidence",
   "metrics.sponsor.level": "{level, select, low {Low} wavering {Wavering} steady {Steady} confident {Confident} champion {Champion} other {}}",
   "metrics.sponsor.causes": "Recent causes",
-  "metrics.sponsor.mark": "{dir, select, up {▲} down {▼} other {●}}"
+  "metrics.sponsor.mark": "{dir, select, up {▲} down {▼} other {●}}",
+  "metrics.sponsor.dir": "{dir, select, up {Raised confidence:} down {Lowered confidence:} other {No change:}}"
 }

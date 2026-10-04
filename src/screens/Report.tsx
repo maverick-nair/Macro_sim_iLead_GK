@@ -1,4 +1,4 @@
-import { Fragment, type CSSProperties } from 'react';
+import type { CSSProperties } from 'react';
 import type { ScreenProps } from '../app/types';
 import type { StyleKey } from '../data/types';
 import { css } from '../lib/css';
@@ -175,7 +175,7 @@ export function Report({ d, act, print: printProp, mobile: mobileProp }: ReportP
                   <span style={css('color:var(--ik-text-2)')}>{m.n}</span>
                   <b>{m.end}</b>
                 </div>
-                <svg width="100%" height="44" viewBox="0 0 100 44" preserveAspectRatio="none" aria-label={m.aria}>
+                <svg width="100%" height="44" viewBox="0 0 100 44" preserveAspectRatio="none" role="img" aria-label={m.aria}>
                   <polyline points={m.target} fill="none" stroke="var(--ik-line-strong)" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke"></polyline>
                   <polyline points={m.pts} fill="none" stroke="var(--ik-acc)" strokeWidth="2" vectorEffect="non-scaling-stroke" strokeLinejoin="round"></polyline>
                 </svg>
@@ -194,7 +194,7 @@ export function Report({ d, act, print: printProp, mobile: mobileProp }: ReportP
             <div key={k.n} style={css(`display:grid; grid-template-columns:${skillCols}; gap:14px; align-items:center; padding:10px 0; border-top:1px solid var(--ik-line)`)}>
               <b style={css('font-size:14px')}>{k.n}</b>
               <div style={css('display:flex; align-items:center; gap:8px')}>
-                <div aria-label={k.aria} style={css('display:flex; gap:3px')}>
+                <div role="img" aria-label={k.aria} style={css('display:flex; gap:3px')}>
                   {k.steps.map((st, i) => (
                     <span key={i} style={css(`width:26px; height:8px; border-radius:4px; background:${st}`)}></span>
                   ))}
@@ -231,21 +231,25 @@ export function Report({ d, act, print: printProp, mobile: mobileProp }: ReportP
               </span>
             </div>
           </div>
-          <div style={css('overflow-x:auto')}>
+          {/* Scrolls sideways on a phone, so it takes focus (arrow keys scroll it) and is named after the table. */}
+          <div role="region" aria-label="Style fit, week by week" tabIndex={0} style={css('overflow-x:auto')}>
+            {/* Rows are display:contents wrappers, so the grid lays out the cells exactly as before. */}
             <div role="table" aria-label="Style you chose for each person each week, and whether it fit" style={css(`display:grid; grid-template-columns:${heatCols}; gap:4px; min-width:${heatMin}`)}>
-              <span></span>
-              {WEEKS.map(w => (
-                <span key={w} style={css('font-size:12px; color:var(--ik-text-2); text-align:center')}>{w}</span>
-              ))}
+              <div role="row" style={css('display:contents')}>
+                <span role="cell"></span>
+                {WEEKS.map(w => (
+                  <span key={w} role="columnheader" style={css('font-size:12px; color:var(--ik-text-2); text-align:center')}>{w}</span>
+                ))}
+              </div>
               {heat.map(h => (
-                <Fragment key={h.id}>
-                  <span style={css('font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; align-self:center')}>{h.n}</span>
+                <div key={h.id} role="row" style={css('display:contents')}>
+                  <span role="rowheader" style={css('font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; align-self:center')}>{h.n}</span>
                   {h.cells.map((c, i) => (
-                    <span key={i} title={c.t} aria-label={c.t} style={css(`height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:${c.bg}; border:${c.border}; color:${c.color}`)}>
+                    <span key={i} role="cell" title={c.t} aria-label={c.t} style={css(`height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; background:${c.bg}; border:${c.border}; color:${c.color}`)}>
                       {c.k}
                     </span>
                   ))}
-                </Fragment>
+                </div>
               ))}
             </div>
           </div>

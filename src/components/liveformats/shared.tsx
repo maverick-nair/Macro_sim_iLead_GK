@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import type { MoodKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 import type { PeriodUnit, SubPeriodUnit } from '../action/days';
+import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { TranscriptBubble } from '../live/TranscriptBubble';
 
 /** `desktop` is the 1440 stage beside the brief, `phone` the 390 stage under the shell header. */
@@ -163,9 +164,17 @@ export interface TranscriptCardProps {
   className?: string;
 }
 
+/** The newest turn when it is the NPC's, for the announcer: it speaks only once the turn has finished. */
+export function lastNpcLine(turns: StageTurn[], name: string) {
+  const last = turns.at(-1);
+  return last?.speaker === 'npc' ? { name, text: last.text, streaming: last.streaming, aiGenerated: true } : null;
+}
+
 /**
- * The 1:1 transcript card: a header, then the turns in a polite log. Turns with no words yet are
- * left out; pass `pending` to show a typing or thinking line under the log.
+ * The 1:1 transcript card: a header, then the turns in a log. Turns with no words yet are left out;
+ * pass `pending` to show a typing or thinking line under the log. The log is not a live region, since
+ * a streaming turn grows token by token; a visually hidden polite region announces each NPC turn
+ * once it has finished.
  */
 export function TranscriptCard({ turns, npcName, label, header, onReplay, pending, className = '' }: TranscriptCardProps) {
   const { t } = useI18n();
@@ -179,7 +188,7 @@ export function TranscriptCard({ turns, npcName, label, header, onReplay, pendin
           <span>{t('liveformats.transcript.saved')}</span>
         </div>
       )}
-      <div ref={log} role="log" aria-label={label} tabIndex={0} className={`min-h-0 flex-1 overflow-auto p-3.5 ${FOCUS} focus-visible:-outline-offset-2`}>
+      <div ref={log} role="log" aria-label={label} aria-live="off" tabIndex={0} className={`min-h-0 flex-1 overflow-auto p-3.5 ${FOCUS} focus-visible:-outline-offset-2`}>
         <div className="flex flex-col gap-2.5">
           {shown.length === 0 && !pending && <p className="m-0 text-13 text-fg-secondary">{t('liveformats.transcript.empty')}</p>}
           {shown.map(x => (
@@ -188,6 +197,7 @@ export function TranscriptCard({ turns, npcName, label, header, onReplay, pendin
         </div>
       </div>
       {pending && <div className="px-3.5 pb-3.5">{pending}</div>}
+      <LineAnnouncer line={lastNpcLine(turns, npcName)} />
     </section>
   );
 }

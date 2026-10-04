@@ -23,15 +23,20 @@ const RING_C = 2 * Math.PI * RING_R;
 
 export interface TrustRingProps {
   value: number;
+  /**
+   * `corner` pins the ring to the bottom right of a positioned parent. `inline` is a flex item, as
+   * on the member card, where it shares a row with the mood pill.
+   */
+  placement?: 'corner' | 'inline';
 }
 
-/** Trust on the portrait: a ring on the shared 0 to 100 scale, amber under 30. */
-export function TrustRing({ value }: TrustRingProps) {
+/** Trust on the portrait: a ring on the shared 0 to 100 scale, amber under 30. One image named "Trust 64". */
+export function TrustRing({ value, placement = 'corner' }: TrustRingProps) {
   const { t, number } = useI18n();
   const label = t('member.trust', { value });
   const dash = `${(value / 100 * RING_C).toFixed(1)} ${RING_C.toFixed(1)}`;
   return (
-    <div title={label} aria-label={label} className="absolute right-1.5 bottom-1.5 size-9.5">
+    <div role="img" title={label} aria-label={label} className={`size-9.5 ${placement === 'inline' ? 'relative ml-auto flex-none' : 'absolute right-1.5 bottom-1.5'}`}>
       <svg className="block size-9.5" viewBox="0 0 38 38" aria-hidden="true">
         <circle cx="19" cy="19" r={RING_R} className="fill-member-ring-fill stroke-member-ring-track" strokeWidth="3" />
         <circle cx="19" cy="19" r={RING_R} fill="none" className={value < LOW_BELOW ? 'stroke-member-ring-low' : 'stroke-member-ring-ok'} strokeWidth="3" strokeLinecap="round" strokeDasharray={dash} transform="rotate(-90 19 19)" />
@@ -88,6 +93,12 @@ export interface MemberCardProps {
   /** Open style tooltip. Controlled when passed; the card rises above its neighbours while one shows. */
   styleTooltip?: StyleKey | null;
   onStyleTooltipChange?: (style: StyleKey | null) => void;
+  /** The style can no longer change this period (locked): the control stays readable but picking does nothing. */
+  styleDisabled?: boolean;
+  /** Why, read as the style letters' description ("Styles are set until the next week."). */
+  styleDisabledReason?: string;
+  /** A letter was picked while the style is disabled (to say why, for example in a toast). */
+  onStyleDisabledPick?: () => void;
 }
 
 /**
@@ -95,7 +106,7 @@ export interface MemberCardProps {
  * three metric bars and the style control. The whole card is one button that selects the member.
  */
 export function MemberCard(props: MemberCardProps) {
-  const { name, title, img, mood, away = false, skill, morale, result, trust, style, statsHidden = false, tags = [], unread = false, promise, selected = false, unavailableReason, onSelect, onOpenProfile, onStyleChange, styleTooltip, onStyleTooltipChange } = props;
+  const { name, title, img, mood, away = false, skill, morale, result, trust, style, statsHidden = false, tags = [], unread = false, promise, selected = false, unavailableReason, onSelect, onOpenProfile, onStyleChange, styleTooltip, onStyleTooltipChange, styleDisabled = false, styleDisabledReason, onStyleDisabledPick } = props;
   const { t } = useI18n();
   const [ownTip, setOwnTip] = useState<StyleKey | null>(null);
   const tip = styleTooltip === undefined ? ownTip : styleTooltip;
@@ -106,6 +117,7 @@ export function MemberCard(props: MemberCardProps) {
 
   const unavailable = unavailableReason !== undefined && unavailableReason !== '';
   const moodName = t('member.mood', { mood });
+  const pill = away ? t('member.mood.away') : moodName;
   const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
   const profile = (e: MouseEvent) => { e.stopPropagation(); onOpenProfile(); };
 
@@ -128,23 +140,34 @@ export function MemberCard(props: MemberCardProps) {
           {unread && <span title={t('member.unread')} className={signal}><Chat /></span>}
           {promise && <span title={promise} className={signal}><Clock /></span>}
         </div>
-        <span className="absolute bottom-2 left-2 flex h-5.5 items-center gap-1.25 rounded-pill bg-member-pill px-2 text-12 font-700 text-member-on-portrait">
-          <span className={`size-1.75 rounded-round ${MOOD_DOT[mood]}`} />
-          {away ? t('member.mood.away') : moodName}
-        </span>
-        {!statsHidden && <TrustRing value={trust} />}
+        {/*
+          The mood pill and the trust ring share the bottom of the portrait (pill 8px in, ring 6px in).
+          When both do not fit on one row (narrow cards, such as a 1024 wide board) the ring moves up
+          above the pill instead of covering it, and a pill wider than the card truncates.
+        */}
+        <div className="absolute right-1.5 bottom-1.5 left-2 flex flex-wrap-reverse items-start gap-1">
+          <span title={pill} className="mb-0.5 flex h-5.5 min-w-0 items-center gap-1.25 rounded-pill bg-member-pill px-2 text-12 font-700 text-member-on-portrait">
+            <span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />
+            <span className="truncate">{pill}</span>
+          </span>
+          {!statsHidden && <TrustRing value={trust} placement="inline" />}
+        </div>
       </div>
       <div className="flex flex-col gap-2 px-3 pt-2.5 pb-3">
-        <div className="flex items-start justify-between gap-1.5">
-          <div className="flex min-w-0 flex-col">
-            <b className="truncate text-14">{name}</b>
-            <span className="truncate text-12 text-fg-secondary">{title}</span>
+        {/*
+          Name and title truncate beside the profile button. On cards too narrow to leave the name
+          64px (a 1024 wide board), the button moves to its own row so the name gets the full width.
+        */}
+        <div className="flex flex-wrap items-start justify-between gap-1.5">
+          <div className="flex min-w-16 flex-1 basis-0 flex-col">
+            <b title={name} className="truncate text-14">{name}</b>
+            <span title={title} className="truncate text-12 text-fg-secondary">{title}</span>
           </div>
           <button
             type="button"
             onClick={profile}
             aria-label={t('member.profile.open', { name })}
-            className="flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
+            className="ml-auto flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
           >
             <External />
           </button>
@@ -163,7 +186,7 @@ export function MemberCard(props: MemberCardProps) {
             <MetricBar metric="result" value={result} />
           </div>
         )}
-        <StyleControl value={style} onChange={onStyleChange} memberName={name} tooltip={tip} onTooltipChange={setTip} />
+        <StyleControl value={style} onChange={onStyleChange} memberName={name} tooltip={tip} onTooltipChange={setTip} disabled={styleDisabled} disabledReason={styleDisabledReason} onDisabledPick={onStyleDisabledPick} />
       </div>
     </div>
   );

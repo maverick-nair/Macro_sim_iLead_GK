@@ -72,7 +72,7 @@ export function End({ d, app, act }: ScreenProps) {
           </p>
         </div>
         <div style={css('display:flex; align-items:center; gap:16px; padding:16px 22px; border-radius:24px; background:var(--ik-card); border:1px solid var(--ik-line)')}>
-          <div aria-label="Tier: Gold. Bronze, Silver, Gold, Platinum" style={css('display:flex; gap:6px')}>
+          <div role="img" aria-label="Tier: Gold. Bronze, Silver, Gold, Platinum" style={css('display:flex; gap:6px')}>
             {TIERS.map(t => (
               <span key={t.n} title={t.n} style={css(`width:14px; height:${t.h}; border-radius:4px; background:${t.bg}; align-self:flex-end`)}></span>
             ))}

@@ -26,12 +26,12 @@ export interface MetricBarProps {
   value: number;
 }
 
-/** One metric row on a member card: label, bar on the shared scale, value. */
+/** One metric row on a member card: label, bar on the shared scale, value. Read as one image ("skill 62", ", low" under 30). */
 export function MetricBar({ metric, value }: MetricBarProps) {
   const { t, number } = useI18n();
   const low = value < LOW_BELOW;
   return (
-    <div aria-label={t('metric.bar.aria', { metric: t('metric.nameLower', { metric }), value, low: String(low) })} className="grid grid-cols-(--il-metric-bar-columns) items-center gap-1.5 text-12">
+    <div role="img" aria-label={t('metric.bar.aria', { metric: t('metric.nameLower', { metric }), value, low: String(low) })} className="grid grid-cols-(--il-metric-bar-columns) items-center gap-1.5 text-12">
       <span className="text-fg-secondary">{t('metric.name', { metric })}</span>
       <MetricTrack value={value} low={low} />
       <b className={`text-right font-700 ${low ? 'text-status-attention' : ''}`}>{number(value)}</b>

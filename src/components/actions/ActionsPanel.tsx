@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { useI18n } from '../../i18n';
+import { Heading, type HeadingLevel } from '../Heading';
 import { ActionTile, type ActionTileProps } from '../action/ActionTile';
 import { SubPeriodUnitContext, useDays, type PeriodUnit, type SubPeriodUnit } from '../action/days';
 
@@ -25,6 +26,8 @@ export interface ActionsPanelProps {
   member: ActionsPanelMember | null;
   /** The open action flow (ActionDrawer). Replaces the lists while present. */
   drawer?: ReactNode;
+  /** Level of the "Actions" heading, so the page sets the outline. Defaults to 2. */
+  headingLevel?: HeadingLevel;
 }
 
 const MicIcon = () => (
@@ -43,7 +46,7 @@ const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-f
  * and a key to the icons. While an action is being planned the card shows that flow instead.
  * Every cost inside, including the drawer's, reads in the storyline's sub-period unit.
  */
-export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer }: ActionsPanelProps) {
+export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2 }: ActionsPanelProps) {
   const { t } = useI18n();
   const fmt = useDays(subPeriodUnit);
   return (
@@ -53,7 +56,7 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
           {drawer ? drawer : (
             <div className="flex flex-1 flex-col gap-3.5 px-4.5 py-4">
               <div className="flex items-baseline justify-between">
-                <h2 className="m-0 text-18 font-700">{t('actions.title')}</h2>
+                <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>
                 <span className="text-12 text-fg-secondary">{t('time.left', { amount: fmt(capacityLeft) })}</span>
               </div>
               {outOfCapacity && (

@@ -63,7 +63,7 @@ export function CommandPalette({ open, onClose, query, onQueryChange, results }:
             <Dialog.Description className="sr-only">{t('palette.hint')}</Dialog.Description>
             <input value={query} onChange={e => onQueryChange(e.target.value)} onKeyDown={onKeyDown}
               placeholder={t('palette.placeholder')} aria-label={t('palette.placeholder')}
-              className="h-14 w-full border-0 border-b border-solid border-line-default bg-transparent px-4.5 py-0 text-15 text-fg-primary outline-0" />
+              className="h-14 w-full border-0 border-b border-solid border-line-default bg-transparent px-4.5 py-0 text-15 text-fg-primary outline-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary" />
             <div className="flex max-h-(--il-palette-results-max-height) flex-col gap-0.5 overflow-auto p-2">
               {results.map((r, i) => (
                 <button key={r.id} type="button" onClick={r.onRun}

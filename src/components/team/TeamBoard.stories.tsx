@@ -75,6 +75,8 @@ export const ThreeStages: StoryObj = { render: () => <Frame columns={THREE} /> }
 export const SixStages: StoryObj = { render: () => <Frame columns={SIX} /> };
 /** Six stages at 1280 wide, the narrowest desktop board. */
 export const SixStagesAt1280: StoryObj = { render: () => <Frame columns={SIX} width={886} /> };
+/** Five stages at 1024 wide (1024 minus the rail and the actions panel): trust rings sit above the mood pills, profile buttons under the names. */
+export const FiveStagesAt1024: StoryObj = { render: () => <Frame columns={FIVE} width={630} /> };
 
 /** Frame b2: Kent selected. */
 export const Selected: StoryObj = {

@@ -14,7 +14,8 @@ export interface ReasonChipProps {
 
 /**
  * A metric change on the outcome panel. Small by design: the spec replaces large delta overlays
- * with these chips, exact numbers on tap.
+ * with these chips, exact numbers on tap. The arrow is decorative and left out of the accessible
+ * name, which says the direction in words ("Kent morale up", "Kent Morale +8, up").
  */
 export function ReasonChip({ name, metric, delta, showNumbers, onToggle, size = 'sm' }: ReasonChipProps) {
   const { t, delta: fmt } = useI18n();
@@ -32,6 +33,7 @@ export function ReasonChip({ name, metric, delta, showNumbers, onToggle, size = 
       className={`${sizing} py-0 whitespace-nowrap rounded-pill border border-line-default font-700 text-fg-primary ${up ? 'bg-status-gain-soft' : 'bg-status-decline-soft'}`}
     >
       <span aria-hidden="true" className={up ? 'text-status-gain' : 'text-status-decline'}>{up ? '▲' : '▼'}</span> {text}
+      {showNumbers && <span className="sr-only">{t('reason.chip.direction', { direction: up ? 'up' : 'down' })}</span>}
     </button>
   );
 }

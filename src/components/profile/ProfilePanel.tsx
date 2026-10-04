@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type KeyboardEvent } from 'react';
+import { useId, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
 import type { MoodKey, StyleKey } from '../../data/types';
 import type { MetricKey } from '../../engine/contract';
 import { useI18n, type I18n } from '../../i18n';
@@ -148,6 +148,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
   const { name, title, img, mood, away = false, stats, style, facts, shared, periodUnit, subPeriodUnit, timeline, promises, actions, onClose } = props;
   const { t, number } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
+  const interactionsId = useId();
 
   // Layout effect so the cleanup runs while the panel is still in the document and can tell
   // whether focus was inside it.
@@ -200,8 +201,9 @@ export function ProfilePanel(props: ProfilePanelProps) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 overflow-auto border-r border-line-default p-5">
-        <h3 className="m-0 text-18 font-700">{t('profile.interactions.title')}</h3>
+      {/* A long timeline scrolls: the column takes focus so keyboards can scroll it (WCAG 2.1.1). */}
+      <div role="region" aria-labelledby={interactionsId} tabIndex={0} className="flex flex-col gap-3 overflow-auto border-r border-line-default p-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
+        <h3 id={interactionsId} className="m-0 text-18 font-700">{t('profile.interactions.title')}</h3>
         {timeline.length === 0
           ? <p className="m-0 text-13 text-fg-secondary">{t('profile.interactions.empty', { name })}</p>
           : <ol className="m-0 contents list-none p-0">{timeline.map(e => <TimelineItem key={e.id} entry={e} periodUnit={periodUnit} subPeriodUnit={subPeriodUnit} />)}</ol>}

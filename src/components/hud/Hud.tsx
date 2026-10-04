@@ -45,7 +45,10 @@ export interface HudProps {
   score: HudScore;
   /** Denominator of the breakdown bars: a pillar's maximum for the whole run. */
   pillarScale?: number;
-  /** Open score breakdown. Controlled when passed; otherwise hover and focus open it. */
+  /**
+   * Open score breakdown. Controlled when passed; otherwise the HUD keeps its own. Hover opens it,
+   * and the score button toggles it (Enter, Space or a tap). Escape closes it.
+   */
   scoreOpen?: boolean;
   onScoreOpenChange?: (open: boolean) => void;
   /** Consecutive periods on target. */
@@ -146,17 +149,20 @@ export function Hud(p: HudProps) {
         {p.clientLogo && <div className="flex h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
       </div>
-      {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
-        {p.nav.map(n => (
+      {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
+        {p.nav.map(n => (n.label ? (
           <button key={n.key} type="button" onClick={() => p.onNav(n.key)}
             className={`h-8 flex-none cursor-pointer rounded-pill border-0 bg-transparent px-2 py-0 text-13 font-600 text-fg-secondary hover:bg-surface-raised hover:text-fg-primary ${focus}`}>
             {n.label}
           </button>
-        ))}
+        ) : (
+          // No label (the client theme, D17): keep the slot the design draws, but not as a nameless button.
+          <span key={n.key} aria-hidden="true" className="h-8 flex-none px-2" />
+        )))}
       </nav>}
       <div className="min-w-0 flex-1" />
       <span className="flex-none text-13 text-fg-secondary">{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
-      <div aria-label={capAria} className="flex items-center gap-2">
+      <div role="group" aria-label={capAria} className="flex items-center gap-2">
         <div className={`flex gap-0.25 ${pulse ? 'animate-(--il-hud-capacity-pulse)' : ''}`}>
           {slots.map((v, i) => <Bolt key={i} left={v} />)}
         </div>
@@ -169,13 +175,15 @@ export function Hud(p: HudProps) {
         </button>
       )}
       <div className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}>
-        <button type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-describedby={open ? tipId : undefined}
-          onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); } }}
+        {/* A disclosure: Enter and Space (a click with no pointer) toggle the breakdown. A pointer click keeps it open, since hovering already opened it. */}
+        <button type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open ? tipId : undefined}
+          onClick={e => setOpen(e.detail === 0 ? !open : true)}
+          onBlur={() => setOpen(false)} onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); } }}
           className={`flex h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
           <Star />{number(score.total)}
         </button>
         {open && (
-          <div id={tipId} role="tooltip" className="absolute top-full right-0 z-40 mt-2 flex w-65 flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)">
+          <div id={tipId} className="absolute top-full right-0 z-40 mt-2 flex w-65 flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)">
             <b>{t('hud.score.title')}</b>
             <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
             {PILLARS.map(k => (
@@ -190,7 +198,7 @@ export function Hud(p: HudProps) {
           </div>
         )}
       </div>
-      <span aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700"><Flame />{number(p.streak)}</span>
+      <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700"><Flame />{number(p.streak)}</span>
       <button type="button" onClick={p.onPalette} aria-label={t('hud.palette.aria')}
         className={`h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary ${focus}`}>
         {t('hud.palette.key')}

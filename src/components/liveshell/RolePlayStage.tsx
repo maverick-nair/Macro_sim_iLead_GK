@@ -1,17 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { useI18n } from '../../i18n';
 import { mark, rich } from '../stylesetting/rich';
+import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { LiveCaption } from '../live/LiveCaption';
 import { TranscriptBubble } from '../live/TranscriptBubble';
 import { FOCUS, shortNameOf, type LiveCaptionLine, type LiveConversation, type LiveLayout, type LiveMood, type LivePerson, type LiveTurn } from './types';
 
 export interface LiveTranscriptProps {
   turns: LiveTurn[];
-  /** Replays an NPC turn with captions. Offered on every NPC turn when set. */
+  /**
+   * Replays an NPC turn with captions. When set, every NPC turn offers Replay (spec); leave it out
+   * and no turn shows the control.
+   */
   onReplay?: (turnId: string) => void;
   /**
-   * True while captions announce the NPC line. The transcript is then not a live region, so screen
-   * readers do not hear every line twice; without captions it announces new turns politely.
+   * True while captions announce the NPC line. The transcript then stays quiet, so screen readers do
+   * not hear every line twice; without captions it announces each finished NPC turn once.
    */
   captionsAnnounce?: boolean;
 }
@@ -19,11 +23,18 @@ export interface LiveTranscriptProps {
 /**
  * The running transcript: NPC turns left with the AI persona label and Replay, yours right. Scrolls
  * and follows the newest turn. Shared by the 1:1 and, later, chat (D14).
+ *
+ * The log itself is not a live region: a streaming turn grows token by token, and a live log would
+ * announce every token. A visually hidden polite region announces the newest NPC turn once it has
+ * finished (not one you interrupted), and only while captions are not already announcing it.
  */
 export function LiveTranscript({ turns, onReplay, captionsAnnounce = false }: LiveTranscriptProps) {
   const { t } = useI18n();
   const list = useRef<HTMLDivElement>(null);
   const last = turns[turns.length - 1];
+  const said = !captionsAnnounce && last && last.speaker !== 'you' && !last.interrupted
+    ? { name: shortNameOf(last.speaker), text: last.text, streaming: last.streaming, aiGenerated: last.aiGenerated }
+    : null;
   const follow = `${turns.length}:${last?.text.length ?? 0}`;
   useEffect(() => {
     const el = list.current;
@@ -35,7 +46,7 @@ export function LiveTranscript({ turns, onReplay, captionsAnnounce = false }: Li
         <b>{t('liveshell.transcript.title')}</b>
         <span>{t('liveshell.transcript.saved')}</span>
       </div>
-      <div ref={list} role="log" aria-live={captionsAnnounce ? 'off' : 'polite'} tabIndex={0}
+      <div ref={list} role="log" aria-live="off" tabIndex={0}
         className="flex flex-1 flex-col gap-2.5 overflow-auto p-3.5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
         {turns.map(turn => {
           const npc = turn.speaker !== 'you';
@@ -47,6 +58,7 @@ export function LiveTranscript({ turns, onReplay, captionsAnnounce = false }: Li
           );
         })}
       </div>
+      <LineAnnouncer line={said} />
     </div>
   );
 }

@@ -87,6 +87,28 @@ export const Column: StoryObj = { render: () => <Col><Live {...KENT} /><Live {..
 /** Narrow layout, as at 1280. */
 export const Narrow: StoryObj = { render: () => <Col width={180}><Live {...GREEN} /></Col> };
 
+/**
+ * At 1024 wide a five stage board leaves each card about 108px. The trust ring moves up above the
+ * mood pill instead of covering it, a pill wider than the card truncates (the full mood is in its
+ * tooltip and the card's label), and the profile button moves under the name so the name keeps the
+ * card's width.
+ */
+export const At1024: StoryObj = {
+  render: () => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 108px)', gap: 12, paddingTop: 70 }}>
+      <MemberCard {...KENT} />
+      <MemberCard {...PETER} />
+      <MemberCard {...BETH} name="Alexandra Montgomery Whitfield" />
+      <MemberCard {...MANDY} mood="frustrated" statsHidden />
+    </div>
+  )
+};
+
+/** Styles locked for the period: the letters stay focusable and say why, but picking does nothing. */
+export const StyleLocked: StoryObj = {
+  render: () => <Col><Live {...MANDY} styleDisabled styleDisabledReason="Styles are set until the next week." /></Col>
+};
+
 export const TrustRings: StoryObj = {
   render: () => (
     <div style={{ display: 'flex', gap: 12 }}>

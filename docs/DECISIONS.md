@@ -255,7 +255,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The brief is data with optional rows (agenda, what you know, mood, open promises, declared style, tone). The row labels follow the format ("Watch for" in a meeting, "She cares about" for the sponsor), so the design's per format briefs come from one shape.
 - The 1:1 mood ring has three steps (frustrated, guarded, more open), as designed, separate from the five member moods.
 - NPC turns can stream (`streaming`) and be cut off (`interrupted`, shown as "Interrupted" beside the AI persona label). Pressing the mic or Escape while the NPC speaks calls `onInterrupt`.
-- The transcript is a polite live region only while captions are hidden, so screen readers do not hear each line twice.
+- Screen readers hear each NPC line once, when it has finished: the captions announce it, or the transcript does while captions are hidden (D54).
 - A long transcript now scrolls inside the window (capped at the window height minus the header and reply bar) instead of growing the page. At 900 tall the cap is above the designed height.
 - The mood ring's 600ms colour change is snapped to `duration.slow` (300ms), per D24.
 - Still open: Space as push to talk (D18), and chat in the shell (D14). `LiveTranscript` and `LiveInputBar` are ready for chat.
@@ -273,6 +273,14 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The live screen loads on demand, so the board's first load stays at 178 KB gzipped (budget 200).
 - `?period=N` opens the mock engine at a later period, for demos and tests (the week 4 sponsor briefing). The real engine ignores it.
 - Hiring needs an open seat: with 10 people in 5 stages of 2, the team starts full (role coverage, D44), so the interview appears once someone leaves. The `Board/Engine board/Interview open` story shows it with room in every stage.
+
+**D54. Accessibility review fixes.** Decided. All 67 parity frames are unchanged.
+- Streamed text is never inside a live region. Captions, the 1:1 transcript, the chat thread and the interview transcript keep their visible text out of live regions and announce each finished NPC line once ("Kent, AI persona: ...") from a visually hidden polite region; a line you interrupt is not read out. One streamed reply went from one announcement per token to one.
+- Meeting and sponsor stages have no transcript; with captions off the page can pass `spokenLine` so the line is still announced.
+- Tiles and meters that were named with `aria-label` on a plain div are now groups (KPI tiles, Team Pulse, target, HUD days left) or images (metric bars, trust ring, streak, report meters), named in words with the trend ("Team skill 57, rising"). Arrow and dot glyphs are hidden from screen readers.
+- The style setting screen is the main landmark, headed by its visible "Week 2 of 8 · Style setting" line. Components that render headings on the board take a `headingLevel`.
+- The HUD score is a disclosure: Enter or Space toggles the breakdown (focus no longer opens it). The style control can be locked (`disabled`, aria-disabled with the reason as description). The palette search box has a focus ring.
+- On narrow cards (a 1024 wide board) the trust ring moves above the mood pill instead of covering it, and the profile button moves under the name so the name keeps the card's width.
 
 ## Blocked on missing docs
 
