@@ -77,6 +77,9 @@
   --color-hud-capacity-half: var(--il-color-hud-capacity-half);
   --color-hud-capacity-empty: var(--il-color-hud-capacity-empty);
   --color-hud-streak: var(--il-color-hud-streak);
+  --color-onboarding-caption-bar: var(--il-color-onboarding-caption-bar);
+  --color-onboarding-mic-glow: var(--il-color-onboarding-mic-glow);
+  --color-onboarding-mic-glow-listening: var(--il-color-onboarding-mic-glow-listening);
   --color-stylesetting-portrait-shade: var(--il-color-stylesetting-portrait-shade);
   --background-image-brand: var(--il-fill-brand);
   --background-image-product: var(--il-fill-product);

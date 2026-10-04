@@ -4,11 +4,15 @@ import { describe, expect, it } from 'vitest';
 
 /**
  * Components may only use tokens and the string catalog. Stories and tests are exempt (they hold
- * fixture data). Screens are exempt until their milestone migrates them.
+ * fixture data). Screens are exempt until their milestone migrates them. The app shell is covered
+ * too: its dialogs, loading screen and onboarding are components now, and the prototype wiring left
+ * in App.tsx (fixture state, screen routing) holds no literal styles or copy.
  */
 const dir = import.meta.dirname;
+const SHELL = ['../app/App.tsx', '../app/EngineOnboarding.tsx'];
 const files = fs.readdirSync(dir, { recursive: true, encoding: 'utf8' })
   .filter(f => /\.tsx?$/.test(f) && !/\.(stories|test)\.tsx?$/.test(f))
+  .concat(SHELL)
   .map(f => path.join(dir, f));
 
 const RULES: Array<[string, RegExp]> = [

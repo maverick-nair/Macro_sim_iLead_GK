@@ -1,6 +1,7 @@
 {
   "id": "sales_elevator",
   "name": "Sales Elevator, Innov8 Elevators",
+  "organisation": "Innov8 Elevators",
   "money": {
     "currency": "USD",
     "locale": "en-US",

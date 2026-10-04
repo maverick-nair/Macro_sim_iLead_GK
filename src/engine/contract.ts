@@ -161,6 +161,8 @@ export const PeriodSummary = z.object({
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
+  /** The storyline's name and the organisation the participant joins, for onboarding. */
+  storyline: z.object({ name: Text, organisation: Text.nullable() }),
   clock: Clock,
   money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
   members: z.array(MemberView),

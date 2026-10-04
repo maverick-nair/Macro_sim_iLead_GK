@@ -1,0 +1,16 @@
+{
+  "appdialog": {
+    "enter": { "value": "ilIn 240ms ease", "$description": "Settings, pause, resume and session dialogs rise in" },
+    "scrim-blur": { "value": "6px", "$description": "Backdrop blur behind an app dialog" },
+    "eyebrow-tracking": { "value": "0.08em", "$description": "WELCOME BACK on the resume recap" }
+  },
+  "app": {
+    "leading": { "value": "1.5", "$description": "Body line height on the app root" },
+    "logo-tracking": { "value": "-0.03em" },
+    "loading": {
+      "track": { "value": "linear-gradient(90deg, {color.track} 0%, {color.accent.soft} 50%, {color.track} 100%)", "$description": "Shimmer bar while the office loads" },
+      "track-size": { "value": "400px 6px" },
+      "shimmer": { "value": "ilShimmer 1.4s linear infinite" }
+    }
+  }
+}

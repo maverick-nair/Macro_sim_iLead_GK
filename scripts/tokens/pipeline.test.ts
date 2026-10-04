@@ -35,6 +35,13 @@ describe('token pipeline', () => {
     expect(build(src).tokensCss).toContain('light-dark(var(--il-color-ink-200), oklch(1 0 0 / 0.1))');
   });
 
+  it('scales font sizes inside the app root by the text size setting', () => {
+    const { tokensCss } = build(tiny({ primitive: { ...tiny().primitive, font: { size: { '13': { $value: '13px' } } } } }));
+    expect(tokensCss).toContain(':root {\n  --il-color-ink-200');
+    expect(tokensCss).toMatch(/:root \{[^}]*--il-font-size-13: 13px;/);
+    expect(tokensCss).toMatch(/\.il-theme \{[^}]*--il-font-size-13: calc\(13px \* var\(--il-text-scale, 1\)\);/);
+  });
+
   it('wraps brand overridable tokens in a var() fallback', () => {
     const src = tiny({ semantic: { color: { accent: { light: '{color.ink.200}', dark: '{color.white}', overridableBy: 'client-acc' } } } });
     expect(build(src).tokensCss).toContain('--il-color-accent: var(--client-acc, light-dark(');

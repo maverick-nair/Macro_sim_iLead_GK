@@ -1,14 +1,17 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useApi } from '../api';
 import { Toast } from '../components/feedback/Toast';
-import { I18nProvider } from '../i18n';
+import { I18nProvider, useI18n } from '../i18n';
 import type { LiveVariant, MetricKey, Outcome, Scenario, StyleKey, EventType } from '../data/types';
-import { NoWrapButton } from '../ds/Button';
-import { Switch } from '../ds/Switch';
-import { css } from '../lib/css';
+import { RESUME_FIXTURE } from '../data/fixtures';
 import { EngineBoard } from '../components/board/EngineBoard';
 import { ReactingScreen } from '../components/liveshell/ReactingScreen';
+import { SettingsDialog } from '../components/settings/SettingsDialog';
+import { PauseDialog, ResumeDialog, SessionExpiredDialog } from '../components/settings/SessionDialogs';
+import { LoadingScreen } from '../components/shell/LoadingScreen';
 import { Onboarding } from '../screens/Onboarding';
+import { HALDEN_THEME } from './clientTheme';
+import { EngineOnboarding } from './EngineOnboarding';
 /** Screens past onboarding load on demand, so the board's first load stays inside its budget. */
 const Board = lazy(() => import('../screens/Board').then(m => ({ default: m.Board })));
 const End = lazy(() => import('../screens/End').then(m => ({ default: m.End })));
@@ -84,24 +87,8 @@ function applyMoves(stats: Stats, outcome: Outcome): Stats {
   return next;
 }
 
-/** Layout of the themed root. Colors come from the generated `.il-theme` token layers. */
-const THEME_ROOT = css(`color:var(--ik-text); font-family:var(--font-sans); font-size:14px; line-height:1.5; font-variant-numeric:tabular-nums; position:relative; min-height:inherit; overflow:hidden; display:flex; flex-direction:column`);
-
-/** Halden Group sample client theme. The client brand color maps only to accent tokens. */
-const CLIENT_THEME: Record<string, string> = {
-  '--client-acc': 'light-dark(oklch(0.5 0.17 0), oklch(0.72 0.17 0))',
-  '--client-acc-2': 'light-dark(oklch(0.58 0.15 30), oklch(0.8 0.12 30))',
-  '--client-acc-soft': 'light-dark(oklch(0.95 0.025 0), oklch(0.6 0.18 0 / 0.18))',
-  '--client-grad': 'linear-gradient(135deg, oklch(0.66 0.19 2), oklch(0.78 0.13 30))'
-};
-
-const DIALOG = `max-width:100%; border-radius:24px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); animation:ilIn 240ms ease`;
-
-const RECAP = [
-  { img: '/assets/npc/beth.png', t: '1:1 with Beth went well', d: 'Morale +6', c: 'var(--ik-pos)' },
-  { img: '/assets/npc/lowe.png', t: 'Feedback to Lowe felt public', d: 'Trust −3', c: 'var(--ik-neg)' },
-  { img: '/assets/npc/green.png', t: 'Ashcroft moved to proposal', d: 'Result +4', c: 'var(--ik-pos)' }
-];
+/** Layout of the themed root. Colors and type come from the generated `.il-theme` token layers. */
+const THEME_ROOT = 'il-theme relative flex flex-col overflow-hidden font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]';
 
 export function App(p: AppProps) {
   const api = useApi();
@@ -111,7 +98,12 @@ export function App(p: AppProps) {
   const reactTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pendingOutcome = useRef<Promise<Outcome> | null>(null);
+  /** What had focus when a dialog opened, so closing it can return there. */
+  const opener = useRef<HTMLElement | null>(null);
+  // The app's own I18nProvider is below this component; the context default is the same English catalog.
+  const { t } = useI18n();
   const frozen = !!p.frozen;
+  const engine = !!p.engine;
   const set = useCallback((u: Partial<State> | ((st: State) => Partial<State> | null)) => {
     setS(st => {
       const patch = typeof u === 'function' ? u(st) : u;
@@ -161,15 +153,17 @@ export function App(p: AppProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [api]);
 
-  // Session clock. Runs on the board only, stops while an overlay (pause, settings) is open.
+  // Prototype session clock. Runs on the prototype board only, stops while an overlay (pause,
+  // settings) is open. The engine board keeps its own clock, so in engine mode nothing ticks here
+  // and the app does not re-render every second.
   useEffect(() => {
+    if (frozen || engine) return;
     const tick = setInterval(() => {
-      if (frozen) return;
       const st = sRef.current;
       if (st.screen === 'board' && !st.overlay) set(x => ({ secs: Math.max(0, x.secs - 1) }));
     }, 1000);
     return () => clearInterval(tick);
-  }, [frozen, set]);
+  }, [frozen, engine, set]);
 
   useEffect(() => () => { clearTimeout(reactTimer.current); clearTimeout(toastTimer.current); }, []);
 
@@ -181,8 +175,8 @@ export function App(p: AppProps) {
 
   const persist = useCallback((work: Promise<unknown>) => {
     if (frozen) return;
-    work.catch(() => say('We could not save that. We will retry when you are back online.'));
-  }, [frozen, say]);
+    work.catch(() => say(t('app.saveFailed')));
+  }, [frozen, say, t]);
 
   const go = useCallback<AppActions['go']>((screen, extra = {}) => {
     clearTimeout(reactTimer.current);
@@ -209,7 +203,10 @@ export function App(p: AppProps) {
     live: (variant, who) => go('live', { variant, who: who || 'kent' }),
     openProfile: id => set(st => (st.opened.includes(id) ? null : { opened: [...st.opened, id] })),
     clearOutcome: () => set({ outcome: false }),
-    overlay: o => set({ overlay: o }),
+    overlay: o => {
+      if (o && !sRef.current.overlay) opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      set({ overlay: o });
+    },
     settings: patch => {
       const next = { ...sRef.current.settings, ...patch };
       set({ settings: next });
@@ -217,16 +214,16 @@ export function App(p: AppProps) {
     }
   }), [api, go, persist, say, set]);
 
-  const updateSettings = (patch: Partial<Settings>) => act.settings(patch);
-
   const D = s.scenario;
   const dark = (p.theme ?? 'dark') === 'dark';
   const mobile = !!p.mobile;
-  const minH = p.minHeight ?? (mobile ? '844px' : '900px');
+  const minH = p.minHeight ?? (mobile ? 'var(--il-frame-phone-min-height)' : 'var(--il-frame-desktop-min-height)');
+  // Text size scales every font size token (and the ported screens' pixel sizes) from the app root,
+  // so text grows and wraps while the layout keeps its size. CSS zoom scaled the layout too.
   const rootVars: CSSProperties & Record<string, string | number> = {
-    colorScheme: dark ? 'dark' : 'light', minHeight: minH, zoom: s.settings.text / 100,
-    background: dark ? '#0A081B url(/assets/bg-1.png) center / cover no-repeat' : 'radial-gradient(1200px 600px at 85% 100%, oklch(0.9 0.06 230), transparent 70%), oklch(0.97 0.012 270)',
-    ...(p.clientTheme ? CLIENT_THEME : null)
+    colorScheme: dark ? 'dark' : 'light', minHeight: minH, '--il-text-scale': s.settings.text / 100,
+    background: dark ? 'var(--il-backdrop-office)' : 'var(--il-backdrop-daylight)',
+    ...(p.clientTheme ? HALDEN_THEME : null)
   };
 
   const app: AppModel | null = s.ready && D ? {
@@ -241,120 +238,52 @@ export function App(p: AppProps) {
   const isLoading = !s.ready || p.uiState === 'loading';
   const screenProps = app && D ? { d: D, app, act } : null;
 
-  const settingRows: Array<{ label: string; hint: string; key: 'text' | 'input'; opts: Array<[Settings['text'] | Settings['input'], string]> }> = [
-    { label: 'Text size', hint: 'Up to 200% without losing content', key: 'text', opts: [[100, '100%'], [125, '125%'], [150, '150%'], [200, '200%']] },
-    { label: 'How you respond', hint: 'Switch any time, even mid conversation', key: 'input', opts: [['text', 'Text'], ['ptt', 'Push to talk'], ['open', 'Hands free']] }
-  ];
   const closeOverlay = () => set({ overlay: null });
+  const returnFocus = () => opener.current;
 
   return (
     <I18nProvider>
     <div style={rootVars} className={s.settings.reduced ? 'il-reduced-motion' : undefined}>
-      <div className="il-theme" style={THEME_ROOT}>
-        {isLoading && (
-          <div style={css('flex:1; min-height:inherit; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px')}>
-            <span style={css('font-size:28px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent')}>iLead</span>
-            <div style={css('width:220px; height:6px; border-radius:3px; background:linear-gradient(90deg, var(--ik-track) 0%, var(--ik-acc-soft) 50%, var(--ik-track) 100%); background-size:400px 6px; animation:ilShimmer 1.4s linear infinite')} />
-            <span style={css('font-size:13px; color:var(--ik-text-2)')}>Setting up your office</span>
-          </div>
-        )}
+      <div className={THEME_ROOT}>
+        {/* Everything behind an open dialog is inert: no focus, no clicks, hidden from screen readers. */}
+        <div className="contents" inert={!!s.overlay}>
+          {isLoading && <LoadingScreen />}
 
-        {screenProps && (
-          <Suspense>
-            {scr === 'onboarding' && p.uiState !== 'loading' && <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>}
-            {p.engine && (scr === 'style' || scr === 'board') && (
-              <div style={css(`flex:1; display:flex; flex-direction:column; min-height:${minH}`)}>
-                <EngineBoard client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
-              </div>
-            )}
-            {!p.engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
-            {!p.engine && scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} mobile={mobile} /></div>}
-            {scr === 'live' && <div><Live {...screenProps} variant={s.variant} uiState={uiState} mobile={mobile} /></div>}
-            {scr === 'weekend' && <div><WeekEnd {...screenProps} step={step} /></div>}
-            {scr === 'end' && <div><End {...screenProps} /></div>}
-            {scr === 'report' && <div><Report {...screenProps} print={!!p.print} mobile={mobile} /></div>}
-          </Suspense>
-        )}
+          {screenProps && (
+            <Suspense>
+              {scr === 'onboarding' && p.uiState !== 'loading' && (engine
+                ? <div><EngineOnboarding act={act} minHeight={minH} /></div>
+                : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
+              {engine && (scr === 'style' || scr === 'board') && (
+                <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
+                  <EngineBoard client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
+                </div>
+              )}
+              {!engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
+              {!engine && scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} mobile={mobile} /></div>}
+              {scr === 'live' && <div><Live {...screenProps} variant={s.variant} uiState={uiState} mobile={mobile} /></div>}
+              {scr === 'weekend' && <div><WeekEnd {...screenProps} step={step} /></div>}
+              {scr === 'end' && <div><End {...screenProps} /></div>}
+              {scr === 'report' && <div><Report {...screenProps} print={!!p.print} mobile={mobile} /></div>}
+            </Suspense>
+          )}
 
-        {scr === 'reacting' && D && (
-          <ReactingScreen slow={p.uiState === 'slow'} onKeepWaiting={() => void toBoard()} onRetry={() => void toBoard()}
-            people={['kent', 'beth', 'jack'].flatMap(id => D.members.filter(m => m.id === id)).map(m => ({ id: m.id, name: m.name, img: `/assets/npc/${m.id}.png` }))} />
-        )}
+          {scr === 'reacting' && D && (
+            <ReactingScreen slow={p.uiState === 'slow'} onKeepWaiting={() => void toBoard()} onRetry={() => void toBoard()}
+              people={['kent', 'beth', 'jack'].flatMap(id => D.members.filter(m => m.id === id)).map(m => ({ id: m.id, name: m.name, img: `/assets/npc/${m.id}.png` }))} />
+          )}
+        </div>
 
-        {s.overlay && (
-          <div style={css('position:absolute; inset:0; z-index:50; background:var(--ik-scrim); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:24px')}>
-            {s.overlay === 'settings' && (
-              <div role="dialog" aria-label="Settings and accessibility" style={css(`width:560px; max-height:100%; overflow-y:auto; overflow-x:hidden; padding:28px; display:flex; flex-direction:column; gap:22px; ${DIALOG}`)}>
-                <div style={css('display:flex; justify-content:space-between; align-items:center')}>
-                  <h2 style={css('margin:0; font-size:22px; font-weight:700')}>Settings</h2>
-                  <button onClick={closeOverlay} aria-label="Close settings" style={css('width:36px; height:36px; border-radius:50%; border:0; background:var(--ik-raised); color:var(--ik-text); cursor:pointer')}>✕</button>
-                </div>
-                {settingRows.map(r => (
-                  <div key={r.key} style={css('display:flex; flex-direction:column; gap:8px')}>
-                    <div style={css('display:flex; justify-content:space-between; gap:12px')}>
-                      <span style={css('font-weight:700')}>{r.label}</span>
-                      <span style={css('font-size:12px; color:var(--ik-text-2)')}>{r.hint}</span>
-                    </div>
-                    <div role="radiogroup" aria-label={r.label} style={css('display:flex; gap:2px; padding:3px; border-radius:999px; background:var(--ik-raised); border:1px solid var(--ik-line)')}>
-                      {r.opts.map(([v, n]) => {
-                        const on = s.settings[r.key] === v;
-                        return (
-                          <button key={String(v)} role="radio" aria-checked={on} onClick={() => updateSettings({ [r.key]: v } as Partial<Settings>)}
-                            style={css(`flex:1; height:34px; border:0; border-radius:999px; cursor:pointer; font-size:13px; font-weight:700; background:${on ? 'var(--grad-brand)' : 'transparent'}; color:${on ? '#0A081B' : 'var(--ik-text-2)'}`)}>{n}</button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-                <div style={css('display:flex; flex-direction:column; gap:14px; padding-top:4px')}>
-                  <Switch label="Captions on every NPC voice line" checked={s.settings.captions} onChange={v => updateSettings({ captions: v })} />
-                  <Switch label="Reduce motion and celebrations" checked={s.settings.reduced} onChange={v => updateSettings({ reduced: v })} />
-                  <Switch label="Show the session clock" checked={s.settings.clock} onChange={v => updateSettings({ clock: v })} />
-                </div>
-                <p style={css('margin:0; font-size:12px; color:var(--ik-text-2)')}>Changes save automatically. Voice is never required. You can finish every interaction in text.</p>
-              </div>
-            )}
-            {s.overlay === 'paused' && (
-              <div role="dialog" aria-label="Paused" style={css(`width:440px; padding:32px; display:flex; flex-direction:column; gap:16px; align-items:center; text-align:center; ${DIALOG}`)}>
-                <div style={css('width:64px; height:64px; border-radius:50%; background:var(--grad-brand); display:flex; align-items:center; justify-content:center; gap:6px')}>
-                  <span style={css('width:6px; height:22px; border-radius:2px; background:#0A081B')} />
-                  <span style={css('width:6px; height:22px; border-radius:2px; background:#0A081B')} />
-                </div>
-                <h2 style={css('margin:0; font-size:24px; font-weight:700')}>You are paused</h2>
-                <p style={css('margin:0; color:var(--ik-text-2); text-wrap:pretty')}>The clock has stopped and your team will wait. Everything is saved, so you can also close this tab and resume on any device.</p>
-                <NoWrapButton variant="primary" size="lg" onClick={closeOverlay}>Resume</NoWrapButton>
-              </div>
-            )}
-            {s.overlay === 'resume' && (
-              <div role="dialog" aria-label="Welcome back" style={css(`width:520px; padding:28px; display:flex; flex-direction:column; gap:18px; ${DIALOG}`)}>
-                <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2)')}>Welcome back</span>
-                <h2 style={css('margin:0; font-size:24px; font-weight:700')}>You are in week 2, day 3</h2>
-                <div style={css('display:flex; flex-direction:column; gap:8px')}>
-                  <span style={css('font-size:13px; font-weight:700')}>Last 3 outcomes</span>
-                  {RECAP.map(r => (
-                    <div key={r.t} style={css('display:flex; gap:10px; align-items:center; padding:10px 12px; border-radius:12px; background:var(--ik-raised)')}>
-                      <img src={r.img} alt="" style={css('width:32px; height:32px; border-radius:50%; object-fit:cover; object-position:center top; background:#DEE9FF')} />
-                      <span style={css('flex:1; font-size:13px')}>{r.t}</span>
-                      <span style={css(`font-size:12px; font-weight:700; color:${r.c}`)}>{r.d}</span>
-                    </div>
-                  ))}
-                </div>
-                <span style={css('font-size:13px; color:var(--ik-text-2)')}>2 open messages are waiting: Kent and Priya.</span>
-                <div style={css('display:flex; justify-content:flex-end')}>
-                  <NoWrapButton variant="primary" size="md" onClick={closeOverlay}>Back to my team</NoWrapButton>
-                </div>
-              </div>
-            )}
-            {s.overlay === 'expired' && (
-              <div role="dialog" aria-label="Session ended" style={css(`width:440px; padding:32px; display:flex; flex-direction:column; gap:14px; text-align:center; align-items:center; ${DIALOG}`)}>
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--ik-acc-2)" strokeWidth="1.75" strokeLinecap="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-                <h2 style={css('margin:0; font-size:22px; font-weight:700')}>Your session timed out</h2>
-                <p style={css('margin:0; color:var(--ik-text-2); text-wrap:pretty')}>You were away for a while, so we signed you out to keep your work safe. Every action and draft is saved. Sign in to pick up exactly where you left off.</p>
-                <NoWrapButton variant="primary" size="md" onClick={() => set({ overlay: 'resume' })}>Sign in again</NoWrapButton>
-              </div>
-            )}
-          </div>
+        {s.overlay === 'settings' && (
+          <SettingsDialog values={s.settings} onChange={act.settings} onClose={closeOverlay} voiceConsent={engine} frozen={frozen} returnFocus={returnFocus} />
         )}
+        {s.overlay === 'paused' && <PauseDialog onResume={closeOverlay} frozen={frozen} returnFocus={returnFocus} />}
+        {/* The recap is the design fixture's until the engine reports recent outcomes (M5). */}
+        {s.overlay === 'resume' && (
+          <ResumeDialog period={s.week} periodUnit="week" sub={s.day} subPeriodUnit="day" recent={RESUME_FIXTURE.recent} waiting={RESUME_FIXTURE.waiting}
+            onBack={closeOverlay} frozen={frozen} returnFocus={returnFocus} />
+        )}
+        {s.overlay === 'expired' && <SessionExpiredDialog onSignIn={() => set({ overlay: 'resume' })} frozen={frozen} returnFocus={returnFocus} />}
 
         <Toast message={s.toast} />
       </div>
