@@ -26,5 +26,6 @@ import style from './style.json';
 import stylesetting from './stylesetting.json';
 import team from './team.json';
 import time from './time.json';
+import weekend from './weekend.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...settings, ...style, ...stylesetting, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...settings, ...style, ...stylesetting, ...team, ...time, ...weekend };

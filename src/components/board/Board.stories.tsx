@@ -53,17 +53,15 @@ export const Event: StoryObj = {
   )
 };
 
-/** Period end and run end, from a real run of the good policy. */
-function FromRun({ ended }: { ended: boolean }) {
+/** The results panel at the end of the run, from a real run of the good policy. The week end has its own stories (`Week end`). */
+function RunEndedPanel() {
   const [view, setView] = useState<EngineView | null>(null);
   useEffect(() => {
     void (async () => {
       const r = await play(defaultStoryline(), 'good', 3);
-      const v = r.view as unknown as EngineView;
-      setView(ended ? v : { ...v, phase: 'periodEnd', clock: { ...v.clock, period: 3 }, periods: v.periods.slice(0, 3), pendingReward: ['extra_day', 'quiet_word'] });
+      setView(r.view as unknown as EngineView);
     })();
-  }, [ended]);
-  return view ? <PeriodPanel view={view} busy={false} money={n => `$${Math.round(n).toLocaleString('en-US')}`} onIntent={noop} onClose={ended ? noop : undefined} /> : null;
+  }, []);
+  return view ? <PeriodPanel view={view} money={n => `$${Math.round(n).toLocaleString('en-US')}`} onClose={noop} /> : null;
 }
-export const PeriodEndWithReward: StoryObj = { render: () => <FromRun ended={false} /> };
-export const RunEnded: StoryObj = { render: () => <FromRun ended /> };
+export const RunEnded: StoryObj = { render: () => <RunEndedPanel /> };

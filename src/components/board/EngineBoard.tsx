@@ -26,6 +26,7 @@ import { ReactingScreen } from '../liveshell/ReactingScreen';
 import type { LivePerson } from '../liveshell/types';
 // The live screen loads when a conversation starts, so the board's first load stays in budget.
 const EngineLive = lazy(() => import('./EngineLive').then(m => ({ default: m.EngineLive })));
+const EngineWeekEnd = lazy(() => import('./EngineWeekEnd').then(m => ({ default: m.EngineWeekEnd })));
 import { PeriodPanel } from './PeriodPanel';
 import { EventCard } from './EventCard';
 import { teamChips, type Chip } from './chips';
@@ -146,6 +147,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const [reacting, setReacting] = useState<{ id: string; people: LivePerson[] } | null>(null);
   /** At the end of the run the results can be closed to look at the board, read only. */
   const [resultsOpen, setResultsOpen] = useState(true);
+  /** At the end of the run, the last week end (banner, report, badges) comes before the results. */
+  const [lastWeekSeen, setLastWeekSeen] = useState(false);
   /** The outcome headline, for screen readers, when focus cannot move to it (an action is being planned). */
   const [announce, setAnnounce] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
@@ -520,8 +523,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   // One modal at a time: an event card first (after the outcome has been read), then the period end.
   const card = !oc ? v.cards[0] : undefined;
-  const periodPanel = !card && (v.phase === 'periodEnd' || (ended && resultsOpen));
-  const plainBoard = !v.live && !reacting && !styling && !card && !periodPanel;
+  // The week end replaces the board at a period end, and once more at the end of the run before the results.
+  const weekEnd = !card && !v.live && !reacting && (v.phase === 'periodEnd' || (ended && !lastWeekSeen));
+  const periodPanel = !card && ended && lastWeekSeen && resultsOpen;
+  const plainBoard = !v.live && !reacting && !styling && !card && !periodPanel && !weekEnd;
 
   // ---- live interactions: the board owns "The team is reacting" ----
   const finishLive: FinishLive = async (i, people) => {
@@ -606,6 +611,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {reacting && <ReactingScreen people={reacting.people} />}
       </>
     );
+  } else if (weekEnd) {
+    body = (
+      <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
+        <EngineWeekEnd key={`${v.phase}:${v.periods.length}`} view={v} busy={busy} send={async i => !!(await send(i))} onResults={() => setLastWeekSeen(true)} />
+      </Suspense>
+    );
   } else if (styling) {
     // Weekly style setting opens before any action (spec), as its own screen.
     body = (
@@ -657,7 +668,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
             onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />
         </div>
         {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
-        {periodPanel && <PeriodPanel view={v} busy={busy} money={money.format} onIntent={i => void send(i)} onClose={ended ? () => setResultsOpen(false) : undefined} onCloseFocus={() => rescue(true)} />}
+        {periodPanel && <PeriodPanel view={v} money={money.format} onClose={() => setResultsOpen(false)} onCloseFocus={() => rescue(true)} />}
         <CommandPalette open={pal && plainBoard} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
       </>
     );
@@ -665,7 +676,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   return (
     <main ref={mainRef} aria-label={plainBoard || card || periodPanel ? t('board.aria') : undefined} className="relative flex flex-1 flex-col">
-      <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>
+      {/* The week end brings its own headings. */}
+      {!weekEnd && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
       {body}
       <div role="status" className="sr-only">{announce}</div>
       <Toast message={toast} />

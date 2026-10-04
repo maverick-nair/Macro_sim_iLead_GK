@@ -88,7 +88,7 @@ export const SponsorBriefing: StoryObj = {
     <Harness startPeriod={4} setup={async client => {
       await confirmStyles(client);
       const v = await client.view();
-      const briefing = v.inbox.find(x => x.kind === 'sponsor');
+      const briefing = v.inbox.find(x => x.briefing);
       if (briefing) await client.send({ type: 'openConversation', kind: 'sponsor', messageId: briefing.id });
     }} />
   )

@@ -426,6 +426,25 @@
   --il-toast-fg: var(--il-color-fg-inverse);
   --il-toast-max-width: 90%;
   --il-toast-enter: ilIn var(--il-duration-base) ease;
+  --il-weekend-enter: ilIn var(--il-duration-slow) ease;
+  --il-weekend-logo-tracking: -0.03em;
+  --il-weekend-glow-fill: radial-gradient(circle, var(--il-color-celebration-glow), transparent 65%);
+  --il-weekend-glow-top: 45%;
+  --il-weekend-display-tracking: -0.03em;
+  --il-weekend-title-tracking: -0.02em;
+  --il-weekend-report-columns: minmax(0,1.3fr) minmax(0,1fr);
+  --il-weekend-funnel-columns: 130px 1fr 70px;
+  --il-weekend-funnel-tick: 2px;
+  --il-weekend-kpi-columns: 1fr 70px 70px 70px;
+  --il-weekend-reward-columns: repeat(3,280px);
+  --il-weekend-reward-lift: translateY(-6px);
+  --il-weekend-reward-transition: transform var(--il-duration-base) ease;
+  --il-weekend-reward-art-1: linear-gradient(135deg,var(--il-color-brand-electric-blue),var(--il-color-brand-cyber-cyan));
+  --il-weekend-reward-art-2: linear-gradient(135deg,var(--il-color-brand-cyber-cyan),var(--il-color-brand-mint-green));
+  --il-weekend-reward-art-3: linear-gradient(135deg,var(--il-color-portrait-sky-100),var(--il-color-portrait-sky-300));
+  --il-weekend-news-art-blue: linear-gradient(135deg,var(--il-color-brand-electric-blue),var(--il-color-brand-cyber-cyan));
+  --il-weekend-news-art-mint: linear-gradient(135deg,var(--il-color-brand-cyber-cyan),var(--il-color-brand-mint-green));
+  --il-weekend-news-art-warm: linear-gradient(135deg,var(--il-color-brand-cyber-cyan),var(--il-color-amber-840));
   /* Migration aliases, removed as screens move to utilities. */
   --ik-text: var(--il-color-fg-primary);
   --ik-text-2: var(--il-color-fg-secondary);

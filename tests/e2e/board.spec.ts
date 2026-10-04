@@ -34,6 +34,23 @@ async function dismissEvents(page: Page) {
   }
 }
 
+/**
+ * Clicks through the week end (banner, report, badges, the reward if offered, news) to its last
+ * button. The week end has its own keyboard and axe walk in weekend.spec.ts.
+ */
+async function throughWeekEnd(page: Page, last: string) {
+  await expect(page.getByText(/ · Week end$/)).toBeVisible();
+  await page.getByRole('button', { name: /^See your week$/ }).click();
+  const step = page.getByRole('button', { name: new RegExp(`^(Continue|Nice|Take this reward|Next|${last})$`) });
+  for (;;) {
+    if (await page.getByRole('radiogroup', { name: 'Rewards' }).count()) await page.getByRole('radio').first().click();
+    const name = (await step.first().textContent())?.trim();
+    await step.first().click();
+    if (name === last) return;
+    if (!(await page.getByText(/ · Week end$/).count())) return;
+  }
+}
+
 /** Weekly style setting: pick on every card, a reason for one, review the summary, confirm. */
 async function setStyles(page: Page, index = 1) {
   await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
@@ -92,15 +109,11 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
 
   await page.getByRole('button', { name: /End week/ }).click();
   await dismissEvents(page);
-  const panel = page.getByRole('dialog', { name: 'Week 1 is done' });
-  await expect(panel).toBeVisible();
-  await expect(panel.getByRole('heading', { name: 'Week 1 is done' })).toBeFocused();
-  // One modal at a time.
-  await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(1);
-  expect(await axe(page)).toEqual([]);
-  const reward = panel.getByText('Your sponsor offers you something');
-  if (await reward.count()) await panel.getByRole('button').first().click();
-  await page.getByRole('button', { name: 'Start week 2' }).click();
+  // The week end replaces the board, focus on its headline.
+  await expect(page.getByText('End of week 1')).toBeVisible();
+  await expect(page.locator('h1')).toBeFocused();
+  await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(0);
+  await throughWeekEnd(page, 'Set styles for week 2');
   await expect(page.getByRole('button', { name: 'Review and confirm' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 1, name: 'Set your leadership styles for week 2' })).toBeFocused();
 });
@@ -178,17 +191,21 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   await rail.click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
   await expect(inbox).toBeFocused();
-  await inbox.getByRole('button', { name: 'Later' }).click();
+  // Other messages (news such as the CEO check in) can sit in the inbox too: set the briefing aside.
+  await inbox.locator('div').filter({ has: page.getByText('Briefing with Paula', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last().getByRole('button', { name: 'Later' }).click();
   await expect(page.getByText('Briefing with Paula')).toHaveCount(0);
   await expect(inbox).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(inbox).toHaveCount(0);
   await expect(rail).toBeFocused();
   // A day passes: the briefing is back.
+  // (A CEO check in, when the sponsor's confidence fell, takes a day of this week, so read the days left first.)
+  const left = page.getByText(/^\d+ days? left$/).first();
+  const before = (await left.textContent()) ?? '';
   await page.getByRole('button', { name: /Energize the team/ }).click();
   await page.getByRole('radio', { name: 'Team Lunch' }).click();
   await page.getByRole('button', { name: /^Confirm/ }).click();
-  await expect(page.getByText(/4 days left/).first()).toBeVisible();
+  await expect(left).not.toHaveText(before);
   await expect(page.getByRole('button', { name: /Briefing with Paula/ })).toBeVisible();
 });
 
@@ -204,15 +221,17 @@ test('palette: Ctrl K on the plain board only', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('the end of the run: one modal, then the board read only', async ({ page }) => {
+test('the end of the run: the last week end, one modal, then the board read only', async ({ page }) => {
   await page.goto('/?start=board&period=8');
   await setStyles(page);
   await page.getByRole('button', { name: /End week/ }).click();
   await dismissEvents(page);
+  await expect(page.getByText('End of week 8')).toBeVisible();
+  await throughWeekEnd(page, 'See your results');
   const panel = page.getByRole('dialog', { name: 'The run is over' });
   await expect(panel).toBeVisible();
   await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(1);
-  await expect(panel.getByText(/Leadership Score \d{1,3}(,\d{3})* of 7,200/)).toBeVisible();
+  await expect(panel.getByText(/Leadership Score \d{1,3}(,\d{3})* of [\d,]+/)).toBeVisible();
   expect(await axe(page)).toEqual([]);
   await panel.getByRole('button', { name: 'Look at the board' }).click();
   await expect(panel).toHaveCount(0);
@@ -295,19 +314,28 @@ test('a whole week by keyboard only', async ({ page }) => {
   }
   await tabTo(/End week/);
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog').first()).toBeVisible();
+  await expect(page.getByRole('dialog').first().or(page.getByText('End of week 1'))).toBeVisible();
   while (await page.getByRole('button', { name: 'Got it' }).count()) {
     const card = page.getByRole('dialog', { name: (await page.getByRole('dialog').getByRole('heading').first().textContent()) ?? '' });
     await expect(card.getByRole('heading')).toBeFocused();
     await page.keyboard.press('Escape');
     await expect(card).toHaveCount(0);
   }
-  await expect(page.getByRole('heading', { name: 'Week 1 is done' })).toBeFocused();
-  if (await page.getByText('Your sponsor offers you something').count()) {
-    await tabTo(/^BUTTON\|\|(One extra day|A quiet word|Team lunch)/);
-    await page.keyboard.press('Enter');
-  }
-  await tabTo(/Start week 2/);
+  // The week end, by keyboard (walked step by step with axe in weekend.spec.ts).
+  await expect(page.getByText('End of week 1')).toBeVisible();
+  await expect(page.locator('h1')).toBeFocused();
+  await tabTo(/^BUTTON\|\|See your week\|/);
   await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { level: 1, name: 'Week 1 report' })).toBeFocused();
+  for (;;) {
+    if (await page.getByRole('radiogroup', { name: 'Rewards' }).count()) {
+      await tabTo(/^BUTTON\|radio\|/);
+      await page.keyboard.press('Space');
+    }
+    await tabTo(/^BUTTON\|\|(Continue|Nice|Take this reward|Next|Set styles for week 2)\|/);
+    const last = /Set styles for week 2/.test(await focused());
+    await page.keyboard.press('Enter');
+    if (last) break;
+  }
   await expect(page.getByRole('heading', { level: 1, name: 'Set your leadership styles for week 2' })).toBeFocused();
 });

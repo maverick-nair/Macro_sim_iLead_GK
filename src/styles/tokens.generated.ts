@@ -394,7 +394,26 @@ export const tokens = {
     "toast.bg",
     "toast.fg",
     "toast.max-width",
-    "toast.enter"
+    "toast.enter",
+    "weekend.enter",
+    "weekend.logo.tracking",
+    "weekend.glow.fill",
+    "weekend.glow.top",
+    "weekend.display.tracking",
+    "weekend.title.tracking",
+    "weekend.report.columns",
+    "weekend.funnel.columns",
+    "weekend.funnel.tick",
+    "weekend.kpi.columns",
+    "weekend.reward.columns",
+    "weekend.reward.lift",
+    "weekend.reward.transition",
+    "weekend.reward.art-1",
+    "weekend.reward.art-2",
+    "weekend.reward.art-3",
+    "weekend.news.art-blue",
+    "weekend.news.art-mint",
+    "weekend.news.art-warm"
   ]
 } as const;
 

@@ -49,3 +49,46 @@ export const RESUME_FIXTURE: { recent: Array<{ img: string; title: string; metri
   ],
   waiting: ['Kent', 'Priya']
 };
+
+/**
+ * The week end in frames w1 to w5 (port of `project/ilWeekEnd.dc.html`): week 2 of 8, the design's
+ * sample report, the Listener badge, three rewards and two news bulletins. The funnel comes from the
+ * scenario's stages. The playable app takes all of this from the engine's period summary instead.
+ */
+export const WEEKEND_FIXTURE = {
+  period: 2,
+  periods: 8,
+  headline: 'Kent is back in the game.',
+  line: 'You made time for the people who needed it. Revenue is still behind pace, so next week is about demos.',
+  stars: 2,
+  /** Funnel bars run against this length, as in the design (42 of 45 fills most of the track). */
+  funnelScale: 45,
+  bottleneck: 'close',
+  kpis: [
+    { metric: 'skill', start: 56, end: 57 },
+    { metric: 'morale', start: 54, end: 58 },
+    { metric: 'result', start: 58, end: 60 },
+    { metric: 'trust', start: 53, end: 57 }
+  ] as Array<{ metric: MetricKey; start: number; end: number }>,
+  starRows: [
+    { kind: 'people', earned: true, detail: 'Lifted team morale by 4 points' },
+    { kind: 'leadership', earned: true, detail: 'Matched your style to 7 of 10 people' },
+    { kind: 'business', earned: false, detail: 'Hit week 2 revenue pace. You were $18,800 short.' }
+  ] as Array<{ kind: 'people' | 'leadership' | 'business'; earned: boolean; detail: string }>,
+  streak: { count: 3, unit: 'day', note: 'Replied to every message on time. 2 more days for a bonus.' } as const,
+  sponsor: { from: 'steady', to: 'confident' } as const,
+  pulse: { upbeat: 6, steady: 3, struggling: 1, lastStruggling: 3 },
+  badge: { key: 'listener', rule: 'listener', name: 'Listener', reason: 'You asked three open questions in your 1:1 with Kent before offering a fix.' },
+  sponsorFirstName: 'Priya',
+  rewards: [
+    { key: 'half_day', name: 'An extra half day', description: 'Five and a half days of your time in week 3.' },
+    { key: 'quiet_word', name: 'A quiet word', description: 'Learn one thing a team member has not told you yet.' },
+    { key: 'team_lunch', name: 'Team lunch budget', description: 'Energize the team once in week 3 at no day cost.' }
+  ],
+  news: [
+    { key: 'price_cut', card: 'impact', title: 'A competitor cut prices by 10%', body: 'Two of your open deals mention it. Expect tougher proposal conversations.', impact: 'Proposal and Closing stages will convert a little slower unless the team sells value.' },
+    { key: 'ashcroft', card: 'opportunity', title: 'Ashcroft signed at list price', body: 'Jack and Green held the line. Priya sent a note to the whole team.', impact: 'Revenue +$8,400. Morale lifts for Jack and Green.' }
+  ] as Array<{ key: string; card: 'impact' | 'opportunity'; title: string; body: string; impact: string }>,
+  /** The design marks where GenieKreator's news illustration goes; the gallery keeps the annotation. */
+  newsArtLabel: 'Illustration from GenieKreator config'
+};

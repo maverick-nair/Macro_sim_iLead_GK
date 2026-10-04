@@ -1,0 +1,41 @@
+{
+  "weekend": {
+    "enter": { "value": "ilIn {duration.slow} ease", "$description": "Report, unlock and news steps rise in" },
+    "logo": {
+      "tracking": { "value": "-0.03em" }
+    },
+    "glow": {
+      "fill": { "value": "radial-gradient(circle, {color.celebration.glow}, transparent 65%)", "$description": "Halo behind the banner headline" },
+      "top": { "value": "45%", "$description": "The halo sits a little above the middle" }
+    },
+    "display": {
+      "tracking": { "value": "-0.03em", "$description": "The 64px banner headline" }
+    },
+    "title": {
+      "tracking": { "value": "-0.02em", "$description": "Unlock heading and news titles" }
+    },
+    "report": {
+      "columns": { "value": "minmax(0,1.3fr) minmax(0,1fr)", "$description": "Funnel and team, then stars and the small cards" }
+    },
+    "funnel": {
+      "columns": { "value": "130px 1fr 70px", "$description": "Stage, bar, value" },
+      "tick": { "value": "2px", "$description": "The ideal marker on a funnel bar" }
+    },
+    "kpi": {
+      "columns": { "value": "1fr 70px 70px 70px", "$description": "Metric, start, change, end" }
+    },
+    "reward": {
+      "columns": { "value": "repeat(3,280px)", "$description": "Three reward cards" },
+      "lift": { "value": "translateY(-6px)", "$description": "The chosen reward card rises" },
+      "transition": { "value": "transform {duration.base} ease", "$description": "The design's 200ms, snapped to duration.base (D24)" },
+      "art-1": { "value": "linear-gradient(135deg,{color.brand.electric-blue},{color.brand.cyber-cyan})" },
+      "art-2": { "value": "linear-gradient(135deg,{color.brand.cyber-cyan},{color.brand.mint-green})" },
+      "art-3": { "value": "linear-gradient(135deg,{color.portrait.sky-100},{color.portrait.sky-300})" }
+    },
+    "news": {
+      "art-blue": { "value": "linear-gradient(135deg,{color.brand.electric-blue},{color.brand.cyber-cyan})", "$description": "Impact, capacity and diagnostic bulletins" },
+      "art-mint": { "value": "linear-gradient(135deg,{color.brand.cyber-cyan},{color.brand.mint-green})", "$description": "Opportunity and signal bulletins" },
+      "art-warm": { "value": "linear-gradient(135deg,{color.brand.cyber-cyan},{color.amber.840})", "$description": "Crisis bulletins" }
+    }
+  }
+}
