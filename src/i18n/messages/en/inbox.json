@@ -1,0 +1,15 @@
+{
+  "inbox.title": "Inbox",
+  "inbox.open": "Inbox, {count} unread",
+  "inbox.close": "Close inbox",
+  "inbox.empty.title": "All caught up",
+  "inbox.empty.body": "New messages from your team will slide in here.",
+  "inbox.empty.bodySponsor": "New messages from your team and {sponsor} will slide in here.",
+  "inbox.sender.news": "News",
+  "inbox.pinned": "Pinned",
+  "inbox.pinnedDue": "Pinned · {due}",
+  "inbox.later": "Later",
+  "inbox.cta": "{cta, select, impact {See impact} other {Reply now}}",
+  "inbox.footer": "Replying costs no {unit, select, quarter {quarters} month {months} week {weeks} hour {hours} other {days}}, and still counts with that person.",
+  "inbox.tag": "{type, select, chat {Chat from {name}} sponsor {{name}, sponsor note} news {News} other {Email from {name}}}"
+}

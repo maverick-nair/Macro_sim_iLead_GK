@@ -1,0 +1,13 @@
+{
+  "inbox": {
+    "rail": {
+      "ring-urgent": { "value": "{color.amber.840}", "$description": "Ring around an urgent sender in the rail. The same amber in both modes, as in the design" }
+    },
+    "drawer": {
+      "width": { "value": "360px" },
+      "offset": { "value": "72px", "$description": "Opens beside the rail" },
+      "shadow": { "value": "0 24px 64px oklch(0.05 0.03 280 / 0.45)" },
+      "enter": { "value": "ilIn 240ms ease" }
+    }
+  }
+}
