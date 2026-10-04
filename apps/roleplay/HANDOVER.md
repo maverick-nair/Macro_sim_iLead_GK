@@ -1,58 +1,81 @@
-# AI RolePlay Training App - Handover
+# AI RolePlay - Handover
 
 ## What it is
-Premium AI RolePlay training product. Scenario: **Renewal Negotiation with Margaret Hale** (VP Procurement, Northwind Freight). The player is a Cloudline account executive defending a $1.2M/yr renewal against a competitor quote 22% lower with a Friday deadline. One attempt per roleplay (no retries, no "New Call"). No emojis. Dark and light themes, WCAG AA 2.2.
+
+An AI RolePlay product with two deliberately different propositions on one instrument:
+
+- **Practice**: unlimited attempts, rewind to any of your turns (the persona rewinds with you), criteria available on request, in the moment hints, selectable persona difficulty, and a trend across attempts. Scores are for the learner.
+- **Assessment**: one attempt per scenario, a fixed time limit, a standardised persona that follows a schedule of critical incidents, hidden criteria, no hints and no rewind. The lock lives in the attempt store.
+
+Scenario shipped: **Renewal Negotiation with Margaret Hale** (VP Procurement, Northwind Freight). No emojis, no em or en dashes. Dark and light themes, WCAG 2.2 AA.
+
+Every score is produced the same way in both modes: an LLM (or the offline heuristic) classifies each participant turn into a band (Strong, Adequate, Weak, Harmful) against authored behavioural indicators with written anchors, quoting the words that justify the band. Rules turn bands into points through a fixed consequence table. No model ever emits a number into a score. Every rating in the report traces to quoted turns, and every report states where the instrument sits on the claim ladder (rung 1 of 4 today: structured feedback, not for talent decisions).
 
 ## Run
-The app lives at `apps/roleplay` inside the GenieKreator monorepo (pnpm workspace). Install once from the repo root, then run from this folder:
+
+The app lives at `apps/roleplay` inside the GenieKreator monorepo (pnpm workspace).
+
 ```
 pnpm install              # at the repo root
-pnpm dev                  # Vite dev server (PORT env var, default 8443)
+pnpm dev                  # Vite dev server with the offline providers (PORT env var, default 8443)
+pnpm server               # local API server on ROLEPLAY_API_PORT (default 8787)
+pnpm dev:ai               # Vite with VITE_AI_PROVIDER=http, proxies /api to the server
 pnpm build                # production build
-pnpm typecheck            # tsc --noEmit
+pnpm typecheck            # tsc --noEmit (src, server, test)
+pnpm test                 # vitest: scoring engine, classifier heuristics, report assembly
 ```
-The root `pnpm lint`, `pnpm lint:copy` and `pnpm format:check` (Prettier) also cover this folder.
-Stack: React 19, TypeScript, Vite 8, Tailwind CSS v4 (`@tailwindcss/vite`, no config file), jsPDF (lazy-loaded).
+
+The root `pnpm lint`, `pnpm lint:copy`, `pnpm format:check` (Prettier) and `pnpm test` also cover this folder.
+
+Providers: `VITE_AI_PROVIDER=mock` (default) runs everything in the browser with scripted persona lines, a transparent pattern based classifier and a template report writer. `VITE_AI_PROVIDER=http` sends persona, classification and report calls to the API server. The server uses Claude through the official SDK when `ANTHROPIC_API_KEY`, `LLM_MODEL_NPC` and `LLM_MODEL_JUDGE` are set, otherwise it answers with the same offline providers. `ROLEPLAY_DUAL_PASS=1` runs each classification twice and reports the agreement; on disagreement the more conservative band is kept. See `.env.example`.
+
+Stack: React 19, TypeScript, Vite 8, Tailwind CSS v4, Zod 4, `@anthropic-ai/sdk`, jsPDF (lazy loaded), Vitest, Node http for the server (run with tsx).
 
 ## Files
-- `src/App.tsx` - shell only: theme context provider and the landing, session, summary page switch.
-- `src/pages/` - `LandingPage`, `SessionPage`, `SummaryPage`.
-- `src/components/` - shared pieces: `TenPointScale`, `SkillScore`, `SkillRadar`, `ScoreRing`, `VoiceWave`, `BoxField`, `ConfettiBurst`, `BadgeMedal`, `FlameIcon`, `RollingNumber`, `EmailDialog`, `ThemeToggle`, `ToolButton`, `CountdownTimer`, `SectionLabel`, `LeaderboardIcon`.
-- `src/data/` - all mock constants: `scenario.ts` (titles, briefing copy, `ASSESSED_SKILLS`, `LANDING_OBJECTIVES`, `OBJECTIVES`, peer threshold, image URLs), `skills.ts` (`SKILLS`, `RAW_SCORE`), `report.ts` (`REPORT_META`, `KPIS`, `STRENGTHS`, `DEVELOPMENT`, `PDF_NAME`), `communication.ts` (`CEFR`, `SENTIMENT`, `TONE`, `CLARITY`), `transcript.ts` (`TRANSCRIPT`, `FULL_TRANSCRIPT`), `npc.ts` (`LIVE_PHRASE`, `NPC_REPLIES`), `scoring.ts` (`TOPIC_RX`, `OBJECTIVE_TESTS`), `badges.ts`, `peers.ts`, `bands.ts` (`KNOLSKAPE_BANDS`).
-- `src/lib/` - helpers: `score.ts` (`bandFor`, `scoreColor`, `scoreLabel`, `cefrColor`), `color.ts` (`readableOn`), `motion.ts` (`reduceMotion`), `useCountUp.ts`, `buildReportPdf.ts`, `theme.ts` (`ThemeContext`).
-- `src/types.ts` - shared types (`Page`, `Skill`, `Evidence`, `Line`, `SessionStats`, `ReportTab`).
-- `src/index.css` - theme tokens, box pattern, animations, reduced-motion rules.
-- `src/main.tsx` - entrypoint.
+
+- `src/App.tsx` - shell: theme provider, page switch, session config, attempt list.
+- `src/pages/` - `LandingPage` (briefing, skills with indicators, objectives, instrument status, mode chooser), `SessionPage` (turn loop, snapshots and rewind, hints, incident scheduling via the provider, report build on End Call), `SummaryPage` (Overview, Evidence by Skill, Communication, Transcript, Method tabs).
+- `src/domain/` - pure, deterministic:
+  - `scenario.ts` Zod schemas. A scenario is `stimulus` (persona, hidden interests, opening, critical incidents, mock lines) plus `instrument` (skills, indicators with anchors and coaching copy, objectives, claim rung, evidence summary, peer baseline). `validateScenario` checks cross references.
+  - `scoring.ts` consequence tables (`BAND_POINTS`, `NOT_OBSERVED_POINTS`), indicator and skill scoring, overall score and coverage, objective completion, per turn XP, streak and badge rules, level thresholds, practice hints.
+  - `report.ts` report assembly from engine output plus narrative, transcript tagging from evidence, report ids.
+  - `descriptive.ts` transcript derived conversation metrics (talk share, questions, offers, filler). Descriptive only, never scored.
+  - `instrumentStatus.ts` the four rung claim ladder and what each rung requires.
+- `src/providers/` - `types.ts` (interfaces and Zod request and response schemas shared with the server), `mock.ts` (offline persona, heuristic classifier, template writer), `http.ts` (calls `/api/*`, validates responses, falls back to mock), `index.ts` (selection).
+- `src/store/attempts.ts` - localStorage attempt store standing in for the sessions backend; enforces the one assessment attempt.
+- `src/data/scenarios/renewalNegotiation.ts` - the authored scenario. `src/data/` also keeps `badges.ts`, `peers.ts`, `bands.ts` and the sample cohort numbers.
+- `src/components/` - `TenPointScale`, `SkillScore`, `SkillRadar`, `ScoreRing`, `BandChip`, `ClaimLadderPanel`, `AttemptTrend`, `VoiceWave`, `BoxField`, `ConfettiBurst`, `BadgeMedal`, `FlameIcon`, `RollingNumber`, `EmailDialog`, `ThemeToggle`, `ToolButton`, `CountdownTimer`, `SectionLabel`, `LeaderboardIcon`.
+- `src/lib/` - `score.ts` (`bandFor`, `scoreColor`, `scoreLabel`, `cefrColor`), `color.ts` (`readableOn`), `motion.ts`, `useCountUp.ts`, `buildReportPdf.ts` (renders the report object), `theme.ts`.
+- `server/index.ts` - API routes `/api/npc`, `/api/classify`, `/api/report`, `/api/health`. Prompts are versioned files in `/prompts/roleplay/{npc,classify,report}/v1.md`; structured outputs are validated with Zod and retried once.
+- `test/scoring.test.ts` - engine, classifier, hints, descriptive metrics, report assembly, claim ladder.
 
 ## Theme tokens (index.css)
+
 - `:root` = dark, `:root.light` = light.
 - `--ink` is RGB channels: use `rgb(var(--ink) / a)`. `--bg` is hex: use `color-mix(in srgb, var(--bg) X%, transparent)`, never `rgb(var(--bg)/a)`.
 - Dark: bg `#0e0d0c`, brand `#ff8a4c`, accent `#c2410c`. Light: bg `#f4f2ef`, brand `#b8320f`.
 - Secondary text must be `text-ink/70` or stronger (lower fails AA in light theme).
 
 ## Knolskape 10-point bands
-Novice 1-2 `#b5472f`, Emerging 3-4 `#e07b2e`, Competent 5-6 `#efc23a`, Proficient 7-8 `#8dc063`, Role Model 9-10 `#2f7a34`. Use `bandFor(score)` and `readableOn(hex)`. Only the band containing the score is elevated.
 
-## Flows
-**Landing:** hero, Role / Goal / Scene, 6 Skills being Assessed (tiles with descriptions, no proficiency levels), 3 outcome-only Objectives with XP (criteria hidden: Break the Deadlock 60, Protect the Margin 50, Win Her Over 40), player card, badges, animated tile background with cursor spotlight.
+Novice 1-2 `#b5472f`, Emerging 3-4 `#e07b2e`, Competent 5-6 `#efc23a`, Proficient 7-8 `#8dc063`, Role Model 9-10 `#2f7a34`. Use `bandFor(score)` and `readableOn(hex)`. Only the band containing the score is elevated. Behavioural bands (Strong, Adequate, Weak, Harmful) use `BAND_COLORS` in `BandChip`.
 
-**Session:**
-- Strict turn-taking: NPC speech streams word by word; mic, composer and send are locked while she speaks. Voice input auto-submits on finish or stop.
-- `VoiceWave` live meter for NPC and player.
-- Gamification: XP HUD with level ring, rolling XP, streak (x1.5 at 3+), badges, floating +XP, unlock toasts. Objective confetti originates from the objective row (sidebar open) or the top-bar Objectives button (sidebar closed).
-- Leaderboard shows peer XP, not levels.
+## Scoring rules (engine, do not change without re-validating)
 
-**Report (4 tabs):** Performance Overview (scale, percentile, Rewards Earned, KPIs, Skill Snapshot with radar and summary stats, strengths/development, feedback, recommendations); Detailed Analysis (skills and sub-skills only, evidence, drills); Communication (CEFR, sentiment, tone, clarity); Transcript (tagged turns, key moments). PDF download and email (mailto). "Compare with peers / Just me" toggle; peer mode is enabled only when `PLAYERS_COMPLETED > PEER_THRESHOLD` (50).
+- Band points: Strong 10, Adequate 7, Weak 4, Harmful 1. An indicator never observed counts 4, because every indicator in this scenario has an opportunity to appear.
+- Repeated hits on one indicator average their points.
+- Skill score = rounded mean of indicator points, clamped to 1 to 10. Overall = weighted mean of skill scores, rounded. Pass mark is per scenario (8 here).
+- Objective complete = an Adequate or better band on one of its listed indicators. XP: 25 for on topic, 45 per newly met objective, a length bonus capped at 20, times 1.5 from the third strong reply in a row. Off topic turns earn nothing and reset the streak.
+- Conversation metrics and language analysis are descriptive and never enter the score. Audio is scored by transcript only; no voice or facial emotion inference anywhere.
 
-## What is mocked (needed before production)
-1. Scoring is keyword/regex based (`TOPIC_RX`, `OBJECTIVE_TESTS`). Replace with an LLM or validated rubric scorer.
-2. NPC replies cycle 3 scripted lines; dictation types a fixed phrase; camera is a stock image. Wire real LLM, STT and TTS.
-3. All report, peer, leaderboard and season data are constants. Needs a backend, auth and persistence.
-4. Email uses `mailto:`; real sending with the PDF attached needs a server.
+## What is still mocked (needed before production)
 
-## Suggested next steps
-- Add an API layer for scenarios, sessions, scoring and reports.
-- Run a screen-reader and keyboard audit, and check mobile layout of the session screen.
+1. **Persona, classifier and report writer** run offline by default. With a key the API server uses Claude. The LLM path has not yet been exercised against a live key in this repository; validate the prompts and output schemas on real traffic first.
+2. **Speech**: dictation types a fixed phrase, the camera is a stock image, there is no text to speech. Real STT and TTS belong behind adapters on the server, with consent before capture.
+3. **Sessions, peers and leaderboard**: attempts persist in localStorage, peer baselines and the leaderboard are sample constants. The report shape in `src/domain/report.ts` is what the backend should store.
+4. **Email** is a mailto handoff; real sending with the PDF attached needs a server.
+5. **Validation**: the instrument is on claim rung 1. Rung 2 needs a calibration set rated by trained assessors with agreement per skill; rung 3 needs parallel forms and subgroup fairness analysis; rung 4 needs convergent and criterion evidence and a technical manual. Do not change the rung in the scenario file without that evidence.
 
 ## Code rules
-Default exports for components; double quotes for strings with apostrophes; global CSS and fonts in `index.css`; respect `prefers-reduced-motion`. Formatting is Prettier with the repo root config. No em or en dashes anywhere (the root copy lint fails on them).
+
+Default exports for components; double quotes for strings with apostrophes; global CSS and fonts in `index.css`; respect `prefers-reduced-motion`. Formatting is Prettier with the repo root config. Say "skills", never "competency". No em or en dashes anywhere (the root copy lint fails on them). Prompts live only in `/prompts`, never inline.

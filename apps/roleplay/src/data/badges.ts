@@ -6,4 +6,3 @@ export const BADGES = [
   { id: "listener", name: "Deep Listener", desc: "Reflected the client's words", mark: "DL" },
   { id: "clean-sweep", name: "Clean Sweep", desc: "Completed every objective", mark: "CS" },
 ];
-export const OBJECTIVE_BADGE = ["detective", "trader", "listener"];

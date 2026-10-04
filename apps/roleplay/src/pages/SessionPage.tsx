@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import type { SessionStats } from "../types";
 import ThemeToggle from "../components/ThemeToggle";
 import VoiceWave from "../components/VoiceWave";
 import RollingNumber from "../components/RollingNumber";
@@ -9,18 +8,56 @@ import BadgeMedal from "../components/BadgeMedal";
 import ToolButton from "../components/ToolButton";
 import CountdownTimer from "../components/CountdownTimer";
 import LeaderboardIcon from "../components/LeaderboardIcon";
-import { SCENARIO_TITLE, LANDING_OBJECTIVES, OBJECTIVES, PLAYERS_COMPLETED } from "../data/scenario";
-import { TRANSCRIPT } from "../data/transcript";
-import { LIVE_PHRASE, NPC_REPLIES } from "../data/npc";
-import { BADGES, OBJECTIVE_BADGE } from "../data/badges";
-import { TOPIC_RX, OBJECTIVE_TESTS } from "../data/scoring";
+import { PLAYERS_COMPLETED } from "../data/scenario";
+import { BADGES } from "../data/badges";
 import { PEERS } from "../data/peers";
+import type { Difficulty, Mode, Scenario, SessionTurn, TurnClassification } from "../domain/scenario";
+import { hintFor, levelFor, levelProgress, turnOutcome } from "../domain/scoring";
+import {
+  assembleReport,
+  buildReportRequest,
+  reportId,
+  type Report,
+  type SessionStats,
+} from "../domain/report";
+import { scoreSession } from "../domain/scoring";
+import { providers } from "../providers";
+import { saveAttempt } from "../store/attempts";
+
+const START_XP = 560;
+const START_STREAK = 2;
+const OPENING_OFFSET_SECONDS = 125; // the authored opening ends at 2:05
+
+// Everything the session needs to restore when the learner rewinds to an earlier turn.
+type Snapshot = {
+  messages: SessionTurn[];
+  classifications: TurnClassification[];
+  agreements: number[];
+  xp: number;
+  streak: number;
+  bestStreak: number;
+  badges: string[];
+  metObjectives: boolean[];
+  turns: number;
+};
 
 export default function SessionPage({
+  scenario,
+  mode,
+  difficulty,
+  hints,
   onEnd,
 }: {
-  onEnd: (messages: typeof TRANSCRIPT, stats: SessionStats) => void;
+  scenario: Scenario;
+  mode: Mode;
+  difficulty: Difficulty;
+  hints: boolean;
+  onEnd: (report: Report) => void;
 }) {
+  const isPractice = mode === "practice";
+  const objectives = scenario.instrument.objectives;
+  const persona = scenario.stimulus.persona;
+
   const [muted, setMuted] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [cameraOn, setCameraOn] = useState(false);
@@ -28,10 +65,13 @@ export default function SessionPage({
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showObjectives, setShowObjectives] = useState(true);
   const [showTranscript, setShowTranscript] = useState(true);
+  const [showCriteria, setShowCriteria] = useState(false);
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState(TRANSCRIPT);
-  const [xp, setXp] = useState(560);
-  const [streak, setStreak] = useState(2);
+  const [messages, setMessages] = useState<SessionTurn[]>(scenario.stimulus.opening);
+  const [classifications, setClassifications] = useState<TurnClassification[]>([]);
+  const [agreements, setAgreements] = useState<number[]>([]);
+  const [xp, setXp] = useState(START_XP);
+  const [streak, setStreak] = useState(START_STREAK);
   const [turns, setTurns] = useState(0);
   const [combo, setCombo] = useState<number | null>(null);
   const [celebrate, setCelebrate] = useState<number | null>(null);
@@ -44,37 +84,40 @@ export default function SessionPage({
     kind: "objective" | "level" | "badge";
   } | null>(null);
   const [badges, setBadges] = useState<string[]>([]);
-  const [bestStreak, setBestStreak] = useState(2);
+  const [bestStreak, setBestStreak] = useState(START_STREAK);
   const [floats, setFloats] = useState<{ id: number; v: number; mult: boolean }[]>([]);
-  const startXpRef = useRef(560);
-  const [metObjectives, setMetObjectives] = useState<boolean[]>([false, false, false]);
-  const [feedback, setFeedback] = useState<{
-    gain: number;
-    note: string;
-    ok: boolean;
-  } | null>(null);
+  const [metObjectives, setMetObjectives] = useState<boolean[]>(objectives.map(() => false));
+  const [feedback, setFeedback] = useState<{ gain: number; note: string; ok: boolean } | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
+  const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [finishing, setFinishing] = useState(false);
+  const [timeUp, setTimeUp] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const startRef = useRef(Date.now());
+  const replyTimers = useRef<number[]>([]);
 
+  const elapsedSeconds = () => OPENING_OFFSET_SECONDS + Math.floor((Date.now() - startRef.current) / 1000);
   // Message timestamps derive from wall-clock, so the countdown can tick in its own
   // component without re-rendering the whole session every second.
   function nowStamp() {
-    const e = 125 + Math.floor((Date.now() - startRef.current) / 1000);
+    const e = elapsedSeconds();
     return `${Math.floor(e / 60)}:${String(e % 60).padStart(2, "0")}`;
   }
 
-  // Opening line: Margaret finishes speaking before the floor opens.
+  // Opening line: the persona finishes speaking before the floor opens.
   useEffect(() => {
     const id = window.setTimeout(() => setSpeaking(false), 3200);
     return () => window.clearTimeout(id);
   }, []);
+
+  useEffect(() => () => replyTimers.current.forEach((t) => window.clearTimeout(t)), []);
 
   // Dictation: live transcript fills as you speak; when you finish (or tap stop) the
   // message is sent automatically, as it would be in a real call.
   const dictRef = useRef("");
   useEffect(() => {
     if (!isRecording) return;
-    const words = LIVE_PHRASE.split(" ");
+    const words = scenario.stimulus.mockDictation.split(" ");
     let i = 0;
     dictRef.current = "";
     setDraft("");
@@ -85,7 +128,7 @@ export default function SessionPage({
       if (i >= words.length) {
         clearInterval(id);
         setIsRecording(false);
-        handleSubmit(dictRef.current);
+        void handleSubmit(dictRef.current);
       }
     }, 150);
     return () => clearInterval(id);
@@ -95,7 +138,7 @@ export default function SessionPage({
     if (speaking) return;
     if (isRecording) {
       setIsRecording(false);
-      if (dictRef.current.trim()) handleSubmit(dictRef.current);
+      if (dictRef.current.trim()) void handleSubmit(dictRef.current);
     } else setIsRecording(true);
   }
 
@@ -103,13 +146,10 @@ export default function SessionPage({
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, showTranscript]);
 
-  const level = xp >= 900 ? "Role Model" : xp >= 700 ? "Proficient" : xp >= 500 ? "Competent" : "Emerging";
-  const levelFloor = xp >= 900 ? 900 : xp >= 700 ? 700 : xp >= 500 ? 500 : 300;
-  const levelCeil = levelFloor + 200;
-  const levelPct = Math.min(100, ((xp - levelFloor) / (levelCeil - levelFloor)) * 100);
-
+  const level = levelFor(xp).name;
+  const levelPct = levelProgress(xp);
   const objectivesDone = metObjectives.filter(Boolean).length;
-  const objectivesPct = (objectivesDone / OBJECTIVES.length) * 100;
+  const objectivesPct = objectives.length ? (objectivesDone / objectives.length) * 100 : 0;
   const CONFETTI = [
     { a: -70, d: 26, c: "#ff8a4c" },
     { a: -35, d: 30, c: "#34d399" },
@@ -127,115 +167,117 @@ export default function SessionPage({
     .map((p, i) => ({ ...p, rank: i + 1 }));
   const myRank = board.find((p) => (p as { you?: boolean }).you)?.rank ?? board.length;
 
-  // Margaret takes the floor: a short think, then her line streams as she says it.
+  // The persona takes the floor: a short think, then her line streams as she says it.
   // The player cannot interrupt; mic and composer stay locked until she finishes.
-  function scheduleReply() {
+  async function scheduleReply(transcript: SessionTurn[], playerTurn: number) {
     setSpeaking(true);
-    const words = NPC_REPLIES[turns % NPC_REPLIES.length].split(" ");
-    window.setTimeout(() => {
-      setMessages((m) => [...m, { speaker: "Margaret Hale", time: nowStamp(), text: "" }]);
-      let i = 0;
-      const id = window.setInterval(() => {
-        i += 1;
-        setMessages((m) => {
-          const c = [...m];
-          c[c.length - 1] = { ...c[c.length - 1], text: words.slice(0, i).join(" ") };
-          return c;
-        });
-        if (i >= words.length) {
-          window.clearInterval(id);
-          window.setTimeout(() => setSpeaking(false), 400);
-        }
-      }, 170);
-    }, 900);
+    const [reply] = await Promise.all([
+      providers.npc.reply({ scenario, mode, difficulty, transcript, playerTurn }),
+      new Promise((r) => replyTimers.current.push(window.setTimeout(r, 900))),
+    ]);
+    const words = reply.text.split(" ");
+    setMessages((m) => [...m, { speaker: persona.name, time: nowStamp(), text: "" }]);
+    let i = 0;
+    const id = window.setInterval(() => {
+      i += 1;
+      setMessages((m) => {
+        const c = [...m];
+        c[c.length - 1] = { ...c[c.length - 1], text: words.slice(0, i).join(" ") };
+        return c;
+      });
+      if (i >= words.length) {
+        window.clearInterval(id);
+        replyTimers.current.push(window.setTimeout(() => setSpeaking(false), 400));
+      }
+    }, 170);
   }
 
-  function handleSubmit(override?: string) {
+  async function handleSubmit(override?: string) {
     const text = (override ?? draft).trim();
-    if (!text || speaking) return;
-    const lower = text.toLowerCase();
-    const words = text.split(/\s+/).filter(Boolean);
-    const substantive = words.length >= 4;
-    const onTopic = TOPIC_RX.test(lower);
-    const matched = OBJECTIVE_TESTS.map((fn) => fn(lower));
-    const newlyMet = matched.map((m, i) => m && !metObjectives[i]);
-    const newCount = newlyMet.filter(Boolean).length;
+    if (!text || speaking || finishing) return;
+    setSpeaking(true);
+    setHint(null);
 
-    setMessages((m) => [...m, { speaker: "You", time: nowStamp(), text }]);
+    // Snapshot before the turn so practice mode can rewind to exactly this point.
+    const snapshot: Snapshot = {
+      messages,
+      classifications,
+      agreements,
+      xp,
+      streak,
+      bestStreak,
+      badges,
+      metObjectives,
+      turns,
+    };
+    setSnapshots((s) => [...s.slice(0, turns), snapshot]);
+
+    const playerTurn: SessionTurn = { speaker: "You", time: nowStamp(), text };
+    const transcript = [...messages, playerTurn];
+    const turnIndex = transcript.length - 1;
+    setMessages(transcript);
     setDraft("");
     setIsRecording(false);
-    setTurns((t) => t + 1);
+    setTurns(turns + 1);
 
-    // Relevance gate: a line that neither engages the scenario nor advances an objective
-    // earns nothing and breaks the streak, since length alone is never rewarded.
-    if (!onTopic && !matched.some(Boolean)) {
+    const { classification, agreement } = await providers.classifier.classify({
+      scenario,
+      transcript,
+      turnIndex,
+    });
+    const nextClassifications = [...classifications, classification];
+    setClassifications(nextClassifications);
+    if (agreement !== null) setAgreements((a) => [...a, agreement]);
+
+    const outcome = turnOutcome({ scenario, text, classification, metObjectives, streak, xp, badges });
+
+    if (!outcome.onTopic) {
       setStreak(0);
-      setFeedback({
-        gain: 0,
-        note: "Off-topic. Steer back to the negotiation",
-        ok: false,
-      });
-      window.setTimeout(() => setFeedback(null), 2600);
-      scheduleReply();
+      setFeedback({ gain: 0, note: outcome.note, ok: false });
+      replyTimers.current.push(window.setTimeout(() => setFeedback(null), 2600));
+      void scheduleReply(transcript, turns + 1);
       return;
     }
 
-    // Context-weighted XP: relevance + objectives newly hit + a modest, capped length bonus.
-    // A hot streak (3+ strong replies) multiplies the whole turn by 1.5.
-    const nextStreak = streak + 1;
-    const mult = nextStreak >= 3;
-    const base = (onTopic ? 25 : 0) + newCount * 45 + (substantive ? Math.min(words.length, 20) : 0);
-    const gain = Math.round(base * (mult ? 1.5 : 1));
-
-    const earned: string[] = [];
-    const addBadge = (id: string) => {
-      if (!badges.includes(id) && !earned.includes(id)) earned.push(id);
-    };
-    if (onTopic) addBadge("icebreaker");
-    if (nextStreak >= 3) addBadge("hot-streak");
-    newlyMet.forEach((m, i) => m && addBadge(OBJECTIVE_BADGE[i]));
-    if (metObjectives.every((v, i) => v || newlyMet[i])) addBadge("clean-sweep");
-    if (earned.length) setBadges((b) => [...b, ...earned]);
-
-    const levelOf = (v: number) =>
-      v >= 900 ? "Role Model" : v >= 700 ? "Proficient" : v >= 500 ? "Competent" : "Emerging";
-    const levelledUp = levelOf(xp + gain) !== levelOf(xp);
-
+    if (outcome.earnedBadges.length) setBadges((b) => [...b, ...outcome.earnedBadges]);
+    const newCount = outcome.newlyMet.filter(Boolean).length;
     if (newCount > 0) {
-      setMetObjectives((prev) => prev.map((v, i) => v || newlyMet[i]));
-      const idx = newlyMet.indexOf(true);
+      setMetObjectives((prev) => prev.map((v, i) => v || outcome.newlyMet[i]));
+      const idx = outcome.newlyMet.indexOf(true);
       setCelebrate(idx);
-      window.setTimeout(() => setCelebrate(null), 1100);
+      replyTimers.current.push(window.setTimeout(() => setCelebrate(null), 1100));
     }
 
     // Celebrations, most important first: level up, then objective, then badge.
-    const b0 = BADGES.find((b) => b.id === earned[0]);
-    const moment = levelledUp
+    const b0 = BADGES.find((b) => b.id === outcome.earnedBadges[0]);
+    const moment = outcome.levelledUp
       ? {
-          title: `Level up: ${levelOf(xp + gain)}`,
+          title: `Level up: ${levelFor(xp + outcome.gain).name}`,
           sub: "New rank unlocked on the leaderboard",
-          xp: gain,
+          xp: outcome.gain,
           kind: "level" as const,
         }
       : newCount > 0
         ? {
             title: "Objective complete",
-            sub: OBJECTIVES[newlyMet.indexOf(true)],
-            xp: gain,
+            sub: objectives[outcome.newlyMet.indexOf(true)].label,
+            xp: outcome.gain,
             kind: "objective" as const,
           }
         : b0
-          ? { title: `Badge unlocked: ${b0.name}`, sub: b0.desc, xp: gain, kind: "badge" as const }
+          ? { title: `Badge unlocked: ${b0.name}`, sub: b0.desc, xp: outcome.gain, kind: "badge" as const }
           : null;
     if (moment) {
       setUnlock({ key: Date.now(), ...moment });
-      window.setTimeout(() => setUnlock(null), 2600);
+      replyTimers.current.push(window.setTimeout(() => setUnlock(null), 2600));
       if (moment.kind !== "badge") {
         // Objective confetti fires from that objective in the open sidebar, or from the
         // top-bar Objectives button when the sidebar is closed.
         let origin: { x: number; y: number } | undefined;
         if (moment.kind === "objective") {
-          const row = document.querySelector<HTMLElement>(`[data-objective="${newlyMet.indexOf(true)}"]`);
+          const row = document.querySelector<HTMLElement>(
+            `[data-objective="${outcome.newlyMet.indexOf(true)}"]`,
+          );
           const btn = document.querySelector<HTMLElement>("[data-anchor='objectives-btn']");
           const el = row && row.getClientRects().length ? row : btn;
           if (el) {
@@ -248,21 +290,94 @@ export default function SessionPage({
     }
 
     const fid = Date.now();
-    setFloats((f) => [...f, { id: fid, v: gain, mult }]);
-    window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== fid)), 1400);
+    setFloats((f) => [...f, { id: fid, v: outcome.gain, mult: outcome.multiplied }]);
+    replyTimers.current.push(window.setTimeout(() => setFloats((f) => f.filter((x) => x.id !== fid)), 1400));
 
-    setXp((x) => x + gain);
-    setBestStreak((b) => Math.max(b, nextStreak));
-    setStreak((s) => s + 1);
-    setCombo(gain);
-    const note = newCount > 0 ? `${OBJECTIVES[newlyMet.indexOf(true)]} complete` : "On topic";
-    setFeedback({ gain, note, ok: true });
-    window.setTimeout(() => {
-      setCombo(null);
-      setFeedback(null);
-    }, 2400);
-    scheduleReply();
+    setXp(xp + outcome.gain);
+    setBestStreak(Math.max(bestStreak, outcome.nextStreak));
+    setStreak(outcome.nextStreak);
+    setCombo(outcome.gain);
+    setFeedback({ gain: outcome.gain, note: outcome.note, ok: true });
+    replyTimers.current.push(
+      window.setTimeout(() => {
+        setCombo(null);
+        setFeedback(null);
+      }, 2400),
+    );
+
+    if (isPractice && hints) {
+      const h = hintFor(scenario, nextClassifications);
+      if (h) {
+        setHint(h);
+        replyTimers.current.push(window.setTimeout(() => setHint(null), 7000));
+      }
+    }
+
+    void scheduleReply(transcript, turns + 1);
   }
+
+  // Practice only: rewind to the state before the k-th player turn and edit that line again.
+  function rewindTo(playerTurnOrdinal: number) {
+    const snap = snapshots[playerTurnOrdinal];
+    if (!snap || speaking || finishing) return;
+    const removed = messages.find((m, i) => i === snap.messages.length);
+    setMessages(snap.messages);
+    setClassifications(snap.classifications);
+    setAgreements(snap.agreements);
+    setXp(snap.xp);
+    setStreak(snap.streak);
+    setBestStreak(snap.bestStreak);
+    setBadges(snap.badges);
+    setMetObjectives(snap.metObjectives);
+    setTurns(snap.turns);
+    setSnapshots((s) => s.slice(0, playerTurnOrdinal));
+    setDraft(removed?.text ?? "");
+    setHint(null);
+    setFeedback({ gain: 0, note: "Rewound. Try this turn differently", ok: true });
+    replyTimers.current.push(window.setTimeout(() => setFeedback(null), 2600));
+  }
+
+  async function endCall() {
+    if (finishing) return;
+    setFinishing(true);
+    replyTimers.current.forEach((t) => window.clearTimeout(t));
+    const completedAt = new Date().toISOString();
+    const scores = scoreSession(scenario, classifications);
+    const narrative = await providers.reporter.write(buildReportRequest(scenario, messages, scores));
+    const stats: SessionStats = {
+      startXp: START_XP,
+      endXp: xp,
+      badges,
+      bestStreak,
+      objectives: objectivesDone,
+      startRank: 4,
+      endRank: myRank,
+    };
+    const report = assembleReport({
+      id: reportId(completedAt, mode),
+      scenario,
+      mode,
+      completedAt,
+      durationSeconds: elapsedSeconds(),
+      transcript: messages,
+      classifications,
+      narrative,
+      stats,
+      agreement: agreements.length ? agreements.reduce((a, b) => a + b, 0) / agreements.length : null,
+    });
+    saveAttempt(report);
+    onEnd(report);
+  }
+
+  function onExpire() {
+    setTimeUp(true);
+    if (!isPractice) void endCall();
+  }
+
+  // Which player-turn ordinal does a transcript index correspond to (for rewind buttons)?
+  const openingLength = scenario.stimulus.opening.length;
+  const playerOrdinalAt = (index: number) =>
+    messages.slice(openingLength, index + 1).filter((m) => m.speaker === "You").length - 1;
 
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ background: "transparent" }}>
@@ -280,6 +395,21 @@ export default function SessionPage({
             style={{ background: "rgba(52,211,153,0.12)", color: "var(--ok)" }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--ok)]" /> Live
+          </span>
+          <span
+            className="hidden md:inline-flex items-center gap-2 px-2.5 py-1 text-[11px] font-display uppercase tracking-wider"
+            style={
+              isPractice
+                ? { background: "rgb(var(--ink) / 0.06)", color: "rgb(var(--ink) / 0.8)" }
+                : { background: "rgb(var(--accent-rgb) / 0.14)", color: "var(--brand)" }
+            }
+            title={
+              isPractice
+                ? "Practice: unlimited attempts, rewind available"
+                : "Assessment: one attempt, standardised persona"
+            }
+          >
+            {isPractice ? `Practice · ${difficulty}` : "Assessment · one attempt"}
           </span>
         </div>
 
@@ -348,7 +478,7 @@ export default function SessionPage({
               </span>
             ))}
           </div>
-          <CountdownTimer initial={459} />
+          <CountdownTimer initial={scenario.durationSeconds} onExpire={onExpire} />
 
           <ToolButton active={showTranscript} onClick={() => setShowTranscript((v) => !v)} label="Transcript">
             <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
@@ -362,7 +492,7 @@ export default function SessionPage({
               active={showObjectives}
               onClick={() => setShowObjectives((v) => !v)}
               label="Objectives"
-              badge={`${objectivesDone}/${OBJECTIVES.length}`}
+              badge={`${objectivesDone}/${objectives.length}`}
               badgeColor="var(--ok)"
             >
               <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
@@ -387,18 +517,9 @@ export default function SessionPage({
           </ToolButton>
           <ThemeToggle />
           <button
-            onClick={() =>
-              onEnd(messages, {
-                startXp: startXpRef.current,
-                endXp: xp,
-                badges,
-                bestStreak,
-                objectives: objectivesDone,
-                startRank: 4,
-                endRank: myRank,
-              })
-            }
-            className="tool-btn px-3.5 py-2 text-xs font-semibold font-display"
+            onClick={() => void endCall()}
+            disabled={finishing}
+            className="tool-btn px-3.5 py-2 text-xs font-semibold font-display disabled:opacity-60"
             style={{
               background: "rgba(244,63,94,0.12)",
               color: "var(--danger)",
@@ -439,50 +560,60 @@ export default function SessionPage({
               </div>
             </div>
             <div ref={scrollRef} className="flex-1 overflow-auto px-4 py-4 space-y-4">
-              {messages.map((t, i) => (
-                <div
-                  key={i}
-                  className={`flex flex-col gap-1 ${t.speaker === "You" ? "items-end" : "items-start"}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-ink/70 text-[10px] font-display">{t.speaker}</span>
-                    <span className="text-ink/70 text-[10px] tabular-nums">{t.time}</span>
-                  </div>
+              {messages.map((t, i) => {
+                const you = t.speaker === "You";
+                const ordinal = you && i >= openingLength ? playerOrdinalAt(i) : -1;
+                const canRewind =
+                  isPractice && ordinal >= 0 && ordinal < snapshots.length && !speaking && !finishing;
+                return (
                   <div
-                    className="max-w-[88%] px-3 py-2 text-sm leading-relaxed"
-                    style={
-                      t.speaker === "You"
-                        ? {
-                            background: "rgb(var(--accent-rgb) / 0.16)",
-                            color: "rgb(var(--ink) / 0.9)",
-                            border: "1px solid rgb(var(--accent-rgb) / 0.3)",
-                          }
-                        : {
-                            background: "rgb(var(--ink) / 0.05)",
-                            color: "rgb(var(--ink) / 0.7)",
-                            border: "1px solid rgb(var(--ink) / 0.08)",
-                          }
-                    }
+                    key={i}
+                    className={`group/turn flex flex-col gap-1 ${you ? "items-end" : "items-start"}`}
                   >
-                    {t.text}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-ink/70 text-[10px] font-display">{t.speaker}</span>
+                      <span className="text-ink/70 text-[10px] tabular-nums">{t.time}</span>
+                    </div>
+                    <div
+                      className="max-w-[88%] px-3 py-2 text-sm leading-relaxed"
+                      style={
+                        you
+                          ? {
+                              background: "rgb(var(--accent-rgb) / 0.16)",
+                              color: "rgb(var(--ink) / 0.9)",
+                              border: "1px solid rgb(var(--accent-rgb) / 0.3)",
+                            }
+                          : {
+                              background: "rgb(var(--ink) / 0.05)",
+                              color: "rgb(var(--ink) / 0.7)",
+                              border: "1px solid rgb(var(--ink) / 0.08)",
+                            }
+                      }
+                    >
+                      {t.text}
+                    </div>
+                    {canRewind && (
+                      <button
+                        onClick={() => rewindTo(ordinal)}
+                        className="text-[11px] font-display font-semibold text-brand opacity-70 hover:opacity-100 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] rounded px-1"
+                        aria-label={`Retry from your turn at ${t.time}`}
+                      >
+                        Retry from here
+                      </button>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {speaking && messages[messages.length - 1]?.speaker === "You" && (
                 <div
                   className="flex items-center gap-1 px-3 py-2 w-fit"
-                  style={{
-                    background: "rgb(var(--ink) / 0.05)",
-                    border: "1px solid rgb(var(--ink) / 0.08)",
-                  }}
+                  style={{ background: "rgb(var(--ink) / 0.05)", border: "1px solid rgb(var(--ink) / 0.08)" }}
                 >
                   {[0, 0.15, 0.3].map((d, i) => (
                     <span
                       key={i}
                       className="w-1 h-1 rounded-full bg-ink/40"
-                      style={{
-                        animation: `pulse ${1 + d}s ease-in-out infinite`,
-                      }}
+                      style={{ animation: `pulse ${1 + d}s ease-in-out infinite` }}
                     />
                   ))}
                 </div>
@@ -503,16 +634,13 @@ export default function SessionPage({
               </span>
               <span
                 className="px-1.5 py-0.5 text-[10px] font-display uppercase tracking-wider"
-                style={{
-                  background: "rgba(52,211,153,0.14)",
-                  color: "var(--ok)",
-                }}
+                style={{ background: "rgba(52,211,153,0.14)", color: "var(--ok)" }}
               >
                 Live
               </span>
             </div>
             <h2 className="font-display font-bold text-ink text-lg md:text-xl tracking-tight leading-snug">
-              {SCENARIO_TITLE}
+              {scenario.title}
             </h2>
             <p className="text-ink/70 text-sm mt-1 truncate">
               Protect the deal and the relationship under price pressure.
@@ -573,11 +701,9 @@ export default function SessionPage({
                 style={{ background: "rgba(0,0,0,0.5)" }}
               >
                 <span
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    speaking ? "bg-[var(--ok)] animate-pulse" : "bg-ink/30"
-                  }`}
+                  className={`w-1.5 h-1.5 rounded-full ${speaking ? "bg-[var(--ok)] animate-pulse" : "bg-ink/30"}`}
                 />
-                <span className="text-ink/85 text-xs font-medium font-display">Margaret Hale</span>
+                <span className="text-ink/85 text-xs font-medium font-display">{persona.name}</span>
               </div>
             </div>
 
@@ -662,10 +788,7 @@ export default function SessionPage({
                 <div
                   role="status"
                   className="absolute top-3 right-3 px-2.5 py-1 font-display font-bold text-xs animate-fade-in-up z-10"
-                  style={{
-                    background: "rgba(16,185,129,0.22)",
-                    color: "var(--ok)",
-                  }}
+                  style={{ background: "rgba(16,185,129,0.22)", color: "var(--ok)" }}
                 >
                   +{combo} XP
                 </div>
@@ -760,6 +883,34 @@ export default function SessionPage({
 
           {/* Composer: ChatGPT-style input with dictation */}
           <div className="flex-none">
+            {hint && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="flex items-start gap-2 mb-2 px-3 py-2 text-xs font-display animate-fade-in-up"
+                style={{
+                  background: "rgb(var(--accent-rgb) / 0.12)",
+                  color: "var(--brand)",
+                  border: "1px solid rgb(var(--accent-rgb) / 0.4)",
+                }}
+              >
+                <span className="font-bold uppercase tracking-wider text-[10px] mt-0.5">Hint</span>
+                <span className="text-ink/85">{hint}</span>
+              </div>
+            )}
+            {timeUp && isPractice && (
+              <div
+                role="status"
+                className="flex items-center gap-2 mb-2 px-3 py-2 text-xs font-display"
+                style={{
+                  background: "rgb(var(--ink) / 0.06)",
+                  color: "rgb(var(--ink) / 0.85)",
+                  border: "1px solid rgb(var(--ink) / 0.12)",
+                }}
+              >
+                Time is up for a scored call. You can keep practising, or end the call to see your report.
+              </div>
+            )}
             {feedback && (
               <div
                 role="status"
@@ -798,10 +949,10 @@ export default function SessionPage({
             >
               <button
                 onClick={toggleMic}
-                disabled={speaking}
+                disabled={speaking || finishing}
                 aria-label={
                   speaking
-                    ? "Microphone locked while Margaret is speaking"
+                    ? `Microphone locked while ${persona.name} is speaking`
                     : isRecording
                       ? "Finish and send"
                       : "Speak your response"
@@ -841,27 +992,27 @@ export default function SessionPage({
               <textarea
                 value={draft}
                 readOnly={isRecording}
-                disabled={speaking}
+                disabled={speaking || finishing}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    handleSubmit();
+                    void handleSubmit();
                   }
                 }}
                 rows={1}
                 placeholder={
                   speaking
-                    ? "Margaret is speaking. Wait for your turn."
+                    ? `${persona.name} is speaking. Wait for your turn.`
                     : isRecording
-                      ? "Listening…"
+                      ? "Listening..."
                       : "Your turn. Tap the mic to speak, or type"
                 }
                 className="flex-1 min-w-0 resize-none bg-transparent text-ink text-sm leading-relaxed placeholder:text-ink/70 px-2 py-2.5 max-h-32 focus:outline-none"
               />
               <button
-                onClick={() => handleSubmit()}
-                disabled={!draft.trim() || speaking || isRecording}
+                onClick={() => void handleSubmit()}
+                disabled={!draft.trim() || speaking || isRecording || finishing}
                 aria-label="Send response"
                 className="w-10 h-10 flex-none flex items-center justify-center transition-colors disabled:cursor-not-allowed focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
                 style={{
@@ -887,11 +1038,12 @@ export default function SessionPage({
                   Speaking. Your message sends when you finish, or tap stop.
                 </>
               ) : speaking ? (
-                <>Floor locked. You can reply once Margaret finishes.</>
+                <>Floor locked. You can reply once {persona.name.split(" ")[0]} finishes.</>
               ) : (
                 <>
                   Press <span className="text-ink/70 font-medium">Enter</span> to send ·{" "}
                   <span className="text-ink/70 font-medium">Shift + Enter</span> for a new line
+                  {isPractice && <> · Rewind any of your turns from the transcript</>}
                 </>
               )}
             </p>
@@ -906,9 +1058,7 @@ export default function SessionPage({
           >
             {showObjectives && (
               <aside
-                className={`flex flex-col overflow-hidden ${
-                  showLeaderboard ? "border-b border-ink/10" : "flex-1"
-                }`}
+                className={`flex flex-col overflow-hidden ${showLeaderboard ? "border-b border-ink/10" : "flex-1"}`}
               >
                 <div className="px-4 py-3 border-b border-ink/10 flex items-center justify-between flex-none">
                   <span className="font-display font-semibold text-ink text-sm tracking-tight">
@@ -929,14 +1079,13 @@ export default function SessionPage({
                     </svg>
                   </button>
                 </div>
-                {/* Progress */}
                 <div className="px-4 py-3 border-b border-ink/10 flex-none">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-ink/70 text-[10px] font-display uppercase tracking-widest">
                       Progress
                     </span>
                     <span className="font-display font-semibold text-ink text-xs tabular-nums">
-                      {objectivesDone}/{OBJECTIVES.length}
+                      {objectivesDone}/{objectives.length}
                     </span>
                   </div>
                   <div
@@ -945,19 +1094,20 @@ export default function SessionPage({
                   >
                     <div
                       className="h-full transition-all duration-500"
-                      style={{
-                        width: `${objectivesPct}%`,
-                        background: "var(--ok)",
-                      }}
+                      style={{ width: `${objectivesPct}%`, background: "var(--ok)" }}
                     />
                   </div>
                 </div>
-                <div className="py-2">
-                  {OBJECTIVES.map((o, i) => {
+                <div className="py-2 overflow-auto">
+                  {objectives.map((o, i) => {
                     const done = metObjectives[i];
                     const celebrating = celebrate === i;
+                    const criteria = scenario.instrument.skills
+                      .flatMap((s) => s.indicators)
+                      .filter((ind) => o.indicatorIds.includes(ind.id))
+                      .map((ind) => ind.label);
                     return (
-                      <div key={o} data-objective={i} className="flex items-center gap-3 px-4 py-2.5">
+                      <div key={o.id} data-objective={i} className="flex items-start gap-3 px-4 py-2.5">
                         <div
                           className="relative w-9 h-9 flex-none flex items-center justify-center"
                           style={{
@@ -1005,26 +1155,48 @@ export default function SessionPage({
                         <div className="min-w-0 flex-1">
                           <p
                             className="text-sm leading-snug"
-                            style={{
-                              color: done ? "rgb(var(--ink) / 0.85)" : "rgb(var(--ink) / 0.62)",
-                            }}
+                            style={{ color: done ? "rgb(var(--ink) / 0.85)" : "rgb(var(--ink) / 0.75)" }}
                           >
-                            {o}
+                            {o.label}
                           </p>
                           <p
                             className="text-[11px] font-display"
-                            style={{
-                              color: done ? "var(--ok)" : "rgb(var(--ink) / 0.62)",
-                            }}
+                            style={{ color: done ? "var(--ok)" : "rgb(var(--ink) / 0.7)" }}
                           >
                             {done
-                              ? `Completed · +${LANDING_OBJECTIVES[i].xp} XP`
-                              : `Hidden criteria · ${LANDING_OBJECTIVES[i].xp} XP`}
+                              ? `Completed · +${o.xp} XP`
+                              : isPractice && showCriteria
+                                ? `${o.xp} XP`
+                                : `Hidden criteria · ${o.xp} XP`}
                           </p>
+                          {isPractice && showCriteria && (
+                            <ul className="mt-1 space-y-0.5">
+                              {criteria.map((c) => (
+                                <li key={c} className="text-[11px] text-ink/75 leading-snug flex gap-1.5">
+                                  <span
+                                    aria-hidden
+                                    className="mt-1.5 w-1 h-1 rounded-full bg-brand flex-none"
+                                  />
+                                  {c}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
                         </div>
                       </div>
                     );
                   })}
+                  {isPractice && (
+                    <div className="px-4 pt-1 pb-2">
+                      <button
+                        onClick={() => setShowCriteria((v) => !v)}
+                        className="text-[11px] font-display font-semibold text-brand focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)] rounded px-1"
+                        aria-expanded={showCriteria}
+                      >
+                        {showCriteria ? "Hide what counts" : "Show what counts"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </aside>
             )}
@@ -1076,9 +1248,7 @@ export default function SessionPage({
                         ) : (
                           <span
                             className="font-display font-bold text-sm tabular-nums w-5 text-center flex-none"
-                            style={{
-                              color: you ? "var(--brand)" : "rgb(var(--ink) / 0.62)",
-                            }}
+                            style={{ color: you ? "var(--brand)" : "rgb(var(--ink) / 0.7)" }}
                           >
                             {p.rank}
                           </span>
@@ -1086,9 +1256,7 @@ export default function SessionPage({
                         <div className="min-w-0 flex-1">
                           <p
                             className="text-sm font-medium truncate"
-                            style={{
-                              color: you ? "rgb(var(--ink))" : "rgb(var(--ink) / 0.8)",
-                            }}
+                            style={{ color: you ? "rgb(var(--ink))" : "rgb(var(--ink) / 0.8)" }}
                           >
                             {p.name}
                             {you && <span className="text-brand"> (you)</span>}
@@ -1096,9 +1264,7 @@ export default function SessionPage({
                         </div>
                         <span
                           className="font-display font-semibold text-sm tabular-nums flex-none"
-                          style={{
-                            color: you ? "var(--brand)" : "rgb(var(--ink) / 0.7)",
-                          }}
+                          style={{ color: you ? "var(--brand)" : "rgb(var(--ink) / 0.7)" }}
                         >
                           {p.pts.toLocaleString()}
                           <span className="text-[10px] font-normal text-ink/70"> XP</span>
@@ -1154,6 +1320,25 @@ export default function SessionPage({
             <p className="font-display font-bold text-2xl text-ink ml-2">
               +<RollingNumber value={unlock.xp} />
               <span className="text-sm text-ink/75"> XP</span>
+            </p>
+          </div>
+        </div>
+      )}
+      {finishing && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-0 z-[62] flex items-center justify-center"
+          style={{ background: "color-mix(in srgb, var(--bg) 80%, transparent)" }}
+        >
+          <div
+            className="flex flex-col items-center gap-3 px-8 py-6 border border-ink/15"
+            style={{ background: "var(--surface)" }}
+          >
+            <VoiceWave active color="var(--brand)" bars={14} className="w-28" />
+            <p className="font-display font-semibold text-ink text-sm">Preparing your report</p>
+            <p className="text-ink/75 text-xs">
+              Scoring every turn against the indicators and writing the feedback.
             </p>
           </div>
         </div>

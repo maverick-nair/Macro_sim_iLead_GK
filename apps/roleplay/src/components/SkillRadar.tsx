@@ -1,13 +1,14 @@
-import { SKILLS } from "../data/skills";
 import { bandFor } from "../lib/score";
 
-// Hexagonal radar of the six assessed skills on the 10-point scale, with an optional
+export type RadarSkill = { name: string; score: number; peer: number };
+
+// Hexagonal radar of the assessed skills on the 10-point scale, with an optional
 // dashed peer-average outline.
-export default function SkillRadar({ compare }: { compare: boolean }) {
+export default function SkillRadar({ skills, compare }: { skills: RadarSkill[]; compare: boolean }) {
   const size = 240;
   const c = size / 2;
   const R = 84;
-  const n = SKILLS.length;
+  const n = skills.length;
   const pt = (i: number, v: number) => {
     const a = (Math.PI * 2 * i) / n - Math.PI / 2;
     return [c + Math.cos(a) * R * (v / 10), c + Math.sin(a) * R * (v / 10)] as const;
@@ -19,24 +20,24 @@ export default function SkillRadar({ compare }: { compare: boolean }) {
         viewBox={`0 0 ${size} ${size}`}
         className="w-full h-auto overflow-visible"
         role="img"
-        aria-label={`Skill profile radar. ${SKILLS.map((k) => `${k.name} ${k.score} of 10`).join(", ")}`}
+        aria-label={`Skill profile radar. ${skills.map((k) => `${k.name} ${k.score} of 10`).join(", ")}`}
       >
         {[2, 4, 6, 8, 10].map((g) => (
           <polygon
             key={g}
-            points={poly(SKILLS.map(() => g))}
+            points={poly(skills.map(() => g))}
             fill="none"
             stroke="rgb(var(--ink) / 0.12)"
             strokeWidth={1}
           />
         ))}
-        {SKILLS.map((_, i) => {
+        {skills.map((_, i) => {
           const [x, y] = pt(i, 10);
           return <line key={i} x1={c} y1={c} x2={x} y2={y} stroke="rgb(var(--ink) / 0.12)" />;
         })}
         {compare && (
           <polygon
-            points={poly(SKILLS.map((k) => k.peer))}
+            points={poly(skills.map((k) => k.peer))}
             fill="none"
             stroke="rgb(var(--ink) / 0.7)"
             strokeWidth={1.5}
@@ -44,13 +45,13 @@ export default function SkillRadar({ compare }: { compare: boolean }) {
           />
         )}
         <polygon
-          points={poly(SKILLS.map((k) => k.score))}
+          points={poly(skills.map((k) => k.score))}
           fill="rgb(var(--accent-rgb) / 0.22)"
           stroke="var(--brand)"
           strokeWidth={2}
           strokeLinejoin="round"
         />
-        {SKILLS.map((k, i) => {
+        {skills.map((k, i) => {
           const [x, y] = pt(i, k.score);
           return (
             <circle
@@ -64,7 +65,7 @@ export default function SkillRadar({ compare }: { compare: boolean }) {
             />
           );
         })}
-        {SKILLS.map((k, i) => {
+        {skills.map((k, i) => {
           const [x, y] = pt(i, 12.6);
           const words = k.name.split(" ");
           const mid = Math.ceil(words.length / 2);

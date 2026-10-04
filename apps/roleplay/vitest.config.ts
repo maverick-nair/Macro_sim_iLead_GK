@@ -2,6 +2,8 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    projects: ["packages/*", "apps/*"],
+    name: "@gk/roleplay",
+    include: ["test/**/*.test.ts"],
+    environment: "node",
   },
 });

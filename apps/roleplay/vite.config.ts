@@ -34,6 +34,7 @@ export default defineConfig(({ mode }) => {
       port: parseInt(process.env.PORT || "8443"),
       strictPort: true,
       watch: { ignored: ["**/.figma/**"] },
+      proxy: { "/api": `http://localhost:${process.env.ROLEPLAY_API_PORT || "8787"}` },
     },
     preview: {
       host: process.env.FIGMA_DEV_SERVER_HOST || "0.0.0.0",

@@ -1,13 +1,20 @@
 import { useEffect, useRef, useState } from "react";
+import type { Report } from "../domain/report";
+import type { Scenario } from "../domain/scenario";
 import { scoreLabel } from "../lib/score";
-import { SCENARIO_TITLE, SCORE } from "../data/scenario";
-import { SKILLS } from "../data/skills";
-import { STRENGTHS, DEVELOPMENT, PDF_NAME } from "../data/report";
 
+// Email is a mailto handoff until the backend sends with the PDF attached. The summary in the
+// body is drawn from the report object, never typed in by hand.
 export default function EmailDialog({
+  report,
+  scenario,
+  pdfName,
   onClose,
   onDownload,
 }: {
+  report: Report;
+  scenario: Scenario;
+  pdfName: string;
   onClose: () => void;
   onDownload: () => void;
 }) {
@@ -29,23 +36,21 @@ export default function EmailDialog({
     const body = [
       note.trim(),
       note.trim() ? "" : null,
-      `${SCENARIO_TITLE}`,
-      `Overall score: ${SCORE}/10 (${scoreLabel(SCORE)})`,
+      scenario.title,
+      `${report.mode === "assessment" ? "Assessment" : "Practice"} report ${report.id}`,
+      `Overall score: ${report.scores.overall}/10 (${scoreLabel(report.scores.overall)})`,
       "",
-      ...SKILLS.map((k) => `${k.name}: ${k.score}/10`),
+      ...report.scores.skills.map((k) => `${k.name}: ${k.score}/10`),
       "",
-      "Key strengths:",
-      ...STRENGTHS.map((x) => `- ${x.title}`),
+      "Recommendations:",
+      ...report.narrative.recommendations.map((x) => `- ${x.title}`),
       "",
-      "Development priorities:",
-      ...DEVELOPMENT.map((x) => `- ${x.title}`),
-      "",
-      `The full PDF report (${PDF_NAME}) is attached.`,
+      `The full PDF report (${pdfName}) is attached.`,
     ]
       .filter((x) => x !== null)
       .join("\n");
     onDownload();
-    window.location.href = `mailto:${encodeURIComponent(to.trim())}?subject=${encodeURIComponent(`Roleplay Report: ${SCENARIO_TITLE}`)}&body=${encodeURIComponent(body)}`;
+    window.location.href = `mailto:${encodeURIComponent(to.trim())}?subject=${encodeURIComponent(`Roleplay Report: ${scenario.title}`)}&body=${encodeURIComponent(body)}`;
     setSent(true);
   }
 
@@ -70,8 +75,8 @@ export default function EmailDialog({
             </h2>
             <p className="text-ink/80 text-sm leading-relaxed mb-5">
               Your email app has opened with a summary addressed to <strong className="text-ink">{to}</strong>
-              . The PDF has also been downloaded as <strong className="text-ink">{PDF_NAME}</strong>. Attach
-              it before you send.
+              . The PDF has also been downloaded as <strong className="text-ink">{pdfName}</strong>. Attach it
+              before you send.
             </p>
             <button
               onClick={onClose}
