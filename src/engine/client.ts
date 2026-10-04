@@ -34,7 +34,8 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
   async function call(path: string, init?: RequestInit) {
     let res: Response;
     try {
-      res = await fetchImpl(`${root}${path}`, { ...init, headers: { 'content-type': 'application/json', ...init?.headers } });
+      // The session cookie identifies the participant to the server, as with the API adapter.
+      res = await fetchImpl(`${root}${path}`, { ...init, credentials: 'include', headers: { 'content-type': 'application/json', ...init?.headers } });
     } catch {
       throw new EngineError('Network error', 'network', true);
     }
@@ -52,7 +53,7 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
     async *streamTurn(interactionId, turn, signal) {
       let res: Response;
       try {
-        res = await fetchImpl(`${root}/interactions/${encodeURIComponent(interactionId)}/turns/${encodeURIComponent(turn.id)}/stream`, { headers: { accept: 'text/event-stream' }, signal });
+        res = await fetchImpl(`${root}/interactions/${encodeURIComponent(interactionId)}/turns/${encodeURIComponent(turn.id)}/stream`, { headers: { accept: 'text/event-stream' }, credentials: 'include', signal });
       } catch {
         if (signal.aborted) return;
         yield { type: 'error', retryable: true };

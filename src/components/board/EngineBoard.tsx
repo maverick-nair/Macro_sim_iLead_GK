@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
-import type { Block, EngineView, Intent, MemberView, StyleKey } from '../../engine/contract';
+import type { Block, EngineView, Intent, MemberView, MetricChange, StyleKey } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
 import { useEngineView, useIntent } from '../../engine/react';
 import { useUi } from '../../app/uiStore';
@@ -47,6 +47,8 @@ export interface EngineBoardProps {
   voiceConsent?: boolean;
   /** Preferred input for live interactions. */
   input?: 'ptt' | 'open' | 'text';
+  /** Captions on NPC speech (Settings). */
+  captions?: boolean;
   onPause: () => void;
   onSettings: () => void;
 }
@@ -114,6 +116,15 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const member = (id: string) => v.members.find(m => m.id === id);
   const action = (key: string) => v.actions.find(a => a.key === key);
   const img = (m: { img: string | null } | undefined) => m?.img ?? PLACEHOLDER;
+  /** One reason detail per distinct reason behind a set of changes (rule 5: every change shows its why). */
+  const whys = (changes: MetricChange[]) => {
+    const seen = new Map<string, { cause: string; rule: string; evidence: string; judgedByAI: boolean }>();
+    for (const c of changes) {
+      const k = `${c.reason.label}|${c.reason.cause}`;
+      if (!seen.has(k)) seen.set(k, { cause: c.reason.cause, rule: c.reason.rule, evidence: c.reason.evidence.map(e => e.quote).join(' '), judgedByAI: c.reason.evidence.some(e => e.judgedByAI) });
+    }
+    return [...seen.values()];
+  };
   const chipName = (c: Chip) => (c.subject === 'team' ? t('board.chip.team') : c.subject === 'group' ? t('board.chip.people', { n: c.count }) : first(member(c.subject)?.name ?? ''));
   const stageName = (key: string) => v.funnel.find(st => st.key === key)?.name ?? key;
 
@@ -333,11 +344,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     onEndPeriod: () => { if (!styling && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling ? 'secondary' : 'primary'
   };
-  const elapsed = (v.clock.period - 1 + (v.clock.subPeriod - 1) / Math.max(1, v.clock.capacity)) / periods;
   const strip: MetricsStripProps = {
     kpis: v.kpis.map(k => ({ metric: k.metric, value: k.value, trend: { kind: 'direction', direction: k.value > k.start ? 'up' : k.value < k.start ? 'down' : 'flat' } })),
     pulse: v.pulse,
-    target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: Math.min(1, elapsed), pacePeriod: { unit: periodUnit, n: v.clock.period } },
+    target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: v.clock.runShare, pacePeriod: { unit: periodUnit, n: v.clock.period } },
     sponsor: { level: v.sponsor.level, causes: v.sponsor.causes, open: sponsorOpen, onToggle: () => setSponsorOpen(o => !o) }
   };
 
@@ -349,12 +359,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
   const outcome = oc && (() => {
     const who = person(oc.speaker);
-    const lead = oc.changes.find(c => c.reason.evidence.length) ?? oc.changes[0];
     const shown = oc.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence' && !!member(c.subject));
     return (
       <OutcomePanel
-        person={who} headline={oc.headline} reply={oc.reply} onReplay={() => undefined}
-        why={{ cause: lead?.reason.cause ?? '', rule: lead?.reason.rule ?? '', evidence: lead?.reason.evidence.map(e => e.quote).join(' ') ?? '', judgedByAI: !!lead?.reason.evidence.some(e => e.judgedByAI) }}
+        person={who} headline={oc.headline} reply={oc.reply}
+        why={whys(oc.changes)}
         whyOpen={ui.whyOpen === oc.id} onToggleWhy={() => ui.setWhy(ui.whyOpen === oc.id ? null : oc.id)}
         affected={oc.affected.map(person)} revealed={reveal}
         reaction={reveal && oc.reactions[reveal] ? { name: first(person(reveal).name), text: oc.reactions[reveal] } : undefined}
@@ -362,7 +371,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         changes={teamChips(shown, v.members.length).map(c => ({ name: chipName(c), metric: c.metric, delta: c.delta }))}
         showNumbers={ui.showNumbers} onToggleNumbers={() => ui.setShowNumbers(!ui.showNumbers)}
         ripple={oc.ripple ?? ''} changed={oc.changed}
-        onDismiss={() => { setReveal(null); void send({ type: 'clearOutcome' }); }} onOpenHistory={() => undefined}
+        onDismiss={() => { setReveal(null); void send({ type: 'clearOutcome' }); }}
+        onOpenHistory={member(oc.speaker) ? () => openProfile(oc.speaker) : undefined}
       />
     );
   })();
@@ -385,7 +395,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     return (
       <>
         <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
-          <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'}
+          <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
             onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
         </Suspense>
         <Toast message={toast} />

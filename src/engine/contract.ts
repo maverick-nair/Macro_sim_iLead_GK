@@ -83,7 +83,7 @@ export const MemberView = z.object({
 export const Clock = z.object({
   period: z.number().int().min(1), periods: z.number().int().min(1).max(10), periodUnit: PeriodUnit,
   subPeriod: z.number().int().min(1), subPeriodUnit: SubPeriodUnit,
-  capacity: Num, capacityLeft: Num, costStep: Num
+  capacity: Num, capacityLeft: Num, costStep: Num, runShare: z.number().min(0).max(1)
 });
 
 /** Why an action is unavailable. The UI words it from the catalog. */

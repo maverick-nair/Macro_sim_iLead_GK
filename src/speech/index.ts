@@ -17,3 +17,4 @@ export { createVad, levelFromRms, VAD_DEFAULTS, type Vad, type VadEvent, type Va
 export { createSpeechController, type SpeechController, type SpeechControllerOptions, type SpeechState, type SpeechStatus, type StartResult } from './controller';
 export { useSpeech, type UseSpeech, type UseSpeechOptions } from './useSpeech';
 export { classifyQuestion, questionCounts, talkListenRatio, type QuestionCounts, type QuestionKind, type TalkListen, type Turn } from './analytics';
+export { createSpeech } from './default';

@@ -3,6 +3,7 @@ import type { EngineView, MetricKey } from '../../engine/contract';
 import { Button } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { ReasonChip } from '../reason/ReasonChip';
+import { ReasonDetail } from '../reason/ReasonDetail';
 import { teamChips, type Chip } from './chips';
 
 export interface EventCardProps {
@@ -19,6 +20,9 @@ export interface EventCardProps {
 export function EventCard({ card, busy, nameOf, everyone, onDismiss }: EventCardProps) {
   const { t } = useI18n();
   const [numbers, setNumbers] = useState(false);
+  const [why, setWhy] = useState(false);
+  // Every change shows its reason (rule 5): one detail per distinct reason.
+  const reasons = [...new Map(card.changes.map(c => [`${c.reason.label}|${c.reason.cause}`, c.reason])).values()];
   const changes = teamChips(card.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence'), everyone);
   return (
     <div className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-12">
@@ -33,7 +37,9 @@ export function EventCard({ card, busy, nameOf, everyone, onDismiss }: EventCard
             ))}
           </div>
         )}
-        <div className="flex justify-end">
+        {why && reasons.map((r, i) => <ReasonDetail key={i} cause={r.cause} rule={r.rule} evidence={r.evidence.map(e => e.quote).join(' ')} judgedByAI={r.evidence.some(e => e.judgedByAI)} layout="stack" />)}
+        <div className="flex items-center justify-end gap-2">
+          {reasons.length > 0 && <Button variant="secondary" size="md" onClick={() => setWhy(w => !w)} aria-expanded={why}>{t('outcome.why', { open: String(why) })}</Button>}
           <Button variant="primary" size="md" disabled={busy} onClick={onDismiss}>{t('board.card.dismiss')}</Button>
         </div>
       </div>

@@ -4,7 +4,7 @@ import type { EngineView, LiveView } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
 import { useEngineClient, useIntent } from '../../engine/react';
 import { useI18n } from '../../i18n';
-import { createHttpTranscriptionClient, MediaRecorderSpeechProvider, MockSpeechProvider, useSpeech, type SpeechProvider } from '../../speech';
+import { createSpeech, useSpeech } from '../../speech';
 import type { MicState } from '../live/MicButton';
 import { EmailStage, type EmailField } from '../liveshell/EmailStage';
 import { LiveShell } from '../liveshell/LiveShell';
@@ -31,6 +31,8 @@ export interface EngineLiveProps {
   voiceConsent: boolean;
   /** Preferred input: push to talk, open mic or text. */
   input: 'ptt' | 'open' | 'text';
+  /** Captions on NPC speech (Settings); without them the transcript announces new turns. */
+  captions?: boolean;
   /** Called once the interaction is over and the board should show the outcome. */
   onDone: () => void;
   onError: (code: string) => void;
@@ -40,21 +42,9 @@ const PLACEHOLDER = '/assets/npc/placeholder.svg';
 /** The reacting beat lasts at least this long, so the evaluation reads as a moment (spec: about 3 seconds). */
 const REACTING_MS = 1600;
 
-/** Real capture with server transcription when configured; otherwise the scripted mock voice. */
-function createSpeech(format: string): SpeechProvider {
-  const url = import.meta.env.VITE_ILEAD_SPEECH_URL as string | undefined;
-  if (url) return new MediaRecorderSpeechProvider({ transcription: createHttpTranscriptionClient(url) });
-  const lines: Record<string, string> = {
-    sponsor: 'We are behind on conversions, and I own that. The plan is to coach the bottleneck this week. I need support on lead quality.',
-    meeting: 'Today we have three things. First the pipeline, then the new CRM. What do you all think?',
-    interview: 'Tell me about a time you turned around a difficult client. What happened next?'
-  };
-  return new MockSpeechProvider({ script: lines[format] ?? 'Thanks for making time. How are things going for you this week? Let us agree one next step by Friday.' });
-}
-
 const moodRing = (m: LiveView['brief']['mood']): LiveMood => (m === 'frustrated' || m === 'concerned' ? (m === 'frustrated' ? 'frustrated' : 'guarded') : 'open');
 
-export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onError }: EngineLiveProps) {
+export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, onDone, onError }: EngineLiveProps) {
   const { t } = useI18n();
   const client = useEngineClient();
   const intent = useIntent();
@@ -178,7 +168,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
     };
   });
   const current = turns.filter(x => x.speaker !== 'you').pop();
-  const caption = current ? { name: (current.speaker as LivePerson).name.split(' ')[0], text: current.text, streaming: current.streaming, aiGenerated: current.aiGenerated } : null;
+  const caption = captions && current ? { name: (current.speaker as LivePerson).name.split(' ')[0], text: current.text, streaming: current.streaming, aiGenerated: current.aiGenerated } : null;
   const conversation: LiveConversation = ai.streaming ? 'npcSpeaking' : intent.isPending ? 'npcThinking' : lv.closed || lv.turnsLeft === 0 ? 'closed' : 'yourTurn';
   const mic: MicState = speech.status === 'listening' || speech.status === 'finishing' ? 'listening' : speech.status === 'review' ? 'review' : speech.status === 'denied' || speech.status === 'unsupported' ? 'denied' : 'idle';
   const shellFormat: LiveFormat = lv.format;
@@ -240,7 +230,6 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, onDone, onE
           <EmailStage
             to={lv.people.map(person)} cc={[]} subject={email.subject} body={email.body}
             onSubject={subject => setEmail(e => ({ ...e, subject }))} onBody={body => setEmail(e => ({ ...e, body }))}
-            onAddRecipient={() => undefined}
             onDictate={field => {
               if (dictating === field) { speech.stop(); setDictating(null); return; }
               setDictating(field);

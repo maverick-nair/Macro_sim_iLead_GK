@@ -52,7 +52,8 @@ const I18nContext = createContext<I18n>(createI18n());
 
 export function I18nProvider({ locale = 'en', messages, children }: { locale?: string; messages?: Partial<Messages>; children: ReactNode }) {
   const value = useMemo(() => createI18n(locale, messages), [locale, messages]);
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
+  // Language and direction on a layout neutral wrapper, so screen readers and RTL locales follow the catalog.
+  return <I18nContext.Provider value={value}><div lang={locale} dir={value.dir} className="contents">{children}</div></I18nContext.Provider>;
 }
 
 export const useI18n = () => useContext(I18nContext);

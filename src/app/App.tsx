@@ -264,7 +264,7 @@ export function App(p: AppProps) {
             {scr === 'onboarding' && p.uiState !== 'loading' && <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>}
             {p.engine && (scr === 'style' || scr === 'board') && (
               <div style={css(`flex:1; display:flex; flex-direction:column; min-height:${minH}`)}>
-                <EngineBoard client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
+                <EngineBoard client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
               </div>
             )}
             {!p.engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}

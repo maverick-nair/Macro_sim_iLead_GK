@@ -45,18 +45,18 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
     const wasNeeded = m.neededAtStart;
     // Changing someone's style when what they need has not changed feels erratic (3.1).
     if (sim.period > 1 && m.lastStyle && chosen !== m.lastStyle && m.neededPrevStart !== null && wasNeeded === m.neededPrevStart && m.lastStyle === wasNeeded) {
-      changes.push(...trustChange(m, sim.config.trustRules.erraticStyleChange, { label: 'Style changed', cause: `You changed how you lead ${firstName(sim, m.id)}, though what ${pr(sim, m.id)} ${pr(sim, m.id) === 'they' ? 'need' : 'needs'} had not changed.`, rule: `Changing someone’s style without a reason lowers trust by ${-sim.config.trustRules.erraticStyleChange}.`, evidence: [] }));
+      changes.push(...trustChange(m, sim.config.trustRules.erraticStyleChange, { label: 'Style changed', cause: `You changed how you lead ${firstName(sim, m.id)}, though what ${pr(sim, m.id)} ${pr(sim, m.id) === 'they' ? 'need' : 'needs'} had not changed.`, rule: `Changing someone’s style without a reason lowers trust by ${-sim.config.trustRules.erraticStyleChange}.`, evidence: [{ quote: `${m.lastStyle ? STYLE_NAMES[m.lastStyle] : ''} to ${STYLE_NAMES[chosen]} for ${firstName(sim, m.id)}`, by: 'You', judgedByAI: false }] }));
     }
     m.lastStyle = m.style ?? chosen;
     m.style = chosen;
     const diff = record(sim, m, chosen, 'weeklyStyle');
     const mt = mismatchType(diff, rng, misread(sim, m));
     const reason: Reason = {
+      evidence: [{ quote: `${STYLE_NAMES[chosen]} for ${firstName(sim, m.id)}${notes[m.id] ? `: ${notes[m.id]}` : ''}`, by: 'You', judgedByAI: false }],
       label: mt === 0 ? 'Style fits' : 'Style missed',
       // Never name the needed style: working it out is the game (D54).
-      cause: `You chose ${STYLE_NAMES[chosen]} for ${firstName(sim, m.id)}, and it ${mt === 0 ? 'fit what they needed this week' : mt === 1 ? 'was not quite what they needed' : 'was far from what they needed'}${notes[m.id] ? `. Your note: "${notes[m.id]}"` : ''}.`,
-      rule: `The weekly style lands as ${mt === 0 ? 'a fit' : mt === 1 ? 'a partial miss' : 'a clear miss'}: fits give ${triple(w.m0)}, partial misses ${triple(w.m1)}, clear misses ${triple(w.m2 ?? w.m1)}.`,
-      evidence: []
+      cause: `You chose ${STYLE_NAMES[chosen]} for ${firstName(sim, m.id)}, and it ${mt === 0 ? 'fit what they needed this week' : mt === 1 ? 'was not quite what they needed' : 'was far from what they needed'}.`,
+      rule: `The weekly style lands as ${mt === 0 ? 'a fit' : mt === 1 ? 'a partial miss' : 'a clear miss'}: fits give ${triple(w.m0)}, partial misses ${triple(w.m1)}, clear misses ${triple(w.m2 ?? w.m1)}.`
     };
     changes.push(...effectChanges(sim, rng, m, mt === 0 ? w.m0 : mt === 1 ? w.m1 : w.m2 ?? w.m1, reason));
     changes.push(...trustChange(m, mt === 0 ? 2 : mt === 2 ? -3 : 0, { ...reason, label: mt === 0 ? 'Led the right way' : 'Led the wrong way', rule: 'Being led the way you need builds trust: +2 for a fit, −3 for a clear miss.' }));
@@ -222,6 +222,10 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     default:
       break;
   }
+
+  // Evidence for decisions with no words: the choice itself, as the participant made it (rule 5).
+  const choice = { quote: a.options.length > 1 ? `${a.name}: ${o.label}` : a.name, by: 'You', judgedByAI: false };
+  for (const c of changes) if (!c.reason.evidence.length) c.reason = { ...c.reason, evidence: [choice] };
 
   let interactionId: string | null = null;
   if (a.kind === 'static') {

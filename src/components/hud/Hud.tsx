@@ -146,14 +146,14 @@ export function Hud(p: HudProps) {
         {p.clientLogo && <div className="flex h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
       </div>
-      <nav aria-label={t('hud.nav.aria')} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
+      {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
         {p.nav.map(n => (
           <button key={n.key} type="button" onClick={() => p.onNav(n.key)}
             className={`h-8 flex-none cursor-pointer rounded-pill border-0 bg-transparent px-2 py-0 text-13 font-600 text-fg-secondary hover:bg-surface-raised hover:text-fg-primary ${focus}`}>
             {n.label}
           </button>
         ))}
-      </nav>
+      </nav>}
       <div className="min-w-0 flex-1" />
       <span className="flex-none text-13 text-fg-secondary">{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
       <div aria-label={capAria} className="flex items-center gap-2">

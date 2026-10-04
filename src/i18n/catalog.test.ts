@@ -64,6 +64,17 @@ describe('copy rules', () => {
     for (const s of ['Morale -3', 'a—b', 'x – y', 'well-known', 'pre‐made']) expect(copyViolations(sanitizeCopy(s))).toEqual([]);
   });
 
+  it('removes emoji, look alike dashes and "competency" from generated text', () => {
+    expect(sanitizeCopy('Great job 🎉')).toBe('Great job');
+    expect(sanitizeCopy('Well done 👍🏽!')).toBe('Well done!');
+    expect(sanitizeCopy('Core competencies matter')).toBe('Core skills matter');
+    expect(sanitizeCopy('Q3–Q4 plan')).toBe('Q3 to Q4 plan');
+    for (const s of ['a ⁃ b', 'line ─ here', 'x ˗ y', 'full－width']) {
+      expect(copyViolations(s).length).toBeGreaterThan(0);
+      expect(copyViolations(sanitizeCopy(s))).toEqual([]);
+    }
+  });
+
   it('formats deltas with a minus sign', () => {
     expect(formatDelta(8)).toBe('+8');
     expect(formatDelta(-2)).toBe('−2');

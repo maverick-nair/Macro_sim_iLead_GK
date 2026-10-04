@@ -1,7 +1,7 @@
 import { blockedReason } from './actions';
 import { ONE_SHOT, speakerFor, turnLimit } from './live';
 import { finalScore, pillarMax, RUN_MAX } from './period';
-import { capacity, capacityLeft, idealThroughput, person, teamAverage } from './sim';
+import { capacity, capacityLeft, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import type { InboxMessage, MemberSim, Mood, Sim } from './types';
 
 /**
@@ -103,7 +103,9 @@ export function buildView(sim: Sim) {
     clock: {
       period: sim.period, periods: c.time.period.count, periodUnit: c.time.period.unit,
       subPeriod: Math.min(sim.sub + 1, c.time.subPeriod.perPeriod), subPeriodUnit: c.time.subPeriod.unit,
-      capacity: capacity(sim), capacityLeft: capacityLeft(sim), costStep: c.time.costStep
+      capacity: capacity(sim), capacityLeft: capacityLeft(sim), costStep: c.time.costStep,
+      /** How far through the run we are, 0 to 1: where the pace marker sits. */
+      runShare: Math.min(1, ((sim.period - 1) * perPeriod(sim) + sim.sub) / (c.time.period.count * perPeriod(sim)))
     },
     money: { currency: c.money.currency, locale: c.money.locale, display: c.money.display, target: c.money.target, value: Math.round(sim.funnel.value), valueThisPeriod: Math.round(sim.funnel.periodValue) },
     members: sim.members.map(member),

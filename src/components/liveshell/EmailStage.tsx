@@ -14,8 +14,8 @@ export interface EmailStageProps {
   body: string;
   onSubject: (value: string) => void;
   onBody: (value: string) => void;
-  /** "Add from team" on the To or CC row. */
-  onAddRecipient: (field: 'to' | 'cc') => void;
+  /** "Add from team" on the To or CC row. Leave it out when recipients are fixed (the action drawer picked them). */
+  onAddRecipient?: (field: 'to' | 'cc') => void;
   /** Starts or stops dictation into one field. */
   onDictate: (field: EmailField) => void;
   /** The field being dictated into, or null. Shows the listening strip over the body. */
@@ -60,10 +60,12 @@ export function EmailStage(p: EmailStageProps) {
           {field !== 'subject' ? (
             <div className="flex flex-1 flex-wrap gap-1.5">
               {(field === 'to' ? p.to : p.cc).map(person => <Chip key={person.id} person={person} />)}
-              <button type="button" onClick={() => p.onAddRecipient(field)} aria-label={t('liveshell.email.addAria', { field })}
-                className={`h-7.5 cursor-pointer rounded-pill border border-dashed border-line-strong bg-transparent px-2.5 py-0 text-12 font-700 whitespace-nowrap text-fg-secondary ${FOCUS}`}>
-                {t('liveshell.email.add')}
-              </button>
+              {p.onAddRecipient && (
+                <button type="button" onClick={() => p.onAddRecipient?.(field)} aria-label={t('liveshell.email.addAria', { field })}
+                  className={`h-7.5 cursor-pointer rounded-pill border border-dashed border-line-strong bg-transparent px-2.5 py-0 text-12 font-700 whitespace-nowrap text-fg-secondary ${FOCUS}`}>
+                  {t('liveshell.email.add')}
+                </button>
+              )}
             </div>
           ) : (
             <input value={p.subject} onChange={e => p.onSubject(e.target.value)} aria-label={t('liveshell.email.subjectAria')}

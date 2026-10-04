@@ -20,6 +20,9 @@ export type OutcomeChange = Pick<ReasonChipProps, 'name' | 'metric' | 'delta'>;
  * forbids showing band names (Strong, Adequate and so on) to participants. Consequences go in
  * `changed` as plain sentences.
  */
+/** One reason behind changes in the outcome. */
+export type OutcomeWhy = Omit<ReasonDetailProps, 'layout'>;
+
 export interface OutcomePanelProps {
   /** `band`: desktop, above the board. `card`: mobile, top of the list. */
   layout?: 'band' | 'card';
@@ -29,8 +32,10 @@ export interface OutcomePanelProps {
   headline: string;
   /** The NPC's reply, in their voice. */
   reply: string;
-  onReplay: () => void;
-  why: Omit<ReasonDetailProps, 'layout'>;
+  /** Replays the reply in the NPC's voice. Leave it out when there is no voice to replay. */
+  onReplay?: () => void;
+  /** The reasons behind the changes: one, or one per distinct reason (rule 5: every change shows its reason). */
+  why: OutcomeWhy | OutcomeWhy[];
   whyOpen: boolean;
   onToggleWhy: () => void;
   /** Everyone affected; tap a face to read their reaction. Desktop only. */
@@ -46,13 +51,15 @@ export interface OutcomePanelProps {
   /** Up to 2 lines of consequence; more are dropped. */
   changed: string[];
   onDismiss: () => void;
-  onOpenHistory: () => void;
+  /** Opens the full entry in History. Leave it out when there is nowhere to open it. */
+  onOpenHistory?: () => void;
 }
 
 const PlayIcon = () => <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>;
 /** Icon glyphs, not copy: the buttons are named from the catalog. */
 const CLOSE_GLYPH = '✕';
-const PLAY_GLYPH = '▶';
+/** U+FE0E keeps the triangle a text glyph, never an emoji. */
+const PLAY_GLYPH = '▶\uFE0E';
 
 const eyebrow = 'text-12 font-700 tracking-(--il-outcome-eyebrow-tracking) text-fg-secondary uppercase';
 const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
@@ -67,6 +74,8 @@ export function OutcomePanel(p: OutcomePanelProps) {
   const changed = p.changed.slice(0, 2);
   const chips = p.changes.map((c, i) => <ReasonChip key={i} {...c} showNumbers={p.showNumbers} onToggle={p.onToggleNumbers} size={layout === 'card' ? 'md' : 'sm'} />);
   const whyLabel = t('outcome.why', { open: String(p.whyOpen) });
+  const whys = Array.isArray(p.why) ? p.why : [p.why];
+  const details = (layout?: 'stack') => whys.map((w, i) => <ReasonDetail key={i} {...w} layout={layout} />);
 
   if (layout === 'card') {
     return (
@@ -81,15 +90,17 @@ export function OutcomePanel(p: OutcomePanelProps) {
           </div>
         </div>
         <div className="flex items-start gap-2.5 rounded-14 bg-surface-raised p-3">
-          <button type="button" onClick={p.onReplay} aria-label={t('outcome.replayShort')} className={`size-8 flex-none cursor-pointer rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}>
-            <span aria-hidden="true">{PLAY_GLYPH}</span>
-          </button>
+          {p.onReplay && (
+            <button type="button" onClick={p.onReplay} aria-label={t('outcome.replayShort')} className={`size-8 flex-none cursor-pointer rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}>
+              <span aria-hidden="true">{PLAY_GLYPH}</span>
+            </button>
+          )}
           <span className="text-14">{quote}</span>
         </div>
         <div className="flex flex-wrap gap-1.5">{chips}</div>
         <span className="text-13 text-fg-secondary">{p.ripple}</span>
         {changed.map((c, i) => <span key={i} className="text-14">{c}</span>)}
-        {p.whyOpen && <div id={whyId} className="contents"><ReasonDetail {...p.why} layout="stack" /></div>}
+        {p.whyOpen && <div id={whyId} className="contents">{details('stack')}</div>}
         <div className="flex gap-2">
           <NoWrapButton variant="secondary" size="lg" onClick={p.onToggleWhy}>{whyLabel}</NoWrapButton>
           <Button variant="primary" size="lg" onClick={p.onDismiss}>{t('outcome.back')}</Button>
@@ -107,11 +118,13 @@ export function OutcomePanel(p: OutcomePanelProps) {
         <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
         <h3 className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking)">{p.headline}</h3>
         <div className="flex items-start gap-2.5">
-          <button type="button" onClick={p.onReplay} aria-label={t('outcome.replay', { name: p.person.shortName })}
-            className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}><PlayIcon /></button>
+          {p.onReplay && (
+            <button type="button" onClick={p.onReplay} aria-label={t('outcome.replay', { name: p.person.shortName })}
+              className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}><PlayIcon /></button>
+          )}
           <span className="text-14 text-pretty">{quote}</span>
         </div>
-        {p.whyOpen && <div id={whyId} className="contents"><ReasonDetail {...p.why} /></div>}
+        {p.whyOpen && <div id={whyId} className="contents">{details()}</div>}
       </div>
       <div className="flex min-w-0 flex-col gap-2.5">
         <div className="flex gap-2">
@@ -132,7 +145,7 @@ export function OutcomePanel(p: OutcomePanelProps) {
           <span aria-hidden="true">{CLOSE_GLYPH}</span>
         </button>
         <button type="button" onClick={p.onToggleWhy} aria-expanded={p.whyOpen} aria-controls={p.whyOpen ? whyId : undefined} className={`${link} font-700 text-accent-secondary`}>{whyLabel}</button>
-        <button type="button" onClick={p.onOpenHistory} className={`${link} font-600 text-fg-secondary`}>{t('outcome.history')}</button>
+        {p.onOpenHistory && <button type="button" onClick={p.onOpenHistory} className={`${link} font-600 text-fg-secondary`}>{t('outcome.history')}</button>}
       </div>
     </section>
   );

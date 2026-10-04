@@ -85,7 +85,7 @@ describe('storyline config', () => {
 
 describe('money formatting', () => {
   const fmt = (currency: string, locale: string, display: 'symbol' | 'code' = 'symbol') =>
-    moneyFormatter({ currency, locale, display, target: 1, valuePerConversion: 1, inputPerSubPeriod: [1] });
+    moneyFormatter({ currency, locale, display });
 
   it('formats every supported currency in its own conventions', () => {
     expect(fmt('USD', 'en-US').format(41200)).toBe('$41,200');

@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { moneyFormatter } from '../engine/config';
+import { moneyFormatter } from '../engine/money';
 
 /**
  * Money formatting for the running storyline: currency, locale and display come from the
@@ -8,7 +8,7 @@ import { moneyFormatter } from '../engine/config';
 export type MoneyConfig = Parameters<typeof moneyFormatter>[0];
 export type Money = ReturnType<typeof moneyFormatter>;
 
-const DEFAULT: MoneyConfig = { currency: 'USD', locale: 'en-US', display: 'symbol', target: 1, valuePerConversion: 1, inputPerSubPeriod: [1] };
+const DEFAULT: MoneyConfig = { currency: 'USD', locale: 'en-US', display: 'symbol' };
 const MoneyContext = createContext<Money>(moneyFormatter(DEFAULT));
 
 export function MoneyProvider({ money, children }: { money: Pick<MoneyConfig, 'currency' | 'locale' | 'display'>; children: ReactNode }) {

@@ -203,8 +203,8 @@ function scheduledEvents(sim: Sim, rng: Rng) {
       const reason: Reason = {
         label: ev.title,
         cause: gendered(ev.body, sim, target),
-        rule: `Events hit harder when you lead someone in a style that does not fit them: ${mt === 0 ? 'half' : mt === 1 ? 'full' : 'one and a half times'} impact here.`,
-        evidence: []
+        evidence: [{ quote: ev.title, by: 'News', judgedByAI: false }],
+        rule: `Events hit harder when you lead someone in a style that does not fit them: ${mt === 0 ? 'half' : mt === 1 ? 'full' : 'one and a half times'} impact here.`
       };
       changes.push(...effectChanges(sim, rng, m, ev.impact, reason, { scale: EVENT_SHARE[mt], useTrust: false }));
     }
@@ -226,7 +226,7 @@ function fire(sim: Sim, rng: Rng, kind: string, m: MemberSim, extra: { away?: nu
   const t = trigger(sim, kind)!;
   sim.triggerCount[kind] = fired(sim, kind) + 1;
   const text = gendered(t.message, sim, m.id);
-  const reason: Reason = { label: TRIGGER_LABELS[kind] ?? kind, cause: text, rule: TRIGGER_RULES[kind] ?? '', evidence: [] };
+  const reason: Reason = { label: TRIGGER_LABELS[kind] ?? kind, cause: text, rule: TRIGGER_RULES[kind] ?? '', evidence: [{ quote: text, by: person(sim, m.id).name.split(' ')[0], judgedByAI: false }] };
   const changes = t.impact.some(v => v !== 0) ? effectChanges(sim, rng, m, t.impact, reason, { useTrust: false }) : [];
   if (extra.away) { m.away = extra.away; m.awayReason = 'leave'; m.awaySetAt = sim.absSub; }
   if (extra.leave) {

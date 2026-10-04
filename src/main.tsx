@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ApiContext, createDefaultApi } from './api';
 import { App } from './app/App';
 import { EngineProvider } from './engine/react';
+import { createDefaultClient } from './engine/client';
 import './styles/global.css';
 
 // The galleries are review tools; they stay out of the participant's bundle.
@@ -29,12 +30,15 @@ function useIsPhone(): boolean {
  * Phones keep the prototype until the 390 board is designed (D15).
  */
 function Play() {
-  const api = useMemo(createDefaultApi, []);
-  const phone = useIsPhone();
   const q = new URLSearchParams(location.search);
+  // The launch link names the participant (LMS or GenieKreator); settings and the session are theirs.
+  const participant = q.get('participant') ?? 'local';
+  const api = useMemo(() => createDefaultApi(participant), [participant]);
+  const engine = useMemo(() => createDefaultClient(participant), [participant]);
+  const phone = useIsPhone();
   return (
     <ApiContext.Provider value={api}>
-      <EngineProvider>
+      <EngineProvider client={engine}>
         <App key={phone ? 'phone' : 'desk'} screen={q.get('start') === 'board' ? 'board' : undefined} engine={!phone && q.get('engine') !== 'off'} theme={q.get('theme') === 'light' ? 'light' : 'dark'} clientTheme={q.get('client') === 'halden'} mobile={phone} minHeight="100vh" />
       </EngineProvider>
     </ApiContext.Provider>
