@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { currentTier, type Tier } from './display';
@@ -25,6 +26,8 @@ export interface ScoreBreakdownProps {
   tier: { key: string; name: string } | null;
   badges: { earned: number; total: number };
   onBadges: () => void;
+  /** "Rank N of M in your cohort" (CohortRank), when the leaderboard is on. It renders nothing until it has loaded. */
+  rank?: ReactNode;
 }
 
 const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
@@ -44,6 +47,7 @@ export function ScoreBreakdown(p: ScoreBreakdownProps) {
         <span className="text-12 text-fg-secondary">{t('score.of', { total: number(p.total), max: number(p.max) })}</span>
       </div>
       <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
+      {p.rank}
       {p.pillars.map(x => (
         <div key={x.key} className="flex flex-col gap-0.5">
           <span className="sr-only">{t('score.pillar.aria', { pillar: x.key, value: number(x.value), weight: x.weight })}</span>

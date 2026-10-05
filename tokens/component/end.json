@@ -12,6 +12,10 @@
     "display": {
       "tracking": { "value": "-0.03em", "$description": "The 60px tier headline" }
     },
+    "tier": {
+      "fill": { "value": "{fill.spectrum}", "$description": "The tier word in the headline (subtle, the design). The celebration level swaps it" },
+      "glow": { "value": "none", "$description": "No glow on the tier word (subtle, the design); full adds one" }
+    },
     "score": {
       "tracking": { "value": "-0.02em", "$description": "The Leadership Score number" }
     },

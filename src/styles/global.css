@@ -6,6 +6,7 @@
 @import './tailwind-theme.generated.css';
 @import './fonts.css';
 @import './tokens.generated.css';
+@import './celebration.css';
 
 /* A container that draws the focus ring of its visually hidden control (member card selection). */
 @custom-variant focus-within-select (&:has(> .il-select:focus-visible));

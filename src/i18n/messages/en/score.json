@@ -10,6 +10,7 @@
   "score.tier.from": "from {min}",
   "score.tier.here": "{final, select, true {Final tier} other {You are here}}",
   "score.badges": "Badges, {earned} of {total}",
+  "score.rank": "Rank {rank, number, integer} of {total, number, integer} {scope, select, unit {in your business unit} global {across all participants} other {in your cohort}}",
   "score.streak.count": "{n, plural, =0 {No streak yet} one {1 {unit, select, year {year} month {month} day {day} other {week}} in a row} other {# {unit, select, year {years} month {months} day {days} other {weeks}} in a row}}",
   "score.streak.next": "{n, plural, one {1 more {unit, select, year {year} month {month} day {day} other {week}}} other {# more {unit, select, year {years} month {months} day {days} other {weeks}}}} for a +{bonus} bonus",
   "score.streak.start": "{length} {unit, select, year {years} month {months} day {days} other {weeks}} in a row at {stars, plural, one {# star} other {# stars}} or more earn a +{bonus} bonus",

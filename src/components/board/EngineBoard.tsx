@@ -32,6 +32,8 @@ const EngineWeekEnd = lazy(() => import('./EngineWeekEnd').then(m => ({ default:
 const EngineEnd = lazy(() => import('./EngineEnd').then(m => ({ default: m.EngineEnd })));
 // The development report (M6) and its charts load only when opened.
 const EngineReport = lazy(() => import('../report/EngineReport'));
+// The cohort rank in the score breakdown loads when the breakdown first opens with the leaderboard on.
+const CohortRank = lazy(() => import('../gamification/CohortRank'));
 import { EventCard } from './EventCard';
 import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
@@ -491,6 +493,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         streak={streak} tiers={v.gamification.tiers} tier={v.score.tier}
         badges={{ earned: v.badges.filter(b => b.earned).length, total: v.badges.length }}
         onBadges={() => { setScoreOpen(false); setBadgesOpen(true); }}
+        rank={v.gamification.leaderboard.enabled ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
       />
     ),
     scoreOpen, onScoreOpenChange: setScoreOpen,
@@ -755,7 +758,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }
 
   return (
-    <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} className="relative flex flex-1 flex-col">
+    <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} data-celebration={v.gamification.celebration} className="relative flex flex-1 flex-col">
       {/* The week end, the end screen and the report bring their own headings. */}
       {!weekEnd && !endScreen && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
       {body}

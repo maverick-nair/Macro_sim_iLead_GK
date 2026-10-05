@@ -1,0 +1,42 @@
+/* Celebration level (Configuration Spec, Celebrations), from `view.gamification.celebration` as
+   `data-celebration` on the board container. Subtle is the design: with no attribute (the /screens
+   frames) or `subtle`, every token keeps its own value. `none` and `full` swap the celebration tokens
+   for those in tokens/component/celebration.json. Reduced motion (the OS setting or the in-app
+   setting) always wins: global.css removes every animation and transition, and the burst below is
+   drawn only when motion is allowed. */
+
+@keyframes ilPop { from { opacity: 0; transform: scale(.4) } to { opacity: 1; transform: none } }
+@keyframes ilBurst { from { opacity: .9; transform: scale(.6) } to { opacity: 0; transform: scale(1.5) } }
+
+[data-celebration='none'] {
+  --il-gamification-star-enter: var(--il-celebration-none-star-enter);
+  --il-gamification-badge-award-enter: var(--il-celebration-none-award-enter);
+  --il-gamification-badge-award-shadow: var(--il-celebration-none-award-shadow);
+  --il-weekend-glow-fill: var(--il-celebration-none-glow);
+  --il-end-glow-fill: var(--il-celebration-none-glow);
+  --il-end-tier-fill: var(--il-celebration-none-tier-fill);
+  --il-weekend-reward-lift: var(--il-celebration-none-reward-lift);
+  --il-weekend-reward-transition: var(--il-celebration-none-reward-transition);
+}
+
+[data-celebration='full'] {
+  --il-gamification-star-enter: var(--il-celebration-full-star-enter);
+  --il-gamification-badge-award-enter: var(--il-celebration-full-award-enter);
+  --il-gamification-badge-award-shadow: var(--il-celebration-full-award-shadow);
+  --il-weekend-glow-fill: var(--il-celebration-full-weekend-glow);
+  --il-end-glow-fill: var(--il-celebration-full-end-glow);
+  --il-end-tier-glow: var(--il-celebration-full-tier-glow);
+  --il-weekend-reward-lift: var(--il-celebration-full-reward-lift);
+  --il-weekend-reward-transition: var(--il-celebration-full-reward-transition);
+}
+
+/* Full: a brief ring of light opens out once behind the week's stars and a new badge's medal
+   (`il-burst` marks them). Invisible at rest, so with no animation nothing shows. */
+@media (prefers-reduced-motion: no-preference) {
+  [data-celebration='full'] .il-burst { position: relative; isolation: isolate; }
+  [data-celebration='full'] .il-burst::before {
+    content: ''; position: absolute; inset: var(--il-celebration-burst-inset); z-index: -1; pointer-events: none;
+    border-radius: 50%; background: var(--il-celebration-burst-fill); opacity: 0; animation: var(--il-celebration-burst-motion);
+  }
+  .il-reduced-motion [data-celebration='full'] .il-burst::before { content: none; }
+}

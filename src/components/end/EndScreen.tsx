@@ -62,7 +62,7 @@ export function EndScreen(p: EndScreenProps) {
             {t('end.eyebrow', { periods: p.periods, unit, people: p.people })}
           </span>
           <h1 ref={h1} tabIndex={-1} className="m-0 text-60 leading-none font-700 tracking-(--il-end-display-tracking) outline-none">
-            {before}<span className="bg-(image:--il-fill-spectrum) bg-clip-text text-transparent">{tierName}</span>{after}
+            {before}<span className="bg-(image:--il-end-tier-fill) bg-clip-text text-transparent [filter:var(--il-end-tier-glow)]">{tierName}</span>{after}
           </h1>
           <p className="m-0 max-w-160 text-17 text-pretty text-fg-secondary">{t('end.lead')}</p>
         </div>
@@ -120,6 +120,7 @@ export function EndScreen(p: EndScreenProps) {
           )}
         />
       </section>
+      {p.cohort}
     </div>
   );
 }
