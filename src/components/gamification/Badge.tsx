@@ -10,15 +10,19 @@ export interface BadgeChipProps {
   status: BadgeStatus;
   /** The rule for an earned badge, the hint for a locked one (never its rule). Shown on hover. */
   detail: string;
+  /** The badge artwork (`badgeIcon(rule)`), drawn in the medal. The design gallery's chips have none. */
+  icon?: ReactNode;
 }
 
 /** A badge on the shelf: medal dot and name. Locked badges are muted and only reveal their hint. */
-export function BadgeChip({ name, status, detail }: BadgeChipProps) {
+export function BadgeChip({ name, status, detail, icon }: BadgeChipProps) {
   const { t } = useI18n();
   const locked = status === 'locked';
   return (
     <span title={detail} className={`flex h-9 items-center gap-2 rounded-pill border border-line-default bg-surface-card py-0 pr-3.5 pl-1 text-13 font-700 ${locked ? 'text-fg-secondary' : 'text-fg-primary'}`}>
-      <span aria-hidden="true" className={`size-7 rounded-round ${locked ? 'bg-track' : 'bg-(image:--il-fill-spectrum)'}`} />
+      <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-round ${locked ? 'bg-track text-fg-secondary' : 'bg-(image:--il-fill-spectrum) text-brand-deep-space'}`}>
+        {icon && <span className="size-4">{icon}</span>}
+      </span>
       <span>{name}</span>
       <span className="sr-only">{t('gamification.badge.status', { status, detail })}</span>
     </span>

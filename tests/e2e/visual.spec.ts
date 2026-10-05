@@ -19,9 +19,9 @@ async function settle(page: Page) {
   });
 }
 
-async function shot(page: Page, name: string) {
+async function shot(page: Page, name: string, fullPage = false) {
   await settle(page);
-  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002 });
+  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, fullPage });
 }
 
 async function confirmStyles(page: Page) {
@@ -33,6 +33,38 @@ async function confirmStyles(page: Page) {
   await expect(page.getByRole('heading', { name: /Styles are set for week 1/ })).toBeVisible();
   await page.getByRole('button', { name: 'Dismiss outcome' }).click();
   await expect(page.getByRole('region', { name: 'Outcome' })).toHaveCount(0);
+}
+
+/** Plays the last week on the mock engine (opened at week 8) and walks its week end to the end screen. */
+async function finishRun(page: Page) {
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10);
+  for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
+  await page.getByRole('button', { name: 'Review and confirm' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
+  await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+  // Event cards wait behind the outcome.
+  await expect(page.getByText('How it landed')).toHaveCount(0);
+  await dismissCards(page);
+  await page.getByRole('button', { name: /End week/ }).click();
+  await dismissCards(page);
+  await page.getByRole('button', { name: /^See your week$/ }).click();
+  const step = page.getByRole('button', { name: /^(Continue|Nice)$/ });
+  const h1 = page.getByRole('heading', { level: 1, name: /^You finished at / });
+  for (;;) {
+    await expect(step.first().or(h1)).toBeVisible();
+    if (await h1.count()) return;
+    await step.first().click();
+  }
+}
+
+/** Event cards one after another: each goes before the next shows. */
+async function dismissCards(page: Page) {
+  const gotIt = page.getByRole('button', { name: 'Got it' });
+  while (await gotIt.count()) {
+    const title = await page.getByRole('dialog').getByRole('heading').first().textContent();
+    await gotIt.click();
+    await expect(page.getByRole('heading', { name: title ?? '' })).toHaveCount(0);
+  }
 }
 
 async function dismissEvents(page: Page) {
@@ -89,6 +121,13 @@ for (const [theme, q] of Object.entries(THEMES)) {
         // And the opening line has finished: the speaking hint gives way to the reply prompt.
         await expect(page.getByText(/is speaking\. Talk to interrupt/)).toHaveCount(0, { timeout: 15_000 });
         await shot(page, `${theme}-${width}-live`);
+      });
+
+      test(`end screen at ${width}`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 1000 });
+        await page.goto(url('start=board', 'period=8', q));
+        await finishRun(page);
+        await shot(page, `${theme}-${width}-end`, true);
       });
     }
   });

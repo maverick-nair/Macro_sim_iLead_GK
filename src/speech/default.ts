@@ -11,6 +11,7 @@ const MOCK_LINES: Record<string, string> = {
   sponsor: 'We are behind on conversions, and I own that. The plan is to coach the bottleneck this week. I need support on lead quality.',
   meeting: 'Today we have three things. First the pipeline, then the new CRM. What do you all think?',
   interview: 'Tell me about a time you turned around a difficult client. What happened next?',
+  reflection: 'Asking first changed how people answered me. With my real team I will check in before I decide.',
   default: 'Thanks for making time. How are things going for you this week? Let us agree one next step by Friday.'
 };
 

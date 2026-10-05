@@ -42,6 +42,7 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
     planAction: () => wait(undefined, 0),
     // The prototype's "team is reacting" beat runs about 3 seconds while evaluation happens.
     submitInteraction: () => wait(clone(scenario.outcome), latency),
-    endWeek: () => wait(undefined, 0)
+    endWeek: () => wait(undefined, 0),
+    emailReport: () => wait(undefined)
   };
 }

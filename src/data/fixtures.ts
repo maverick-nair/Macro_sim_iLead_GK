@@ -92,3 +92,55 @@ export const WEEKEND_FIXTURE = {
   /** The design marks where GenieKreator's news illustration goes; the gallery keeps the annotation. */
   newsArtLabel: 'Illustration from GenieKreator config'
 };
+
+/**
+ * The end of the run as the design draws it (frame e1, `project/ilEnd.dc.html`): Gold, 4,860 points,
+ * $226,400 of $240,000, four moments and two reflection questions. The playable app takes all of this
+ * from the engine's report (`view.report`) instead. The SBI text behind each moment is not in the
+ * design (the rows open in the app); it is written here in the same voice for the stories.
+ */
+export const END_FIXTURE = {
+  periods: 8,
+  people: 10,
+  tiers: [
+    { key: 'bronze', name: 'Bronze' },
+    { key: 'silver', name: 'Silver' },
+    { key: 'gold', name: 'Gold' },
+    { key: 'platinum', name: 'Platinum' }
+  ],
+  tier: 'gold',
+  score: 4860,
+  scoreMax: 1000,
+  results: {
+    revenue: 226400,
+    target: 240000,
+    // The design's bar is 94% full.
+    share: 0.94,
+    conversions: 27,
+    conversionsNote: '+9 on week 1 pace',
+    conversionsTone: 'gain' as const,
+    kpis: [
+      { metric: 'skill', start: 57, end: 71 },
+      { metric: 'morale', start: 57, end: 68 },
+      { metric: 'result', start: 59, end: 74 },
+      { metric: 'trust', start: 56, end: 70 }
+    ] as Array<{ metric: MetricKey; start: number; end: number }>
+  },
+  moments: [
+    { id: 'kent', kind: 'best', period: 2, title: 'Kent opened up about the territory split', img: '/assets/npc/kent.png',
+      situation: 'Week 2. Kent had gone quiet in the team meeting.', behaviour: 'You asked what was behind it before offering a fix.',
+      quote: 'What would make this feel fair to you?', impact: 'Kent morale +6, trust +5.', intent: 'P' },
+    { id: 'peter', kind: 'best', period: 5, title: 'Peter qualified his first $10,000 lead', img: '/assets/npc/peter.png',
+      situation: 'Week 5. Peter was new to qualifying.', behaviour: 'You walked him through the first call, then let him lead the second.',
+      quote: null, impact: 'Peter skill +4, result +5.', intent: 'G' },
+    { id: 'jack', kind: 'best', period: 3, title: 'Jack and Green held price on Ashcroft', img: '/assets/npc/jack.png',
+      situation: 'Week 3. Ashcroft pushed for a discount.', behaviour: 'You trusted the pair to hold the line and backed them with Priya.',
+      quote: null, impact: 'Jack result +4, the team morale +2.', intent: 'E' },
+    { id: 'lowe', kind: 'revisit', period: 2, title: 'Feedback to Lowe landed in front of the team', img: '/assets/npc/lowe.png',
+      situation: 'Week 2. Lowe missed a follow up.', behaviour: 'You raised it in the team meeting rather than one to one.',
+      quote: 'We cannot keep dropping these.', impact: 'Lowe trust −5, morale −4.', intent: 'D' }
+  ] as Array<{ id: string; kind: 'best' | 'revisit'; period: number; title: string; img: string; situation: string; behaviour: string; quote: string | null; impact: string; intent: 'D' | 'G' | 'P' | 'E' | null }>,
+  questions: ['What did you learn about adapting your style to each person?', 'What will you do differently with your real team next week?'],
+  answers: ['Kent taught me that the loudest problem is not always the real one. Asking first changed everything.', ''],
+  rating: 4
+};

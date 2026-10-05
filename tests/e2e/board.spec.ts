@@ -42,7 +42,11 @@ async function throughWeekEnd(page: Page, last: string) {
   await expect(page.getByText(/ · Week end$/)).toBeVisible();
   await page.getByRole('button', { name: /^See your week$/ }).click();
   const step = page.getByRole('button', { name: new RegExp(`^(Continue|Nice|Take this reward|Next|${last})$`) });
+  const header = page.getByText(/ · Week end$/);
   for (;;) {
+    // The next step's button, or the week end has gone (the board, or the end screen after the last week).
+    await expect.poll(async () => (await step.count()) > 0 || (await header.count()) === 0).toBe(true);
+    if (!(await step.count())) return;
     if (await page.getByRole('radiogroup', { name: 'Rewards' }).count()) await page.getByRole('radio').first().click();
     const name = (await step.first().textContent())?.trim();
     await step.first().click();
@@ -223,25 +227,25 @@ test('palette: Ctrl K on the plain board only', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
-test('the end of the run: the last week end, one modal, then the board read only', async ({ page }) => {
+test('the end of the run: the last week end, the end screen, then the board read only and back', async ({ page }) => {
   await page.goto('/?start=board&period=8');
   await setStyles(page);
   await page.getByRole('button', { name: /End week/ }).click();
   await dismissEvents(page);
   await expect(page.getByText('End of week 8')).toBeVisible();
   await throughWeekEnd(page, 'See your results');
-  const panel = page.getByRole('dialog', { name: 'The run is over' });
-  await expect(panel).toBeVisible();
-  await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(1);
-  await expect(panel.getByText(/Leadership Score \d{1,3}(,\d{3})* of 1,000/)).toBeVisible();
+  // The end screen takes the whole page (no modal, no HUD), its headline focused.
+  const h1 = page.getByRole('heading', { level: 1, name: /^You finished at \w+\.$/ });
+  await expect(h1).toBeFocused();
+  await expect(page.locator('[role="dialog"][aria-modal="true"]')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Results' })).toBeVisible();
   expect(await axe(page)).toEqual([]);
-  await panel.getByRole('button', { name: 'Look at the board' }).click();
-  await expect(panel).toHaveCount(0);
+  await page.getByRole('button', { name: 'Look at the board' }).click();
   await expect(page.getByText(/The board is read only now/)).toBeVisible();
   await expect(page.getByRole('button', { name: /Energize the team/ })).toContainText('The run is over');
   expect(await axe(page)).toEqual([]);
   await page.getByRole('button', { name: 'See your results' }).click();
-  await expect(page.getByRole('dialog', { name: 'The run is over' })).toBeVisible();
+  await expect(h1).toBeFocused();
 });
 
 test('light theme: no accessibility issues, contrast included', async ({ page }) => {

@@ -1,0 +1,8 @@
+{
+  "$description": "End of simulation screen. The glow behind the headline is a little softer than the badge award's celebration glow, as the design draws it.",
+  "color": {
+    "end": {
+      "glow": { "light": { "ref": "color.cyan.750", "alpha": 0.3 }, "dark": { "ref": "color.cyan.750", "alpha": 0.3 }, "$description": "Glow at the top of the end screen" }
+    }
+  }
+}
