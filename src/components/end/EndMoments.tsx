@@ -41,7 +41,7 @@ export function EndMoments({ moments, periods, periodUnit }: EndMomentsProps) {
                     <b className="text-14">{m.title}</b>
                     <span className="text-12 text-fg-secondary">{t('end.moments.when', { unit: periodUnit, n: m.period, kind: m.kind })}</span>
                   </span>
-                  <span className={`flex h-6 items-center rounded-pill px-2.5 py-0 text-12 font-700 ${m.kind === 'best' ? 'bg-status-gain-soft' : 'bg-status-attention-soft'}`}>{t('end.moments.tag', { kind: m.kind })}</span>
+                  <span className={`flex min-h-6 items-center rounded-pill px-2.5 py-0 text-12 font-700 ${m.kind === 'best' ? 'bg-status-gain-soft' : 'bg-status-attention-soft'}`}>{t('end.moments.tag', { kind: m.kind })}</span>
                 </button>
                 <dl id={panel} hidden={!expanded} className={`m-0 ${expanded ? 'flex' : 'hidden'} flex-col gap-2 border-t border-line-default px-3.5 pt-3 pb-3.5 text-13`}>
                   <div><dt className="text-12 font-700 text-fg-secondary">{t('end.moments.situation')}</dt><dd className="m-0">{m.situation}</dd></div>

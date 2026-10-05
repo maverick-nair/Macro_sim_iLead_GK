@@ -80,6 +80,7 @@ export function EngineOnboarding({ act, minHeight }: { act: AppActions; minHeigh
       onOpenProfile={id => { if (!view.members.find(m => m.id === id)?.statsRevealed) mutate({ type: 'openProfile', memberId: id }); }}
       onSay={act.say}
       onFinish={() => act.go('style')}
+      liveVoice
     />
   );
 }

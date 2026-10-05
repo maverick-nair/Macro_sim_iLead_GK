@@ -8,8 +8,8 @@
     },
     "sm": {
       "height": {
-        "value": "calc({space.unit} * 8)",
-        "$description": "32px"
+        "value": "max(calc({space.unit} * 8), calc({font.size.13} * 1.6))",
+        "$description": "32px; grows with the text size so a label at 200% fits (D56)"
       },
       "padding-x": {
         "value": "calc({space.unit} * 3.5)",
@@ -21,8 +21,8 @@
     },
     "md": {
       "height": {
-        "value": "calc({space.unit} * 10)",
-        "$description": "40px"
+        "value": "max(calc({space.unit} * 10), calc({font.size.14} * 1.6))",
+        "$description": "40px; grows with the text size"
       },
       "padding-x": {
         "value": "calc({space.unit} * 5)",
@@ -34,8 +34,8 @@
     },
     "lg": {
       "height": {
-        "value": "calc({space.unit} * 12)",
-        "$description": "48px"
+        "value": "max(calc({space.unit} * 12), calc({font.size.15} * 1.6))",
+        "$description": "48px; grows with the text size"
       },
       "padding-x": {
         "value": "calc({space.unit} * 6.5)",

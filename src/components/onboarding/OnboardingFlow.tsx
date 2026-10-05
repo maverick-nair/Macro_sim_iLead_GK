@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../../i18n';
 import { ConsentStep, HowToPlayStep, LanguageStep, OnboardingHeader, SponsorStep, VoiceStep } from './OnboardingSteps';
 import { TeamStep } from './TeamStep';
+// The real mic test (speech layer and AI stream) loads when the voice step opens, outside the first load.
+// Once fetched it renders at once, so a press on the mic never lands on the placeholder.
+let liveVoiceModule: typeof import('./LiveVoiceStep') | null = null;
+const loadLiveVoice = () => import('./LiveVoiceStep').then(m => (liveVoiceModule = m));
+const LiveVoiceStep = lazy(loadLiveVoice);
 import { ONBOARDING_STEPS, type OnboardingLanguage, type OnboardingMember, type OnboardingSponsor, type OnboardingStep, type PeriodUnit, type SponsorTab, type SubPeriodUnit, type VoiceCheck } from './types';
 
 export interface OnboardingFlowProps {
@@ -30,6 +35,11 @@ export interface OnboardingFlowProps {
   onSay: (text: string) => void;
   /** Start the first period. */
   onFinish: () => void;
+  /**
+   * The playable app: the mic test records through the speech layer and the sample voice streams a
+   * line with captions. Without it (the design frames and stories) both are simulated.
+   */
+  liveVoice?: boolean;
 }
 
 const WAIT_SECONDS = 4;
@@ -65,6 +75,8 @@ export function OnboardingFlow(p: OnboardingFlowProps) {
     return () => clearInterval(id);
   }, [step]);
   useEffect(() => () => clearInterval(micTimer.current), []);
+  // Fetch the real mic test a step early, so it is ready when the voice step opens.
+  useEffect(() => { if (p.liveVoice && (step === 'consent' || step === 'voice')) void loadLiveVoice(); }, [p.liveVoice, step]);
   useEffect(() => {
     if (shown.current === step) return;
     shown.current = step;
@@ -125,7 +137,16 @@ export function OnboardingFlow(p: OnboardingFlowProps) {
           onPlay={() => p.onSay(t('onboarding.sponsor.playing', { name: first(p.sponsor.name) }))} />
       )}
       {step === 'consent' && <ConsentStep organisation={p.organisation} onAccept={next} onTextOnly={textOnly} />}
-      {step === 'voice' && (
+      {step === 'voice' && p.liveVoice && (
+        liveVoiceModule
+          ? <liveVoiceModule.default sampleName={p.sampleName} onNext={next} onSkip={textOnly} />
+          : (
+            <Suspense fallback={<VoiceStep check="idle" listening={false} wave={flatWave()} words={words} heard={0} sampleName={p.sampleName} onMic={() => undefined} onNext={next} onSkip={textOnly} onSample={() => undefined} />}>
+              <LiveVoiceStep sampleName={p.sampleName} onNext={next} onSkip={textOnly} />
+            </Suspense>
+          )
+      )}
+      {step === 'voice' && !p.liveVoice && (
         <VoiceStep check={voice.check} listening={voice.listening} wave={voice.wave} words={words} heard={voice.heard} sampleName={p.sampleName}
           onMic={toggleMic} onNext={next} onSkip={textOnly}
           onSample={() => p.onSay(t('onboarding.voice.sampleToast', { name: p.sampleName }))} />

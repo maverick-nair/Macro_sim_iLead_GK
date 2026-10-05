@@ -43,7 +43,7 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
         return (
           <div key={k.key} className={`grid items-center gap-3.5 border-t border-line-default py-2.5 ${layout === 'phone' ? 'grid-cols-(--il-report-skills-columns-phone)' : 'grid-cols-(--il-report-skills-columns)'}`}>
             <b className="text-14">{k.name}</b>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-large:flex-wrap">
               <div role="img" aria-label={aria} className="flex gap-0.75">
                 {levelSegments(k.level?.index ?? null, levels.length).map((on, i) => (
                   <span key={i} className={`h-2 w-6.5 rounded-4 ${on ? 'bg-accent-default' : 'bg-track'}`}></span>

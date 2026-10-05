@@ -65,6 +65,10 @@ export const ConsentNoOrganisation: Story = { args: { initial: { step: 'consent'
 export const Voice: Story = { args: { initial: { step: 'voice' } } };
 export const VoiceHeard: Story = { args: { initial: { step: 'voice', voice: 'heard' } } };
 export const VoiceDenied: Story = { args: { initial: { step: 'voice', voice: 'denied' } } };
+/** No microphone to record from (none plugged in, or no recording support). */
+export const VoiceUnavailable: Story = { args: { initial: { step: 'voice', voice: 'unavailable' } } };
+/** The real mic test on the mock voice: press the mic, read the line, see the level and the transcript; Play a sample voice streams captions. */
+export const VoiceLive: Story = { args: { initial: { step: 'voice' }, liveVoice: true } };
 export const HowToPlay: Story = { args: { initial: { step: 'how' } } };
 /** A monthly storyline: "Each month ... spend your 4 weeks". */
 export const HowToPlayMonthly: Story = { args: { initial: { step: 'how' }, periods: { unit: 'month', count: 6 }, subPeriodUnit: 'week', capacity: 4 } };

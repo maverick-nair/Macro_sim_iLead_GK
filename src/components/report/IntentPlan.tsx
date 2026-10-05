@@ -72,7 +72,7 @@ export function PlanSection({ items, reflection, checkIn, alone = true }: PlanSe
     <Column title={t('report.plan.title')} alone={alone}>
       {items.map((p, i) => (
         <div key={p.key} className="grid grid-cols-(--il-report-plan-columns) gap-2.5 rounded-16 border border-line-default px-3.5 py-3 text-14">
-          <b className="flex size-7 items-center justify-center rounded-round bg-(image:--il-fill-brand) text-13 text-brand-deep-space">{number(i + 1)}</b>
+          <b className="flex min-h-7 min-w-7 self-start items-center justify-center rounded-round px-1 bg-(image:--il-fill-brand) text-13 text-brand-deep-space">{number(i + 1)}</b>
           {p.skill ? (
             <div className="flex flex-col gap-1">
               <b>{p.skill}</b>

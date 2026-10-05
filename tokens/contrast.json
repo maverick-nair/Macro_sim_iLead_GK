@@ -4,7 +4,7 @@
     { "fg": "color.fg.primary", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.accent.soft", "color.status.attention-soft", "color.status.gain-soft", "color.status.decline-soft"], "min": 4.5, "why": "Body text on every surface, selected rows and status chips" },
     { "fg": "color.fg.secondary", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material"], "min": 4.5, "why": "Labels and metadata" },
 
-    { "fg": "color.accent.secondary", "bg": ["color.surface.card", "color.surface.material"], "min": 4.5, "why": "Accent text: eyebrows, Add a reason, Hide, See why, award count, Changed" },
+    { "fg": "color.accent.secondary", "bg": ["color.surface.card", "color.surface.material", "color.surface.raised"], "min": 4.5, "why": "Accent text: eyebrows, Add a reason, Hide, See why, award count, Changed, also on raised rows and chips (D61: Halden's second accent was 4.03:1 there)" },
     { "fg": "color.live.replay", "bg": ["color.surface.card", "color.surface.raised"], "min": 4.5, "why": "Replay link under NPC turns" },
     { "fg": "color.fg.link", "bg": ["color.surface.solid", "color.surface.card", "color.surface.material", "color.status.attention-soft"], "min": 4.5, "why": "Ghost buttons, including Continue on the prerequisite nudge" },
     { "fg": "color.fg.link-hover", "bg": ["color.surface.solid", "color.surface.card", "color.surface.material", "color.status.attention-soft"], "min": 4.5, "why": "Ghost buttons on hover" },

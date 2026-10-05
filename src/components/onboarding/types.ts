@@ -54,5 +54,8 @@ export interface OnboardingMember {
   facts: Record<OnboardingFactKey, string>;
 }
 
-/** How the voice check stands: not tried, heard the test phrase, or the browser blocked the mic. */
-export type VoiceCheck = 'idle' | 'heard' | 'denied';
+/**
+ * How the voice check stands: not tried, heard the test phrase, the browser blocked the mic, or there
+ * is no microphone this browser can record from (none plugged in, or no recording support).
+ */
+export type VoiceCheck = 'idle' | 'heard' | 'denied' | 'unavailable';

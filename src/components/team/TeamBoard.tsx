@@ -76,7 +76,7 @@ function StageHeader({ name, count, ideal, bottleneck, periodUnit, level }: Omit
       <div className="flex items-baseline justify-between gap-1.5">
         {level
           ? <Heading level={level} className="m-0 min-w-0 text-13 font-700 text-pretty">{name}</Heading>
-          : <b title={name} className="min-w-0 truncate text-13">{name}</b>}
+          : <b title={name} className="min-w-0 truncate text-13 text-large:whitespace-normal text-large:break-words">{name}</b>}
         <b className="text-15">{number(count)}</b>
       </div>
       <span className={`text-12 ${bottleneck ? 'font-700 text-status-attention' : 'font-400 text-fg-secondary'}`}>

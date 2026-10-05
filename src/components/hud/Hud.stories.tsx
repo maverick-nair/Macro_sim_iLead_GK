@@ -41,6 +41,8 @@ export const CapacityFull: Story = { ...frame, args: { ...base, clock: clock({ s
 
 /** The participant turned the session clock off in settings. */
 export const ClockHidden: Story = { ...frame, args: { ...base, sessionClock: null } };
+/** The engine board keeps Pause with the clock hidden. */
+export const PauseWithoutClock: Story = { ...frame, args: { ...base, sessionClock: null, alwaysPause: true } };
 
 export const NoStreak: Story = { ...frame, args: { ...base, streak: 0 } };
 

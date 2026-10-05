@@ -39,7 +39,12 @@ export interface HudProps {
   onNav: (key: string) => void;
   clock: HudClock;
   /** Session clock text ("38:12"), or null when the participant hides it. */
-  sessionClock: string | null;
+  sessionClock: ReactNode | null;
+  /**
+   * Keep the Pause button when the clock is hidden, labelled "Pause" (the engine board: pausing is
+   * not tied to showing the clock). The prototype frames hide the button with the clock.
+   */
+  alwaysPause?: boolean;
   onPause: () => void;
   score: HudScore;
   /** Denominator of the simple breakdown's bars. Defaults to 100, the engine's pillar scale (scoring-and-report.md 6). */
@@ -154,7 +159,7 @@ export function Hud(p: HudProps) {
   const rich = p.breakdown !== undefined;
 
   return (
-    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap">
+    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2">
       <div className="flex items-center gap-2.5">
         {p.clientLogo && <div className="flex min-h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
@@ -178,10 +183,10 @@ export function Hud(p: HudProps) {
         </div>
         <span className="text-13 text-fg-secondary">{around(t('time.left', { amount: MARK }), v => <b className="text-fg-primary">{v}</b>, amount)}</span>
       </div>
-      {p.sessionClock !== null && (
-        <button type="button" onClick={p.onPause} aria-label={t('hud.pause.aria')}
+      {(p.sessionClock !== null || p.alwaysPause) && (
+        <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined}
           className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary ${focus}`}>
-          <Pause />{p.sessionClock}
+          <Pause />{p.sessionClock ?? t('hud.pause.label')}
         </button>
       )}
       {/* Focus leaving the score (and the breakdown, which can hold controls) closes it; Escape inside it closes it and returns to the score. */}

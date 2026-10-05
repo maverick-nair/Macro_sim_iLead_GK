@@ -97,3 +97,13 @@ export const PerkInDrawer: StoryObj = {
 
 /** Phone width, 390 minus the 16px gutters; the panel keeps its own padding. */
 export const Narrow: StoryObj = { render: () => <Frame width={358} height={760} member={{ firstName: 'Kent', tiles: memberFor(3) }} /> };
+
+/** A board under 1280 wide (D58): the header has a toggle that folds the card to its rail. Interactive. */
+function Folding() {
+  const [collapsed, setCollapsed] = useState(false);
+  return <Frame width={collapsed ? 96 : 330} collapse={{ collapsed, open: 5, onToggle: () => setCollapsed(c => !c) }} />;
+}
+export const Collapsible: StoryObj = { render: () => <Folding /> };
+
+/** Folded: a 72px rail with the actions open now; it expands on demand. */
+export const Collapsed: StoryObj = { render: () => <Frame width={96} collapse={{ collapsed: true, open: 5, onToggle: noop }} /> };

@@ -110,6 +110,27 @@ describe('AI stream store', () => {
     expect(store.getState().text).toBe('new');
   });
 
+  it('hold stops taking tokens until released, and cancel still ends a held stream', async () => {
+    const s = manualStream();
+    const store = createAiStreamStore();
+    void store.start(s.iterable);
+    s.token('Hello');
+    await tick();
+    store.hold(true);
+    s.token(' there');
+    s.token(' friend');
+    await tick();
+    // At most the token already asked for lands; the rest wait.
+    expect(store.getState().text.length).toBeLessThanOrEqual('Hello there'.length);
+    expect(store.getState().streaming).toBe(true);
+    store.hold(false);
+    await tick();
+    expect(store.getState().text).toBe('Hello there friend');
+    store.hold(true);
+    expect(store.cancel()?.text).toBe('Hello there friend');
+    expect(store.getState()).toMatchObject({ cancelled: true, streaming: false });
+  });
+
   it('notifies subscribers and resets', async () => {
     const s = manualStream();
     const store = createAiStreamStore();

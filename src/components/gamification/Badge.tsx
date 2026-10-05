@@ -19,9 +19,9 @@ export function BadgeChip({ name, status, detail, icon }: BadgeChipProps) {
   const { t } = useI18n();
   const locked = status === 'locked';
   return (
-    <span title={detail} className={`flex h-9 items-center gap-2 rounded-pill border border-line-default bg-surface-card py-0 pr-3.5 pl-1 text-13 font-700 ${locked ? 'text-fg-secondary' : 'text-fg-primary'}`}>
+    <span title={detail} className={`relative flex min-h-9 items-center gap-2 rounded-pill border border-line-default bg-surface-card py-0 pr-3.5 pl-1 text-13 font-700 ${locked ? 'text-fg-secondary' : 'text-fg-primary'}`}>
       <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-round ${locked ? 'bg-track text-fg-secondary' : 'bg-(image:--il-fill-spectrum) text-brand-deep-space'}`}>
-        {icon && <span className="size-4">{icon}</span>}
+        {icon && <span className="flex size-4">{icon}</span>}
       </span>
       <span>{name}</span>
       <span className="sr-only">{t('gamification.badge.status', { status, detail })}</span>

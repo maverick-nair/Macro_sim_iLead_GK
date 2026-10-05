@@ -81,6 +81,13 @@ for (const theme of ['dark', 'light'] as const) {
     // 4. Voice check.
     await press(page, page.getByRole('button', { name: 'Start mic test' }));
     await expect(page.getByRole('heading', { level: 1, name: 'We heard you clearly' })).toBeVisible({ timeout: 6000 });
+    // The speech layer's transcript (the mock voice in dev reads the test line).
+    await expect(page.getByText(/^We heard: .I'm ready to lead my team\..$/)).toBeVisible();
+    // The sample voice streams a line with captions, as NPC speech does in a conversation.
+    await press(page, page.getByRole('button', { name: 'Play a sample voice' }));
+    await expect(page.getByText(/^Hi, good to meet you\. I am glad you are here/)).toBeVisible({ timeout: 10000 });
+    // Finished: the whole line is on screen, and read out once from the polite region.
+    await expect(page.getByText(/how this week is going\.$/)).toHaveCount(2, { timeout: 15000 });
     await axe(page, 'voice');
     await press(page, page.getByRole('button', { name: 'Sounds good' }));
 

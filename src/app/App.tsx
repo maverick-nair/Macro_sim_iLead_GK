@@ -12,6 +12,11 @@ import { LoadingScreen } from '../components/shell/LoadingScreen';
 import { Onboarding } from '../screens/Onboarding';
 import { HALDEN_THEME } from './clientTheme';
 import { EngineOnboarding } from './EngineOnboarding';
+import { useEngineView } from '../engine/react';
+import { runInProgress, showsRecap } from './resume';
+import { useSessionClock } from './sessionClock';
+/** The welcome back recap on the engine loads only when a run is resumed. */
+const EngineResume = lazy(() => import('./EngineResume'));
 /** Screens past onboarding load on demand, so the board's first load stays inside its budget. */
 const Board = lazy(() => import('../screens/Board').then(m => ({ default: m.Board })));
 const End = lazy(() => import('../screens/End').then(m => ({ default: m.End })));
@@ -79,6 +84,27 @@ const INITIAL: State = {
 };
 
 const REACTING_MS = 3200;
+
+/** The recap reads the engine view here, so its own chunk stays free of the engine client. */
+function EngineResumeHost({ onBack }: { onBack: () => void }) {
+  const { data } = useEngineView();
+  if (!data) return null;
+  return <Suspense><EngineResume view={data} onBack={onBack} returnFocus={() => document.querySelector<HTMLElement>('main h1')} /></Suspense>;
+}
+
+/**
+ * The start of the playable app. A run already in progress past onboarding (a reload, another
+ * device) opens on the board instead, with the welcome back recap when the run is on the board or in
+ * style setting with history. Decided once, from the first engine view of this load.
+ */
+function EngineStart({ act, minHeight, onResume }: { act: AppActions; minHeight: string; onResume: (recap: boolean) => void }) {
+  const { data: view } = useEngineView();
+  const resumed = !!view && runInProgress(view);
+  // Onboarding never logs history, so this holds only for a run that was already under way.
+  useEffect(() => { if (view && resumed) onResume(showsRecap(view)); }, [view, resumed, onResume]);
+  if (!view || resumed) return null;
+  return <EngineOnboarding act={act} minHeight={minHeight} />;
+}
 const TOAST_MS = 3400;
 
 function applyMoves(stats: Stats, outcome: Outcome): Stats {
@@ -145,6 +171,8 @@ export function App(p: AppProps) {
       }
       st.stats = stats;
       if (p.capacity !== undefined) st.capacity = p.capacity;
+      // The engine board's session clock counts down from the saved session (D13).
+      if (engine) useSessionClock.getState().set(session?.secs ?? INITIAL.secs);
       set(st);
       if (st.screen === 'reacting' && p.uiState !== 'slow' && !frozen) reactTimer.current = setTimeout(() => void toBoard(), REACTING_MS);
     });
@@ -239,11 +267,13 @@ export function App(p: AppProps) {
   const screenProps = app && D ? { d: D, app, act } : null;
 
   const closeOverlay = () => set({ overlay: null });
+  /** A run in progress was found on load: straight to the board, with the recap. */
+  const resume = useCallback((recap: boolean) => set({ screen: 'board', step: null, overlay: recap ? 'resume' : null }), [set]);
   const returnFocus = () => opener.current;
 
   return (
     <I18nProvider>
-    <div style={rootVars} className={s.settings.reduced ? 'il-reduced-motion' : undefined}>
+    <div style={rootVars} data-text-large={s.settings.text > 100 ? '' : undefined} className={s.settings.reduced ? 'il-reduced-motion' : undefined}>
       <div className={THEME_ROOT}>
         {/* Everything behind an open dialog is inert: no focus, no clicks, hidden from screen readers. */}
         <div className="contents" inert={!!s.overlay}>
@@ -252,11 +282,13 @@ export function App(p: AppProps) {
           {screenProps && (
             <Suspense>
               {scr === 'onboarding' && p.uiState !== 'loading' && (engine
-                ? <div><EngineOnboarding act={act} minHeight={minH} /></div>
+                ? <div>{p.screen ? <EngineOnboarding act={act} minHeight={minH} /> : <EngineStart act={act} minHeight={minH} onResume={resume} />}</div>
                 : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
               {engine && (scr === 'style' || scr === 'board') && (
                 <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
-                  <EngineBoard phone={mobile} client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
+                  <EngineBoard phone={mobile} client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
+                    paused={!!s.overlay} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
+                    actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })} />
                 </div>
               )}
               {!engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
@@ -278,8 +310,11 @@ export function App(p: AppProps) {
           <SettingsDialog values={s.settings} onChange={act.settings} onClose={closeOverlay} voiceConsent={engine} frozen={frozen} returnFocus={returnFocus} />
         )}
         {s.overlay === 'paused' && <PauseDialog onResume={closeOverlay} frozen={frozen} returnFocus={returnFocus} />}
-        {/* The recap is the design fixture's until the engine reports recent outcomes (M5). */}
-        {s.overlay === 'resume' && (
+        {/* On the engine the recap is built from the engine view; the gallery frame (x3) keeps the design fixture. */}
+        {s.overlay === 'resume' && engine && (
+          <EngineResumeHost onBack={closeOverlay} />
+        )}
+        {s.overlay === 'resume' && !engine && (
           <ResumeDialog period={s.week} periodUnit="week" sub={s.day} subPeriodUnit="day" recent={RESUME_FIXTURE.recent} waiting={RESUME_FIXTURE.waiting}
             onBack={closeOverlay} frozen={frozen} returnFocus={returnFocus} />
         )}

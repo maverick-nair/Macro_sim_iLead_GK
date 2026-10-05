@@ -127,7 +127,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor, layout = 'row' }: M
   const targetTile = (
     <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} className={tile}>
       <span className="text-12 text-fg-secondary">{target.label ?? t('metrics.target.label')}</span>
-      <div className="flex items-baseline gap-1.5"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
+      <div className="flex items-baseline gap-1.5 text-large:flex-wrap"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
       <div className="relative h-1.5 rounded-3 bg-track">
         <div className="absolute top-0 bottom-0 left-0 rounded-3 bg-meter" style={{ width: pct(target.target ? target.value / target.target : 0) }} />
         <div title={paceTitle} className="absolute -top-0.75 -bottom-0.75 w-0.5 bg-fg-primary" style={{ left: pct(target.pace) }} />
@@ -181,7 +181,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor, layout = 'row' }: M
   }
 
   return (
-    <section aria-label={t('metrics.strip.aria')} className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 px-6 pt-0 pb-3.5">
+    <section aria-label={t('metrics.strip.aria')} className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5">
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
       {pulseTile}
       {targetTile}

@@ -13,10 +13,11 @@
     },
     "team": {
       "columns": { "value": "repeat(5,minmax(0,1fr))", "$description": "Small multiples: revenue and the four team metrics" },
-      "columns-phone": { "value": "1fr 1fr" }
+      "columns-phone": { "value": "1fr 1fr" },
+      "columns-large": { "value": "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", "$description": "Text above 100% (D56): fewer small multiples per row" }
     },
     "skills": {
-      "columns": { "value": "200px 200px minmax(0,1fr)", "$description": "Skill, level bar, evidence" },
+      "columns": { "value": "calc(200px + (var(--il-text-scale, 1) - 1) * 60px) 200px minmax(0,1fr)", "$description": "Skill, level bar, evidence. The skill column grows with the text size so long skill names fit (260px at 200%, D56)" },
       "columns-phone": { "value": "1fr" }
     },
     "pair": {
@@ -32,8 +33,9 @@
       "missed-swatch": { "value": "repeating-linear-gradient(45deg, {color.status.attention} 0 2px, transparent 2px 5px)", "$description": "The legend swatch for a missed week" }
     },
     "plan": {
-      "columns": { "value": "28px 1fr", "$description": "Number badge and the step" }
+      "columns": { "value": "minmax(28px, max-content) minmax(0,1fr)", "$description": "Number badge and the step. The badge column grows with the badge at large text (D56)" }
     },
+    "stats-large": { "value": "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", "$description": "Analytics stats at text above 100% (D56): fewer per row" },
     "cards": {
       "columns": { "value": "repeat(auto-fill,minmax(260px,1fr))", "$description": "Key moments and people cards" }
     },

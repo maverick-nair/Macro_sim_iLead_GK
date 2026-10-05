@@ -129,7 +129,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
             </ul>
           )}
         </section>
-        <div className="grid grid-cols-2 gap-3.5">
+        <div className="grid grid-cols-2 gap-3.5 text-large:grid-cols-1">
           <div className={`${SMALL_CARD} gap-1.5`}>
             <span className="text-12 text-fg-secondary">{t('weekend.streak.title')}</span>
             <b className="flex items-center gap-1.5 text-26">
