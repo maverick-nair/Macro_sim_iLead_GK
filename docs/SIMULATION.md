@@ -496,30 +496,36 @@ Away members show "In training" or "On leave".
 
 ---
 
-## 8. Report [M][S]
+## 8. Report [G]
 
-Individual report [M]:
-| Measure | Definition |
-|---|---|
-| Dominant style | The style you used most |
-| Range of styles | Share of each style across all decisions |
-| Leadership capability | Style accuracy over the run |
-| Consistency, per member | Dominant intent (weekly style set) against dominant style in actions and conversations |
-| Average result, per member | Mean result over the run |
-| Delta in performance, per member | Final result − starting result |
-| Actions taken, per member | Count |
-| Time spent with members | Top 25% performers, bottom 25%, others |
+Report 2.0 (`docs/genie/scoring-and-report.md` sections 5 and 7). The engine builds it from the run (`src/engine/report/build.ts`) and sends it in the view once the run has ended. Every element traces to the run or to authored copy; no text is written by a model at runtime. All settings are *config* under `report`, with these defaults (`src/engine/report/defaults.ts`).
 
-New in 2.0:
-- Tier and score breakdown
-- Stars per period
-- Best 3 moments and 1 to revisit: the largest positive and negative outcome deltas, with their evidence quotes
-- Skills narrative per leadership style; the report says "skills", never "competency"
-- Intent vs action: the reason notes from style setting against what happened
+### 8.1 Skill observations
+- **Skills framework:** Situational flexibility, Coaching for growth, Handling difficult conversations, Goal setting and accountability, Giving feedback, Recognition and fairness, Communicating change, Results ownership, each with one authored behavioural anchor per level.
+- **Linkage matrix:** which skills each live interaction rates (2 to 4), keyed by action: Meet face to face, Coach member, Give feedback, Send email, Meet the team, Set goals, the swap and exit talks, the sponsor briefing, the reward talk, the hire interview and replies to messages. Static actions never create observations.
+- **Observation:** the evaluator returns one band per linked skill, with the participant's words it rests on. A red flag makes every rated skill Harmful. The interaction's overall band (and so its consequences, D62) still comes from its authored rubric, so the game is unchanged.
 
-The group report measures [M] are listed in `docs/ilead-1`.
+### 8.2 Ratings
+- **Enough evidence:** 2 observations from 2 different interactions; otherwise "Not enough evidence".
+- **Skill score:** the mean of band scores (Strong 100, Adequate 70, Weak 35, Harmful 0). Level by threshold: Novice 0, Developing 40, Proficient 60, Advanced 75, Role Model 90. Any Harmful observation caps the skill at Developing.
+- **Overall level:** from the mean of rated skills, shown only when at least half the skills are rated.
+- **Evidence quotes:** up to 2 per skill, verbatim from the participant's own turns, highest band first, then the most recent.
 
----
+### 8.3 Sections
+| # | Section | From |
+|---|---|---|
+| 1 | Executive summary | Overall level and its authored narrative; 3 strengths (top rated skills); 3 priorities (lowest rated, not already strengths); one business sentence (share of target, deals, the most frequent bottleneck) |
+| 2 | Style flexibility and fit | Style shares, dominant style, contextual capability %, the 4 by 4 grid of style needed against style used, weekly fit per person per period, narratives by capability band and dominant style |
+| 3 | Intent vs action | Per person: dominant weekly style, dominant style shown in conversations, aligned or gap, a quote from the latest conversation that differed, the participant's own reason from style setting, trust lost to mixed signals |
+| 4 | Skills profile | Level, anchor, observation count, quotes, or "Not enough evidence" |
+| 5 | Key moments | 5 to 7: conversations with a Strong, Weak or Harmful band, escalations, promises kept or broken, unanswered messages; ranked by the size of the changes to people, then shown in order. Each in SBI form with the intent declared that week |
+| 6 | People outcomes | Per person: morale, trust and result at each period end, actions taken and days spent with them, result change |
+| 7 | Business outcomes | Revenue against target pace per period, the funnel against the cumulative ideal, deals, the bottleneck in most periods and why (its lowest result owner's weakest number) |
+| 8 | Conversation analytics | Descriptive, never scored: participant words per NPC word in spoken and role play formats, open questions, recognition statements (authored phrase list) |
+| 9 | Development plan | The 3 lowest rated skills (then skills without enough evidence), each with an authored practice activity and on the job action, and a check in date |
+| 10 | Methodology | Authored copy, plus the facts: conversations, observations, review status |
+
+The end screen collects up to 3 reflection answers (authored questions, by voice or text) and a 1 to 5 experience rating (`submitReflection`). The plan quotes the first answer.
 
 ## 9. Calibration ("make it playable")
 

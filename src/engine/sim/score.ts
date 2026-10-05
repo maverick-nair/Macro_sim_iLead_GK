@@ -90,10 +90,6 @@ export function nextStreakBonus(sim: Sim) {
 
 export type BadgeMoment = 'conversion' | 'periodEnd' | 'interaction' | 'runEnd';
 
-/** Interactions that rate Communicating change (scoring-and-report.md 5.2): Meet the team, Send email, the swap and exit talks. */
-const COMMUNICATES_CHANGE = new Set(['meeting', 'email']);
-const CHANGE_RULES = new Set(['swap', 'fire']);
-
 /** Awards every badge whose rule holds at this moment. Each badge is earned once. */
 export function checkBadges(sim: Sim, moment: BadgeMoment) {
   const have = new Set(sim.badges.map(b => b.key));
@@ -141,7 +137,9 @@ function rule(sim: Sim, r: string, moment: BadgeMoment): string | null {
     }
     case 'change_champion': {
       if (moment !== 'interaction') return null;
-      const n = sim.liveRecords.filter(rec => rec.band === 'strong' && (COMMUNICATES_CHANGE.has(rec.format) || CHANGE_RULES.has(sim.config.actions.find(a => a.key === rec.actionKey)?.rule ?? ''))).length;
+      // Strong overall band in a conversation that rates Communicating change (the report's linkage matrix, 5.2).
+      const rates = (rec: Sim['liveRecords'][number]) => (sim.config.report.linkage[rec.actionKey] ?? []).includes('communicating_change');
+      const n = sim.liveRecords.filter(rec => rec.band === 'strong' && rates(rec)).length;
       return n >= 2 ? 'You explained a change really well, twice.' : null;
     }
     case 'steady_hand':

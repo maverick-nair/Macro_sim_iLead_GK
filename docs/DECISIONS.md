@@ -362,6 +362,12 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Perks:** the engine sends each action's cost now and its perk; the hire on the extra budget reads "No days, one seat past a full team", a team activity "No cooldown this time".
 - **Budget:** first load is 193.2 KB of 200 KB. The week end and the live screen load on demand; M6 must keep the report out of the first load.
 
+**D64. M6 report engine.** Decided.
+- **Skills are rated beside the rubric.** scoring-and-report.md treats the rubric dimensions as the skills. Our storyline rubrics (listening, clarity, agenda and so on) are calibrated and drive each conversation's overall band and consequences, so the evaluator now returns both: the rubric dimensions (game) and one band per linked skill (report). A real evaluator gets the linked skills in its input. Say if the rubric should become the skills; that recalibrates the game.
+- **Defaults authored here:** the 8 skill anchors, the narrative bank, the development plan copy, the recognition phrases, the methodology lines and the two reflection questions (taken from the design). All are config; GenieKreator authors replace them.
+- **Change Champion** (D62) now reads the linkage matrix: a Strong conversation that rates Communicating change.
+- **Not in the engine:** the participant's name and the report date come from the launch (LMS or GenieKreator), not the engine; minutes of play come from the client. Human review is not built: methodology says "not yet reviewed".
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
