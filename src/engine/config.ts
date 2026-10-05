@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
+import { DEFAULT_DEVELOPMENT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE, DEFAULT_SKILLS } from './report/defaults';
 
 /**
  * Storyline configuration authored in GenieKreator. The engine only runs on a config that passes
@@ -177,6 +178,38 @@ export const Gamification = z.object({
   if (new Set(g.badges.map(b => b.key)).size !== g.badges.length) ctx.addIssue({ code: 'custom', path: ['badges'], message: 'Badge keys must be unique' });
 });
 
+/**
+ * Report 2.0 settings (scoring-and-report.md 5 and 7; Configuration Spec, Report settings): the skills
+ * framework with its anchors, which interactions rate which skills, the rating scale, and the authored
+ * copy the report is worded from. Defaults are the iLead 2.0 framework.
+ */
+export const REPORT_SECTIONS = ['summary', 'style', 'intent', 'skills', 'moments', 'people', 'business', 'analytics', 'plan', 'methodology'] as const;
+export const Report = z.object({
+  skills: z.array(z.object({ key: Key, name: Copy, anchors: z.array(Copy).min(3).max(7) })).min(2).default(() => DEFAULT_SKILLS.map(s => ({ ...s, anchors: [...s.anchors] }))),
+  linkage: z.record(Key, z.array(Key).min(1).max(4)).default(DEFAULT_LINKAGE),
+  scale: z.array(z.object({ name: Copy, min: Score })).min(3).max(7).default(DEFAULT_SCALE),
+  minObservations: z.number().int().min(1).max(5).default(2),
+  evidencePerSkill: z.number().int().min(0).max(4).default(2),
+  /** Day count from the report date to the development plan's check in. */
+  checkInDays: z.number().int().min(1).max(90).default(14),
+  sections: z.array(z.enum(REPORT_SECTIONS)).min(1).default([...REPORT_SECTIONS]),
+  narratives: z.object({
+    overall: z.array(Copy).min(1),
+    capability: z.object({ low: Copy, mid: Copy, high: Copy }),
+    dominant: z.object({ D: Copy, G: Copy, P: Copy, E: Copy })
+  }).default(DEFAULT_NARRATIVES),
+  development: z.record(Key, z.object({ practice: Copy, onTheJob: Copy })).default(DEFAULT_DEVELOPMENT),
+  recognitionPhrases: z.array(z.string().min(2)).default(DEFAULT_RECOGNITION),
+  methodology: z.array(Copy).min(1).default(DEFAULT_METHODOLOGY),
+  /** Reflection questions on the end screen. */
+  reflection: z.array(Copy).min(0).max(3).default(['What did you learn about adapting your style to each person?', 'What will you do differently with your real team next week?'])
+}).superRefine((r, ctx) => {
+  const keys = new Set(r.skills.map(s => s.key));
+  for (const [k, list] of Object.entries(r.linkage)) for (const sk of list) if (!keys.has(sk)) ctx.addIssue({ code: 'custom', path: ['linkage', k], message: `No skill called ${sk}` });
+  if (r.skills.some(s => s.anchors.length !== r.scale.length)) ctx.addIssue({ code: 'custom', path: ['skills'], message: `Give one anchor per level (${r.scale.length})` });
+  if (r.scale[0].min !== 0 || r.scale.some((l, i) => i > 0 && l.min <= r.scale[i - 1].min)) ctx.addIssue({ code: 'custom', path: ['scale'], message: 'Levels start at 0 and rise' });
+});
+
 export const STYLES = ['D', 'G', 'P', 'E'] as const;
 
 /** Skill, morale and result change. */
@@ -332,6 +365,7 @@ export const StorylineConfig = z.object({
   candidates: z.array(Person).default([]),
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),
   gamification: Gamification.default(() => Gamification.parse({})),
+  report: Report.default(() => Report.parse({})),
   actions: z.array(Action).min(1),
   /** Weekly style setting effect per period (docs/SIMULATION.md 4.4). */
   weeklyStyle: EffectTable,

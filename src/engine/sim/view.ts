@@ -1,5 +1,6 @@
 import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, speakerFor, turnLimit } from './live';
+import { buildReport } from '../report/build';
 import { finalScore } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, idealThroughput, perPeriod, person, teamAverage } from './sim';
@@ -166,7 +167,8 @@ export function buildView(sim: Sim) {
     perks: { bonusDay: sim.bonusPeriod !== null && sim.bonusPeriod >= sim.period, hireBudget: sim.hireBudget, teamActivity: sim.freeTeamActivity, checkIn: sim.checkInPeriod === sim.period },
     history: sim.log,
     live: liveView(sim),
-    liveCap: { cap: sim.config.time.liveCap, used: sim.liveTaken[sim.period] ?? 0 }
+    liveCap: { cap: sim.config.time.liveCap, used: sim.liveTaken[sim.period] ?? 0 },
+    report: sim.phase === 'ended' ? buildReport(sim) : null
   };
 }
 

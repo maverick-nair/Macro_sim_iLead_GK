@@ -178,6 +178,42 @@ export const PeriodSummary = z.object({
   news: z.array(z.object({ key: Id, card: CardKind, title: Text, body: Text, impact: Text.nullable() }))
 });
 
+/**
+ * Report 2.0 (scoring-and-report.md 5 and 7), sent once the run has ended. Every element traces to the
+ * run or to authored copy; sentences are server content (D60).
+ */
+const Quote = z.object({ text: Text, when: Text });
+const Level = z.object({ index: z.number().int().min(0), name: Text });
+export const ReportView = z.object({
+  available: z.boolean(),
+  storyline: z.object({ name: Text, organisation: Text.nullable() }),
+  periods: z.number().int(), periodUnit: PeriodUnit,
+  sections: z.array(z.enum(['summary', 'style', 'intent', 'skills', 'moments', 'people', 'business', 'analytics', 'plan', 'methodology'])),
+  score: z.object({ total: Num, max: Num, tier: z.object({ key: Id, name: Text }) }),
+  results: z.object({ revenue: Num, target: Num, share: Num, conversions: z.number().int(), kpis: z.array(z.object({ metric: MetricKey, start: Num, end: Num, series: z.array(Num) })) }),
+  summary: z.object({ level: Level.nullable(), strengths: z.array(Id), priorities: z.array(Id), business: Text, narrative: Text.nullable() }),
+  style: z.object({
+    shares: z.record(StyleKey, z.number().int()), total: z.number().int(), dominant: z.array(StyleKey), capability: Num,
+    /** Rows: the style needed (D, G, P, E); columns: the style used. */
+    grid: z.array(z.array(z.number().int())), matched: z.number().int(), weeklyTotal: z.number().int(),
+    weeks: z.array(z.object({ memberId: Id, name: Text, left: z.boolean(), cells: z.array(z.object({ period: z.number().int(), chosen: StyleKey, fit: z.number().int().min(0).max(2) }).nullable()) })),
+    narrative: z.array(Text)
+  }),
+  intent: z.array(z.object({ memberId: Id, name: Text, intent: z.array(StyleKey), shown: z.array(StyleKey), status: z.enum(['aligned', 'gap', 'noEvidence']), quote: Quote.nullable(), note: z.object({ text: Text, period: z.number().int() }).nullable(), trustCost: Num })),
+  skills: z.array(z.object({ key: Id, name: Text, observations: z.number().int(), score: Num.nullable(), capped: z.boolean(), level: Level.nullable(), anchor: Text.nullable(), quotes: z.array(Quote) })),
+  scale: z.array(z.object({ name: Text, min: Num })),
+  moments: z.array(z.object({ id: Id, kind: z.enum(['best', 'revisit']), period: z.number().int(), memberId: Id.nullable(), title: Text, situation: Text, behaviour: Text, quote: Text.nullable(), impact: Text, intent: StyleKey.nullable() })),
+  people: z.array(z.object({ memberId: Id, name: Text, img: z.string().nullable(), left: z.boolean(), start: z.object({ morale: Num, trust: Num, result: Num }),
+    series: z.array(z.object({ period: z.number().int(), morale: Num, trust: Num, result: Num })), actions: z.number().int(), days: Num, resultChange: Num })),
+  business: z.object({ revenue: z.array(z.object({ period: z.number().int(), value: Num, pace: Num })), funnel: z.array(z.object({ stage: Id, name: Text, cumulative: Num, cumulativeIdeal: Num })),
+    bottleneck: z.object({ stage: Id, name: Text, periods: z.number().int(), why: Text.nullable() }).nullable(), conversions: z.number().int() }),
+  analytics: z.object({ conversations: z.number().int(), talkRatio: Num.nullable(), openQuestions: z.number().int(), recognition: z.number().int(), spoken: z.number().int() }),
+  plan: z.array(z.object({ skill: Id, name: Text, enoughEvidence: z.boolean(), practice: Text, onTheJob: Text })), checkInDays: z.number().int(),
+  reflection: z.object({ answers: z.array(z.string()), rating: z.number().int().nullable() }).nullable(), questions: z.array(Text),
+  methodology: z.object({ lines: z.array(Text), reviewed: z.boolean(), conversations: z.number().int(), observations: z.number().int() }),
+  badges: z.number().int(), gamificationTiers: z.array(z.object({ key: Id, name: Text, min: Num }))
+});
+
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
@@ -224,7 +260,9 @@ export const EngineView = z.object({
   perks: z.object({ bonusDay: z.boolean(), hireBudget: z.boolean(), teamActivity: z.boolean(), checkIn: z.boolean() }),
   history: z.array(LogEntry),
   live: LiveView.nullable(),
-  liveCap: z.object({ cap: z.number().int(), used: z.number().int() })
+  liveCap: z.object({ cap: z.number().int(), used: z.number().int() }),
+  /** The development report, once the run has ended. */
+  report: ReportView.nullable()
 });
 
 /** What the participant asks for. The engine answers with a new view. */
@@ -245,6 +283,8 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('clearOutcome') }),
   z.object({ type: z.literal('endPeriod') }),
   z.object({ type: z.literal('chooseReward'), reward: Id }),
+  /** End screen: reflection answers (text or transcribed voice, up to 3) and the 1 to 5 experience rating. */
+  z.object({ type: z.literal('submitReflection'), answers: z.array(z.string().max(2000)).max(3), rating: z.number().int().min(1).max(5).nullable() }),
   z.object({ type: z.literal('startNextPeriod') })
 ]);
 

@@ -28,6 +28,8 @@ export interface Evaluation {
   dimensions: Array<{ key: string; band: Band; evidence: string[] }>;
   /** Behaviours that force Harmful: blame, discrimination, policy breach, abuse. */
   redFlags: string[];
+  /** One band per skill this interaction rates: the skill observations (scoring-and-report.md 5.1). */
+  skills?: Array<{ key: string; band: Band; evidence: string[] }>;
 }
 
 export interface EvidenceQuote { quote: string; by: string; judgedByAI: boolean }
@@ -179,12 +181,27 @@ export interface LiveRecord {
   format: string;
   band: Band;
   memberIds: string[];
+  /** Report fields (scoring-and-report.md 5 and 7). Optional so tests can build bare records. */
+  id?: string;
+  sub?: number;
+  title?: string;
+  /** The style the evaluator read, when the conversation is style tagged (one person). */
+  styleShown?: Style | null;
+  skills?: Array<{ key: string; band: Band; evidence: string[] }>;
+  /** The participant's own turns, verbatim. */
+  quotes?: string[];
+  /** Words said by the participant and by the NPCs, open questions asked, recognition statements, and whether it was spoken. */
+  talk?: { you: number; npc: number; openQuestions: number; recognition: number; spoken: boolean };
+  concern?: boolean;
+  /** Sum of absolute changes to people, and the largest changes. */
+  impact?: number;
+  changes?: Array<{ subject: string; metric: string; delta: number }>;
 }
 
 /** A bulletin for the coming period, shown at the week end (Configuration Spec, Delivery). */
 export interface NewsItem { key: string; card: CardKind; title: string; body: string; impact: string | null }
 
-export interface Decision { memberId: string; chosen: Style; needed: Style; mismatch: Mismatch; source: string }
+export interface Decision { memberId: string; chosen: Style; needed: Style; mismatch: Mismatch; source: string; period?: number }
 
 export interface LogEntry {
   id: string;
@@ -279,6 +296,12 @@ export interface Sim {
   /** Team means at the start of the run, for the People pillar. */
   runStart: { morale: number; trust: number };
   liveRecords: LiveRecord[];
+  /** Reasons written in weekly style setting, for the report's intent vs action. */
+  styleNotes: Array<{ period: number; memberId: string; text: string }>;
+  /** Actions and days spent per person, for People outcomes. */
+  attention: Record<string, { actions: number; days: number }>;
+  /** End screen reflection and experience rating. */
+  reflection: { answers: string[]; rating: number | null } | null;
   /** Recognitions nobody else felt passed over by (Fair Hand). */
   fairRecognitions: number;
   /** Unlock rewards in hand: the next hire is allowed past a full team and costs no days; the next team activity has no cooldown. */

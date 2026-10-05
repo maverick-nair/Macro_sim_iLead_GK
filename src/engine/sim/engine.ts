@@ -30,6 +30,7 @@ export type Intent =
   | { type: 'clearOutcome' }
   | { type: 'endPeriod' }
   | { type: 'chooseReward'; reward: string }
+  | { type: 'submitReflection'; answers: string[]; rating: number | null }
   | { type: 'startNextPeriod' };
 
 export interface Result {
@@ -65,7 +66,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
     if (extra) it.turns.push({ id: `t${++sim.seq}`, by: 'you', text: extra.text, voice: extra.usedVoice });
     const text = live.participantText(it);
     if (!text.trim()) throw new IntentError('Say something first', 'empty');
-    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey) });
+    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey), skills: config.report.linkage[it.actionKey] ?? [] });
     // The person opening up in the conversation is what surfaces the concern (Design doc, Evaluation pipeline).
     if (it.concernRevealed) ev.flags.concernSurfaced = true;
     const reply = npcReply ?? (live.lastNpcWords(it) || ((await evaluator.reply?.({ format: it.format, text, band: ev.band })) ?? ''));
@@ -141,6 +142,11 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
       }
       case 'chooseReward':
         chooseReward(sim, intent.reward);
+        return { view: buildView(sim), changes: [] };
+      case 'submitReflection':
+        // The end screen's reflection and experience rating (Configuration Spec; Cohort Results, Experience feedback).
+        if (sim.phase !== 'ended') throw new IntentError('Reflection comes at the end of the run', 'wrongPhase');
+        sim.reflection = { answers: intent.answers.map(a => a.trim()).slice(0, 3), rating: intent.rating };
         return { view: buildView(sim), changes: [] };
       case 'startNextPeriod':
         startNextPeriod(sim);

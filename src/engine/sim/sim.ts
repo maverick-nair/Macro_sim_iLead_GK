@@ -27,7 +27,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     decisions: { period: [], run: [] }, styleUses: { D: 0, G: 0, P: 0, E: 0 },
     periods: [], streak: 0, streakBonus: 0, badges: [],
     sponsor: { value: config.gamification.sponsor.start, causes: [] }, pendingReward: null, promises: [], inbox: [], cards: [],
-    runStart: { morale: 0, trust: 0 }, liveRecords: [], fairRecognitions: 0, hireBudget: false, freeTeamActivity: false, checkInPeriod: null,
+    runStart: { morale: 0, trust: 0 }, liveRecords: [], styleNotes: [], attention: {}, reflection: null, fairRecognitions: 0, hireBudget: false, freeTeamActivity: false, checkInPeriod: null,
     events: { schedule: {}, fired: [], pending: [] }, pulseAtStart: 0,
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
     periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start
@@ -121,7 +121,7 @@ export function log(sim: Sim, entry: Omit<LogEntry, 'id' | 'period' | 'sub'>) {
 
 export function record(sim: Sim, m: MemberSim, chosen: Style, source: string): Mismatch {
   const n = needed(sim, m);
-  const d = { memberId: m.id, chosen, needed: n, mismatch: styleDifference(chosen, n), source };
+  const d = { memberId: m.id, chosen, needed: n, mismatch: styleDifference(chosen, n), source, period: sim.period };
   sim.decisions.period.push(d);
   sim.decisions.run.push(d);
   sim.styleUses[chosen]++;

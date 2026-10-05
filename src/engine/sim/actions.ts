@@ -8,7 +8,7 @@ import {
   addMessage, capacityLeft, effectChanges, firstName, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
   STYLE_NAMES, stageName, trustChange
 } from './sim';
-import type { Band, Change, Evaluation, MemberSim, Outcome, Reason, Sim } from './types';
+import type { Band, Change, Evaluation, Interaction, LiveRecord, MemberSim, Outcome, Reason, Sim } from './types';
 
 /** Actions and live interactions (docs/SIMULATION.md sections 4 and 5). */
 
@@ -42,6 +42,7 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
   if (missing.length) throw new IntentError(`Set a style for ${missing.map(m => m.id).join(', ')}`, 'missingStyles');
   const changes: Change[] = [];
   const w = sim.config.weeklyStyle;
+  for (const [memberId, text] of Object.entries(notes)) if (text.trim()) sim.styleNotes.push({ period: sim.period, memberId, text: text.trim() });
   for (const m of sim.members) {
     const chosen = styles[m.id];
     const wasNeeded = m.neededAtStart;
@@ -266,6 +267,13 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   }
   if (a.scope === 'team') sim.touchedTeam = true;
   sim.touched.push(...input.memberIds);
+  // Attention per person for the report: a team action counts for everyone, its days for no one.
+  const days = a.rule === 'hire' && sim.hireBudget ? 0 : o.cost ?? a.cost;
+  for (const id of a.scope === 'team' ? sim.members.map(m => m.id) : input.memberIds) {
+    const t = (sim.attention[id] ??= { actions: 0, days: 0 });
+    t.actions += 1;
+    if (a.scope !== 'team') t.days += days / Math.max(1, input.memberIds.length);
+  }
   const budget = a.rule === 'hire' && sim.hireBudget;
   if (budget) sim.hireBudget = false;
   setCooldown(sim, a, o, input.memberIds);
@@ -465,8 +473,8 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     changes.push(...trustChange(main, 4, { label: 'Opened up', cause: `${firstName(sim, main.id)} shared what is really on ${pr(sim, main.id) === 'she' ? 'her' : pr(sim, main.id) === 'they' ? 'their' : 'his'} mind.`, rule: 'When someone trusts you enough to share a concern, trust rises by 4.', evidence: quotes(ev) }));
   }
   // Live interaction record for the week score and the Leadership pillar; an expected response to an event; badges.
-  sim.liveRecords.push({ period: sim.period, actionKey: it.actionKey, format: it.format, band: ev.band, memberIds: it.memberIds });
   changes.push(...respond(sim, rng, it.actionKey, it.memberIds, it.replyTo));
+  sim.liveRecords.push(liveRecord(sim, it, ev, changes, a?.name, replyMsg));
   checkBadges(sim, 'interaction');
 
   const affected = [...new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject))];
@@ -489,6 +497,31 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
 }
 
 /** Up to two candidates whose home stage has room (role coverage), in storyline order. */
+const words = (t: string) => t.split(/\s+/).filter(Boolean).length;
+
+/** What the report keeps about a finished conversation (scoring-and-report.md 5 and 7). */
+function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[], actionName: string | undefined, msg: { title: string } | undefined): LiveRecord {
+  const mine = it.turns.filter(t => t.by === 'you');
+  const theirs = it.turns.filter(t => t.by !== 'you');
+  const phrases = sim.config.report.recognitionPhrases.map(p => p.toLowerCase());
+  const said = mine.map(t => t.text).join(' ');
+  const recognition = phrases.reduce((n, p) => n + (said.toLowerCase().split(p).length - 1), 0);
+  const people = new Map<string, number>();
+  for (const c of changes) if (c.subject !== 'sponsor' && c.metric !== 'confidence') people.set(c.subject, (people.get(c.subject) ?? 0) + Math.abs(c.delta));
+  const tagged = it.memberIds.length === 1 && !UNTAGGED.has(it.format) && it.actionKey !== 'reply' && it.actionKey !== 'sponsor';
+  const title = it.actionKey === 'sponsor' ? 'Sponsor briefing' : it.actionKey === 'reply' ? `Reply: ${msg?.title ?? 'a message'}` : actionName ?? it.actionKey;
+  return {
+    id: nextId(sim, 'r'), period: sim.period, sub: sim.sub, actionKey: it.actionKey, format: it.format, band: ev.band, memberIds: it.memberIds, title,
+    styleShown: tagged ? ev.styleUsed : null,
+    skills: ev.skills ?? [],
+    quotes: mine.map(t => t.text),
+    talk: { you: words(said), npc: theirs.reduce((n, t) => n + words(t.text), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition, spoken: mine.some(t => t.voice) },
+    concern: !!ev.flags.concernSurfaced,
+    impact: [...people.values()].reduce((a, b) => a + b, 0),
+    changes: [...changes].filter(c => c.subject !== 'sponsor').sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta)).slice(0, 4).map(c => ({ subject: c.subject, metric: c.metric, delta: c.delta }))
+  };
+}
+
 export function interviewees(sim: Sim): string[] {
   // Extra hire budget (an unlock) allows one seat past a full stage.
   const room = (stage: string) => sim.members.filter(m => m.stage === stage).length < sim.config.maxPerStage + (sim.hireBudget ? 1 : 0);

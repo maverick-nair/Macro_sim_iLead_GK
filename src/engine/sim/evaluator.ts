@@ -15,6 +15,8 @@ export interface EvaluationInput {
   usedVoice?: boolean;
   /** Rubric dimensions for this interaction; defaults per format. */
   rubric?: Array<{ key: string }>;
+  /** Skills this interaction rates (Report 2.0 linkage matrix); each gets a band as an observation. */
+  skills?: string[];
 }
 
 export interface Evaluator {
@@ -100,7 +102,16 @@ const DIM_CUES: Record<string, RegExp[]> = {
   structure: [OPEN_Q_ONE, /\b(?:tell me about a time|walk me through|give me an example)\b/i, /\b(?:next question|another question)\b/i],
   probing: [/\b(?:what happened next|why|how did you|what did you learn|tell me more)\b/i, OPEN_Q_ONE, /\b(?:result|outcome)\b/i],
   specific: [/\b\d+\b/, /\b(?:specifically|exactly|each)\b/i, NEXT_STEP],
-  measurable: [/\b\d+\s*(?:%|percent|deals|leads|calls|meetings)\b/i, /\bby (?:day|week|monday|tuesday|wednesday|thursday|friday)\b/i, /\b(?:measure|track|target)\b/i]
+  measurable: [/\b\d+\s*(?:%|percent|deals|leads|calls|meetings)\b/i, /\bby (?:day|week|monday|tuesday|wednesday|thursday|friday)\b/i, /\b(?:measure|track|target)\b/i],
+  // Skills of the leadership framework (scoring-and-report.md 5.2).
+  situational_flexibility: [ACK, INVITE, /\b(?:right now you need|for now|this week you|given where you are)\b/i],
+  coaching_for_growth: [/\b(?:coach|practi[cs]e|learn|grow|develop|try it)\b/i, OPEN_Q_ONE, /\b(?:next (?:call|time)|walk through|together)\b/i],
+  difficult_conversations: [ACK, /\b(?:honest(?:ly)?|concern|difficult|hard|the truth)\b/i, NEXT_STEP],
+  goal_setting: [/\b\d+\b/, NEXT_STEP, /\b(?:goal|target|measure|track|check in)\b/i],
+  giving_feedback: [/\b(?:because|specifically|for example)\b/i, /\b(?:when you|i noticed|i saw|you did)\b/i, NEXT_STEP],
+  recognition_fairness: [/\b(?:thank|well done|great (?:work|job)|appreciate|proud)\b/i, /\b(?:everyone|fair|the whole team|each of you)\b/i, /\b(?:because|specifically|for example)\b/i],
+  communicating_change: [/\b(?:why|the reason|because|change)\b/i, /\b(?:first|then|plan|what it means)\b/i, INVITE],
+  results_ownership: [/\b(?:i own|on me|my responsibility|i take (?:responsibility|ownership))\b/i, /\b(?:\d+|target|pipeline|revenue|behind|risk)\b/i, /\b(?:i|we)(?:'ll| will)\b/i]
 };
 
 function dimensionBand(key: string, text: string): { band: Band; evidence: string[] } {
@@ -115,7 +126,7 @@ export const heuristicEvaluator: Evaluator = {
     const lines = REPLIES[band];
     return lines[text.length % lines.length];
   },
-  evaluate({ format, text, usedVoice, rubric }) {
+  evaluate({ format, text, usedVoice, rubric, skills }) {
     const scores = (Object.keys(CUES) as Style[]).map(s => [s, CUES[s].filter(rx => rx.test(text)).length] as const);
     const total = scores.reduce((a, [, n]) => a + n, 0);
     const [styleUsed, top] = [...scores].sort((a, b) => b[1] - a[1])[0];
@@ -148,6 +159,8 @@ export const heuristicEvaluator: Evaluator = {
       emailIntent: format === 'email' ? (WARN.test(text) ? 'warn' : CONGRATS.test(text) ? 'congratulate' : 'neutral') : undefined,
       usedVoice,
       dimensions,
+      // A red flag makes every rated skill Harmful, as it does the overall band.
+      skills: (skills ?? []).map(key => ({ key, ...dimensionBand(key, text), ...(redFlags.length ? { band: 'harmful' as Band } : {}) })),
       redFlags
     };
   }
