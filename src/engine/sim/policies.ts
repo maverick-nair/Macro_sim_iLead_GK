@@ -78,7 +78,7 @@ export async function play(config: StorylineConfig, policy: Policy, seed: number
     if (v.pendingReward) v = (await engine.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] })).view;
     if (v.phase === 'periodEnd') v = (await engine.dispatch({ type: 'startNextPeriod' })).view;
   }
-  return { view: v, share: v.money.value / config.money.target };
+  return { view: v, share: v.money.value / config.money.target, engine };
 }
 
 type Step = { intent: { action: string; option?: string; memberIds: string[] }; say: string };

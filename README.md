@@ -26,7 +26,7 @@ Plan and status: `docs/PLAN.md`. Simulation rules: `docs/SIMULATION.md`. Design 
 
 | Route      | What it is |
 |------------|------------|
-| `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?participant=<id>` names the participant (the launch link from the LMS or GenieKreator), so settings and the session are theirs; it defaults to `local`. `?start=board` skips onboarding, `?period=4` opens the mock engine at period 4 (the real engine ignores it), `?engine=off` shows the prototype's fixed board, `?theme=light` the light theme, `?client=halden` the sample client theme. Phones (600px and below) get the 390 layouts. |
+| `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?participant=<id>` names the participant (the launch link from the LMS or GenieKreator), so settings and the session are theirs; it defaults to `local`. `?start=board` skips onboarding, `?period=4` opens the mock engine at period 4 (the real engine ignores it), `?engine=off` shows the prototype's fixed board, `?theme=light` the light theme, `?client=halden` the sample client theme. Phones (600px and below) get the 390 layouts. In development only, `?report=1` plays a whole mock run with the good player and opens its development report (`&policy=random` or `passive`, `&seed=N`, `&print=1`). |
 | `/screens` | Every screen, each frame the live app opened at that state. Port of `project/iLead Screens.dc.html`. Frame ids (`b4`, `l1`, ...) match the design and are linkable, for example `/screens#b4`. |
 | `/states`  | Edge states: loading, empty, offline, mic denied, slow AI. Port of `project/iLead States.dc.html`. |
 

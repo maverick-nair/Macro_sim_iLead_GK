@@ -22,6 +22,7 @@ import outcome from './outcome.json';
 import palette from './palette.json';
 import profile from './profile.json';
 import reason from './reason.json';
+import report from './report.json';
 import score from './score.json';
 import settings from './settings.json';
 import style from './style.json';
@@ -30,4 +31,4 @@ import team from './team.json';
 import time from './time.json';
 import weekend from './weekend.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...style, ...stylesetting, ...team, ...time, ...weekend };
+export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...report, ...score, ...settings, ...style, ...stylesetting, ...team, ...time, ...weekend };

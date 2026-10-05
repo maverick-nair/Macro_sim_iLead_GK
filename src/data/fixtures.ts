@@ -92,3 +92,4 @@ export const WEEKEND_FIXTURE = {
   /** The design marks where GenieKreator's news illustration goes; the gallery keeps the annotation. */
   newsArtLabel: 'Illustration from GenieKreator config'
 };
+

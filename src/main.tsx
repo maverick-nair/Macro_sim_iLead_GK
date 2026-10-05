@@ -9,6 +9,8 @@ import './styles/global.css';
 // The galleries are review tools; they stay out of the participant's bundle.
 const ScreensGallery = lazy(() => import('./gallery/ScreensGallery').then(m => ({ default: m.ScreensGallery })));
 const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ default: m.StatesGallery })));
+// Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
+const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
 
 /** Phones get the 390 layouts the design defines for live interactions, outcomes and the report. */
 function useIsPhone(): boolean {
@@ -49,6 +51,7 @@ function Root() {
   const path = location.pathname.replace(/\/+$/, '');
   if (path === '/screens') return <Suspense><ScreensGallery /></Suspense>;
   if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
+  if (ReportDev && new URLSearchParams(location.search).get('report') === '1') return <Suspense><ReportDev /></Suspense>;
   return <Play />;
 }
 

@@ -1,0 +1,15 @@
+{
+  "$description": "Development report chart meanings. Charts never rely on colour alone: every series also has a line pattern or a label, so they read in black and white print.",
+  "color": {
+    "report": {
+      "chart": {
+        "series": { "light": "{color.accent.default}", "dark": "{color.accent.default}", "$description": "The participant's own values: revenue, actual funnel, style shares, Morale" },
+        "second": { "light": "{color.accent.secondary}", "dark": "{color.accent.secondary}", "$description": "A second series, dashed: Trust in the people trajectories" },
+        "third": { "light": "{color.fg.primary}", "dark": "{color.fg.primary}", "$description": "A third series, dotted: Result in the people trajectories" },
+        "reference": { "light": "{color.fg.secondary}", "dark": "{color.fg.secondary}", "$description": "Targets and ideals: target pace, cumulative ideal markers, axes" },
+        "attention": { "light": "{color.status.attention}", "dark": "{color.status.attention}", "$description": "The bottleneck stage, hatched" },
+        "cell": { "light": "{color.surface.raised}", "dark": "{color.surface.raised}", "$description": "Empty cells of the used vs needed grid" }
+      }
+    }
+  }
+}
