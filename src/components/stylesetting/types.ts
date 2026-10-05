@@ -47,3 +47,9 @@ export const styleChanged = (m: StyleSettingMember) => m.style !== null && m.las
 
 /** Portrait backdrop on this screen: calm, or grey while away. */
 export const portraitBackdrop = (away: boolean) => (away ? 'bg-(image:--il-fill-portrait-away)' : 'bg-(image:--il-fill-portrait-calm)');
+
+/** First letters of the first and last name, for the sponsor's avatar. */
+export const initials = (name: string) => {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  return words.length === 0 ? '' : (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : '')).toUpperCase();
+};

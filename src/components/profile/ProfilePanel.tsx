@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
+import { lazy, Suspense, useId, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
 import type { MoodKey, StyleKey } from '../../data/types';
 import type { MetricKey } from '../../engine/contract';
 import { useI18n, type I18n } from '../../i18n';
@@ -75,18 +75,23 @@ export interface ProfilePanelProps {
   /** Every individual action for this person, as the Actions panel would show them. */
   actions: Array<Omit<ActionTileProps, 'layout'>>;
   onClose: () => void;
+  /**
+   * `panel`: three columns over the board, a non modal dialog of its own. `sheet`: one column, the
+   * content of a phone's bottom sheet, which brings the name as its title, the close button and focus.
+   */
+  layout?: 'panel' | 'sheet';
 }
 
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
 const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const STATS: MetricKey[] = ['skill', 'morale', 'result', 'trust'];
+export const STATS: MetricKey[] = ['skill', 'morale', 'result', 'trust'];
 const DOT: Record<ProfileTone, string> = { pos: 'bg-status-gain', neg: 'bg-status-decline', neutral: 'bg-line-strong' };
 const OUTCOME: Record<ProfileTone, string> = { pos: 'text-status-gain', neg: 'text-status-decline', neutral: 'text-fg-secondary' };
 const PROMISE: Record<Exclude<PromiseStatus, 'open'>, string> = { kept: 'text-status-gain', broken: 'text-status-decline' };
 
 /** Away members read grey; strained moods warm the backdrop, as on the member card. */
-function backdrop(mood: MoodKey, away: boolean): string {
+export function backdrop(mood: MoodKey, away: boolean): string {
   if (away) return 'bg-(image:--il-fill-portrait-away)';
   return mood === 'frustrated' || mood === 'concerned' ? 'bg-(image:--il-fill-portrait-warm)' : 'bg-(image:--il-fill-portrait-calm)';
 }
@@ -109,7 +114,7 @@ export function timelineText({ t, delta, locale }: I18n, entry: ProfileTimelineE
   return { when, outcome };
 }
 
-function TimelineItem({ entry, periodUnit, subPeriodUnit }: { entry: ProfileTimelineEntry; periodUnit: PeriodUnit; subPeriodUnit: SubPeriodUnit }) {
+export function TimelineItem({ entry, periodUnit, subPeriodUnit }: { entry: ProfileTimelineEntry; periodUnit: PeriodUnit; subPeriodUnit: SubPeriodUnit }) {
   const i18n = useI18n();
   const { t } = i18n;
   const { when, outcome } = timelineText(i18n, entry, periodUnit, subPeriodUnit);
@@ -129,7 +134,7 @@ function TimelineItem({ entry, periodUnit, subPeriodUnit }: { entry: ProfileTime
   );
 }
 
-function PromiseLine({ promise }: { promise: ProfilePromise }) {
+export function PromiseLine({ promise }: { promise: ProfilePromise }) {
   const { t } = useI18n();
   const label = t('profile.promise.label', { status: promise.status });
   if (promise.status === 'open') {
@@ -144,7 +149,14 @@ function PromiseLine({ promise }: { promise: ProfilePromise }) {
  * every action you can take with them. A non modal dialog: focus moves in on open and back to the
  * opener on close, and Escape inside it closes it.
  */
+// The phone's one column profile loads only on phones.
+const ProfileSheet = lazy(() => import('./ProfileSheet').then(m => ({ default: m.ProfileSheet })));
+
 export function ProfilePanel(props: ProfilePanelProps) {
+  return props.layout === 'sheet' ? <Suspense><ProfileSheet {...props} /></Suspense> : <ProfileDialog {...props} />;
+}
+
+function ProfileDialog(props: ProfilePanelProps) {
   const { name, title, img, mood, away = false, stats, style, facts, shared, periodUnit, subPeriodUnit, timeline, promises, actions, onClose } = props;
   const { t, number } = useI18n();
   const ref = useRef<HTMLDivElement>(null);

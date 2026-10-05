@@ -68,6 +68,7 @@ export interface EngineWeekEndProps {
   initial?: WeekEndFlowProps['initial'];
   /** The run is over: after the banner, report and badges, show the results. */
   onResults: () => void;
+  layout?: 'desktop' | 'phone';
 }
 
 /**
@@ -75,7 +76,7 @@ export interface EngineWeekEndProps {
  * is read once, when the week end opens: taking the reward clears it in the view, and the step must
  * stay until the flow moves on. At the end of the run the flow stops after the badges.
  */
-export function EngineWeekEnd({ view, busy, send, minHeight, initial, onResults }: EngineWeekEndProps) {
+export function EngineWeekEnd({ view, busy, send, minHeight, initial, onResults, layout }: EngineWeekEndProps) {
   const i18n = useI18n();
   const s = view.periods[view.periods.length - 1];
   const ended = view.phase === 'ended';
@@ -84,6 +85,7 @@ export function EngineWeekEnd({ view, busy, send, minHeight, initial, onResults 
   const news: WeekEndNews[] = s.news.map(n => ({ key: n.key, card: n.card, title: n.title, body: n.body, impact: n.impact }));
   return (
     <WeekEndFlow
+      layout={layout}
       focusOnOpen={!initial}
       initial={initial}
       minHeight={minHeight}

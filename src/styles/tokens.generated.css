@@ -432,6 +432,18 @@
   --il-palette-width: 560px;
   --il-palette-max-width: calc(100% - 32px);
   --il-palette-results-max-height: 340px;
+  --il-phone-gutter-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  --il-phone-gutter-x: max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
+  --il-phone-label-tracking: var(--il-tracking-label);
+  --il-phone-top: max(12px, env(safe-area-inset-top, 0px));
+  --il-phone-dock-reserve: calc(96px + env(safe-area-inset-bottom, 0px));
+  --il-phone-dock-shadow: 0 -12px 32px var(--il-color-elevation-drawer);
+  --il-phone-sheet-max-height: calc(100dvh - 40px);
+  --il-phone-sheet-shadow: 0 -24px 64px var(--il-color-elevation-panel);
+  --il-phone-sheet-enter: ilIn var(--il-duration-base) ease;
+  --il-phone-kpi-width: 148px;
+  --il-phone-scroller-mask: linear-gradient(90deg, black calc(100% - 28px), transparent);
+  --il-phone-stylesetting-portrait: 44px;
   --il-profile-panel-columns: minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr);
   --il-profile-panel-shadow: 0 24px 64px var(--il-color-elevation-panel);
   --il-profile-panel-enter: ilIn var(--il-duration-base) ease;

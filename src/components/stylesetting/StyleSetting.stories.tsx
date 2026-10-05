@@ -159,3 +159,10 @@ function OneCard({ member }: { member: StyleSettingMember }) {
 }
 export const Card: StoryObj = { render: () => <OneCard member={TEAM[0]} /> };
 export const CardUnset: StoryObj = { render: () => <OneCard member={{ ...TEAM[2], style: null }} /> };
+
+/** Phone (390): stacked header, the definitions behind a button, full width cards, Review and confirm in a bottom bar. */
+const PhoneFrame = ({ children }: { children: ReactNode }) => <div style={{ width: 390, height: 844, overflowY: 'auto', transform: 'translateZ(0)', display: 'flex', flexDirection: 'column' }}>{children}</div>;
+export const Phone: StoryObj = { render: () => <PhoneFrame><StyleSettingView {...base} layout="phone" /></PhoneFrame> };
+export const PhoneNothingChosen: StoryObj = { render: () => <PhoneFrame><StyleSettingView {...base} members={NONE} layout="phone" /></PhoneFrame> };
+export const PhoneLongName: StoryObj = { render: () => <PhoneFrame><StyleSettingView {...base} members={LONG} layout="phone" /></PhoneFrame> };
+export const PhoneSummary: StoryObj = { render: () => <PhoneFrame><StyleSettingView {...base} view="summary" layout="phone" /></PhoneFrame> };

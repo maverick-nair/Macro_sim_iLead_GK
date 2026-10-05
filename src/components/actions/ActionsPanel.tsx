@@ -33,6 +33,13 @@ export interface ActionsPanelProps {
    * sponsor (`gain`), a CEO check in that took one (`neutral`). The design frames pass none.
    */
   notes?: Array<{ text: string; tone: 'gain' | 'neutral' }>;
+  /**
+   * `panel`: the card beside the board. `sheet`: the content of a phone's bottom sheet, which brings
+   * its own title ("Actions") and chrome: the selected person's actions come first (a tap on a person
+   * opened the sheet), then the team's, with room for `memberExtra` (the profile button) under the name.
+   */
+  layout?: 'panel' | 'sheet';
+  memberExtra?: ReactNode;
 }
 
 const MicIcon = () => (
@@ -51,9 +58,47 @@ const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-f
  * and a key to the icons. While an action is being planned the card shows that flow instead.
  * Every cost inside, including the drawer's, reads in the storyline's sub-period unit.
  */
-export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2, notes }: ActionsPanelProps) {
+export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2, notes, layout = 'panel', memberExtra }: ActionsPanelProps) {
   const { t } = useI18n();
   const fmt = useDays(subPeriodUnit);
+
+  if (layout === 'sheet') {
+    const sub = (headingLevel + 1) as HeadingLevel;
+    const memberBlock = member && (
+      <div className="flex flex-col gap-2">
+        <Heading level={sub} className={`m-0 ${section}`}>{t('actions.member', { name: member.firstName })}</Heading>
+        {memberExtra}
+        {member.tiles.map((a, i) => <ActionTile key={i} {...a} />)}
+      </div>
+    );
+    return (
+      <SubPeriodUnitContext.Provider value={subPeriodUnit}>
+        {drawer ? drawer : (
+          <div className="flex flex-col gap-3.5 px-(--il-phone-gutter-x) pt-3">
+            <span className="text-13 text-fg-secondary">{t('time.left', { amount: fmt(capacityLeft) })}</span>
+            {notes?.map(n => <span key={n.text} className={`text-12 ${n.tone === 'gain' ? 'font-700 text-status-gain' : 'text-fg-secondary'}`}>{n.text}</span>)}
+            {outOfCapacity && (
+              <div role="status" className="flex flex-col gap-1 rounded-14 bg-surface-raised p-3 text-13">
+                <b>{t('actions.out.title', { amount: fmt(capacity) })}</b>
+                <span className="text-fg-secondary">{t('actions.out.body', { period: periodUnit, unit: subPeriodUnit })}</span>
+              </div>
+            )}
+            {memberBlock}
+            <div className="flex flex-col gap-2">
+              <Heading level={sub} className={`m-0 ${section}`}>{t('actions.team')}</Heading>
+              {team.map((a, i) => <ActionTile key={i} {...a} />)}
+            </div>
+            {!member && <p className="m-0 text-13 text-fg-secondary">{t('phone.actions.member.empty')}</p>}
+            <div className="flex flex-wrap gap-3 text-12 text-fg-secondary">
+              <span className="flex items-center gap-1"><MicIcon />{t('actions.legend.live')}</span>
+              <span className="flex items-center gap-1"><BoltIcon />{t('actions.legend.instant')}</span>
+            </div>
+          </div>
+        )}
+      </SubPeriodUnitContext.Provider>
+    );
+  }
+
   return (
     <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pr-6 pb-6 pl-0">
       <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">

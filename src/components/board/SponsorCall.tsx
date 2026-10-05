@@ -1,4 +1,4 @@
-import { NoWrapButton } from '../../ds/Button';
+import { Button, NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 
 export interface SponsorCallProps {
@@ -13,6 +13,8 @@ export interface SponsorCallProps {
   laterLabel: string;
   onAnswer: () => void;
   onLater: () => void;
+  /** `phone`: the caller over its own row, then Later and Take the call side by side, 48px tall. */
+  layout?: 'desktop' | 'phone';
 }
 
 /**
@@ -20,8 +22,30 @@ export interface SponsorCallProps {
  * calling and why, Later and Take the call. It is an alert, so screen readers hear it as it rings;
  * it does not take focus, and the board stays usable around it.
  */
-export function SponsorCall({ name, initials, img, line, laterLabel, onAnswer, onLater }: SponsorCallProps) {
+export function SponsorCall({ name, initials, img, line, laterLabel, onAnswer, onLater, layout = 'desktop' }: SponsorCallProps) {
   const { t } = useI18n();
+  const caller = (
+    <div className="relative size-11 flex-none">
+      <div className="absolute -inset-1 animate-(--il-event-call-ring) rounded-round border-2 border-accent-default" />
+      <div className="flex size-11 items-center justify-center overflow-hidden rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">
+        {img ? <img src={img} alt="" className="size-full object-cover object-top mix-blend-multiply" /> : initials}
+      </div>
+    </div>
+  );
+  if (layout === 'phone') {
+    return (
+      <div role="alert" className="mx-(--il-phone-gutter-x) mb-3 flex animate-(--il-event-call-enter) flex-col gap-3 rounded-18 border border-accent-default bg-surface-material p-3 shadow-(--il-event-call-shadow)">
+        <div className="flex items-center gap-3.5 pl-1">
+          {caller}
+          <div className="flex min-w-0 flex-col"><b className="text-pretty">{t('events.call.title', { name })}</b><span className="text-12 text-pretty text-fg-secondary">{line}</span></div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="secondary" size="lg" onClick={onLater}>{laterLabel}</Button>
+          <Button variant="primary" size="lg" onClick={onAnswer}>{t('events.call.answer')}</Button>
+        </div>
+      </div>
+    );
+  }
   return (
     <div role="alert" className="mx-6 mt-0 mb-3 flex animate-(--il-event-call-enter) items-center gap-3.5 rounded-18 border border-accent-default bg-surface-material py-2.5 pr-3 pl-2.5 shadow-(--il-event-call-shadow)">
       <div className="relative size-11">

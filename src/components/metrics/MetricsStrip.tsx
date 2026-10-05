@@ -66,6 +66,12 @@ export interface MetricsStripProps {
   pulse: TeamPulse;
   target: MetricsTarget;
   sponsor: SponsorConfidence;
+  /**
+   * `row`: one row above the board (the design's 1440). `phone`: the KPI tiles in a sideways scroller
+   * (a named, focusable region that fades at its edge), Team Pulse and the target side by side, and
+   * sponsor confidence full width with its causes opening in place under it.
+   */
+  layout?: 'row' | 'phone';
 }
 
 const tile = 'flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12';
@@ -77,7 +83,7 @@ const PULSE = [
 const pct = (n: number) => `${Math.max(0, Math.min(100, n * 100))}%`;
 
 /** How the team is doing, in one row: the four team KPIs, Team Pulse, the money target and sponsor confidence. */
-export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps) {
+export function MetricsStrip({ kpis, pulse, target, sponsor, layout = 'row' }: MetricsStripProps) {
   const { t, number } = useI18n();
   const money = useMoney();
   const popId = useId();
@@ -97,66 +103,91 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   );
   const meter = sponsor.meter;
 
+  const pulseTile = pulse.value === undefined ? (
+    <div role="group" aria-label={t('metrics.pulse.aria', { upbeat: pulse.upbeat, steady: pulse.steady, struggling: pulse.struggling })} className={tile}>
+      <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
+      {moodBar}
+      {/* Counts wrap as a whole ("4 struggling") when the tile is narrow, never mid count. */}
+      <div className="flex flex-wrap gap-x-2.5 text-12 text-fg-secondary">
+        {groups.map(g => <span key={g.group} className="whitespace-nowrap"><b className="text-fg-primary">{number(g.n)}</b> {t('metrics.pulse.group', { group: g.group })}</span>)}
+      </div>
+    </div>
+  ) : (
+    // The engine's pulse: the number and its trend, then the mood bar. The counts are in the name and the tooltip.
+    <div role="group" title={t('metrics.pulse.tip', counts)}
+      aria-label={t('metrics.pulse.valueAria', { value: number(pulse.value), dir: pulseDir, unit: pulse.periodUnit ?? 'week', ...counts })} className={tile}>
+      <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
+      <div className="flex items-baseline gap-2">
+        <b className="text-22 font-700">{number(pulse.value)}</b>
+        <span className={`text-12 font-700 ${pulseTone}`}><span aria-hidden="true">{t('metric.trend.glyph', { dir: pulseDir })}</span>{' '}{t('metric.trend.word', { dir: pulseDir })}</span>
+      </div>
+      {moodBar}
+    </div>
+  );
+  const targetTile = (
+    <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} className={tile}>
+      <span className="text-12 text-fg-secondary">{target.label ?? t('metrics.target.label')}</span>
+      <div className="flex items-baseline gap-1.5"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
+      <div className="relative h-1.5 rounded-3 bg-track">
+        <div className="absolute top-0 bottom-0 left-0 rounded-3 bg-meter" style={{ width: pct(target.target ? target.value / target.target : 0) }} />
+        <div title={paceTitle} className="absolute -top-0.75 -bottom-0.75 w-0.5 bg-fg-primary" style={{ left: pct(target.pace) }} />
+      </div>
+    </div>
+  );
+  const sponsorTile = (cls: string) => (
+    <button type="button" onClick={sponsor.onToggle} aria-expanded={sponsor.open} aria-controls={sponsor.open ? popId : undefined}
+      className={`${tile} ${cls} cursor-pointer text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
+      <span className="text-12 text-fg-secondary">{t('metrics.sponsor.title')}</span>
+      <b className="text-16">{meter ? t('metrics.sponsor.levelValue', { level: sponsor.level, value: number(meter.value) }) : t('metrics.sponsor.level', { level: sponsor.level })}</b>
+      <div className="flex w-full gap-0.75">
+        {SPONSOR_LEVELS.map((l, i) => <div key={l} className={`h-1.5 flex-1 rounded-3 ${i < filled ? 'bg-meter' : 'bg-track'}`} />)}
+      </div>
+    </button>
+  );
+  const causes = (cls: string) => (
+    <div id={popId} className={`${cls} flex flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)`}>
+      <b>{t('metrics.sponsor.causes')}</b>
+      {meter && sponsor.causes.length === 0 && <span className="text-fg-secondary">{t('metrics.sponsor.none')}</span>}
+      {sponsor.causes.map((c, i) => {
+        const dir = c.delta > 0 ? 'up' : c.delta < 0 ? 'down' : 'flat';
+        const tone = dir === 'up' ? 'text-status-gain' : dir === 'down' ? 'text-status-decline' : 'text-fg-secondary';
+        // The arrow is decorative; the direction is read out in words.
+        return <span key={i}><span aria-hidden="true" className={tone}>{t('metrics.sponsor.mark', { dir })}</span><span className="sr-only">{t('metrics.sponsor.dir', { dir })}</span> {c.text}</span>;
+      })}
+      {meter && (
+        <>
+          <b className="border-t border-line-default pt-2">{t('metrics.sponsor.lines')}</b>
+          <span>{t('metrics.sponsor.unlock', { at: number(meter.unlockAt), name: meter.sponsorName })}</span>
+          <span>{t('metrics.sponsor.checkIn', { below: number(meter.checkInBelow), unit: meter.subPeriodUnit })}</span>
+        </>
+      )}
+    </div>
+  );
+
+  if (layout === 'phone') {
+    return (
+      <section aria-label={t('metrics.strip.aria')} className="flex min-w-0 flex-col gap-2.5 px-(--il-phone-gutter-x) pb-3">
+        {/* KPI tiles scroll sideways: a named region that takes focus, so keyboards can scroll it too. */}
+        <div role="region" aria-label={t('phone.kpis.aria')} tabIndex={0}
+          className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto mask-(--il-phone-scroller-mask) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+          {kpis.map(k => <div key={k.metric} className="w-(--il-phone-kpi-width) flex-none snap-start"><KpiTile {...k} /></div>)}
+          <span aria-hidden="true" className="w-4 flex-none" />
+        </div>
+        <div className="grid grid-cols-2 gap-2.5">{pulseTile}{targetTile}</div>
+        {sponsorTile('w-full')}
+        {sponsor.open && causes('')}
+      </section>
+    );
+  }
+
   return (
     <section aria-label={t('metrics.strip.aria')} className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 px-6 pt-0 pb-3.5">
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
-      {pulse.value === undefined ? (
-        <div role="group" aria-label={t('metrics.pulse.aria', { upbeat: pulse.upbeat, steady: pulse.steady, struggling: pulse.struggling })} className={tile}>
-          <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
-          {moodBar}
-          {/* Counts wrap as a whole ("4 struggling") when the tile is narrow, never mid count. */}
-          <div className="flex flex-wrap gap-x-2.5 text-12 text-fg-secondary">
-            {groups.map(g => <span key={g.group} className="whitespace-nowrap"><b className="text-fg-primary">{number(g.n)}</b> {t('metrics.pulse.group', { group: g.group })}</span>)}
-          </div>
-        </div>
-      ) : (
-        // The engine's pulse: the number and its trend, then the mood bar. The counts are in the name and the tooltip.
-        <div role="group" title={t('metrics.pulse.tip', counts)}
-          aria-label={t('metrics.pulse.valueAria', { value: number(pulse.value), dir: pulseDir, unit: pulse.periodUnit ?? 'week', ...counts })} className={tile}>
-          <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
-          <div className="flex items-baseline gap-2">
-            <b className="text-22 font-700">{number(pulse.value)}</b>
-            <span className={`text-12 font-700 ${pulseTone}`}><span aria-hidden="true">{t('metric.trend.glyph', { dir: pulseDir })}</span>{' '}{t('metric.trend.word', { dir: pulseDir })}</span>
-          </div>
-          {moodBar}
-        </div>
-      )}
-      <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} className={tile}>
-        <span className="text-12 text-fg-secondary">{target.label ?? t('metrics.target.label')}</span>
-        <div className="flex items-baseline gap-1.5"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
-        <div className="relative h-1.5 rounded-3 bg-track">
-          <div className="absolute top-0 bottom-0 left-0 rounded-3 bg-meter" style={{ width: pct(target.target ? target.value / target.target : 0) }} />
-          <div title={paceTitle} className="absolute -top-0.75 -bottom-0.75 w-0.5 bg-fg-primary" style={{ left: pct(target.pace) }} />
-        </div>
-      </div>
+      {pulseTile}
+      {targetTile}
       <div className="relative">
-        <button type="button" onClick={sponsor.onToggle} aria-expanded={sponsor.open} aria-controls={sponsor.open ? popId : undefined}
-          className={`${tile} size-full cursor-pointer text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
-          <span className="text-12 text-fg-secondary">{t('metrics.sponsor.title')}</span>
-          <b className="text-16">{meter ? t('metrics.sponsor.levelValue', { level: sponsor.level, value: number(meter.value) }) : t('metrics.sponsor.level', { level: sponsor.level })}</b>
-          <div className="flex w-full gap-0.75">
-            {SPONSOR_LEVELS.map((l, i) => <div key={l} className={`h-1.5 flex-1 rounded-3 ${i < filled ? 'bg-meter' : 'bg-track'}`} />)}
-          </div>
-        </button>
-        {sponsor.open && (
-          <div id={popId} className="absolute top-full right-0 z-40 mt-2 flex w-70 flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)">
-            <b>{t('metrics.sponsor.causes')}</b>
-            {meter && sponsor.causes.length === 0 && <span className="text-fg-secondary">{t('metrics.sponsor.none')}</span>}
-            {sponsor.causes.map((c, i) => {
-              const dir = c.delta > 0 ? 'up' : c.delta < 0 ? 'down' : 'flat';
-              const tone = dir === 'up' ? 'text-status-gain' : dir === 'down' ? 'text-status-decline' : 'text-fg-secondary';
-              // The arrow is decorative; the direction is read out in words.
-              return <span key={i}><span aria-hidden="true" className={tone}>{t('metrics.sponsor.mark', { dir })}</span><span className="sr-only">{t('metrics.sponsor.dir', { dir })}</span> {c.text}</span>;
-            })}
-            {meter && (
-              <>
-                <b className="border-t border-line-default pt-2">{t('metrics.sponsor.lines')}</b>
-                <span>{t('metrics.sponsor.unlock', { at: number(meter.unlockAt), name: meter.sponsorName })}</span>
-                <span>{t('metrics.sponsor.checkIn', { below: number(meter.checkInBelow), unit: meter.subPeriodUnit })}</span>
-              </>
-            )}
-          </div>
-        )}
+        {sponsorTile('size-full')}
+        {sponsor.open && causes('absolute top-full right-0 z-40 mt-2 w-70')}
       </div>
     </section>
   );

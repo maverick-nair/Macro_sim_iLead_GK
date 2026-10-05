@@ -1,10 +1,10 @@
-import { useState, type MouseEvent } from 'react';
+import { lazy, Suspense, useState, type MouseEvent } from 'react';
 import type { MoodKey, StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 import { LOW_BELOW, MetricBar } from '../metric/MetricBar';
 import { StyleControl } from '../style/StyleControl';
 
-const MOOD_DOT: Record<MoodKey, string> = {
+export const MOOD_DOT: Record<MoodKey, string> = {
   happy: 'bg-member-mood-happy',
   neutral: 'bg-member-mood-neutral',
   thinking: 'bg-member-mood-thinking',
@@ -13,7 +13,7 @@ const MOOD_DOT: Record<MoodKey, string> = {
 };
 
 /** Away members read grey; strained moods warm the backdrop so trouble shows before any number. */
-function backdrop(mood: MoodKey, away: boolean): string {
+export function backdrop(mood: MoodKey, away: boolean): string {
   if (away) return 'bg-(image:--il-member-portrait-away)';
   return mood === 'frustrated' || mood === 'concerned' ? 'bg-(image:--il-member-portrait-strained)' : 'bg-(image:--il-member-portrait-calm)';
 }
@@ -46,13 +46,13 @@ export function TrustRing({ value, placement = 'corner' }: TrustRingProps) {
   );
 }
 
-const Check = () => (
+export const Check = () => (
   <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
 );
-const Chat = () => (
+export const Chat = () => (
   <svg className="size-3.25" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
 );
-const Clock = () => (
+export const Clock = () => (
   <svg className="size-3.25" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 );
 const External = () => (
@@ -60,6 +60,8 @@ const External = () => (
 );
 
 const signal = 'flex size-6 items-center justify-center rounded-round bg-member-signal text-member-signal-fg';
+
+const MemberRow = lazy(() => import('./MemberRow').then(m => ({ default: m.MemberRow })));
 
 export interface MemberCardProps {
   name: string;
@@ -99,6 +101,18 @@ export interface MemberCardProps {
   styleDisabledReason?: string;
   /** A letter was picked while the style is disabled (to say why, for example in a toast). */
   onStyleDisabledPick?: () => void;
+  /**
+   * `card`: the board's card (1440 and 1024). `row`: a phone's team list, one tappable row per person
+   * (portrait, name and role that wrap, mood, style, signals and the trust ring). The row has no
+   * profile button or style control of its own: on a phone, tapping it opens the person's actions and
+   * profile in a sheet, and the style is set on the style setting screen.
+   */
+  layout?: 'card' | 'row';
+  /**
+   * Row only. `open`: the row opens the person's sheet (selected shows as current). `toggle`: picking
+   * people for an action, the row is a toggle button (aria-pressed).
+   */
+  rowAction?: 'open' | 'toggle';
 }
 
 /**
@@ -120,6 +134,9 @@ export function MemberCard(props: MemberCardProps) {
   const pill = away ? t('member.mood.away') : moodName;
   const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
   const profile = (e: MouseEvent) => { e.stopPropagation(); onOpenProfile(); };
+
+  // The phone's row loads with the phone board.
+  if (props.layout === 'row') return <Suspense><MemberRow {...props} /></Suspense>;
 
   // The card is a plain container so the profile button and style control are not nested inside a
   // button (WCAG 4.1.2). A visually hidden toggle carries selection for keyboard and screen readers;

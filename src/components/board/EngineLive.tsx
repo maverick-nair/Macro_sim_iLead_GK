@@ -13,7 +13,7 @@ import { LiveShell } from '../liveshell/LiveShell';
 import { MeetingStage } from '../liveshell/MeetingStage';
 import { RolePlayStage } from '../liveshell/RolePlayStage';
 import { SponsorStage, type SponsorNote } from '../liveshell/SponsorStage';
-import type { LiveBrief, LiveConversation, LiveFormat, LiveMode, LiveMood, LivePerson, LiveTurn } from '../liveshell/types';
+import type { LiveBrief, LiveConversation, LiveFormat, LiveLayout, LiveMode, LiveMood, LivePerson, LiveTurn } from '../liveshell/types';
 import { ChatStage } from '../liveformats/ChatStage';
 import { CompareView } from '../liveformats/CompareView';
 import { InterviewStage, type Candidate } from '../liveformats/InterviewStage';
@@ -43,6 +43,8 @@ export interface EngineLiveProps {
   /** Called once the interaction is left without an evaluation (nothing was said). */
   onDone: () => void;
   onError: (code: string) => void;
+  /** `phone`: the design's 390 live screens (frames m1 to m5): the shell and every stage take their phone layout. */
+  layout?: LiveLayout;
 }
 
 const PLACEHOLDER = '/assets/npc/placeholder.svg';
@@ -54,7 +56,7 @@ const OWN_KEYS = 'input, textarea, select, button, a[href], [contenteditable="tr
 const moodRing = (m: LiveView['brief']['mood']): LiveMood => (m === 'frustrated' || m === 'concerned' ? (m === 'frustrated' ? 'frustrated' : 'guarded') : 'open');
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, suspended = false, onFinish, onDone, onError }: EngineLiveProps) {
+export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, suspended = false, onFinish, onDone, onError, layout = 'desktop' }: EngineLiveProps) {
   const { t } = useI18n();
   const client = useEngineClient();
   const intent = useIntent();
@@ -345,6 +347,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
       case 'meeting':
         return (
           <MeetingStage
+            layout={layout}
             attendees={lv.people.map(p => ({ ...person(p), speaking: !!current && current.speaker !== 'you' && current.speaker.id === p.id && conversation === 'npcSpeaking', raisedHand: false }))}
             caption={caption} spokenLine={spokenLine} onCallOn={id => setDraft(t('board.live.callOn', { name: (byId.get(id)?.name ?? '').split(' ')[0] }))}
           />
@@ -355,6 +358,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         const stages = v.funnel.map(st => ({ key: st.key, name: st.name, count: round1(st.throughput), ideal: round1(st.idealThroughput) }));
         return (
           <SponsorStage
+            layout={layout}
             sponsor={speaker} speaking={conversation === 'npcSpeaking'} caption={caption} spokenLine={spokenLine}
             notes={prompts.map((prompt, i) => ({ value: notes[i], prompt })) as [SponsorNote, SponsorNote, SponsorNote]}
             onNoteChange={(i, value) => setNotes(n => n.map((x, j) => (j === i ? value : x)))}
@@ -364,22 +368,23 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         );
       }
       case 'chat':
-        return <ChatStage npc={npcOf(speaker)} turns={stageTurns(turns)} ended={lv.closed ? 'npc' : null} periodUnit={v.clock.periodUnit} subPeriodUnit={v.clock.subPeriodUnit} />;
+        return <ChatStage layout={layout} npc={npcOf(speaker)} turns={stageTurns(turns)} ended={lv.closed ? 'npc' : null} periodUnit={v.clock.periodUnit} subPeriodUnit={v.clock.subPeriodUnit} />;
       case 'interview': {
         const cands = (lv.candidates ?? []).map(candidateOf);
         if (comparing && cands.length === 2) {
-          return <CompareView candidates={[cands[0], cands[1]]} notes={cvNotes}
+          return <CompareView layout={layout} candidates={[cands[0], cands[1]]} notes={cvNotes}
             onHire={id => finishInterview(id)} onPassBoth={() => finishInterview(null)} />;
         }
         const cand = cands[lv.candidate ?? 0];
         return cand ? (
-          <InterviewStage candidate={cand} position={{ n: (lv.candidate ?? 0) + 1, total: cands.length }} onReplay={replay} captions={captions}
+          <InterviewStage layout={layout} candidate={cand} position={{ n: (lv.candidate ?? 0) + 1, total: cands.length }} onReplay={replay} captions={captions}
             turns={stageTurns(segment(turns, cand.id))} notes={cvNotes[cand.id] ?? ''} onNotes={n => setCvNotes(x => ({ ...x, [cand.id]: n }))} />
         ) : null;
       }
       case 'plan':
         return (
           <PlanForm
+            layout={layout}
             fields={plan} onChange={(field, value) => setPlan(f => ({ ...f, [field]: value }))}
             onDictate={field => {
               if (planField === field) { speech.stop(); return; }
@@ -398,7 +403,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
           />
         );
       default:
-        return <RolePlayStage person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} onReplay={replay} />;
+        return <RolePlayStage layout={layout} person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} onReplay={replay} />;
     }
   })();
 
@@ -408,6 +413,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   return (
     <div ref={root} className="flex flex-1 flex-col">
       <LiveShell
+        layout={layout}
         format={shellFormat}
         personName={speaker.name}
         pronoun={speaker.pronoun}
@@ -446,7 +452,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         {stage}
       </LiveShell>
       <Dialog.Root open={confirmPass} onOpenChange={setConfirmPass}>
-        <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-12">
+        <Dialog.Overlay className={`fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim ${layout === 'phone' ? 'p-4' : 'p-6'} backdrop-blur-12`}>
           <Dialog.Content aria-modal="true"
             onCloseAutoFocus={e => { const o = passOpener.current; if (o?.isConnected) { e.preventDefault(); o.focus(); } }}
             className="flex w-full max-w-(--il-board-panel-max-width) flex-col gap-3 rounded-26 border border-line-strong bg-surface-solid p-6 outline-0">

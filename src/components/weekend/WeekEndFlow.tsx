@@ -36,6 +36,8 @@ export interface WeekEndFlowProps {
   onChooseReward: (key: string) => void | boolean | Promise<boolean>;
   /** The last step's button: start the next period, or see the results once the run is over. */
   onFinish: () => void;
+  /** `phone`: a 390 screen. The report and the rewards stack in one column, with phone gutters. */
+  layout?: 'desktop' | 'phone';
 }
 
 /**
@@ -77,6 +79,7 @@ export function WeekEndFlow(p: WeekEndFlowProps) {
   const unit = p.periodUnit;
   const finishLabel = p.ended ? t('weekend.results') : t('weekend.next', { unit, n: p.period + 1 });
   const lastStep = steps[steps.length - 1];
+  const phone = p.layout === 'phone';
 
   const take = async () => {
     if (!unlock || reward === null || taking) return;
@@ -90,13 +93,13 @@ export function WeekEndFlow(p: WeekEndFlowProps) {
   };
 
   return (
-    <div ref={root} className="relative flex flex-1 flex-col gap-5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
+    <div ref={root} className={`relative flex flex-1 flex-col gap-5 ${phone ? 'px-(--il-phone-gutter-x) pt-(--il-phone-top) pb-(--il-phone-gutter-bottom)' : 'px-8 pt-5 pb-8'}`} style={{ minHeight: p.minHeight }}>
       <WeekEndHeader period={p.period} periods={p.periods} periodUnit={unit} onShortcut={p.onShortcut} />
       {step === 'banner' && <BannerStep period={p.period} periodUnit={unit} headline={p.headline} line={p.line} stars={p.stars} onNext={() => next()} />}
       {step === 'report' && (
         <>
           <h1 tabIndex={-1} className="sr-only">{t('weekend.report.heading', { unit, n: p.period })}</h1>
-          <WeekEndReport report={p.report} period={p.period} periodUnit={unit} subPeriodUnit={p.subPeriodUnit} last={!!p.ended || p.period >= p.periods}
+          <WeekEndReport layout={p.layout} report={p.report} period={p.period} periodUnit={unit} subPeriodUnit={p.subPeriodUnit} last={!!p.ended || p.period >= p.periods}
             continueLabel={lastStep === 'report' ? finishLabel : t('weekend.report.continue')} onContinue={() => next()} />
         </>
       )}
@@ -106,7 +109,7 @@ export function WeekEndFlow(p: WeekEndFlowProps) {
           onNext={() => (badge < p.badges.length - 1 ? setBadge(badge + 1) : next('badge'))} />
       )}
       {step === 'unlock' && unlock && (
-        <UnlockStep sponsorFirstName={unlock.sponsorFirstName} period={p.period + 1} periodUnit={unit} rewards={unlock.rewards}
+        <UnlockStep layout={p.layout} sponsorFirstName={unlock.sponsorFirstName} period={p.period + 1} periodUnit={unit} rewards={unlock.rewards}
           chosen={reward} busy={taking || p.busy} onChoose={setReward} onTake={() => void take()} />
       )}
       {step === 'news' && news[page] && (
