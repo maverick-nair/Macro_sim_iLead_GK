@@ -375,8 +375,15 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Not engine data yet:** the participant's name (the report says "Your development report" until the launch sends it), the report date (the client's today), the report's audience, per level colours, calibration agreement and retention for methodology.
 - **Budget:** first load is 196.8 KB of 200 KB. The catalog is one chunk; M7 should split the end, report and week end copy into their lazy chunks.
 
+**D66. Your answers before M7.** Decided (2026-10-05).
+- **Rubric and skills stay separate (D64):** storyline rubrics decide the game band; the 8 skills are rated alongside for the report. No recalibration.
+- **Week score with no live conversation (D62):** 0.8 × style fit + 0.2 × funnel, as built.
+- **Engine text in other languages (D60):** the server localizes. GenieKreator authors each language and the engine words its text in the participant's language; the contract keeps plain strings.
+- **Sales Elevator money (D19):** keep the calibrated values: $240,000 target, $30,000 per deal, 8 leads a day.
+- **Before M7:** close every gap left from M0 to M6 (the phone board, leaderboard and celebration level, assessor review, Pause, raised hands, the mic test, the resume recap, PDF and email contracts, launch name and date, 200% text, the accessibility leftovers, the board at 1024, the bundle budget).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
 - Resolved: the GenieKreator Configuration Spec and the other GenieKreator source docs are in `docs/genie/`, copied from the GenieKreator authoring repo.
-- Sales Elevator money values (target, value per deal, lead input). Calibration will propose them; confirm or replace.
+- Resolved (D66): Sales Elevator money values stay as calibrated.
