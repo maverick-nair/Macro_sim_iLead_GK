@@ -38,5 +38,14 @@
   "end.report.pdf": "Download PDF",
   "end.report.email": "Email to me",
   "end.email.sent": "Report sent to your work email.",
-  "end.email.failed": "The email did not go through. Try again."
+  "end.email.failed": "The email did not go through. Try again.",
+  "end.cohort.title": "{scope, select, unit {Your business unit} global {All participants} other {Your cohort}}",
+  "end.cohort.rank": "Rank {rank, number, integer} of {total, number, integer}",
+  "end.cohort.caption": "{scope, select, unit {Your business unit} global {All participants} other {Your cohort}} by Leadership Score, top {size, number, integer}{outside, select, true {, then your own place} other {}}. Your row is marked You.",
+  "end.cohort.col.rank": "Rank",
+  "end.cohort.col.name": "Name",
+  "end.cohort.col.score": "Score",
+  "end.cohort.col.tier": "Tier",
+  "end.cohort.you": "You",
+  "end.cohort.colleague": "A colleague"
 }

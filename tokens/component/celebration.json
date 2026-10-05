@@ -1,0 +1,29 @@
+{
+  "$description": "Celebration level (Configuration Spec, Celebrations: none, subtle, full). Subtle is the design and needs no tokens here: the component tokens it reads (gamification.star.enter, gamification.badge.award-*, weekend.glow.fill, weekend.reward.*, end.glow.fill, end.tier.*) are the subtle look. `data-celebration` on the board container swaps them for these (src/styles/celebration.css). Reduced motion always wins: the global rule removes every animation and transition, and the burst is drawn only with motion allowed.",
+  "celebration": {
+    "none": {
+      "star-enter": { "value": "none", "$description": "Stars are simply there" },
+      "award-enter": { "value": "none", "$description": "The badge award is simply there" },
+      "award-shadow": { "value": "none", "$description": "No glow around the badge award" },
+      "glow": { "value": "none", "$description": "No halo behind the week end banner or the end screen headline" },
+      "tier-fill": { "value": "linear-gradient({color.fg.primary},{color.fg.primary})", "$description": "The tier word in plain text colour, no spectrum" },
+      "reward-lift": { "value": "none", "$description": "The chosen reward card stays in place (its border and fill still mark it)" },
+      "reward-transition": { "value": "none" }
+    },
+    "full": {
+      "star-enter": { "value": "ilPop {duration.slow} {easing.overshoot-strong} both", "$description": "Stars pop in from small, on the D24 scale" },
+      "award-enter": { "value": "ilPop {duration.slow} {easing.overshoot} both", "$description": "The badge award pops in" },
+      "award-shadow": { "value": "0 0 120px {color.celebration.glow}", "$description": "A wider glow around the badge award" },
+      "weekend-glow": { "value": "radial-gradient(circle, {color.celebration.glow}, transparent 78%)", "$description": "A wider halo behind the week end banner" },
+      "end-glow": { "value": "radial-gradient(ellipse at center, {color.celebration.glow}, transparent 75%)", "$description": "A wider glow behind the end screen headline" },
+      "tier-glow": { "value": "drop-shadow(0 0 18px {color.celebration.glow})", "$description": "The tier word glows" },
+      "reward-lift": { "value": "translateY(-8px) scale(1.02)", "$description": "The chosen reward card rises a little more" },
+      "reward-transition": { "value": "transform {duration.base} {easing.spring}" }
+    },
+    "burst": {
+      "fill": { "value": "radial-gradient(circle, transparent 42%, {color.celebration.glow} 52%, transparent 68%)", "$description": "A ring of light that opens out behind the stars and the badge medal (full only)" },
+      "inset": { "value": "-40px", "$description": "How far the burst reaches past its element" },
+      "motion": { "value": "ilBurst {duration.slow} {easing.brand} both", "$description": "Once, on the D24 scale" }
+    }
+  }
+}

@@ -19,7 +19,7 @@ export function StarMeter({ earned, total = 3 }: StarMeterProps) {
   const { t } = useI18n();
   const uid = useId().replace(/:/g, '');
   return (
-    <div role="img" aria-label={t('gamification.stars.aria', { earned, total })} className="relative flex gap-3.5">
+    <div role="img" aria-label={t('gamification.stars.aria', { earned, total })} className="il-burst relative flex gap-3.5">
       {Array.from({ length: total }, (_, i) => {
         const on = i < earned;
         const gid = `${uid}wg${i}`;

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { PeriodUnit } from '../action/days';
 import type { BadgeChipProps } from '../gamification/Badge';
 
@@ -84,4 +85,6 @@ export interface EndScreenProps {
   emailing?: boolean;
   /** The read only board. Absent in the design gallery. */
   onLookAtBoard?: () => void;
+  /** The cohort leaderboard (CohortPanel), below the rest. Absent in the design gallery (frame e1 has none) and when the leaderboard is off. */
+  cohort?: ReactNode;
 }

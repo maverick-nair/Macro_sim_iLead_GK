@@ -60,7 +60,7 @@ export function BadgeAward({ name, reason, icon, index, total, onSkip, onContinu
   const { t } = useI18n();
   return (
     <div role="dialog" aria-label={t('gamification.badge.awardAria')} className="flex w-115 max-w-full animate-(--il-gamification-badge-award-enter) flex-col items-center gap-3.5 rounded-30 border border-line-strong bg-surface-material p-8 text-center shadow-(--il-gamification-badge-award-shadow)">
-      <div aria-hidden="true" className="flex size-35 items-center justify-center rounded-round bg-(image:--il-fill-spectrum) text-brand-deep-space shadow-(--il-gamification-badge-medal-ring)">{icon}</div>
+      <div aria-hidden="true" className="il-burst flex size-35 items-center justify-center rounded-round bg-(image:--il-fill-spectrum) text-brand-deep-space shadow-(--il-gamification-badge-medal-ring)">{icon}</div>
       <span className="text-12 font-700 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase">{t('gamification.badge.awardCount', { index, total })}</span>
       <h2 tabIndex={-1} className="m-0 text-30 font-700 outline-none">{name}</h2>
       <p className="m-0 text-fg-secondary">{reason}</p>

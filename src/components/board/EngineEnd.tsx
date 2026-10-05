@@ -8,6 +8,9 @@ import { EndScreen } from '../end/EndScreen';
 import type { EndScreenProps } from '../end/types';
 import { badgeIcon } from '../gamification/badgeIcons';
 import { shelfOrder } from '../gamification/display';
+import { useLeaderboard } from '../gamification/leaderboard';
+import { cohortRows } from '../end/cohort';
+import { CohortPanel } from '../end/CohortPanel';
 import type { BadgeChipProps } from '../gamification/Badge';
 import '../end/messages';
 
@@ -91,6 +94,9 @@ export function EngineEnd({ view, voiceConsent, send, say, onViewReport, onLookA
 
   const provider = useMemo(() => createSpeech('reflection'), []);
   const speech = useSpeech(provider, { consented: voiceConsent, mode: 'pushToTalk' });
+  // The cohort leaderboard, when on (off for selection use). Left out while loading and on error.
+  const board = useLeaderboard(view);
+  const lb = view.gamification.leaderboard;
 
   // Dictation lands in the answer box once it has been heard, for editing like typed words.
   useEffect(() => {
@@ -174,6 +180,7 @@ export function EngineEnd({ view, voiceConsent, send, say, onViewReport, onLookA
       onEmail={() => void email()}
       emailing={emailing}
       onLookAtBoard={() => void leave(onLookAtBoard)}
+      cohort={board && <CohortPanel scope={lb.scope} size={lb.size} {...cohortRows(t, board, view.gamification.tiers, lb.size)} />}
     />
   );
 }
