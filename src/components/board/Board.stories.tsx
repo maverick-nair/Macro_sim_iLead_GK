@@ -1,13 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useEffect, useState } from 'react';
-import type { EngineView, MetricChange } from '../../engine/contract';
+import { useState } from 'react';
+import type { MetricChange } from '../../engine/contract';
 import { EngineProvider } from '../../engine/react';
-import { play } from '../../engine/sim/policies';
 import { createMockClient, defaultStoryline } from '../../engine/mock';
 import { EngineBoard } from './EngineBoard';
 import { EventCard, type EventCardKind } from './EventCard';
 import { SponsorCall } from './SponsorCall';
-import { PeriodPanel } from './PeriodPanel';
 
 const meta: Meta = { title: 'Board/Engine board', parameters: { layout: 'fullscreen' } };
 export default meta;
@@ -108,16 +106,3 @@ export const SponsorCallOnBoard: StoryObj = {
     </EngineProvider>
   )
 };
-
-/** The results panel at the end of the run, from a real run of the good policy. The week end has its own stories (`Week end`). */
-function RunEndedPanel() {
-  const [view, setView] = useState<EngineView | null>(null);
-  useEffect(() => {
-    void (async () => {
-      const r = await play(defaultStoryline(), 'good', 3);
-      setView(r.view as unknown as EngineView);
-    })();
-  }, []);
-  return view ? <PeriodPanel view={view} money={n => `$${Math.round(n).toLocaleString('en-US')}`} onClose={noop} /> : null;
-}
-export const RunEnded: StoryObj = { render: () => <RunEndedPanel /> };

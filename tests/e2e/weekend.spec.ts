@@ -158,7 +158,7 @@ test('a later week end in the light theme: so far view of the funnel, every step
   await expect(page.getByRole('heading', { level: 1, name: 'Set your leadership styles for week 4' })).toBeFocused();
 });
 
-test('the end of the run: banner, report and the new badges, then the results', async ({ page }) => {
+test('the end of the run: banner, report and the new badges, then the end screen', async ({ page }) => {
   await page.goto('/?start=board&period=8');
   await setStyles(page);
   await endWeek(page);
@@ -168,8 +168,8 @@ test('the end of the run: banner, report and the new badges, then the results', 
   expect(seen).toContain('badge');
   expect(seen).not.toContain('unlock');
   expect(seen).not.toContain('news');
-  const panel = page.getByRole('dialog', { name: 'The run is over' });
-  await expect(panel.getByRole('heading', { name: 'The run is over' })).toBeFocused();
+  // The end screen replaces the week end (end.spec.ts walks it); focus starts on its headline.
+  await expect(page.getByRole('heading', { level: 1, name: /^You finished at \w+\.$/ })).toBeFocused();
   expect(await axe(page)).toEqual([]);
 });
 

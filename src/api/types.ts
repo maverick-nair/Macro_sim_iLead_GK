@@ -25,6 +25,8 @@ export interface IleadApi {
    */
   submitInteraction(input: InteractionSubmission): Promise<Outcome>;
   endWeek(input: { week: number }): Promise<void>;
+  /** Emails the participant's development report to their work address, once the run has ended. */
+  emailReport(): Promise<void>;
 }
 
 export interface SessionSnapshot {

@@ -7,6 +7,7 @@ import action from './action.json';
 import actions from './actions.json';
 import board from './board.json';
 import common from './common.json';
+import end from './end.json';
 import events from './events.json';
 import gamification from './gamification.json';
 import hud from './hud.json';
@@ -30,4 +31,4 @@ import team from './team.json';
 import time from './time.json';
 import weekend from './weekend.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...style, ...stylesetting, ...team, ...time, ...weekend };
+export const en = { ...action, ...actions, ...board, ...common, ...end, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...style, ...stylesetting, ...team, ...time, ...weekend };

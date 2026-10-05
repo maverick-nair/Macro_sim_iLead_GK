@@ -1,0 +1,31 @@
+{
+  "end": {
+    "glow": {
+      "fill": { "value": "radial-gradient(ellipse at center, {color.end.glow}, transparent 65%)", "$description": "Glow at the top of the end screen, behind the headline" }
+    },
+    "logo": {
+      "tracking": { "value": "-0.03em" }
+    },
+    "hero": {
+      "columns": { "value": "minmax(0,1fr) auto", "$description": "Headline, then the tier and score card" }
+    },
+    "display": {
+      "tracking": { "value": "-0.03em", "$description": "The 60px tier headline" }
+    },
+    "score": {
+      "tracking": { "value": "-0.02em", "$description": "The Leadership Score number" }
+    },
+    "results": {
+      "columns": { "value": "minmax(0,1.6fr) repeat(5,minmax(0,1fr))", "$description": "Target achieved, then five result tiles" }
+    },
+    "body": {
+      "columns": { "value": "minmax(0,1.15fr) minmax(0,1fr)", "$description": "Moments and badges, then the reflection" }
+    },
+    "moment": {
+      "columns": { "value": "52px minmax(0,1fr) auto", "$description": "Portrait, title and when, tag" }
+    },
+    "rating": {
+      "border": { "value": "1.5px", "$description": "Unselected rating buttons" }
+    }
+  }
+}

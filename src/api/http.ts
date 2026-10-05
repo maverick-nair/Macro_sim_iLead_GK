@@ -33,6 +33,7 @@ export function createHttpApi(baseUrl: string, opts: { getToken?: () => string |
     setStyle: ({ week, memberId, style }) => request('PUT', `/weeks/${week}/styles/${encodeURIComponent(memberId)}`, { style }),
     planAction: input => request('POST', `/weeks/${input.week}/actions`, input),
     submitInteraction: input => request<Outcome>('POST', '/interactions', input),
-    endWeek: ({ week }) => request('POST', `/weeks/${week}/end`)
+    endWeek: ({ week }) => request('POST', `/weeks/${week}/end`),
+    emailReport: () => request('POST', '/report/email')
   };
 }
