@@ -8,14 +8,16 @@ export const STYLE_KEYS: readonly StyleKey[] = ['D', 'G', 'P', 'E'];
 /** Board cards use the compact control; the style setting screen uses the roomier one. */
 const SIZES = {
   sm: { segment: 'min-h-6.5 text-12', tip: 'w-52.5 shadow-(--il-style-tooltip-shadow)' },
-  md: { segment: 'min-h-7.5 text-13', tip: 'w-50' }
+  md: { segment: 'min-h-7.5 text-13', tip: 'w-50' },
+  /** A phone's style setting: 44px letters (WCAG 2.5.8, the design's phone targets). */
+  lg: { segment: 'min-h-11 text-15', tip: 'w-50' }
 } as const;
 
 export interface StyleTooltipProps {
   style: StyleKey;
   /** Which edge of the segment the tooltip lines up with, so it never hangs off the card. */
   align: 'start' | 'end';
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
 }
 
 /** Full name and meaning of a style, shown above a segment on hover or focus. */
@@ -36,7 +38,7 @@ export interface StyleControlProps {
   onChange: (style: StyleKey) => void;
   /** Names the group for screen readers: "Leadership style for Kent Goldberg". */
   memberName: string;
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | 'lg';
   /**
    * The style whose tooltip is open. Pass it (with onTooltipChange) to control the tooltip, for
    * example to raise the surrounding card while it shows; leave it out and the control keeps its own.

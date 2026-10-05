@@ -1,0 +1,26 @@
+{
+  "phone": {
+    "gutter-bottom": { "value": "calc(16px + env(safe-area-inset-bottom, 0px))", "$description": "Space under the last control on a phone: 16px plus the home indicator's safe area" },
+    "gutter-x": { "value": "max(16px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px))", "$description": "Side padding on a phone, wider in landscape where a notch takes a side" },
+    "label-tracking": { "value": "{tracking.label}", "$description": "Uppercase section labels on the phone board (\"YOUR TEAM\", frame m6)" },
+    "top": { "value": "max(12px, env(safe-area-inset-top, 0px))", "$description": "Top padding of the phone HUD, under a status bar or notch" },
+    "dock": {
+      "reserve": { "value": "calc(96px + env(safe-area-inset-bottom, 0px))", "$description": "Room left under the board for the dock (a 48px bar, its padding and the safe area), so the last row is never hidden" },
+      "shadow": { "value": "0 -12px 32px {color.elevation.drawer}" }
+    },
+    "sheet": {
+      "max-height": { "value": "calc(100dvh - 40px)", "$description": "A bottom sheet stops 40px short of the top, so the board still shows behind it" },
+      "shadow": { "value": "0 -24px 64px {color.elevation.panel}" },
+      "enter": { "value": "ilIn {duration.base} ease", "$description": "Sheets rise in like the drawers (D24)" }
+    },
+    "kpi": {
+      "width": { "value": "148px", "$description": "A KPI tile in the phone's sideways scroller: two and a half tiles show at 390, so the cut off tile says there is more" }
+    },
+    "scroller": {
+      "mask": { "value": "linear-gradient(90deg, black calc(100% - 28px), transparent)", "$description": "The sideways scroller fades out at its right edge, a cue that it scrolls" }
+    },
+    "stylesetting": {
+      "portrait": { "value": "44px" }
+    }
+  }
+}

@@ -12,7 +12,7 @@ const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ 
 // Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
 const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
 
-/** Phones get the 390 layouts the design defines for live interactions, outcomes and the report. */
+/** Phones get the 390 layouts: the design's for live interactions, the outcome and the report, and the phone board. */
 function useIsPhone(): boolean {
   const query = '(max-width: 600px)';
   const [phone, setPhone] = useState(() => matchMedia(query).matches);
@@ -29,7 +29,7 @@ function useIsPhone(): boolean {
  * Full screen participant app.
  * `?theme=light` opens the light theme, `?client=halden` the sample client theme, `?engine=off` the
  * design prototype's fixed board instead of the engine, `?start=board` skips onboarding.
- * Phones keep the prototype until the 390 board is designed (D15).
+ * Phones play on the engine too, with the phone board (`board/PhoneBoard.tsx`); `?engine=off` still opens the prototype.
  */
 function Play() {
   const q = new URLSearchParams(location.search);
@@ -43,7 +43,7 @@ function Play() {
   return (
     <ApiContext.Provider value={api}>
       <EngineProvider client={engine}>
-        <App key={phone ? 'phone' : 'desk'} screen={q.get('start') === 'board' ? 'board' : undefined} engine={!phone && q.get('engine') !== 'off'} theme={q.get('theme') === 'light' ? 'light' : 'dark'} clientTheme={q.get('client') === 'halden'} mobile={phone} minHeight="100vh" />
+        <App key={phone ? 'phone' : 'desk'} screen={q.get('start') === 'board' ? 'board' : undefined} engine={q.get('engine') !== 'off'} theme={q.get('theme') === 'light' ? 'light' : 'dark'} clientTheme={q.get('client') === 'halden'} mobile={phone} minHeight="100vh" />
       </EngineProvider>
     </ApiContext.Provider>
   );

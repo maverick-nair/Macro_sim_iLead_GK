@@ -256,7 +256,7 @@ export function App(p: AppProps) {
                 : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
               {engine && (scr === 'style' || scr === 'board') && (
                 <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
-                  <EngineBoard client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
+                  <EngineBoard phone={mobile} client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')} />
                 </div>
               )}
               {!engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}

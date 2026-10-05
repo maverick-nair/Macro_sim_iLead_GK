@@ -1,4 +1,4 @@
-import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { lazy, Suspense, useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import type { StyleKey } from '../../data/types';
 import { NoWrapButton } from '../../ds/Button';
 import { Heading } from '../Heading';
@@ -8,7 +8,9 @@ import { mark, rich } from './rich';
 import { StyleSettingCard } from './StyleSettingCard';
 import { StyleSettingList } from './StyleSettingList';
 import { StyleSummary } from './StyleSummary';
-import type { PeriodUnit, StyleSettingMember } from './types';
+// The phone layout loads only on phones, so the board's first load stays in budget.
+const PhoneView = lazy(() => import('./StyleSettingPhone').then(m => ({ default: m.StyleSettingPhone })));
+import { initials, type PeriodUnit, type StyleSettingMember } from './types';
 
 export type StyleSettingLayout = 'cards' | 'list';
 export type StyleSettingViewMode = StyleSettingLayout | 'summary';
@@ -55,16 +57,17 @@ export interface StyleSettingViewProps {
    * Inside a page that has its own `main` and `h1` (the engine board), it renders a plain region and an `h2`.
    */
   embedded?: boolean;
+  /**
+   * `desktop`: the 1440 design. `phone`: a 390 screen. The header stacks, the sponsor's prompt leads,
+   * the four style definitions open from a button, every member is a full width card (StyleSettingCard
+   * `row`) and Review and confirm sits in a bar at the bottom of the screen. There is no list view on a
+   * phone: the list is a wide table.
+   */
+  layout?: 'desktop' | 'phone';
 }
 
 const LAYOUTS: readonly StyleSettingLayout[] = ['cards', 'list'];
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-
-/** First letters of the first and last name, for the sponsor's avatar. */
-const initials = (name: string) => {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  return words.length === 0 ? '' : (words[0][0] + (words.length > 1 ? words[words.length - 1][0] : '')).toUpperCase();
-};
+export const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /** Cards or List: a radio group with one tab stop; arrow keys move and pick. */
 function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange: (v: StyleSettingLayout) => void }) {
@@ -146,6 +149,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
   const tipFor = (id: string) => (p.tooltip === undefined ? undefined : p.tooltip?.id === id ? p.tooltip.style : null);
 
   const Root = p.embedded ? 'div' : 'main';
+  if (p.layout === 'phone') return <Suspense><PhoneView {...p} Root={Root} where={where} complete={complete} set={set} confirmDisabled={confirmDisabled} focusSummary={focusSummary} tipFor={tipFor} /></Suspense>;
   return (
     <Root className="flex flex-1 flex-col gap-4.5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
       <header className="flex items-center gap-4">
@@ -183,3 +187,4 @@ export function StyleSettingView(p: StyleSettingViewProps) {
     </Root>
   );
 }
+

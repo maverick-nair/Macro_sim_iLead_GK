@@ -62,6 +62,8 @@ export interface EndReflection {
 
 export interface EndScreenProps {
   minHeight?: string;
+  /** `phone`: a 390 screen. Hero, results and body stack; results are two tiles a row. */
+  layout?: 'desktop' | 'phone';
   /** Focus the headline on arrival (the playable app, where the end screen replaces the board). */
   focusOnOpen?: boolean;
   periods: number;

@@ -21,6 +21,8 @@ export interface EventCardProps {
   onDismiss: () => void;
   /** Where focus goes after the card closes. Defaults to Radix's (the element focused before). */
   onCloseFocus?: () => void;
+  /** `phone`: a 390 screen, with 16px around the card and 44px buttons that share the row. */
+  layout?: 'desktop' | 'phone';
 }
 
 /**
@@ -45,7 +47,8 @@ const chip = 'relative flex h-6.5 items-center rounded-pill bg-event-tag px-3 te
  * dialog (Radix): focus moves to its title, stays inside, the board behind is inert, and Escape is
  * Got it.
  */
-export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onCloseFocus }: EventCardProps) {
+export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onCloseFocus, layout = 'desktop' }: EventCardProps) {
+  const phone = layout === 'phone';
   const { t } = useI18n();
   const [numbers, setNumbers] = useState(false);
   const [why, setWhy] = useState(false);
@@ -56,7 +59,7 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
   const changes = teamChips(card.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence'), everyone);
   return (
     <Dialog.Root open onOpenChange={o => { if (!o && !busy) onDismiss(); }}>
-      <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-12">
+      <Dialog.Overlay className={`fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim ${phone ? 'px-(--il-phone-gutter-x) pt-(--il-phone-top) pb-(--il-phone-gutter-bottom)' : 'p-6'} backdrop-blur-12`}>
       <Dialog.Content
         aria-describedby={undefined} aria-modal="true"
         onOpenAutoFocus={e => { e.preventDefault(); title.current?.focus({ preventScroll: true }); }}
@@ -81,14 +84,14 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
             </div>
           )}
           {why && <div id={whyId} className="contents">{reasons.map((r, i) => <ReasonDetail key={i} cause={r.cause} rule={r.rule} evidence={r.evidence.map(e => e.quote).join(' ')} judgedByAI={r.evidence.some(e => e.judgedByAI)} layout="stack" />)}</div>}
-          <div className="flex items-center justify-end gap-2 pt-1.5">
+          <div className={`flex items-center justify-end gap-2 pt-1.5 ${phone ? 'flex-wrap' : ''}`}>
             {reasons.length > 0 && (
               <button type="button" onClick={() => setWhy(w => !w)} aria-expanded={why} aria-controls={why ? whyId : undefined}
-                className={`h-9 cursor-pointer rounded-pill border border-solid border-line-strong bg-transparent px-4 py-0 text-13 font-700 text-fg-primary ${focusRing}`}>
+                className={`${phone ? 'min-h-12 px-5 text-15' : 'h-9 px-4 text-13'} cursor-pointer rounded-pill border border-solid border-line-strong bg-transparent py-0 font-700 text-fg-primary ${focusRing}`}>
                 {t('outcome.why', { open: String(why) })}
               </button>
             )}
-            <Button variant="primary" size="md" disabled={busy} onClick={onDismiss}>{t('board.card.dismiss')}</Button>
+            <Button variant="primary" size={phone ? 'lg' : 'md'} disabled={busy} onClick={onDismiss}>{t('board.card.dismiss')}</Button>
           </div>
         </div>
       </Dialog.Content>

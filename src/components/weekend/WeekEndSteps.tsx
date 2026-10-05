@@ -97,16 +97,18 @@ export interface UnlockStepProps {
   busy?: boolean;
   onChoose: (index: number) => void;
   onTake: () => void;
+  /** `phone`: the reward cards stack, full width. */
+  layout?: 'desktop' | 'phone';
 }
 
 /** The sponsor's confidence crossed the unlock line: pick one reward. Nothing goes on until one is taken. */
-export function UnlockStep({ sponsorFirstName, period, periodUnit, rewards, chosen, busy, onChoose, onTake }: UnlockStepProps) {
+export function UnlockStep({ sponsorFirstName, period, periodUnit, rewards, chosen, busy, onChoose, onTake, layout = 'desktop' }: UnlockStepProps) {
   const { t } = useI18n();
   return (
     <div className={`flex flex-1 flex-col items-center justify-center gap-5.5 ${ENTER}`}>
       <span className={EYEBROW}>{t('weekend.unlock.eyebrow', { name: sponsorFirstName })}</span>
       <h1 tabIndex={-1} className={`${HEADING} text-40 tracking-(--il-weekend-title-tracking)`}>{t('weekend.unlock.title', { unit: periodUnit, n: period })}</h1>
-      <div role="radiogroup" aria-label={t('weekend.unlock.aria')} className="grid grid-cols-(--il-weekend-reward-columns) gap-4">
+      <div role="radiogroup" aria-label={t('weekend.unlock.aria')} className={`grid ${layout === 'phone' ? 'w-full grid-cols-1' : 'grid-cols-(--il-weekend-reward-columns)'} gap-4`}>
         {rewards.map((r, i) => {
           const on = chosen === i;
           return (
