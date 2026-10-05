@@ -382,6 +382,13 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Sales Elevator money (D19):** keep the calibrated values: $240,000 target, $30,000 per deal, 8 leads a day.
 - **Before M7:** close every gap left from M0 to M6 (the phone board, leaderboard and celebration level, assessor review, Pause, raised hands, the mic test, the resume recap, PDF and email contracts, launch name and date, 200% text, the accessibility leftovers, the board at 1024, the bundle budget).
 
+**D67. Closing the M0 to M6 gaps: engine and services.** Decided.
+- **Team meetings:** the meeting has a floor. Calling someone by first name gives them the floor; after each reply up to two people who have not spoken raise a hand (anyone carrying an unshared concern first, then the lowest morale); with nobody named, the first hand speaks up. Deterministic, so replays match. The view sends `live.raisedHands`.
+- **Assessor review** (scoring-and-report.md 4.5): `engine.review({ recordId, band, skills })` is assessor tooling, not a participant intent; on the server it sits behind the reviewer role. The assessor's band replaces the AI's overall and skill bands in the score, badges read afterwards and the report; consequences already applied stay. The report says "Reviewed by an assessor: N conversations of M". Sample audit and assignment to reviewers are server work.
+- **Leaderboard and celebration:** `gamification.leaderboard` (scope, size, anonymous; on for development use, off for selection use via the storyline's `use`) and `gamification.celebration` (none, subtle, full). Ranks need other participants, so they come from the cohort API (`getLeaderboard`, proposed `POST /cohort/leaderboard`); the mock serves a sample cohort.
+- **Launch data and files:** `getProfile` (proposed `GET /profile`) gives the participant's name for the report; with the mock, `?name=` stands in. `reportPdf` (proposed `GET /report.pdf`) gives a server rendered PDF; without one, Download PDF opens the print view and the browser saves it. Email stays `POST /report/email`. All paths are proposals in `src/api/http.ts`.
+- **First load:** the end screen, report and week end copy now load with their screens (`registerMessages`), taking the first load from 196.8 KB to 193.5 KB.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
