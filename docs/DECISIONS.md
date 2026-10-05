@@ -368,6 +368,13 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Change Champion** (D62) now reads the linkage matrix: a Strong conversation that rates Communicating change.
 - **Not in the engine:** the participant's name and the report date come from the launch (LMS or GenieKreator), not the engine; minutes of play come from the client. Human review is not built: methodology says "not yet reviewed".
 
+**D65. M6 on screen: the end screen and the development report.** Decided. Frames e1, e2, e3 and the phone report render the new components from fixtures, pixel identical (67 of 67).
+- **End screen** (`src/components/end/`): after the last week end. Tier, score, results, up to 4 moments (each opens to its situation, behaviour and impact), badges, the reflection (authored questions, 0 to 3, by voice or text) and the 1 to 5 rating, saved with `submitReflection`. "Look at the board" replaces the D58 results panel; the read only board leads back.
+- **Report** (`src/components/report/`, loaded only when opened, with visx): all ten sections in the authored order. Every chart has a "Show as table" toggle with a real table; print shows tables where a chart would not read in black and white. Download PDF opens the print view (letter pages, "Page N of M") and the browser's print dialog. Email me goes through the API (`POST /report/email`, proposed).
+- **Design vs docs:** the engine's 5 skill levels replace the design's 4 (one bar segment each); the score is the engine's 0 to 1000; the design's chart notes ("Dip in week 4 after the price war") are authored commentary the engine does not send, so the report says "Up from 57"; "You did" is worded from the styles intended and shown; "98 minutes of play" is dropped (client data, not engine data); the conversions note reads against the ideal pace instead of "week 1 pace". The undesigned sections (moments, people, business, analytics, methodology, the shares and grid charts) follow the design's card language and need design review.
+- **Not engine data yet:** the participant's name (the report says "Your development report" until the launch sends it), the report date (the client's today), the report's audience, per level colours, calibration agreement and retention for methodology.
+- **Budget:** first load is 196.8 KB of 200 KB. The catalog is one chunk; M7 should split the end, report and week end copy into their lazy chunks.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
