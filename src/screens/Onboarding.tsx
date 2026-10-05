@@ -6,7 +6,7 @@ import { useI18n } from '../i18n';
 
 /**
  * The prototype's onboarding (port of `project/ilOnboarding.dc.html`) on the design fixture, for the
- * `/screens` gallery and the phone prototype. The playable app renders the same flow from the engine
+ * `/screens` gallery and `?engine=off`. The playable app renders the same flow from the engine
  * (`src/app/EngineOnboarding.tsx`).
  */
 export interface OnboardingProps extends ScreenProps {

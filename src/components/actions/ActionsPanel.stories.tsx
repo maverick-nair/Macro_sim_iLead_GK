@@ -95,9 +95,6 @@ export const PerkInDrawer: StoryObj = {
   render: () => <Frame drawer={<ActionDrawer name="Hire member" kind="live" days={0} description="Interview two candidates, then hire one or pass." perk="Extra hire budget from your sponsor: no days, and one seat past a full team." people={{ mode: 'who' }} picks={[]} summary="Hire member. Costs nothing." cta="start" canConfirm onConfirm={noop} onBack={noop} />} />
 };
 
-/** Phone width, 390 minus the 16px gutters; the panel keeps its own padding. */
-export const Narrow: StoryObj = { render: () => <Frame width={358} height={760} member={{ firstName: 'Kent', tiles: memberFor(3) }} /> };
-
 /** A board under 1280 wide (D58): the header has a toggle that folds the card to its rail. Interactive. */
 function Folding() {
   const [collapsed, setCollapsed] = useState(false);

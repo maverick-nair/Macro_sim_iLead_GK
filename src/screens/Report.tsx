@@ -15,15 +15,14 @@ import '../components/report/messages';
 
 /**
  * The prototype's development report (port of `project/ilReport.dc.html`) on the design fixture, for the
- * `/screens` gallery (frames e2 web, e3 print, m7 mobile). It shows only the sections the design drew.
+ * `/screens` gallery (frames e2 web, e3 print). It shows only the sections the design drew.
  * The playable app renders the engine's report with the same components (`src/components/report/EngineReport.tsx`).
  */
 export interface ReportProps extends ScreenProps {
   print?: boolean;
-  mobile?: boolean;
 }
 
-export function Report({ d, act, print = false, mobile = false }: ReportProps) {
+export function Report({ d, act, print = false }: ReportProps) {
   const { t } = useI18n();
   const fit = FX.fit(d.members);
   const blocks: ReportBlock[] = [
@@ -35,7 +34,7 @@ export function Report({ d, act, print = false, mobile = false }: ReportProps) {
       key: 'style', card: true, pageBreak: true,
       node: (
         <StyleFitSection unit="week" periods={[1, 2, 3, 4, 5, 6, 7, 8]} summary={FX.fitSummary}
-          rows={d.members.map((m, i) => ({ id: m.id, name: mobile ? m.name.split(' ')[0] : m.name, fullName: m.name, left: false, cells: fit[i] }))} />
+          rows={d.members.map((m, i) => ({ id: m.id, name: m.name, fullName: m.name, left: false, cells: fit[i] }))} />
       )
     },
     {
@@ -49,7 +48,7 @@ export function Report({ d, act, print = false, mobile = false }: ReportProps) {
     }
   ];
   return (
-    <ReportProvider value={{ layout: mobile ? 'phone' : 'desktop', print, tables: 'hidden' }}>
+    <ReportProvider value={{ print, tables: 'hidden' }}>
       <ReportDocument
         blocks={blocks}
         footer={{ brand: t('report.footer.brand'), last: t('report.footer.shared') }}

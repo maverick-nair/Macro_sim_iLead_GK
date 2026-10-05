@@ -1,6 +1,5 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
-import { useReport } from './context';
 import { levelSegments } from './display';
 import type { ReportQuote, SkillRowData } from './types';
 import './messages';
@@ -27,7 +26,6 @@ export interface SkillsSectionProps {
  */
 export function SkillsSection({ rows, levels }: SkillsSectionProps) {
   const { t, number } = useI18n();
-  const { layout } = useReport();
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-2.5">
@@ -41,7 +39,7 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
           ? t('report.skills.aria', { skill: k.name, level: k.level.name, n: k.level.index + 1, total: levels.length })
           : t('report.skills.ariaNone', { skill: k.name });
         return (
-          <div key={k.key} className={`grid items-center gap-3.5 border-t border-line-default py-2.5 ${layout === 'phone' ? 'grid-cols-(--il-report-skills-columns-phone)' : 'grid-cols-(--il-report-skills-columns)'}`}>
+          <div key={k.key} className="grid items-center gap-3.5 border-t border-line-default py-2.5 grid-cols-(--il-report-skills-columns)">
             <b className="text-14">{k.name}</b>
             <div className="flex items-center gap-2 text-large:flex-wrap">
               <div role="img" aria-label={aria} className="flex gap-0.75">

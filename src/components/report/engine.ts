@@ -3,7 +3,7 @@ import type { I18n } from '../../i18n';
 import { checkInDate, intentTone, multipleDomain, talkRatio } from './display';
 import type {
   AnalyticsData, BusinessData, FitRow, IntentCardData, MethodologyData, MomentData, PeriodUnit, PersonData, PlanItemData,
-  ReportHeaderData, ReportLayout, SkillRowData, StyleExtras, StyleKey, SummaryExtras, TeamSeries
+  ReportHeaderData, SkillRowData, StyleExtras, StyleKey, SummaryExtras, TeamSeries
 } from './types';
 import './messages';
 
@@ -22,7 +22,6 @@ export interface ReportModelOptions {
   participantName?: string | null;
   /** The report date, for the header and the check in date. */
   date: Date;
-  layout: ReportLayout;
   /** The unit of days spent per person ("day"). */
   subPeriodUnit: string;
 }
@@ -48,7 +47,6 @@ export interface ReportModel {
   sections: SectionModel[];
 }
 
-const first = (name: string) => name.split(' ')[0];
 
 export function monthYear(date: Date, locale: string) {
   return new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(date);
@@ -114,7 +112,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
         return {
           key, periods,
           rows: r.style.weeks.map(w => ({
-            id: w.memberId, name: o.layout === 'phone' ? first(w.name) : w.name, fullName: w.name, left: w.left,
+            id: w.memberId, name: w.name, fullName: w.name, left: w.left,
             cells: periods.map((_, i) => {
               const c = w.cells[i];
               return c ? { style: c.chosen, fit: Math.min(2, Math.max(0, c.fit)) as 0 | 1 | 2 } : null;

@@ -1,6 +1,5 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
-import type { ReportLayout } from './types';
 import './messages';
 
 /**
@@ -9,12 +8,11 @@ import './messages';
  * visually hidden copy for screen readers.
  */
 export interface ReportSettings {
-  layout: ReportLayout;
   print: boolean;
   tables: 'toggle' | 'hidden';
 }
 
-const ReportContext = createContext<ReportSettings>({ layout: 'desktop', print: false, tables: 'toggle' });
+const ReportContext = createContext<ReportSettings>({ print: false, tables: 'toggle' });
 
 export function ReportProvider({ value, children }: { value: ReportSettings; children: ReactNode }) {
   return <ReportContext.Provider value={value}>{children}</ReportContext.Provider>;

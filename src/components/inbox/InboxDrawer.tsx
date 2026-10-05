@@ -33,22 +33,15 @@ export interface InboxDrawerProps {
   onClose: () => void;
   onOpen: (id: string) => void;
   onLater: (id: string) => void;
-  /**
-   * `drawer`: beside the rail, a non modal dialog of its own. `sheet`: the content of a phone's bottom
-   * sheet, which brings the title, close button and focus handling; buttons are 44px tall.
-   */
-  layout?: 'drawer' | 'sheet';
 }
 
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
 const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const pill = `h-7.5 cursor-pointer rounded-pill px-3 py-0 text-12 font-700 ${focus}`;
-const pillLarge = `min-h-11 cursor-pointer rounded-pill px-4.5 py-0 text-14 font-700 ${focus}`;
 
-function Item({ it, onOpen, onLater, large = false }: { it: InboxDrawerItem; onOpen: () => void; onLater: () => void; large?: boolean }) {
+function Item({ it, onOpen, onLater }: { it: InboxDrawerItem; onOpen: () => void; onLater: () => void }) {
   const { t } = useI18n();
-  const pill_ = large ? pillLarge : pill;
   return (
     <div className={`flex flex-col gap-2.5 rounded-16 border bg-surface-raised p-3 ${it.urgent ? 'border-status-attention' : 'border-line-default'}`}>
       <div className="flex gap-2.5">
@@ -56,17 +49,17 @@ function Item({ it, onOpen, onLater, large = false }: { it: InboxDrawerItem; onO
           <SenderFace sender={it.sender} />
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className={`flex justify-between gap-1.5 text-12 text-fg-secondary ${large ? 'flex-wrap' : ''}`}><b>{it.tag}</b><span>{it.meta}</span></span>
+          <span className="flex justify-between gap-1.5 text-12 text-fg-secondary"><b>{it.tag}</b><span>{it.meta}</span></span>
           <b className="text-14">{it.title}</b>
           <span className="text-13 text-fg-secondary">{it.preview}</span>
         </span>
       </div>
-      <div className={`flex items-center gap-2 ${large ? 'flex-wrap' : ''}`}>
+      <div className="flex items-center gap-2">
         {it.urgent && <span className="text-12 font-700 text-status-attention">{it.due ? t('inbox.pinnedDue', { due: it.due }) : t('inbox.pinned')}</span>}
         {!it.urgent && it.due && <span className="text-12 text-fg-secondary">{it.due}</span>}
         <span className="flex-1" />
-        {it.later !== false && <button type="button" onClick={onLater} className={`${pill_} border border-solid border-line-default bg-transparent text-fg-primary`}>{t('inbox.later')}</button>}
-        <button type="button" onClick={onOpen} className={`${pill_} border-0 bg-brand text-brand-deep-space`}>{t('inbox.cta', { cta: it.cta })}</button>
+        {it.later !== false && <button type="button" onClick={onLater} className={`${pill} border border-solid border-line-default bg-transparent text-fg-primary`}>{t('inbox.later')}</button>}
+        <button type="button" onClick={onOpen} className={`${pill} border-0 bg-brand text-brand-deep-space`}>{t('inbox.cta', { cta: it.cta })}</button>
       </div>
     </div>
   );
@@ -79,25 +72,7 @@ function Item({ it, onOpen, onLater, large = false }: { it: InboxDrawerItem; onO
  * opener (the rail) when it closes.
  */
 export function InboxDrawer(props: InboxDrawerProps) {
-  if (props.layout === 'sheet') return props.open ? <InboxList {...props} /> : null;
   return props.open ? <OpenDrawer {...props} /> : null;
-}
-
-/** The inbox's items, empty state and footer, for a phone's sheet. */
-function InboxList({ subPeriodUnit, items, sponsorName, onOpen, onLater }: InboxDrawerProps) {
-  const { t } = useI18n();
-  return (
-    <div className="flex flex-col gap-2 px-(--il-phone-gutter-x) pt-3">
-      {items.length === 0 && (
-        <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-          <b>{t('inbox.empty.title')}</b>
-          <span className="text-13 text-fg-secondary">{sponsorName ? t('inbox.empty.bodySponsor', { sponsor: sponsorName }) : t('inbox.empty.body')}</span>
-        </div>
-      )}
-      {items.map(it => <Item key={it.id} it={it} large onOpen={() => onOpen(it.id)} onLater={() => onLater(it.id)} />)}
-      <span className="pt-1 text-12 text-fg-secondary">{t('inbox.footer', { unit: subPeriodUnit })}</span>
-    </div>
-  );
 }
 
 function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLater }: InboxDrawerProps) {

@@ -53,7 +53,6 @@ export interface LiveSessionProps {
   app: AppModel;
   variant: LiveVariant;
   uiState?: string;
-  mobile?: boolean;
 }
 
 const defaults: LiveState = {
@@ -80,7 +79,7 @@ const defaults: LiveState = {
 };
 
 /** The design's componentDidMount: seeds state for the requested gallery uiState. */
-function initialStateFor(uiState: string | undefined, mobile: boolean | undefined, S: LiveScript): LiveState {
+function initialStateFor(uiState: string | undefined, S: LiveScript): LiveState {
   const st: Partial<LiveState> = {};
   const npc0: LogEntry = { who: 'npc', i: 0 };
   const me0: LogEntry = { who: 'me', i: 0 };
@@ -97,7 +96,6 @@ function initialStateFor(uiState: string | undefined, mobile: boolean | undefine
   else if (u === 'hint') Object.assign(st, { hint: true, phase: 'idle', log: [npc0], words: 99 });
   else if (u === 'dictating') Object.assign(st, { dictating: true });
   else Object.assign(st, { log: [npc0], words: 0 });
-  if (mobile) st.brief = false;
   return { ...defaults, ...st };
 }
 
@@ -133,7 +131,7 @@ export function useLiveSession(props: LiveSessionProps) {
   propsRef.current = props;
   const scripts = useCallback((): LiveScript => scriptsFor(propsRef.current.variant, propsRef.current.app?.who), []);
 
-  const [state, setRaw] = useState<LiveState>(() => initialStateFor(props.uiState, props.mobile, scripts()));
+  const [state, setRaw] = useState<LiveState>(() => initialStateFor(props.uiState, scripts()));
   /** Latest state, read by timers the way the class read `this.state`. */
   const stateRef = useRef(state);
   stateRef.current = state;

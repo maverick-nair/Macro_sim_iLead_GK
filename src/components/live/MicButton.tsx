@@ -11,8 +11,6 @@ export interface MicButtonProps {
   state: MicState;
   /** Voice mode draws the large brand mic; text mode keeps a small neutral one for switching back. */
   mode: 'voice' | 'text';
-  /** `lg` is the mobile size (64), `md` the desktop size (60). Text mode and a denied mic are always 48. */
-  size?: 'md' | 'lg';
   /** Starts listening, or stops and goes to review while listening. */
   onPress: () => void;
 }
@@ -38,12 +36,12 @@ const MicOffIcon = () => (
 );
 
 /** The mic button of the live reply bar. Renders state only; the speech provider lives elsewhere. */
-export function MicButton({ state, mode, size = 'md', onPress }: MicButtonProps) {
+export function MicButton({ state, mode, onPress }: MicButtonProps) {
   const { t } = useI18n();
   const denied = state === 'denied';
   const listening = state === 'listening';
   const voice = mode === 'voice' && !denied;
-  const box = voice ? (size === 'lg' ? 'size-16' : 'size-15') : 'size-12';
+  const box = voice ? 'size-15' : 'size-12';
   const look = denied
     ? 'bg-track text-fg-secondary'
     : listening

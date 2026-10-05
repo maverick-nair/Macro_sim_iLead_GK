@@ -5,8 +5,6 @@ import type { PeriodUnit, SubPeriodUnit } from '../action/days';
 import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { TranscriptBubble } from '../live/TranscriptBubble';
 
-/** `desktop` is the 1440 stage beside the brief, `phone` the 390 stage under the shell header. */
-export type StageLayout = 'desktop' | 'phone';
 
 /** A moment in sim time, in the storyline's units: period 2, sub period 3 reads "Week 2, Day 3". */
 export interface SimTime {

@@ -36,9 +36,6 @@ const EngineEnd = lazy(() => import('./EngineEnd').then(m => ({ default: m.Engin
 const EngineReport = lazy(() => import('../report/EngineReport'));
 // The cohort rank in the score breakdown loads when the breakdown first opens with the leaderboard on.
 const CohortRank = lazy(() => import('../gamification/CohortRank'));
-// The phone board (390) loads only on phones.
-const PhoneBoard = lazy(() => import('./PhoneBoard').then(m => ({ default: m.PhoneBoard })));
-import type { PhoneSheet } from './PhoneBoard';
 import { EventCard } from './EventCard';
 import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
@@ -80,12 +77,6 @@ export interface EngineBoardProps {
   captions?: boolean;
   onPause: () => void;
   onSettings: () => void;
-  /**
-   * A phone (600px and below): the 390 layouts. The board becomes a list with a dock and bottom
-   * sheets, and style setting, the live screen, events, the end screen and the report use their
-   * phone layouts.
-   */
-  phone?: boolean;
   /**
    * The run is paused: an app dialog (pause, settings, welcome back) is open over the board. Nothing
    * moves: the session clock stops, and a live conversation holds its streamed words and its clock.
@@ -187,12 +178,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const [lastWeekSeen, setLastWeekSeen] = useState(false);
   /** The outcome headline, for screen readers, when focus cannot move to it (an action is being planned). */
   const [announce, setAnnounce] = useState('');
-  /** Phone only: the actions sheet is open, and the drawer is lowered so people can be picked on the list. */
-  const [phoneActions, setPhoneActions] = useState(false);
-  const [lowered, setLowered] = useState(false);
-  const phone = !!app.phone;
-  // On a phone, fetch the phone board while styles are being set, so it is ready when the board opens.
-  useEffect(() => { if (phone) { void import('./PhoneBoard'); void import('../stylesetting/StyleSettingPhone'); } }, [phone]);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const narrow = useMediaQuery(NARROW_BOARD);
   /** Selecting someone opens a folded Actions panel for them; folding it again while they are selected leaves it folded. */
@@ -245,8 +230,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   // A new period clears the style draft and any half planned action.
   useEffect(() => { setDraft({}); setNotes({}); setStyleView(x => ({ ...x, summary: false })); setFlow(null); }, [v.clock.period]);
-  // A lowered drawer rises again with the next action.
-  useEffect(() => { if (!flow) setLowered(false); }, [flow]);
 
   const styling = v.phase === 'style';
   const ended = v.phase === 'ended';
@@ -350,13 +333,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     setFlow(null);
   };
 
-  /** Phone: a tap on a person selects them and opens their actions in the sheet. */
-  const openMember = (m: MemberView) => {
-    setFlow(null);
-    if (selected !== m.id) ui.toggleMember(m.id);
-    setPhoneActions(true);
-  };
-
   const clickCard = (m: MemberView) => {
     if (picking && f && fa) {
       if (ineligible(m)) return;
@@ -380,7 +356,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       style: styleOf(m), unread: m.unread, promise: m.promise ?? undefined,
       selected: picking && f ? f.picks.includes(m.id) : selected === m.id,
       unavailableReason: picking ? ineligible(m) : undefined,
-      onSelect: () => (phone && !picking ? openMember(m) : clickCard(m)),
+      onSelect: () => clickCard(m),
       onOpenProfile: () => openProfile(m.id),
       onStyleChange: (k: StyleKey) => { if (styling) setDraft(d => ({ ...d, [m.id]: k })); },
       // Outside style setting the letters stay focusable but read as locked, with the reason.
@@ -479,8 +455,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         const r = await send({ type: 'planAction', action: fa.key, option: choice?.option.key, memberIds: f.picks, stage: choice?.stage ?? undefined });
         if (!r) return;
         setFlow(null);
-        // On a phone the sheet closes, so the outcome (or the conversation) has the screen.
-        setPhoneActions(false);
         // A decision shows its outcome panel (with reasons); a toast only when the engine sent none.
         if (!r.interactionId && !r.view.outcome) say(t('board.planned', { action: fa.name }));
       },
@@ -570,7 +544,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     return (
       <div ref={outcomeRef} className="contents">
         <OutcomePanel
-          layout={phone ? 'card' : 'band'}
           person={who} headline={oc.headline} reply={oc.reply} headingLevel={2}
           why={whys(oc.changes)}
           whyOpen={ui.whyOpen === oc.id} onToggleWhy={() => ui.setWhy(ui.whyOpen === oc.id ? null : oc.id)}
@@ -626,7 +599,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const due = msg?.dueInSubPeriods ?? null;
     call = (
       <SponsorCall
-        layout={phone ? 'phone' : 'desktop'}
         name={v.sponsor.name} initials={initials(v.sponsor.name)} img={v.sponsor.img}
         line={t('events.call.line', { title: v.sponsor.title, about: callCard.title })}
         laterLabel={due !== null && due >= 1 ? t('events.call.later', { amount: amount(due) }) : t('events.call.laterNow')}
@@ -706,16 +678,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     shownOutcome.current = oc.id;
     if (flow || card || endScreen) { setAnnounce(oc.headline); return; }
     const h = headlineIn(outcomeRef.current);
-    if (h) { h.focus({ preventScroll: true }); return; }
-    // The phone board loads on demand: wait a few frames for the outcome card to mount.
-    let tries = 0, frame = 0;
-    const retry = () => {
-      const el = headlineIn(outcomeRef.current);
-      if (el) el.focus({ preventScroll: true });
-      else if (++tries < 60) frame = requestAnimationFrame(retry);
-    };
-    frame = requestAnimationFrame(retry);
-    return () => cancelAnimationFrame(frame);
+    h?.focus({ preventScroll: true });
   }, [oc, reacting, v.live, styling, flow, card, endScreen]);
 
   useEffect(() => { paletteOk.current = plainBoard; }, [plainBoard]);
@@ -734,7 +697,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {v.live && (
           <div className={reacting ? 'hidden' : 'flex flex-1 flex-col'}>
             <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
-              <EngineLive key={v.live.id} layout={phone ? 'phone' : 'desktop'} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
+              <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
                 suspended={!!reacting} held={!!app.paused} onPause={app.onPause} onFinish={finishLive} onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
             </Suspense>
           </div>
@@ -745,16 +708,16 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   } else if (weekEnd) {
     body = (
       <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
-        <EngineWeekEnd key={`${v.phase}:${v.periods.length}`} layout={phone ? 'phone' : 'desktop'} view={v} busy={busy} send={async i => !!(await send(i))} onResults={() => setLastWeekSeen(true)} />
+        <EngineWeekEnd key={`${v.phase}:${v.periods.length}`} view={v} busy={busy} send={async i => !!(await send(i))} onResults={() => setLastWeekSeen(true)} />
       </Suspense>
     );
   } else if (endScreen) {
     body = (
       <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
         {endView === 'end'
-          ? <EngineEnd layout={phone ? 'phone' : 'desktop'} view={v} voiceConsent={!!app.voiceConsent} send={async i => !!(await send(i))} say={say}
+          ? <EngineEnd view={v} voiceConsent={!!app.voiceConsent} send={async i => !!(await send(i))} say={say}
               onViewReport={print => setEndView(print ? 'print' : 'report')} onLookAtBoard={() => setEndView('board')} />
-          : <EngineReport view={v} print={endView === 'print'} layout={phone && endView !== 'print' ? 'phone' : undefined} onBack={() => setEndView('end')} participantName={profileName} getPdf={() => api.reportPdf()}
+          : <EngineReport view={v} print={endView === 'print'} onBack={() => setEndView('end')} participantName={profileName} getPdf={() => api.reportPdf()}
               onEmail={() => { void api.emailReport().then(() => say(t('board.report.emailSent')), () => say(t('board.report.emailFailed'))); }} />}
       </Suspense>
     );
@@ -763,7 +726,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     body = (
       <StyleSettingView
         embedded
-        layout={phone ? 'phone' : 'desktop'}
         periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
         sponsorName={v.sponsor.name} sponsorLine={v.sponsor.styleLine}
         view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
@@ -780,45 +742,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         onBack={() => setStyleView(x => ({ ...x, summary: false }))}
         confirmDisabled={busy || chosen < v.members.length}
       />
-    );
-  } else if (phone) {
-    // What the phone's sheet holds: the drawer (unless lowered to pick people), a profile, the inbox, the score, the actions.
-    const sheet: PhoneSheet = drawer && !lowered ? 'drawer' : drawer ? 'none' : profile ? 'profile' : ui.panel === 'inbox' ? 'inbox' : scoreOpen ? 'score' : phoneActions ? 'actions' : 'none';
-    const closeSheet = () => { setFlow(null); setLowered(false); setPhoneActions(false); setScoreOpen(false); ui.openPanel('none'); };
-    body = (
-      <>
-        <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
-          <PhoneBoard
-            hud={hud} strip={strip} call={call} breakdown={hud.breakdown}
-            banner={ended && lastWeekSeen && endView === 'board' ? (
-              <div className="mx-(--il-phone-gutter-x) mb-3 flex flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3 text-13">
-                <span>{t('board.ended.readOnly')}</span>
-                <span className="inline-flex self-start"><Button variant="secondary" size="lg" onClick={() => setEndView('end')}>{t('board.ended.reopen')}</Button></span>
-              </div>
-            ) : undefined}
-            outcome={outcome}
-            team={{ hint, legendOpen: legend, onToggleLegend: () => setLegend(l => !l), periodUnit, columns }}
-            actions={{
-              capacityLeft: v.clock.capacityLeft, capacity: v.clock.capacity, subPeriodUnit: unit, periodUnit, outOfCapacity: v.clock.capacityLeft <= 0,
-              notes: actionNotes,
-              team: v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null)),
-              member: sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null
-            }}
-            onOpenProfile={sm ? () => openProfile(sm.id) : undefined}
-            drawer={drawer}
-            picking={picking && lowered && fa ? { action: fa.name, count: f?.picks.length ?? 0, max: maxPick } : null}
-            inbox={{ unread: inbox.length, items: drawerItems, sponsorName: first(v.sponsor.name), subPeriodUnit: unit, onOpen: id => void openMessage(id), onLater: later }}
-            profile={profile}
-            sheet={sheet}
-            onOpenSheet={k => { if (k === 'inbox') ui.openPanel('inbox'); else setPhoneActions(true); }}
-            onCloseSheet={closeSheet}
-            onLower={setLowered}
-          />
-        </Suspense>
-        {card && <EventCard key={card.id} layout="phone" card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
-        {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
-          returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-haspopup]')} />}
-      </>
     );
   } else {
     body = (

@@ -1,8 +1,8 @@
-import { Fragment, useId, useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { Button } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { CV_FIELDS, CvValue, type Candidate } from './InterviewStage';
-import { CARD, FOCUS, type StageLayout } from './shared';
+import { CARD, FOCUS } from './shared';
 
 export type HireMark = 'hire' | 'pass';
 export type HireMarks = Record<string, HireMark>;
@@ -32,7 +32,6 @@ export interface CompareViewProps {
   onPassBoth: () => void;
   /** Once confirmed, the view shows the decision and can no longer change it. */
   decided?: CompareDecision | null;
-  layout?: StageLayout;
 }
 
 const FOCUS_WITHIN = 'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary';
@@ -46,10 +45,9 @@ const MARK_ON: Record<HireMark, string> = {
  * one column each, then Hire or Pass for each. Exactly one hire or a pass on both, confirmed with
  * one button. No portraits: the comparison rests on the CV and what you noted. Fills its parent.
  */
-export function CompareView({ candidates, notes, onHire, onPassBoth, decided = null, layout = 'desktop' }: CompareViewProps) {
+export function CompareView({ candidates, notes, onHire, onPassBoth, decided = null }: CompareViewProps) {
   const { t } = useI18n();
   const uid = useId();
-  const mobile = layout === 'phone';
   const ids = candidates.map(c => c.id);
   const [marks, setMarks] = useState<HireMarks>({});
   const shownMarks: HireMarks = decided ? Object.fromEntries(ids.map(id => [id, decided.kind === 'hire' && decided.id === id ? 'hire' : 'pass'])) : marks;
@@ -66,15 +64,11 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
   };
 
   const cell = 'border-t border-line-default px-3.5 py-3 text-left align-top text-13';
-  const rowHead = (rid: string, label: string) => mobile
-    ? <th id={rid} scope="colgroup" colSpan={2} className="border-t border-line-default px-3.5 pt-3 pb-0 text-left text-12 font-700 text-fg-secondary">{label}</th>
-    : <th id={rid} scope="row" className={`${cell} w-(--il-liveformats-compare-label-width) font-400 text-fg-secondary`}>{label}</th>;
+  const rowHead = (rid: string, label: string) => <th id={rid} scope="row" className={`${cell} w-(--il-liveformats-compare-label-width) font-400 text-fg-secondary`}>{label}</th>;
   const row = (key: string, label: string, render: (c: Candidate, i: number) => ReactNode) => {
     const rid = `${uid}-r-${key}`;
-    const tds = candidates.map((c, i) => <td key={c.id} headers={`${col(i)} ${rid}`} className={`${cell} ${mobile ? 'border-t-0 pt-1.5' : ''}`}>{render(c, i)}</td>);
-    return mobile
-      ? <Fragment key={key}><tr>{rowHead(rid, label)}</tr><tr>{tds}</tr></Fragment>
-      : <tr key={key}>{rowHead(rid, label)}{tds}</tr>;
+    const tds = candidates.map((c, i) => <td key={c.id} headers={`${col(i)} ${rid}`} className={cell}>{render(c, i)}</td>);
+    return <tr key={key}>{rowHead(rid, label)}{tds}</tr>;
   };
 
   const decisionCell = (c: Candidate) => {
@@ -101,7 +95,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
 
   return (
     <section aria-labelledby={titleId} className={`flex size-full min-h-0 flex-col overflow-hidden ${CARD}`}>
-      <div className={`flex flex-col gap-1 border-b border-line-default ${mobile ? 'px-3.5 py-3' : 'px-5 py-4'}`}>
+      <div className="flex flex-col gap-1 border-b border-line-default px-5 py-4">
         <h2 id={titleId} className="m-0 text-18 font-700">{t('liveformats.compare.title')}</h2>
         <span className="text-13 text-fg-secondary">{t('liveformats.compare.intro')}</span>
       </div>
@@ -110,10 +104,10 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
           <caption className="sr-only">{t('liveformats.compare.caption', { a: candidates[0].name, b: candidates[1].name })}</caption>
           <thead>
             <tr>
-              {!mobile && <th scope="col" className="w-(--il-liveformats-compare-label-width)"><span className="sr-only">{t('liveformats.compare.field')}</span></th>}
+              <th scope="col" className="w-(--il-liveformats-compare-label-width)"><span className="sr-only">{t('liveformats.compare.field')}</span></th>
               {candidates.map((c, i) => (
                 <th key={c.id} id={col(i)} scope="col" className="px-3.5 py-3 text-left align-bottom">
-                  <span className={`block font-700 ${mobile ? 'text-15' : 'text-17'}`}>{c.name}</span>
+                  <span className="block font-700 text-17">{c.name}</span>
                   <span className="block text-12 font-400 text-fg-secondary">{c.title}</span>
                 </th>
               ))}
@@ -128,7 +122,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
           </tbody>
         </table>
       </div>
-      <div className={`flex items-center gap-3 border-t border-line-default ${mobile ? 'flex-col items-stretch px-3.5 py-3' : 'px-5 py-3.5'}`}>
+      <div className="flex items-center gap-3 border-t border-line-default px-5 py-3.5">
         <span aria-live="polite" className={`flex-1 text-13 ${decided ? 'font-700' : 'text-fg-secondary'}`}>{status}</span>
         {!decided && (
           <Button variant="primary" size="md" disabled={!decision} onClick={confirm}>

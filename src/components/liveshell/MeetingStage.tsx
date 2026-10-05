@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n';
 import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { LiveCaption } from '../live/LiveCaption';
-import { FOCUS, shortNameOf, type LiveCaptionLine, type LiveLayout, type LivePerson } from './types';
+import { FOCUS, shortNameOf, type LiveCaptionLine, type LivePerson } from './types';
 
 export interface MeetingAttendee extends LivePerson {
   /** The active speaker: ringed, glowing and tagged "Speaking". */
@@ -11,7 +11,7 @@ export interface MeetingAttendee extends LivePerson {
 }
 
 export interface MeetingStageProps {
-  /** Everyone in the room, in seating order. The design seats 10 at 1440 and 6 on a phone. */
+  /** Everyone in the room, in seating order. The design seats 10. */
   attendees: MeetingAttendee[];
   /** The current speaker's line, under the grid. Null hides it. */
   caption: LiveCaptionLine | null;
@@ -22,18 +22,17 @@ export interface MeetingStageProps {
   spokenLine?: LiveCaptionLine | null;
   /** Calls on someone by name (their raised hand). */
   onCallOn: (id: string) => void;
-  layout?: LiveLayout;
 }
 
 /**
  * Team meeting workspace: the attendee grid with the active speaker and raised hands, then the
  * caption of whoever is speaking. Renders two siblings of the stage column.
  */
-export function MeetingStage({ attendees, caption, spokenLine, onCallOn, layout = 'desktop' }: MeetingStageProps) {
+export function MeetingStage({ attendees, caption, spokenLine, onCallOn }: MeetingStageProps) {
   const { t } = useI18n();
   return (
     <>
-      <div role="list" aria-label={t('liveshell.meeting.aria')} className={`grid flex-1 content-start gap-2.5 ${layout === 'phone' ? 'grid-cols-2' : 'grid-cols-5'}`}>
+      <div role="list" aria-label={t('liveshell.meeting.aria')} className="grid flex-1 content-start grid-cols-5 gap-2.5 stage-narrow:grid-cols-3">
         {attendees.map(a => {
           const name = shortNameOf(a);
           return (

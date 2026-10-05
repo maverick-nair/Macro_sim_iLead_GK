@@ -1,0 +1,8 @@
+{
+  "smallscreen": {
+    "glow": { "value": "radial-gradient(140% 60% at 50% 0%, {color.accent.soft}, transparent 70%)", "$description": "The small screen notice (D69): an accent glow from the top over the solid surface, in the client's accent too" },
+    "title": {
+      "leading": { "value": "1.2", "$description": "The notice's title, which wraps to two or three lines" }
+    }
+  }
+}

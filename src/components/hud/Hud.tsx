@@ -138,6 +138,8 @@ export function Hud(p: HudProps) {
   const pillarScale = p.pillarScale ?? 100;
   const wrap = useRef<HTMLDivElement>(null);
   const scoreButton = useRef<HTMLButtonElement>(null);
+  /** How the score was last pressed: a touch has no hover, so a tap toggles the breakdown (D69, tablets). */
+  const touch = useRef(false);
   const [ownOpen, setOwnOpen] = useState(false);
   const open = p.scoreOpen ?? ownOpen;
   const setOpen = (v: boolean) => {
@@ -159,7 +161,7 @@ export function Hud(p: HudProps) {
   const rich = p.breakdown !== undefined;
 
   return (
-    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2">
+    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2">
       <div className="flex items-center gap-2.5">
         {p.clientLogo && <div className="flex min-h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
@@ -190,13 +192,14 @@ export function Hud(p: HudProps) {
         </button>
       )}
       {/* Focus leaving the score (and the breakdown, which can hold controls) closes it; Escape inside it closes it and returns to the score. */}
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- hover opens the breakdown; the button is the control */}
-      <div ref={wrap} className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a mouse hover opens the breakdown (not a touch, whose emulated hover would fight the tap); the button is the control */}
+      <div ref={wrap} className="relative" onPointerEnter={e => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={e => { if (e.pointerType === 'mouse') setOpen(false); }}
         onBlur={e => { if (!wrap.current?.contains(e.relatedTarget as Node | null)) setOpen(false); }}
         onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); scoreButton.current?.focus(); } }}>
-        {/* A disclosure: Enter and Space (a click with no pointer) toggle the breakdown. A pointer click keeps it open, since hovering already opened it. */}
+        {/* A disclosure: Enter, Space (a click with no pointer) and a tap toggle the breakdown. A mouse click keeps it open, since hovering already opened it. */}
         <button ref={scoreButton} type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
-          onClick={e => setOpen(e.detail === 0 ? !open : true)}
+          onPointerDown={e => { touch.current = e.pointerType !== 'mouse'; }}
+          onClick={e => setOpen(e.detail === 0 || touch.current ? !open : true)}
           className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
           <Star />{number(score.total)}
         </button>

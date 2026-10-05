@@ -2,7 +2,7 @@ import { useId } from 'react';
 import { LinePath } from '@visx/shape';
 import { scaleLinear } from '@visx/scale';
 import { useI18n } from '../../i18n';
-import { DataTable, useReport, useTableAlternative } from './context';
+import { DataTable, useTableAlternative } from './context';
 import { round1 } from './display';
 import type { PeriodUnit, TeamSeries } from './types';
 import './messages';
@@ -34,7 +34,6 @@ export interface TeamOverRunProps {
 /** "Your team over eight weeks": revenue against target pace and the four team metrics, as small multiples or a table. */
 export function TeamOverRun({ periods, unit, series }: TeamOverRunProps) {
   const { t } = useI18n();
-  const { layout } = useReport();
   const id = useId();
   const alt = useTableAlternative('chart');
   const title = t('report.team.title', { n: periods, unit });
@@ -54,7 +53,7 @@ export function TeamOverRun({ periods, unit, series }: TeamOverRunProps) {
       ) : <h2 id={`${id}h`} className="m-0 text-20 font-700">{title}</h2>}
       {alt.showTable ? table : (
         <>
-          <div className={`grid gap-2.5 ${layout === 'phone' ? 'grid-cols-(--il-report-team-columns-phone)' : 'grid-cols-(--il-report-team-columns) text-large:grid-cols-(--il-report-team-columns-large)'}`}>
+          <div className="grid gap-2.5 grid-cols-(--il-report-team-columns) text-large:grid-cols-(--il-report-team-columns-large)">
             {series.map(s => (
               <div key={s.key} className="flex flex-col gap-1.5 rounded-16 border border-line-default p-3">
                 <div className="flex justify-between text-12">

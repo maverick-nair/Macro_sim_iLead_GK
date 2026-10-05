@@ -19,7 +19,8 @@ export const LongMessage: StoryObj = {
   render: () => <Stage><Toast message="Listening. Your words will appear in the box to edit, and you can change anything before it is saved to your development plan." /></Stage>
 };
 
-export const Mobile: StoryObj = { render: () => <Stage width={390}><Toast message="Your PDF report is downloading." /></Stage> };
+/** Tablet size, 834 wide (D69). */
+export const Tablet: StoryObj = { render: () => <Stage width={834}><Toast message="Your PDF report is downloading." /></Stage> };
 
 /** Fire it like the app does: each message replaces the last and clears after 3.4 seconds. */
 export const Interactive: StoryObj = {

@@ -13,22 +13,16 @@
     },
     "team": {
       "columns": { "value": "repeat(5,minmax(0,1fr))", "$description": "Small multiples: revenue and the four team metrics" },
-      "columns-phone": { "value": "1fr 1fr" },
       "columns-large": { "value": "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", "$description": "Text above 100% (D56): fewer small multiples per row" }
     },
     "skills": {
-      "columns": { "value": "calc(200px + (var(--il-text-scale, 1) - 1) * 60px) 200px minmax(0,1fr)", "$description": "Skill, level bar, evidence. The skill column grows with the text size so long skill names fit (260px at 200%, D56)" },
-      "columns-phone": { "value": "1fr" }
+      "columns": { "value": "calc(200px + (var(--il-text-scale, 1) - 1) * 60px) 200px minmax(0,1fr)", "$description": "Skill, level bar, evidence. The skill column grows with the text size so long skill names fit (260px at 200%, D56)" }
     },
     "pair": {
-      "columns": { "value": "1fr 1fr", "$description": "Intent and action beside the plan" },
-      "columns-phone": { "value": "1fr" }
+      "columns": { "value": "1fr 1fr", "$description": "Intent and action beside the plan" }
     },
     "fit": {
       "name": { "value": "150px", "$description": "Name column of the style fit heatmap" },
-      "name-phone": { "value": "70px" },
-      "cell-phone": { "value": "30px", "$description": "A week column on a phone; the heatmap scrolls sideways" },
-      "min-phone": { "value": "330px" },
       "missed": { "value": "repeating-linear-gradient(45deg, {color.status.attention-soft} 0 3px, transparent 3px 7px)", "$description": "A missed week: hatched, so it reads without colour" },
       "missed-swatch": { "value": "repeating-linear-gradient(45deg, {color.status.attention} 0 2px, transparent 2px 5px)", "$description": "The legend swatch for a missed week" }
     },

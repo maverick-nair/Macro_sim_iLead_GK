@@ -9,7 +9,6 @@ export interface ReasonChipProps {
   /** Words ("Kent morale up") by default; exact numbers ("Kent Morale +8") once tapped. */
   showNumbers: boolean;
   onToggle: () => void;
-  size?: 'sm' | 'md';
 }
 
 /**
@@ -17,13 +16,13 @@ export interface ReasonChipProps {
  * with these chips, exact numbers on tap. The arrow is decorative and left out of the accessible
  * name, which says the direction in words ("Kent morale up", "Kent Morale +8, up").
  */
-export function ReasonChip({ name, metric, delta, showNumbers, onToggle, size = 'sm' }: ReasonChipProps) {
+export function ReasonChip({ name, metric, delta, showNumbers, onToggle }: ReasonChipProps) {
   const { t, delta: fmt } = useI18n();
   const up = delta > 0;
   const text = showNumbers
     ? t('reason.chip.numbers', { name, metric: t('metric.name', { metric }), delta: fmt(delta) })
     : t('reason.chip.words', { name, metric: t('metric.nameLower', { metric }), direction: up ? 'up' : 'down' });
-  const sizing = size === 'md' ? 'min-h-7.5 px-3 text-13' : 'min-h-6.5 px-2.5 text-12 cursor-pointer';
+  const sizing = 'min-h-6.5 px-2.5 text-12 cursor-pointer';
   // Buttons carry UA padding and font; the chip sets every box property itself.
   return (
     <button

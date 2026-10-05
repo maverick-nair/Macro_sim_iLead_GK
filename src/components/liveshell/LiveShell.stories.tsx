@@ -7,7 +7,7 @@ import { MeetingStage, type MeetingAttendee } from './MeetingStage';
 import { ReactingScreen } from './ReactingScreen';
 import { RolePlayStage, type RolePlayStageProps } from './RolePlayStage';
 import { SponsorStage, type SponsorStageProps } from './SponsorStage';
-import type { LiveBrief, LiveConversation, LiveFormat, LiveLayout, LiveMode, LivePerson, LiveTurn } from './types';
+import type { LiveBrief, LiveConversation, LiveFormat, LiveMode, LivePerson, LiveTurn } from './types';
 
 const meta: Meta = { title: 'Components/Live shell' };
 export default meta;
@@ -64,14 +64,13 @@ const META: Record<DesignedFormat, LiveShellProps['meta']> = {
 };
 const NAME: Record<DesignedFormat, LivePerson | null> = { roleplay: KENT, meeting: null, sponsor: PRIYA, email: KENT };
 
-/** The screen at 1440 by 900, or 390 by 844 on a phone, as the app mounts it. */
-const Frame = ({ layout = 'desktop', children }: { layout?: LiveLayout; children: ReactNode }) => (
-  <div style={{ width: layout === 'phone' ? 390 : 1440, minHeight: layout === 'phone' ? 844 : 900, display: 'flex', flexDirection: 'column' }}>{children}</div>
+/** The screen at 1440 by 900 as the app mounts it, or narrower for a tablet. */
+const Frame = ({ width = 1440, children }: { width?: number; children: ReactNode }) => (
+  <div style={{ width, minHeight: 900, display: 'flex', flexDirection: 'column' }}>{children}</div>
 );
 
 interface ShellState {
   format?: DesignedFormat;
-  layout?: LiveLayout;
   mode?: LiveMode;
   mic?: MicState;
   conversation?: LiveConversation;
@@ -89,11 +88,11 @@ function shell(st: ShellState, children: ReactNode): LiveShellProps {
   const format = st.format ?? 'roleplay';
   const conversation = st.conversation ?? 'yourTurn';
   return {
-    format, personName: NAME[format]?.name ?? '', pronoun: NAME[format]?.pronoun, meta: META[format], layout: st.layout ?? 'desktop',
+    format, personName: NAME[format]?.name ?? '', pronoun: NAME[format]?.pronoun, meta: META[format],
     timer: { seconds: 372, paused: false }, onPause: noop, mode: st.mode ?? 'voice', onModeChange: noop,
     hint: { available: !st.hintUsed, text: st.hintUsed ? TIPS[format] : null, onRequest: noop },
     endKind: conversation === 'closed' ? 'finish' : format === 'email' ? 'discard' : 'end', onEnd: noop, offline: st.offline,
-    brief: BRIEFS[format], briefOpen: st.briefOpen ?? st.layout !== 'phone', onBriefToggle: noop, onInterrupt: noop,
+    brief: BRIEFS[format], briefOpen: st.briefOpen ?? true, onBriefToggle: noop, onInterrupt: noop,
     input: format === 'email' ? null : {
       mic: st.mic ?? 'idle', conversation, voiceInput: st.voiceInput, speakerName: st.speaker ?? 'Kent', draft: st.draft ?? '', onDraft: noop, onSend: noop,
       onMicPress: noop, onRecordAgain: noop, levels: LEVELS, partial: st.partial
@@ -103,12 +102,12 @@ function shell(st: ShellState, children: ReactNode): LiveShellProps {
 }
 
 type RolePlay = Partial<RolePlayStageProps>;
-const rolePlay = (layout: LiveLayout, p: RolePlay = {}) => (
-  <RolePlayStage person={KENT} mood="frustrated" conversation="yourTurn" layout={layout} turns={[npc(0)]} onReplay={noop}
+const rolePlay = (p: RolePlay = {}) => (
+  <RolePlayStage person={KENT} mood="frustrated" conversation="yourTurn" turns={[npc(0)]} onReplay={noop}
     caption={{ name: 'Kent', text: KENT_LINES[0], aiGenerated: true }} {...p} />
 );
 const RolePlayFrame = ({ st = {}, stage = {} }: { st?: ShellState; stage?: RolePlay }) => (
-  <Frame layout={st.layout}><LiveShell {...shell(st, rolePlay(st.layout ?? 'desktop', { conversation: st.conversation, ...stage }))} /></Frame>
+  <Frame><LiveShell {...shell(st, rolePlay({ conversation: st.conversation, ...stage }))} /></Frame>
 );
 
 const BODY = "Hi Kent,\n\nThanks for being honest with me today. You're right that we changed the territory split without asking you, and I'm sorry.\n\nCan we sit down Thursday at 10 to look at routing together? I'd also like your help getting Beth up to speed on the older accounts.\n\n";
@@ -118,8 +117,8 @@ const email = (p: Partial<EmailStageProps> = {}) => (
 );
 
 const attendees = (n: number, hands: string[] = ['ruth']): MeetingAttendee[] => TEAM.slice(0, n).map(m => ({ ...m, speaking: m.id === 'green', raisedHand: hands.includes(m.id) }));
-const meeting = (layout: LiveLayout, n = layout === 'phone' ? 6 : 10, hands?: string[]) => (
-  <MeetingStage attendees={attendees(n, hands)} layout={layout} onCallOn={noop}
+const meeting = (n = 10, hands?: string[]) => (
+  <MeetingStage attendees={attendees(n, hands)} onCallOn={noop}
     caption={{ name: 'Green', text: 'Ashcroft is close, but procurement wants twelve percent off.', aiGenerated: true }} />
 );
 
@@ -127,16 +126,19 @@ const FUNNEL: SponsorStageProps['funnel'] = {
   periodUnit: 'week', scale: 45,
   stages: [['Lead generation', 42, 40], ['Qualification', 28, 30], ['Solution demo', 12, 22], ['Proposal', 9, 12], ['Closing', 4, 6]].map(([name, count, ideal]) => ({ key: String(name), name: String(name), count: Number(count), ideal: Number(ideal) }))
 };
-const sponsor = (layout: LiveLayout, p: Partial<SponsorStageProps> = {}) => (
-  <SponsorStage sponsor={PRIYA} speaking={false} layout={layout} onNoteChange={noop} funnel={FUNNEL} kpi={{ revenue: 41200, target: 240000 }}
+const sponsor = (p: Partial<SponsorStageProps> = {}) => (
+  <SponsorStage sponsor={PRIYA} speaking={false} onNoteChange={noop} funnel={FUNNEL} kpi={{ revenue: 41200, target: 240000 }}
     caption={{ name: 'Priya', text: 'Thanks for joining. Walk me through where the pipeline stands.', aiGenerated: true }}
     notes={[{ value: 'Ashcroft is winnable at list price', prompt: 'Where the pipeline stands' }, { value: '', prompt: 'What is blocking demos' }, { value: '', prompt: 'What you need from Priya' }]} {...p} />
 );
 
-// The designed frames, desktop (l1 to l6) and phone (m1 to m5).
+// The designed frames, l1 to l6.
 
 /** l1: 1:1 by voice, the transcript ready to edit before sending. */
 export const L1VoiceReview: StoryObj = { render: () => <RolePlayFrame st={{ mic: 'review', draft: YOU_LINES[0] }} /> };
+
+/** l1 at tablet size, 834 wide (an iPad held upright): the same layout, narrower (D69). */
+export const L1Tablet: StoryObj = { render: () => <Frame width={834}><LiveShell {...shell({ mic: 'review', draft: YOU_LINES[0] }, rolePlay())} /></Frame> };
 
 /** l2: Kent is speaking; the caption and the last turn stream in. Speaking interrupts. */
 export const L2NpcStreaming: StoryObj = {
@@ -153,34 +155,16 @@ export const L3TextMode: StoryObj = { render: () => <RolePlayFrame st={{ mode: '
 export const L4Email: StoryObj = { render: () => <Frame><LiveShell {...shell({ format: 'email' }, email())} /></Frame> };
 
 /** l5: team meeting with the active speaker, a raised hand and the caption. */
-export const L5Meeting: StoryObj = { render: () => <Frame><LiveShell {...shell({ format: 'meeting', conversation: 'npcSpeaking', speaker: 'Green' }, meeting('desktop'))} /></Frame> };
+export const L5Meeting: StoryObj = { render: () => <Frame><LiveShell {...shell({ format: 'meeting', conversation: 'npcSpeaking', speaker: 'Green' }, meeting())} /></Frame> };
 
 /** l6: sponsor briefing, three points first, funnel and revenue pinned. */
-export const L6Sponsor: StoryObj = { render: () => <Frame><LiveShell {...shell({ format: 'sponsor', conversation: 'npcSpeaking', speaker: 'Priya' }, sponsor('desktop', { speaking: true }))} /></Frame> };
-
-/** m1: 1:1 by voice on a phone. The brief starts collapsed. */
-export const M1PhoneVoice: StoryObj = { render: () => <RolePlayFrame st={{ layout: 'phone', mic: 'review', draft: YOU_LINES[0] }} /> };
-
-/** m2: mic denied on a phone: the banner offers text and the conversation stays intact. */
-export const M2PhoneMicDenied: StoryObj = { render: () => <RolePlayFrame st={{ layout: 'phone', mode: 'text', mic: 'denied' }} /> };
-
-/** m3: email on a phone. */
-export const M3PhoneEmail: StoryObj = { render: () => <Frame layout="phone"><LiveShell {...shell({ format: 'email', layout: 'phone' }, email())} /></Frame> };
-
-/** m4: team meeting on a phone, six tiles. */
-export const M4PhoneMeeting: StoryObj = { render: () => <Frame layout="phone"><LiveShell {...shell({ format: 'meeting', layout: 'phone', conversation: 'npcSpeaking', speaker: 'Green' }, meeting('phone'))} /></Frame> };
-
-/** m5: sponsor briefing on a phone. */
-export const M5PhoneSponsor: StoryObj = { render: () => <Frame layout="phone"><LiveShell {...shell({ format: 'sponsor', layout: 'phone', conversation: 'npcSpeaking', speaker: 'Priya' }, sponsor('phone', { speaking: true }))} /></Frame> };
+export const L6Sponsor: StoryObj = { render: () => <Frame><LiveShell {...shell({ format: 'sponsor', conversation: 'npcSpeaking', speaker: 'Priya' }, sponsor({ speaking: true }))} /></Frame> };
 
 /** r1: "The team is reacting" while the evaluation runs. */
 export const R1Reacting: StoryObj = { render: () => <Frame><ReactingScreen people={[KENT, BETH, TEAM[8]]} /></Frame> };
 
 /** The evaluation is slow: keep waiting or retry. */
 export const ReactingSlow: StoryObj = { render: () => <Frame><ReactingScreen people={[KENT, BETH, TEAM[8]]} slow onKeepWaiting={noop} onRetry={noop} /></Frame> };
-
-/** One person reacting, on a phone. */
-export const ReactingOnePhone: StoryObj = { render: () => <Frame layout="phone"><ReactingScreen people={[KENT]} /></Frame> };
 
 // Edge states (the /states frames) and the engine states the design implies.
 
@@ -241,26 +225,18 @@ export const EmailSubjectAndInitials: StoryObj = {
 };
 
 /** The meeting with all 10 attendees, two hands raised. */
-export const MeetingTenAttendees: StoryObj = { render: () => <Frame><LiveShell {...shell({ format: 'meeting', conversation: 'npcSpeaking', speaker: 'Green' }, meeting('desktop', 10, ['ruth', 'mandy']))} /></Frame> };
-
-/** Phone: the brief open, NPC streaming. */
-export const PhoneBriefOpen: StoryObj = {
-  render: () => <RolePlayFrame st={{ layout: 'phone', briefOpen: true, conversation: 'npcSpeaking' }} stage={{ caption: { name: 'Kent', text: words(KENT_LINES[0], 6), streaming: true, aiGenerated: true }, turns: [npc(0, words(KENT_LINES[0], 6), { streaming: true })] }} />
-};
-
-/** Phone: before the first turn the transcript is hidden. */
-export const PhoneNoTurnsYet: StoryObj = { render: () => <RolePlayFrame st={{ layout: 'phone', conversation: 'npcThinking' }} stage={{ caption: null, turns: [] }} /> };
+export const MeetingTenAttendees: StoryObj = { render: () => <Frame><LiveShell {...shell({ format: 'meeting', conversation: 'npcSpeaking', speaker: 'Green' }, meeting(10, ['ruth', 'mandy']))} /></Frame> };
 
 // Playable: a scripted engine stand in that streams the NPC token by token.
 
-function usePlayable(layout: LiveLayout) {
+function usePlayable() {
   const [turns, setTurns] = useState<LiveTurn[]>([]);
   const [conversation, setConversation] = useState<LiveConversation>('npcSpeaking');
   const [mic, setMic] = useState<MicState>('idle');
   const [mode, setMode] = useState<LiveMode>('voice');
   const [draft, setDraft] = useState('');
   const [hint, setHint] = useState(false);
-  const [briefOpen, setBriefOpen] = useState(layout !== 'phone');
+  const [briefOpen, setBriefOpen] = useState(true);
   const [paused, setPaused] = useState(false);
   const [secs, setSecs] = useState(372);
   const [mood, setMood] = useState(0);
@@ -310,7 +286,7 @@ function usePlayable(layout: LiveLayout) {
 
   const last = [...turns].reverse().find(t => t.speaker !== 'you');
   const props: LiveShellProps = {
-    format: 'roleplay', personName: KENT.name, pronoun: 'he', meta: META.roleplay, layout,
+    format: 'roleplay', personName: KENT.name, pronoun: 'he', meta: META.roleplay,
     timer: { seconds: secs, paused }, onPause: () => setPaused(x => !x), mode, onModeChange: m => { setMode(m); if (mic === 'listening') setMic('review'); },
     hint: { available: !hint, text: hint ? TIPS.roleplay : null, onRequest: () => { setHint(true); setBriefOpen(true); } },
     endKind: conversation === 'closed' ? 'finish' : 'end', onEnd: noop,
@@ -325,7 +301,7 @@ function usePlayable(layout: LiveLayout) {
       onRecordAgain: () => { setDraft(''); setMic('listening'); }
     },
     children: (
-      <RolePlayStage person={KENT} mood={(['frustrated', 'guarded', 'open'] as const)[mood]} conversation={conversation} layout={layout} turns={turns} onReplay={noop}
+      <RolePlayStage person={KENT} mood={(['frustrated', 'guarded', 'open'] as const)[mood]} conversation={conversation} turns={turns} onReplay={noop}
         caption={conversation !== 'npcThinking' && last ? { name: 'Kent', text: last.text, streaming: last.streaming, aiGenerated: true } : null} />
     )
   };
@@ -333,10 +309,7 @@ function usePlayable(layout: LiveLayout) {
 }
 
 /** Everything works: Kent streams token by token, press the mic or Escape to interrupt, review and send, ask for the hint, collapse the brief, switch to text, pause. */
-export const Playable: StoryObj = { render: function Render() { return <Frame><LiveShell {...usePlayable('desktop')} /></Frame>; } };
-
-/** The playable 1:1 on a phone. */
-export const PlayablePhone: StoryObj = { render: function Render() { return <Frame layout="phone"><LiveShell {...usePlayable('phone')} /></Frame>; } };
+export const Playable: StoryObj = { render: function Render() { return <Frame><LiveShell {...usePlayable()} /></Frame>; } };
 
 /** The email composer, playable: type, dictate per field, add from team. */
 export const PlayableEmail: StoryObj = {
@@ -380,7 +353,7 @@ export const PlayableSponsor: StoryObj = {
     const prompts = ['Where the pipeline stands', 'What is blocking demos', 'What you need from Priya'];
     return (
       <Frame>
-        <LiveShell {...shell({ format: 'sponsor', speaker: 'Priya' }, sponsor('desktop', {
+        <LiveShell {...shell({ format: 'sponsor', speaker: 'Priya' }, sponsor({
           notes: [0, 1, 2].map(i => ({ value: notes[i], prompt: prompts[i] })) as SponsorStageProps['notes'],
           onNoteChange: (i, v) => setNotes(n => n.map((x, j) => (j === i ? v : x)))
         }))} />

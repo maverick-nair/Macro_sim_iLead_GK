@@ -13,6 +13,11 @@
 /* Text larger than 100% (D56): the app root carries `data-text-large`, so layouts can reflow for big text
    (grids drop columns, names wrap instead of truncating) without changing anything at 100%. */
 @custom-variant text-large (&:where([data-text-large], [data-text-large] *));
+/* A window or tablet narrower than the 1024 design (744 to 1023, D69): rows that hold a line at 1024 may wrap. */
+@custom-variant tablet (@media (max-width: 1023.98px));
+/* A live stage narrower than 560, as beside the open brief on a tablet (D69): its columns stack. The
+   stage section is the container; at 1024 and up it is wider, so nothing changes there. */
+@custom-variant stage-narrow (@container (max-width: 559.98px));
 
 /* App globals, from the iLeadApp design component helmet. In the base layer so utilities win. */
 @layer base {
@@ -28,6 +33,22 @@
 @keyframes ilDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-3px) } }
 @keyframes ilIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: none } }
 @keyframes ilShimmer { 0% { background-position: -400px 0 } 100% { background-position: 400px 0 } }
+
+/* Laptops, desktops and tablets (D69). On a touch screen (a coarse pointer) every control is at least
+   44 by 44 (WCAG 2.5.5) and a tap never waits for a double tap zoom. Text links inside a sentence
+   stay inline; checkboxes keep their drawn size inside their 44px label row. Unlayered, so it wins
+   over the utilities' smaller sizes; nothing changes with a mouse or trackpad. */
+@media (pointer: coarse) {
+  .il-theme :is(a[href], button, select, summary, textarea, [role='button'], [role='tab'], [role='option'], [role='menuitem'], input:not([type='hidden'], [type='checkbox'], [type='radio'], [type='range'])) {
+    touch-action: manipulation;
+  }
+  .il-theme :is(button, select, summary, textarea, [role='button'], [role='tab'], [role='option'], [role='menuitem'], input:not([type='hidden'], [type='checkbox'], [type='radio'], [type='range'])):not(.sr-only) {
+    min-height: var(--il-app-touch-target);
+  }
+  .il-theme :is(button, [role='button'], [role='tab']):not(.sr-only) {
+    min-width: var(--il-app-touch-target);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

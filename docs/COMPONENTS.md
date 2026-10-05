@@ -8,7 +8,7 @@ How components in `src/components` are built. The reference implementations are 
 2. **Build it** in `src/components/<area>/<Name>.tsx` with Tailwind utilities on tokens. It is presentational: props in, events out, no game logic and no engine calls.
 3. **Replace the ported markup** in the screen with the component, keeping the screen's own data shaping: the ported screens serve the design fixtures for `/screens` and `?engine=off`. On the playable board, `src/components/board/` shapes the engine view into the same props.
 4. **Prove parity** with `npm run parity` (or `npm run parity -- b1 b4` for the frames that show it). Every frame must still pass. `tests/visual/probe.ts <frame> '<selector>'` prints computed style differences against the prototype when one fails.
-5. **Write stories** in `<Name>.stories.tsx` next to the component, covering every state and variant (default, hover or focus where it matters, selected, disabled, low or empty values, mobile size, long text).
+5. **Write stories** in `<Name>.stories.tsx` next to the component, covering every state and variant (default, hover or focus where it matters, selected, disabled, low or empty values, tablet size, 834 wide, long text).
 6. `npm test` and `npx tsc -b` pass. The guard test (`src/components/guard.test.ts`) catches the common hardcoded values and inline strings (see below for what it does not catch).
 
 ## Rules

@@ -16,7 +16,7 @@ import { SkillsSection } from './SkillsSection';
 import { StyleFitSection } from './StyleFitSection';
 import { SummarySection } from './SummarySection';
 import { TeamOverRun } from './TeamOverRun';
-import type { ReportBlock, ReportLayout } from './types';
+import type { ReportBlock } from './types';
 import './messages';
 
 export interface EngineReportProps {
@@ -29,27 +29,10 @@ export interface EngineReportProps {
   participantName?: string | null;
   /** The report date, for the header and the check in date. Defaults to today. */
   date?: Date;
-  /** Defaults to the viewport: phone layouts at 600px and below. */
-  layout?: ReportLayout;
   /** Emails the report. Leave it out where there is no email service; the button hides. */
   onEmail?: () => void;
   /** A PDF rendered by the server, or null without a PDF service (then the print view and the browser's dialog). */
   getPdf?: () => Promise<Blob | null>;
-}
-
-/** Phones get the 390 layouts at this width and below, as in the app (src/main.tsx). */
-const PHONE_WIDTH = 600;
-const PHONE = `(max-width: ${PHONE_WIDTH}px)`;
-function useViewportLayout(fixed?: ReportLayout): ReportLayout {
-  const [phone, setPhone] = useState(() => !!globalThis.matchMedia?.(PHONE).matches);
-  useEffect(() => {
-    if (fixed || !globalThis.matchMedia) return;
-    const mq = matchMedia(PHONE);
-    const on = () => setPhone(mq.matches);
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, [fixed]);
-  return fixed ?? (phone ? 'phone' : 'desktop');
 }
 
 function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUnit'], periods: number) {
@@ -73,10 +56,9 @@ function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUnit'], p
  * the print view (letter pages) and the browser's print dialog, where the participant saves a PDF.
  * Load it lazily: it carries visx, which stays out of the first load.
  */
-export function EngineReport({ view, onBack, print: printProp = false, participantName, date: dateProp, layout: layoutProp, onEmail, getPdf }: EngineReportProps) {
+export function EngineReport({ view, onBack, print: printProp = false, participantName, date: dateProp, onEmail, getPdf }: EngineReportProps) {
   const i18n = useI18n();
   const { t } = i18n;
-  const layout = useViewportLayout(layoutProp);
   const [print, setPrint] = useState(printProp);
   const [printing, setPrinting] = useState(false);
   const [date] = useState(() => dateProp ?? new Date());
@@ -84,8 +66,8 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
   const moved = useRef(false);
   const money = useMemo(() => moneyFormatter(view.money), [view.money]);
   const r = view.report;
-  const model = useMemo(() => (r ? buildReportModel(i18n, money, r, { participantName, date: dateProp ?? date, layout, subPeriodUnit: view.clock.subPeriodUnit }) : null),
-    [i18n, money, r, participantName, dateProp, date, layout, view.clock.subPeriodUnit]);
+  const model = useMemo(() => (r ? buildReportModel(i18n, money, r, { participantName, date: dateProp ?? date, subPeriodUnit: view.clock.subPeriodUnit }) : null),
+    [i18n, money, r, participantName, dateProp, date, view.clock.subPeriodUnit]);
 
   // A new screen: focus starts on the name (the h1), or on the print view's toolbar when it opens there.
   useEffect(() => {
@@ -141,7 +123,7 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
   }
 
   return (
-    <ReportProvider value={{ layout, print, tables: 'toggle' }}>
+    <ReportProvider value={{ print, tables: 'toggle' }}>
       <ReportDocument
         landmark
         blocks={blocks}

@@ -7,7 +7,7 @@ import './gallery.css';
 export interface Frame extends AppProps {
   id: string;
   label: string;
-  /** Card width, default 1440px. Mobile frames are 390px. */
+  /** Card width, default 1440px. */
   w?: string;
 }
 
@@ -19,7 +19,7 @@ export interface FrameGroup {
 
 /** Builds a frame. Every frame except the playable prototype `p1` is frozen. */
 export function F(id: string, label: string, o: Omit<Frame, 'id' | 'label'> = {}): Frame {
-  return { id, label, frozen: id !== 'p1', ...o, w: o.mobile ? '390px' : o.w ?? '1440px' };
+  return { id, label, frozen: id !== 'p1', ...o, w: o.w ?? '1440px' };
 }
 
 /**

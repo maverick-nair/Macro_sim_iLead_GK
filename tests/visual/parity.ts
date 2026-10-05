@@ -44,6 +44,12 @@ const ACCEPTED: Record<string, { maxDiff: number; reason: string }> = {
   x2: { maxDiff: 0.004, reason: 'D20 dynamic: the board blurred behind a dialog rasterizes unstably' }
 };
 
+/**
+ * Prototype frames the app no longer renders. The design's phone frames (m1 to m7, 390 wide) were
+ * retired with phone support (D69): the simulation runs on laptops, desktops and tablets only.
+ */
+const RETIRED = new Set(['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7']);
+
 const args = process.argv.slice(2);
 const refresh = args.includes('--refresh');
 const prod = args.includes('--prod');
@@ -154,7 +160,7 @@ async function main() {
   for (const pg of PAGES) {
     const protoDir = path.join(cache, 'proto', pg.key), appDir = path.join(cache, 'app', pg.key);
     if (refresh || !fs.existsSync(protoDir)) await shoot(page, `http://localhost:${proto.port}/${encodeURIComponent(pg.proto)}`, protoDir, null);
-    const known = fs.readdirSync(protoDir).map(f => f.replace('.png', ''));
+    const known = fs.readdirSync(protoDir).map(f => f.replace('.png', '')).filter(id => !RETIRED.has(id));
     for (const id of known) allIds.add(id);
     const ids = only.size ? known.filter(id => only.has(id)) : known;
     if (!ids.length) continue;

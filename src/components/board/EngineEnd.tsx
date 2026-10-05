@@ -57,8 +57,6 @@ export function endScreenProps({ t, delta }: Pick<I18n, 't' | 'delta'>, view: En
 }
 
 export interface EngineEndProps {
-  /** `phone`: the end screen's 390 layout. */
-  layout?: 'desktop' | 'phone';
   view: EngineView;
   /** Consent to audio capture, from onboarding or Settings. Without it the mic says voice is off. */
   voiceConsent: boolean;
@@ -77,7 +75,7 @@ export interface EngineEndProps {
  * from what the engine saved), dictation into an answer, and saving: with Save answers, and before
  * leaving for the report or the board (a failed save keeps the participant here, answers intact).
  */
-export function EngineEnd({ view, voiceConsent, send, say, onViewReport, onLookAtBoard, layout }: EngineEndProps) {
+export function EngineEnd({ view, voiceConsent, send, say, onViewReport, onLookAtBoard }: EngineEndProps) {
   const i18n = useI18n();
   const { t } = i18n;
   const api = useApi();
@@ -169,7 +167,6 @@ export function EngineEnd({ view, voiceConsent, send, say, onViewReport, onLookA
     <EndScreen
       {...endScreenProps(i18n, view, report)}
       focusOnOpen
-      layout={layout}
       reflection={{
         questions, answers: shown, rating,
         onAnswer: (i, text) => { if (dictating === i) return; setAnswers(a => a.map((x, j) => (j === i ? text : x))); },

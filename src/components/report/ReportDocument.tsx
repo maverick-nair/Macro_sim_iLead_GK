@@ -35,19 +35,18 @@ export interface ReportDocumentProps {
  * then packed into pages before the browser paints, so the footers count the pages that print.
  */
 export function ReportDocument({ blocks, toolbar, footer, landmark = false }: ReportDocumentProps) {
-  const { layout, print } = useReport();
+  const { print } = useReport();
   const { t } = useI18n();
-  const phone = layout === 'phone';
   const Outer = landmark ? 'main' : 'div';
   const outer = print
     ? 'relative mx-auto flex w-full max-w-none flex-1 flex-col items-center gap-6 bg-(--il-report-print-desk) p-8 print:block print:bg-transparent print:p-0'
-    : `mx-auto flex w-full max-w-(--il-report-width) flex-1 flex-col items-stretch gap-5 bg-transparent ${phone ? 'p-3' : 'px-8 pt-6 pb-10'}`;
+    : `mx-auto flex w-full max-w-(--il-report-width) flex-1 flex-col items-stretch gap-5 bg-transparent px-8 pt-6 pb-10`;
   return (
     <Outer className={outer}>
       {toolbar && <div className={`w-full print:hidden ${print ? 'scheme-dark' : ''}`}>{toolbar}</div>}
       {print && <style>{REPORT_PAGE_RULE}</style>}
       {print ? <PrintPages blocks={blocks} footer={footer} /> : splitAt(blocks, b => !!b.card).map((group, i) => (
-        <article key={group[0].key} aria-label={t('report.page', { n: i + 1 })} className={`${WEB_PAGE} ${phone ? 'rounded-20 px-4 py-5' : 'rounded-28 p-8'}`}>
+        <article key={group[0].key} aria-label={t('report.page', { n: i + 1 })} className={`${WEB_PAGE} rounded-28 p-8`}>
           {group.map(b => <Fragment key={b.key}>{b.node}</Fragment>)}
         </article>
       ))}

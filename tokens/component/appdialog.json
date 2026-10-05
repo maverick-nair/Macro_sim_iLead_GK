@@ -7,6 +7,13 @@
   "app": {
     "leading": { "value": "1.5", "$description": "Body line height on the app root" },
     "logo-tracking": { "value": "-0.03em" },
+    "touch-target": { "value": "44px", "$description": "Smallest control under a coarse pointer, a tablet's touch screen (D69, WCAG 2.5.5)" },
+    "safe": {
+      "top": { "value": "env(safe-area-inset-top, 0px)", "$description": "A tablet's status bar or camera housing (the page is viewport-fit=cover); 0 on laptops and desktops" },
+      "right": { "value": "env(safe-area-inset-right, 0px)" },
+      "bottom": { "value": "env(safe-area-inset-bottom, 0px)", "$description": "A tablet's home indicator" },
+      "left": { "value": "env(safe-area-inset-left, 0px)" }
+    },
     "loading": {
       "track": { "value": "linear-gradient(90deg, {color.track} 0%, {color.accent.soft} 50%, {color.track} 100%)", "$description": "Shimmer bar while the office loads" },
       "track-size": { "value": "400px 6px" },

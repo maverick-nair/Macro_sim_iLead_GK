@@ -25,7 +25,7 @@ const MEMBERS = ['Kent Goldberg', 'Beth Killiney', 'Mandy Lobert', 'Peter Higgin
 /** A report card, as the web view shows each section. */
 function Card({ children, settings }: { children: ReactNode; settings?: Partial<ReportSettings> }) {
   return (
-    <ReportProvider value={{ layout: 'desktop', print: false, tables: 'toggle', ...settings }}>
+    <ReportProvider value={{ print: false, tables: 'toggle', ...settings }}>
       <div className="mx-auto flex max-w-(--il-report-width) flex-col gap-7 rounded-28 border border-line-default bg-surface-card p-8">{children}</div>
     </ReportProvider>
   );
@@ -48,7 +48,6 @@ export const SummaryNoLevel: StoryObj = {
 };
 
 export const TeamOverTheRun: StoryObj = { render: () => <Card><TeamOverRun periods={8} unit="week" series={FX.series} /></Card> };
-export const TeamOverTheRunPhone: StoryObj = { render: () => <div className="max-w-97.5"><Card settings={{ layout: 'phone' }}><TeamOverRun periods={8} unit="week" series={FX.series} /></Card></div> };
 
 export const SkillsDesign: StoryObj = { render: () => <Card><SkillsSection rows={FX.skills} levels={FX.levels} /></Card> };
 /** The engine's five levels, a capped skill and a skill without enough evidence. */
@@ -150,12 +149,12 @@ export const Analytics: StoryObj = { render: () => <Card><AnalyticsSection data=
 export const Methodology: StoryObj = { render: () => <Card><MethodologySection data={{ lines: ['This report comes from what you said and did in the simulation.', 'Your game score never changes a skill rating.'], reviewed: false, conversations: 30, observations: 76 }} /></Card> };
 
 /** The whole engine report from a real run (Sales Elevator), played by an automated player. */
-function FromRun({ policy, seed, print, layout }: { policy: 'good' | 'random' | 'passive'; seed: number; print?: boolean; layout?: 'desktop' | 'phone' }) {
+function FromRun({ policy, seed, print }: { policy: 'good' | 'random' | 'passive'; seed: number; print?: boolean }) {
   const [view, setView] = useState<EngineView | null>(null);
   useEffect(() => {
     void playToEnd({ policy, seed, reflection: policy === 'good' ? ['Kent taught me that the loudest problem is not always the real one.'] : undefined }).then(setView);
   }, [policy, seed]);
-  return <div className="flex min-h-screen flex-col">{view && <EngineReport view={view} onBack={noop} print={print} layout={layout} participantName="Jordan Lee" date={new Date(2026, 9, 5)} />}</div>;
+  return <div className="flex min-h-screen flex-col">{view && <EngineReport view={view} onBack={noop} print={print} participantName="Jordan Lee" date={new Date(2026, 9, 5)} />}</div>;
 }
 
 export const FromRunGood: StoryObj = { render: () => <FromRun policy="good" seed={3} /> };
@@ -163,5 +162,6 @@ export const FromRunRandom: StoryObj = { render: () => <FromRun policy="random" 
 /** No live conversations: no overall level, every skill without enough evidence. */
 export const FromRunPassive: StoryObj = { render: () => <FromRun policy="passive" seed={2} /> };
 export const FromRunPrint: StoryObj = { render: () => <FromRun policy="good" seed={3} print /> };
-export const FromRunMobile: StoryObj = { render: () => <div className="max-w-97.5"><FromRun policy="random" seed={5} layout="phone" /></div> };
+/** Tablet size, 834 wide (D69): the web view, its columns narrower. */
+export const FromRunTablet: StoryObj = { render: () => <div style={{ width: 834 }}><FromRun policy="random" seed={5} /></div> };
 export const FromRunLight: StoryObj = { globals: { theme: 'light' }, render: () => <FromRun policy="good" seed={3} /> };

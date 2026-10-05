@@ -10,7 +10,7 @@ const date = new Date(2026, 9, 5);
 async function run(policy: 'good' | 'random', reflection?: string[]) {
   const view = await playToEnd({ policy, seed: 3, reflection });
   const money = moneyFormatter(view.money);
-  return { view, report: view.report!, model: (r: ReportView, name: string | null = 'Jordan Lee') => buildReportModel(i18n, money, r, { participantName: name, date, layout: 'desktop', subPeriodUnit: view.clock.subPeriodUnit }) };
+  return { view, report: view.report!, model: (r: ReportView, name: string | null = 'Jordan Lee') => buildReportModel(i18n, money, r, { participantName: name, date, subPeriodUnit: view.clock.subPeriodUnit }) };
 }
 
 describe('the engine report, shaped for display', () => {

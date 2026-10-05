@@ -3,7 +3,7 @@ import { Button } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import type { PeriodUnit, SubPeriodUnit } from '../action/days';
 import { Waveform } from '../live/Waveform';
-import { CARD, DictateButton, FIELD, FOCUS, Portrait, TranscriptCard, TypingIndicator, type StageLayout, type StageNpc, type StageTurn } from './shared';
+import { CARD, DictateButton, FIELD, FOCUS, Portrait, TranscriptCard, TypingIndicator, type StageNpc, type StageTurn } from './shared';
 
 /** Fields you write or dictate. */
 export type PlanTextField = 'goals' | 'measures' | 'owner' | 'support';
@@ -48,7 +48,6 @@ export interface PlanFormProps {
   /** The 2 minute check in after submitting. A streaming NPC turn with no words yet reads "Priya is reading your plan". */
   checkIn: StageTurn[];
   onReplay?: (turnId: string) => void;
-  layout?: StageLayout;
 }
 
 const TEXT_ROWS: Record<PlanTextField, number> = { goals: 3, measures: 2, owner: 1, support: 2 };
@@ -61,10 +60,9 @@ const ORDER: PlanField[] = ['goals', 'measures', 'owner', 'due', 'support'];
  * 2 minute check in runs beside it as a transcript. Fills its parent.
  */
 export function PlanForm(props: PlanFormProps) {
-  const { fields, onChange, onDictate, dictating = null, levels = [], period, dueOptions, periodUnit, subPeriodUnit, reviewer, onSubmit, submitted, checkIn, onReplay, layout = 'desktop' } = props;
+  const { fields, onChange, onDictate, dictating = null, levels = [], period, dueOptions, periodUnit, subPeriodUnit, reviewer, onSubmit, submitted, checkIn, onReplay } = props;
   const { t } = useI18n();
   const uid = useId();
-  const mobile = layout === 'phone';
   const [tried, setTried] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
   const missing = tried ? missingFields(fields) : [];
@@ -90,7 +88,7 @@ export function PlanForm(props: PlanFormProps) {
   );
 
   const rowShell = (f: PlanField, labelEl: React.ReactNode, body: React.ReactNode) => (
-    <div key={f} className={`border-b border-line-default ${mobile ? 'flex flex-col gap-1.5 px-3.5 py-3' : 'grid grid-cols-(--il-liveformats-plan-row-columns) items-start gap-3 px-4 py-3'}`}>
+    <div key={f} className="border-b border-line-default grid grid-cols-(--il-liveformats-plan-row-columns) items-start gap-3 px-4 py-3">
       {labelEl}
       {body}
     </div>
@@ -100,7 +98,7 @@ export function PlanForm(props: PlanFormProps) {
     const on = dictating === f;
     const describedBy = [missing.includes(f) ? id(f, 'error') : '', on ? id(f, 'live') : ''].filter(Boolean).join(' ') || undefined;
     const labelEl = (
-      <label htmlFor={id(f)} className={`flex flex-col text-13 ${mobile ? 'font-700' : 'pt-2 text-fg-secondary'}`}>
+      <label htmlFor={id(f)} className="flex flex-col text-13 pt-2 text-fg-secondary">
         <span>{label(f)}</span>
         {f === 'support' && <span className="text-12 font-400 text-fg-secondary">{t('liveformats.plan.optional')}</span>}
       </label>
@@ -113,7 +111,7 @@ export function PlanForm(props: PlanFormProps) {
           placeholder={t('liveformats.plan.placeholder', { field: f })} className={`w-full resize-y px-3 py-2 text-14 leading-normal ${FIELD} ${FOCUS}`} />;
     const field = (
       <div className="flex min-w-0 flex-col gap-1.5">
-        {mobile ? <div className="flex items-start gap-2"><div className="min-w-0 flex-1">{input}</div>{mic}</div> : input}
+        {input}
         {on && (
           <div id={id(f, 'live')} role="status" className="flex items-center gap-2.5 rounded-14 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
             <Waveform levels={levels.slice(0, 12).map(w => Math.max(4, w / 2))} size="sm" />
@@ -123,18 +121,18 @@ export function PlanForm(props: PlanFormProps) {
         {error(f)}
       </div>
     );
-    return rowShell(f, labelEl, mobile ? field : <>{field}<span className="pt-1">{mic}</span></>);
+    return rowShell(f, labelEl, <>{field}<span className="pt-1">{mic}</span></>);
   };
 
   const dueRow = () => {
     const hint = dueOptions.length ? t('liveformats.plan.dueHint', { period: periodName }) : t('liveformats.plan.dueNone', { period: periodName });
     const describedBy = [id('due', 'hint'), missing.includes('due') ? id('due', 'error') : ''].filter(Boolean).join(' ');
     return rowShell('due',
-      <span id={id('due', 'label')} className={`text-13 ${mobile ? 'font-700' : 'pt-2 text-fg-secondary'}`}>{dueLabel}</span>,
+      <span id={id('due', 'label')} className="text-13 pt-2 text-fg-secondary">{dueLabel}</span>,
       <div className="flex min-w-0 flex-col gap-1.5">
         <div role="radiogroup" aria-labelledby={id('due', 'label')} aria-describedby={describedBy} aria-invalid={missing.includes('due') || undefined} className="flex flex-wrap gap-2">
           {dueOptions.map(n => (
-            <label key={n} className={`flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-control px-3.5 text-13 font-700 has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-brand-deep-space has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary`}>
+            <label key={n} className="flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-control px-3.5 text-13 font-700 has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-brand-deep-space has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary">
               <input type="radio" name={id('due')} value={n} checked={fields.due === n} onChange={() => onChange('due', n)} className="sr-only" />
               {t('time.subPeriod', { unit: subPeriodUnit, n })}
             </label>
@@ -150,14 +148,14 @@ export function PlanForm(props: PlanFormProps) {
     return (
       <form ref={formRef} aria-label={t('liveformats.plan.aria')} noValidate onSubmit={e => { e.preventDefault(); submit(); }}
         className={`flex size-full min-h-0 flex-col overflow-hidden ${CARD}`}>
-        <div className={`flex flex-col gap-1 border-b border-line-default ${mobile ? 'px-3.5 py-3' : 'px-4 py-3.5'}`}>
+        <div className="flex flex-col gap-1 border-b border-line-default px-4 py-3.5">
           <h2 className="m-0 text-17 font-700">{t('liveformats.plan.title')}</h2>
           <span className="text-13 text-fg-secondary">{t('liveformats.plan.intro', { name: reviewer.firstName })}</span>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
           {ORDER.map(f => (f === 'due' ? dueRow() : textRow(f)))}
         </div>
-        <div className={`flex items-center gap-2.5 ${mobile ? 'px-3.5 py-3' : 'px-4 py-3'}`}>
+        <div className="flex items-center gap-2.5 px-4 py-3">
           <span className="flex-1 text-12 text-fg-secondary">{t('liveformats.plan.footer')}</span>
           <Button variant="primary" size="md" onClick={submit}>{t('liveformats.plan.submit')}</Button>
         </div>
@@ -189,12 +187,12 @@ export function PlanForm(props: PlanFormProps) {
   const checkInCard = (
     <TranscriptCard turns={checkIn} npcName={reviewer.firstName} label={t('liveformats.plan.checkIn.title', { name: reviewer.firstName })} onReplay={onReplay}
       pending={reading ? <TypingIndicator name={reviewer.firstName} state="reading" /> : null}
-      className={mobile ? 'h-100 flex-none' : ''}
+     
       header={
         <div className="flex items-center gap-3 border-b border-line-default px-4 py-3">
           <Portrait img={reviewer.img} size="sm" mood={reviewer.mood} />
           <div className="flex min-w-0 flex-1 flex-col">
-            <h2 className="m-0 truncate text-15 font-700">{t('liveformats.plan.checkIn.title', { name: mobile ? reviewer.firstName : reviewer.name })}</h2>
+            <h2 className="m-0 truncate text-15 font-700">{t('liveformats.plan.checkIn.title', { name: reviewer.name })}</h2>
             <span className="text-12 text-fg-secondary">{t('liveformats.plan.checkIn.sub')}</span>
           </div>
           <span className="text-12 text-fg-secondary">{t('liveformats.transcript.saved')}</span>
@@ -202,8 +200,8 @@ export function PlanForm(props: PlanFormProps) {
       } />
   );
   return (
-    <div className={mobile ? 'flex size-full min-h-0 flex-col gap-2.5 overflow-auto *:flex-none' : 'grid size-full min-h-0 grid-cols-(--il-liveformats-plan-columns) gap-5'}>
-      {mobile ? <>{checkInCard}{summary}</> : <>{summary}{checkInCard}</>}
+    <div className="grid size-full min-h-0 grid-cols-(--il-liveformats-plan-columns) gap-5 stage-narrow:grid-cols-1 stage-narrow:overflow-y-auto">
+      {summary}{checkInCard}
     </div>
   );
 }

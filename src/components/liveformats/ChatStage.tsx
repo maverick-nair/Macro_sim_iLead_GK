@@ -4,7 +4,7 @@ import type { PeriodUnit, SubPeriodUnit } from '../action/days';
 import { LineAnnouncer, LiveAnnouncer } from '../live/LiveAnnouncer';
 import { TranscriptBubble } from '../live/TranscriptBubble';
 import { Waveform } from '../live/Waveform';
-import { CARD, DictateButton, FOCUS, lastNpcLine, MoodPill, Portrait, sameTime, TypingIndicator, useSimTime, useStickToBottom, type StageLayout, type StageNpc, type StageTurn } from './shared';
+import { CARD, DictateButton, FOCUS, lastNpcLine, MoodPill, Portrait, sameTime, TypingIndicator, useSimTime, useStickToBottom, type StageNpc, type StageTurn } from './shared';
 
 /** Who ended the thread: you closed it, or the NPC signed off. */
 export type ChatEnded = 'you' | 'npc';
@@ -42,7 +42,6 @@ export interface ChatStageProps {
   /** Plays a voice note turn. The id of the one playing is `playingId`. */
   onPlay?: (turnId: string) => void;
   playingId?: string | null;
-  layout?: StageLayout;
 }
 
 const SendGlyph = () => (
@@ -63,7 +62,7 @@ function Divider({ children }: { children: ReactNode }) {
   );
 }
 
-function Composer({ c, npcName, mobile }: { c: ChatComposer; npcName: string; mobile: boolean }) {
+function Composer({ c, npcName }: { c: ChatComposer; npcName: string }) {
   const { t } = useI18n();
   const id = useId();
   const hint = useId();
@@ -82,10 +81,10 @@ function Composer({ c, npcName, mobile }: { c: ChatComposer; npcName: string; mo
           {c.recording && (
             <span role="status" className="flex items-center gap-2.5 px-2 pt-1 text-12 font-700 text-status-gain">
               <Waveform levels={(c.levels ?? []).slice(0, 12).map(w => Math.max(4, w / 2))} size="sm" />
-              <span className={mobile ? 'sr-only' : ''}>{t('liveformats.chat.recording')}</span>
+              <span>{t('liveformats.chat.recording')}</span>
             </span>
           )}
-          <textarea id={id} value={c.draft} onChange={e => c.onDraft(e.target.value)} onKeyDown={onKey} rows={mobile ? 2 : 1}
+          <textarea id={id} value={c.draft} onChange={e => c.onDraft(e.target.value)} onKeyDown={onKey} rows={1}
             aria-describedby={hint} placeholder={t('liveformats.chat.draft.placeholder')}
             className="w-full resize-none rounded-12 border-0 bg-transparent p-2 text-15 text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
         </div>
@@ -106,24 +105,22 @@ function Composer({ c, npcName, mobile }: { c: ChatComposer; npcName: string; mo
  * transcripts with a play control, and the thread's own composer. It ends when you close it or the
  * NPC signs off, with a quiet line in the thread. Fills its parent.
  */
-export function ChatStage({ npc, turns, ended, periodUnit, subPeriodUnit, composer, onClose, onPlay, playingId = null, layout = 'desktop' }: ChatStageProps) {
+export function ChatStage({ npc, turns, ended, periodUnit, subPeriodUnit, composer, onClose, onPlay, playingId = null }: ChatStageProps) {
   const { t } = useI18n();
   const when = useSimTime(periodUnit, subPeriodUnit);
-  const mobile = layout === 'phone';
   const shown = turns.filter(x => x.text);
   const composing = !ended && turns.some(x => x.speaker === 'npc' && x.streaming && !x.text);
   const log = useStickToBottom<HTMLDivElement>(`${shown.length}:${shown.at(-1)?.text.length ?? 0}:${ended}:${composing}`);
   const column = 'mx-auto w-full max-w-(--il-liveformats-thread-max-width)';
-  const pad = mobile ? 'px-3' : 'px-4.5';
+  const pad = 'px-4.5';
   return (
     <section aria-label={t('liveformats.chat.aria', { name: npc.name })} className={`flex size-full min-h-0 flex-col overflow-hidden ${CARD}`}>
-      <header className={`flex items-center border-b border-line-default ${mobile ? 'gap-2.5 px-3 py-2.5' : 'gap-3 px-4.5 py-3'}`}>
+      <header className="flex items-center border-b border-line-default gap-3 px-4.5 py-3">
         <Portrait img={npc.img} size="sm" mood={npc.mood} />
         <div className="flex min-w-0 flex-1 flex-col">
           <h2 className="m-0 truncate text-15 font-700">{npc.name}</h2>
-          {mobile ? <span className="text-12 text-fg-secondary">{t('liveformats.mood', { name: npc.firstName, mood: npc.mood })}</span> : null}
         </div>
-        {!mobile && <MoodPill name={npc.firstName} mood={npc.mood} />}
+        <MoodPill name={npc.firstName} mood={npc.mood} />
         {onClose && !ended && (
           <button type="button" onClick={onClose}
             className={`h-8.5 flex-none cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 text-fg-primary ${FOCUS}`}>
@@ -134,7 +131,7 @@ export function ChatStage({ npc, turns, ended, periodUnit, subPeriodUnit, compos
 
       {/* Not a live region: a streaming turn grows token by token. The announcers below speak each finished NPC turn, and the end of the thread, once. */}
       <div ref={log} role="log" aria-label={t('liveformats.chat.log', { name: npc.firstName })} aria-live="off" tabIndex={0}
-        className={`min-h-0 flex-1 overflow-auto ${pad} ${mobile ? 'py-3' : 'py-4'} ${FOCUS} focus-visible:-outline-offset-2`}>
+        className={`min-h-0 flex-1 overflow-auto ${pad} py-4 ${FOCUS} focus-visible:-outline-offset-2`}>
         <div className={`flex flex-col gap-2.5 ${column}`}>
           {shown.map((x, i) => (
             <Fragment key={x.id}>
@@ -150,7 +147,7 @@ export function ChatStage({ npc, turns, ended, periodUnit, subPeriodUnit, compos
       </div>
 
       {composing && <div className={`${pad} pb-3`}><div className={column}><TypingIndicator name={npc.firstName} state="typing" /></div></div>}
-      {composer && !ended && <div className={`border-t border-line-default ${pad} py-3`}><div className={column}><Composer c={composer} npcName={npc.firstName} mobile={mobile} /></div></div>}
+      {composer && !ended && <div className={`border-t border-line-default ${pad} py-3`}><div className={column}><Composer c={composer} npcName={npc.firstName} /></div></div>}
       <LineAnnouncer line={lastNpcLine(turns, npc.firstName)} />
       <LiveAnnouncer text={ended ? t('liveformats.chat.ended', { by: ended, name: npc.firstName }) : ''} />
     </section>

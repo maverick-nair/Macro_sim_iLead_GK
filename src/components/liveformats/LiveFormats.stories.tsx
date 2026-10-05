@@ -4,7 +4,7 @@ import { ChatStage, type ChatComposer, type ChatStageProps } from './ChatStage';
 import { CompareView, type CompareDecision } from './CompareView';
 import { InterviewStage, type Candidate } from './InterviewStage';
 import { PlanForm, type PlanField, type PlanFields, type PlanFormProps, type PlanTextField } from './PlanForm';
-import type { StageLayout, StageNpc, StageTurn } from './shared';
+import type { StageNpc, StageTurn } from './shared';
 
 const meta: Meta = { title: 'Components/Live formats', parameters: { layout: 'fullscreen' } };
 export default meta;
@@ -12,11 +12,11 @@ export default meta;
 const noop = () => {};
 
 /**
- * The centre stage as the live shell leaves it: beside the 300 wide brief at 1440 (1072 by 680),
- * or the full width under the header on a phone. The stage fills this box.
+ * The centre stage as the live shell leaves it: beside the 300 wide brief at 1440 (1072 by 680).
+ * In an 834 wide app (a tablet held upright) it is about 466 wide. The stage fills this box.
  */
-const Stage = ({ layout = 'desktop', height, children }: { layout?: StageLayout; height?: number; children: ReactNode }) => (
-  <div style={{ width: '100%', maxWidth: layout === 'phone' ? 366 : 1072, height: height ?? (layout === 'phone' ? 720 : 680), display: 'flex', flexDirection: 'column' }}>{children}</div>
+const Stage = ({ width = 1072, height = 680, children }: { width?: number; height?: number; children: ReactNode }) => (
+  <div style={{ width: '100%', maxWidth: width, height, display: 'flex', flexDirection: 'column' }}>{children}</div>
 );
 
 function useLevels(on: boolean) {
@@ -55,9 +55,9 @@ function useComposer(initial = ''): ChatComposer {
   return { draft, onDraft: setDraft, onSend: () => setDraft(''), onRecord: noop };
 }
 
-const chat = (p: Partial<ChatStageProps>, layout: StageLayout = 'desktop') => function Render() {
+const chat = (p: Partial<ChatStageProps>, width?: number) => function Render() {
   const composer = useComposer();
-  return <Stage layout={layout}><ChatStage npc={KENT} turns={OPENING} ended={null} periodUnit="week" subPeriodUnit="day" composer={composer} onClose={noop} onPlay={noop} layout={layout} {...p} /></Stage>;
+  return <Stage width={width}><ChatStage npc={KENT} turns={OPENING} ended={null} periodUnit="week" subPeriodUnit="day" composer={composer} onClose={noop} onPlay={noop} {...p} /></Stage>;
 };
 
 /** The NPC writes first: Kent's two opening messages under the Week 2, Day 2 divider, and an empty composer. */
@@ -88,12 +88,8 @@ export const ChatLongThread: StoryObj = {
     ]
   })
 };
-/** Phone: compact header with the mood line, the thread and the composer at 390. */
-export const ChatPhone: StoryObj = { render: chat({ turns: VOICE.slice(0, 5) }, 'phone') };
-/** Phone, Kent composing. */
-export const ChatPhoneStreaming: StoryObj = { render: chat({ turns: [...THREAD.slice(0, 3), { id: 'c4', speaker: 'npc', text: '', streaming: true, at: W2D3 }] }, 'phone') };
-/** Phone, signed off. */
-export const ChatPhoneSignedOff: StoryObj = { render: chat({ turns: VOICE, ended: 'npc' }, 'phone') };
+/** Tablet size: the stage of an 834 wide app, beside the brief. */
+export const ChatTablet: StoryObj = { render: chat({ turns: VOICE.slice(0, 5) }, 466) };
 
 /** Send a message: Kent types, replies, then signs off after the third reply. */
 export const ChatInteractive: StoryObj = {
@@ -133,31 +129,27 @@ const INTERVIEW: StageTurn[] = [
 const NOTES_A = 'Ask: how she forecasts a quarter.\nStrong on discovery, specific example.\nCheck: CRM habits.';
 const NOTES_B = 'Good demo story.\nVague on a lost deal, ask again.';
 
-const interview = (layout: StageLayout, turns: StageTurn[], initialNotes = '') => function Render() {
+const interview = (turns: StageTurn[], initialNotes = '') => function Render() {
   const [notes, setNotes] = useState(initialNotes);
-  return <Stage layout={layout} height={layout === 'phone' ? 900 : undefined}><InterviewStage candidate={ANA} position={{ n: 1, total: 2 }} turns={turns} notes={notes} onNotes={setNotes} onReplay={noop} layout={layout} /></Stage>;
+  return <Stage><InterviewStage candidate={ANA} position={{ n: 1, total: 2 }} turns={turns} notes={notes} onNotes={setNotes} onReplay={noop}  /></Stage>;
 };
 
 /** First candidate, the opening question asked, Mandy thinking. Neutral ring: no mood is read from a face. */
-export const InterviewFirstCandidate: StoryObj = { render: interview('desktop', [INTERVIEW[0], { id: 'i2', speaker: 'npc', text: '', streaming: true }]) };
+export const InterviewFirstCandidate: StoryObj = { render: interview([INTERVIEW[0], { id: 'i2', speaker: 'npc', text: '', streaming: true }]) };
 /** Mid interview with your notes. Mandy is answering: captions under the portrait, the line streams into the transcript. */
-export const InterviewNotes: StoryObj = { render: interview('desktop', [...INTERVIEW, { id: 'i4', speaker: 'npc', text: 'Every Friday I sent a short note with', streaming: true }], NOTES_A) };
-/** Phone: the candidate, CV, transcript and notes stack and the stage scrolls. */
-export const InterviewPhone: StoryObj = { render: interview('phone', INTERVIEW, NOTES_A) };
+export const InterviewNotes: StoryObj = { render: interview([...INTERVIEW, { id: 'i4', speaker: 'npc', text: 'Every Friday I sent a short note with', streaming: true }], NOTES_A) };
 
-const compare = (layout: StageLayout, decided: CompareDecision | null = null) => function Render() {
+const compare = (decided: CompareDecision | null = null) => function Render() {
   const [done, setDone] = useState<CompareDecision | null>(decided);
-  return <Stage layout={layout} height={layout === 'phone' ? 860 : undefined}><CompareView candidates={[ANA, PETER]} notes={{ mandy: NOTES_A, peter: NOTES_B }} onHire={id => setDone({ kind: 'hire', id })} onPassBoth={() => setDone({ kind: 'passBoth' })} decided={done} layout={layout} /></Stage>;
+  return <Stage><CompareView candidates={[ANA, PETER]} notes={{ mandy: NOTES_A, peter: NOTES_B }} onHire={id => setDone({ kind: 'hire', id })} onPassBoth={() => setDone({ kind: 'passBoth' })} decided={done}  /></Stage>;
 };
 
 /** After two interviews: CV fields and your notes side by side, Hire or Pass for each. Marking one Hire marks the other Pass. */
-export const InterviewCompare: StoryObj = { render: compare('desktop') };
+export const InterviewCompare: StoryObj = { render: compare() };
 /** Confirmed: Mandy hired, Peter passed. */
-export const InterviewCompareHired: StoryObj = { render: compare('desktop', { kind: 'hire', id: 'mandy' }) };
+export const InterviewCompareHired: StoryObj = { render: compare({ kind: 'hire', id: 'mandy' }) };
 /** Confirmed: a pass on both. */
-export const InterviewComparePassBoth: StoryObj = { render: compare('desktop', { kind: 'passBoth' }) };
-/** Phone: two narrow columns, each row's field heading spans both. */
-export const InterviewComparePhone: StoryObj = { render: compare('phone') };
+export const InterviewComparePassBoth: StoryObj = { render: compare({ kind: 'passBoth' }) };
 
 /* Plan */
 
@@ -175,7 +167,7 @@ const CHECK_IN: StageTurn[] = [
   { id: 'p3', speaker: 'npc', text: 'Then say that in the plan. And ask Priya before Thursday, not after.' }
 ];
 
-const plan = (p: Partial<PlanFormProps> & { initial?: PlanFields; dictate?: PlanTextField }, layout: StageLayout = 'desktop') => function Render() {
+const plan = (p: Partial<PlanFormProps> & { initial?: PlanFields; dictate?: PlanTextField }) => function Render() {
   const { initial = EMPTY, dictate = null, submitted: startSubmitted = false, checkIn = CHECK_IN, ...rest } = p;
   const [fields, setFields] = useState<PlanFields>(initial);
   const [dictating, setDictating] = useState<PlanTextField | null>(dictate);
@@ -183,10 +175,10 @@ const plan = (p: Partial<PlanFormProps> & { initial?: PlanFields; dictate?: Plan
   const [submitted, setSubmitted] = useState(startSubmitted);
   const onChange = <K extends PlanField>(field: K, value: PlanFields[K]) => setFields(f => ({ ...f, [field]: value }));
   return (
-    <Stage layout={layout} height={layout === 'phone' ? 900 : undefined}>
+    <Stage>
       <PlanForm fields={fields} onChange={onChange} onDictate={f => setDictating(d => (d === f ? null : f))} dictating={dictating} levels={levels}
         period={2} dueOptions={[3, 4, 5]} periodUnit="week" subPeriodUnit="day" reviewer={KENT} onSubmit={() => setSubmitted(true)} submitted={submitted}
-        checkIn={submitted ? checkIn : []} onReplay={noop} layout={layout} {...rest} />
+        checkIn={submitted ? checkIn : []} onReplay={noop} {...rest} />
     </Stage>
   );
 };
@@ -203,7 +195,4 @@ export const PlanSubmittedCheckIn: StoryObj = { render: plan({ initial: FILLED, 
 export const PlanSubmittedReading: StoryObj = { render: plan({ initial: FILLED, submitted: true, checkIn: [{ id: 'p0', speaker: 'npc', text: '', streaming: true }] }) };
 /** A month storyline: due options are the weeks left in Month 2. */
 export const PlanMonthStoryline: StoryObj = { render: plan({ initial: { ...FILLED, due: 3 }, period: 2, dueOptions: [2, 3, 4], periodUnit: 'month', subPeriodUnit: 'week' }) };
-/** Phone: labels above the fields, a mic beside each. */
-export const PlanPhone: StoryObj = { render: plan({ initial: { ...EMPTY, goals: FILLED.goals }, dictate: 'goals' }, 'phone') };
-/** Phone, submitted: the check in comes first, the plan below it. */
-export const PlanPhoneSubmitted: StoryObj = { render: plan({ initial: FILLED, submitted: true }, 'phone') };
+

@@ -8,8 +8,6 @@ import type { MoodKey, StyleKey } from '../../data/types';
 /** All seven formats (spec, "Live interaction screens"). Chat, interview and plan stages live in liveformats (D14). */
 export type LiveFormat = 'roleplay' | 'email' | 'meeting' | 'sponsor' | 'chat' | 'interview' | 'plan';
 
-/** `desktop` is the 1440 design, `phone` the 390 one. */
-export type LiveLayout = 'desktop' | 'phone';
 
 /** How the participant answers right now. */
 export type LiveMode = 'voice' | 'text';

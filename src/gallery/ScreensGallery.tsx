@@ -55,15 +55,7 @@ const GROUPS: Array<[string, string, ReturnType<typeof F>[]]> = [
     F('x1', 'Settings and accessibility', { screen: 'board', overlay: 'settings' }),
     F('x2', 'Paused', { screen: 'board', overlay: 'paused' }),
     F('x3', 'Resume recap', { screen: 'board', overlay: 'resume' }),
-    F('x4', 'Session timed out', { screen: 'board', overlay: 'expired' })]],
-  ['m', 'Mobile at 390 · live interactions, outcome and report', [
-    F('m1', '1:1 by voice', { screen: 'live', variant: 'roleplay', uiState: 'review', mobile: true }),
-    F('m2', '1:1, mic denied, continue in text', { screen: 'live', variant: 'roleplay', uiState: 'micDenied', mobile: true }),
-    F('m3', 'Email', { screen: 'live', variant: 'email', mobile: true }),
-    F('m4', 'Team meeting', { screen: 'live', variant: 'meeting', mobile: true }),
-    F('m5', 'Sponsor briefing', { screen: 'live', variant: 'sponsor', mobile: true }),
-    F('m6', 'Outcome', { screen: 'board', outcome: true, mobile: true }),
-    F('m7', 'Report', { screen: 'report', mobile: true })]]
+    F('x4', 'Session timed out', { screen: 'board', overlay: 'expired' })]]
 ];
 
 const groups: FrameGroup[] = GROUPS.map(([id, title, frames]) => ({ id: 'g-' + id, title, frames }));

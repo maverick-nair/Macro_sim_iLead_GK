@@ -65,7 +65,7 @@
 
 **Performance:**
 - The board route's initial JS stays under 200 KB gzipped. The mock engine, the live screen, the galleries and every ported screen past onboarding load on demand.
-- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4 and is 176 KB now (4 Oct 2026).
+- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4 and is 196.3 KB now (5 Oct 2026, D69).
 
 ## Status
 
@@ -119,7 +119,7 @@ Each one ends with a demo, a summary and a stop for approval.
 - Needs D19 for the config schema.
 
 **M8. Hardening.**
-- axe on every route, Web Vitals budgets and visual baselines for light, dark and client at 1440, 1024 and 390 (see D15).
+- axe on every route, Web Vitals budgets and visual baselines for light, dark and client at 1440, 1024 and 834 (see D15 and D69: phones are not supported, 390 holds only the small screen notice).
 - Preflight on and legacy aliases removed (D6, D7).
 - Handoff docs.
 

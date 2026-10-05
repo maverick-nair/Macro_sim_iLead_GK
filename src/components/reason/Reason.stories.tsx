@@ -12,14 +12,13 @@ const CHANGES: Array<Pick<ReasonChipProps, 'name' | 'metric' | 'delta'>> = [
   { name: 'Beth', metric: 'morale', delta: -2 }
 ];
 
-function Chips({ size }: { size: 'sm' | 'md' }) {
+function Chips() {
   const [nums, setNums] = useState(false);
-  return <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{CHANGES.map((c, i) => <ReasonChip key={i} {...c} size={size} showNumbers={nums} onToggle={() => setNums(n => !n)} />)}</div>;
+  return <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>{CHANGES.map((c, i) => <ReasonChip key={i} {...c} showNumbers={nums} onToggle={() => setNums(n => !n)} />)}</div>;
 }
 
 /** Tap a chip to switch between words and exact numbers. */
-export const Interactive: StoryObj = { render: () => <Chips size="sm" /> };
-export const Mobile: StoryObj = { render: () => <Chips size="md" /> };
+export const Interactive: StoryObj = { render: () => <Chips /> };
 
 export const AllStates: StoryObj = {
   render: () => (
@@ -38,4 +37,4 @@ const WHY = {
 /** "See why" on the outcome panel: cause, authored rule and evidence. */
 export const Why: StoryObj = { render: () => <div style={{ width: 640 }}><ReasonDetail {...WHY} judgedByAI /></div> };
 export const WhyWithoutAI: StoryObj = { render: () => <div style={{ width: 640 }}><ReasonDetail {...WHY} judgedByAI={false} /></div> };
-export const WhyMobile: StoryObj = { render: () => <div style={{ width: 340 }}><ReasonDetail {...WHY} judgedByAI layout="stack" /></div> };
+export const WhyNarrow: StoryObj = { render: () => <div style={{ width: 340 }}><ReasonDetail {...WHY} judgedByAI layout="stack" /></div> };

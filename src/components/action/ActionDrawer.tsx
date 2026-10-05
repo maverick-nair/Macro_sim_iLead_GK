@@ -105,12 +105,6 @@ export interface ActionDrawerProps {
   /** Level of the action name heading, so the page sets the outline. Defaults to 2 (it replaces the Actions panel's own heading). */
   headingLevel?: HeadingLevel;
   onBack: () => void;
-  /**
-   * `panel`: inside the Actions card. `sheet`: a phone's bottom sheet, with 44px targets. People are
-   * picked on the team list behind the sheet: `onPickPeople` lowers the sheet to do that.
-   */
-  layout?: 'panel' | 'sheet';
-  onPickPeople?: () => void;
 }
 
 /** The action flow that replaces the actions list once an action is chosen. */
@@ -121,13 +115,11 @@ export function ActionDrawer(p: ActionDrawerProps) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   const pill = 'flex h-5.5 items-center rounded-pill px-2 text-12 font-700';
-  const sheet = p.layout === 'sheet';
-  const small = sheet ? 'lg' : 'sm';
   const who = p.people.mode === 'pick' ? t('action.drawer.people', { count: p.picks.length, max: p.people.max })
     : p.people.mode === 'with' ? t('action.drawer.with') : t('action.drawer.who');
   return (
-    <div className={`flex flex-1 animate-(--il-action-drawer-enter) flex-col gap-3.5 ${sheet ? 'px-(--il-phone-gutter-x) pt-1' : 'overflow-auto px-4.5 py-4'}`}>
-      <button type="button" onClick={p.onBack} className={`${sheet ? 'min-h-11 min-w-11 text-left' : ''} cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>{t('action.drawer.back')}</button>
+    <div className="flex flex-1 animate-(--il-action-drawer-enter) flex-col gap-3.5 overflow-auto px-4.5 py-4">
+      <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-1.5"><span className={`${pill} bg-accent-soft`}>{t('action.kind', { kind: p.kind })}</span><span className={`${pill} bg-surface-raised`}>{fmt(p.days)}</span></div>
         <Heading ref={heading} tabIndex={-1} level={p.headingLevel ?? 2} className="m-0 text-22 font-700 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</Heading>
@@ -137,10 +129,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
       {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} />}
       <div className="flex flex-col gap-2">
         <span className="text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
-        {p.people.mode === 'pick' && <span className="text-13 text-fg-secondary">{sheet ? t('phone.drawer.pickHint', { limit: p.people.limit }) : t('action.drawer.pickHint', { limit: p.people.limit })}</span>}
-        {p.people.mode === 'pick' && p.onPickPeople && (
-          <span className="inline-flex self-start"><Button variant="secondary" size="lg" onClick={p.onPickPeople}>{t('phone.drawer.pick', { count: p.picks.length })}</Button></span>
-        )}
+        {p.people.mode === 'pick' && <span className="text-13 text-fg-secondary">{t('action.drawer.pickHint', { limit: p.people.limit })}</span>}
         <div className="flex flex-wrap gap-1.5">
           {p.picks.map(pk => (
             <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
@@ -153,8 +142,8 @@ export function ActionDrawer(p: ActionDrawerProps) {
         <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
           <span className="text-pretty">{t('action.drawer.nudge', { name: p.nudge.name, area: p.nudge.area, cost: fmt(p.nudge.days) })}</span>
           <div className="flex gap-2">
-            <NoWrapButton variant="secondary" size={small} onClick={p.nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
-            <NoWrapButton variant="ghost" size={small} onClick={p.nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
+            <NoWrapButton variant="secondary" size="sm" onClick={p.nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
+            <NoWrapButton variant="ghost" size="sm" onClick={p.nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
           </div>
         </div>
       )}

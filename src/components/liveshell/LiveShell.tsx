@@ -4,7 +4,7 @@ import { useI18n } from '../../i18n';
 import { useDays, type SubPeriodUnit } from '../action/days';
 import { LiveBriefCard } from './LiveBriefCard';
 import { LiveInputBar, type LiveInputBarProps } from './LiveInputBar';
-import { FOCUS, type LiveBrief, type LiveFormat, type LiveLayout, type LiveMode } from './types';
+import { FOCUS, type LiveBrief, type LiveFormat, type LiveMode } from './types';
 
 export interface LiveTimer {
   /** Seconds left (`counts: 'down'`, the default) or elapsed (`counts: 'up'`). */
@@ -53,10 +53,9 @@ export interface LiveShellProps {
   briefOpen: boolean;
   onBriefToggle: () => void;
   /** The reply bar under the stage. Null for formats with their own send (email). */
-  input: Omit<LiveInputBarProps, 'mode' | 'onModeChange' | 'onInterrupt' | 'layout'> | null;
+  input: Omit<LiveInputBarProps, 'mode' | 'onModeChange' | 'onInterrupt'> | null;
   /** Stops the NPC's current turn: speaking into the mic, or Escape anywhere in the shell. */
   onInterrupt?: () => void;
-  layout?: LiveLayout;
   /** The format's workspace: RolePlayStage, EmailStage, MeetingStage or SponsorStage. */
   children: ReactNode;
 }
@@ -119,7 +118,6 @@ function ModeSwitch({ mode, onChange }: { mode: LiveMode; onChange: (m: LiveMode
 export function LiveShell(p: LiveShellProps) {
   const { t } = useI18n();
   const days = useDays(p.meta.costUnit);
-  const phone = p.layout === 'phone';
   const secs = Math.max(0, Math.round(p.timer.seconds));
   const time = t('liveshell.timer.value', { minutes: Math.floor(secs / 60), seconds: String(secs % 60).padStart(2, '0') });
   const npcSpeaking = p.input?.conversation === 'npcSpeaking';
@@ -133,12 +131,12 @@ export function LiveShell(p: LiveShellProps) {
     // Escape anywhere in the shell interrupts the NPC; the controls inside stay the interactive elements.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div onKeyDown={onKeyDown} className="flex flex-1 flex-col">
-      <header className={`flex items-center border-b border-line-default bg-surface-material backdrop-blur-(--il-liveshell-header-blur) ${phone ? 'gap-2.5 px-3.5 py-2.5' : 'gap-4 px-6 py-3'}`}>
+      <header className="flex items-center border-b border-line-default bg-surface-material backdrop-blur-(--il-liveshell-header-blur) gap-4 px-6 py-3">
         <span aria-hidden="true" className="flex size-9 flex-none items-center justify-center rounded-12 bg-(image:--il-fill-brand) text-liveshell-on-signal">
           <HeaderMic />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
-          <b className={`truncate ${phone ? 'text-15' : 'text-17'}`}>{t('liveshell.title', { format: p.format, name: p.personName })}</b>
+          <b className="truncate text-17">{t('liveshell.title', { format: p.format, name: p.personName })}</b>
           <span className="text-12 text-fg-secondary">
             {p.meta.action && p.format === 'roleplay'
               ? t('liveshell.subtitle.action', { action: p.meta.action, cost: days(p.meta.cost) })
@@ -150,18 +148,14 @@ export function LiveShell(p: LiveShellProps) {
           {p.timer.paused ? <PlayIcon /> : <PauseIcon />}
           <span>{time}</span>
         </button>
-        {!phone && (
-          <>
-            <span className="text-12 text-fg-secondary">{t('liveshell.clock.paused')}</span>
-            {p.hint && (
-              <button type="button" onClick={p.hint.onRequest} disabled={!p.hint.available}
-                className={`h-8.5 cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
-                {t('liveshell.hint.button', { used: p.hint.text !== null })}
-              </button>
-            )}
-            <ModeSwitch mode={p.mode} onChange={p.onModeChange} />
-          </>
+        <span className="text-12 text-fg-secondary">{t('liveshell.clock.paused')}</span>
+        {p.hint && (
+          <button type="button" onClick={p.hint.onRequest} disabled={!p.hint.available}
+            className={`h-8.5 cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
+            {t('liveshell.hint.button', { used: p.hint.text !== null })}
+          </button>
         )}
+        <ModeSwitch mode={p.mode} onChange={p.onModeChange} />
         <NoWrapButton variant={p.endKind === 'finish' ? 'primary' : 'secondary'} size="md" onClick={p.onEnd}>
           {t('liveshell.end', { kind: p.endKind })}
         </NoWrapButton>
@@ -173,11 +167,11 @@ export function LiveShell(p: LiveShellProps) {
         </div>
       )}
 
-      <div className={`grid min-h-0 flex-1 ${phone ? 'grid-cols-1 gap-2.5 px-3 pt-2.5 pb-3' : `${p.briefOpen ? 'grid-cols-(--il-liveshell-body-columns-brief)' : 'grid-cols-(--il-liveshell-body-columns-collapsed)'} gap-5 px-6 pt-5 pb-6`}`}>
+      <div className={`grid min-h-0 flex-1 ${p.briefOpen ? 'grid-cols-(--il-liveshell-body-columns-brief)' : 'grid-cols-(--il-liveshell-body-columns-collapsed)'} gap-5 px-6 pt-5 pb-6`}>
         <LiveBriefCard format={p.format} brief={p.brief} pronoun={p.pronoun} tip={p.hint?.text ?? null} open={p.briefOpen} onToggle={p.onBriefToggle} />
-        <section aria-label={t('liveshell.stage.aria')} className="flex min-h-0 min-w-0 flex-col gap-3.5">
+        <section aria-label={t('liveshell.stage.aria')} className="@container flex min-h-0 min-w-0 flex-col gap-3.5">
           {p.children}
-          {p.input && <LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} layout={p.layout} />}
+          {p.input && <LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} />}
         </section>
       </div>
     </div>

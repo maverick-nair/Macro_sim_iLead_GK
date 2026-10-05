@@ -21,11 +21,6 @@ export interface StyleSettingCardProps {
   onTooltipChange?: (style: StyleKey | null) => void;
   /** Voice note seam: rendered beside the reason field when present, for a mic button later. */
   rationaleAddon?: ReactNode;
-  /**
-   * `card`: the 1440 card with the portrait across its top. `row`: a phone's full width card with a
-   * round portrait beside the name (which wraps), 44px style letters and a 44px reason control.
-   */
-  layout?: 'card' | 'row';
 }
 
 /** "Skill 35 · Morale 9 · Trust 30", numbers bold; or the hidden stats line. */
@@ -51,8 +46,7 @@ export function useStyleNote(member: StyleSettingMember, periodUnit: PeriodUnit)
  * last period's tag, the D, G, P, E control, what the chosen style means, and an optional reason.
  * The border lights up when the style differs from last period's.
  */
-export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, tooltip, onTooltipChange, rationaleAddon, layout = 'card' }: StyleSettingCardProps) {
-  const row = layout === 'row';
+export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, tooltip, onTooltipChange, rationaleAddon }: StyleSettingCardProps) {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const opener = useRef<HTMLButtonElement>(null);
@@ -66,17 +60,6 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
   return (
     <div role="group" aria-label={t('stylesetting.member.aria', { name: m.name, title: m.title, mood: t('member.mood', { mood: m.mood }) })}
       className={`flex flex-col rounded-20 border-2 bg-surface-card backdrop-blur-12 ${styleChanged(m) ? 'border-accent-secondary' : 'border-line-default'}`}>
-      {row ? (
-        <div className="flex items-center gap-3 px-3 pt-3">
-          <span className={`size-(--il-phone-stylesetting-portrait) flex-none overflow-hidden rounded-round ${portraitBackdrop(m.away)}`}>
-            <img src={m.img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
-          </span>
-          <span className="flex min-w-0 flex-col">
-            <b className="text-15 text-pretty break-words">{m.name}</b>
-            <span className="text-12 text-pretty break-words text-fg-secondary">{m.title}</span>
-          </span>
-        </div>
-      ) : (
       <div className={`relative h-30 overflow-hidden rounded-t-18 ${portraitBackdrop(m.away)}`}>
         <img src={m.img} alt="" className={`size-full object-cover object-(--il-stylesetting-portrait-position) mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-stylesetting-portrait-overlay)" />
@@ -85,11 +68,10 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
           <span className="text-12">{m.title}</span>
         </div>
       </div>
-      )}
       <div className="flex flex-col gap-2.5 px-3 pt-2.5 pb-3">
         <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>
         <LastPeriodTag periodUnit={periodUnit} style={m.lastStyle} reaction={m.lastReaction} />
-        <StyleControl size={row ? 'lg' : 'md'} value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} />
+        <StyleControl size="md" value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} />
         <span className="min-h-8.5 text-12 text-pretty text-fg-secondary">
           {note.lead !== null && <><b className="text-fg-primary">{note.lead}</b> </>}{note.text}
         </span>
@@ -103,12 +85,12 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
             onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); close(true); } }}
             placeholder={t('stylesetting.rationale.placeholder')}
             aria-label={t('stylesetting.rationale.aria', { name: m.name })}
-            className={`${row ? 'h-11 text-15' : 'h-8.5 text-13'} rounded-10 border border-solid border-line-control bg-surface-raised px-2.5 py-0 text-fg-primary`}
+            className="h-8.5 rounded-10 text-13 border border-solid border-line-control bg-surface-raised px-2.5 py-0 text-fg-primary"
           />
         ) : (
           <button ref={opener} type="button" onClick={() => setEditing(true)}
             aria-label={m.rationale ? t('stylesetting.rationale.editAria', { name: m.name, text: m.rationale }) : t('stylesetting.rationale.addAria', { name: m.name })}
-            className={`${row ? 'min-h-11 text-left text-13' : 'text-12'} cursor-pointer self-start border-0 bg-transparent p-0 font-700 text-accent-secondary ${focus}`}>
+            className={`cursor-pointer text-12 self-start border-0 bg-transparent p-0 font-700 text-accent-secondary ${focus}`}>
             {m.rationale ? t('stylesetting.rationale.note', { text: m.rationale.slice(0, NOTE_PREVIEW) }) : t('stylesetting.rationale.add')}
           </button>
         )}

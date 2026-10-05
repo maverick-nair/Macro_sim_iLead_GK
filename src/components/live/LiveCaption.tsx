@@ -13,7 +13,7 @@ export interface LiveCaptionProps {
    * `panel` sits under the meeting grid or the sponsor avatar.
    */
   variant?: 'stage' | 'panel';
-  /** Stage text size: 18 on desktop, 15 on mobile. */
+  /** Stage text size: 18 under the 1:1 portrait, 15 on the smaller interview stage. */
   size?: 'md' | 'lg';
   /** Centres a panel caption (sponsor briefing). Stage captions are always centred. */
   centered?: boolean;

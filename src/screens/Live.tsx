@@ -8,7 +8,7 @@ import { RolePlayStage } from '../components/liveshell/RolePlayStage';
 import { MeetingStage } from '../components/liveshell/MeetingStage';
 import { SponsorStage } from '../components/liveshell/SponsorStage';
 import { EmailStage } from '../components/liveshell/EmailStage';
-import type { LiveConversation, LiveLayout, LivePerson, LiveTurn } from '../components/liveshell/types';
+import type { LiveConversation, LivePerson, LiveTurn } from '../components/liveshell/types';
 
 /**
  * Live interaction screen: 1:1 AI RolePlay (voice and text), email composer, team meeting and
@@ -18,7 +18,6 @@ import type { LiveConversation, LiveLayout, LivePerson, LiveTurn } from '../comp
 export interface LiveProps extends ScreenProps {
   variant: LiveVariant;
   uiState?: string;
-  mobile?: boolean;
 }
 
 const conversationOf = (phase: LivePhase): LiveConversation =>
@@ -30,8 +29,6 @@ export function Live(props: LiveProps) {
   const { d: D, app, act } = props;
   const { state: s, setState, scripts, startListen, stopListen, send } = useLiveSession(props);
   const S = scripts();
-  const mobile = !!props.mobile;
-  const layout: LiveLayout = mobile ? 'phone' : 'desktop';
   const v: LiveVariant = props.variant || 'roleplay';
 
   const mem = (id: string): LivePerson => {
@@ -59,7 +56,6 @@ export function Live(props: LiveProps) {
   const caption = { name: first(curLine.id), text: shown, streaming: speaking, aiGenerated: true };
   const recipient = mem(app.who && app.who !== 'kent' ? app.who : 'kent');
   const person = v === 'email' ? recipient : v === 'meeting' ? null : mem(who);
-  const showBrief = s.brief && (!mobile || v !== 'email');
   const endKind: LiveEndKind = s.phase === 'done' ? 'finish' : v === 'email' ? 'discard' : 'end';
   const end = () => act.go('reacting');
   const callOn = () => {
@@ -71,7 +67,7 @@ export function Live(props: LiveProps) {
 
   const stage = {
     roleplay: () => (
-      <RolePlayStage person={mem(who)} mood={moods[s.mood]} conversation={conversationOf(s.phase)} layout={layout}
+      <RolePlayStage person={mem(who)} mood={moods[s.mood]} conversation={conversationOf(s.phase)}
         caption={app.settings.captions && s.phase !== 'thinking' ? caption : null}
         slow={s.slow} onRetry={() => setState({ slow: false, phase: 'speaking', log: [...s.log, { who: 'npc', i: s.turn }] })}
         turns={turns} onReplay={replay} />
@@ -84,11 +80,11 @@ export function Live(props: LiveProps) {
           speaking: m.id === speakerId && (s.phase === 'speaking' || s.phase === 'idle'),
           raisedHand: m.id === 'ruth' && !s.called && s.turn < 2
         }))
-        .slice(0, mobile ? 6 : 10);
-      return <MeetingStage attendees={attendees} caption={caption} onCallOn={callOn} layout={layout} />;
+        .slice(0, 10);
+      return <MeetingStage attendees={attendees} caption={caption} onCallOn={callOn} />;
     },
     sponsor: () => (
-      <SponsorStage sponsor={mem('sponsor')} speaking={speaking} caption={caption} layout={layout}
+      <SponsorStage sponsor={mem('sponsor')} speaking={speaking} caption={caption}
         notes={[note(0), note(1), note(2)]}
         onNoteChange={(i, val) => setState(x => { const a = [...x.notes]; a[i] = val; return { notes: a }; })}
         funnel={{ periodUnit: 'week', stages: D.stages.map(st => ({ key: st.k, name: st.n, count: st.count, ideal: st.ideal })), scale: funnelScale }}
@@ -105,12 +101,12 @@ export function Live(props: LiveProps) {
   return (
     <div style={css(`min-height:${app.minH}; display:flex; flex-direction:column`)}>
       <LiveShell
-        format={v} personName={person?.name ?? ''} pronoun={v === 'sponsor' ? 'she' : person?.pronoun} meta={metas[v]} layout={layout}
+        format={v} personName={person?.name ?? ''} pronoun={v === 'sponsor' ? 'she' : person?.pronoun} meta={metas[v]}
         timer={{ seconds: s.secs, paused: false }} onPause={() => act.overlay('paused')}
         mode={s.mode} onModeChange={mode => setState({ mode, phase: s.phase === 'listening' ? 'review' : s.phase })}
         hint={{ available: !s.hint, text: s.hint ? briefs[v].hint : null, onRequest: () => setState({ hint: true, brief: true }) }}
         endKind={endKind} onEnd={end} offline={props.uiState === 'offline'}
-        brief={briefs[v].brief} briefOpen={showBrief} onBriefToggle={() => setState(x => ({ brief: !x.brief }))}
+        brief={briefs[v].brief} briefOpen={s.brief} onBriefToggle={() => setState(x => ({ brief: !x.brief }))}
         onInterrupt={() => setState({ words: 999 })}
         input={v === 'email' ? null : {
           mic: micStateOf(s), conversation: conversationOf(s.phase), voiceInput: app.settings.input === 'open' ? 'open' : 'ptt',

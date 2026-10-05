@@ -25,7 +25,7 @@ const SHELF: BadgeChipProps[] = [
 
 /** Earned and newly earned show the medal; locked ones are muted and reveal only the hint on hover. */
 export const Shelf: StoryObj = { render: () => <div style={{ width: 640 }}><BadgeShelf badges={SHELF} /></div> };
-export const ShelfMobile: StoryObj = { render: () => <div style={{ width: 340 }}><BadgeShelf badges={SHELF} /></div> };
+export const ShelfNarrow: StoryObj = { render: () => <div style={{ width: 340 }}><BadgeShelf badges={SHELF} /></div> };
 
 export const Chips: StoryObj = {
   render: () => (
@@ -47,7 +47,7 @@ export const AwardSecondOfThree: StoryObj = {
   render: () => <BadgeAward name="Steady hand" reason="Everyone on the team stayed above 40 morale for a whole week, even after the price cut news." icon={LISTENER} index={2} total={3} onSkip={noop} onContinue={noop} />
 };
 
-export const AwardMobile: StoryObj = {
+export const AwardNarrow: StoryObj = {
   render: () => <div style={{ width: 340 }}><BadgeAward name="Listener" reason="You asked three open questions in your 1:1 with Kent before offering a fix." icon={LISTENER} index={1} total={1} onSkip={noop} onContinue={noop} /></div>
 };
 

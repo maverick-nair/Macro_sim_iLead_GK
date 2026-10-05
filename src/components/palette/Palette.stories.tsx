@@ -42,4 +42,5 @@ export const ActionsOnly: StoryObj = { render: () => <Board initial="team" /> };
 export const NoResults: StoryObj = { render: () => <Board initial="zz" /> };
 /** Escape, a click on the scrim or running a result closes it; focus goes back to the button. */
 export const Closed: StoryObj = { render: () => <Board open={false} /> };
-export const Mobile: StoryObj = { render: () => <div style={{ width: 390 }}><Board initial="e" height={700} /></div> };
+/** Tablet size, 834 wide (D69). */
+export const Tablet: StoryObj = { render: () => <div style={{ width: 834 }}><Board initial="e" height={700} /></div> };

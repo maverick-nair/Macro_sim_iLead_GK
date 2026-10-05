@@ -22,7 +22,7 @@ function useLevels(on: boolean) {
 
 const Label = ({ children }: { children: React.ReactNode }) => <span style={{ fontSize: 12, color: 'var(--il-color-fg-secondary)' }}>{children}</span>;
 
-/** Every mic state: voice idle and review, listening (ring and glow), text mode, and blocked. Desktop 60, mobile 64, text 48. */
+/** Every mic state: voice idle and review, listening (ring and glow), text mode, and blocked. Voice 60, text 48. */
 export const AllStates: StoryObj = {
   render: () => (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, max-content)', gap: 28, alignItems: 'center', padding: 16 }}>
@@ -30,12 +30,6 @@ export const AllStates: StoryObj = {
         <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
           <MicButton state={state} mode={mode} onPress={noop} />
           <Label>{label}</Label>
-        </div>
-      ))}
-      {(['idle', 'listening'] as MicState[]).map(state => (
-        <div key={state} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <MicButton state={state} mode="voice" size="lg" onPress={noop} />
-          <Label>Mobile, {state}</Label>
         </div>
       ))}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
@@ -48,8 +42,8 @@ export const AllStates: StoryObj = {
 
 export const Playground: StoryObj<typeof MicButton> = {
   render: args => <div style={{ padding: 16 }}><MicButton {...args} /></div>,
-  args: { state: 'idle', mode: 'voice', size: 'md', onPress: noop },
-  argTypes: { state: { control: 'inline-radio', options: ['idle', 'listening', 'review', 'denied'] }, mode: { control: 'inline-radio', options: ['voice', 'text'] }, size: { control: 'inline-radio', options: ['md', 'lg'] } }
+  args: { state: 'idle', mode: 'voice', onPress: noop },
+  argTypes: { state: { control: 'inline-radio', options: ['idle', 'listening', 'review', 'denied'] }, mode: { control: 'inline-radio', options: ['voice', 'text'] } }
 };
 
 /** Tap to listen, tap again to stop and review, as the reply bar wires it. */
@@ -97,7 +91,7 @@ export const StatusLines: StoryObj = {
   )
 };
 
-/** The hint under the bar: push to talk (default), hands free, text, and mic blocked. Wraps on mobile. */
+/** The hint under the bar: push to talk (default), hands free, text, and mic blocked. Wraps when narrow. */
 export const Hints: StoryObj = {
   render: () => (
     <div style={{ display: 'flex', gap: 32 }}>

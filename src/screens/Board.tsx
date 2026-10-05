@@ -25,12 +25,11 @@ import { useI18n, type I18n } from '../i18n';
 /**
  * Main board: HUD, metrics strip, team board with stage columns, inbox rail,
  * actions panel, profile, action drawer, events, outcome panel, legend, Cmd K
- * palette, sponsor call, mobile outcome. Port of `project/ilBoard.dc.html`.
+ * palette, sponsor call. Port of `project/ilBoard.dc.html`.
  */
 export interface BoardProps extends ScreenProps {
   uiState?: string;
   eventType?: string;
-  mobile?: boolean;
 }
 
 /** Team and member actions share one shape in the design logic. */
@@ -71,17 +70,8 @@ type Tile = Omit<ActionTileProps, 'layout'>;
 
 const METRICS: MetricKey[] = ['skill', 'morale', 'result', 'trust'];
 
-function fmt(d: number): string {
-  if (d === 0) return 'No days';
-  const w = Math.floor(d), h = d % 1 ? '½' : '';
-  if (!w) return '½ day';
-  return w + h + (d === 1 ? ' day' : ' days');
-}
 const first = (n: string) => n.split(' ')[0];
-function backdrop(m: MemberView): string {
-  return m.away ? 'linear-gradient(160deg,#E4E6F0,#C9CEDF)' : (m.mood === 'frustrated' || m.mood === 'concerned') ? 'linear-gradient(160deg,#FFE7C2,#F7C17E)' : 'linear-gradient(160deg,#DEE9FF,#9FDCEB)';
-}
-/** Palette icon backdrop, the same mood rule as the card backdrop. */
+/** Palette icon backdrop: away reads grey, strained moods warm. */
 function paletteTone(m: MemberView): PaletteTone {
   return m.away ? 'away' : (m.mood === 'frustrated' || m.mood === 'concerned') ? 'warm' : 'calm';
 }
@@ -193,7 +183,7 @@ export function Board(props: BoardProps) {
   };
 
   // ---- renderVals ----
-  const mobile = !!props.mobile, outcome = !!app.outcome, cap = app.capacity;
+  const outcome = !!app.outcome, cap = app.capacity;
   const members: MemberView[] = app.members.map(m => (outcome && m.id === 'kent' ? { ...m, mood: 'neutral', unread: false } : m));
   const f = s.flow, picking = !!(f && f.a.select && !f.member);
 
@@ -292,7 +282,7 @@ export function Board(props: BoardProps) {
     const n = t('hud.nav.item', { key });
     act.say(key === 'more' ? 'More: Tutorial, Funnel, Leaderboard, Badges and Help.' : `${n} opens as a panel over the board.`);
   };
-  const capText = fmt(cap), outOfDays = cap === 0;
+  const outOfDays = cap === 0;
   // TODO(M2): the engine supplies the clock, score and streak; these are the prototype's fixed values.
   // The prototype's fixture scores its pillars out of 1000 (125 a week over 8 weeks); the engine's are 0 to 100.
   const hud: HudProps = {
@@ -338,15 +328,13 @@ export function Board(props: BoardProps) {
   const ev = evData && evKey ? { ...evData, art: EV_ART[evKey], hasImg: !!EV_IMG[evKey], img: EV_IMG[evKey] ? `/assets/npc/${EV_IMG[evKey]}.png` : '', two: evKey === 'capacity' || evKey === 'impact',
     secondLabel: evKey === 'capacity' ? 'Talk to Ruth first' : 'Call Priya', second: () => { setState({ event: null }); if (evKey === 'capacity') act.live('roleplay', 'ruth'); else act.live('sponsor'); } } : null;
   const closeEvent = () => { setState({ event: null }); if (ev && evKey === 'capacity') act.say('Leave approved. Justin covers Brightwell on Thursday and Friday.'); };
-  const mobileList = members.slice(0, 6).map(m => ({ id: m.id, name: m.name, title: m.title, img: m.img, backdrop: backdrop(m), moodN: D.moods[m.mood].n, moodC: D.moods[m.mood].c }));
   const openPal = () => { hot.current = true; setState({ pal: true, q: '' }); };
   const closePal = () => setState({ pal: false });
 
   return (
     <div ref={rootRef} onMouseEnter={() => { hot.current = true; }} onMouseLeave={() => { hot.current = false; }} style={css(`flex:1; display:flex; flex-direction:column; min-height:${app.minH}; position:relative`)}>
 
-      {!mobile && (
-        <>
+      <>
           <Hud {...hud} />
 
           {isOffline && <div role="alert" style={css('margin:0 24px 12px; padding:10px 16px; border-radius:14px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; align-items:center; gap:10px; font-size:13px')}><b>Connection lost.</b><span>Your clock is paused and actions will queue and send when you are back online.</span><span style={css('flex:1')}></span><span style={css('color:var(--ik-text-2)')}>Retrying in 4s</span></div>}
@@ -372,23 +360,7 @@ export function Board(props: BoardProps) {
 
             {pf && <ProfilePanel {...pf} />}
           </div>
-        </>
-      )}
-
-      {mobile && (
-        <div style={css('flex:1; display:flex; flex-direction:column; gap:12px; padding:12px 16px 24px')}>
-          <div style={css('display:flex; align-items:center; gap:10px')}><span style={css('font-size:20px; font-weight:700; letter-spacing:-0.03em; background:var(--grad-brand); -webkit-background-clip:text; background-clip:text; color:transparent')}>iLead</span><span style={css('flex:1')}></span><span style={css('font-size:12px; color:var(--ik-text-2); white-space:nowrap')}><b style={css('color:var(--ik-text)')}>Week 2</b> · Day 3 · {capText} left</span></div>
-          <OutcomePanel layout="card" {...outcomePanel} />
-          <span style={css('font-size:12px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--ik-text-2); padding-top:4px')}>Your team</span>
-          {mobileList.map(m => (
-            <div key={m.id} style={css('display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:16px; background:var(--ik-card); border:1px solid var(--ik-line); min-height:56px')}>
-              <div style={css(`width:44px; height:44px; flex:none; border-radius:50%; overflow:hidden; background:${m.backdrop}`)}><img src={m.img} alt="" style={css('width:100%; height:100%; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} /></div>
-              <div style={css('flex:1; display:flex; flex-direction:column; min-width:0')}><b style={css('font-size:14px')}>{m.name}</b><span style={css('font-size:12px; color:var(--ik-text-2)')}>{m.title}</span></div>
-              <span style={css('display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700')}><span style={css(`width:8px; height:8px; border-radius:50%; background:${m.moodC}`)}></span>{m.moodN}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      </>
 
       {ev && (
         <div style={css('position:absolute; inset:0; z-index:48; background:var(--ik-scrim); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px')}>

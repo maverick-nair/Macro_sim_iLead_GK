@@ -1,6 +1,5 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
-import { useReport } from './context';
 import type { SummaryExtras } from './types';
 import './messages';
 
@@ -17,7 +16,6 @@ export interface SummarySectionProps {
 /** The executive summary. In the design it is the opening paragraph under the name. */
 export function SummarySection({ narrative, extras }: SummarySectionProps) {
   const { t } = useI18n();
-  const { layout } = useReport();
   const id = useId();
   if (!extras) return <p className={LEDE}>{narrative}</p>;
   const list = (items: string[]) => (items.length
@@ -27,7 +25,7 @@ export function SummarySection({ narrative, extras }: SummarySectionProps) {
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-4">
       <h2 id={`${id}h`} className="sr-only">{t('report.summary.title')}</h2>
       {narrative && <p className={LEDE}>{narrative}</p>}
-      <div className={`grid gap-2.5 ${layout === 'phone' ? 'grid-cols-1' : 'grid-cols-3'}`}>
+      <div className="grid gap-2.5 grid-cols-3">
         <div className={BOX}>
           <span className="text-12 text-fg-secondary">{t('report.summary.level')}</span>
           {extras.level ? <b className="text-20">{extras.level}</b> : <span className="text-14">{t('report.summary.noLevel')}</span>}

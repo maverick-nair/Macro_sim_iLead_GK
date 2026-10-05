@@ -1,6 +1,5 @@
 import { useId, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
-import { useReport } from './context';
 import { TONE_TEXT } from './display';
 import type { IntentCardData, PlanItemData } from './types';
 import './messages';
@@ -28,7 +27,6 @@ export interface IntentSectionProps {
 /** "Intent and action": what the participant said they would do, what they did, and whether the two met. */
 export function IntentSection({ cards, alone = true }: IntentSectionProps) {
   const { t } = useI18n();
-  const { layout } = useReport();
   const list = cards.map(c => (
     <div key={c.key} className={CARD}>
       {c.name && <b className="text-14">{c.name}</b>}
@@ -51,7 +49,7 @@ export function IntentSection({ cards, alone = true }: IntentSectionProps) {
   ));
   return (
     <Column title={t('report.intent.title')} alone={alone}>
-      {alone && cards.length > 2 ? <div className={`grid gap-2.5 ${layout === 'phone' ? 'grid-cols-1' : 'grid-cols-2'}`}>{list}</div> : list}
+      {alone && cards.length > 2 ? <div className="grid gap-2.5 grid-cols-2">{list}</div> : list}
     </Column>
   );
 }
@@ -89,8 +87,7 @@ export function PlanSection({ items, reflection, checkIn, alone = true }: PlanSe
   );
 }
 
-/** The design's pair: intent and action beside the plan, one column on a phone. */
+/** The design's pair: intent and action beside the plan. */
 export function PairSection({ children }: { children: ReactNode }) {
-  const { layout } = useReport();
-  return <section className={`grid gap-4 ${layout === 'phone' ? 'grid-cols-(--il-report-pair-columns-phone)' : 'grid-cols-(--il-report-pair-columns)'}`}>{children}</section>;
+  return <section className="grid gap-4 grid-cols-(--il-report-pair-columns)">{children}</section>;
 }

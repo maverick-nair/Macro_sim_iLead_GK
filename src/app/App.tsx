@@ -44,7 +44,6 @@ export interface AppProps {
   /** Open the board with the outcome panel showing and its metric moves applied. */
   outcome?: boolean;
   eventType?: EventType | '';
-  mobile?: boolean;
   print?: boolean;
   /** Static gallery snapshot: no clock, no auto advance. */
   frozen?: boolean;
@@ -52,6 +51,8 @@ export interface AppProps {
   minHeight?: string;
   /** Play on the engine: after onboarding the board renders engine state, styles are set on it. */
   engine?: boolean;
+  /** Out of sight behind the small screen notice (D69): nothing moves, as while paused. */
+  held?: boolean;
 }
 
 type Stats = Record<string, Record<MetricKey, number>>;
@@ -113,8 +114,11 @@ function applyMoves(stats: Stats, outcome: Outcome): Stats {
   return next;
 }
 
-/** Layout of the themed root. Colors and type come from the generated `.il-theme` token layers. */
-const THEME_ROOT = 'il-theme relative flex flex-col overflow-hidden font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]';
+/**
+ * Layout of the themed root. Colors and type come from the generated `.il-theme` token layers. The
+ * padding keeps a tablet's status bar and home indicator clear (D69); it is 0 on laptops and desktops.
+ */
+const THEME_ROOT = 'il-theme relative flex flex-col overflow-hidden pt-(--il-app-safe-top) pr-(--il-app-safe-right) pb-(--il-app-safe-bottom) pl-(--il-app-safe-left) font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]';
 
 export function App(p: AppProps) {
   const api = useApi();
@@ -182,16 +186,17 @@ export function App(p: AppProps) {
   }, [api]);
 
   // Prototype session clock. Runs on the prototype board only, stops while an overlay (pause,
-  // settings) is open. The engine board keeps its own clock, so in engine mode nothing ticks here
-  // and the app does not re-render every second.
+  // settings) is open or the small screen notice covers the app. The engine board keeps its own
+  // clock, so in engine mode nothing ticks here and the app does not re-render every second.
+  const held = !!p.held;
   useEffect(() => {
-    if (frozen || engine) return;
+    if (frozen || engine || held) return;
     const tick = setInterval(() => {
       const st = sRef.current;
       if (st.screen === 'board' && !st.overlay) set(x => ({ secs: Math.max(0, x.secs - 1) }));
     }, 1000);
     return () => clearInterval(tick);
-  }, [frozen, engine, set]);
+  }, [frozen, engine, held, set]);
 
   useEffect(() => () => { clearTimeout(reactTimer.current); clearTimeout(toastTimer.current); }, []);
 
@@ -244,8 +249,7 @@ export function App(p: AppProps) {
 
   const D = s.scenario;
   const dark = (p.theme ?? 'dark') === 'dark';
-  const mobile = !!p.mobile;
-  const minH = p.minHeight ?? (mobile ? 'var(--il-frame-phone-min-height)' : 'var(--il-frame-desktop-min-height)');
+  const minH = p.minHeight ?? 'var(--il-frame-desktop-min-height)';
   // Text size scales every font size token (and the ported screens' pixel sizes) from the app root,
   // so text grows and wraps while the layout keeps its size. CSS zoom scaled the layout too.
   const rootVars: CSSProperties & Record<string, string | number> = {
@@ -286,17 +290,17 @@ export function App(p: AppProps) {
                 : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
               {engine && (scr === 'style' || scr === 'board') && (
                 <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
-                  <EngineBoard phone={mobile} client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
-                    paused={!!s.overlay} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
+                  <EngineBoard client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
+                    paused={!!s.overlay || held} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
                     actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })} />
                 </div>
               )}
               {!engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
-              {!engine && scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} mobile={mobile} /></div>}
-              {scr === 'live' && <div><Live {...screenProps} variant={s.variant} uiState={uiState} mobile={mobile} /></div>}
+              {!engine && scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} /></div>}
+              {scr === 'live' && <div><Live {...screenProps} variant={s.variant} uiState={uiState} /></div>}
               {scr === 'weekend' && <div><WeekEnd {...screenProps} step={step} /></div>}
               {scr === 'end' && <div><End {...screenProps} /></div>}
-              {scr === 'report' && <div><Report {...screenProps} print={!!p.print} mobile={mobile} /></div>}
+              {scr === 'report' && <div><Report {...screenProps} print={!!p.print} /></div>}
             </Suspense>
           )}
 

@@ -4,7 +4,7 @@ import { mark, rich } from '../stylesetting/rich';
 import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { LiveCaption } from '../live/LiveCaption';
 import { TranscriptBubble } from '../live/TranscriptBubble';
-import { FOCUS, shortNameOf, type LiveCaptionLine, type LiveConversation, type LiveLayout, type LiveMood, type LivePerson, type LiveTurn } from './types';
+import { FOCUS, shortNameOf, type LiveCaptionLine, type LiveConversation, type LiveMood, type LivePerson, type LiveTurn } from './types';
 
 export interface LiveTranscriptProps {
   turns: LiveTurn[];
@@ -74,7 +74,6 @@ export interface RolePlayStageProps {
   onRetry?: () => void;
   turns: LiveTurn[];
   onReplay?: (turnId: string) => void;
-  layout?: LiveLayout;
 }
 
 const MOOD = {
@@ -87,18 +86,17 @@ const DOTS = ['animate-(--il-liveshell-roleplay-dot-1)', 'animate-(--il-liveshel
 
 /**
  * 1:1 RolePlay workspace: the portrait in its mood ring (pulsing while the NPC speaks), the mood
- * pill, captions or the thinking state, and the transcript beside it (under it on a phone).
+ * pill, captions or the thinking state, and the transcript beside it.
  */
-export function RolePlayStage({ person, mood, conversation, caption, slow = false, onRetry, turns, onReplay, layout = 'desktop' }: RolePlayStageProps) {
+export function RolePlayStage({ person, mood, conversation, caption, slow = false, onRetry, turns, onReplay }: RolePlayStageProps) {
   const { t } = useI18n();
-  const phone = layout === 'phone';
   const m = MOOD[mood];
   const name = shortNameOf(person);
   const nameNode = <span>{name}</span>;
   return (
-    <div className={`grid min-h-0 flex-1 gap-5 ${phone ? 'grid-cols-1' : 'grid-cols-(--il-liveshell-roleplay-columns)'}`}>
+    <div className="grid min-h-0 flex-1 grid-cols-(--il-liveshell-roleplay-columns) gap-5 stage-narrow:grid-cols-1 stage-narrow:overflow-y-auto">
       <div className="flex flex-col items-center justify-center gap-4 p-3">
-        <div className={`relative ${phone ? 'size-37.5' : 'size-57.5'}`}>
+        <div className="relative size-57.5 stage-narrow:size-37.5">
           <div aria-hidden="true" className={`absolute -inset-3.5 rounded-round opacity-75 [filter:var(--il-liveshell-roleplay-halo-filter)] [transition:var(--il-liveshell-roleplay-halo-transition)] ${m.halo}`} />
           {conversation === 'npcSpeaking' && <div aria-hidden="true" className={`absolute -inset-2 animate-(--il-liveshell-roleplay-speaking-ring) rounded-round border-2 border-solid ${m.ring}`} />}
           <div className={`relative size-full overflow-hidden rounded-round border-3 border-solid bg-(image:--il-fill-portrait-calm) [transition:var(--il-liveshell-roleplay-portrait-transition)] ${m.ring}`}>
@@ -109,7 +107,7 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
           <span className={`size-2 rounded-round ${m.dot}`} />
           {rich(t('liveshell.roleplay.mood', { name: mark(0), mood: mark(1) }), [nameNode, <span>{t('liveshell.roleplay.moodWord', { mood })}</span>])}
         </span>
-        {caption && <LiveCaption name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} size={phone ? 'md' : 'lg'} />}
+        {caption && <LiveCaption name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} size="lg" />}
         {conversation === 'npcThinking' && !slow && (
           <div role="status" className="flex items-center gap-2 rounded-pill border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
             <span className="flex gap-1">
@@ -129,7 +127,7 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
           </div>
         )}
       </div>
-      {(!phone || turns.length > 0) && <LiveTranscript turns={turns} onReplay={onReplay} captionsAnnounce={!!caption} />}
+      <LiveTranscript turns={turns} onReplay={onReplay} captionsAnnounce={!!caption} />
     </div>
   );
 }

@@ -5,7 +5,6 @@ import { PatternLines } from '@visx/pattern';
 import { scaleBand, scaleLinear } from '@visx/scale';
 import { Bar, Line, LinePath } from '@visx/shape';
 import { useI18n } from '../../i18n';
-import { useReport } from './context';
 import { chartMax, gridCell, round1 } from './display';
 import { STYLE_KEYS, type StyleKey } from './types';
 import './messages';
@@ -26,8 +25,7 @@ const TICK = { className: 'fill-fg-secondary text-11', fontFamily: 'inherit', fo
 /** Style shares: one bar per style, with the count and share at its end. The dominant style is bold. */
 export function StyleSharesChart({ shares, total, dominant, label }: { shares: Record<StyleKey, number>; total: number; dominant: StyleKey[]; label: string }) {
   const { t, number } = useI18n();
-  const phone = useReport().layout === 'phone';
-  const W = phone ? 340 : 520, ROW = 30, LEFT = phone ? 80 : 100, RIGHT = phone ? 72 : 96;
+  const W = 520, ROW = 30, LEFT = 100, RIGHT = 96;
   const H = ROW * STYLE_KEYS.length;
   const x = scaleLinear({ domain: [0, chartMax(Object.values(shares))], range: [0, W - LEFT - RIGHT] });
   const y = scaleBand({ domain: [...STYLE_KEYS], range: [0, H], padding: ROW_GAP });
@@ -54,8 +52,7 @@ export function StyleSharesChart({ shares, total, dominant, label }: { shares: R
 /** The 4 by 4 used vs needed grid: rows are the style people needed, columns the style you used. Matches sit on the outlined diagonal. */
 export function FitGridChart({ grid, label }: { grid: number[][]; label: string }) {
   const { t, number } = useI18n();
-  const phone = useReport().layout === 'phone';
-  const W = phone ? 340 : 520, LEFT = phone ? 74 : 100, TOP = 26, CELL_H = 36;
+  const W = 520, LEFT = 100, TOP = 26, CELL_H = 36;
   const H = TOP + CELL_H * 4;
   const x = scaleBand({ domain: [...STYLE_KEYS], range: [LEFT, W], padding: CELL_GAP });
   const y = scaleBand({ domain: [...STYLE_KEYS], range: [TOP, H], padding: CELL_GAP });
@@ -88,8 +85,7 @@ export function FitGridChart({ grid, label }: { grid: number[][]; label: string 
 /** Cumulative revenue against target pace (dashed), with the values named at the line ends. */
 export function RevenueChart({ points, money, label }: { points: Array<{ label: string; value: number; pace: number }>; money: (n: number) => string; label: string }) {
   const { t } = useI18n();
-  const phone = useReport().layout === 'phone';
-  const W = phone ? 340 : 520, H = 220, M = { t: 12, r: phone ? 76 : 92, b: 26, l: 48 };
+  const W = 520, H = 220, M = { t: 12, r: 92, b: 26, l: 48 };
   const x = scaleBand({ domain: points.map(p => p.label), range: [M.l, W - M.r], padding: TICK_GAP });
   const y = scaleLinear({ domain: [0, chartMax(points.flatMap(p => [p.value, p.pace]))], range: [H - M.b, M.t], nice: true });
   const cx = (p: { label: string }) => round1((x(p.label) ?? 0) + x.bandwidth() / 2);
@@ -114,8 +110,7 @@ export function RevenueChart({ points, money, label }: { points: Array<{ label: 
 export function FunnelChart({ stages, label }: { stages: Array<{ key: string; name: string; value: number; ideal: number; bottleneck: boolean }>; label: string }) {
   const { t, number } = useI18n();
   const id = useId().replace(/[^a-zA-Z0-9_]/g, '');
-  const phone = useReport().layout === 'phone';
-  const W = phone ? 340 : 520, ROW = 34, LEFT = phone ? 86 : 110, RIGHT = phone ? 74 : 120;
+  const W = 520, ROW = 34, LEFT = 110, RIGHT = 120;
   const H = ROW * stages.length + 8;
   const x = scaleLinear({ domain: [0, chartMax(stages.flatMap(s => [s.value, s.ideal]))], range: [0, W - LEFT - RIGHT] });
   const y = scaleBand({ domain: stages.map(s => s.key), range: [4, H - 4], padding: ROW_GAP });

@@ -3,7 +3,7 @@ import { useMoney } from '../../i18n/money';
 import type { PeriodUnit } from '../action/days';
 import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { LiveCaption } from '../live/LiveCaption';
-import { initialsOf, shortNameOf, type LiveCaptionLine, type LiveLayout, type LivePerson } from './types';
+import { initialsOf, shortNameOf, type LiveCaptionLine, type LivePerson } from './types';
 
 export interface SponsorFunnelStage {
   key: string;
@@ -36,7 +36,6 @@ export interface SponsorStageProps {
   funnel: { periodUnit: PeriodUnit; stages: SponsorFunnelStage[]; scale: number };
   /** The pinned KPI snapshot, in the storyline's currency. */
   kpi: { revenue: number; target: number };
-  layout?: LiveLayout;
 }
 
 const pct = (n: number, scale: number) => `${Math.round((n / Math.max(1, scale)) * 100)}%`;
@@ -45,11 +44,11 @@ const pct = (n: number, scale: number) => `${Math.round((n / Math.max(1, scale))
  * Sponsor briefing workspace: the sponsor avatar with captions, your three points (filled first),
  * and the funnel and revenue snapshot pinned for reference.
  */
-export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, onNoteChange, funnel, kpi, layout = 'desktop' }: SponsorStageProps) {
+export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, onNoteChange, funnel, kpi }: SponsorStageProps) {
   const { t, number } = useI18n();
   const money = useMoney();
   return (
-    <div className={`grid flex-1 content-start gap-5 ${layout === 'phone' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+    <div className="grid flex-1 content-start grid-cols-2 gap-5 stage-narrow:grid-cols-1">
       <div className="flex flex-col items-center gap-3.5">
         <div className="relative flex aspect-square w-full max-w-105 items-center justify-center rounded-28 bg-(image:--il-liveshell-sponsor-fill)">
           {sponsor.img

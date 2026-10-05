@@ -5,9 +5,6 @@
       "shadow": { "value": "{shadow.outcome-glow}" },
       "enter": { "value": "ilIn {duration.slow} {easing.settle}" }
     },
-    "card": {
-      "enter": { "value": "ilIn {duration.slow} ease", "$description": "Mobile outcome card" }
-    },
     "portrait": {
       "ring": { "value": "0 0 0 3px {color.status.gain}", "$description": "The person the outcome is about" }
     },
@@ -15,8 +12,7 @@
       "tracking": { "value": "{tracking.eyebrow}" }
     },
     "headline": {
-      "tracking": { "value": "{tracking.headline}" },
-      "leading": { "value": "1.25", "$description": "Mobile headline, wraps to two lines" }
+      "tracking": { "value": "{tracking.headline}" }
     }
   }
 }

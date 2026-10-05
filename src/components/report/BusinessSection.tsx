@@ -2,14 +2,12 @@ import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import { ChartBlock } from './ChartBlock';
 import { FunnelChart, RevenueChart } from './charts';
-import { useReport } from './context';
 import type { BusinessData, PeriodUnit } from './types';
 import './messages';
 
 /** "Business results": revenue against target pace, the funnel over the run against its ideal, the bottleneck and conversions. */
 export function BusinessSection({ data, unit, periods }: { data: BusinessData; unit: PeriodUnit; periods: number }) {
   const { t, number } = useI18n();
-  const { layout } = useReport();
   const id = useId();
   const last = data.revenue.at(-1);
   const bottleneck = data.funnel.find(f => f.bottleneck);
@@ -17,7 +15,7 @@ export function BusinessSection({ data, unit, periods }: { data: BusinessData; u
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
       <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.business.title')}</h2>
       <p className="m-0 text-14 text-pretty">{data.line}</p>
-      <div className={`grid gap-5 ${layout === 'phone' ? 'grid-cols-1' : 'grid-cols-2'}`}>
+      <div className="grid gap-5 grid-cols-2">
         <ChartBlock
           title={t('report.business.revenueTitle')}
           chart={<RevenueChart points={data.revenue} money={data.money}

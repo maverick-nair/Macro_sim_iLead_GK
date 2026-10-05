@@ -2,7 +2,6 @@ import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import { ChartBlock } from './ChartBlock';
 import { FitGridChart, StyleSharesChart } from './charts';
-import { useReport } from './context';
 import { fitClass } from './display';
 import { STYLE_KEYS, type FitRow, type PeriodUnit, type StyleExtras } from './types';
 import './messages';
@@ -26,13 +25,9 @@ export interface StyleFitSectionProps {
  */
 export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleFitSectionProps) {
   const { t, number } = useI18n();
-  const { layout } = useReport();
   const id = useId();
-  const phone = layout === 'phone';
   const title = t('report.fit.title', { unit });
-  const columns = phone
-    ? `var(--il-report-fit-name-phone) repeat(${periods.length},var(--il-report-fit-cell-phone))`
-    : `var(--il-report-fit-name) repeat(${periods.length},minmax(0,1fr))`;
+  const columns = `var(--il-report-fit-name) repeat(${periods.length},minmax(0,1fr))`;
   const legend = [
     ['matched', 'bg-accent-default'],
     ['off', 'border-2 border-solid border-accent-default'],
@@ -51,10 +46,10 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
           ))}
         </div>
       </div>
-      {/* Scrolls sideways on a phone, so it takes focus (arrow keys scroll it) and is named after the table. */}
+      {/* Scrolls sideways when narrow, so it takes focus (arrow keys scroll it) and is named after the table. */}
       <div role="region" aria-label={title} tabIndex={0} className={`overflow-x-auto ${FOCUS}`}>
         {/* Rows are display:contents wrappers, so the grid lays out the cells directly. */}
-        <div role="table" aria-label={t('report.fit.tableAria', { unit })} className={`grid gap-1 ${phone ? 'min-w-(--il-report-fit-min-phone)' : 'min-w-0'}`} style={{ gridTemplateColumns: columns }}>
+        <div role="table" aria-label={t('report.fit.tableAria', { unit })} className="grid gap-1 min-w-0" style={{ gridTemplateColumns: columns }}>
           <div role="row" className="contents">
             <span role="columnheader"><span className="sr-only">{t('report.fit.person')}</span></span>
             {periods.map(p => (
@@ -88,7 +83,7 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
       {extras && (
         <>
           <p className="m-0 text-14">{t('report.style.capability', { pct: number(extras.capability) })}</p>
-          <div className={`grid gap-5 ${phone ? 'grid-cols-1' : 'grid-cols-2'}`}>
+          <div className="grid gap-5 grid-cols-2">
             <ChartBlock
               title={t('report.style.sharesTitle')}
               chart={<StyleSharesChart shares={extras.shares} total={extras.total} dominant={extras.dominant}

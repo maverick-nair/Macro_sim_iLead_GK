@@ -27,13 +27,13 @@ const BASE: OutcomePanelProps = {
 };
 
 /** Every control works: faces reveal reactions, chips switch to numbers, See why expands. */
-function Live({ layout, width }: { layout: 'band' | 'card'; width: number }) {
+function Live({ width }: { width: number }) {
   const [whyOpen, setWhy] = useState(false);
   const [nums, setNums] = useState(false);
   const [revealed, setRevealed] = useState<string | null>(null);
   return (
     <div style={{ width }}>
-      <OutcomePanel {...BASE} layout={layout} whyOpen={whyOpen} onToggleWhy={() => setWhy(w => !w)} showNumbers={nums} onToggleNumbers={() => setNums(n => !n)}
+      <OutcomePanel {...BASE} whyOpen={whyOpen} onToggleWhy={() => setWhy(w => !w)} showNumbers={nums} onToggleNumbers={() => setNums(n => !n)}
         revealed={revealed} onReveal={id => setRevealed(r => (r === id ? null : id))}
         reaction={revealed ? { name: revealed[0].toUpperCase() + revealed.slice(1), text: REACTIONS[revealed] } : undefined} />
     </div>
@@ -48,7 +48,7 @@ export const BandWhyOpen: StoryObj = { render: () => <div style={{ width: 1392 }
 export const BandReactionAndNumbers: StoryObj = {
   render: () => <div style={{ width: 1392 }}><OutcomePanel {...BASE} revealed="beth" reaction={{ name: 'Beth', text: REACTIONS.beth }} showNumbers /></div>
 };
-export const BandInteractive: StoryObj = { render: () => <Live layout="band" width={1392} /> };
+export const BandInteractive: StoryObj = { render: () => <Live width={1392} /> };
 /** At 1280 the reply and consequences wrap. */
 export const BandNarrow: StoryObj = { render: () => <div style={{ width: 1232 }}><OutcomePanel {...BASE} whyOpen /></div> };
 /** Only two consequence lines ever show; extras are dropped. */
@@ -63,7 +63,5 @@ export const BandLongText: StoryObj = {
 };
 export const BandNoBystander: StoryObj = { render: () => <div style={{ width: 1392 }}><OutcomePanel {...BASE} affected={[KENT]} ripple="" changes={BASE.changes.slice(0, 2)} /></div> };
 
-/** Frame m6: mobile card. */
-export const Card: StoryObj = { render: () => <div style={{ width: 358 }}><OutcomePanel {...BASE} layout="card" /></div> };
-export const CardWhyOpen: StoryObj = { render: () => <div style={{ width: 358 }}><OutcomePanel {...BASE} layout="card" whyOpen showNumbers /></div> };
-export const CardInteractive: StoryObj = { render: () => <Live layout="card" width={358} /> };
+/** Tablet size, 834 wide (D69): the band inside the board's 24px margins. */
+export const BandTablet: StoryObj = { render: () => <div style={{ width: 786 }}><OutcomePanel {...BASE} whyOpen /></div> };

@@ -4,7 +4,7 @@ import { useI18n } from '../../i18n';
 import { MicButton, RecordAgainButton, type MicState } from '../live/MicButton';
 import { MicHint, MicStatus, type MicHintInput, type MicStatusKind } from '../live/MicStatus';
 import { Waveform } from '../live/Waveform';
-import { FOCUS, type LiveConversation, type LiveLayout, type LiveMode } from './types';
+import { FOCUS, type LiveConversation, type LiveMode } from './types';
 
 export interface LiveInputBarProps {
   mode: LiveMode;
@@ -31,7 +31,6 @@ export interface LiveInputBarProps {
   levels: number[];
   /** The last capture was poor audio: the transcript has gaps to fix. */
   partial?: boolean;
-  layout?: LiveLayout;
 }
 
 /** The state line above the reply, in the order the design checks it. */
@@ -111,7 +110,7 @@ export function LiveInputBar(p: LiveInputBarProps) {
           )}
         </div>
         {canRedo && <RecordAgainButton onPress={p.onRecordAgain!} />}
-        <MicButton state={mic} mode={mode} size={p.layout === 'phone' ? 'lg' : 'md'} onPress={pressMic} />
+        <MicButton state={mic} mode={mode} onPress={pressMic} />
         <button type="button" onClick={p.onSend} disabled={cantSend} aria-label={t('liveshell.reply.send')}
           className={`flex size-12 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-brand-deep-space ${listening || closed ? 'bg-track' : 'bg-transparent bg-(image:--il-fill-brand)'} ${FOCUS}`}>
           <SendIcon />

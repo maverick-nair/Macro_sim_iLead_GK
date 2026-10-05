@@ -33,7 +33,7 @@ export const NpcTurn: StoryObj<typeof TranscriptBubble> = {
 export const NpcWithoutReplay: StoryObj = { render: () => <Panel><TranscriptBubble speaker="npc" name="Green" text="Ashcroft is close, but procurement wants twelve percent off." /></Panel> };
 export const YourTurn: StoryObj = { render: () => <Panel><TranscriptBubble speaker="you" text={YOU} /></Panel> };
 export const LongText: StoryObj = { render: () => <Panel><TranscriptBubble speaker="npc" name="Kent" text={LONG} onReplay={() => {}} /><TranscriptBubble speaker="you" text={LONG} /></Panel> };
-export const Mobile: StoryObj = { render: () => <Panel width={340}><TranscriptBubble speaker="npc" name="Kent" text={KENT} onReplay={() => {}} /><TranscriptBubble speaker="you" text={YOU} /></Panel> };
+export const Narrow: StoryObj = { render: () => <Panel width={340}><TranscriptBubble speaker="npc" name="Kent" text={KENT} onReplay={() => {}} /><TranscriptBubble speaker="you" text={YOU} /></Panel> };
 
 function useStream(line: string, ms = 120) {
   const words = line.split(' ');
@@ -58,7 +58,7 @@ export const Streaming: StoryObj = {
   }
 };
 
-/** Captions under the 1:1 portrait (desktop and mobile size), the meeting grid and the sponsor avatar. */
+/** Captions under the 1:1 portrait, the smaller interview size, the meeting grid and the sponsor avatar. */
 export const Captions: StoryObj = {
   render: () => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: 620 }}>

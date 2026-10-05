@@ -66,12 +66,6 @@ export interface MetricsStripProps {
   pulse: TeamPulse;
   target: MetricsTarget;
   sponsor: SponsorConfidence;
-  /**
-   * `row`: one row above the board (the design's 1440). `phone`: the KPI tiles in a sideways scroller
-   * (a named, focusable region that fades at its edge), Team Pulse and the target side by side, and
-   * sponsor confidence full width with its causes opening in place under it.
-   */
-  layout?: 'row' | 'phone';
 }
 
 const tile = 'flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12';
@@ -83,7 +77,7 @@ const PULSE = [
 const pct = (n: number) => `${Math.max(0, Math.min(100, n * 100))}%`;
 
 /** How the team is doing, in one row: the four team KPIs, Team Pulse, the money target and sponsor confidence. */
-export function MetricsStrip({ kpis, pulse, target, sponsor, layout = 'row' }: MetricsStripProps) {
+export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps) {
   const { t, number } = useI18n();
   const money = useMoney();
   const popId = useId();
@@ -163,22 +157,6 @@ export function MetricsStrip({ kpis, pulse, target, sponsor, layout = 'row' }: M
       )}
     </div>
   );
-
-  if (layout === 'phone') {
-    return (
-      <section aria-label={t('metrics.strip.aria')} className="flex min-w-0 flex-col gap-2.5 px-(--il-phone-gutter-x) pb-3">
-        {/* KPI tiles scroll sideways: a named region that takes focus, so keyboards can scroll it too. */}
-        <div role="region" aria-label={t('phone.kpis.aria')} tabIndex={0}
-          className="flex snap-x snap-mandatory gap-2.5 overflow-x-auto mask-(--il-phone-scroller-mask) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
-          {kpis.map(k => <div key={k.metric} className="w-(--il-phone-kpi-width) flex-none snap-start"><KpiTile {...k} /></div>)}
-          <span aria-hidden="true" className="w-4 flex-none" />
-        </div>
-        <div className="grid grid-cols-2 gap-2.5">{pulseTile}{targetTile}</div>
-        {sponsorTile('w-full')}
-        {sponsor.open && causes('')}
-      </section>
-    );
-  }
 
   return (
     <section aria-label={t('metrics.strip.aria')} className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5">

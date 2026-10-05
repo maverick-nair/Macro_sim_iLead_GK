@@ -122,5 +122,3 @@ export const DrawerInteractive: StoryObj = {
   }
 };
 
-/** Phone width, 390 minus the 16px gutters. */
-export const DrawerMobileWidth: StoryObj = { render: () => drawer(NUDGE, 358) };

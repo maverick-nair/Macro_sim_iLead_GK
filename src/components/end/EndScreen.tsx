@@ -38,31 +38,30 @@ export function EndScreen(p: EndScreenProps) {
     const end = Math.round(k.end), change = end - Math.round(k.start);
     return { key: k.metric, label: t('metric.team', { metric: t('metric.nameLower', { metric: k.metric }) }), value: number(end), note: delta(change), tone: toneOf(change) };
   });
-  const phone = p.layout === 'phone';
   const tiles = [{ key: 'conversions', label: t('end.results.conversions'), value: number(r.conversions), note: r.conversionsNote, tone: r.conversionsTone }, ...kpis];
 
   return (
-    <div className={`relative flex flex-1 flex-col gap-5.5 ${phone ? 'overflow-x-clip px-(--il-phone-gutter-x) pt-(--il-phone-top) pb-(--il-phone-gutter-bottom)' : 'px-8 pt-5 pb-8'}`} style={{ minHeight: p.minHeight }}>
+    <div className="relative flex flex-1 flex-col gap-5.5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
       <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/2 h-125 w-225 -translate-x-1/2 bg-(image:--il-end-glow-fill)"></div>
-      <header className={`relative flex items-center gap-4 ${phone ? 'flex-wrap gap-y-1' : ''}`}>
+      <header className="relative flex items-center gap-4">
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-end-logo-tracking) text-transparent">{t('hud.logo')}</span>
         <span className="text-13 text-fg-secondary">{t('end.header')}</span>
         {p.onLookAtBoard && (
           <>
             <span className="flex-1"></span>
-            <button type="button" onClick={p.onLookAtBoard} className={`${phone ? 'min-h-11' : ''} cursor-pointer rounded-8 border-0 bg-transparent px-1 py-0.5 text-13 font-600 text-fg-secondary underline ${FOCUS}`}>
+            <button type="button" onClick={p.onLookAtBoard} className={`cursor-pointer rounded-8 border-0 bg-transparent px-1 py-0.5 text-13 font-600 text-fg-secondary underline ${FOCUS}`}>
               {t('end.lookAtBoard')}
             </button>
           </>
         )}
       </header>
 
-      <section className={`relative grid ${phone ? 'grid-cols-1 gap-5' : 'grid-cols-(--il-end-hero-columns) gap-8'} items-end`}>
+      <section className="relative grid grid-cols-(--il-end-hero-columns) gap-8 items-end">
         <div className="flex flex-col gap-2.5">
           <span className="text-12 font-700 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase">
             {t('end.eyebrow', { periods: p.periods, unit, people: p.people })}
           </span>
-          <h1 ref={h1} tabIndex={-1} className={`m-0 ${phone ? 'text-44' : 'text-60'} leading-none font-700 tracking-(--il-end-display-tracking) outline-none`}>
+          <h1 ref={h1} tabIndex={-1} className="m-0 text-60 leading-none font-700 tracking-(--il-end-display-tracking) outline-none">
             {before}<span className="bg-(image:--il-end-tier-fill) bg-clip-text text-transparent [filter:var(--il-end-tier-glow)]">{tierName}</span>{after}
           </h1>
           <p className="m-0 max-w-160 text-17 text-pretty text-fg-secondary">{t('end.lead')}</p>
@@ -83,8 +82,8 @@ export function EndScreen(p: EndScreenProps) {
         </div>
       </section>
 
-      <section aria-label={t('end.results.aria')} className={`relative grid ${phone ? 'grid-cols-2' : 'grid-cols-(--il-end-results-columns) text-large:grid-cols-(--il-end-results-columns-large)'} gap-3`}>
-        <div className={`${TILE} gap-2 ${phone ? 'col-span-2' : ''}`}>
+      <section aria-label={t('end.results.aria')} className="relative grid grid-cols-(--il-end-results-columns) text-large:grid-cols-(--il-end-results-columns-large) gap-3">
+        <div className={`${TILE} gap-2`}>
           <span className="text-12 text-fg-secondary">{t('end.results.target')}</span>
           <b className="text-24">
             {money.format(r.revenue)} <span className="text-13 font-600 text-fg-secondary">{t('end.results.of', { target: money.format(r.target) })}</span>
@@ -102,7 +101,7 @@ export function EndScreen(p: EndScreenProps) {
         ))}
       </section>
 
-      <section className={`relative grid ${phone ? 'grid-cols-1' : 'grid-cols-(--il-end-body-columns)'} gap-5`}>
+      <section className="relative grid grid-cols-(--il-end-body-columns) gap-5">
         <div className="flex flex-col gap-3">
           <EndMoments moments={p.moments} periods={p.periods} periodUnit={unit} />
           <div className="flex flex-col gap-2 pt-1.5">

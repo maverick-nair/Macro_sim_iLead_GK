@@ -95,7 +95,7 @@ The spec defines 7 formats. The design covers 4: 1:1 RolePlay, email, team meeti
 
 Proposal: build chat in the shared shell, reusing the transcript bubble and input bar from the 1:1, and show you a frame before going further. Interview and plan stay out of scope until designed.
 
-**D15. Breakpoints with no design.** Open.
+**D15. Breakpoints with no design.** Open. The 390 items are superseded by D69: phones are not supported, and the 390 frames are retired.
 The brief asks for visual regression at 1440, 1024 and 390 for every screen. The design defines:
 - 1440 for every screen
 - 1280 only for the client theme board
@@ -230,7 +230,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - Portraits are optional per person, with an optional portrait per mood. `scripts/portraits/prepare.py` crops any photo to the card frame and links it into the storyline without touching calibration. `scripts/portraits/CASTING.md` describes the ten candidate photos needed.
 - Until those photos are in the repo, candidates show a neutral silhouette. This environment cannot reach stock photo sites.
 
-**D43. Phones keep the prototype board.** Decided, until the 390 board is designed (D15). Desktop plays on the engine. `?engine=off` opens the prototype's fixed board, and `?start=board` skips onboarding.
+**D43. Phones keep the prototype board.** Superseded by D69 (phones are not supported). Decided, until the 390 board is designed (D15). Desktop plays on the engine. `?engine=off` opens the prototype's fixed board, and `?start=board` skips onboarding.
 
 **D44. The GenieKreator docs join the sources.** Decided.
 - The Configuration Spec, the 2.0 Design doc, the Teardown and the GenieKreator repo's scoring rules are in `docs/genie/`. They describe 2.0 behaviour, so they outrank the 1.0 Model doc where they differ (tag [G] in SIMULATION.md).
@@ -265,7 +265,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 **D50. Live interactions are conversations.** Decided. See SIMULATION.md 5.0. The engine keeps the turns; the NPC's words come from an `NpcModel` (an AI model on the server, a persona stand in for the mock); ending the interaction evaluates everything the participant said. Email and written plan are submitted once. The live cap, the week 4 and 8 sponsor briefings and the two candidate interview follow the GenieKreator docs.
 
 **D51. Live shell components.** Decided. The live screen renders `src/components/liveshell/` (LiveShell, LiveBriefCard, LiveInputBar, RolePlayStage, EmailStage, MeetingStage, SponsorStage, ReactingScreen). All 67 parity frames are unchanged.
-- One component per piece with a `layout: 'desktop' | 'phone'` prop, not separate phone components: the 390 frames differ only in sizes and in what the header shows.
+- One component per piece with a `layout: 'desktop' | 'phone'` prop, not separate phone components: the 390 frames differ only in sizes and in what the header shows. Superseded by D69: the phone layouts and the `layout` prop are gone.
 - The brief is data with optional rows (agenda, what you know, mood, open promises, declared style, tone). The row labels follow the format ("Watch for" in a meeting, "She cares about" for the sponsor), so the design's per format briefs come from one shape.
 - The 1:1 mood ring has three steps (frustrated, guarded, more open), as designed, separate from the five member moods.
 - NPC turns can stream (`streaming`) and be cut off (`interrupted`, shown as "Interrupted" beside the AI persona label). Pressing the mic or Escape while the NPC speaks calls `onInterrupt`.
@@ -390,7 +390,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **First load:** the end screen, report and week end copy now load with their screens (`registerMessages`), taking the first load from 196.8 KB to 193.5 KB.
 
 **D68. Closing the M0 to M6 gaps: screens.** Decided.
-- **Phones play on the engine** (600px and below): compact HUD, KPI tiles in a sideways scroller, the team as a list by stage, and a dock for the inbox and actions. Actions, the action drawer, profile, inbox and the score breakdown open in a bottom sheet. 44px touch targets, safe areas, no sideways page scroll. `?engine=off` still opens the prototype.
+- **Phones play on the engine** (superseded by D69: phones are not supported) (600px and below): compact HUD, KPI tiles in a sideways scroller, the team as a list by stage, and a dock for the inbox and actions. Actions, the action drawer, profile, inbox and the score breakdown open in a bottom sheet. 44px touch targets, safe areas, no sideways page scroll. `?engine=off` still opens the prototype.
 - **Pause:** the HUD Pause pill carries the session clock. While any dialog is open nothing moves: the clock stops and a live conversation holds its streamed words, its clock and push to talk.
 - **Welcome back:** a run in progress on load opens on the board with a recap built from the engine view (period, time left, last outcome, urgent inbox, open promises, KPIs).
 - **Mic test:** onboarding records with the real speech layer; a blocked or missing mic continues in text.
@@ -398,6 +398,15 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Cohort and celebration:** a "Your cohort" table on the end screen and "Rank N of M" in the score breakdown, hidden for selection use. `celebration: full` adds a short burst behind stars and badges, only with motion allowed.
 - **Accessibility:** 200% text reflows at 1440 and 1024; step dots read "Step n of 6"; Halden's second accent darkened to pass 4.5:1.
 - **Bundle:** initial JS 198.0 KB of the 200 KB budget, so M7 must load theme code lazily.
+
+**D69. Laptop, desktop and tablet only.** Decided (2026-10-05, the product owner).
+- **Phones removed.** The phone board, its HUD, dock and bottom sheets, phone style setting, and every phone layout (`layout: 'phone'`, `'sheet'`, `'row'`, `'list'`, the outcome `card`) are gone, with their stories, the phone E2E flow, the phone only tokens and catalog keys. The design's seven 390 frames (m1 to m7) are retired from `/screens` and from `npm run parity` (`RETIRED` in `tests/visual/parity.ts`): parity now holds 60 frames (52 screens, 15 states, less the 7).
+- **The notice.** Narrower than 744, or shorter than 500 on a touch screen (a phone held sideways), the app shows a full screen notice instead: the brand mark, a laptop and phone line icon, "iLead works best on a bigger screen", why, Copy link (copies the page's own address and says "Link copied"), and "Tablets work in portrait and landscape." Query `SMALL_SCREEN` in `src/lib/useMediaQuery.ts`; the gate is `src/app/SmallScreenGate.tsx`. The app stays mounted underneath, `inert` and hidden, with its clocks held, so turning the device or widening the window resumes exactly where it was, focus included. It follows the dark, light and client themes.
+- **Breakpoints.** 1440 and up is the design. 1024 to 1279 folds the Actions panel to a rail (D58). 744 to 1023 (tablets, small windows) uses the 1024 layouts: the HUD may wrap to two rows, a live stage narrower than 560 stacks its columns (a container query), and the outcome's faces wrap. Nothing scrolls sideways.
+- **Tablets by touch.** Under a coarse pointer every control is at least 44 by 44 (WCAG 2.5.5), taps do not wait for a double tap zoom, the app root keeps clear of the status bar and home indicator (safe area insets, 0 on laptops), and the score breakdown toggles on a tap instead of relying on hover.
+- **Baselines** are now 1440 and 1024 for every engine screen, plus the 390 notice, in dark, light and the client theme (`tests/e2e/visual.spec.ts`). The 1440 and 1024 baselines did not change.
+- **Next.** Tablet portrait layouts at 834 follow the design review of the Tablet page in the design canvas; until then tablets use the 1024 layouts as above.
+- **Bundle:** initial JS 196.3 KB of the 200 KB budget (was 198.0 KB).
 
 ## Blocked on missing docs
 

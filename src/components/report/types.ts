@@ -4,7 +4,6 @@ import type { PeriodUnit } from '../action/days';
 export type { PeriodUnit };
 export type StyleKey = 'D' | 'G' | 'P' | 'E';
 export const STYLE_KEYS: readonly StyleKey[] = ['D', 'G', 'P', 'E'];
-export type ReportLayout = 'desktop' | 'phone';
 export type Tone = 'gain' | 'attention' | 'neutral';
 
 /** A verbatim quote and where it was said ("Week 2, 1:1 with Kent"). */
@@ -71,7 +70,7 @@ export interface FitCell {
 
 export interface FitRow {
   id: string;
-  /** As shown in the row header (first names on a phone). */
+  /** As shown in the row header. */
   name: string;
   /** For the cell's name ("Kent Goldberg, week 1: Directing, missed"). */
   fullName: string;

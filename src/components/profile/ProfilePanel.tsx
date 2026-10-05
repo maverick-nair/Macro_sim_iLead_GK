@@ -1,4 +1,4 @@
-import { lazy, Suspense, useId, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
+import { useId, useLayoutEffect, useRef, type KeyboardEvent } from 'react';
 import type { MoodKey, StyleKey } from '../../data/types';
 import type { MetricKey } from '../../engine/contract';
 import { useI18n, type I18n } from '../../i18n';
@@ -75,11 +75,6 @@ export interface ProfilePanelProps {
   /** Every individual action for this person, as the Actions panel would show them. */
   actions: Array<Omit<ActionTileProps, 'layout'>>;
   onClose: () => void;
-  /**
-   * `panel`: three columns over the board, a non modal dialog of its own. `sheet`: one column, the
-   * content of a phone's bottom sheet, which brings the name as its title, the close button and focus.
-   */
-  layout?: 'panel' | 'sheet';
 }
 
 /** Icon glyph, not copy: the button is named from the catalog. */
@@ -149,14 +144,7 @@ export function PromiseLine({ promise }: { promise: ProfilePromise }) {
  * every action you can take with them. A non modal dialog: focus moves in on open and back to the
  * opener on close, and Escape inside it closes it.
  */
-// The phone's one column profile loads only on phones.
-const ProfileSheet = lazy(() => import('./ProfileSheet').then(m => ({ default: m.ProfileSheet })));
-
 export function ProfilePanel(props: ProfilePanelProps) {
-  return props.layout === 'sheet' ? <Suspense><ProfileSheet {...props} /></Suspense> : <ProfileDialog {...props} />;
-}
-
-function ProfileDialog(props: ProfilePanelProps) {
   const { name, title, img, mood, away = false, stats, style, facts, shared, periodUnit, subPeriodUnit, timeline, promises, actions, onClose } = props;
   const { t, number } = useI18n();
   const ref = useRef<HTMLDivElement>(null);

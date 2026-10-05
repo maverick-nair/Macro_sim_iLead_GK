@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type MouseEvent } from 'react';
+import { useState, type MouseEvent } from 'react';
 import type { MoodKey, StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 import { LOW_BELOW, MetricBar } from '../metric/MetricBar';
@@ -61,8 +61,6 @@ const External = () => (
 
 const signal = 'flex size-6 items-center justify-center rounded-round bg-member-signal text-member-signal-fg';
 
-const MemberRow = lazy(() => import('./MemberRow').then(m => ({ default: m.MemberRow })));
-
 export interface MemberCardProps {
   name: string;
   /** Job title, from scenario data. */
@@ -101,18 +99,6 @@ export interface MemberCardProps {
   styleDisabledReason?: string;
   /** A letter was picked while the style is disabled (to say why, for example in a toast). */
   onStyleDisabledPick?: () => void;
-  /**
-   * `card`: the board's card (1440 and 1024). `row`: a phone's team list, one tappable row per person
-   * (portrait, name and role that wrap, mood, style, signals and the trust ring). The row has no
-   * profile button or style control of its own: on a phone, tapping it opens the person's actions and
-   * profile in a sheet, and the style is set on the style setting screen.
-   */
-  layout?: 'card' | 'row';
-  /**
-   * Row only. `open`: the row opens the person's sheet (selected shows as current). `toggle`: picking
-   * people for an action, the row is a toggle button (aria-pressed).
-   */
-  rowAction?: 'open' | 'toggle';
 }
 
 /**
@@ -134,9 +120,6 @@ export function MemberCard(props: MemberCardProps) {
   const pill = away ? t('member.mood.away') : moodName;
   const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
   const profile = (e: MouseEvent) => { e.stopPropagation(); onOpenProfile(); };
-
-  // The phone's row loads with the phone board.
-  if (props.layout === 'row') return <Suspense><MemberRow {...props} /></Suspense>;
 
   // The card is a plain container so the profile button and style control are not nested inside a
   // button (WCAG 4.1.2). A visually hidden toggle carries selection for keyboard and screen readers;

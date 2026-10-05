@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import { LiveCaption } from '../live/LiveCaption';
-import { CARD, FIELD, FOCUS, Portrait, TranscriptCard, TypingIndicator, type StageLayout, type StageTurn } from './shared';
+import { CARD, FIELD, FOCUS, Portrait, TranscriptCard, TypingIndicator, type StageTurn } from './shared';
 
 /**
  * What the CV says, and nothing more. The stage never shows age, and the portrait carries no mood
@@ -78,28 +78,26 @@ export interface InterviewStageProps {
   onReplay?: (turnId: string) => void;
   /** The participant's captions setting. */
   captions?: boolean;
-  layout?: StageLayout;
 }
 
 /**
  * A hiring interview: the candidate's portrait and CV card on the left, the transcript and your
- * question notes on the right. On a phone everything stacks and the stage scrolls. Fills its parent.
+ * question notes on the right. Fills its parent.
  */
-export function InterviewStage({ candidate, position, turns, notes, onNotes, onReplay, captions = true, layout = 'desktop' }: InterviewStageProps) {
+export function InterviewStage({ candidate, position, turns, notes, onNotes, onReplay, captions = true }: InterviewStageProps) {
   const { t } = useI18n();
   const notesId = useId();
   const hintId = useId();
   const nameId = useId();
-  const mobile = layout === 'phone';
   const live = turns.at(-1);
   const speaking = live?.speaker === 'npc' && live.streaming ? live : null;
 
   const who = (
-    <div className={`flex ${mobile ? 'items-center gap-3.5' : 'flex-col items-center gap-3 text-center'}`}>
-      <Portrait img={candidate.img} size={mobile ? 'md' : 'lg'} />
-      <div className={`flex min-w-0 flex-col gap-0.5 ${mobile ? '' : 'items-center'}`}>
+    <div className="flex flex-col items-center gap-3 text-center">
+      <Portrait img={candidate.img} size="lg" />
+      <div className="flex min-w-0 flex-col gap-0.5 items-center">
         {position && <span className="text-12 font-700 text-fg-secondary">{t('liveformats.interview.position', position)}</span>}
-        <h2 id={nameId} className={`m-0 font-700 ${mobile ? 'text-17' : 'text-20'}`}>{candidate.name}</h2>
+        <h2 id={nameId} className="m-0 font-700 text-20">{candidate.name}</h2>
         <span className="text-13 text-fg-secondary">{candidate.title}</span>
       </div>
     </div>
@@ -112,7 +110,7 @@ export function InterviewStage({ candidate, position, turns, notes, onNotes, onR
     <div className={`flex flex-col gap-2 p-4 ${CARD}`}>
       <label htmlFor={notesId} className="text-14 font-700">{t('liveformats.interview.notes.label')}</label>
       <span id={hintId} className="text-12 text-fg-secondary">{t('liveformats.interview.notes.hint')}</span>
-      <textarea id={notesId} value={notes} onChange={e => onNotes(e.target.value)} rows={mobile ? 4 : 5} aria-describedby={hintId}
+      <textarea id={notesId} value={notes} onChange={e => onNotes(e.target.value)} rows={5} aria-describedby={hintId}
         placeholder={t('liveformats.interview.notes.placeholder')}
         className={`w-full resize-y px-3 py-2.5 text-14 leading-normal ${FIELD} ${FOCUS}`} />
     </div>
@@ -121,33 +119,21 @@ export function InterviewStage({ candidate, position, turns, notes, onNotes, onR
   const transcript = (
     <TranscriptCard turns={turns} npcName={candidate.firstName} label={t('liveformats.transcript.title')} onReplay={onReplay}
       pending={speaking && !speaking.text ? <TypingIndicator name={candidate.firstName} state="thinking" /> : null}
-      className={mobile ? 'h-90 flex-none' : 'flex-1'} />
+      className="flex-1" />
   );
 
   return (
     <section aria-label={t('liveformats.interview.aria', { name: candidate.name })}
-      className={mobile ? 'flex size-full min-h-0 flex-col gap-2.5 overflow-auto *:flex-none' : 'grid size-full min-h-0 grid-cols-(--il-liveformats-interview-columns) gap-5'}>
-      {mobile ? (
-        <>
-          {who}
-          {caption}
-          <CvCard cv={candidate.cv} />
-          {transcript}
-          {notesCard}
-        </>
-      ) : (
-        <>
-          <div role="region" aria-labelledby={nameId} tabIndex={0} className={`flex min-h-0 flex-col gap-4 overflow-auto rounded-22 p-1 ${FOCUS}`}>
-            {who}
-            {caption}
-            <CvCard cv={candidate.cv} />
-          </div>
-          <div className="flex min-h-0 flex-col gap-3.5">
-            {transcript}
-            {notesCard}
-          </div>
-        </>
-      )}
+      className="grid size-full min-h-0 grid-cols-(--il-liveformats-interview-columns) gap-5 stage-narrow:grid-cols-1 stage-narrow:overflow-y-auto">
+      <div role="region" aria-labelledby={nameId} tabIndex={0} className={`flex min-h-0 flex-col gap-4 overflow-auto rounded-22 p-1 ${FOCUS}`}>
+        {who}
+        {caption}
+        <CvCard cv={candidate.cv} />
+      </div>
+      <div className="flex min-h-0 flex-col gap-3.5">
+        {transcript}
+        {notesCard}
+      </div>
     </section>
   );
 }
