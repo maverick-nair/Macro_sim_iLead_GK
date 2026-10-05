@@ -33,6 +33,19 @@ export interface ActionsPanelProps {
    * sponsor (`gain`), a CEO check in that took one (`neutral`). The design frames pass none.
    */
   notes?: Array<{ text: string; tone: 'gain' | 'neutral' }>;
+  /**
+   * Makes the card collapsible (the board at 1024 wide, D58): a toggle in its header, and when
+   * `collapsed` a slim rail with the number of actions open now, which expands on demand. Leave it
+   * out for the fixed card (1440 and the design frames).
+   */
+  collapse?: ActionsPanelCollapse;
+}
+
+export interface ActionsPanelCollapse {
+  collapsed: boolean;
+  onToggle: () => void;
+  /** Actions that can be taken now, for the rail. */
+  open: number;
 }
 
 const MicIcon = () => (
@@ -44,6 +57,13 @@ const BoltIcon = () => (
   <svg className="size-3" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z" /></svg>
 );
 
+const Chevron = ({ to }: { to: 'left' | 'right' }) => (
+  <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d={to === 'left' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'} />
+  </svg>
+);
+const toggleClass = 'flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+
 const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
 
 /**
@@ -51,9 +71,25 @@ const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-f
  * and a key to the icons. While an action is being planned the card shows that flow instead.
  * Every cost inside, including the drawer's, reads in the storyline's sub-period unit.
  */
-export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2, notes }: ActionsPanelProps) {
-  const { t } = useI18n();
+export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2, notes, collapse }: ActionsPanelProps) {
+  const { t, number } = useI18n();
   const fmt = useDays(subPeriodUnit);
+  if (collapse?.collapsed) {
+    // The rail: one button that brings the card back, with how many actions are open and the time left.
+    return (
+      <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pr-6 pb-6 pl-0">
+        <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
+          <button type="button" aria-expanded={false} onClick={collapse.onToggle}
+            aria-label={t('actions.rail.aria', { n: collapse.open, left: t('time.left', { amount: fmt(capacityLeft) }) })}
+            className="flex flex-1 cursor-pointer flex-col items-center gap-3 rounded-22 border-0 bg-transparent px-1 py-4 text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
+            <span className="flex size-8 items-center justify-center rounded-round border border-line-default bg-surface-raised text-fg-secondary"><Chevron to="left" /></span>
+            <b className="flex min-h-8 min-w-8 items-center justify-center rounded-pill bg-accent-soft px-1.5 text-15">{number(collapse.open)}</b>
+            <span className="text-13 font-700 [writing-mode:vertical-rl]">{t('actions.rail.label', { n: collapse.open })}</span>
+          </button>
+        </div>
+      </aside>
+    );
+  }
   return (
     <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pr-6 pb-6 pl-0">
       <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
@@ -62,7 +98,13 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
             <div className="flex flex-1 flex-col gap-3.5 px-4.5 py-4">
               <div className="flex items-baseline justify-between">
                 <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>
-                <span className="text-12 text-fg-secondary">{t('time.left', { amount: fmt(capacityLeft) })}</span>
+                <span className={`text-12 text-fg-secondary ${collapse ? 'ml-auto' : ''}`}>{t('time.left', { amount: fmt(capacityLeft) })}</span>
+                {collapse && (
+                  <button type="button" aria-expanded={true} onClick={collapse.onToggle} aria-label={t('actions.collapse')} title={t('actions.collapse')}
+                    className={`ml-2 self-center ${toggleClass}`}>
+                    <Chevron to="right" />
+                  </button>
+                )}
               </div>
               {notes && notes.length > 0 && (
                 <div className="-mt-2 flex flex-col items-end text-12">

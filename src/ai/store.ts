@@ -41,6 +41,12 @@ export interface AiStreamStore {
   /** Aborts the stream. Returns what was shown, or null when nothing was streaming. */
   cancel(): Shown | null;
   reset(): void;
+  /**
+   * Holds the stream where it is (the run is paused): no more tokens are taken from the source until
+   * it is released. Nothing is cut off, so the engine is not told of an interrupt. Holding before a
+   * stream starts holds that stream too.
+   */
+  hold(on: boolean): void;
 }
 
 const IDLE: AiStreamState = { text: '', streaming: false, done: false, turnId: null, error: null, cancelled: false, shown: null, label: AI_LABEL };
@@ -53,6 +59,9 @@ export function createAiStreamStore(): AiStreamStore {
   let abort: AbortController | null = null;
   let iterator: AsyncIterator<StreamChunk> | null = null;
   const listeners = new Set<() => void>();
+  let held = false;
+  let waiting: Array<() => void> = [];
+  const wake = () => { const w = waiting; waiting = []; w.forEach(f => f()); };
   const set = (patch: Partial<AiStreamState>) => {
     state = { ...state, ...patch };
     listeners.forEach(l => l());
@@ -60,6 +69,7 @@ export function createAiStreamStore(): AiStreamStore {
   const shownNow = (): Shown => ({ text: state.text, rawLength: raw.length, turnId: state.turnId });
   const detach = () => {
     gen++;
+    wake();
     abort?.abort();
     abort = null;
     const it = iterator;
@@ -87,6 +97,8 @@ export function createAiStreamStore(): AiStreamStore {
       iterator = it;
       try {
         for (;;) {
+          while (held && my === gen) await new Promise<void>(r => waiting.push(r));
+          if (my !== gen) break;
           const r = await it.next();
           if (my !== gen) break;
           if (r.done) {
@@ -130,6 +142,10 @@ export function createAiStreamStore(): AiStreamStore {
       if (state.streaming) detach();
       raw = '';
       set(IDLE);
+    },
+    hold(on) {
+      held = on;
+      if (!on) wake();
     }
   };
   return store;

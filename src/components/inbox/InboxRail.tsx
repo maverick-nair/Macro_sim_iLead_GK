@@ -40,7 +40,7 @@ export function InboxRail({ unread, items, onToggle, onOpen }: InboxRailProps) {
         className={`relative flex size-11 cursor-pointer items-center justify-center rounded-14 border border-solid border-line-default bg-surface-card p-0 text-fg-primary ${focus}`}>
         <InboxIcon />
         {unread > 0 && (
-          <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 flex h-5 min-w-5 items-center justify-center rounded-10 bg-brand px-1.25 text-12 font-700 text-brand-deep-space">{number(unread)}</span>
+          <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-10 bg-brand px-1.25 text-12 font-700 text-brand-deep-space">{number(unread)}</span>
         )}
       </button>
       {items.map(it => (

@@ -5,6 +5,7 @@
   "hud.nav.item": "{key, select, objective {Objective} funnel {Funnel} history {History} badges {Badges} more {More} other {}}",
   "hud.clock": "{period} · {subPeriod}",
   "hud.pause.aria": "Pause the simulation",
+  "hud.pause.label": "Pause",
   "hud.score.aria": "Leadership score {total}. Show breakdown",
   "hud.score.title": "Leadership Score",
   "hud.score.body": "Built from three parts. Every point is earned, nothing is taken away for being slow.",

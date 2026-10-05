@@ -1,5 +1,8 @@
 {
   "actions.title": "Actions",
+  "actions.collapse": "Hide actions, to give the team board more room",
+  "actions.rail.label": "{n, plural, one {action open} other {actions open}}",
+  "actions.rail.aria": "Show actions. {n, plural, =0 {None open now} one {# action open now} other {# actions open now}}, {left}",
   "actions.cost": "{unit, select, quarter {{whole, plural, =0 {{half, select, yes {½ quarter} other {No quarters}}} one {{half, select, yes {1½ quarters} other {1 quarter}}} other {#{half, select, yes {½} other {}} quarters}}} month {{whole, plural, =0 {{half, select, yes {½ month} other {No months}}} one {{half, select, yes {1½ months} other {1 month}}} other {#{half, select, yes {½} other {}} months}}} week {{whole, plural, =0 {{half, select, yes {½ week} other {No weeks}}} one {{half, select, yes {1½ weeks} other {1 week}}} other {#{half, select, yes {½} other {}} weeks}}} hour {{whole, plural, =0 {{half, select, yes {½ hour} other {No hours}}} one {{half, select, yes {1½ hours} other {1 hour}}} other {#{half, select, yes {½} other {}} hours}}} other {{whole, plural, =0 {{half, select, yes {½ day} other {No days}}} one {{half, select, yes {1½ days} other {1 day}}} other {#{half, select, yes {½} other {}} days}}}}",
   "actions.out.title": "You have used all {amount}",
   "actions.out.body": "Actions are locked until next {period, select, year {year} month {month} week {week} day {day} other {period}}. Reply to messages any time, they cost no {unit, select, quarter {quarters} month {months} week {weeks} hour {hours} other {days}}.",

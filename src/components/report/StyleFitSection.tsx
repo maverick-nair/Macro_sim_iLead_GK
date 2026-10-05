@@ -65,7 +65,7 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
           </div>
           {rows.map(r => (
             <div key={r.id} role="row" className="contents">
-              <span role="rowheader" className="self-center overflow-hidden text-13 font-600 text-ellipsis whitespace-nowrap">
+              <span role="rowheader" className="self-center overflow-hidden text-13 font-600 text-ellipsis whitespace-nowrap text-large:whitespace-normal text-large:break-words">
                 {r.name}{r.left && <span className="sr-only">{` ${t('report.left')}`}</span>}
               </span>
               {r.cells.map((c, i) => {
@@ -74,7 +74,7 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
                   : t('report.fit.cellNone', { name: r.fullName, unit, n: periods[i] });
                 return (
                   <span key={i} role="cell" title={label} aria-label={label}
-                    className={`flex h-7 items-center justify-center rounded-6 text-12 font-700 ${fitClass(c)}`}>
+                    className={`flex min-h-7 items-center justify-center rounded-6 text-12 font-700 ${fitClass(c)}`}>
                     {c?.style}
                   </span>
                 );

@@ -37,7 +37,7 @@ export const EVENT_ART: Record<EventCardKind, string> = {
 };
 
 const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const chip = 'relative flex h-6.5 items-center rounded-pill bg-event-tag px-3 text-12 font-700 tracking-(--il-event-card-tag-tracking) text-event-on-tag uppercase';
+const chip = 'relative flex min-h-6.5 items-center rounded-pill bg-event-tag px-3 text-12 font-700 tracking-(--il-event-card-tag-tracking) text-event-on-tag uppercase';
 
 /**
  * An event over the board: the art band for its type with the type tag (and the storyline's label,
@@ -84,7 +84,7 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
           <div className="flex items-center justify-end gap-2 pt-1.5">
             {reasons.length > 0 && (
               <button type="button" onClick={() => setWhy(w => !w)} aria-expanded={why} aria-controls={why ? whyId : undefined}
-                className={`h-9 cursor-pointer rounded-pill border border-solid border-line-strong bg-transparent px-4 py-0 text-13 font-700 text-fg-primary ${focusRing}`}>
+                className={`min-h-9 cursor-pointer rounded-pill border border-solid border-line-strong bg-transparent px-4 py-0 text-13 font-700 text-fg-primary ${focusRing}`}>
                 {t('outcome.why', { open: String(why) })}
               </button>
             )}

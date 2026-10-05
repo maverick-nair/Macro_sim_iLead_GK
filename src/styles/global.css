@@ -9,6 +9,9 @@
 
 /* A container that draws the focus ring of its visually hidden control (member card selection). */
 @custom-variant focus-within-select (&:has(> .il-select:focus-visible));
+/* Text larger than 100% (D56): the app root carries `data-text-large`, so layouts can reflow for big text
+   (grids drop columns, names wrap instead of truncating) without changing anything at 100%. */
+@custom-variant text-large (&:where([data-text-large], [data-text-large] *));
 
 /* App globals, from the iLeadApp design component helmet. In the base layer so utilities win. */
 @layer base {

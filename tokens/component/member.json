@@ -33,6 +33,12 @@
         "$description": "Hover lift, selection glow, picking dim"
       }
     },
+    "ring": {
+      "size": {
+        "value": "calc(38px + (var(--il-text-scale, 1) - 1) * 24px)",
+        "$description": "The trust ring: 38px at 100% text, growing with the text size so its number stays inside (62px at 200%)"
+      }
+    },
     "hidden-stats": {
       "height": {
         "value": "64px",

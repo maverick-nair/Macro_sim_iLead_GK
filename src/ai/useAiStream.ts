@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { createAiStreamStore, type AiStreamState, type AiStreamStore } from './store';
 
-export type UseAiStream = AiStreamState & Pick<AiStreamStore, 'start' | 'cancel' | 'reset'>;
+export type UseAiStream = AiStreamState & Pick<AiStreamStore, 'start' | 'cancel' | 'reset' | 'hold'>;
 
 /**
  * One streamed AI reply (NPC turn, coaching hint). `text` is already sanitized for the copy rules;
@@ -12,5 +12,5 @@ export function useAiStream(): UseAiStream {
   const [store] = useState(createAiStreamStore);
   useEffect(() => () => void store.cancel(), [store]);
   const state = useSyncExternalStore(store.subscribe, store.getState, store.getState);
-  return useMemo(() => ({ ...state, start: store.start, cancel: store.cancel, reset: store.reset }), [state, store]);
+  return useMemo(() => ({ ...state, start: store.start, cancel: store.cancel, reset: store.reset, hold: store.hold }), [state, store]);
 }

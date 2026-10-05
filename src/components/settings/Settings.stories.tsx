@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState, type ReactNode } from 'react';
 import { LoadingScreen } from '../shell/LoadingScreen';
 import { PauseDialog, ResumeDialog, SessionExpiredDialog } from './SessionDialogs';
+import { ResumeRecap, type ResumeRecapProps } from './ResumeRecap';
 import { SettingsDialog, type SettingsValues } from './SettingsDialog';
 
 const noop = () => {};
@@ -47,6 +48,24 @@ export const Resume: Story = {
 export const ResumeMonthly: Story = {
   render: () => <ResumeDialog period={3} periodUnit="month" sub={2} subPeriodUnit="week" onBack={noop} waiting={[]} recent={[{ img: '/assets/npc/kent.png', title: 'Coaching with Kent landed', metric: 'skill', delta: 5 }]} />
 };
+const RECAP: Omit<ResumeRecapProps, 'onBack'> = {
+  period: 3, periodUnit: 'week', sub: 2, subPeriodUnit: 'day', left: '3½ days left',
+  headline: '1:1 with Kent went well',
+  inbox: [
+    { id: 'm1', from: 'Paula, sponsor note', title: 'Where are we on conversions?', urgent: true, due: 'Due today' },
+    { id: 'm2', from: 'Chat from Beth', title: 'Can we talk about the Ashcroft lead?', urgent: false, due: 'Due in 2 days' },
+    { id: 'm3', from: 'News', title: 'A competitor cut prices', urgent: false, due: null }
+  ],
+  promises: [{ id: 'p1', name: 'Kent', text: 'Career talk', due: 'Due in 1 day' }], since: 'this',
+  changes: [
+    { metric: 'skill', start: 56, now: 57, trend: 'up' }, { metric: 'morale', start: 54, now: 52, trend: 'down' },
+    { metric: 'result', start: 58, now: 58, trend: 'flat' }, { metric: 'trust', start: 53, now: 57, trend: 'up' }
+  ]
+};
+/** Welcome back in the playable app, built from the engine view: last outcome, inbox (urgent first), promises, KPIs since the week began. */
+export const ResumeOnEngine: Story = { render: () => <ResumeRecap {...RECAP} onBack={noop} /> };
+/** Early in a run: no outcome yet, nothing waiting, no promises. */
+export const ResumeOnEngineQuiet: Story = { render: () => <ResumeRecap {...RECAP} headline={null} inbox={[]} promises={[]} onBack={noop} /> };
 /** Frame x4: only signing in closes it. */
 export const SessionExpired: Story = { render: () => <SessionExpiredDialog onSignIn={noop} /> };
 /** Frame z1. */

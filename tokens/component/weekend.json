@@ -18,11 +18,11 @@
       "columns": { "value": "minmax(0,1.3fr) minmax(0,1fr)", "$description": "Funnel and team, then stars and the small cards" }
     },
     "funnel": {
-      "columns": { "value": "130px 1fr 70px", "$description": "Stage, bar, value" },
+      "columns": { "value": "minmax(130px, max-content) minmax(0,1fr) minmax(70px, max-content)", "$description": "Stage, bar, value. The text columns grow for large text (D56); at 100% they stay 130px and 70px" },
       "tick": { "value": "2px", "$description": "The ideal marker on a funnel bar" }
     },
     "kpi": {
-      "columns": { "value": "1fr 70px 70px 70px", "$description": "Metric, start, change, end" }
+      "columns": { "value": "minmax(0,1fr) repeat(3, minmax(70px, max-content))", "$description": "Metric, start, change, end. The number columns grow for large text (D56)" }
     },
     "reward": {
       "columns": { "value": "repeat(3,280px)", "$description": "Three reward cards" },

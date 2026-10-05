@@ -65,7 +65,7 @@ function StageHeader({ name, count, ideal, bottleneck, periodUnit }: Omit<StageC
   const { t, number } = useI18n();
   return (
     <div className={`flex flex-col gap-0.5 rounded-12 border px-3 py-2 ${bottleneck ? 'border-status-attention bg-status-attention-soft' : 'border-line-default bg-surface-card'}`}>
-      <div className="flex items-baseline justify-between gap-1.5"><b title={name} className="min-w-0 truncate text-13">{name}</b><b className="text-15">{number(count)}</b></div>
+      <div className="flex items-baseline justify-between gap-1.5"><b title={name} className="min-w-0 truncate text-13 text-large:whitespace-normal text-large:break-words">{name}</b><b className="text-15">{number(count)}</b></div>
       <span className={`text-12 ${bottleneck ? 'font-700 text-status-attention' : 'font-400 text-fg-secondary'}`}>
         {bottleneck ? t('team.stage.bottleneck', { unit: periodUnit }) : t('team.stage.ideal', { ideal })}
       </span>

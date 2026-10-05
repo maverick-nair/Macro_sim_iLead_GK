@@ -4,6 +4,8 @@ import { EngineError } from '../../engine/client';
 import { useEngineView, useIntent } from '../../engine/react';
 import { useApi } from '../../api';
 import { useUi } from '../../app/uiStore';
+import { SessionClockText, useSessionTicker } from '../../app/sessionClock';
+import { NARROW_BOARD, useMediaQuery } from '../../lib/useMediaQuery';
 import { Button } from '../../ds/Button';
 import { MoneyProvider } from '../../i18n/money';
 import { useI18n } from '../../i18n';
@@ -73,7 +75,18 @@ export interface EngineBoardProps {
   captions?: boolean;
   onPause: () => void;
   onSettings: () => void;
+  /**
+   * The run is paused: an app dialog (pause, settings, welcome back) is open over the board. Nothing
+   * moves: the session clock stops, and a live conversation holds its streamed words and its clock.
+   */
+  paused?: boolean;
+  /** Show the session clock in the HUD's Pause button (Settings). The button stays without it. */
+  showClock?: boolean;
+  /** The participant folded the Actions panel on a narrow board (a setting, saved per participant). */
+  actionsCollapsed?: boolean;
+  onActionsCollapsed?: (collapsed: boolean) => void;
 }
+
 
 /** The catalog's words for an engine that could not be reached or answered nonsense. */
 const loadCode = (e: unknown) => (e instanceof EngineError ? (e.code === 'badPayload' ? 'badPayload' : e.code === 'network' ? 'network' : 'other') : 'network');
@@ -161,6 +174,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   /** The outcome headline, for screen readers, when focus cannot move to it (an action is being planned). */
   const [announce, setAnnounce] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const narrow = useMediaQuery(NARROW_BOARD);
+  /** Selecting someone opens a folded Actions panel for them; folding it again while they are selected leaves it folded. */
+  const [foldedFor, setFoldedFor] = useState<string | null>(null);
   const inFlight = useRef(false);
   const mainRef = useRef<HTMLElement>(null);
   const h1Ref = useRef<HTMLHeadingElement>(null);
@@ -477,7 +493,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const hud: HudProps = {
     clientLogo: app.client, nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
-    sessionClock: null, onPause: app.onPause,
+    sessionClock: app.showClock === false ? null : <SessionClockText />, alwaysPause: true, onPause: app.onPause,
     // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6).
     score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership },
     breakdown: (
@@ -559,6 +575,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // Then the end screen (or the report opened from it) takes the whole page; the board stays reachable, read only.
   const endScreen = !card && !weekEnd && ended && lastWeekSeen && endView !== 'board';
   const plainBoard = !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
+  // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13).
+  useSessionTicker(!app.paused && !ended && plainBoard);
+  // The Actions panel folds only on a narrow board, and opens while someone is selected or an action is being planned.
+  const foldable = narrow && !!app.onActionsCollapsed;
+  const peek = !!selected && selected !== foldedFor;
+  const folded = foldable && !!app.actionsCollapsed && !peek && !f;
 
   // ---- sponsor call ----
   let call: ReactNode = null;
@@ -665,7 +687,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <div className={reacting ? 'hidden' : 'flex flex-1 flex-col'}>
             <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
               <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
-                suspended={!!reacting} onFinish={finishLive} onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
+                suspended={!!reacting} held={!!app.paused} onPause={app.onPause} onFinish={finishLive} onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
             </Suspense>
           </div>
         )}
@@ -723,7 +745,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           </div>
         )}
         {outcome}
-        <div className="relative grid min-h-0 flex-1 grid-cols-(--il-board-columns)">
+        <div className={`relative grid min-h-0 flex-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
           {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
           <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
             <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
@@ -737,6 +759,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
             team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
             member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
             drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
+            collapse={foldable ? {
+              collapsed: folded,
+              open: v.actions.filter(a => a.scope === 'team' && !tile(a.key, null).block).length,
+              onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
+            } : undefined}
           /></div>
           <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
           {profile && <ProfilePanel {...profile} />}

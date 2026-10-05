@@ -21,7 +21,8 @@ async function settle(page: Page) {
 
 async function shot(page: Page, name: string, fullPage = false) {
   await settle(page);
-  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, fullPage });
+  // The session clock in the HUD's Pause button counts real seconds: masked, so the shot is stable.
+  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, fullPage, mask: [page.getByRole('button', { name: 'Pause the simulation' })] });
 }
 
 async function confirmStyles(page: Page) {

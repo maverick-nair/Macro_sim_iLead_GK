@@ -36,8 +36,8 @@ export function TrustRing({ value, placement = 'corner' }: TrustRingProps) {
   const label = t('member.trust', { value });
   const dash = `${(value / 100 * RING_C).toFixed(1)} ${RING_C.toFixed(1)}`;
   return (
-    <div role="img" title={label} aria-label={label} className={`size-9.5 ${placement === 'inline' ? 'relative ml-auto flex-none' : 'absolute right-1.5 bottom-1.5'}`}>
-      <svg className="block size-9.5" viewBox="0 0 38 38" aria-hidden="true">
+    <div role="img" title={label} aria-label={label} className={`size-(--il-member-ring-size) ${placement === 'inline' ? 'relative ml-auto flex-none' : 'absolute right-1.5 bottom-1.5'}`}>
+      <svg className="block size-full" viewBox="0 0 38 38" aria-hidden="true">
         <circle cx="19" cy="19" r={RING_R} className="fill-member-ring-fill stroke-member-ring-track" strokeWidth="3" />
         <circle cx="19" cy="19" r={RING_R} fill="none" className={value < LOW_BELOW ? 'stroke-member-ring-low' : 'stroke-member-ring-ok'} strokeWidth="3" strokeLinecap="round" strokeDasharray={dash} transform="rotate(-90 19 19)" />
       </svg>
@@ -148,7 +148,7 @@ export function MemberCard(props: MemberCardProps) {
         <div className="absolute right-1.5 bottom-1.5 left-2 flex flex-wrap-reverse items-start gap-1">
           <span title={pill} className="mb-0.5 flex min-h-5.5 min-w-0 items-center gap-1.25 rounded-pill bg-member-pill px-2 text-12 font-700 text-member-on-portrait">
             <span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />
-            <span className="truncate">{pill}</span>
+            <span className="truncate text-large:whitespace-normal text-large:break-words">{pill}</span>
           </span>
           {!statsHidden && <TrustRing value={trust} placement="inline" />}
         </div>
@@ -160,8 +160,8 @@ export function MemberCard(props: MemberCardProps) {
         */}
         <div className="flex flex-wrap items-start justify-between gap-1.5">
           <div className="flex min-w-16 flex-1 basis-0 flex-col">
-            <b title={name} className="truncate text-14">{name}</b>
-            <span title={title} className="truncate text-12 text-fg-secondary">{title}</span>
+            <b title={name} className="truncate text-14 text-large:whitespace-normal text-large:break-words">{name}</b>
+            <span title={title} className="truncate text-12 text-fg-secondary text-large:whitespace-normal text-large:break-words">{title}</span>
           </div>
           <button
             type="button"

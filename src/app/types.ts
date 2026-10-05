@@ -14,6 +14,8 @@ export interface Settings {
   clock: boolean;
   /** Consent to capture audio (Design doc, input rules): null until asked; false keeps play text only. */
   voiceConsent: boolean | null;
+  /** The Actions panel folded to a rail on a narrow board (under 1280 wide, D58). Unset means open. */
+  actionsCollapsed?: boolean;
 }
 
 /** A member with live stats, the style set for this week and a resolved portrait URL. */

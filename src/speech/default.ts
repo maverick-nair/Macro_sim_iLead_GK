@@ -15,9 +15,12 @@ const MOCK_LINES: Record<string, string> = {
   default: 'Thanks for making time. How are things going for you this week? Let us agree one next step by Friday.'
 };
 
-/** Real capture with server transcription when `VITE_ILEAD_SPEECH_URL` is set; otherwise the scripted mock voice. */
-export function createSpeech(format: string): SpeechProvider {
+/**
+ * Real capture with server transcription when `VITE_ILEAD_SPEECH_URL` is set; otherwise the scripted
+ * mock voice. `mockScript` replaces what the mock says (the onboarding mic test says its test phrase).
+ */
+export function createSpeech(format: string, options: { mockScript?: string } = {}): SpeechProvider {
   const url = import.meta.env.VITE_ILEAD_SPEECH_URL as string | undefined;
   if (url) return new MediaRecorderSpeechProvider({ transcription: createHttpTranscriptionClient(url) });
-  return new MockSpeechProvider({ script: MOCK_LINES[format] ?? MOCK_LINES.default });
+  return new MockSpeechProvider({ script: options.mockScript ?? MOCK_LINES[format] ?? MOCK_LINES.default });
 }

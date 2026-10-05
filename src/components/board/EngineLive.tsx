@@ -38,6 +38,13 @@ export interface EngineLiveProps {
   captions?: boolean;
   /** The board is showing "The team is reacting" over this screen: the clock stops. */
   suspended?: boolean;
+  /**
+   * The run is paused (the app's pause dialog, or any app dialog): nothing moves. The NPC's words stop
+   * where they are and carry on after, the interaction clock stops, and a recording is dropped.
+   */
+  held?: boolean;
+  /** The timer's Pause opens the app's pause dialog (as in the design) instead of only stopping this clock. */
+  onPause?: () => void;
   /** Ends the interaction with an evaluation: the board owns the reacting beat. Resolves false if the engine refused. */
   onFinish: FinishLive;
   /** Called once the interaction is left without an evaluation (nothing was said). */
@@ -54,7 +61,7 @@ const OWN_KEYS = 'input, textarea, select, button, a[href], [contenteditable="tr
 const moodRing = (m: LiveView['brief']['mood']): LiveMood => (m === 'frustrated' || m === 'concerned' ? (m === 'frustrated' ? 'frustrated' : 'guarded') : 'open');
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, suspended = false, onFinish, onDone, onError }: EngineLiveProps) {
+export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, suspended = false, held = false, onPause, onFinish, onDone, onError }: EngineLiveProps) {
   const { t } = useI18n();
   const client = useEngineClient();
   const intent = useIntent();
@@ -93,10 +100,18 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
 
   // The interaction clock counts down while not paused (Configuration Spec: soft stop). Pausing is client side.
   useEffect(() => {
-    if (paused || suspended) return;
+    if (paused || suspended || held) return;
     const id = setInterval(() => setSeconds(s => Math.max(0, s - 1)), 1000);
     return () => clearInterval(id);
-  }, [paused, suspended]);
+  }, [paused, suspended, held]);
+
+  // Paused: the streamed line holds where it is (not an interrupt), and a recording in progress is dropped.
+  useEffect(() => {
+    ai.hold(held);
+    if (held && (speech.status === 'listening' || speech.status === 'requesting' || speech.status === 'finishing')) speech.cancel();
+    // `ai.hold` is stable; this follows the pause only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [held]);
 
   /** NPC turns whose stream ran to the end. */
   const finished = useRef(new Set<string>());
@@ -293,7 +308,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   // review; Enter then sends. Only with voice consent, in voice mode, while it is your turn.
   const ptt = useRef({ on: false, held: false, down: () => {}, up: () => {}, send: () => {} });
   useEffect(() => {
-    ptt.current.on = voiceConsent && input === 'ptt' && mode === 'voice' && replyBar && conversation !== 'closed' && !suspended && !confirmPass;
+    ptt.current.on = voiceConsent && input === 'ptt' && mode === 'voice' && replyBar && conversation !== 'closed' && !suspended && !held && !confirmPass;
     ptt.current.down = () => { if (ai.streaming) interrupt(); void speech.start(); };
     ptt.current.up = () => { if (speech.status === 'listening') speech.stop(); };
     ptt.current.send = () => { if (speech.status === 'review' && conversation !== 'npcThinking') onSend(); };
@@ -412,8 +427,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         personName={speaker.name}
         pronoun={speaker.pronoun}
         meta={{ cost: action?.cost ?? 0, costUnit: v.clock.subPeriodUnit, topic: lv.optionLabel ?? undefined, minutes: lv.minutes, action: lv.actionName ?? undefined }}
-        timer={{ seconds, paused }}
-        onPause={() => setPaused(p => !p)}
+        timer={{ seconds, paused: paused || held }}
+        onPause={onPause ?? (() => setPaused(p => !p))}
         mode={mode}
         onModeChange={m => { if (m === 'voice' && !voiceConsent) return; speech.cancel(); setMode(m); }}
         hint={lv.hint.mode === 'off' ? null : { available: !lv.hint.text, text: lv.hint.text, onRequest: () => void send({ type: 'requestHint', interactionId: lv.id }) }}

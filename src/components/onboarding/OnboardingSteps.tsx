@@ -1,4 +1,4 @@
-import { useId } from 'react';
+import { useId, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n, type I18n } from '../../i18n';
 import { onRovingKey } from '../roving';
@@ -33,10 +33,10 @@ export function OnboardingHeader({ step, total }: OnboardingHeaderProps) {
       <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-onboarding-logo-tracking) text-transparent">{t('hud.logo')}</span>
       <span className="text-13 text-fg-secondary">{t('onboarding.tagline')}</span>
       <span className="flex-1" />
-      <div className="flex gap-1.5">
-        <span className="sr-only">{t('onboarding.progress', { n: step + 1, total })}</span>
+      {/* One image named "Step 2 of 6": the dots are its picture, so they carry no names of their own. */}
+      <div role="img" aria-label={t('onboarding.progress', { n: step + 1, total })} className="flex gap-1.5">
         {Array.from({ length: total }, (_, j) => (
-          <span key={j} aria-hidden="true"
+          <span key={j}
             className={`h-1.5 rounded-3 [transition:var(--il-onboarding-dot-transition)] ${j === step ? 'w-7' : 'w-2.5'} ${j <= step ? 'bg-(image:--il-fill-brand)' : 'bg-track'}`} />
         ))}
       </div>
@@ -197,13 +197,24 @@ export interface VoiceStepProps {
   onSample: () => void;
   onNext: () => void;
   onSkip: () => void;
+  /**
+   * The real mic test (the playable app): what the speech layer heard so far, shown under the
+   * phrase, or null before anything was heard. The design frames leave it out.
+   */
+  heardText?: string | null;
+  /** A short line under the mic: the test is recording, or nothing was heard. */
+  status?: string;
+  /** Offers text mode inside the blocked or unavailable notice. */
+  onText?: () => void;
+  /** The sample NPC line, as captions, under the sample button while it plays. */
+  sample?: ReactNode;
 }
 
 /** Step 4: mic check with a live transcript of the test phrase, a sample NPC voice, or skip to text. */
-export function VoiceStep({ check, listening, wave, words, heard, sampleName, onMic, onSample, onNext, onSkip }: VoiceStepProps) {
+export function VoiceStep({ check, listening, wave, words, heard, sampleName, onMic, onSample, onNext, onSkip, heardText, status, onText, sample }: VoiceStepProps) {
   const { t } = useI18n();
   const [open, close] = quoteMarks(t);
-  const denied = check === 'denied';
+  const denied = check === 'denied' || check === 'unavailable';
   const said = words.slice(0, heard).join(' ');
   const rest = (heard ? ' ' : '') + words.slice(heard).join(' ');
   return (
@@ -213,8 +224,9 @@ export function VoiceStep({ check, listening, wave, words, heard, sampleName, on
         <h1 tabIndex={-1} className={`${HEADING} text-36 tracking-(--il-onboarding-title-tracking)`}>{t('onboarding.voice.title', { state: check })}</h1>
         {denied && (
           <div role="alert" className="flex w-full flex-col gap-1.5 rounded-18 border border-status-attention bg-status-attention-soft p-4 text-left">
-            <b>{t('onboarding.voice.denied.title')}</b>
-            <span className="text-13">{t('onboarding.voice.denied.body')}</span>
+            <b>{t(check === 'unavailable' ? 'onboarding.voice.unavailable.title' : 'onboarding.voice.denied.title')}</b>
+            <span className="text-13">{t(check === 'unavailable' ? 'onboarding.voice.unavailable.body' : 'onboarding.voice.denied.body')}</span>
+            {onText && <div className="pt-1.5"><NoWrapButton variant="primary" size="md" onClick={onText}>{t('onboarding.voice.useText')}</NoWrapButton></div>}
           </div>
         )}
         <button type="button" onClick={onMic} aria-label={t('onboarding.voice.mic', { listening: listening ? 'yes' : 'no' })} aria-pressed={listening} aria-disabled={denied || undefined}
@@ -229,14 +241,21 @@ export function VoiceStep({ check, listening, wave, words, heard, sampleName, on
         <div className="flex h-10 items-center gap-0.75" aria-hidden="true">
           {wave.map((h, j) => <span key={j} className="w-1 rounded-2 bg-accent-secondary [transition:var(--il-onboarding-wave-transition)]" style={{ height: h }} />)}
         </div>
+        {status !== undefined && <span role="status" className="min-h-5 text-13 text-fg-secondary">{status}</span>}
         <div className="min-w-105 rounded-16 border border-line-default bg-surface-card px-4.5 py-3.5 text-18">
           <span className="text-fg-secondary">{t('onboarding.voice.say')}</span>{open}<b>{said}</b>
           <span className="text-fg-secondary">{rest}</span>{close}
+          {heardText !== undefined && (
+            <span className="mt-1.5 block text-14 text-fg-secondary">
+              {heardText ? <>{t('onboarding.voice.heard')}{open}<span className="text-fg-primary">{heardText}</span>{close}</> : t('onboarding.voice.heardNothing')}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2.5">
           <NoWrapButton variant="secondary" size="md" onClick={onSample}>{t('onboarding.voice.sample')}</NoWrapButton>
           <span className="text-13 text-fg-secondary">{t('onboarding.voice.sampleWho', { name: sampleName })}</span>
         </div>
+        {sample}
         <div className="flex gap-2.5">
           <NoWrapButton variant="primary" size="lg" disabled={check !== 'heard'} onClick={onNext}>{t('onboarding.voice.ok')}</NoWrapButton>
           <NoWrapButton variant="ghost" size="lg" onClick={onSkip}>{t('onboarding.voice.skip')}</NoWrapButton>

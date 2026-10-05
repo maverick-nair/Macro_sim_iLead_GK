@@ -19,7 +19,7 @@ export function AnalyticsSection({ data }: { data: AnalyticsData }) {
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
       <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.analytics.title')}</h2>
       <p className="m-0 text-13 text-fg-secondary">{t('report.analytics.note')}</p>
-      <dl className={`m-0 grid gap-2.5 ${layout === 'phone' ? 'grid-cols-2' : 'grid-cols-5'}`}>
+      <dl className={`m-0 grid gap-2.5 ${layout === 'phone' ? 'grid-cols-2' : 'grid-cols-5 text-large:grid-cols-(--il-report-stats-large)'}`}>
         {stats.map(([key, value]) => (
           <div key={key} className="flex flex-col gap-1 rounded-16 border border-line-default px-3.5 py-3">
             <dt className="text-12 text-fg-secondary">{t('report.analytics.stat', { stat: key })}</dt>

@@ -4,6 +4,10 @@
       "value": "64px minmax(0, 1fr) 330px",
       "$description": "Inbox rail, team board, actions panel"
     },
+    "columns-collapsed": {
+      "value": "64px minmax(0, 1fr) calc({space.unit} * 6 + 72px)",
+      "$description": "Narrow boards (under 1280 wide) with the actions panel folded to its 72px rail (D58)"
+    },
     "panel-max-width": {
       "value": "560px",
       "$description": "Period end and run end panels"

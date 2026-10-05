@@ -53,7 +53,7 @@ export function TeamOverRun({ periods, unit, series }: TeamOverRunProps) {
       ) : <h2 id={`${id}h`} className="m-0 text-20 font-700">{title}</h2>}
       {alt.showTable ? table : (
         <>
-          <div className={`grid gap-2.5 ${layout === 'phone' ? 'grid-cols-(--il-report-team-columns-phone)' : 'grid-cols-(--il-report-team-columns)'}`}>
+          <div className={`grid gap-2.5 ${layout === 'phone' ? 'grid-cols-(--il-report-team-columns-phone)' : 'grid-cols-(--il-report-team-columns) text-large:grid-cols-(--il-report-team-columns-large)'}`}>
             {series.map(s => (
               <div key={s.key} className="flex flex-col gap-1.5 rounded-16 border border-line-default p-3">
                 <div className="flex justify-between text-12">
