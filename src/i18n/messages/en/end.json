@@ -38,8 +38,5 @@
   "end.report.pdf": "Download PDF",
   "end.report.email": "Email to me",
   "end.email.sent": "Report sent to your work email.",
-  "end.email.failed": "The email did not go through. Try again.",
-  "end.slot.title": "Your report",
-  "end.slot.body": "{print, select, true {The print view of your report opens here.} other {The report opens here.}}",
-  "end.slot.back": "Back to your results"
+  "end.email.failed": "The email did not go through. Try again."
 }

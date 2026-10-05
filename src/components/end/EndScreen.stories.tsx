@@ -11,7 +11,6 @@ import { EngineEnd } from '../board/EngineEnd';
 import type { BadgeChipProps } from '../gamification/Badge';
 import { badgeIcon } from '../gamification/badgeIcons';
 import { EndScreen } from './EndScreen';
-import { ReportSlot } from './ReportSlot';
 import type { EndReflection, EndScreenProps } from './types';
 
 const noop = () => {};
@@ -124,7 +123,3 @@ export const FromRunPassive: StoryObj = { render: () => <FromRun policy="passive
 /** A random run without voice consent: the mic says voice is off. */
 export const FromRunNoVoice: StoryObj = { render: () => <FromRun policy="random" voiceConsent={false} /> };
 
-/** The temporary report slot, until the report lands (`src/components/report/`). */
-export const ReportSlotWeb: StoryObj = { render: () => <Frame><ReportSlot view={{} as EngineView} print={false} onBack={noop} /></Frame> };
-/** The slot in its print view (Download PDF). */
-export const ReportSlotPrint: StoryObj = { render: () => <Frame><ReportSlot view={{} as EngineView} print onBack={noop} /></Frame> };

@@ -5,7 +5,7 @@ import { EngineError, parse, type EngineClient } from './client';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
-import { neededStyles } from './sim/policies';
+import { neededStyles, play, type Policy } from './sim/policies';
 
 /**
  * The mock engine adapter: the same engine code the server runs, in the browser, on a storyline
@@ -55,3 +55,13 @@ export function createMockClient(opts: { config?: StorylineConfig; seed?: number
   };
 }
 
+/**
+ * Demo and test aid, mock only: plays a whole run with an automated player, then hands in the end
+ * screen's reflection, and returns the ended view with its development report (the `?report=1` dev
+ * page and the report stories).
+ */
+export async function playToEnd(opts: { policy?: Policy; seed?: number; reflection?: string[]; rating?: number | null; config?: StorylineConfig } = {}) {
+  const r = await play(opts.config ?? defaultStoryline(), opts.policy ?? 'good', opts.seed ?? 3);
+  if (opts.reflection) await r.engine.dispatch({ type: 'submitReflection', answers: opts.reflection, rating: opts.rating ?? null });
+  return parse(EngineView, r.engine.view());
+}

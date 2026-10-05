@@ -274,10 +274,13 @@ test('a whole week by keyboard only', async ({ page }) => {
   expect(names).toHaveLength(10);
   for (const n of names) {
     await tabTo(new RegExp(`radio\\|.*Leadership style for ${n}`));
+    const group = page.getByRole('radiogroup', { name: `Leadership style for ${n}` });
+    // Arrow keys move focus within the group; wait until it has moved, then pick, then wait for the pick
+    // to land before tabbing on, so a run under load cannot skip a card.
     await page.keyboard.press('ArrowRight');
+    await expect(group.getByRole('radio').nth(1)).toBeFocused();
     await page.keyboard.press('Space');
-    // Wait for the pick to land before tabbing on, so a fast run cannot skip a card.
-    await expect(page.getByRole('radiogroup', { name: `Leadership style for ${n}` }).getByRole('radio', { checked: true })).toHaveCount(1);
+    await expect(group.getByRole('radio', { checked: true })).toHaveCount(1);
   }
   await expect(page.getByText('10 of 10 styles set')).toBeAttached();
   await tabTo(/Review and confirm/, true);
@@ -311,16 +314,19 @@ test('a whole week by keyboard only', async ({ page }) => {
   await page.keyboard.press('Enter');
   await expect(page.getByText('How it landed')).toHaveCount(0);
 
-  // Event cards: focus on the title; Escape is Got it.
-  while (await page.getByRole('button', { name: 'Got it' }).count()) {
-    const card = page.getByRole('dialog');
-    await expect(card.getByRole('heading')).toBeFocused();
-    await page.keyboard.press('Escape');
-    await expect(card).toHaveCount(0);
-  }
-  await tabTo(/End week/);
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('dialog').first().or(page.getByText('End of week 1'))).toBeVisible();
+  // Event cards: focus on the title; Escape is Got it. A card can arrive just after the outcome goes,
+  // and End week does nothing while an intent is in flight, so retry until the week end opens.
+  await expect(async () => {
+    while (await page.getByRole('button', { name: 'Got it' }).count()) {
+      const card = page.getByRole('dialog');
+      await expect(card.getByRole('heading')).toBeFocused();
+      await page.keyboard.press('Escape');
+      await expect(card).toHaveCount(0);
+    }
+    await tabTo(/End week/);
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('dialog').first().or(page.getByText('End of week 1'))).toBeVisible({ timeout: 4000 });
+  }).toPass({ timeout: 30_000 });
   while (await page.getByRole('button', { name: 'Got it' }).count()) {
     const card = page.getByRole('dialog', { name: (await page.getByRole('dialog').getByRole('heading').first().textContent()) ?? '' });
     await expect(card.getByRole('heading')).toBeFocused();

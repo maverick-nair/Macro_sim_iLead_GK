@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNod
 import type { Block, EngineView, Intent, MemberView, MetricChange, StyleKey } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
 import { useEngineView, useIntent } from '../../engine/react';
+import { useApi } from '../../api';
 import { useUi } from '../../app/uiStore';
 import { Button } from '../../ds/Button';
 import { MoneyProvider } from '../../i18n/money';
@@ -29,7 +30,8 @@ const EngineLive = lazy(() => import('./EngineLive').then(m => ({ default: m.Eng
 const EngineWeekEnd = lazy(() => import('./EngineWeekEnd').then(m => ({ default: m.EngineWeekEnd })));
 // The end screen loads once the run is over. The report opens in its slot (swap this import for the report).
 const EngineEnd = lazy(() => import('./EngineEnd').then(m => ({ default: m.EngineEnd })));
-const ReportSlot = lazy(() => import('../end/ReportSlot').then(m => ({ default: m.ReportSlot })));
+// The development report (M6) and its charts load only when opened.
+const EngineReport = lazy(() => import('../report/EngineReport'));
 import { EventCard } from './EventCard';
 import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
@@ -127,6 +129,7 @@ function TeamScroll({ stages, label, children }: { stages: number; label: string
 }
 
 function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
+  const api = useApi();
   const { t } = useI18n();
   const ui = useUi();
   const intent = useIntent();
@@ -681,7 +684,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {endView === 'end'
           ? <EngineEnd view={v} voiceConsent={!!app.voiceConsent} send={async i => !!(await send(i))} say={say}
               onViewReport={print => setEndView(print ? 'print' : 'report')} onLookAtBoard={() => setEndView('board')} />
-          : <ReportSlot view={v} print={endView === 'print'} onBack={() => setEndView('end')} />}
+          : <EngineReport view={v} print={endView === 'print'} onBack={() => setEndView('end')}
+              onEmail={() => { void api.emailReport().then(() => say(t('end.email.sent')), () => say(t('end.email.failed'))); }} />}
       </Suspense>
     );
   } else if (styling) {

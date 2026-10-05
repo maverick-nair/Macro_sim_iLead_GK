@@ -1,0 +1,54 @@
+{
+  "report": {
+    "width": { "value": "1180px", "$description": "Web view column" },
+    "logo": {
+      "tracking": { "value": "{tracking.logo}" }
+    },
+    "title": {
+      "tracking": { "value": "{tracking.logo}", "$description": "The participant's name" },
+      "leading": { "value": "1.05" }
+    },
+    "lede": {
+      "leading": { "value": "1.65", "$description": "The opening paragraph" }
+    },
+    "team": {
+      "columns": { "value": "repeat(5,minmax(0,1fr))", "$description": "Small multiples: revenue and the four team metrics" },
+      "columns-phone": { "value": "1fr 1fr" }
+    },
+    "skills": {
+      "columns": { "value": "200px 200px minmax(0,1fr)", "$description": "Skill, level bar, evidence" },
+      "columns-phone": { "value": "1fr" }
+    },
+    "pair": {
+      "columns": { "value": "1fr 1fr", "$description": "Intent and action beside the plan" },
+      "columns-phone": { "value": "1fr" }
+    },
+    "fit": {
+      "name": { "value": "150px", "$description": "Name column of the style fit heatmap" },
+      "name-phone": { "value": "70px" },
+      "cell-phone": { "value": "30px", "$description": "A week column on a phone; the heatmap scrolls sideways" },
+      "min-phone": { "value": "330px" },
+      "missed": { "value": "repeating-linear-gradient(45deg, {color.status.attention-soft} 0 3px, transparent 3px 7px)", "$description": "A missed week: hatched, so it reads without colour" },
+      "missed-swatch": { "value": "repeating-linear-gradient(45deg, {color.status.attention} 0 2px, transparent 2px 5px)", "$description": "The legend swatch for a missed week" }
+    },
+    "plan": {
+      "columns": { "value": "28px 1fr", "$description": "Number badge and the step" }
+    },
+    "cards": {
+      "columns": { "value": "repeat(auto-fill,minmax(260px,1fr))", "$description": "Key moments and people cards" }
+    },
+    "chart": {
+      "max": { "value": "560px", "$description": "Widest a single chart grows in the web view" }
+    },
+    "print": {
+      "page-width": { "value": "1020px", "$description": "A letter page at 120 px per inch, shown at 0.8: 8.5 by 11 inches at 96 px per inch" },
+      "page-height": { "value": "1320px" },
+      "zoom": { "value": "0.8" },
+      "sheet-width": { "value": "8.5in", "$description": "A US letter sheet. When printing, each page is scaled to it with a transform: Chrome fragments zoomed content at the wrong height" },
+      "sheet-height": { "value": "11in" },
+      "scale": { "value": "0.8", "$description": "Printing: the page scaled to the sheet" },
+      "shadow": { "value": "{shadow.report-page}" },
+      "desk": { "value": "{color.desk.300}", "$description": "Behind the pages in the print preview" }
+    }
+  }
+}

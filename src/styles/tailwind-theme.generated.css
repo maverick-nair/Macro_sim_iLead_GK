@@ -86,6 +86,12 @@
   --color-onboarding-caption-bar: var(--il-color-onboarding-caption-bar);
   --color-onboarding-mic-glow: var(--il-color-onboarding-mic-glow);
   --color-onboarding-mic-glow-listening: var(--il-color-onboarding-mic-glow-listening);
+  --color-report-chart-series: var(--il-color-report-chart-series);
+  --color-report-chart-second: var(--il-color-report-chart-second);
+  --color-report-chart-third: var(--il-color-report-chart-third);
+  --color-report-chart-reference: var(--il-color-report-chart-reference);
+  --color-report-chart-attention: var(--il-color-report-chart-attention);
+  --color-report-chart-cell: var(--il-color-report-chart-cell);
   --color-stylesetting-portrait-shade: var(--il-color-stylesetting-portrait-shade);
   --background-image-brand: var(--il-fill-brand);
   --background-image-product: var(--il-fill-product);
@@ -164,6 +170,7 @@
   --ease-overshoot-strong: var(--il-easing-overshoot-strong);
   --shadow-glow: var(--il-shadow-glow);
   --shadow-outcome-glow: var(--il-shadow-outcome-glow);
+  --shadow-report-page: var(--il-shadow-report-page);
   --blur-12: var(--il-blur-12);
   --blur-14: var(--il-blur-14);
   --blur-20: var(--il-blur-20);

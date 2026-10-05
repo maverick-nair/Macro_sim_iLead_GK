@@ -106,10 +106,9 @@ test('the end of a run: reflect by text, rate, save, the report slot, the board 
   await expect(page.getByText('Report sent to your work email.')).toBeVisible();
   await answer.fill('Asking first changed everything. I will check in before I decide.');
   await page.getByRole('button', { name: 'View my report' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: 'Your report' })).toBeFocused();
-  await expect(page.getByText('The report opens here.')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Your development report' })).toBeFocused({ timeout: 15_000 });
   expect(await axe(page)).toEqual([]);
-  await page.getByRole('button', { name: 'Back to your results' }).click();
+  await page.getByRole('button', { name: /Back to results/ }).click();
   await expect(h1).toBeFocused();
   // The answer edited before leaving was saved on the way out, and comes back from the engine.
   await expect(page.getByRole('textbox').first()).toHaveValue('Asking first changed everything. I will check in before I decide.');
@@ -118,8 +117,9 @@ test('the end of a run: reflect by text, rate, save, the report slot, the board 
 
   // Download PDF opens the report in its print view.
   await page.getByRole('button', { name: 'Download PDF' }).click();
-  await expect(page.getByText('The print view of your report opens here.')).toBeVisible();
-  await page.getByRole('button', { name: 'Back to your results' }).click();
+  await expect(page.getByRole('button', { name: 'Print or save as PDF' })).toBeVisible({ timeout: 15_000 });
+  await page.getByRole('button', { name: /Back to the report/ }).click();
+  await page.getByRole('button', { name: /Back to results/ }).click();
   await expect(h1).toBeFocused();
 
   // The board, read only, and back.
@@ -142,7 +142,7 @@ test('light theme: the end screen, the board and the report slot pass axe', asyn
   await page.getByRole('button', { name: 'See your results' }).click();
   await expect(page.getByRole('radio', { name: '5 of 5' })).toHaveAttribute('aria-checked', 'true');
   await page.getByRole('button', { name: 'View my report' }).click();
-  await expect(page.getByText('The report opens here.')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Your development report' })).toBeVisible({ timeout: 15_000 });
   expect(await axe(page)).toEqual([]);
 });
 

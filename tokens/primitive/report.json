@@ -1,0 +1,14 @@
+{
+  "$description": "Raw values of the development report's print preview: the desk the letter pages sit on, and their drop shadow.",
+  "color": {
+    "desk": {
+      "300": { "$value": "oklch(0.3 0.02 280)", "$description": "Behind the letter pages in the print preview" }
+    }
+  },
+  "shadow": {
+    "report-page": {
+      "$value": "0 20px 60px oklch(0.05 0.03 280 / 0.4)",
+      "$description": "A letter page lifted off the desk in the print preview"
+    }
+  }
+}

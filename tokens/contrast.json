@@ -33,6 +33,14 @@
     { "fg": "color.brand.deep-space", "bg": ["fill.event.impact", "fill.event.signal", "fill.event.capacity", "fill.event.diagnostic", "fill.event.opportunity", "fill.event.crisis"], "min": 3, "why": "The event art against the card's dark ink, for the portrait edge" },
     { "fg": "color.fg.secondary", "bg": "color.track", "min": 3, "why": "Icon of a badge not earned yet, on its empty medal" },
     { "fg": "color.brand.deep-space", "bg": "fill.spectrum", "min": 3, "why": "Icon of an earned badge on its medal" },
-    { "fg": "color.accent.default", "bg": ["color.surface.material", "color.surface.solid"], "min": 3, "why": "Border of the incoming sponsor call, the current score marker on the tier scale" }
+    { "fg": "color.accent.default", "bg": ["color.surface.material", "color.surface.solid"], "min": 3, "why": "Border of the incoming sponsor call, the current score marker on the tier scale" },
+
+    { "fg": "color.report.chart.series", "bg": ["color.surface.card", "color.surface.solid", "color.report.chart.cell"], "min": 3, "why": "Report chart, own values: lines, bars, style shares, on the web card, the white print page and the used vs needed grid cells" },
+    { "fg": "color.report.chart.second", "bg": ["color.surface.card", "color.surface.solid", "color.report.chart.cell"], "min": 3, "why": "Report chart, second series, dashed: Trust, on the web card, the white print page and the used vs needed grid cells" },
+    { "fg": "color.report.chart.third", "bg": ["color.surface.card", "color.surface.solid", "color.report.chart.cell"], "min": 3, "why": "Report chart, third series, dotted: Result, on the web card, the white print page and the used vs needed grid cells" },
+    { "fg": "color.report.chart.reference", "bg": ["color.surface.card", "color.surface.solid", "color.report.chart.cell"], "min": 3, "why": "Report chart, targets, ideal markers and axes, on the web card, the white print page and the used vs needed grid cells" },
+    { "fg": "color.report.chart.attention", "bg": ["color.surface.card", "color.surface.solid", "color.report.chart.cell"], "min": 3, "why": "Report chart, the hatched bottleneck stage, on the web card, the white print page and the used vs needed grid cells" },
+    { "fg": "color.fg.primary", "bg": ["color.surface.solid", "color.report.chart.cell"], "min": 4.5, "why": "Report chart labels and table text on the print page and in grid cells" },
+    { "fg": "color.fg.secondary", "bg": ["color.surface.solid", "color.report.chart.cell"], "min": 4.5, "why": "Report chart labels and table text on the print page and in grid cells" }
   ]
 }
