@@ -389,6 +389,16 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Launch data and files:** `getProfile` (proposed `GET /profile`) gives the participant's name for the report; with the mock, `?name=` stands in. `reportPdf` (proposed `GET /report.pdf`) gives a server rendered PDF; without one, Download PDF opens the print view and the browser saves it. Email stays `POST /report/email`. All paths are proposals in `src/api/http.ts`.
 - **First load:** the end screen, report and week end copy now load with their screens (`registerMessages`), taking the first load from 196.8 KB to 193.5 KB.
 
+**D68. Closing the M0 to M6 gaps: screens.** Decided.
+- **Phones play on the engine** (600px and below): compact HUD, KPI tiles in a sideways scroller, the team as a list by stage, and a dock for the inbox and actions. Actions, the action drawer, profile, inbox and the score breakdown open in a bottom sheet. 44px touch targets, safe areas, no sideways page scroll. `?engine=off` still opens the prototype.
+- **Pause:** the HUD Pause pill carries the session clock. While any dialog is open nothing moves: the clock stops and a live conversation holds its streamed words, its clock and push to talk.
+- **Welcome back:** a run in progress on load opens on the board with a recap built from the engine view (period, time left, last outcome, urgent inbox, open promises, KPIs).
+- **Mic test:** onboarding records with the real speech layer; a blocked or missing mic continues in text.
+- **Board at 1024:** under 1280 wide the Actions panel folds to a rail with the number of actions open; the choice is kept per participant.
+- **Cohort and celebration:** a "Your cohort" table on the end screen and "Rank N of M" in the score breakdown, hidden for selection use. `celebration: full` adds a short burst behind stars and badges, only with motion allowed.
+- **Accessibility:** 200% text reflows at 1440 and 1024; step dots read "Step n of 6"; Halden's second accent darkened to pass 4.5:1.
+- **Bundle:** initial JS 198.0 KB of the 200 KB budget, so M7 must load theme code lazily.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
