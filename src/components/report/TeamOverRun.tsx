@@ -5,6 +5,7 @@ import { useI18n } from '../../i18n';
 import { DataTable, useReport, useTableAlternative } from './context';
 import { round1 } from './display';
 import type { PeriodUnit, TeamSeries } from './types';
+import './messages';
 
 /** The small multiples' drawing space, as in the design: 100 by 44, stretched to the card. */
 const W = 100;

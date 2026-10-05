@@ -9,6 +9,7 @@ import type { EndScreenProps } from '../end/types';
 import { badgeIcon } from '../gamification/badgeIcons';
 import { shelfOrder } from '../gamification/display';
 import type { BadgeChipProps } from '../gamification/Badge';
+import '../end/messages';
 
 const PLACEHOLDER = '/assets/npc/placeholder.svg';
 type Report = NonNullable<EngineView['report']>;

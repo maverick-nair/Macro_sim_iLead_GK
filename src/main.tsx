@@ -35,7 +35,9 @@ function Play() {
   const q = new URLSearchParams(location.search);
   // The launch link names the participant (LMS or GenieKreator); settings and the session are theirs.
   const participant = q.get('participant') ?? 'local';
-  const api = useMemo(() => createDefaultApi(participant), [participant]);
+  // `name` stands in for the launch's display name with the mock API (the server reads it from the launch).
+  const name = q.get('name');
+  const api = useMemo(() => createDefaultApi(participant, name), [participant, name]);
   const engine = useMemo(() => createDefaultClient(participant), [participant]);
   const phone = useIsPhone();
   return (

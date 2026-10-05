@@ -1,3 +1,4 @@
+import './messages';
 import type { EndTier, SaveState, Tone } from './types';
 
 /**

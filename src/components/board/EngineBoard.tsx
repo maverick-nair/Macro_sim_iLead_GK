@@ -130,6 +130,9 @@ function TeamScroll({ stages, label, children }: { stages: number; label: string
 
 function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const api = useApi();
+  // The participant's name from the launch, for the report header.
+  const [profileName, setProfileName] = useState<string | null>(null);
+  useEffect(() => { let live = true; void api.getProfile().then(p => { if (live) setProfileName(p.name); }, () => undefined); return () => { live = false; }; }, [api]);
   const { t } = useI18n();
   const ui = useUi();
   const intent = useIntent();
@@ -684,8 +687,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {endView === 'end'
           ? <EngineEnd view={v} voiceConsent={!!app.voiceConsent} send={async i => !!(await send(i))} say={say}
               onViewReport={print => setEndView(print ? 'print' : 'report')} onLookAtBoard={() => setEndView('board')} />
-          : <EngineReport view={v} print={endView === 'print'} onBack={() => setEndView('end')}
-              onEmail={() => { void api.emailReport().then(() => say(t('end.email.sent')), () => say(t('end.email.failed'))); }} />}
+          : <EngineReport view={v} print={endView === 'print'} onBack={() => setEndView('end')} participantName={profileName} getPdf={() => api.reportPdf()}
+              onEmail={() => { void api.emailReport().then(() => say(t('board.report.emailSent')), () => say(t('board.report.emailFailed'))); }} />}
       </Suspense>
     );
   } else if (styling) {

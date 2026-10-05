@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import { useReport } from './context';
 import type { AnalyticsData, MethodologyData } from './types';
+import './messages';
 
 /** "How you talked": conversation analytics. Descriptive only, never scored, and it says so. */
 export function AnalyticsSection({ data }: { data: AnalyticsData }) {
@@ -40,7 +41,7 @@ export function MethodologySection({ data }: { data: MethodologyData }) {
       <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.method.title')}</h2>
       {data.lines.map(l => <p key={l} className="m-0 text-13 text-pretty">{l}</p>)}
       <p className="m-0 text-13 text-fg-secondary">{t('report.method.facts', { conversations: data.conversations, observations: data.observations })}</p>
-      <p className="m-0 text-13 font-600">{t('report.method.reviewed', { reviewed: String(data.reviewed) })}</p>
+      <p className="m-0 text-13 font-600">{t('report.method.reviewed', { reviewed: String(data.reviewed), count: data.reviewedCount ?? 0, total: data.conversations })}</p>
     </section>
   );
 }

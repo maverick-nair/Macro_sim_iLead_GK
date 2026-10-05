@@ -24,7 +24,16 @@ function storeSettings(participant: string, settings: Settings) {
   try { localStorage.setItem(settingsKey(participant), JSON.stringify(settings)); } catch { /* private mode or storage off: settings last for the session */ }
 }
 
-export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; participant?: string } = {}): IleadApi {
+/** A sample cohort for the mock leaderboard: names and results drawn from the participant id, the same every time. */
+const PEERS = ['Aisha Rahman', 'Ben Okafor', 'Chen Wei', 'Dana Kowalski', 'Elif Demir', 'Farid Haddad', 'Grace Mensah', 'Hiro Tanaka', 'Isla Murray', 'Jonas Berg', 'Kavya Iyer', 'Luca Romano', 'Maya Cohen', 'Nina Petrova'];
+function sampleCohort(participant: string) {
+  let h = 2166136261;
+  for (let i = 0; i < participant.length; i++) h = Math.imul(h ^ participant.charCodeAt(i), 16777619);
+  const next = () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0) % 1000) / 1000;
+  return PEERS.map(name => ({ name, score: Math.round(300 + next() * 600), conversions: Math.round(3 + next() * 6), capability: Math.round(30 + next() * 65) }));
+}
+
+export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; participant?: string; name?: string | null } = {}): IleadApi {
   const participant = opts.participant ?? 'local';
   const scenario = opts.scenario ?? DEFAULT_SCENARIO;
   const latency = opts.latencyMs ?? 250;
@@ -43,6 +52,17 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
     // The prototype's "team is reacting" beat runs about 3 seconds while evaluation happens.
     submitInteraction: () => wait(clone(scenario.outcome), latency),
     endWeek: () => wait(undefined, 0),
-    emailReport: () => wait(undefined)
+    emailReport: () => wait(undefined),
+    // No PDF service in the mock: the app opens the print view and the browser saves the PDF.
+    reportPdf: () => wait(null, 0),
+    getProfile: () => wait({ name: opts.name ?? null, cohort: null }, 0),
+    getLeaderboard: ({ size, anonymous, you }) => {
+      const all = [...sampleCohort(participant).map(p => ({ ...p, you: false })), { ...you, name: opts.name ?? null, you: true }]
+        .sort((a, b) => b.score - a.score || b.conversions - a.conversions || b.capability - a.capability)
+        .map((e, i) => ({ ...e, rank: i + 1, name: anonymous && !e.you ? null : e.name }));
+      const top = all.slice(0, size);
+      const me = all.find(e => e.you)!;
+      return wait({ entries: top.some(e => e.you) ? top : [...top, me], total: all.length });
+    }
   };
 }

@@ -109,7 +109,7 @@ export const LiveView = z.object({
   actionKey: Id, actionName: Text.nullable(), optionLabel: Text.nullable(),
   /** Email and written plan are submitted once; the others are conversations. */
   oneShot: z.boolean(),
-  people: z.array(Who), speaker: Who,
+  people: z.array(Who), speaker: Who, raisedHands: z.array(Id),
   brief: z.object({ goal: Text.nullable(), known: z.array(Text), mood: Mood.nullable(), promises: z.array(Text), declaredStyle: StyleKey.nullable() }),
   /** `aiGenerated` marks NPC turns for the AI label (brief, rule 7). */
   turns: z.array(z.object({ id: Id, by: Id, text: Text, voice: z.boolean(), interrupted: z.boolean(), aiGenerated: z.boolean() })),
@@ -210,7 +210,7 @@ export const ReportView = z.object({
   analytics: z.object({ conversations: z.number().int(), talkRatio: Num.nullable(), openQuestions: z.number().int(), recognition: z.number().int(), spoken: z.number().int() }),
   plan: z.array(z.object({ skill: Id, name: Text, enoughEvidence: z.boolean(), practice: Text, onTheJob: Text })), checkInDays: z.number().int(),
   reflection: z.object({ answers: z.array(z.string()), rating: z.number().int().nullable() }).nullable(), questions: z.array(Text),
-  methodology: z.object({ lines: z.array(Text), reviewed: z.boolean(), conversations: z.number().int(), observations: z.number().int() }),
+  methodology: z.object({ lines: z.array(Text), reviewed: z.boolean(), reviewedCount: z.number().int().default(0), conversations: z.number().int(), observations: z.number().int() }),
   badges: z.number().int(), gamificationTiers: z.array(z.object({ key: Id, name: Text, min: Num }))
 });
 
@@ -248,7 +248,10 @@ export const EngineView = z.object({
     weights: z.object({ business: Num, people: Num, leadership: Num }),
     stars: z.tuple([Num, Num, Num]),
     streak: z.object({ length: z.number().int(), minStars: z.number().int(), bonus: Num, cap: Num }),
-    tiers: z.array(z.object({ key: Id, name: Text, min: Num }))
+    tiers: z.array(z.object({ key: Id, name: Text, min: Num })),
+    /** Ranks come from the cohort API (`getLeaderboard`), not the engine: they need other participants. */
+    leaderboard: z.object({ enabled: z.boolean(), scope: z.enum(['cohort', 'unit', 'global']), size: z.number().int(), anonymous: z.boolean() }),
+    celebration: z.enum(['none', 'subtle', 'full'])
   }),
   periods: z.array(PeriodSummary),
   badges: z.array(z.object({ key: Id, rule: Id, name: Text, description: Text, earned: z.boolean(), period: z.number().int().nullable(), reason: Text.nullable() })),

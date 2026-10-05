@@ -166,6 +166,19 @@ export const Gamification = z.object({
     checkInBelow: Score.default(30)
   }).default({ start: 50, briefing: { strong: 20, adequate: 5, weak: -10, harmful: -25 }, periodPace: { met: 5, missed: -5 }, escalation: -10, unlockAt: 70, checkInBelow: 30 }),
   unlocks: z.array(z.enum(UNLOCK_KINDS)).min(1).max(3).default(['bonus_day', 'hire_budget', 'team_activity']),
+  /**
+   * Leaderboard (scoring-and-report.md 6; Configuration Spec, Leaderboard): ranked by Leadership Score,
+   * ties by conversions then contextual capability %. Left unset, it is on for development use and off
+   * for selection use.
+   */
+  leaderboard: z.object({
+    enabled: z.boolean().optional(),
+    scope: z.enum(['cohort', 'unit', 'global']).default('cohort'),
+    size: z.number().int().min(3).max(50).default(10),
+    anonymous: z.boolean().default(false)
+  }).default({ scope: 'cohort', size: 10, anonymous: false }),
+  /** How much the game celebrates (stars, badges, the week end banner): none, subtle or full. */
+  celebration: z.enum(['none', 'subtle', 'full']).default('subtle'),
   badges: z.array(Badge).default(DEFAULT_BADGES)
 }).superRefine((g, ctx) => {
   const sum = g.weights.business + g.weights.people + g.weights.leadership;
@@ -366,6 +379,8 @@ export const StorylineConfig = z.object({
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),
   gamification: Gamification.default(() => Gamification.parse({})),
   report: Report.default(() => Report.parse({})),
+  /** Use declaration (Configuration Spec, Governance): development or selection. Selection turns the leaderboard off by default. */
+  use: z.enum(['development', 'selection']).default('development'),
   actions: z.array(Action).min(1),
   /** Weekly style setting effect per period (docs/SIMULATION.md 4.4). */
   weeklyStyle: EffectTable,

@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n';
 import { WeekEndReport } from './WeekEndReport';
 import { BadgeStep, BannerStep, NewsStep, UnlockStep, WeekEndHeader } from './WeekEndSteps';
 import type { PeriodUnit, SubPeriodUnit, WeekEndBadge, WeekEndNews, WeekEndReport as Report, WeekEndReward, WeekEndStep } from './types';
+import './messages';
 
 export interface WeekEndFlowProps {
   /** Where to open, for the gallery and stories. Normal play starts at the banner. */

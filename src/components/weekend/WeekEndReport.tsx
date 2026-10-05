@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n';
 import { StarRow } from '../gamification/StarMeter';
 import { barPercent, funnelNumber, funnelRow, levelSteps } from './display';
 import type { FunnelView, PeriodUnit, WeekEndReport as Report } from './types';
+import './messages';
 
 const CARD = 'flex flex-col rounded-24 border border-line-default bg-surface-card p-5 backdrop-blur-14';
 const SMALL_BOX = 'flex flex-col rounded-24 border p-4.5';

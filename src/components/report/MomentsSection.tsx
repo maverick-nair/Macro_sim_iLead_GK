@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import type { MomentData } from './types';
+import './messages';
 
 /**
  * "Key moments": five to seven incidents in situation, behaviour, impact form, each with the style the

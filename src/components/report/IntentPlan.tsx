@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n';
 import { useReport } from './context';
 import { TONE_TEXT } from './display';
 import type { IntentCardData, PlanItemData } from './types';
+import './messages';
 
 const CARD = 'flex flex-col gap-1 rounded-16 border border-line-default px-3.5 py-3 text-13';
 

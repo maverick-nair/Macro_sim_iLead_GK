@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n';
 import { useReport } from './context';
 import { levelSegments } from './display';
 import type { ReportQuote, SkillRowData } from './types';
+import './messages';
 
 /** A verbatim quote in curly quotes, then where it was said, kept on one line. */
 function Quote({ q }: { q: ReportQuote }) {

@@ -1,7 +1,7 @@
 import { IntlMessageFormat, type PrimitiveType } from 'intl-messageformat';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { formatDelta, MINUS } from './copy';
-import { en } from './messages/en';
+import { en, type LazyMessages } from './messages/en';
 
 export { formatDelta, sanitizeCopy } from './copy';
 
@@ -9,12 +9,21 @@ export { formatDelta, sanitizeCopy } from './copy';
  * String catalog. Every participant facing string lives in `messages/<locale>/*.json` as an ICU
  * message. Components call `t('key', values)`. Keys are typed from the English catalog.
  */
-export type MessageKey = keyof typeof en;
+export type MessageKey = keyof typeof en | keyof LazyMessages;
 export type Messages = Record<MessageKey, string>;
 export type Values = Record<string, PrimitiveType>;
 
 interface Locale { messages: Messages; dir: 'ltr' | 'rtl' }
-const LOCALES: Record<string, Locale> = { en: { messages: en, dir: 'ltr' } };
+const LOCALES: Record<string, Locale> = { en: { messages: en as Messages, dir: 'ltr' } };
+
+/**
+ * Copy for screens that load on demand (end screen, report, week end), registered by those screens when
+ * their code loads, so it stays out of the first load (D67). Read at call time by every `t`.
+ */
+const registered: Record<string, string> = {};
+export function registerMessages(messages: Record<string, string>) {
+  Object.assign(registered, messages);
+}
 const RTL = new Set(['ar', 'he', 'fa', 'ur']);
 
 export interface I18n {
@@ -33,7 +42,9 @@ export function createI18n(locale = 'en', override?: Partial<Messages>): I18n {
   const t = (key: MessageKey, values?: Values): string => {
     let f = cache.get(key);
     if (!f) {
-      f = new IntlMessageFormat(messages[key] ?? key, locale);
+      const text = messages[key] ?? registered[key];
+      if (text === undefined) return key;
+      f = new IntlMessageFormat(text, locale);
       cache.set(key, f);
     }
     // Intl formats negative numbers with a hyphen; copy rules want the minus sign.

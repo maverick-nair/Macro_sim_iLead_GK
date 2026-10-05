@@ -7,6 +7,7 @@ import { onRovingKey } from '../roving';
 import { badgeIcon } from './badgeIcons';
 import { newsArt, REWARD_ART } from './display';
 import type { PeriodUnit, WeekEndBadge, WeekEndNews, WeekEndReward } from './types';
+import './messages';
 
 export const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const EYEBROW = 'text-12 font-700 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase';

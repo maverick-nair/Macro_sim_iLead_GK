@@ -1,5 +1,6 @@
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
+import './messages';
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const LINK = `cursor-pointer border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary ${FOCUS}`;

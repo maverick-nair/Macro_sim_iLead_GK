@@ -5,6 +5,7 @@ import type {
   AnalyticsData, BusinessData, FitRow, IntentCardData, MethodologyData, MomentData, PeriodUnit, PersonData, PlanItemData,
   ReportHeaderData, ReportLayout, SkillRowData, StyleExtras, StyleKey, SummaryExtras, TeamSeries
 } from './types';
+import './messages';
 
 /**
  * The engine's report (`view.report`) shaped into the report components' props. Display mapping only:

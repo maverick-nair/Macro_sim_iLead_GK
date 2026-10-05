@@ -27,6 +27,25 @@ export interface IleadApi {
   endWeek(input: { week: number }): Promise<void>;
   /** Emails the participant's development report to their work address, once the run has ended. */
   emailReport(): Promise<void>;
+  /**
+   * The development report as a PDF file rendered by the server, or null where there is no PDF service
+   * (the app then opens the print view and the browser saves the PDF).
+   */
+  reportPdf(): Promise<Blob | null>;
+  /** Who launched the run (LMS or GenieKreator launch), for the report header; null fields when unknown. */
+  getProfile(): Promise<{ name: string | null; cohort: string | null }>;
+  /**
+   * The cohort leaderboard (scoring-and-report.md 6): ranked by Leadership Score, ties by conversions,
+   * then contextual capability %. `you` is this participant's own result, sent so the server can place it.
+   */
+  getLeaderboard(input: { size: number; anonymous: boolean; you: LeaderboardResult }): Promise<Leaderboard>;
+}
+
+export interface LeaderboardResult { score: number; conversions: number; capability: number }
+export interface Leaderboard {
+  /** The top `size`, plus this participant when outside it. `name` is null when anonymous. */
+  entries: Array<LeaderboardResult & { rank: number; name: string | null; you: boolean }>;
+  total: number;
 }
 
 export interface SessionSnapshot {

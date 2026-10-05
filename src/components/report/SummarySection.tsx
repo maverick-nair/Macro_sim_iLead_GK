@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import { useReport } from './context';
 import type { SummaryExtras } from './types';
+import './messages';
 
 const LEDE = 'm-0 text-16 leading-(--il-report-lede-leading) text-pretty';
 const BOX = 'flex flex-col gap-1 rounded-16 border border-line-default px-3.5 py-3';

@@ -7,6 +7,7 @@ import { around, sharePercent, TONE_TEXT, tierBarHeight, tierBars, toneOf } from
 import { EndMoments } from './EndMoments';
 import { EndReflection } from './EndReflection';
 import type { EndScreenProps } from './types';
+import './messages';
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const TILE = 'flex flex-col rounded-20 border border-line-default bg-surface-card p-4';

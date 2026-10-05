@@ -3,8 +3,9 @@ import { copyViolations } from '../../i18n/copy';
 import { EngineView } from '../contract';
 import { parseStoryline, type StorylineConfig } from '../config';
 import salesElevator from '../storylines/sales-elevator.json';
+import { createEngine } from '../sim/engine';
 import { heuristicEvaluator } from '../sim/evaluator';
-import { play } from '../sim/policies';
+import { neededStyles, play } from '../sim/policies';
 import { createSim } from '../sim/sim';
 import type { Band, LiveRecord, Sim } from '../sim/types';
 import { buildReport } from './build';
@@ -117,5 +118,29 @@ describe('the whole report from a run', () => {
     expect(sim.phase).not.toBe('ended');
     const r = await play(config, 'passive', 2);
     expect(r.view.report).not.toBeNull();
+  });
+});
+
+describe('human review', () => {
+  it("replaces the AI's bands in scores and the report, and says so", async () => {
+    const e = createEngine(config, { seed: 5 });
+    await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
+    const r = await e.dispatch({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });
+    await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'ok.' });
+    // Finish the run so the report exists.
+    while (e.view().phase !== 'ended') {
+      await e.dispatch({ type: 'endPeriod' });
+      const v = e.view();
+      if (v.pendingReward) await e.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] });
+      if (e.view().phase === 'periodEnd') { await e.dispatch({ type: 'startNextPeriod' }); await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) }); }
+    }
+    const before = e.view();
+    expect(before.report!.methodology).toMatchObject({ reviewed: false, reviewedCount: 0 });
+    const id = before.report!.moments.find(m => m.title.startsWith('Meet face to face with Kent'))?.id;
+    expect(id).toBeTruthy();
+    const after = e.review({ recordId: id!, band: 'strong' });
+    expect(after.report!.methodology).toMatchObject({ reviewed: true, reviewedCount: 1 });
+    expect(after.score.live).toBeGreaterThan(before.score.live!);
+    expect(after.report!.moments.find(m => m.id === id)?.kind).toBe('best');
   });
 });

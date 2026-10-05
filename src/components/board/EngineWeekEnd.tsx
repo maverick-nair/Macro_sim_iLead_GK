@@ -4,6 +4,7 @@ import { useI18n, type I18n } from '../../i18n';
 import { funnelNumber, funnelScale, streakNote } from '../weekend/display';
 import type { WeekEndBadge, WeekEndNews, WeekEndReport, WeekEndReward } from '../weekend/types';
 import { WeekEndFlow, type WeekEndFlowProps } from '../weekend/WeekEndFlow';
+import '../weekend/messages';
 
 type Summary = EngineView['periods'][number];
 const METRICS = ['skill', 'morale', 'result', 'trust'] as const;

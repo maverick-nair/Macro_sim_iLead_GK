@@ -17,6 +17,7 @@ import { StyleFitSection } from './StyleFitSection';
 import { SummarySection } from './SummarySection';
 import { TeamOverRun } from './TeamOverRun';
 import type { ReportBlock, ReportLayout } from './types';
+import './messages';
 
 export interface EngineReportProps {
   view: EngineView;
@@ -32,6 +33,8 @@ export interface EngineReportProps {
   layout?: ReportLayout;
   /** Emails the report. Leave it out where there is no email service; the button hides. */
   onEmail?: () => void;
+  /** A PDF rendered by the server, or null without a PDF service (then the print view and the browser's dialog). */
+  getPdf?: () => Promise<Blob | null>;
 }
 
 /** Phones get the 390 layouts at this width and below, as in the app (src/main.tsx). */
@@ -70,7 +73,7 @@ function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUnit'], p
  * the print view (letter pages) and the browser's print dialog, where the participant saves a PDF.
  * Load it lazily: it carries visx, which stays out of the first load.
  */
-export function EngineReport({ view, onBack, print: printProp = false, participantName, date: dateProp, layout: layoutProp, onEmail }: EngineReportProps) {
+export function EngineReport({ view, onBack, print: printProp = false, participantName, date: dateProp, layout: layoutProp, onEmail, getPdf }: EngineReportProps) {
   const i18n = useI18n();
   const { t } = i18n;
   const layout = useViewportLayout(layoutProp);
@@ -107,6 +110,17 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
   }, [printing, print]);
 
   const go = (next: boolean) => { moved.current = true; setPrint(next); };
+  // Download PDF: the server's PDF when there is one, else the print view and the browser's print dialog.
+  const download = async () => {
+    const blob = await getPdf?.().catch(() => null);
+    if (!blob) { go(true); setPrinting(true); return; }
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'development-report.pdf';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
 
   if (!model) {
     return (
@@ -136,7 +150,7 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
           <div ref={toolbar}>
             {print
               ? <ReportToolbar print onBack={() => go(false)} onDownload={() => window.print()} />
-              : <ReportToolbar onBack={onBack} onEmail={onEmail} onDownload={() => { go(true); setPrinting(true); }} />}
+              : <ReportToolbar onBack={onBack} onEmail={onEmail} onDownload={() => void download()} />}
           </div>
         )}
       />

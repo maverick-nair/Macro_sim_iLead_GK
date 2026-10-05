@@ -1,5 +1,6 @@
 import type { I18n } from '../../i18n';
 import type { FunnelView, PeriodUnit, SponsorLevel, WeekEndFunnel, WeekEndNews } from './types';
+import './messages';
 
 /**
  * Display mappings for the week end. None of these decides an outcome: they turn engine values into

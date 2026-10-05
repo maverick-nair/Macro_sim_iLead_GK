@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import type { ReportLayout } from './types';
+import './messages';
 
 /**
  * How the report is shown. `tables`: `toggle` gives every chart a visible "Show as table" button

@@ -163,6 +163,8 @@ export interface AnalyticsData {
 export interface MethodologyData {
   lines: string[];
   reviewed: boolean;
+  /** Conversations an assessor reviewed (their bands replace the AI's). */
+  reviewedCount?: number;
   conversations: number;
   observations: number;
 }

@@ -130,6 +130,9 @@ export interface Interaction {
   candidate?: number;
   /** A hire on the extra hire budget: one seat past a full stage. */
   budget?: boolean;
+  /** Team meeting: who has the floor, and who has a hand up to speak. */
+  floor?: string;
+  hands?: string[];
 }
 
 export interface InboxMessage {
@@ -193,6 +196,9 @@ export interface LiveRecord {
   /** Words said by the participant and by the NPCs, open questions asked, recognition statements, and whether it was spoken. */
   talk?: { you: number; npc: number; openQuestions: number; recognition: number; spoken: boolean };
   concern?: boolean;
+  /** Human review (scoring-and-report.md 4.5): the AI's band before an assessor replaced it. */
+  aiBand?: Band;
+  reviewed?: boolean;
   /** Sum of absolute changes to people, and the largest changes. */
   impact?: number;
   changes?: Array<{ subject: string; metric: string; delta: number }>;

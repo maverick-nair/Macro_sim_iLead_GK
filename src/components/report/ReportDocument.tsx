@@ -4,6 +4,7 @@ import { REPORT_PAGE_RULE } from '../../styles/print';
 import { useReport } from './context';
 import { paginate, splitAt } from './paginate';
 import type { ReportBlock } from './types';
+import './messages';
 
 const WEB_PAGE = 'flex flex-col gap-7 border border-line-default bg-surface-card backdrop-blur-14';
 /** A letter page: light colours whatever the theme, shown at 0.8 so it is 8.5 by 11 inches on screen and on paper. */

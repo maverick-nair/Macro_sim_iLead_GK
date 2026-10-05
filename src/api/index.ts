@@ -9,9 +9,10 @@ export { createMockApi } from './mock';
 export { createHttpApi } from './http';
 
 /** Uses the HTTP adapter when `VITE_ILEAD_API_URL` is set, otherwise the mock. */
-export function createDefaultApi(participant = 'local'): IleadApi {
+/** `name` is the participant's display name from the launch link, for the mock; the server knows it from the launch. */
+export function createDefaultApi(participant = 'local', name: string | null = null): IleadApi {
   const url = import.meta.env.VITE_ILEAD_API_URL as string | undefined;
-  return url ? createHttpApi(url) : createMockApi({ participant });
+  return url ? createHttpApi(url) : createMockApi({ participant, name });
 }
 
 export const ApiContext = createContext<IleadApi>(createMockApi());

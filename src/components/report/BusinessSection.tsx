@@ -4,6 +4,7 @@ import { ChartBlock } from './ChartBlock';
 import { FunnelChart, RevenueChart } from './charts';
 import { useReport } from './context';
 import type { BusinessData, PeriodUnit } from './types';
+import './messages';
 
 /** "Business results": revenue against target pace, the funnel over the run against its ideal, the bottleneck and conversions. */
 export function BusinessSection({ data, unit, periods }: { data: BusinessData; unit: PeriodUnit; periods: number }) {

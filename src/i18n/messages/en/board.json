@@ -46,5 +46,7 @@
   "board.live.compareEnd.pass": "Pass on both",
   "board.live.compareEnd.keep": "Keep comparing",
   "board.teamScroll": "Your team, scrolls sideways",
-  "board.snoozed": "Back in your inbox next {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}}"
+  "board.snoozed": "Back in your inbox next {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}}",
+  "board.report.emailSent": "Report sent to your work email.",
+  "board.report.emailFailed": "The email did not go through. Try again."
 }

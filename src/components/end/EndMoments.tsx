@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { useI18n } from '../../i18n';
 import type { EndMoment, PeriodUnit } from './types';
+import './messages';
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 

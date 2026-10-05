@@ -1,3 +1,4 @@
+import './messages';
 import type { FitCell, Tone } from './types';
 
 /**

@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n';
 import { LineSample, TrajectoryChart, type TrajectoryMetric } from './charts';
 import { DataTable, useReport, useTableAlternative } from './context';
 import type { PersonData } from './types';
+import './messages';
 
 const METRICS: TrajectoryMetric[] = ['morale', 'trust', 'result'];
 

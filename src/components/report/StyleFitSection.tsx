@@ -5,6 +5,7 @@ import { FitGridChart, StyleSharesChart } from './charts';
 import { useReport } from './context';
 import { fitClass } from './display';
 import { STYLE_KEYS, type FitRow, type PeriodUnit, type StyleExtras } from './types';
+import './messages';
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 

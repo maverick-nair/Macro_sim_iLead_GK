@@ -8,6 +8,7 @@ import { useI18n } from '../../i18n';
 import { useReport } from './context';
 import { chartMax, gridCell, round1 } from './display';
 import { STYLE_KEYS, type StyleKey } from './types';
+import './messages';
 
 /**
  * The report's charts, drawn with visx in a fixed drawing space that scales to the card. None relies

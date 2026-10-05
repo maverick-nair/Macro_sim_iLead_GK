@@ -153,3 +153,24 @@ describe('live interactions', () => {
     expect(second.changes.some(c => c.subject === 'derick' && c.reason.label === 'Mixed signals' && c.delta < 0)).toBe(true);
   });
 });
+
+describe('team meeting floor', () => {
+  it('hands go up after someone speaks; calling a person by name gives them the floor', async () => {
+    const e = createEngine(config, { seed: 3 });
+    await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
+    const r = await e.dispatch({ type: 'planAction', action: 'meet', memberIds: [] });
+    const id = r.interactionId!;
+    const first = e.view().live!.speaker.id;
+    await e.dispatch({ type: 'sendTurn', interactionId: id, text: 'Thanks everyone. Today we have three things.' });
+    const hands = e.view().live!.raisedHands;
+    expect(hands.length).toBeGreaterThan(0);
+    expect(hands).not.toContain(first);
+    const other = e.view().live!.people.find(p => p.id !== first && !hands.includes(p.id))!;
+    await e.dispatch({ type: 'sendTurn', interactionId: id, text: `${other.name.split(' ')[0]}, what do you think?` });
+    expect(e.view().live!.speaker.id).toBe(other.id);
+    // Not naming anyone: the first raised hand speaks up.
+    const next = e.view().live!.raisedHands[0];
+    await e.dispatch({ type: 'sendTurn', interactionId: id, text: 'Good. Anything else from anyone?' });
+    expect(e.view().live!.speaker.id).toBe(next);
+  });
+});

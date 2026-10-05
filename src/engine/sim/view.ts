@@ -62,6 +62,8 @@ function liveView(sim: Sim) {
     oneShot: ONE_SHOT.has(it.format),
     people: (it.format === 'meeting' ? sim.members.filter(m => m.away === 0).map(m => m.id) : it.memberIds).map(who),
     speaker: who(speakerFor(sim, it)),
+    /** Team meeting: attendees with a hand up, first to speak first. */
+    raisedHands: it.format === 'meeting' ? it.hands ?? [] : [],
     brief: {
       goal: a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
       known: [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
@@ -155,7 +157,11 @@ export function buildView(sim: Sim) {
       tier: sim.phase === 'ended' ? { key: score.tier.key, name: score.tier.name } : null
     },
     streak: sim.streak,
-    gamification: { weights: c.gamification.weights, stars: c.gamification.stars, streak: c.gamification.streak, tiers: c.gamification.tiers },
+    gamification: {
+      weights: c.gamification.weights, stars: c.gamification.stars, streak: c.gamification.streak, tiers: c.gamification.tiers,
+      leaderboard: { ...c.gamification.leaderboard, enabled: c.gamification.leaderboard.enabled ?? c.use !== 'selection' },
+      celebration: c.gamification.celebration
+    },
     periods: sim.periods,
     badges: c.gamification.badges.map(b => {
       const got = sim.badges.find(x => x.key === b.key);

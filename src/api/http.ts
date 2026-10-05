@@ -1,5 +1,5 @@
 import type { Outcome, Scenario } from '../data/types';
-import { ApiError, type IleadApi, type SessionSnapshot } from './types';
+import { ApiError, type IleadApi, type Leaderboard, type SessionSnapshot } from './types';
 
 /**
  * JSON over HTTP adapter. Endpoint paths are a proposal until the backend
@@ -34,6 +34,15 @@ export function createHttpApi(baseUrl: string, opts: { getToken?: () => string |
     planAction: input => request('POST', `/weeks/${input.week}/actions`, input),
     submitInteraction: input => request<Outcome>('POST', '/interactions', input),
     endWeek: ({ week }) => request('POST', `/weeks/${week}/end`),
-    emailReport: () => request('POST', '/report/email')
+    emailReport: () => request('POST', '/report/email'),
+    reportPdf: async () => {
+      const token = opts.getToken?.();
+      const res = await fetch(`${base}/report.pdf`, { headers: { Accept: 'application/pdf', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, credentials: 'include' });
+      if (res.status === 404 || res.status === 501) return null;
+      if (!res.ok) throw new ApiError(`GET /report.pdf failed with ${res.status}`, res.status);
+      return await res.blob();
+    },
+    getProfile: () => request<{ name: string | null; cohort: string | null }>('GET', '/profile'),
+    getLeaderboard: input => request<Leaderboard>('POST', '/cohort/leaderboard', input)
   };
 }

@@ -194,7 +194,7 @@ export function buildReport(sim: Sim) {
     analytics,
     plan, checkInDays: r.checkInDays,
     reflection: sim.reflection, questions: r.reflection,
-    methodology: { lines: r.methodology, reviewed: false, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
+    methodology: { lines: r.methodology, reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min }))
   };
 }

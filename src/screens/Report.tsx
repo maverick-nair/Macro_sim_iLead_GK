@@ -11,6 +11,7 @@ import { StyleFitSection } from '../components/report/StyleFitSection';
 import { SummarySection } from '../components/report/SummarySection';
 import { TeamOverRun } from '../components/report/TeamOverRun';
 import type { ReportBlock } from '../components/report/types';
+import '../components/report/messages';
 
 /**
  * The prototype's development report (port of `project/ilReport.dc.html`) on the design fixture, for the

@@ -1,6 +1,7 @@
 import { useI18n } from '../../i18n';
 import { useReport } from './context';
 import type { ReportHeaderData } from './types';
+import './messages';
 
 const BOX = 'flex flex-col rounded-18 border border-line-default px-4 py-3';
 

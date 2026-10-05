@@ -5,7 +5,7 @@ import { chooseReward, endPeriod, startNextPeriod } from './period';
 import { createRng } from './rng';
 import type { Style } from './rules';
 import { createSim, log, member } from './sim';
-import type { Change, Outcome, PeriodSummary, Turn } from './types';
+import type { Band, Change, Outcome, PeriodSummary, Turn } from './types';
 import * as live from './live';
 import { buildView, type EngineView } from './view';
 
@@ -48,6 +48,13 @@ export interface Result {
 export interface Engine {
   view(): EngineView;
   dispatch(intent: Intent): Promise<Result>;
+  /**
+   * An assessor's review of one live interaction (scoring-and-report.md 4.5), by the report's record
+   * id. Not a participant intent: assessor tooling calls it on the server. Their band replaces the AI's
+   * overall band and skill bands everywhere scores and the report read them; consequences already
+   * applied stay, since the run is history.
+   */
+  review(input: { recordId: string; band: Band; skills?: Record<string, Band> }): EngineView;
 }
 
 export { IntentError };
@@ -156,6 +163,15 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
 
   return {
     view: () => buildView(sim),
+    review({ recordId, band, skills }) {
+      const rec = sim.liveRecords.find(r => r.id === recordId);
+      if (!rec) throw new IntentError('No such interaction', 'unknownInteraction');
+      rec.aiBand ??= rec.band;
+      rec.band = band;
+      rec.skills = (rec.skills ?? []).map(o => ({ ...o, band: skills?.[o.key] ?? band }));
+      rec.reviewed = true;
+      return buildView(sim);
+    },
     // Intents apply strictly in order, even when an evaluation is asynchronous.
     dispatch(intent) {
       const next = queue.then(() => run(intent));

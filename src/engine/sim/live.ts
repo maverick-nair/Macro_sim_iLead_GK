@@ -2,7 +2,7 @@ import type { StorylineConfig } from '../config';
 
 type Person = StorylineConfig['members'][number];
 import { IntentError } from './actions';
-import { member, nextId, person } from './sim';
+import { firstName, member, nextId, person } from './sim';
 import type { Interaction, Mood, Sim, Turn } from './types';
 import { moodOf } from './view';
 
@@ -120,7 +120,8 @@ const HINTS: Record<string, string> = {
 export function speakerFor(sim: Sim, it: Interaction): string {
   if (it.format === 'sponsor') return 'sponsor';
   if (it.format === 'interview') return it.candidates?.[it.candidate ?? 0] ?? 'sponsor';
-  return it.memberIds[0] ?? (it.format === 'meeting' ? sim.members[0]?.id ?? 'sponsor' : 'sponsor');
+  if (it.format === 'meeting') return it.floor ?? attendees(sim)[0] ?? 'sponsor';
+  return it.memberIds[0] ?? 'sponsor';
 }
 
 function speakerCtx(sim: Sim, id: string): NpcContext['speaker'] {
@@ -148,6 +149,33 @@ async function npcSays(sim: Sim, npc: NpcModel, it: Interaction, said: string | 
   return turn;
 }
 
+/** Who is in a team meeting: everyone available. */
+export const attendees = (sim: Sim) => sim.members.filter(m => m.away === 0).map(m => m.id);
+
+/**
+ * Team meeting floor (design frame l5: active speaker, raised hands, call on by name). Calling someone
+ * by first name gives them the floor; otherwise the first raised hand speaks up; otherwise whoever
+ * spoke goes on.
+ */
+function passFloor(sim: Sim, it: Interaction, text: string) {
+  const named = attendees(sim).find(id => new RegExp(`\\b${firstName(sim, id)}\\b`, 'i').test(text));
+  const next = named ?? it.hands?.[0];
+  if (!next) return;
+  it.floor = next;
+  it.hands = (it.hands ?? []).filter(id => id !== next);
+}
+
+/**
+ * After someone speaks, up to two people who have not had the floor raise a hand: first anyone
+ * carrying an unshared concern, then the lowest morale. Deterministic, so a replay matches.
+ */
+function raiseHands(sim: Sim, it: Interaction) {
+  const spoke = new Set(it.turns.filter(t => t.by !== 'you').map(t => t.by));
+  const want = attendees(sim).filter(id => !spoke.has(id) && id !== it.floor).map(id => member(sim, id)!).filter(Boolean)
+    .sort((a, b) => Number(!!person(sim, b.id).hiddenConcern && !b.concernShared) - Number(!!person(sim, a.id).hiddenConcern && !a.concernShared) || a.morale - b.morale || a.id.localeCompare(b.id));
+  it.hands = [...new Set([...(it.hands ?? []), ...want.map(m => m.id)])].slice(0, 2);
+}
+
 /** A fresh interaction record. */
 export const blank = (base: Omit<Interaction, 'turns' | 'hint' | 'concernRevealed' | 'closed'>): Interaction => ({ ...base, turns: [], hint: null, concernRevealed: false, closed: false });
 
@@ -172,7 +200,10 @@ export async function sendTurn(sim: Sim, npc: NpcModel, id: string, text: string
   if (it.closed) throw new IntentError('The conversation has ended', 'closed');
   if (yourTurns(it) >= turnLimit(sim, it)) throw new IntentError('No turns left', 'turnLimit');
   it.turns.push({ id: nextId(sim, 't'), by: 'you', text, voice });
-  return npcSays(sim, npc, it, text);
+  if (it.format === 'meeting') passFloor(sim, it, text);
+  const turn = await npcSays(sim, npc, it, text);
+  if (it.format === 'meeting') raiseHands(sim, it);
+  return turn;
 }
 
 /** The participant spoke over the NPC: keep only what was shown (spec, Interrupt). */

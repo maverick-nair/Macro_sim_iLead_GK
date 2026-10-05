@@ -345,7 +345,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
       case 'meeting':
         return (
           <MeetingStage
-            attendees={lv.people.map(p => ({ ...person(p), speaking: !!current && current.speaker !== 'you' && current.speaker.id === p.id && conversation === 'npcSpeaking', raisedHand: false }))}
+            attendees={lv.people.map(p => ({ ...person(p), speaking: !!current && current.speaker !== 'you' && current.speaker.id === p.id && conversation === 'npcSpeaking', raisedHand: lv.raisedHands.includes(p.id) }))}
             caption={caption} spokenLine={spokenLine} onCallOn={id => setDraft(t('board.live.callOn', { name: (byId.get(id)?.name ?? '').split(' ')[0] }))}
           />
         );
