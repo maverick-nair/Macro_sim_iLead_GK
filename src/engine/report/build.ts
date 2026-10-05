@@ -136,7 +136,9 @@ export function buildReport(sim: Sim) {
       intent: intentFor(who, l.period), weight: l.changes.reduce((a, ch) => a + Math.abs(ch.delta), 0), sub: l.sub
     };
   });
-  const moments = [...fromLive, ...fromLog].sort((a, b) => b.weight - a.weight || a.period - b.period || a.sub - b.sub).slice(0, 7)
+  // One moment per title (the same thing three times teaches nothing), the weightiest kept.
+  const moments = [...fromLive, ...fromLog].sort((a, b) => b.weight - a.weight || a.period - b.period || a.sub - b.sub)
+    .filter((m, i, arr) => arr.findIndex(x => x.title === m.title) === i).slice(0, 7)
     .sort((a, b) => a.period - b.period || a.sub - b.sub).map(({ weight: _w, sub: _s, ...m }) => m);
 
   // ---- 6. People outcomes

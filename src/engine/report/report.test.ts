@@ -102,6 +102,7 @@ describe('the whole report from a run', () => {
     expect(rep.sections).toHaveLength(10);
     expect(rep.moments.length).toBeGreaterThanOrEqual(5);
     expect(rep.moments.length).toBeLessThanOrEqual(7);
+    expect(new Set(rep.moments.map(m => m.title)).size).toBe(rep.moments.length);
     expect(rep.plan).toHaveLength(3);
     expect(rep.style.grid.flat().reduce((a, b) => a + b, 0)).toBe(rep.style.total);
     expect(rep.people.every(p => p.series.length > 0)).toBe(true);
