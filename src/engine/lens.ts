@@ -82,7 +82,8 @@ export function needOf(s: { skill: number; morale: number }, high = 70): NeedKey
 
 /** The style difference for a need: 0 fits, 1 is a partial miss, 2 a clear miss. A style the lens does not know is a clear miss. */
 export function fitOf(lens: Pick<Lens, 'fit'>, style: string, need: NeedKey): Fit {
-  return lens.fit[need][style] ?? 2;
+  const row = lens.fit[need];
+  return Object.hasOwn(row, style) ? row[style] : 2;
 }
 
 /** The first style, in lens order, that fits a need. Every need has one (the schema checks). */
