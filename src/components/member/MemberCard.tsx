@@ -99,7 +99,21 @@ export interface MemberCardProps {
   styleDisabledReason?: string;
   /** A letter was picked while the style is disabled (to say why, for example in a toast). */
   onStyleDisabledPick?: () => void;
+  /**
+   * `tablet`: the larger tappable card of the portrait tablet board (D72): photo in its mood ring,
+   * name, title, mood and this period's style as a tag. The whole card is one button; the profile
+   * and the actions open in the actions drawer. Defaults to the desktop card.
+   */
+  layout?: 'desk' | 'tablet';
 }
+
+export const MOOD_RING: Record<MoodKey, string> = {
+  happy: 'ring-member-mood-happy',
+  neutral: 'ring-member-mood-neutral',
+  thinking: 'ring-member-mood-thinking',
+  concerned: 'ring-member-mood-concerned',
+  frustrated: 'ring-member-mood-frustrated'
+};
 
 /**
  * A team member on the board: portrait with mood, signals and trust, then name, title, tags, the
@@ -120,6 +134,29 @@ export function MemberCard(props: MemberCardProps) {
   const pill = away ? t('member.mood.away') : moodName;
   const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
   const profile = (e: MouseEvent) => { e.stopPropagation(); onOpenProfile(); };
+
+  if (props.layout === 'tablet') {
+    return (
+      <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
+        className={`relative flex min-h-42 w-full flex-col items-start gap-2.5 rounded-18 border border-solid px-3 py-3.5 text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${selected ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
+        <img src={img} alt="" className={`size-13 flex-none rounded-round bg-brand-pale-lavender object-cover object-top ring-2 ${MOOD_RING[mood]} ${away ? 'grayscale' : ''}`} />
+        {(unread || promise) && (
+          <span className="absolute top-2.5 right-2.5 flex gap-1">
+            {unread && <span title={t('member.unread')} className={signal}><Chat /></span>}
+            {promise && <span title={promise} className={signal}><Clock /></span>}
+          </span>
+        )}
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <b className="text-15 leading-tight break-words">{name}</b>
+          <span className="text-12 break-words text-fg-secondary">{title}</span>
+        </span>
+        <span className="mt-auto flex flex-wrap items-center gap-1.5">
+          <span className="flex items-center gap-1.25 text-12 font-700"><span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />{pill}</span>
+          <span className="flex min-h-5.5 items-center rounded-pill bg-surface-raised px-2 text-11 font-700 text-fg-secondary">{style ? t('style.name', { style }) : t('tablet.card.noStyle')}</span>
+        </span>
+      </button>
+    );
+  }
 
   // The card is a plain container so the profile button and style control are not nested inside a
   // button (WCAG 4.1.2). A visually hidden toggle carries selection for keyboard and screen readers;

@@ -1,0 +1,12 @@
+{
+  "tablet": {
+    "board-height": { "value": "calc(100dvh - {app.safe.top} - {app.safe.bottom})", "$description": "The tablet board fills the screen, so the dock stays in reach and the team scrolls inside (D72)" },
+    "sheet": {
+      "shadow": { "value": "-30px 0 80px {color.elevation.panel}", "$description": "The actions drawer on a tablet, over the dimmed board (D72)" },
+      "enter": { "value": "ilIn {duration.base} ease", "$description": "The drawer arriving, as the inbox drawer does" }
+    },
+    "dock": {
+      "shadow": { "value": "0 20px 50px {color.elevation.drawer}", "$description": "The bottom dock on a tablet board" }
+    }
+  }
+}

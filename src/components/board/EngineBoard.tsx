@@ -5,7 +5,7 @@ import { useEngineView, useIntent } from '../../engine/react';
 import { useApi } from '../../api';
 import { useUi } from '../../app/uiStore';
 import { SessionClockText, useSessionTicker } from '../../app/sessionClock';
-import { NARROW_BOARD, useMediaQuery } from '../../lib/useMediaQuery';
+import { NARROW_BOARD, TABLET, useMediaQuery } from '../../lib/useMediaQuery';
 import { Button } from '../../ds/Button';
 import { MoneyProvider } from '../../i18n/money';
 import { useI18n } from '../../i18n';
@@ -36,6 +36,12 @@ const EngineEnd = lazy(() => import('./EngineEnd').then(m => ({ default: m.Engin
 const EngineReport = lazy(() => import('../report/EngineReport'));
 // The cohort rank in the score breakdown loads when the breakdown first opens with the leaderboard on.
 const CohortRank = lazy(() => import('../gamification/CohortRank'));
+// The portrait tablet's drawer, dock and pick bar (D72) load only on a tablet.
+const tabletParts = () => import('./TabletBoard');
+const ActionSheet = lazy(() => tabletParts().then(m => ({ default: m.ActionSheet })));
+const TabletDock = lazy(() => tabletParts().then(m => ({ default: m.TabletDock })));
+const PickBar = lazy(() => tabletParts().then(m => ({ default: m.PickBar })));
+import type { ActionSheetProps, SheetTab } from './TabletBoard';
 import { EventCard } from './EventCard';
 import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
@@ -87,6 +93,12 @@ export interface EngineBoardProps {
   /** The participant folded the Actions panel on a narrow board (a setting, saved per participant). */
   actionsCollapsed?: boolean;
   onActionsCollapsed?: (collapsed: boolean) => void;
+  /**
+   * The layout. By default the board follows the window: a tablet held upright (744 to 1023 wide,
+   * portrait) gets the tablet board with its dock and actions drawer (D72), anything else the desktop
+   * board. Stories and tests can fix it.
+   */
+  layout?: 'desk' | 'tablet';
 }
 
 
@@ -180,6 +192,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const [announce, setAnnounce] = useState('');
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const narrow = useMediaQuery(NARROW_BOARD);
+  const tabletQuery = useMediaQuery(TABLET);
+  const tablet = app.layout ? app.layout === 'tablet' : tabletQuery;
+  /** The tablet's actions drawer: which tab is open, or null when it is closed (D72). */
+  const [sheet, setSheet] = useState<SheetTab | null>(null);
+  /** The drawer is lowered so people can be picked on the board. */
+  const [lowered, setLowered] = useState(false);
   /** Selecting someone opens a folded Actions panel for them; folding it again while they are selected leaves it folded. */
   const [foldedFor, setFoldedFor] = useState<string | null>(null);
   const inFlight = useRef(false);
@@ -222,7 +240,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         if (!paletteOk.current) return;
         e.preventDefault(); setQuery(''); setPal(true);
       }
-      if (e.key === 'Escape') { setFlow(null); setLegend(false); useUi.getState().openPanel('none'); }
+      if (e.key === 'Escape') { setFlow(null); setLegend(false); setSheet(null); setLowered(false); useUi.getState().openPanel('none'); }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -334,7 +352,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
 
   const clickCard = (m: MemberView) => {
-    if (picking && f && fa) {
+    if (picking && f && fa && (!tablet || lowered)) {
       if (ineligible(m)) return;
       const has = f.picks.includes(m.id);
       let picks = has ? f.picks.filter(x => x !== m.id) : [...f.picks, m.id];
@@ -343,7 +361,30 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       return;
     }
     setFlow(null);
+    if (tablet) {
+      // On a tablet a tap selects the person and opens the actions drawer for them (D72).
+      if (selected !== m.id) ui.toggleMember(m.id);
+      ui.openPanel('none');
+      setLowered(false);
+      setSheet('member');
+      return;
+    }
     ui.toggleMember(m.id);
+  };
+
+  /** Closes the tablet's actions drawer: the flow, the profile and the selection go with it. */
+  const closeSheet = () => {
+    setSheet(null);
+    setLowered(false);
+    setFlow(null);
+    if (ui.panel === 'profile') ui.openPanel('none');
+    if (selected) ui.toggleMember(selected);
+  };
+  const sheetTab = (tab: SheetTab) => {
+    setFlow(null);
+    setSheet(tab);
+    if (tab === 'profile' && selected) openProfile(selected);
+    else if (ui.panel === 'profile') ui.openPanel('none');
   };
 
   const styleOf = (m: MemberView) => (styling ? draft[m.id] ?? null : m.style);
@@ -455,6 +496,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         const r = await send({ type: 'planAction', action: fa.key, option: choice?.option.key, memberIds: f.picks, stage: choice?.stage ?? undefined });
         if (!r) return;
         setFlow(null);
+        // On a tablet the drawer closes with it, and the selection goes.
+        if (tablet) { setSheet(null); setLowered(false); if (selected) ui.toggleMember(selected); }
         // A decision shows its outcome panel (with reasons); a toast only when the engine sent none.
         if (!r.interactionId && !r.view.outcome) say(t('board.planned', { action: fa.name }));
       },
@@ -515,9 +558,13 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     scoreOpen, onScoreOpenChange: setScoreOpen,
     streak: v.streak, streakLabel: streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
     onEndPeriod: () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
-    endEmphasis: f || styling || ended ? 'secondary' : 'primary'
+    endEmphasis: f || styling || ended ? 'secondary' : 'primary',
+    layout: tablet ? 'tablet' : 'desk'
   };
   const strip: MetricsStripProps = {
+    layout: tablet ? 'tablet' : 'desk',
+    streak: { count: v.streak, periodUnit, label: streak,
+      next: lastPeriod && typeof lastPeriod.streak.next === 'number' && v.streak > 0 ? t('score.streak.next', { n: lastPeriod.streak.next, unit: periodUnit, bonus: v.gamification.streak.bonus }) : '' },
     kpis: v.kpis.map(k => ({ metric: k.metric, value: k.value, trend: { kind: 'direction', direction: k.trend } })),
     pulse: { ...v.pulse, periodUnit },
     target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: v.clock.runShare, pacePeriod: { unit: periodUnit, n: v.clock.period } },
@@ -742,6 +789,62 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         onBack={() => setStyleView(x => ({ ...x, summary: false }))}
         confirmDisabled={busy || chosen < v.members.length}
       />
+    );
+  } else if (tablet) {
+    // ---- the portrait tablet board (D72): HUD, KPI tiles, the team, the outcome, then the dock ----
+    const left = t('time.left', { amount: amount(v.clock.capacityLeft) });
+    const openActions = v.actions.filter(a => a.scope === 'team' && !tile(a.key, null).block).length;
+    const pickOnBoard = lowered && !!f && !!fa && picking;
+    let sheetProps: ActionSheetProps | null = null;
+    if (sheet && !pickOnBoard && !card) {
+      const tab: SheetTab = sm ? sheet : 'team';
+      const due = sm ? inbox.find(x => x.from === sm.id && x.dueInSubPeriods !== null) : undefined;
+      sheetProps = {
+        person: sm ? {
+          name: sm.name, firstName: first(sm.name), img: img(sm), mood: sm.mood, away: sm.away > 0,
+          meta: t('tablet.sheet.meta', { stage: stageName(sm.stage), mood: sm.away > 0 ? t('member.mood.away') : t('member.mood', { mood: sm.mood }), trust: sm.statsRevealed && sm.trust !== null ? String(sm.trust) : 'none' })
+        } : null,
+        tab, onTab: sheetTab, left,
+        due: due ? {
+          text: t('tablet.sheet.due', { name: first(sm!.name), when: due.dueInSubPeriods === 0 ? t('tablet.sheet.dueNow', { unit }) : t('tablet.sheet.dueIn', { amount: amount(due.dueInSubPeriods!) }), title: due.title }),
+          onReply: () => { closeSheet(); void openMessage(due.id); }
+        } : undefined,
+        rows: tab === 'profile' ? [] : v.actions.filter(a => a.scope === (tab === 'member' ? 'member' : 'team')).map(a => ({ key: a.key, tile: tile(a.key, tab === 'member' && sm ? sm.id : null) })),
+        chosen: f?.key ?? null, flow: drawer, profile, subPeriodUnit: unit,
+        onClose: closeSheet, onPickOnBoard: () => setLowered(true)
+      };
+    }
+    body = (
+      <div className="flex h-(--il-tablet-board-height) min-h-0 flex-col">
+        <Hud {...hud} />
+        {call}
+        <MetricsStrip {...strip} />
+        {ended && lastWeekSeen && endView === 'board' && (
+          <div className="mx-6 mt-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13">
+            <span className="flex-1">{t('board.ended.readOnly')}</span>
+            <Button variant="secondary" size="sm" onClick={() => setEndView('end')}>{t('board.ended.reopen')}</Button>
+          </div>
+        )}
+        <div className="relative min-h-0 flex-1 overflow-y-auto">
+          <TeamBoard layout="tablet" hint={hint} legendOpen={false} onToggleLegend={() => undefined} periodUnit={periodUnit} columns={columns} />
+          {oc && <div className="pt-4.5">{outcome}</div>}
+        </div>
+        <Suspense fallback={null}>
+          {pickOnBoard && f && fa
+            ? <PickBar action={fa.name} limit={minPick === maxPick ? t('board.pick.exact', { n: maxPick }) : t('board.pick.range', { min: minPick, max: maxPick })}
+                picks={f.picks.map(id => { const m = member(id); return { id, name: first(m?.name ?? ''), img: img(m) }; })}
+                onDone={() => setLowered(false)} onCancel={closeSheet} />
+            : <TabletDock unread={inbox.length} inboxOpen={ui.panel === 'inbox'} onInbox={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')}
+                open={openActions} left={left} onActions={() => { ui.openPanel('none'); setLowered(false); setSheet(sm ? 'member' : 'team'); }} />}
+          {sheetProps && <ActionSheet {...sheetProps} />}
+        </Suspense>
+        <InboxDrawer layout="tablet" open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
+          onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />
+        {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
+        {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
+          returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-expanded]')} />}
+        <CommandPalette open={pal && plainBoard} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
+      </div>
     );
   } else {
     body = (

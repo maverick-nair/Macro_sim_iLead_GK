@@ -52,20 +52,23 @@ const LockIcon = () => (
  * so keyboard and screen reader users reach it and hear the reason as its description; mouse users
  * also get it as a tooltip.
  */
+/** A tile's sub line: why it is unavailable, the sponsor reward, or its format. Shared with the tablet drawer's rows (D72). */
+export function actionSub(t: ReturnType<typeof useI18n>['t'], fmt: (n: number) => string, { kind, duration, block, perk }: Pick<ActionTileProps, 'kind' | 'duration' | 'block' | 'perk'>): string {
+  if (block?.reason === 'locked' || block?.reason === 'cooldown') return block.text;
+  if (block?.reason === 'planned') return t('action.blocked.planned');
+  if (block?.reason === 'away') return t('action.blocked.away', { day: block.untilDay });
+  if (block?.reason === 'days') return t('action.blocked.days', { need: fmt(block.need), have: fmt(block.have) });
+  if (perk) return perk;
+  if (kind === 'live' && duration) return t('action.sub.liveDuration', { duration: duration.toLowerCase() });
+  return t('action.sub', { kind });
+}
+
 export function ActionTile({ name, kind, days, duration, block, perk, onPick, layout = 'panel' }: ActionTileProps) {
   const { t } = useI18n();
   const fmt = useDays();
   const reasonId = useId();
   const disabled = !!block;
-
-  let sub: string;
-  if (block?.reason === 'locked' || block?.reason === 'cooldown') sub = block.text;
-  else if (block?.reason === 'planned') sub = t('action.blocked.planned');
-  else if (block?.reason === 'away') sub = t('action.blocked.away', { day: block.untilDay });
-  else if (block?.reason === 'days') sub = t('action.blocked.days', { need: fmt(block.need), have: fmt(block.have) });
-  else if (perk) sub = perk;
-  else if (kind === 'live' && duration) sub = t('action.sub.liveDuration', { duration: duration.toLowerCase() });
-  else sub = t('action.sub', { kind });
+  const sub = actionSub(t, fmt, { kind, duration, block, perk });
   // "Planned today" is its own explanation; the other reasons are repeated as a tooltip.
   const tooltip = block && block.reason !== 'planned' ? sub : undefined;
 

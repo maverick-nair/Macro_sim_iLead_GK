@@ -9,6 +9,13 @@ export const NARROW_BOARD = '(max-width: 1279px)';
  */
 export const SMALL_SCREEN = '(max-width: 743.98px), (max-height: 499.98px) and (pointer: coarse)';
 
+/**
+ * A tablet held upright, or a window shaped like one (D72): 744 to 1023 wide and taller than wide.
+ * These get the tablet layouts (bottom dock, actions drawer, stacked live screen). Landscape tablets
+ * and short windows in that range keep the 1024 layouts.
+ */
+export const TABLET = '(min-width: 744px) and (max-width: 1023.98px) and (orientation: portrait)';
+
 /** True while the media query matches. False where there is no `matchMedia` (tests in node). */
 export function useMediaQuery(query: string): boolean {
   const [on, setOn] = useState(() => !!globalThis.matchMedia?.(query).matches);

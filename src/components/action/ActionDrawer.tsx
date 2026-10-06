@@ -10,6 +10,8 @@ export interface ActionOption {
   detail: string;
   /** The engine refuses this choice (a full stage): shown, with its reason in `detail`, but not selectable. */
   disabled?: boolean;
+  /** A short value at the end of the row, such as the cost (the tablet drawer's action rows). */
+  aside?: string;
 }
 
 export interface OptionCardsProps {
@@ -17,13 +19,17 @@ export interface OptionCardsProps {
   /** Index of the chosen option, or null before one is chosen. */
   value: number | null;
   onChange: (index: number) => void;
+  /** The group's name. Defaults to the action's options. */
+  label?: string;
+  /** `lg`: the tablet's large radio rows, 64px tall (D72). */
+  size?: 'md' | 'lg';
 }
 
 /**
  * Radio cards for a static action's options. One tab stop for the group; arrow keys, Home and End
  * move and select, as in a native radio group.
  */
-export function OptionCards({ options, value, onChange }: OptionCardsProps) {
+export function OptionCards({ options, value, onChange, label, size = 'md' }: OptionCardsProps) {
   const { t } = useI18n();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const enabled = options.map((o, i) => (o.disabled ? -1 : i)).filter(i => i >= 0);
@@ -42,18 +48,20 @@ export function OptionCards({ options, value, onChange }: OptionCardsProps) {
     refs.current[next]?.focus();
   };
   return (
-    <div role="radiogroup" aria-label={t('action.drawer.options')} className="flex flex-col gap-2">
+    <div role="radiogroup" aria-label={label ?? t('action.drawer.options')} className="flex flex-col gap-2">
       {options.map((o, i) => {
         const on = value === i;
         const ring = on ? 'border-accent-secondary' : 'border-line-default';
+        const lg = size === 'lg';
         return (
           <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
             aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex items-start ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} gap-2.5 rounded-14 border-(length:--il-action-option-border-width) p-3 text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : 'bg-surface-raised'}`}>
-            <span aria-hidden="true" className={`mt-0.25 flex size-4.5 flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
+            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-16 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-14 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
+            <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
               <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
             </span>
-            <span className="flex flex-col"><b className="text-13">{o.name}</b><span className="text-12 text-fg-secondary">{o.detail}</span></span>
+            <span className="flex min-w-0 flex-1 flex-col"><b className={lg ? 'text-15' : 'text-13'}>{o.name}</b><span className="text-12 text-fg-secondary">{o.detail}</span></span>
+            {o.aside && <span className="flex-none text-13 text-fg-secondary">{o.aside}</span>}
           </button>
         );
       })}
@@ -105,6 +113,14 @@ export interface ActionDrawerProps {
   /** Level of the action name heading, so the page sets the outline. Defaults to 2 (it replaces the Actions panel's own heading). */
   headingLevel?: HeadingLevel;
   onBack: () => void;
+  /**
+   * `tablet`: the flow under the action rows in the tablet's actions drawer (D72): no Back or heading
+   * (the chosen row says which action), the people to pick with a way to pick them on the board, and
+   * the summary over a 56px confirm button with the cost. Defaults to the Actions panel's flow.
+   */
+  layout?: 'panel' | 'tablet';
+  /** Lowers the tablet drawer so people can be picked on the board. */
+  onPickOnBoard?: () => void;
 }
 
 /** The action flow that replaces the actions list once an action is chosen. */
@@ -113,10 +129,59 @@ export function ActionDrawer(p: ActionDrawerProps) {
   const fmt = useDays();
   // Focus moves to the drawer's heading when it opens, so keyboard and screen reader users land in the flow.
   const heading = useRef<HTMLHeadingElement>(null);
-  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  const tablet = p.layout === 'tablet';
+  useEffect(() => { if (!tablet) heading.current?.focus({ preventScroll: true }); }, [tablet]);
   const pill = 'flex h-5.5 items-center rounded-pill px-2 text-12 font-700';
   const who = p.people.mode === 'pick' ? t('action.drawer.people', { count: p.picks.length, max: p.people.max })
     : p.people.mode === 'with' ? t('action.drawer.with') : t('action.drawer.who');
+  const picks = (
+    <div className="flex flex-wrap gap-1.5">
+      {p.picks.map(pk => (
+        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
+          <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
+        </span>
+      ))}
+    </div>
+  );
+  const nudge = p.nudge && (
+    <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
+      <span className="text-pretty">{t('action.drawer.nudge', { name: p.nudge.name, area: p.nudge.area, cost: fmt(p.nudge.days) })}</span>
+      <div className="flex gap-2">
+        <NoWrapButton variant="secondary" size="sm" onClick={p.nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
+        <NoWrapButton variant="ghost" size="sm" onClick={p.nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
+      </div>
+    </div>
+  );
+
+  if (tablet) {
+    return (
+      <>
+        <div className="flex animate-(--il-action-drawer-enter) flex-col gap-3.5">
+          <div className="flex flex-col gap-1">
+            <span className="text-13 text-pretty text-fg-secondary">{p.description}</span>
+            {p.perk && <span role="note" className="text-13 font-700 text-pretty text-status-gain">{p.perk}</span>}
+          </div>
+          {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} size="lg" />}
+          {p.people.mode === 'pick' && (
+            <div className="flex flex-col gap-2">
+              <span className="text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
+              <span className="text-13 text-fg-secondary">{p.people.limit}</span>
+              {picks}
+              {p.onPickOnBoard && <div><NoWrapButton variant="secondary" size="md" onClick={p.onPickOnBoard}>{t('tablet.pick.lower')}</NoWrapButton></div>}
+            </div>
+          )}
+          {nudge}
+        </div>
+        <div className="sticky bottom-0 mt-auto flex flex-col gap-2 border-x-0 border-b-0 border-t border-solid border-line-default bg-surface-solid pt-3">
+          <span aria-live="polite" className="text-center text-12 text-pretty text-fg-secondary">{p.summary}</span>
+          <button type="button" disabled={!p.canConfirm} onClick={p.onConfirm}
+            className="min-h-14 w-full cursor-pointer rounded-16 border-0 bg-transparent bg-(image:--il-button-primary-bg) px-4 py-0 text-16 font-700 text-(--il-button-primary-fg) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary disabled:cursor-not-allowed disabled:opacity-40">
+            {t('tablet.cta', { cta: t('action.drawer.cta', { cta: p.cta }), cost: fmt(p.days) })}
+          </button>
+        </div>
+      </>
+    );
+  }
   return (
     <div className="flex flex-1 animate-(--il-action-drawer-enter) flex-col gap-3.5 overflow-auto px-4.5 py-4">
       <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
@@ -130,23 +195,9 @@ export function ActionDrawer(p: ActionDrawerProps) {
       <div className="flex flex-col gap-2">
         <span className="text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
         {p.people.mode === 'pick' && <span className="text-13 text-fg-secondary">{t('action.drawer.pickHint', { limit: p.people.limit })}</span>}
-        <div className="flex flex-wrap gap-1.5">
-          {p.picks.map(pk => (
-            <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
-              <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
-            </span>
-          ))}
-        </div>
+        {picks}
       </div>
-      {p.nudge && (
-        <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
-          <span className="text-pretty">{t('action.drawer.nudge', { name: p.nudge.name, area: p.nudge.area, cost: fmt(p.nudge.days) })}</span>
-          <div className="flex gap-2">
-            <NoWrapButton variant="secondary" size="sm" onClick={p.nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
-            <NoWrapButton variant="ghost" size="sm" onClick={p.nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
-          </div>
-        </div>
-      )}
+      {nudge}
       <div aria-live="polite" className="mt-auto rounded-14 bg-surface-raised p-3 text-13 text-pretty">{p.summary}</div>
       <div className="w-full"><Button variant="primary" size="lg" disabled={!p.canConfirm} onClick={p.onConfirm}>{t('action.drawer.cta', { cta: p.cta })}</Button></div>
     </div>

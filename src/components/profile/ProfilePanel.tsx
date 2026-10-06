@@ -75,6 +75,12 @@ export interface ProfilePanelProps {
   /** Every individual action for this person, as the Actions panel would show them. */
   actions: Array<Omit<ActionTileProps, 'layout'>>;
   onClose: () => void;
+  /**
+   * `tablet`: the Profile tab of the tablet's actions drawer (D72): one column (who they are, then
+   * your interactions), inside the drawer's dialog, so no dialog, close button or actions of its own
+   * (the drawer's other tab holds the actions). Defaults to the panel over the board.
+   */
+  layout?: 'panel' | 'tablet';
 }
 
 /** Icon glyph, not copy: the button is named from the catalog. */
@@ -152,7 +158,9 @@ export function ProfilePanel(props: ProfilePanelProps) {
 
   // Layout effect so the cleanup runs while the panel is still in the document and can tell
   // whether focus was inside it.
+  const tablet = props.layout === 'tablet';
   useLayoutEffect(() => {
+    if (tablet) return;
     const el = ref.current;
     const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     el?.focus({ preventScroll: true });
@@ -161,7 +169,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
       const inside = !active || active === document.body || (el?.contains(active) ?? false);
       if (inside && opener && opener !== document.body && opener.isConnected) opener.focus({ preventScroll: true });
     };
-  }, []);
+  }, [tablet]);
 
   const onKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Escape') onClose();
@@ -171,43 +179,63 @@ export function ProfilePanel(props: ProfilePanelProps) {
     <div key={label} className="grid grid-cols-(--il-profile-fact-columns) gap-2.5 text-13"><span className="text-fg-secondary">{label}</span><span>{value}</span></div>
   );
 
+  const who = (
+    <>
+      <div className={`flex items-center gap-4.5 ${tablet ? 'pb-1' : 'px-5 pt-5.5 pb-1.5'}`}>
+        <div className={`${tablet ? 'size-20' : 'size-30'} flex-none overflow-hidden rounded-round shadow-(--il-profile-portrait-ring) ${backdrop(mood, away)}`}>
+          <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
+        </div>
+        <div className="flex flex-col gap-0.5">
+          {tablet ? <h3 className="m-0 text-20 font-700 tracking-(--il-profile-name-tracking)">{name}</h3> : <h2 className="m-0 text-24 font-700 tracking-(--il-profile-name-tracking)">{name}</h2>}
+          <span className="text-13 text-fg-secondary">{title}</span>
+          <span className="text-13 font-700">{away ? t('member.mood.away') : t('member.mood', { mood })}</span>
+        </div>
+      </div>
+      <div className={`flex flex-col gap-3.5 ${tablet ? 'py-2' : 'px-5 py-4.5'}`}>
+        <div className="grid grid-cols-4 gap-2">
+          {STATS.map(k => (
+            <div key={k} className="flex flex-col rounded-12 bg-surface-raised p-2.5">
+              <span className="text-12 text-fg-secondary">{t('metric.name', { metric: k })}</span>
+              <b className={`text-20 ${stats[k] < LOW_BELOW ? 'text-status-attention' : 'text-fg-primary'}`}>{number(stats[k])}</b>
+            </div>
+          ))}
+        </div>
+        {shared && <div className="rounded-12 bg-accent-soft px-3 py-2.5 text-13"><b>{t('profile.shared')}</b> {shared}</div>}
+        {factRow(t('profile.fact.label', { key: 'style', unit: periodUnit }), style ? t('style.name', { style }) : t('profile.fact.empty', { key: 'style' }))}
+        {facts.map(f => factRow(t('profile.fact.label', { key: f.key, unit: periodUnit }), f.value ?? t('profile.fact.empty', { key: f.key })))}
+      </div>
+    </>
+  );
+  const history = (
+    <>
+      <h3 id={interactionsId} className="m-0 text-18 font-700">{t('profile.interactions.title')}</h3>
+      {timeline.length === 0
+        ? <p className="m-0 text-13 text-fg-secondary">{t('profile.interactions.empty', { name })}</p>
+        : <ol className="m-0 contents list-none p-0">{timeline.map(e => <TimelineItem key={e.id} entry={e} periodUnit={periodUnit} subPeriodUnit={subPeriodUnit} />)}</ol>}
+      {promises.map((p, i) => <PromiseLine key={i} promise={p} />)}
+    </>
+  );
+
+  if (tablet) {
+    return (
+      <div className="flex flex-col gap-3">
+        {who}
+        <div role="region" aria-labelledby={interactionsId} className="flex flex-col gap-3">{history}</div>
+      </div>
+    );
+  }
+
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the dialog
     <div ref={ref} role="dialog" aria-label={t('profile.aria', { name })} tabIndex={-1} onKeyDown={onKeyDown}
       className="absolute top-0 right-6 bottom-6 left-4 z-35 grid animate-(--il-profile-panel-enter) grid-cols-(--il-profile-panel-columns) overflow-hidden rounded-24 border border-line-strong bg-surface-material shadow-(--il-profile-panel-shadow) outline-none backdrop-blur-24">
       <div className="flex flex-col overflow-auto border-r border-line-default">
-        <div className="flex items-center gap-4.5 px-5 pt-5.5 pb-1.5">
-          <div className={`size-30 flex-none overflow-hidden rounded-round shadow-(--il-profile-portrait-ring) ${backdrop(mood, away)}`}>
-            <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <h2 className="m-0 text-24 font-700 tracking-(--il-profile-name-tracking)">{name}</h2>
-            <span className="text-13 text-fg-secondary">{title}</span>
-            <span className="text-13 font-700">{away ? t('member.mood.away') : t('member.mood', { mood })}</span>
-          </div>
-        </div>
-        <div className="flex flex-col gap-3.5 px-5 py-4.5">
-          <div className="grid grid-cols-4 gap-2">
-            {STATS.map(k => (
-              <div key={k} className="flex flex-col rounded-12 bg-surface-raised p-2.5">
-                <span className="text-12 text-fg-secondary">{t('metric.name', { metric: k })}</span>
-                <b className={`text-20 ${stats[k] < LOW_BELOW ? 'text-status-attention' : 'text-fg-primary'}`}>{number(stats[k])}</b>
-              </div>
-            ))}
-          </div>
-          {shared && <div className="rounded-12 bg-accent-soft px-3 py-2.5 text-13"><b>{t('profile.shared')}</b> {shared}</div>}
-          {factRow(t('profile.fact.label', { key: 'style', unit: periodUnit }), style ? t('style.name', { style }) : t('profile.fact.empty', { key: 'style' }))}
-          {facts.map(f => factRow(t('profile.fact.label', { key: f.key, unit: periodUnit }), f.value ?? t('profile.fact.empty', { key: f.key })))}
-        </div>
+        {who}
       </div>
 
       {/* A long timeline scrolls: the column takes focus so keyboards can scroll it (WCAG 2.1.1). */}
       <div role="region" aria-labelledby={interactionsId} tabIndex={0} className="flex flex-col gap-3 overflow-auto border-r border-line-default p-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
-        <h3 id={interactionsId} className="m-0 text-18 font-700">{t('profile.interactions.title')}</h3>
-        {timeline.length === 0
-          ? <p className="m-0 text-13 text-fg-secondary">{t('profile.interactions.empty', { name })}</p>
-          : <ol className="m-0 contents list-none p-0">{timeline.map(e => <TimelineItem key={e.id} entry={e} periodUnit={periodUnit} subPeriodUnit={subPeriodUnit} />)}</ol>}
-        {promises.map((p, i) => <PromiseLine key={i} promise={p} />)}
+        {history}
       </div>
 
       <div className="flex flex-col gap-2.5 overflow-auto p-5">

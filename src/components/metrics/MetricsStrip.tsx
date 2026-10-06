@@ -61,11 +61,25 @@ export interface SponsorConfidence {
   meter?: { value: number; unlockAt: number; checkInBelow: number; sponsorName: string; subPeriodUnit: SubPeriodUnit };
 }
 
+/** The streak, as an eighth tile on the tablet board (D72), where the HUD has no room for it. */
+export interface MetricsStreak {
+  count: number;
+  periodUnit: PeriodUnit;
+  /** What the next bonus takes ("1 more week for a +25 bonus"), or empty. */
+  next: string;
+  /** The whole streak in words, for the tile's name and tooltip. */
+  label: string;
+}
+
 export interface MetricsStripProps {
   kpis: MetricsKpi[];
   pulse: TeamPulse;
   target: MetricsTarget;
   sponsor: SponsorConfidence;
+  /** `tablet`: four tiles a row, two rows, with the streak as the eighth (D72). Defaults to one row. */
+  layout?: 'desk' | 'tablet';
+  /** The streak tile, shown on the tablet layout only. */
+  streak?: MetricsStreak;
 }
 
 const tile = 'flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12';
@@ -77,7 +91,7 @@ const PULSE = [
 const pct = (n: number) => `${Math.max(0, Math.min(100, n * 100))}%`;
 
 /** How the team is doing, in one row: the four team KPIs, Team Pulse, the money target and sponsor confidence. */
-export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps) {
+export function MetricsStrip({ kpis, pulse, target, sponsor, layout = 'desk', streak }: MetricsStripProps) {
   const { t, number } = useI18n();
   const money = useMoney();
   const popId = useId();
@@ -158,8 +172,9 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
     </div>
   );
 
+  const tablet = layout === 'tablet';
   return (
-    <section aria-label={t('metrics.strip.aria')} className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5">
+    <section aria-label={t('metrics.strip.aria')} className={tablet ? 'grid grid-cols-4 gap-2.5 px-6 pt-4 pb-0 text-large:grid-cols-2' : 'grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5'}>
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
       {pulseTile}
       {targetTile}
@@ -167,6 +182,13 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
         {sponsorTile('size-full')}
         {sponsor.open && causes('absolute top-full right-0 z-40 mt-2 w-70')}
       </div>
+      {tablet && streak && (
+        <div role="group" aria-label={streak.label} title={streak.label} className={tile}>
+          <span className="text-12 text-fg-secondary">{t('metrics.streak.title')}</span>
+          <b className="text-20">{t('metrics.streak.value', { n: streak.count, unit: streak.periodUnit })}</b>
+          {streak.next && <span className="text-12 font-700 text-fg-secondary">{streak.next}</span>}
+        </div>
+      )}
     </section>
   );
 }

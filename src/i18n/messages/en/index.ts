@@ -29,11 +29,12 @@ import score from './score.json';
 import settings from './settings.json';
 import smallscreen from './smallscreen.json';
 import style from './style.json';
+import tablet from './tablet.json';
 import stylesetting from './stylesetting.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...smallscreen, ...style, ...stylesetting, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...smallscreen, ...style, ...stylesetting, ...tablet, ...team, ...time };
 
 /** Loaded with their screens: './end.json', './report.json', './weekend.json'. */
 export type LazyMessages = typeof import('./end.json') & typeof import('./report.json') & typeof import('./weekend.json');
