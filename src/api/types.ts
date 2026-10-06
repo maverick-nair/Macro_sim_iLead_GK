@@ -41,7 +41,7 @@ export interface IleadApi {
   getLeaderboard(input: { size: number; anonymous: boolean; you: LeaderboardResult }): Promise<Leaderboard>;
   /**
    * The client theme authored in GenieKreator (src/theme/schema.ts), as raw JSON, or null when the
-   * simulation uses the iLead theme. The theme loader validates and corrects it (D71).
+   * simulation uses the iLead theme. The theme loader validates and corrects it (D72).
    */
   getTheme(): Promise<unknown>;
 }

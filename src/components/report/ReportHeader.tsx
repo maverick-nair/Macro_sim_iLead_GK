@@ -5,7 +5,7 @@ import './messages';
 
 const BOX = 'flex flex-col rounded-18 border border-line-default px-4 py-3';
 
-/** The client's logo (D71) and the wordmark, "Development report", the participant's name (the page's h1), the run line, tier and score. */
+/** The client's logo (D72) and the wordmark, "Development report", the participant's name (the page's h1), the run line, tier and score. */
 export function ReportHeader({ name, line, tier, score }: ReportHeaderData) {
   const { t } = useI18n();
   return (

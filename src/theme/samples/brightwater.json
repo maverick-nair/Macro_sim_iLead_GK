@@ -1,5 +1,5 @@
 {
-  "$description": "Brightwater Energy, a deliberately bad sample palette for tests and review (D71): a pale yellow accent, a sky blue second accent that fails on white and a navy one that fails on dark, a cream soft accent, a grey raised surface and a pale brand gradient. The loader corrects every pair to WCAG AA by lightness. A text logo, the System font and half the corner radius.",
+  "$description": "Brightwater Energy, a deliberately bad sample palette for tests and review (D72): a pale yellow accent, a sky blue second accent that fails on white and a navy one that fails on dark, a cream soft accent, a grey raised surface and a pale brand gradient. The loader corrects every pair to WCAG AA by lightness. A text logo, the System font and half the corner radius.",
   "version": 1,
   "id": "brightwater",
   "name": "Brightwater Energy",

@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { useI18n } from '../i18n';
 import type { Brand } from './types';
 
-/** The client's brand from the theme (D71), or null for the plain iLead theme. */
+/** The client's brand from the theme (D72), or null for the plain iLead theme. */
 export const BrandContext = createContext<Brand | null>(null);
 export const useBrand = () => useContext(BrandContext);
 

@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 /**
- * M7 (D71): a client theme loaded at runtime. The mock API serves a theme JSON from `?themeUrl=`
+ * M7 (D72): a client theme loaded at runtime. The mock API serves a theme JSON from `?themeUrl=`
  * (standing in for `GET /theme`); here it is Brightwater, a deliberately bad palette, which the loader
  * corrects to WCAG AA. The board and the report must then be axe clean, in dark and light.
  */

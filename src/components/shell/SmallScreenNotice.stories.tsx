@@ -27,7 +27,7 @@ export const Landscape: StoryObj = { render: () => <Phone width={844} height={39
 /** The browser refused the clipboard: the status says to copy the address instead. */
 export const CopyRefused: StoryObj = { render: () => <Phone><SmallScreenNotice link={LINK} copy={refused} focusOnOpen={false} /></Phone> };
 
-/** The client theme's logo beside the iLead mark (Halden, D71). */
+/** The client theme's logo beside the iLead mark (Halden, D72). */
 export const ClientLogo: StoryObj = { decorators: [withClientTheme()], render: () => <Phone><SmallScreenNotice link={LINK} copy={copied} focusOnOpen={false} /></Phone> };
 
 /** The narrowest phones, 320 wide. */

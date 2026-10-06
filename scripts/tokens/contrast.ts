@@ -3,7 +3,7 @@
  *
  * Any token (primitive, semantic or component) can be checked against any other. The maths and the
  * token resolution live in src/theme/paint.ts and src/theme/color.ts, shared with the runtime theme
- * loader, which corrects a client theme against these same pairs (DECISIONS D71). Client themes are
+ * loader, which corrects a client theme against these same pairs (DECISIONS D72). Client themes are
  * no longer a build time variant: the build checks the default theme in light and dark.
  */
 import { createPainter, measure, pairModes, pairTargets, PaintError, round2, worst, type ContrastPair, type TokenNode } from '../../src/theme/paint';

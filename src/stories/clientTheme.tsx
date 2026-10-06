@@ -5,7 +5,7 @@ import brightwater from '../theme/samples/brightwater.json';
 import halden from '../theme/samples/halden.json';
 import type { AppliedTheme } from '../theme/types';
 
-/** The sample client themes, through the theme loader (D71). */
+/** The sample client themes, through the theme loader (D72). */
 export const HALDEN = resolveTheme(halden)!;
 export const BRIGHTWATER = resolveTheme(brightwater)!;
 

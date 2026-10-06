@@ -33,7 +33,7 @@ function readLayer(dir: string): Record<string, unknown> {
 
 /**
  * Loads tokens/primitive/*.json, tokens/semantic/*.json, tokens/component/*.json, tokens/legacy.json,
- * and the extra contrast pairs in tokens/contrast.json. Client themes are runtime config (src/theme, D71).
+ * and the extra contrast pairs in tokens/contrast.json. Client themes are runtime config (src/theme, D72).
  */
 export function loadSources(root: string): TokenSources {
   const t = path.join(root, 'tokens');

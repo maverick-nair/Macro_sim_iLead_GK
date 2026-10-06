@@ -20,7 +20,7 @@ const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev')
  * `?theme=light` (or `dark`) picks the mode over the client theme's preference, `?client=halden` serves
  * the sample client theme from the mock API (`?themeUrl=/path.json` any theme JSON), `?engine=off` the
  * design prototype's fixed board instead of the engine, `?start=board` skips onboarding.
- * The client theme loads lazily (src/theme, D71): the default theme shows until it lands, and stays on any failure.
+ * The client theme loads lazily (src/theme, D72): the default theme shows until it lands, and stays on any failure.
  * Laptops, desktops and tablets only (D69): on a smaller screen a notice covers the app (`app/SmallScreenGate.tsx`).
  */
 function Play() {

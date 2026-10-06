@@ -26,7 +26,7 @@ function DevicesIcon() {
 }
 
 /**
- * Covers the simulation on a screen too small to play on (D69): the brand mark (with the client's logo, D71), why, and the link
+ * Covers the simulation on a screen too small to play on (D69): the brand mark (with the client's logo, D72), why, and the link
  * to copy and open on a laptop, desktop or tablet. Full screen, it scrolls on its own when short
  * (a phone held sideways) and keeps clear of notches and the home indicator.
  */

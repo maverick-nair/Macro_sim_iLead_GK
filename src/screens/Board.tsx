@@ -274,7 +274,7 @@ export function Board(props: BoardProps) {
     .filter(i => !q || i.name.toLowerCase().includes(q)).slice(0, 9);
 
   const isOffline = props.uiState === 'offline';
-  // A client theme's nav reads Objective, History and More, as the design chat intended (D17, fixed in M7: D71).
+  // A client theme's nav reads Objective, History and More, as the design chat intended (D17, fixed in M7: D72).
   const navKeys = app.client ? ['objective', 'history', 'more'] : ['objective', 'funnel', 'history', 'badges', 'more'];
   const nav = navKeys.map(key => ({ key, label: t('hud.nav.item', { key }) }));
   const onNav = (key: string) => {

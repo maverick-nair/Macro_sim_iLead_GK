@@ -62,7 +62,7 @@ export const ClientNav: Story = {
   args: { ...base, nav: NAV.filter(n => ['objective', 'history', 'more'].includes(n.key)) }
 };
 
-/** A client theme with a text logo and a corrected palette (Brightwater, D71). */
+/** A client theme with a text logo and a corrected palette (Brightwater, D72). */
 export const ClientTextLogo: Story = {
   decorators: [withClientTheme(BRIGHTWATER), S => <div style={{ width: 1440 }}><S /></div>],
   args: base

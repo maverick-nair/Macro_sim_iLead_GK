@@ -1,5 +1,5 @@
 /**
- * Theme bootstrap: the only theme code in the first load (D71). It starts the lazy loader
+ * Theme bootstrap: the only theme code in the first load (D72). It starts the lazy loader
  * (loader.ts), writes what it returns on :root, and tells React when the theme has settled.
  * Until then, and whenever anything fails, the default iLead theme shows.
  */

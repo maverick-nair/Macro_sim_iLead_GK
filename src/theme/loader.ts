@@ -1,5 +1,5 @@
 /**
- * The theme loader (M7, D71). Lazy: only the bootstrap (bootstrap.ts) is in the first load; this
+ * The theme loader (M7, D72). Lazy: only the bootstrap (bootstrap.ts) is in the first load; this
  * module, the schema, the contrast tables and the correction maths load on demand.
  *
  * resolveTheme turns a raw GenieKreator theme config into the custom properties the semantic token

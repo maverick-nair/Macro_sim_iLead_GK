@@ -16,7 +16,7 @@ import { startTheme, useThemeState } from '../theme/bootstrap';
 export function ReportDev() {
   const q = new URLSearchParams(location.search);
   const light = q.get('theme') === 'light';
-  // The client theme, loaded and applied on :root the way the app does it (D71).
+  // The client theme, loaded and applied on :root the way the app does it (D72).
   // eslint-disable-next-line react-hooks/exhaustive-deps -- launch parameters, read once
   useEffect(() => startTheme(() => createMockApi({ latencyMs: 0, client: q.get('client'), themeUrl: q.get('themeUrl') }).getTheme()), []);
   const { theme: client } = useThemeState();

@@ -120,7 +120,7 @@ export function build(src: TokenSources): BuildOutput {
       if (typeof node.value !== 'string') throw new TokenError(`${path}: needs light and dark, or value`);
       css = interpolate(node.value, reg, path);
     }
-    if ('overridableBy' in node) throw new TokenError(`${path}: overridableBy is gone, mark the token "themable": true (D71)`);
+    if ('overridableBy' in node) throw new TokenError(`${path}: overridableBy is gone, mark the token "themable": true (D72)`);
     // A GenieKreator theme may set this token at runtime (src/theme): it writes --il-theme-<path> on
     // :root (or on an ancestor of the app root), which this declaration reads first.
     if (node.themable === true) css = `var(${themeVar(path)}, ${css})`;

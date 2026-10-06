@@ -37,7 +37,7 @@ import type { AppActions, AppModel, Overlay, PlannedAction, Screen, Settings } f
 export interface AppProps {
   theme?: 'dark' | 'light';
   /**
-   * A client theme from the theme loader (D71): its brand mark, and its custom properties scoped to
+   * A client theme from the theme loader (D72): its brand mark, and its custom properties scoped to
    * this app root, so a gallery frame or story can show one theme beside another. In play the
    * bootstrap also writes them on :root.
    */

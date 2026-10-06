@@ -1,5 +1,5 @@
 {
-  "$description": "Halden Group, the sample client theme (frame b15, `?client=halden`). A GenieKreator theme config like any other: the mock API serves it from getTheme and the loader validates, corrects and applies it at runtime (D71). It has no logo image, so the brand mark shows the design's placeholder.",
+  "$description": "Halden Group, the sample client theme (frame b15, `?client=halden`). A GenieKreator theme config like any other: the mock API serves it from getTheme and the loader validates, corrects and applies it at runtime (D72). It has no logo image, so the brand mark shows the design's placeholder.",
   "version": 1,
   "id": "halden",
   "name": "Halden Group",

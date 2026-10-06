@@ -51,7 +51,7 @@ export interface AppModel {
   /** Session clock, "m:ss". */
   clock: string;
   showClock: boolean;
-  /** True when a client theme with a brand is active (D71). */
+  /** True when a client theme with a brand is active (D72). */
   client: boolean;
   dark: boolean;
 }

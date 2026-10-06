@@ -3,7 +3,7 @@ import { resolveTheme } from '../theme/loader';
 import halden from '../theme/samples/halden.json';
 import { F, FrameCanvas, type FrameGroup } from './Frames';
 
-/** The Halden sample theme, through the theme loader like any client theme (D71). */
+/** The Halden sample theme, through the theme loader like any client theme (D72). */
 const HALDEN = resolveTheme(halden);
 
 /** Every screen of iLead, each frame the live app opened at that point. Port of `iLead Screens.dc.html`. */

@@ -1,5 +1,5 @@
 /**
- * Automatic contrast correction for a client theme (D71).
+ * Automatic contrast correction for a client theme (D72).
  *
  * Every pair the token build checks (tokens/contrast.json and the `contrast` declared on semantic
  * tokens) is measured again with the theme's colours, in light and dark, with the build's own painter

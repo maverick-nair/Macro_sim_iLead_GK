@@ -11,7 +11,7 @@
  * Fallback (parseTheme): a value that is not an object, or a `version` other than 1, rejects the
  * whole theme. Any other invalid field is dropped on its own, with an issue, and the rest applies.
  *
- * See README "Themes" for the field table and DECISIONS D71.
+ * See README "Themes" for the field table and DECISIONS D72.
  */
 import { z } from 'zod';
 import { parseColor } from './color';
