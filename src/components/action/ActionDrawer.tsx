@@ -113,14 +113,34 @@ export interface ActionDrawerProps {
   /** Level of the action name heading, so the page sets the outline. Defaults to 2 (it replaces the Actions panel's own heading). */
   headingLevel?: HeadingLevel;
   onBack: () => void;
-  /**
-   * `tablet`: the flow under the action rows in the tablet's actions drawer (D72): no Back or heading
-   * (the chosen row says which action), the people to pick with a way to pick them on the board, and
-   * the summary over a 56px confirm button with the cost. Defaults to the Actions panel's flow.
-   */
-  layout?: 'panel' | 'tablet';
-  /** Lowers the tablet drawer so people can be picked on the board. */
-  onPickOnBoard?: () => void;
+}
+
+/** Who is picked for an action, as chips with their photo. */
+export function PickedChips({ picks }: { picks: PickedPerson[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {picks.map(pk => (
+        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
+          <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** The soft prerequisite warning with Assess first and Continue anyway. */
+export function NudgeNote({ nudge }: { nudge: ActionNudge }) {
+  const { t } = useI18n();
+  const fmt = useDays();
+  return (
+    <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
+      <span className="text-pretty">{t('action.drawer.nudge', { name: nudge.name, area: nudge.area, cost: fmt(nudge.days) })}</span>
+      <div className="flex gap-2">
+        <NoWrapButton variant="secondary" size="sm" onClick={nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
+        <NoWrapButton variant="ghost" size="sm" onClick={nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
+      </div>
+    </div>
+  );
 }
 
 /** The action flow that replaces the actions list once an action is chosen. */
@@ -129,59 +149,10 @@ export function ActionDrawer(p: ActionDrawerProps) {
   const fmt = useDays();
   // Focus moves to the drawer's heading when it opens, so keyboard and screen reader users land in the flow.
   const heading = useRef<HTMLHeadingElement>(null);
-  const tablet = p.layout === 'tablet';
-  useEffect(() => { if (!tablet) heading.current?.focus({ preventScroll: true }); }, [tablet]);
+  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
   const pill = 'flex h-5.5 items-center rounded-pill px-2 text-12 font-700';
   const who = p.people.mode === 'pick' ? t('action.drawer.people', { count: p.picks.length, max: p.people.max })
     : p.people.mode === 'with' ? t('action.drawer.with') : t('action.drawer.who');
-  const picks = (
-    <div className="flex flex-wrap gap-1.5">
-      {p.picks.map(pk => (
-        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
-          <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
-        </span>
-      ))}
-    </div>
-  );
-  const nudge = p.nudge && (
-    <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
-      <span className="text-pretty">{t('action.drawer.nudge', { name: p.nudge.name, area: p.nudge.area, cost: fmt(p.nudge.days) })}</span>
-      <div className="flex gap-2">
-        <NoWrapButton variant="secondary" size="sm" onClick={p.nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
-        <NoWrapButton variant="ghost" size="sm" onClick={p.nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
-      </div>
-    </div>
-  );
-
-  if (tablet) {
-    return (
-      <>
-        <div className="flex animate-(--il-action-drawer-enter) flex-col gap-3.5">
-          <div className="flex flex-col gap-1">
-            <span className="text-13 text-pretty text-fg-secondary">{p.description}</span>
-            {p.perk && <span role="note" className="text-13 font-700 text-pretty text-status-gain">{p.perk}</span>}
-          </div>
-          {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} size="lg" />}
-          {p.people.mode === 'pick' && (
-            <div className="flex flex-col gap-2">
-              <span className="text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
-              <span className="text-13 text-fg-secondary">{p.people.limit}</span>
-              {picks}
-              {p.onPickOnBoard && <div><NoWrapButton variant="secondary" size="md" onClick={p.onPickOnBoard}>{t('tablet.pick.lower')}</NoWrapButton></div>}
-            </div>
-          )}
-          {nudge}
-        </div>
-        <div className="sticky bottom-0 mt-auto flex flex-col gap-2 border-x-0 border-b-0 border-t border-solid border-line-default bg-surface-solid pt-3">
-          <span aria-live="polite" className="text-center text-12 text-pretty text-fg-secondary">{p.summary}</span>
-          <button type="button" disabled={!p.canConfirm} onClick={p.onConfirm}
-            className="min-h-14 w-full cursor-pointer rounded-16 border-0 bg-transparent bg-(image:--il-button-primary-bg) px-4 py-0 text-16 font-700 text-(--il-button-primary-fg) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary disabled:cursor-not-allowed disabled:opacity-40">
-            {t('tablet.cta', { cta: t('action.drawer.cta', { cta: p.cta }), cost: fmt(p.days) })}
-          </button>
-        </div>
-      </>
-    );
-  }
   return (
     <div className="flex flex-1 animate-(--il-action-drawer-enter) flex-col gap-3.5 overflow-auto px-4.5 py-4">
       <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
@@ -195,9 +166,9 @@ export function ActionDrawer(p: ActionDrawerProps) {
       <div className="flex flex-col gap-2">
         <span className="text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
         {p.people.mode === 'pick' && <span className="text-13 text-fg-secondary">{t('action.drawer.pickHint', { limit: p.people.limit })}</span>}
-        {picks}
+        <PickedChips picks={p.picks} />
       </div>
-      {nudge}
+      {p.nudge && <NudgeNote nudge={p.nudge} />}
       <div aria-live="polite" className="mt-auto rounded-14 bg-surface-raised p-3 text-13 text-pretty">{p.summary}</div>
       <div className="w-full"><Button variant="primary" size="lg" disabled={!p.canConfirm} onClick={p.onConfirm}>{t('action.drawer.cta', { cta: p.cta })}</Button></div>
     </div>

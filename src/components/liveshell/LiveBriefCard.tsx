@@ -49,7 +49,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
       <aside aria-label={t('liveshell.brief.title')} className={`flex min-w-0 flex-col gap-2.5 ${bare ? '' : 'rounded-22 border border-line-default bg-surface-card p-4.5 backdrop-blur-14'}`}>
         <span className="sr-only">{t('liveshell.brief.goal')}</span>
         <b className={`${bare ? 'text-22' : 'text-17'} leading-tight text-pretty`}>{brief.goal}</b>
-        {brief.declaredStyle !== undefined && <span className="text-14 text-fg-secondary">{t('tablet.live.styleSet', { unit: periodUnit, style: brief.declaredStyle ? t('style.name', { style: brief.declaredStyle }) : t('liveshell.brief.styleValue', { style: 'none' }) })}</span>}
+        {brief.declaredStyle !== undefined && <span className="text-14 text-fg-secondary">{t('tablet.live.styleSet', { unit: periodUnit, style: brief.declaredStyle ? styleOf(lens, brief.declaredStyle).name : t('liveshell.brief.styleNone') })}</span>}
         {open && (
           <div id={id} className="grid grid-cols-2 gap-x-4 gap-y-2.5">
             {brief.agenda && brief.agenda.length > 0 && <Row label={t('liveshell.brief.agenda')}><span className={value}>{brief.agenda.map((item, i) => t('liveshell.brief.agendaItem', { n: i + 1, item })).join(' ')}</span></Row>}

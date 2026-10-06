@@ -1,5 +1,4 @@
 {
-  "tablet.hud.clock": "{period} · {subPeriod} · {left} left",
   "tablet.dock.aria": "Board tools",
   "tablet.dock.actions": "Actions · {n, plural, =0 {none open} other {# open}} · {left}",
   "tablet.sheet.aria": "{who, select, team {Team actions} other {Actions for {who}}}",

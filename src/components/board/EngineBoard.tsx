@@ -20,7 +20,7 @@ import { InboxRail, type InboxRailItem } from '../inbox/InboxRail';
 import { InboxDrawer, type InboxDrawerItem } from '../inbox/InboxDrawer';
 import type { InboxSender } from '../inbox/sender';
 import { OutcomePanel, type OutcomePerson } from '../outcome/OutcomePanel';
-import { CommandPalette, type PaletteResult } from '../palette/CommandPalette';
+import type { PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
@@ -36,16 +36,15 @@ const EngineEnd = lazy(() => import('./EngineEnd').then(m => ({ default: m.Engin
 const EngineReport = lazy(() => import('../report/EngineReport'));
 // The cohort rank in the score breakdown loads when the breakdown first opens with the leaderboard on.
 const CohortRank = lazy(() => import('../gamification/CohortRank'));
-// The portrait tablet's drawer, dock and pick bar (D72) load only on a tablet.
-const tabletParts = () => import('./TabletBoard');
-const ActionSheet = lazy(() => tabletParts().then(m => ({ default: m.ActionSheet })));
-const TabletDock = lazy(() => tabletParts().then(m => ({ default: m.TabletDock })));
-const PickBar = lazy(() => tabletParts().then(m => ({ default: m.PickBar })));
-import type { ActionSheetProps, SheetTab } from './TabletBoard';
+// The badge shelf and the command palette load when first opened (D73: room in the first load for the tablet board).
+const BadgeShelfDialog = lazy(() => import('../gamification/BadgeShelfDialog').then(m => ({ default: m.BadgeShelfDialog })));
+const CommandPalette = lazy(() => import('../palette/CommandPalette').then(m => ({ default: m.CommandPalette })));
+// The portrait tablet board (D73) loads only on a tablet.
+const TabletBoardView = lazy(() => import('./TabletBoard'));
+import type { SheetTab } from './TabletBoard';
 import { EventCard } from './EventCard';
 import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
-import { BadgeShelfDialog } from '../gamification/BadgeShelfDialog';
 import { initials, streakText } from '../gamification/display';
 import { teamChips, type Chip } from './chips';
 
@@ -93,7 +92,7 @@ export interface EngineBoardProps {
   onActionsCollapsed?: (collapsed: boolean) => void;
   /**
    * The layout. By default the board follows the window: a tablet held upright (744 to 1023 wide,
-   * portrait) gets the tablet board with its dock and actions drawer (D72), anything else the desktop
+   * portrait) gets the tablet board with its dock and actions drawer (D73), anything else the desktop
    * board. Stories and tests can fix it.
    */
   layout?: 'desk' | 'tablet';
@@ -192,10 +191,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const narrow = useMediaQuery(NARROW_BOARD);
   const tabletQuery = useMediaQuery(TABLET);
   const tablet = app.layout ? app.layout === 'tablet' : tabletQuery;
-  /** The tablet's actions drawer: which tab is open, or null when it is closed (D72). */
+  /** The tablet's actions drawer: which tab is open, or null when it is closed (D73). */
   const [sheet, setSheet] = useState<SheetTab | null>(null);
   /** The drawer is lowered so people can be picked on the board. */
   const [lowered, setLowered] = useState(false);
+  /** The tablet board's code has loaded and it is on screen. */
+  const [tabletReady, setTabletReady] = useState(false);
   /** Selecting someone opens a folded Actions panel for them; folding it again while they are selected leaves it folded. */
   const [foldedFor, setFoldedFor] = useState<string | null>(null);
   const inFlight = useRef(false);
@@ -360,7 +361,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     }
     setFlow(null);
     if (tablet) {
-      // On a tablet a tap selects the person and opens the actions drawer for them (D72).
+      // On a tablet a tap selects the person and opens the actions drawer for them (D73).
       if (selected !== m.id) ui.toggleMember(m.id);
       ui.openPanel('none');
       setLowered(false);
@@ -556,13 +557,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     scoreOpen, onScoreOpenChange: setScoreOpen,
     streak: v.streak, streakLabel: streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
     onEndPeriod: () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
-    endEmphasis: f || styling || ended ? 'secondary' : 'primary',
-    layout: tablet ? 'tablet' : 'desk'
+    endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
   const strip: MetricsStripProps = {
-    layout: tablet ? 'tablet' : 'desk',
-    streak: { count: v.streak, periodUnit, label: streak,
-      next: lastPeriod && typeof lastPeriod.streak.next === 'number' && v.streak > 0 ? t('score.streak.next', { n: lastPeriod.streak.next, unit: periodUnit, bonus: v.gamification.streak.bonus }) : '' },
     kpis: v.kpis.map(k => ({ metric: k.metric, value: k.value, trend: { kind: 'direction', direction: k.trend } })),
     pulse: { ...v.pulse, periodUnit },
     target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: v.clock.runShare, pacePeriod: { unit: periodUnit, n: v.clock.period } },
@@ -718,13 +715,14 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // A new outcome takes focus, so it is read out; while an action is being planned it is announced instead.
   const shownOutcome = useRef<string | null>(null);
   useEffect(() => {
-    if (!oc || reacting || v.live || styling) return;
+    // The tablet board loads on demand: wait until it is on screen to focus its outcome.
+    if (!oc || reacting || v.live || styling || (tablet && !tabletReady)) return;
     if (shownOutcome.current === oc.id) return;
     shownOutcome.current = oc.id;
     if (flow || card || endScreen) { setAnnounce(oc.headline); return; }
     const h = headlineIn(outcomeRef.current);
     h?.focus({ preventScroll: true });
-  }, [oc, reacting, v.live, styling, flow, card, endScreen]);
+  }, [oc, reacting, v.live, styling, flow, card, endScreen, tablet, tabletReady]);
 
   useEffect(() => { paletteOk.current = plainBoard; }, [plainBoard]);
 
@@ -788,108 +786,85 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         confirmDisabled={busy || chosen < v.members.length}
       />
     );
-  } else if (tablet) {
-    // ---- the portrait tablet board (D72): HUD, KPI tiles, the team, the outcome, then the dock ----
-    const left = t('time.left', { amount: amount(v.clock.capacityLeft) });
-    const openActions = v.actions.filter(a => a.scope === 'team' && !tile(a.key, null).block).length;
-    const pickOnBoard = lowered && !!f && !!fa && picking;
-    let sheetProps: ActionSheetProps | null = null;
-    if (sheet && !pickOnBoard && !card) {
-      const tab: SheetTab = sm ? sheet : 'team';
-      const due = sm ? inbox.find(x => x.from === sm.id && x.dueInSubPeriods !== null) : undefined;
-      sheetProps = {
-        person: sm ? {
-          name: sm.name, firstName: first(sm.name), img: img(sm), mood: sm.mood, away: sm.away > 0,
-          meta: t('tablet.sheet.meta', { stage: stageName(sm.stage), mood: sm.away > 0 ? t('member.mood.away') : t('member.mood', { mood: sm.mood }), trust: sm.statsRevealed && sm.trust !== null ? String(sm.trust) : 'none' })
-        } : null,
-        tab, onTab: sheetTab, left,
-        due: due ? {
-          text: t('tablet.sheet.due', { name: first(sm!.name), when: due.dueInSubPeriods === 0 ? t('tablet.sheet.dueNow', { unit }) : t('tablet.sheet.dueIn', { amount: amount(due.dueInSubPeriods!) }), title: due.title }),
-          onReply: () => { closeSheet(); void openMessage(due.id); }
-        } : undefined,
-        rows: tab === 'profile' ? [] : v.actions.filter(a => a.scope === (tab === 'member' ? 'member' : 'team')).map(a => ({ key: a.key, tile: tile(a.key, tab === 'member' && sm ? sm.id : null) })),
-        chosen: f?.key ?? null, flow: drawer, profile, subPeriodUnit: unit,
-        onClose: closeSheet, onPickOnBoard: () => setLowered(true),
-        opener: () => mainRef.current?.querySelector<HTMLElement>(sm ? '[data-member-card][aria-pressed="true"]' : '[data-dock="actions"]')
-      };
-    }
-    body = (
-      <div className="flex h-(--il-tablet-board-height) min-h-0 flex-col">
-        <Hud {...hud} />
-        {call}
-        <MetricsStrip {...strip} />
-        {ended && lastWeekSeen && endView === 'board' && (
-          <div className="mx-6 mt-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13">
-            <span className="flex-1">{t('board.ended.readOnly')}</span>
-            <Button variant="secondary" size="sm" onClick={() => setEndView('end')}>{t('board.ended.reopen')}</Button>
-          </div>
-        )}
-        <div className="relative min-h-0 flex-1 overflow-y-auto">
-          <TeamBoard layout="tablet" hint={hint} legendOpen={false} onToggleLegend={() => undefined} periodUnit={periodUnit} columns={columns} />
-          {oc && <div className="pt-4.5">{outcome}</div>}
-        </div>
-        <Suspense fallback={null}>
-          {pickOnBoard && f && fa
-            ? <PickBar action={fa.name} limit={minPick === maxPick ? t('board.pick.exact', { n: maxPick }) : t('board.pick.range', { min: minPick, max: maxPick })}
-                picks={f.picks.map(id => { const m = member(id); return { id, name: first(m?.name ?? ''), img: img(m) }; })}
-                onDone={() => setLowered(false)} onCancel={closeSheet} />
-            : <TabletDock unread={inbox.length} inboxOpen={ui.panel === 'inbox'} onInbox={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')}
-                open={openActions} left={left} onActions={() => { ui.openPanel('none'); setLowered(false); setSheet(sm ? 'member' : 'team'); }} />}
-          {sheetProps && <ActionSheet {...sheetProps} />}
-        </Suspense>
-        <InboxDrawer layout="tablet" open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
-          onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />
-        {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
-        {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
-          returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-expanded]')} />}
-        <CommandPalette open={pal && plainBoard} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
-      </div>
-    );
   } else {
-    body = (
+    const top = (
       <>
         <Hud {...hud} />
         {call}
         <MetricsStrip {...strip} />
         {ended && lastWeekSeen && endView === 'board' && (
-          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13">
+          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
             <span className="flex-1">{t('board.ended.readOnly')}</span>
             <Button variant="secondary" size="sm" onClick={() => setEndView('end')}>{t('board.ended.reopen')}</Button>
           </div>
         )}
-        {outcome}
-        <div className={`relative grid min-h-0 flex-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
-          {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
-          <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
-            <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
-          </TeamScroll>
-          <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><ActionsPanel
-            capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
-            notes={actionNotes}
-            team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
-            member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
-            drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
-            collapse={foldable ? {
-              collapsed: folded,
-              open: v.actions.filter(a => a.scope === 'team' && !tile(a.key, null).block).length,
-              onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
-            } : undefined}
-          /></div>
-          <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
-          {profile && <ProfilePanel {...profile} />}
-          <InboxDrawer open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
-            onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />
-        </div>
+      </>
+    );
+    const inboxDrawer = <InboxDrawer open={ui.panel === 'inbox'} subPeriodUnit={unit} items={drawerItems} sponsorName={first(v.sponsor.name)}
+      onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />;
+    const due = sm && inbox.find(x => x.from === sm.id && x.dueInSubPeriods !== null);
+    const tab: SheetTab = sm && sheet ? sheet : 'team';
+    const openActions = v.actions.filter(a => a.scope === 'team' && !tile(a.key, null).block).length;
+    const left = t('time.left', { amount: amount(v.clock.capacityLeft) });
+    body = (
+      <>
+        {tablet ? (
+          // ---- the portrait tablet board (D73): HUD, KPI tiles, the team, the outcome, then the dock ----
+          <Suspense fallback={null}>
+            <TabletBoardView onReady={() => setTabletReady(true)} top={top} team={{ columns, hint, periodUnit }} outcome={oc && outcome}
+              dock={{ unread: inbox.length, inboxOpen: ui.panel === 'inbox', onInbox: () => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox'),
+                open: openActions, left, onActions: () => { ui.openPanel('none'); setLowered(false); setSheet(sm ? 'member' : 'team'); } }}
+              pick={lowered && f && fa && picking ? { action: fa.name, limit: drawer?.people.mode === 'pick' ? drawer.people.limit : '', picks: drawer?.picks ?? [], onDone: () => setLowered(false), onCancel: closeSheet } : null}
+              sheet={sheet && !lowered && !card ? {
+                person: sm ? { name: sm.name, img: img(sm), mood: sm.mood, away: sm.away > 0, stage: stageName(sm.stage), trust: sm.statsRevealed ? sm.trust : null } : null,
+                tab, onTab: sheetTab, left,
+                due: due ? { title: due.title, in: due.dueInSubPeriods!, onReply: () => { closeSheet(); void openMessage(due.id); } } : undefined,
+                rows: tab === 'profile' ? [] : v.actions.filter(a => a.scope === (tab === 'member' ? 'member' : 'team')).map(a => ({ key: a.key, tile: tile(a.key, tab === 'member' ? sm!.id : null) })),
+                chosen: f?.key ?? null, flow: drawer, profile, subPeriodUnit: unit,
+                onClose: closeSheet, onPickOnBoard: () => setLowered(true),
+                opener: () => mainRef.current?.querySelector<HTMLElement>(sm ? '[data-member-card][aria-pressed="true"]' : '[data-dock="actions"]')
+              } : null} />
+          </Suspense>
+        ) : (
+          <>
+            {top}
+            {outcome}
+            <div className={`relative grid min-h-0 flex-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
+              {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
+              <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
+                <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
+              </TeamScroll>
+              <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><ActionsPanel
+                capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
+                notes={actionNotes}
+                team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
+                member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
+                drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
+                collapse={foldable ? {
+                  collapsed: folded,
+                  open: openActions,
+                  onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
+                } : undefined}
+              /></div>
+              <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
+              {profile && <ProfilePanel {...profile} />}
+              {inboxDrawer}
+            </div>
+          </>
+        )}
+        {tablet && inboxDrawer}
         {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
-        {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
-          returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-expanded]')} />}
-        <CommandPalette open={pal && plainBoard} onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />
+        <Suspense fallback={null}>
+          {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
+            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-expanded]')} />}
+          {pal && plainBoard && <CommandPalette open onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />}
+        </Suspense>
       </>
     );
   }
 
   return (
-    <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} data-celebration={v.gamification.celebration} className="relative flex flex-1 flex-col">
+    <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} data-celebration={v.gamification.celebration} data-tablet={tablet ? '' : undefined} className="relative flex flex-1 flex-col">
       {/* The week end, the end screen and the report bring their own headings. */}
       {!weekEnd && !endScreen && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
       {body}
