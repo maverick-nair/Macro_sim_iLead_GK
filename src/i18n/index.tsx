@@ -1,4 +1,4 @@
-import { IntlMessageFormat, type Formatters, type PrimitiveType } from 'intl-messageformat';
+import { IntlMessageFormat, type PrimitiveType } from 'intl-messageformat';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { formatDelta, MINUS } from './copy';
 import { en, type LazyMessages } from './messages/en';
@@ -35,9 +35,8 @@ export interface I18n {
 }
 
 /*
- * Each message used to resolve its locale and build its own Intl formatters (plural rules, numbers):
- * native calls that made up most of the first load's long task on a slow CPU (D78). One locale
- * lookup per locale, and one formatter per locale and options, shared by every message.
+ * Each message used to resolve its locale, a native call that made up most of the first load's long
+ * task on a slow CPU (D78): one lookup per locale, shared by every message.
  */
 const resolveLocale = IntlMessageFormat.resolveLocale;
 const resolved = new Map<string, Intl.Locale | undefined>();
@@ -46,21 +45,6 @@ IntlMessageFormat.resolveLocale = locales => {
   if (!resolved.has(key)) resolved.set(key, resolveLocale(locales));
   return resolved.get(key);
 };
-function memo<A extends unknown[], T>(make: (...args: A) => T): (...args: A) => T {
-  const made = new Map<string, T>();
-  return (...args) => {
-    const key = JSON.stringify(args);
-    let v = made.get(key);
-    if (v === undefined) made.set(key, (v = make(...args)));
-    return v;
-  };
-}
-const FORMATTERS: Formatters = {
-  getNumberFormat: memo((locales?: string | string[], opts?: Intl.NumberFormatOptions) => new Intl.NumberFormat(locales, opts)),
-  getDateTimeFormat: memo((...args: ConstructorParameters<typeof Intl.DateTimeFormat>) => new Intl.DateTimeFormat(...args)),
-  getPluralRules: memo((...args: ConstructorParameters<typeof Intl.PluralRules>) => new Intl.PluralRules(...args))
-};
-
 /** Parsed messages per locale, shared by every catalog without overrides (each provider used to parse its own). */
 const shared = new Map<string, Map<string, IntlMessageFormat>>();
 
@@ -81,7 +65,7 @@ export function createI18n(locale = 'en', override?: Partial<Messages>): I18n {
     if (!f) {
       const text = messages[key] ?? registered[key];
       if (text === undefined) return key;
-      f = new IntlMessageFormat(text, locale, undefined, { formatters: FORMATTERS });
+      f = new IntlMessageFormat(text, locale);
       formats.set(key, f);
     }
     // Intl formats negative numbers with a hyphen; copy rules want the minus sign.

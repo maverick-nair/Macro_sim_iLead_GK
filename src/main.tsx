@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { ApiContext, createDefaultApi } from './api';
 import { App } from './app/App';
 import { prefetch } from './app/prefetch';
-import { groupLaunch, startGroup } from './group/launch';
 import { SmallScreenGate } from './app/SmallScreenGate';
 import { EngineProvider } from './engine/react';
 import { createDefaultClient } from './engine/client';
@@ -16,7 +15,11 @@ const ScreensGallery = lazy(() => import('./gallery/ScreensGallery').then(m => (
 // GenieKreator's author chat prototype (D74): for authors, lazy, never in the participant's first load.
 const AuthorPage = lazy(() => import('./author/ui/AuthorPage'));
 // The organization's group report (D77): not for participants, lazy, never in the participant's first load.
-const GroupPage = lazy(() => import('./group/GroupPage'));
+// Its report is requested as soon as a small launch chunk lands, while the page's own code still loads (D78).
+const GroupPage = lazy(() => {
+  const started = import('./group/launch').then(m => m.startGroup(m.groupLaunch()));
+  return Promise.all([import('./group/GroupPage'), started]).then(([m, s]) => ({ default: () => <m.default started={s} /> }));
+});
 const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ default: m.StatesGallery })));
 // Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
 const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
@@ -66,13 +69,12 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
 const path = location.pathname.replace(/\/+$/, '');
 const play = !['/screens', '/states', '/author', '/group'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
 const launched = play ? launch() : null;
-const group = path === '/group' ? startGroup(groupLaunch()) : undefined;
 
 function Root() {
   if (path === '/screens') return <Suspense><ScreensGallery /></Suspense>;
   if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
   if (path === '/author') return <Suspense><AuthorPage /></Suspense>;
-  if (path === '/group') return <Suspense><GroupPage started={group} /></Suspense>;
+  if (path === '/group') return <Suspense><GroupPage /></Suspense>;
   if (ReportDev && new URLSearchParams(location.search).get('report') === '1') return <Suspense><ReportDev /></Suspense>;
   return launched && <Play launched={launched} />;
 }
