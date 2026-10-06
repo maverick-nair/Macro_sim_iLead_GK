@@ -1,7 +1,7 @@
-/* Tailwind theme and utilities only. Preflight is left out until every screen is on utilities
-   (see docs/DECISIONS.md D6), so the ported inline styles render exactly as designed. */
+/* Tailwind theme, preflight and utilities (preflight on since M8, D6 and D78). */
 @layer theme, base, components, utilities;
 @import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/preflight' layer(base);
 @import 'tailwindcss/utilities' layer(utilities);
 @import './tailwind-theme.generated.css';
 @import './fonts.css';

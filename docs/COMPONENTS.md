@@ -35,7 +35,7 @@ It does not see text split across lines, strings held in variables or passed as 
 
 ## Things that are easy to get wrong
 
-- **Buttons and inputs carry user agent styles** (padding, border, background, font) because Tailwind preflight is off until M8. Set every box property explicitly, including `py-0` when the design has `padding:0 10px`.
+- **Tailwind preflight is on** (since M8, D78): margins, paddings and borders start at 0, headings and buttons inherit the font, lists have no markers (`list-disc` brings them back), images and SVGs are blocks, and `border`, `border-t` and the like draw only the sides they name. A button's padding is whatever its classes say, so give it `px-*`/`py-*` when the design has padding.
 - Global resets live in `@layer base`, so utilities always win over them. Inline styles still beat utilities, so don't mix a component's utilities with a leftover inline style for the same property.
 - **Runtime whitespace:** the ported markup sometimes keeps a literal space between inline elements (`<span>▲</span> {text}`). Keep it: it is part of the design.
 - Tailwind `text-*` sets font size only; line height is inherited (1.5 from the app root), matching the design.

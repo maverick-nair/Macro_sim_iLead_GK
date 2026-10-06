@@ -48,7 +48,7 @@ src/
   speech/     Voice input: SpeechProvider, MediaRecorder with server transcription, mock voice, voice activity, consent (docs/SPEECH.md)
   stories/    Foundation stories (tokens, Button, Switch); component stories sit next to their component
   styles/     Generated token CSS, Tailwind theme, fonts, global keyframes
-tokens/       Token source: primitive, semantic and component layers, migration aliases, contrast pairs
+tokens/       Token source: primitive, semantic and component layers, contrast pairs
 scripts/      Token pipeline, calibration, bundle budget, storyline import, portrait preparation
 tests/        Playwright flows (e2e/) and the design parity harness (visual/)
 calibration/  Calibration reports, one per storyline
@@ -120,4 +120,4 @@ A colour is `oklch()`, `#hex` or `rgb()`, either one value or `{ "light": …, "
 
 Colour tokens are `--il-*` custom properties generated from `tokens/`, declared on the app root (`.il-theme`) with `light-dark()`, so light and dark modes share one set of styles. Tokens marked `themable` read a `--il-theme-<token>` variable first, which a client theme sets at runtime (see Themes).
 
-Components in `src/components` use Tailwind utilities on those tokens (`docs/COMPONENTS.md`). The ported screens in `src/screens` keep the design's inline CSS as strings passed through `css()`, which converts them to React style objects (memoised). Pixel font sizes follow the text size setting (`--il-text-scale` on the app root, like the font size tokens; D56). This keeps every value diffable against the design source. Hover and focus styles use `pseudo('hover', '...')`, which generates a class, matching how the design runtime applied `style-hover`. Those screens still read the legacy `--ik-*` names, migration aliases onto the `--il-*` tokens (`tokens/legacy.json`, D7) that go as each screen moves to components.
+Components in `src/components` use Tailwind utilities on those tokens (`docs/COMPONENTS.md`). The ported screens in `src/screens` keep the design's inline CSS as strings passed through `css()`, which converts them to React style objects (memoised). Pixel font sizes follow the text size setting (`--il-text-scale` on the app root, like the font size tokens; D56). This keeps every value diffable against the design source. Hover and focus styles use `pseudo('hover', '...')`, which generates a class, matching how the design runtime applied `style-hover`. They read the `--il-*` tokens directly: the migration aliases (`--ik-*`, D7) and the preflight switch (D6) were retired in M8 (D78), and Tailwind preflight is on.

@@ -32,7 +32,7 @@ function readLayer(dir: string): Record<string, unknown> {
 }
 
 /**
- * Loads tokens/primitive/*.json, tokens/semantic/*.json, tokens/component/*.json, tokens/legacy.json,
+ * Loads tokens/primitive/*.json, tokens/semantic/*.json, tokens/component/*.json
  * and the extra contrast pairs in tokens/contrast.json. Client themes are runtime config (src/theme, D72).
  */
 export function loadSources(root: string): TokenSources {
@@ -42,7 +42,6 @@ export function loadSources(root: string): TokenSources {
     primitive: readLayer(path.join(t, 'primitive')),
     semantic: readLayer(path.join(t, 'semantic')),
     component: readLayer(path.join(t, 'component')),
-    legacy: JSON.parse(fs.readFileSync(path.join(t, 'legacy.json'), 'utf8')),
     contrast: fs.existsSync(contrastFile) ? (JSON.parse(fs.readFileSync(contrastFile, 'utf8')) as { pairs: ContrastPair[] }).pairs : []
   };
 }

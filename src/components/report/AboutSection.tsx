@@ -17,7 +17,7 @@ export function AboutSection({ data }: { data: AboutData }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <h3 className="m-0 text-15 font-700">{t('report.about.read')}</h3>
-          <ul className="m-0 flex flex-col gap-1 pl-5 text-14">
+          <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-14">
             {data.howToRead.map(l => <li key={l} className="text-pretty">{l}</li>)}
           </ul>
         </div>

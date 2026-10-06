@@ -32,7 +32,7 @@ export function WeekEndHeader({ period, periods, periodUnit, onShortcut }: WeekE
       <span className="text-13 text-fg-secondary">{t('weekend.header', { unit: periodUnit, n: period, total: periods })}</span>
       <span className="flex-1"></span>
       {onShortcut && (
-        <button type="button" onClick={onShortcut} className={`cursor-pointer border-0 bg-transparent text-12 font-600 text-fg-secondary ${FOCUS}`}>
+        <button type="button" onClick={onShortcut} className={`cursor-pointer border-0 bg-transparent px-1.5 py-0.25 text-12 font-600 text-fg-secondary ${FOCUS}`}>
           {t('weekend.shortcut')}
         </button>
       )}

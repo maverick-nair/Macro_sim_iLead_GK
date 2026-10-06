@@ -336,7 +336,7 @@ export function Board(props: BoardProps) {
       <>
           <Hud {...hud} />
 
-          {isOffline && <div role="alert" style={css('margin:0 24px 12px; padding:10px 16px; border-radius:14px; background:var(--ik-warn-soft); border:1px solid var(--ik-warn); display:flex; align-items:center; gap:10px; font-size:13px')}><b>Connection lost.</b><span>Your clock is paused and actions will queue and send when you are back online.</span><span style={css('flex:1')}></span><span style={css('color:var(--ik-text-2)')}>Retrying in 4s</span></div>}
+          {isOffline && <div role="alert" style={css('margin:0 24px 12px; padding:10px 16px; border-radius:14px; background:var(--il-color-status-attention-soft); border:1px solid var(--il-color-status-attention); display:flex; align-items:center; gap:10px; font-size:13px')}><b>Connection lost.</b><span>Your clock is paused and actions will queue and send when you are back online.</span><span style={css('flex:1')}></span><span style={css('color:var(--il-color-fg-secondary)')}>Retrying in 4s</span></div>}
           {s.call && (
             <SponsorCall name={D.sponsor.name} initials={D.sponsor.initials} line="Regional Sales Director. About the Ashcroft discount." laterLabel={t('events.call.later', { amount: days(1) })}
               onLater={() => { setState({ call: false }); act.say('Call with Priya scheduled for tomorrow morning.'); }} onAnswer={() => act.live('sponsor')} />
@@ -362,8 +362,8 @@ export function Board(props: BoardProps) {
       </>
 
       {ev && (
-        <div style={css('position:absolute; inset:0; z-index:48; background:var(--ik-scrim); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px')}>
-          <div role="dialog" aria-label={`${ev.tag} event`} style={css('width:520px; max-width:100%; border-radius:26px; background:var(--ik-mat); border:1px solid var(--ik-line-strong); box-shadow:0 30px 80px oklch(0.05 0.03 280 / 0.5); overflow:hidden; animation:ilIn 280ms cubic-bezier(.2,.9,.3,1.08)')}>
+        <div style={css('position:absolute; inset:0; z-index:48; background:var(--il-color-surface-scrim); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:24px')}>
+          <div role="dialog" aria-label={`${ev.tag} event`} style={css('width:520px; max-width:100%; border-radius:26px; background:var(--il-color-surface-material); border:1px solid var(--il-color-line-strong); box-shadow:0 30px 80px oklch(0.05 0.03 280 / 0.5); overflow:hidden; animation:ilIn 280ms cubic-bezier(.2,.9,.3,1.08)')}>
             <div style={css(`position:relative; height:170px; background:${ev.art}; display:flex; align-items:flex-end; padding:16px 20px`)}>
               {ev.hasImg && <img src={ev.img} alt="" style={css('position:absolute; right:20px; bottom:0; height:150px; width:150px; border-radius:50% 50% 0 0; object-fit:cover; object-position:center top; mix-blend-mode:multiply')} />}
               {/* Flex container with a gap: the interpolation is its own flex item, as in the runtime. */}
@@ -372,9 +372,9 @@ export function Board(props: BoardProps) {
             </div>
             <div style={css('padding:20px 22px 22px; display:flex; flex-direction:column; gap:12px')}>
               <h2 style={css('margin:0; font-size:22px; font-weight:700; letter-spacing:-0.02em; text-wrap:balance')}>{ev.title}</h2>
-              <p style={css('margin:0; color:var(--ik-text-2); text-wrap:pretty')}>{ev.body}</p>
-              <div style={css('display:flex; flex-direction:column; gap:6px')}>{ev.impact.map((im, i) => <span key={i} style={css('display:flex; gap:8px; align-items:center; font-size:13px')}><span style={css('width:6px; height:6px; border-radius:50%; background:var(--ik-acc-2)')}></span>{im}</span>)}</div>
-              <div style={css('display:flex; align-items:center; gap:8px; padding-top:6px')}><span style={css('font-size:12px; color:var(--ik-text-2); display:flex; gap:6px; align-items:center')}><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"></rect><rect x="14" y="4" width="5" height="16" rx="1"></rect></svg>Clock paused</span><span style={css('flex:1')}></span>
+              <p style={css('margin:0; color:var(--il-color-fg-secondary); text-wrap:pretty')}>{ev.body}</p>
+              <div style={css('display:flex; flex-direction:column; gap:6px')}>{ev.impact.map((im, i) => <span key={i} style={css('display:flex; gap:8px; align-items:center; font-size:13px')}><span style={css('width:6px; height:6px; border-radius:50%; background:var(--il-color-accent-secondary)')}></span>{im}</span>)}</div>
+              <div style={css('display:flex; align-items:center; gap:8px; padding-top:6px')}><span style={css('font-size:12px; color:var(--il-color-fg-secondary); display:flex; gap:6px; align-items:center')}><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="4" width="5" height="16" rx="1"></rect><rect x="14" y="4" width="5" height="16" rx="1"></rect></svg>Clock paused</span><span style={css('flex:1')}></span>
                 {ev.two && <NoWrapButton variant="secondary" size="md" onClick={ev.second}>{ev.secondLabel}</NoWrapButton>}
                 <NoWrapButton variant="primary" size="md" onClick={closeEvent}>{ev.cta}</NoWrapButton>
               </div>

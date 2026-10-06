@@ -11,7 +11,6 @@ const tiny = (over: Partial<TokenSources> = {}): TokenSources => ({
   primitive: { color: { ink: { '200': { $value: 'oklch(0.2 0.03 280)' } }, white: { $value: 'oklch(1 0 0)' } } },
   semantic: { color: { fg: { light: '{color.ink.200}', dark: '{color.white}' }, bg: { light: '{color.white}', dark: '{color.ink.200}' } } },
   component: {},
-  legacy: { root: {}, theme: {} },
   ...over
 });
 

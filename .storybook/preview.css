@@ -1,0 +1,3 @@
+/* Story controls (Open palette, Play again, ...) are plain buttons with no classes: with Tailwind preflight on
+   (D78) they would read as text, so they keep a visible button shape. Components always carry classes. */
+button:not([class]) { padding: 4px 10px; border: 1px solid currentColor; border-radius: 6px; cursor: pointer; }

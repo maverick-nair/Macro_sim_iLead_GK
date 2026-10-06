@@ -6,7 +6,7 @@ import type { CSSProperties } from 'react';
  * The screens were designed as inline CSS strings. Keeping them as strings (with
  * `${}` interpolation) keeps the port pixel faithful and easy to diff against the
  * design source. Results are memoised, so repeated renders are cheap.
- * Custom properties (`--ik-text`) are kept verbatim, everything else is camelCased.
+ * Custom properties (`--il-color-fg-primary`) are kept verbatim, everything else is camelCased.
  */
 const cache = new Map<string, CSSProperties>();
 

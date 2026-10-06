@@ -41,7 +41,7 @@ export function Prompts({ lines }: { lines: string[] }) {
   return (
     <div className="flex flex-col gap-1 rounded-16 bg-surface-raised px-3.5 py-3">
       <h3 className="m-0 text-13 font-700">{t('group.prompts')}</h3>
-      <ul className="m-0 flex flex-col gap-1 pl-5 text-13">
+      <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-13">
         {lines.map(l => <li key={l} className="text-pretty">{l}</li>)}
       </ul>
     </div>
@@ -469,7 +469,7 @@ export function AttentionSection({ data }: { data: NonNullable<R['attention']> }
   const none = t('group.none');
   return (
     <Section title={t('group.attention.title')} intro={t('group.attention.intro')}>
-      <ul className="m-0 flex flex-col gap-1 pl-5 text-13 text-fg-secondary">
+      <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-13 text-fg-secondary">
         {bands.map(b => <li key={b} className="text-pretty">{t('group.attention.define', { band: b })}</li>)}
       </ul>
       {data.group ? (
@@ -502,7 +502,7 @@ export function TakeawaysSection({ data }: { data: R['takeaways'] }) {
         {data.map(g => (
           <article key={g.key} aria-label={g.title} className={CARD}>
             <h3 className="m-0 text-15 font-700">{g.title}</h3>
-            <ul className="m-0 flex flex-col gap-1 pl-5 text-13">
+            <ul className="m-0 flex list-disc flex-col gap-1 pl-5 text-13">
               {g.questions.map(q => <li key={q} className="text-pretty">{q}</li>)}
             </ul>
           </article>

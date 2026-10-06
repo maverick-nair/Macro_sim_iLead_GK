@@ -22,7 +22,7 @@
 
 **Built in M0:**
 - **Token pipeline.**
-  - The source is `tokens/primitive.json`, `tokens/semantic.json`, `tokens/component.json` and `tokens/legacy.json`.
+  - The source is `tokens/primitive.json`, `tokens/semantic.json`, `tokens/component.json` and `tokens/legacy.json` (the migration aliases, removed in M8, D78).
   - `scripts/tokens/build.ts` turns them into:
     - `src/styles/tokens.generated.css`: primitives on `:root`, semantic and component layers on `.il-theme`, colors as `light-dark()`.
     - `src/styles/tailwind-theme.generated.css`: a Tailwind v4 theme that only exposes tokens, with all defaults reset.
