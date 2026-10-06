@@ -80,9 +80,10 @@
 | M5 | Done, approved |
 | M6 | Done, approved |
 | M7 | Done, approved |
-| Tablet portrait (834) | Done, awaiting approval (D73) |
-| Author chat prototype | Done, awaiting approval (D74) |
-| M8 | Not started |
+| Tablet portrait (834) | Done, approved (D73) |
+| Author chat prototype | Done, approved (D74) |
+| Report 3.0 and group report | Done, approved (D75 to D77) |
+| M8 | In progress |
 
 ## Milestones
 
