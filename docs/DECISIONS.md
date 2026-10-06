@@ -408,6 +408,15 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Next.** Tablet portrait layouts at 834 follow the design review of the Tablet page in the design canvas; until then tablets use the 1024 layouts as above.
 - **Bundle:** initial JS 196.3 KB of the 200 KB budget (was 198.0 KB).
 
+**D70. Leadership lens and the author chat.** Decided 2026-10-06 (product owner).
+- **The lens drives the simulation.** GenieKreator's Leadership Lens module (8 lenses: Readiness Based, Six Leadership Styles, Inspire and Deliver, Servant, Five Leadership Practices, Adaptive, Team Amplifier, Client Leadership Model) becomes authoring step 2, right after the brief, and replaces the old step 4. One primary lens (mandatory), one optional secondary lens that adds report only dimensions.
+- **Style names follow the lens.** The engine no longer fixes four styles. A lens brings 2 to 6 styles (key, letter, name, short line, description); the author chat's model renames them to fit the lens and the client's context. The participant UI reads every style name from config. Readiness Based with Directing, Guiding, Partnering, Entrusting stays the default and the Sales Elevator storyline.
+- **Fit stays one engine rule.** A member's need comes from their skill and morale (the four quadrants of SIMULATION.md 2). The lens names the needs and gives a fit table: for each need, each style's difference (0, 1 or 2). Readiness Based's table reproduces today's rule exactly, so calibration holds.
+- **Scoring follows the lens.** The primary lens's scoring dimensions become the report's skills (anchors, linkage, at least 2 observations from 2 interactions). The secondary lens's dimensions are marked report only: scored from conversations, shown in the report, never in the Leadership Score or badges, and shown as "Not enough evidence" under 2 observations.
+- **Scenario copy follows the lens and the brief.** Intro screens, sponsor lines, event and email text are authored copy in the storyline, drafted by the author chat for the lens, industry, role level and challenge.
+- **The author chat.** GenieKreator starts with a short chat of 5 to 10 questions (fewer when uploads or answers already cover them). It recommends the lens with the module's rules (client framework first, then the challenge, then role level), and drafts the storyline: company and product, sponsor, intro screens, team, lens styles and fit, scoring dimensions. The author confirms, then edits in the workspace. A working prototype lives in this repo at `/author` (lazy, not in the participant bundle); the real drafting runs on the server (`POST /author/draft`), and the prototype's mock drafts from the lens library without a model.
+- **Guardrails** from the module apply: KNOLSKAPE lens titles only, original sources only in "Based on" (author facing), no certification claims, "skills" never "competency", no em dashes.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
