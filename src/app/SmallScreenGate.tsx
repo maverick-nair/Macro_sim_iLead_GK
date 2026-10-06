@@ -2,14 +2,16 @@ import { useEffect, useLayoutEffect, useRef, type CSSProperties, type ReactNode 
 import { SmallScreenNotice } from '../components/shell/SmallScreenNotice';
 import { I18nProvider } from '../i18n';
 import { SMALL_SCREEN, useMediaQuery } from '../lib/useMediaQuery';
-import { HALDEN_THEME } from './clientTheme';
+import { BrandContext } from '../theme/brand';
+import type { AppliedTheme } from '../theme/types';
 
 /** The app while the notice covers it: still mounted, out of sight, and the page does not scroll behind the notice. */
 const COVERED: CSSProperties = { visibility: 'hidden', height: '100vh', overflow: 'hidden' };
 
 export interface SmallScreenGateProps {
   theme: 'dark' | 'light';
-  clientTheme: boolean;
+  /** The client theme, for the brand mark (its colours are on :root already). */
+  clientTheme: AppliedTheme | null;
   /** The app. `covered` is true while the notice is up, so the app can hold its clocks. */
   children: (covered: boolean) => ReactNode;
 }
@@ -39,9 +41,11 @@ export function SmallScreenGate({ theme, clientTheme, children }: SmallScreenGat
       <div inert={covered} aria-hidden={covered || undefined} style={covered ? COVERED : undefined}>{children(covered)}</div>
       {covered && (
         <I18nProvider>
-          <div className="il-theme font-sans text-14 leading-(--il-app-leading)" style={{ colorScheme: theme, ...(clientTheme ? HALDEN_THEME : null) }}>
-            <SmallScreenNotice link={location.href} clientLogo={clientTheme} />
-          </div>
+          <BrandContext.Provider value={clientTheme?.brand ?? null}>
+            <div className="il-theme font-sans text-14 leading-(--il-app-leading)" style={{ colorScheme: theme, ...clientTheme?.vars }}>
+              <SmallScreenNotice link={location.href} />
+            </div>
+          </BrandContext.Provider>
         </I18nProvider>
       )}
     </>

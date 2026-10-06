@@ -43,6 +43,14 @@ export function createHttpApi(baseUrl: string, opts: { getToken?: () => string |
       return await res.blob();
     },
     getProfile: () => request<{ name: string | null; cohort: string | null }>('GET', '/profile'),
-    getLeaderboard: input => request<Leaderboard>('POST', '/cohort/leaderboard', input)
+    getLeaderboard: input => request<Leaderboard>('POST', '/cohort/leaderboard', input),
+    getTheme: async () => {
+      try {
+        return await request<unknown>('GET', '/theme');
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 404) return null;
+        throw e;
+      }
+    }
   };
 }

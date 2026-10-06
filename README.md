@@ -13,7 +13,7 @@ npm test                 # Vitest
 npm run lint             # ESLint (TypeScript, React hooks, jsx-a11y)
 npm run build            # token check, unit tests, typecheck, production build to dist/, bundle budget
 npm run parity           # every frame vs the Claude Design prototype (add --prod for the build)
-npm run storybook:smoke  # every story in dark, light and client theme, fails on render errors
+npm run storybook:smoke  # every story in dark, light, the Halden and the corrected Brightwater client themes, fails on render errors
 npm run e2e              # Playwright flows on the mock engine, with axe (WCAG 2.2 AA)
 npm run calibrate -- sales-elevator   # tune a storyline so it plays well (add --check to verify)
 ```
@@ -26,7 +26,7 @@ Plan and status: `docs/PLAN.md`. Simulation rules: `docs/SIMULATION.md`. Design 
 
 | Route      | What it is |
 |------------|------------|
-| `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?participant=<id>` names the participant (the launch link from the LMS or GenieKreator), so settings and the session are theirs; it defaults to `local`. `?start=board` skips onboarding, `?period=4` opens the mock engine at period 4 (the real engine ignores it), `?engine=off` shows the prototype's fixed board, `?theme=light` the light theme, `?client=halden` the sample client theme. Laptops, desktops and tablets only (D69): narrower than 744, or shorter than 500 on a touch screen, a notice asks to open the link on a bigger screen; the app stays mounted underneath. In development only, `?report=1` plays a whole mock run with the good player and opens its development report (`&policy=random` or `passive`, `&seed=N`, `&print=1`). |
+| `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?participant=<id>` names the participant (the launch link from the LMS or GenieKreator), so settings and the session are theirs; it defaults to `local`. `?start=board` skips onboarding, `?period=4` opens the mock engine at period 4 (the real engine ignores it), `?engine=off` shows the prototype's fixed board, `?theme=light` (or `dark`) the mode, over the client theme's preference, `?client=halden` the sample client theme and `?themeUrl=/path.json` any theme JSON, both served by the mock API (see Themes). Laptops, desktops and tablets only (D69): narrower than 744, or shorter than 500 on a touch screen, a notice asks to open the link on a bigger screen; the app stays mounted underneath. In development only, `?report=1` plays a whole mock run with the good player and opens its development report (`&policy=random` or `passive`, `&seed=N`, `&print=1`, `&client=halden`, `&themeUrl=`). |
 | `/screens` | Every screen, each frame the live app opened at that state. Port of `project/iLead Screens.dc.html`. Frame ids (`b4`, `l1`, ...) match the design and are linkable, for example `/screens#b4`. |
 | `/states`  | Edge states: loading, empty, offline, mic denied, slow AI. Port of `project/iLead States.dc.html`. |
 
@@ -48,7 +48,7 @@ src/
   speech/     Voice input: SpeechProvider, MediaRecorder with server transcription, mock voice, voice activity, consent (docs/SPEECH.md)
   stories/    Foundation stories (tokens, Button, Switch); component stories sit next to their component
   styles/     Generated token CSS, Tailwind theme, fonts, global keyframes
-tokens/       Token source: primitive, semantic and component layers, migration aliases, contrast pairs, client themes
+tokens/       Token source: primitive, semantic and component layers, migration aliases, contrast pairs
 scripts/      Token pipeline, calibration, bundle budget, storyline import, portrait preparation
 tests/        Playwright flows (e2e/) and the design parity harness (visual/)
 calibration/  Calibration reports, one per storyline
@@ -61,7 +61,7 @@ public/       NPC portraits, backgrounds, Manrope fonts
 Two clients talk to the server. Each has an in-browser mock, used when nothing is configured, and an HTTP adapter.
 
 - **Engine** (`EngineClient`, `src/engine/client.ts`). The playable board reads only engine state and sends intents: `view()`, `send(intent)` and `streamTurn()`, which streams an NPC turn's words as server sent events. Every payload is parsed by the Zod contract (`src/engine/contract.ts`). With no configuration the mock engine runs the same simulation code in the browser, loaded on first use. `VITE_ILEAD_ENGINE_URL` switches to the HTTP adapter.
-- **App shell API** (`IleadApi`, `src/api/types.ts`): `getScenario`, `getSession`, `saveSettings`, `setStyle`, `planAction`, `submitInteraction` and `endWeek`. The shell loads the scenario, the saved session and settings through it, and the prototype board (`?engine=off`) persists through it. `VITE_ILEAD_API_URL` switches to `createHttpApi`. Its endpoint paths are a proposal, kept in `src/api/http.ts` so they are easy to align with the real service.
+- **App shell API** (`IleadApi`, `src/api/types.ts`): `getScenario`, `getSession`, `saveSettings`, `setStyle`, `planAction`, `submitInteraction`, `endWeek` and `getTheme` (the client theme, see Themes). The shell loads the scenario, the saved session and settings through it, and the prototype board (`?engine=off`) persists through it. `VITE_ILEAD_API_URL` switches to `createHttpApi`. Its endpoint paths are a proposal, kept in `src/api/http.ts` so they are easy to align with the real service.
 
 Voice and AI text on the engine board use `src/speech` and `src/ai` (`docs/SPEECH.md`). `VITE_ILEAD_SPEECH_URL` turns on real microphone capture with server transcription; without it a scripted mock voice stands in. The prototype's live screen (`src/screens/Live.tsx`, used by the galleries and `?engine=off`) still simulates voice, NPC speech and the waveform in `src/screens/live/useLiveSession.ts`.
 
@@ -69,10 +69,38 @@ The three variables are listed in `.env.example`; copy it to `.env.local` to set
 
 ## Design tokens
 
-Edit `tokens/**/*.json`, then run `npm run tokens`. The pipeline writes `src/styles/tokens.generated.css`, a Tailwind theme that exposes only tokens, and a typed manifest. It fails on unknown references, missing light or dark values, and any contrast pair below its WCAG minimum. Pairs are declared on semantic tokens and in `tokens/contrast.json`, and are checked in light, dark and every client theme in `tokens/themes/`. Never edit the generated files.
+Edit `tokens/**/*.json`, then run `npm run tokens`. The pipeline writes `src/styles/tokens.generated.css`, a Tailwind theme that exposes only tokens, and a typed manifest. It fails on unknown references, missing light or dark values, and any contrast pair below its WCAG minimum. Pairs are declared on semantic tokens and in `tokens/contrast.json`, and are checked in light and dark. It also writes `src/theme/tokens.generated.ts`, the pairs and token table the runtime theme loader corrects against (see Themes). Never edit the generated files.
+
+## Themes
+
+A client theme is GenieKreator configuration (Configuration Spec, "Brand and theme"), loaded at runtime, never built in (M7, DECISIONS D72). The schema is `src/theme/schema.ts`; the samples are `src/theme/samples/halden.json` (Halden Group, frame b15) and `brightwater.json` (a deliberately bad palette the loader corrects).
+
+| Field | Type | What it sets |
+|---|---|---|
+| `version` | `1` | Required. Any other value rejects the theme. |
+| `id`, `name` | text | The client's name labels the logo ("Halden Group logo"). |
+| `mode` | `dark`, `light`, `system` | The mode the app opens in. `?theme=` wins. |
+| `colors.accent` | colour | `color.accent.default`: bars, selected state, links. |
+| `colors.accentSecondary` | colour | `color.accent.secondary`: eyebrows, text links, the focus ring. |
+| `colors.accentSoft` | colour | `color.accent.soft`: selected backgrounds. |
+| `colors.brand` | `{ from, to, angle? }` | `fill.brand`: the primary button, wordmark, on switch and progress. |
+| `colors.surface` | `{ solid?, card?, raised?, material? }` | The surface tokens. |
+| `logo` | `{ src?, alt?, text? }` | The brand mark beside the iLead wordmark: an image (https, a site path or a data:image URI), or a text mark. With neither, the design's placeholder names the client. |
+| `font` | allowlist | Manrope (default), Inter, IBM Plex Sans, Source Sans 3, Nunito Sans, Work Sans, Lato, Open Sans, System. Web fonts load from Google Fonts. |
+| `radiusScale` | 0 to 2 | Multiplies every numbered radius token; pills stay pills. |
+
+A colour is `oklch()`, `#hex` or `rgb()`, either one value or `{ "light": …, "dark": … }`. Theme text follows the copy rules (no dashes as punctuation, no emoji).
+
+**Loading.** The bootstrap (`src/theme/bootstrap.ts`, the only theme code in the first load) reads an inline theme from the launch payload (`<script type="application/json" id="il-launch">{"theme": …}</script>` on the host page), or calls `getTheme` (proposed `GET /theme`, 404 means none). The mock serves Halden for `?client=halden` and any JSON for `?themeUrl=/path.json`. It then imports the loader (`src/theme/loader.ts`, a lazy chunk with the schema, the contrast table and the maths), which writes the result as custom properties on `:root`: `--il-theme-<token>` for colours, `--il-radius-*` and `--il-font-family-sans`. No rebuild. `<html data-il-theme>` names the theme once it has settled (`default` when there is none). The default theme shows until then.
+
+**Correction.** Every pair the token build checks is measured again with the theme's colours, in light and dark, with the build's own code (`src/theme/color.ts` and `src/theme/paint.ts`, shared with `scripts/tokens`). A failing pair moves the lightness of the theme colour involved (the text first, otherwise the surface), keeping hue and chroma (chroma drops only where the sRGB gamut needs it), by the smallest step that reaches 4.5:1 for text or 3:1 for controls and graphics. Corrections are listed in a console warning in development. A colour no lightness can fix falls back to the default.
+
+**Fallback.** A theme that is not an object, or not version 1, is ignored. Any other invalid field falls back on its own and the rest applies. A failed request, broken JSON or any error in the loader means the default theme, never a broken screen.
+
+**Previewing.** In Storybook, the toolbar picks Halden or Brightwater in either mode; `withClientTheme()` (`src/stories/clientTheme.tsx`) pins one story to a client theme. `tests/e2e/theme.spec.ts` serves Brightwater from the mock API and runs axe on the board and the report.
 
 ## Styling approach
 
-Colour tokens are `--il-*` custom properties generated from `tokens/`, declared on the app root (`.il-theme`) with `light-dark()`, so light and dark modes share one set of styles. A client theme only overrides the `--client-acc*` and `--client-grad` brand variables, which the accent tokens fall back from.
+Colour tokens are `--il-*` custom properties generated from `tokens/`, declared on the app root (`.il-theme`) with `light-dark()`, so light and dark modes share one set of styles. Tokens marked `themable` read a `--il-theme-<token>` variable first, which a client theme sets at runtime (see Themes).
 
 Components in `src/components` use Tailwind utilities on those tokens (`docs/COMPONENTS.md`). The ported screens in `src/screens` keep the design's inline CSS as strings passed through `css()`, which converts them to React style objects (memoised). Pixel font sizes follow the text size setting (`--il-text-scale` on the app root, like the font size tokens; D56). This keeps every value diffable against the design source. Hover and focus styles use `pseudo('hover', '...')`, which generates a class, matching how the design runtime applied `style-hover`. Those screens still read the legacy `--ik-*` names, migration aliases onto the `--il-*` tokens (`tokens/legacy.json`, D7) that go as each screen moves to components.

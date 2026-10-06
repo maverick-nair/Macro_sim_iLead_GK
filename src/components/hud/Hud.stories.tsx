@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { BRIGHTWATER, withClientTheme } from '../../stories/clientTheme';
 import { Hud, type HudProps } from './Hud';
 
 const meta: Meta<typeof Hud> = { title: 'Components/HUD', component: Hud };
@@ -55,10 +56,16 @@ export const ScoreBreakdownOpen: Story = {
 /** End week is secondary while an action drawer is open. */
 export const EndSecondary: Story = { ...frame, args: { ...base, endEmphasis: 'secondary' } };
 
-/** Client theme as the design renders it today (DECISIONS D17): logo placeholder, three unlabelled nav buttons. At 1280. */
+/** The Halden client theme at 1280: the logo placeholder, and the nav reads Objective, History and More (D17, fixed in M7). */
 export const ClientNav: Story = {
-  ...sized(1280),
-  args: { ...base, clientLogo: true, nav: [{ key: 'objective' }, { key: 'history' }, { key: 'more' }] }
+  decorators: [withClientTheme(), S => <div style={{ width: 1280 }}><S /></div>],
+  args: { ...base, nav: NAV.filter(n => ['objective', 'history', 'more'].includes(n.key)) }
+};
+
+/** A client theme with a text logo and a corrected palette (Brightwater, D71). */
+export const ClientTextLogo: Story = {
+  decorators: [withClientTheme(BRIGHTWATER), S => <div style={{ width: 1440 }}><S /></div>],
+  args: base
 };
 
 /** Large numbers through the number formatter. */

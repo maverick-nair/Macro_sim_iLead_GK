@@ -1,19 +1,25 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { HALDEN_THEME } from '../app/clientTheme';
 import type { EngineView } from '../engine/contract';
 import { I18nProvider } from '../i18n';
 import { LoadingScreen } from '../components/shell/LoadingScreen';
 import { EngineReport } from '../components/report/EngineReport';
+import { createMockApi } from '../api';
+import { BrandContext } from '../theme/brand';
+import { startTheme, useThemeState } from '../theme/bootstrap';
 
 /**
  * Dev only (`/?report=1`, never in the production bundle): plays a whole run on the mock engine with an
  * automated player and opens the development report from its ended view, so the report can be seen and
  * tested without playing eight weeks. `&policy=random` or `passive`, `&seed=5`, `&print=1`, `&theme=light`,
- * `&client=halden`, `&participant=<name>`.
+ * `&client=halden` or `&themeUrl=/path.json` (a client theme through the mock API and the theme loader, as in play), `&participant=<name>`.
  */
 export function ReportDev() {
   const q = new URLSearchParams(location.search);
   const light = q.get('theme') === 'light';
+  // The client theme, loaded and applied on :root the way the app does it (D71).
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- launch parameters, read once
+  useEffect(() => startTheme(() => createMockApi({ latencyMs: 0, client: q.get('client'), themeUrl: q.get('themeUrl') }).getTheme()), []);
+  const { theme: client } = useThemeState();
   const [view, setView] = useState<EngineView | null>(null);
   useEffect(() => {
     void import('../engine/mock').then(m => m.playToEnd({
@@ -27,10 +33,10 @@ export function ReportDev() {
   const root: CSSProperties = {
     colorScheme: light ? 'light' : 'dark', minHeight: '100vh',
     background: light ? 'var(--il-backdrop-daylight)' : 'var(--il-backdrop-office)',
-    ...(q.get('client') === 'halden' ? HALDEN_THEME : null)
   };
   return (
     <I18nProvider>
+      <BrandContext.Provider value={client?.brand ?? null}>
       <div style={root}>
         <div className="il-theme relative flex flex-col overflow-hidden font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]">
           {view
@@ -38,6 +44,7 @@ export function ReportDev() {
             : <LoadingScreen />}
         </div>
       </div>
+      </BrandContext.Provider>
     </I18nProvider>
   );
 }

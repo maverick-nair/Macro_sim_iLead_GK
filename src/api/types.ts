@@ -39,6 +39,11 @@ export interface IleadApi {
    * then contextual capability %. `you` is this participant's own result, sent so the server can place it.
    */
   getLeaderboard(input: { size: number; anonymous: boolean; you: LeaderboardResult }): Promise<Leaderboard>;
+  /**
+   * The client theme authored in GenieKreator (src/theme/schema.ts), as raw JSON, or null when the
+   * simulation uses the iLead theme. The theme loader validates and corrects it (D71).
+   */
+  getTheme(): Promise<unknown>;
 }
 
 export interface LeaderboardResult { score: number; conversions: number; capability: number }

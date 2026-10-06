@@ -42,9 +42,10 @@ describe('token pipeline', () => {
     expect(tokensCss).toMatch(/\.il-theme \{[^}]*--il-font-size-13: calc\(13px \* var\(--il-text-scale, 1\)\);/);
   });
 
-  it('wraps brand overridable tokens in a var() fallback', () => {
-    const src = tiny({ semantic: { color: { accent: { light: '{color.ink.200}', dark: '{color.white}', overridableBy: 'client-acc' } } } });
-    expect(build(src).tokensCss).toContain('--il-color-accent: var(--client-acc, light-dark(');
+  it('wraps themable tokens in a var() fallback the theme loader writes, and rejects the old overridableBy', () => {
+    const src = tiny({ semantic: { color: { accent: { light: '{color.ink.200}', dark: '{color.white}', themable: true } } } });
+    expect(build(src).tokensCss).toContain('--il-color-accent: var(--il-theme-color-accent, light-dark(');
+    expect(() => build(tiny({ semantic: { color: { accent: { light: '{color.ink.200}', dark: '{color.white}', overridableBy: 'client-acc' } } } }))).toThrow(/themable/);
   });
 
   it('rejects unknown references, missing dark values and references inside primitives', () => {
@@ -97,21 +98,20 @@ describe('token pipeline', () => {
     expect(() => build(tiny({ contrast: [{ fg: 'color.fg', bg: 'color.nope', min: 3 }] }))).toThrow(/unknown token color.nope/);
   });
 
-  it('checks pairs again under a client theme only when it changes them', () => {
+  it('writes the runtime table the theme loader corrects against: pairs, the tokens they reach, themable tokens, radii', () => {
     const src = tiny({
+      primitive: { ...tiny().primitive, radius: { '6': { $value: '6px' }, pill: { $value: '999px' } } },
       semantic: { color: {
-        bg: { light: '{color.white}', dark: '{color.ink.200}' },
-        accent: { light: '{color.ink.200}', dark: '{color.white}', overridableBy: 'client-acc', contrast: { against: 'color.bg', min: 4.5 } },
+        bg: { light: '{color.white}', dark: '{color.ink.200}', themable: true },
         fg: { light: '{color.ink.200}', dark: '{color.white}', contrast: { against: 'color.bg', min: 4.5 } }
-      } },
-      themes: { pale: { 'client-acc': { light: 'oklch(0.95 0 0)', dark: 'oklch(0.25 0 0)' } } }
+      } }
     });
-    const out = build(src);
-    const accent = out.contrast.filter(r => r.token === 'color.accent');
-    expect(accent.map(r => r.mode)).toEqual(['light', 'dark', 'pale light', 'pale dark']);
-    expect(accent.filter(r => r.mode.startsWith('pale')).every(r => !r.pass)).toBe(true);
-    expect(out.contrast.filter(r => r.token === 'color.fg').map(r => r.mode)).toEqual(['light', 'dark']);
-    expect(out.manifestTs).toContain('"--client-acc": "light-dark(oklch(0.95 0 0), oklch(0.25 0 0))"');
+    const { themeTs } = build(src);
+    expect(themeTs).toContain('export const THEMABLE = ["color.bg"] as const;');
+    expect(themeTs).toMatch(/"fg": "color\.fg",\s*"bg": "color\.bg"/);
+    expect(themeTs).toMatch(/"color\.ink\.200": \{\s*"\$value": "oklch\(0\.2 0\.03 280\)"/);
+    expect(themeTs).toContain('"themable": true');
+    expect(themeTs).toMatch(/"--il-radius-6": 6\s*\}/);
   });
 
   it('merges per component files and rejects a path defined twice', () => {
@@ -137,13 +137,14 @@ describe('token pipeline', () => {
     it('reproduce the values the design renders', () => {
       // From the prototype's iLeadApp root.
       expect(out.tokensCss).toContain('--il-color-ink-200: oklch(0.2 0.03 280);');
-      expect(out.tokensCss).toContain('--il-color-surface-card: light-dark(var(--il-color-white), oklch(0.17 0.035 283 / 0.82));');
-      expect(out.tokensCss).toContain('--il-color-accent-default: var(--client-acc, light-dark(var(--il-color-blue-530), var(--il-color-brand-electric-blue)));');
+      expect(out.tokensCss).toContain('--il-color-surface-card: var(--il-theme-color-surface-card, light-dark(var(--il-color-white), oklch(0.17 0.035 283 / 0.82)));');
+      expect(out.tokensCss).toContain('--il-color-accent-default: var(--il-theme-color-accent-default, light-dark(var(--il-color-blue-530), var(--il-color-brand-electric-blue)));');
     });
 
     it('match the committed generated files', () => {
       expect(fs.readFileSync(path.join(root, 'src/styles/tokens.generated.css'), 'utf8')).toBe(out.tokensCss);
       expect(fs.readFileSync(path.join(root, 'src/styles/tailwind-theme.generated.css'), 'utf8')).toBe(out.tailwindCss);
+      expect(fs.readFileSync(path.join(root, 'src/theme/tokens.generated.ts'), 'utf8')).toBe(out.themeTs);
     });
   });
 });
