@@ -1,5 +1,5 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useAiStream } from '../../ai';
 import type { EngineView, Intent, LiveView } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
@@ -106,7 +106,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   }, [paused, suspended, held]);
 
   // Paused: the streamed line holds where it is (not an interrupt), and a recording in progress is dropped.
-  useEffect(() => {
+  // A layout effect, so the hold lands in the same commit as the pause dialog, before any paint.
+  useLayoutEffect(() => {
     ai.hold(held);
     if (held && (speech.status === 'listening' || speech.status === 'requesting' || speech.status === 'finishing')) speech.cancel();
     // `ai.hold` is stable; this follows the pause only.
