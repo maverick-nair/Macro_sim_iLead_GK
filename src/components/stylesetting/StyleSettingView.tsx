@@ -111,7 +111,7 @@ function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine:
           <span className="sr-only">{t('stylesetting.sponsor.says', { name: sponsorName })}</span>
           {t('common.quote', { text: sponsorLine })}
         </span>
-        <a href={`#${defsId}`} className={`sr-only text-13 font-700 focus:not-sr-only ${focus}`}>{t('stylesetting.sponsor.definitions')}</a>
+        <a href={`#${defsId}`} className={`sr-only text-13 font-700 focus:not-sr-only ${focus}`}>{t('stylesetting.sponsor.definitions', { count: lens.styles.length })}</a>
       </div>
       <div role="list" aria-label={t('stylesetting.definitions.aria')} className="contents">
         {lens.styles.map(s => (

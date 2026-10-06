@@ -5,7 +5,7 @@
   "stylesetting.review": "Review and confirm",
   "stylesetting.progress": "{set} of {total} styles set",
   "stylesetting.sponsor.says": "{name} says",
-  "stylesetting.sponsor.definitions": "What the four styles mean",
+  "stylesetting.sponsor.definitions": "{count, plural, =2 {What the two styles mean} =3 {What the three styles mean} =4 {What the four styles mean} =5 {What the five styles mean} =6 {What the six styles mean} other {What the # styles mean}}",
   "stylesetting.definitions.aria": "Leadership styles",
   "stylesetting.member.aria": "{name}, {title}, {mood}",
   "stylesetting.stats": "Skill {skill} · Morale {morale} · Trust {trust}",

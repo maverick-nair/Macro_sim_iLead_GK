@@ -49,14 +49,15 @@ function StyleLegend({ id, periodUnit }: { id: string; periodUnit: PeriodUnit })
   return (
     <div id={id} role="dialog" aria-label={t('team.legend.title')}
       className={`absolute top-full right-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-18 border border-line-strong bg-surface-material p-4`}>
-      <span className="text-13 text-fg-secondary">{t('team.legend.intro', { unit: periodUnit })}</span>
+      <span className="text-13 text-fg-secondary">{lens.id === 'readiness_based' ? t('team.legend.intro', { unit: periodUnit }) : t('team.legend.introLens', { unit: periodUnit, count: lens.styles.length })}</span>
       {lens.styles.map(s => (
         <div key={s.key} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">
           <span className={`flex size-8 items-center justify-center rounded-round bg-brand font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
           <span className="flex flex-col"><b>{s.name}</b><span className="text-13 text-fg-secondary">{s.description}</span></span>
         </div>
       ))}
-      <div className="flex justify-between border-t border-line-default pt-1 text-12 text-fg-secondary"><span>{t('team.legend.support')}</span><span>{t('team.legend.freedom')}</span></div>
+      {/* Readiness Based styles run from more support to more freedom; other lenses have no such order. */}
+      {lens.id === 'readiness_based' && <div className="flex justify-between border-t border-line-default pt-1 text-12 text-fg-secondary"><span>{t('team.legend.support')}</span><span>{t('team.legend.freedom')}</span></div>}
     </div>
   );
 }
@@ -83,7 +84,11 @@ function StageHeader({ name, count, ideal, bottleneck, periodUnit }: Omit<StageC
  */
 export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2 }: TeamBoardProps) {
   const { t } = useI18n();
+  const lens = useLens();
   const legendId = useId();
+  // "D, G, P and E": the lens's letters.
+  const ls = lens.styles.map(s => s.letter);
+  const letters = ls.length < 2 ? ls.join('') : ls.slice(0, -1).join(t('team.legend.listSeparator')) + t('team.legend.listAnd') + ls[ls.length - 1];
   const hintText = t('team.hint', { kind: hint.kind, name: hint.kind === 'selected' ? hint.name : '' });
 
   return (
@@ -96,7 +101,7 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
         <div className="relative">
           <button type="button" onClick={onToggleLegend} aria-expanded={legendOpen} aria-controls={legendOpen ? legendId : undefined}
             className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
-            <HelpIcon />{t('team.legend.button')}
+            <HelpIcon />{t('team.legend.button', { letters })}
           </button>
           {legendOpen && <StyleLegend id={legendId} periodUnit={periodUnit} />}
         </div>

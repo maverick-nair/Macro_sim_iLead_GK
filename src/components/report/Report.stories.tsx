@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { EngineView } from '../../engine/contract';
 import { DEFAULT_LENS, DEFAULT_LENS_VIEW, NEEDS } from '../../engine/lens';
-import { playToEnd } from '../../engine/mock';
+import { defaultStoryline, playToEnd } from '../../engine/mock';
 import { REPORT_FIXTURE as FX } from '../../data/reportFixture';
 import { BusinessSection } from './BusinessSection';
 import { ReportProvider, type ReportSettings } from './context';
@@ -151,11 +151,11 @@ export const Analytics: StoryObj = { render: () => <Card><AnalyticsSection data=
 export const Methodology: StoryObj = { render: () => <Card><MethodologySection data={{ lines: ['This report comes from what you said and did in the simulation.', 'Your game score never changes a skill rating.'], reviewed: false, conversations: 30, observations: 76 }} /></Card> };
 
 /** The whole engine report from a real run (Sales Elevator), played by an automated player. */
-function FromRun({ policy, seed, print }: { policy: 'good' | 'random' | 'passive'; seed: number; print?: boolean }) {
+function FromRun({ policy, seed, print, lens }: { policy: 'good' | 'random' | 'passive'; seed: number; print?: boolean; lens?: 'six_styles' }) {
   const [view, setView] = useState<EngineView | null>(null);
   useEffect(() => {
-    void playToEnd({ policy, seed, reflection: policy === 'good' ? ['Kent taught me that the loudest problem is not always the real one.'] : undefined }).then(setView);
-  }, [policy, seed]);
+    void playToEnd({ policy, seed, config: lens ? defaultStoryline(lens) : undefined, reflection: policy === 'good' ? ['Kent taught me that the loudest problem is not always the real one.'] : undefined }).then(setView);
+  }, [policy, seed, lens]);
   return <div className="flex min-h-screen flex-col">{view && <EngineReport view={view} onBack={noop} print={print} participantName="Jordan Lee" date={new Date(2026, 9, 5)} />}</div>;
 }
 
@@ -167,3 +167,5 @@ export const FromRunPrint: StoryObj = { render: () => <FromRun policy="good" see
 /** Tablet size, 834 wide (D69): the web view, its columns narrower. */
 export const FromRunTablet: StoryObj = { render: () => <div style={{ width: 834 }}><FromRun policy="random" seed={5} /></div> };
 export const FromRunLight: StoryObj = { globals: { theme: 'light' }, render: () => <FromRun policy="good" seed={3} /> };
+/** The Six Leadership Styles lens (D70): six styles in the shares and the grid, the needs as rows, two Report only skills, the lens in the methodology. */
+export const FromRunSixStyles: StoryObj = { render: () => <FromRun policy="good" seed={3} lens="six_styles" /> };
