@@ -14,7 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseStoryline, type StorylineConfig } from '../src/engine/config';
 import { play, type Policy } from '../src/engine/sim/policies';
-import { neededStyle } from '../src/engine/sim/rules';
+import { bestStyle, needOf } from '../src/engine/lens';
 
 const root = path.resolve(import.meta.dirname, '..');
 const id = process.argv[2] ?? 'sales-elevator';
@@ -97,10 +97,11 @@ async function main() {
     return { p, total: median(runs.map(r => r.total)), stars: median(runs.map(r => r.stars)), spread, ok };
   });
 
-  // Member mix (section 9, step 3).
-  const quadrants = new Set(config.members.map(m => neededStyle(m.start, config.thresholds.high)));
+  // Member mix (section 9, step 3): all four needs present, named by the style that fits each (the lens's fit table).
+  const needs = new Set(config.members.map(m => needOf(m.start, config.thresholds.high)));
+  const quadrants = new Set([...needs].map(n => bestStyle(config.lens, n)));
   const strugglers = config.members.filter(m => Math.min(m.start.skill, m.start.morale, m.start.result) < config.thresholds.low).length;
-  const mixOk = quadrants.size === 4 && strugglers >= 2;
+  const mixOk = needs.size === 4 && strugglers >= 2;
 
   const f = (x: number) => `${Math.round(x * 100)}%`;
   const money = new Intl.NumberFormat(config.money.locale, { style: 'currency', currency: config.money.currency, maximumFractionDigits: 0 });
@@ -130,7 +131,7 @@ ${gameRows.map(r => `| ${r.p} | ${r.total} | ${r.stars.toFixed(1)} | ${r.spread}
 
 ## Starting team
 
-- Needed styles present at the start: ${[...quadrants].sort().join(', ')} (${quadrants.size === 4 ? 'all four' : 'missing some'})
+- Needed styles present at the start: ${[...quadrants].sort().join(', ')} (${needs.size === 4 ? 'all four' : 'missing some'})
 - Members starting under ${config.thresholds.low} in some metric: ${strugglers} (need 2 or more)
 - ${mixOk ? 'Mix is playable as authored; no member values were nudged.' : 'Mix needs attention.'}
 `;

@@ -1,4 +1,5 @@
 import type { StorylineConfig } from '../config';
+import type { NeedKey } from '../lens';
 import type { Mismatch, Style, Triple } from './rules';
 
 export type MetricKey = 'skill' | 'morale' | 'result' | 'trust';
@@ -70,8 +71,8 @@ export interface MemberSim {
   style: Style | null;
   lastStyle: Style | null;
   lastReaction: 'pos' | 'neg' | null;
-  /** Needed style at the start of the period (energize and training compare against it). */
-  neededAtStart: Style;
+  /** Need (skill and morale quadrant) at the start of the period (energize and training compare against it). */
+  neededAtStart: NeedKey;
   /** Sub-periods left away, and why. */
   away: number;
   awayReason: 'training' | 'leave' | null;
@@ -90,8 +91,8 @@ export interface MemberSim {
   assessedStages: string[];
   /** Role fit found by Assess, per stage (SIMULATION 4.3). */
   assessments: Record<string, { skill: number; morale: number; result: number }>;
-  /** Needed style at the start of the previous period, for the erratic style change rule. */
-  neededPrevStart: Style | null;
+  /** Need at the start of the previous period, for the erratic style change rule. */
+  neededPrevStart: NeedKey | null;
   /** Absolute sub-period when `away` was set, so leave starting mid sub-period lasts its full length. */
   awaySetAt: number;
   /** Training request open in this period. */
@@ -207,7 +208,8 @@ export interface LiveRecord {
 /** A bulletin for the coming period, shown at the week end (Configuration Spec, Delivery). */
 export interface NewsItem { key: string; card: CardKind; title: string; body: string; impact: string | null }
 
-export interface Decision { memberId: string; chosen: Style; needed: Style; mismatch: Mismatch; source: string; period?: number }
+/** A style tagged choice: the style chosen, the person's need then, and the lens's difference for it. */
+export interface Decision { memberId: string; chosen: Style; need: NeedKey; mismatch: Mismatch; source: string; period?: number }
 
 export interface LogEntry {
   id: string;
@@ -347,4 +349,4 @@ export interface Sim {
   intentGaps: Record<string, number[]>;
 }
 
-export type { Mismatch, Style, Triple };
+export type { Mismatch, NeedKey, Style, Triple };

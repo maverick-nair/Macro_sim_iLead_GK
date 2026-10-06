@@ -1,6 +1,7 @@
 import { moneyFormatter } from '../money';
 import { roundHalfUp, bandScore, capability, leadershipScore, tierFor } from '../sim/score';
-import { firstName, person, STYLE_NAMES } from '../sim/sim';
+import { lensView, NEEDS } from '../lens';
+import { firstName, person, styleName } from '../sim/sim';
 import type { Band, LiveRecord, Sim, Style } from '../sim/types';
 
 /**
@@ -9,7 +10,6 @@ import type { Band, LiveRecord, Sim, Style } from '../sim/types';
  * English server content (D60), filled from templates.
  */
 
-const STYLES: Style[] = ['D', 'G', 'P', 'E'];
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 const unitName = (sim: Sim) => sim.config.time.period.unit;
 const Unit = (sim: Sim) => unitName(sim)[0].toUpperCase() + unitName(sim).slice(1);
@@ -43,7 +43,9 @@ export function buildReport(sim: Sim) {
   const skills = r.skills.map((sk, order) => {
     const obs = sim.liveRecords.flatMap(rec => (rec.skills ?? []).filter(o => o.key === sk.key).map(o => ({ ...o, rec })));
     const interactions = new Set(obs.map(o => o.rec.id ?? o.rec));
-    const enough = obs.length >= r.minObservations && interactions.size >= Math.min(2, r.minObservations);
+    // Report only skills (a secondary lens, D70) always need 2 observations from 2 interactions.
+    const minObs = sk.reportOnly ? Math.max(2, r.minObservations) : r.minObservations;
+    const enough = obs.length >= minObs && interactions.size >= Math.min(2, minObs);
     const raw = obs.length ? mean(obs.map(o => bandScore(sim, o.band))) : null;
     const capped = obs.some(o => o.band === 'harmful');
     const idx = enough && raw !== null ? (capped ? Math.min(levelOf(raw), 1) : levelOf(raw)) : null;
@@ -54,14 +56,16 @@ export function buildReport(sim: Sim) {
       .flatMap(o => o.evidence.filter(q => (o.rec.quotes ?? []).some(t => t.includes(q))).map(q => ({ text: q, when: when(sim, o.rec) })))
       .filter((q, i, arr) => arr.findIndex(x => x.text === q.text) === i)
       .slice(0, r.evidencePerSkill);
-    return { key: sk.key, name: sk.name, order, observations: obs.length, score: enough && raw !== null ? roundHalfUp(raw) : null, rawScore: raw, capped: enough && capped,
+    return { key: sk.key, name: sk.name, reportOnly: sk.reportOnly, order, observations: obs.length, score: enough && raw !== null ? roundHalfUp(raw) : null, rawScore: raw, capped: enough && capped,
       level: idx === null ? null : { index: idx, name: r.scale[idx].name }, anchor: idx === null ? null : sk.anchors[idx] ?? null, quotes };
   });
-  const rated = skills.filter(s => s.level !== null);
+  // The summary, its level and the plan read the primary lens's skills only (D70).
+  const scored = skills.filter(s => !s.reportOnly);
+  const rated = scored.filter(s => s.level !== null);
   const byScore = [...rated].sort((a, b) => b.rawScore! - a.rawScore! || b.observations - a.observations || a.order - b.order);
   const strengths = byScore.slice(0, 3).map(s => s.key);
   const priorities = [...rated].sort((a, b) => a.rawScore! - b.rawScore! || b.observations - a.observations || a.order - b.order).filter(s => !strengths.includes(s.key)).slice(0, 3).map(s => s.key);
-  const overall = rated.length >= Math.ceil(r.skills.length / 2) ? levelOf(mean(rated.map(s => s.rawScore!))) : null;
+  const overall = rated.length >= Math.ceil(scored.length / 2) ? levelOf(mean(rated.map(s => s.rawScore!))) : null;
 
   // ---- 7. Business outcomes
   const funnel = c.stages.map((st, i) => ({ stage: st.key, name: st.name, cumulative: sim.funnel.stageOut[i], cumulativeIdeal: sim.periods.reduce((a, p) => a + (p.funnel[i]?.ideal ?? 0), 0) }));
@@ -78,12 +82,13 @@ export function buildReport(sim: Sim) {
   const share = sim.funnel.value / c.money.target;
   const businessLine = `You reached ${Math.round(share * 100)}% of the ${money.format(c.money.target)} target with ${Math.floor(sim.funnel.conversions)} deals${bottleneck ? `; ${bottleneck.name} was the bottleneck in ${bottleneck.periods} of ${sim.periods.length} ${unit}s` : ''}.`;
 
-  // ---- 2. Style flexibility and fit (3)
+  // ---- 2. Style flexibility and fit (3): the lens's styles (D70); grid rows are the four needs, columns the styles.
+  const styles: Style[] = c.lens.styles.map(s => s.key);
   const choices = sim.decisions.run;
-  const shares = Object.fromEntries(STYLES.map(s => [s, choices.filter(d => d.chosen === s).length])) as Record<Style, number>;
+  const shares = Object.fromEntries(styles.map(s => [s, choices.filter(d => d.chosen === s).length])) as Record<Style, number>;
   const dom = dominant(choices.map(d => d.chosen));
   const cap = capability(sim);
-  const grid = STYLES.map(needed => STYLES.map(used => choices.filter(d => d.needed === needed && d.chosen === used).length));
+  const grid = NEEDS.map(need => styles.map(used => choices.filter(d => d.need === need && d.chosen === used).length));
   const capNarrative = cap < 40 ? r.narratives.capability.low : cap < 70 ? r.narratives.capability.mid : r.narratives.capability.high;
   const weekly = choices.filter(d => d.source === 'weeklyStyle');
   const weeks = all.map(m => ({
@@ -119,7 +124,7 @@ export function buildReport(sim: Sim) {
     id: rec.id ?? `${rec.period}`, kind: rec.band === 'strong' ? 'best' as const : 'revisit' as const, period: rec.period, memberId: rec.memberIds.length === 1 ? rec.memberIds[0] : null,
     title: `${rec.title ?? rec.actionKey}${rec.memberIds.length === 1 ? ` with ${shortName(sim, rec.memberIds[0])}` : ''} ${rec.band === 'strong' ? 'went well' : rec.band === 'weak' ? 'did not land' : 'went badly'}`,
     situation: `${Unit(sim)} ${rec.period}. ${rec.memberIds.length === 1 ? `${shortName(sim, rec.memberIds[0])} needed a conversation.` : rec.actionKey === 'sponsor' ? `${shortName(sim, 'sponsor')} wanted an update.` : 'The team needed you.'}`,
-    behaviour: `You chose ${rec.title ?? rec.actionKey}${rec.styleShown ? ` and came across as ${STYLE_NAMES[rec.styleShown]}` : ''}.`,
+    behaviour: `You chose ${rec.title ?? rec.actionKey}${rec.styleShown ? ` and came across as ${styleName(sim, rec.styleShown)}` : ''}.`,
     quote: rec.quotes?.[0] ?? null,
     impact: rec.changes?.length ? rec.changes.slice(0, 3).map(change).join(', ') + '.' : 'No visible change.',
     intent: intentFor(rec.memberIds[0], rec.period), weight: rec.impact ?? 0, sub: rec.sub ?? 0
@@ -163,7 +168,7 @@ export function buildReport(sim: Sim) {
 
   // ---- 9. Development plan: the 3 lowest rated skills, then skills without enough evidence
   const lowest = [...rated].sort((a, b) => a.rawScore! - b.rawScore! || a.order - b.order);
-  const unrated = skills.filter(s => s.level === null);
+  const unrated = scored.filter(s => s.level === null);
   const plan = [...lowest, ...unrated].slice(0, 3).map(s => ({ skill: s.key, name: s.name, enoughEvidence: s.level !== null, ...(r.development[s.key] ?? { practice: '', onTheJob: '' }) }));
 
   // ---- Team over the run (small multiples) and results
@@ -171,9 +176,14 @@ export function buildReport(sim: Sim) {
   const revenue = sim.periods.map(p => ({ period: p.period, value: p.cumulativeValue, pace: (c.money.target * p.period) / c.time.period.count }));
 
   const dom1 = dom.length === 1 ? dom[0] : null;
+  const domLine = dom1 ? r.narratives.dominant[dom1] : undefined;
+  // Methodology names the lens in participant language; the source ("based on") is author only (D70).
+  const lensLines = [`This simulation looks at leadership through the ${c.lens.title} lens.`,
+    ...(c.lens.secondary ? [`Your report also looks at ${c.lens.secondary.title}. Those skills are marked Report only: they never change your score.`] : [])];
   return {
     available: sim.phase === 'ended',
     storyline: { name: c.name, organisation: c.organisation ?? null },
+    lens: { ...lensView(c.lens), secondary: c.lens.secondary ? { id: c.lens.secondary.id, title: c.lens.secondary.title } : null },
     periods: sim.periods.length, periodUnit: unit,
     sections: r.sections,
     score: { total: score.total, max: score.max, tier: { key: tier.key, name: tier.name } },
@@ -184,7 +194,7 @@ export function buildReport(sim: Sim) {
       narrative: overall === null ? null : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null
     },
     style: { shares, total: choices.length, dominant: dom, capability: roundHalfUp(cap), grid, matched, weeklyTotal: weekly.length, weeks,
-      narrative: [capNarrative, ...(dom1 ? [r.narratives.dominant[dom1]] : [])] },
+      narrative: [capNarrative, ...(domLine ? [domLine] : [])] },
     intent,
     skills: skills.map(({ rawScore: _r, order: _o, ...s }) => s),
     scale: r.scale,
@@ -194,7 +204,7 @@ export function buildReport(sim: Sim) {
     analytics,
     plan, checkInDays: r.checkInDays,
     reflection: sim.reflection, questions: r.reflection,
-    methodology: { lines: r.methodology, reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
+    methodology: { lines: [...lensLines, ...r.methodology], reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min }))
   };
 }

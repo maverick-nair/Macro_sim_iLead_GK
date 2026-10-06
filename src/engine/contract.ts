@@ -14,7 +14,18 @@ const Id = z.string().min(1);
 const Num = z.number().finite();
 
 export const MetricKey = z.enum(['skill', 'morale', 'result', 'trust']);
-export const StyleKey = z.enum(['D', 'G', 'P', 'E']);
+/** A style key of the storyline's lens (D70), for example "D". Names and letters come with the view's `lens`. */
+export const StyleKey = z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,15}$/);
+export const NeedKey = z.enum(['lowSkill_lowMorale', 'lowSkill_highMorale', 'highSkill_lowMorale', 'highSkill_highMorale']);
+/**
+ * The leadership lens as the participant sees it (D70): 2 to 6 styles and the names of the four needs,
+ * in the grid's order. The UI never hard codes style names. The fit table and the source stay on the server.
+ */
+export const LensView = z.object({
+  id: Id, title: Text,
+  styles: z.array(z.object({ key: StyleKey, letter: z.string().min(1).max(2), name: Text, short: Text, description: Text })).min(2).max(6),
+  needs: z.array(z.object({ key: NeedKey, label: Text, short: Text })).length(4)
+});
 export const Mood = z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']);
 export const Score = z.number().min(0).max(100);
 export const PeriodUnit = z.enum(['year', 'month', 'week', 'day']);
@@ -187,6 +198,8 @@ const Level = z.object({ index: z.number().int().min(0), name: Text });
 export const ReportView = z.object({
   available: z.boolean(),
   storyline: z.object({ name: Text, organisation: Text.nullable() }),
+  /** The lens, and the secondary lens whose skills are report only. */
+  lens: LensView.extend({ secondary: z.object({ id: Id, title: Text }).nullable() }),
   periods: z.number().int(), periodUnit: PeriodUnit,
   sections: z.array(z.enum(['summary', 'style', 'intent', 'skills', 'moments', 'people', 'business', 'analytics', 'plan', 'methodology'])),
   score: z.object({ total: Num, max: Num, tier: z.object({ key: Id, name: Text }) }),
@@ -194,13 +207,14 @@ export const ReportView = z.object({
   summary: z.object({ level: Level.nullable(), strengths: z.array(Id), priorities: z.array(Id), business: Text, narrative: Text.nullable() }),
   style: z.object({
     shares: z.record(StyleKey, z.number().int()), total: z.number().int(), dominant: z.array(StyleKey), capability: Num,
-    /** Rows: the style needed (D, G, P, E); columns: the style used. */
+    /** Rows: the four needs, in `lens.needs` order; columns: the style used, in `lens.styles` order. */
     grid: z.array(z.array(z.number().int())), matched: z.number().int(), weeklyTotal: z.number().int(),
     weeks: z.array(z.object({ memberId: Id, name: Text, left: z.boolean(), cells: z.array(z.object({ period: z.number().int(), chosen: StyleKey, fit: z.number().int().min(0).max(2) }).nullable()) })),
     narrative: z.array(Text)
   }),
   intent: z.array(z.object({ memberId: Id, name: Text, intent: z.array(StyleKey), shown: z.array(StyleKey), status: z.enum(['aligned', 'gap', 'noEvidence']), quote: Quote.nullable(), note: z.object({ text: Text, period: z.number().int() }).nullable(), trustCost: Num })),
-  skills: z.array(z.object({ key: Id, name: Text, observations: z.number().int(), score: Num.nullable(), capped: z.boolean(), level: Level.nullable(), anchor: Text.nullable(), quotes: z.array(Quote) })),
+  /** `reportOnly`: a secondary lens's skill, never in the score, badges or summary (D70). */
+  skills: z.array(z.object({ key: Id, name: Text, reportOnly: z.boolean(), observations: z.number().int(), score: Num.nullable(), capped: z.boolean(), level: Level.nullable(), anchor: Text.nullable(), quotes: z.array(Quote) })),
   scale: z.array(z.object({ name: Text, min: Num })),
   moments: z.array(z.object({ id: Id, kind: z.enum(['best', 'revisit']), period: z.number().int(), memberId: Id.nullable(), title: Text, situation: Text, behaviour: Text, quote: Text.nullable(), impact: Text, intent: StyleKey.nullable() })),
   people: z.array(z.object({ memberId: Id, name: Text, img: z.string().nullable(), left: z.boolean(), start: z.object({ morale: Num, trust: Num, result: Num }),
@@ -219,6 +233,7 @@ export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
   /** The storyline's name and the organisation the participant joins, for onboarding. */
   storyline: z.object({ name: Text, organisation: Text.nullable() }),
+  lens: LensView,
   clock: Clock,
   money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
   members: z.array(MemberView),
@@ -321,4 +336,5 @@ export type IntentResult = z.output<typeof IntentResult>;
 export type StreamChunk = z.output<typeof StreamChunk>;
 export type MetricKey = z.output<typeof MetricKey>;
 export type StyleKey = z.output<typeof StyleKey>;
+export type LensView = z.output<typeof LensView>;
 export type Mood = z.output<typeof Mood>;

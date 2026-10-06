@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from './rng';
-import { applyEffect, applyTrust, mismatchType, neededStyle, styleDifference, trainingMismatch, trustMultiplier } from './rules';
+import { bestStyle, DEFAULT_LENS, fitOf, needOf, NEEDS } from '../lens';
+import { applyEffect, applyTrust, mismatchType, trainingMismatch, trustMultiplier } from './rules';
+
+const neededStyle = (s: { skill: number; morale: number }) => bestStyle(DEFAULT_LENS, needOf(s));
 
 const freq = (f: () => number, n = 20000) => { const c: Record<number, number> = {}; for (let i = 0; i < n; i++) { const v = f(); c[v] = (c[v] ?? 0) + 1; } return Object.fromEntries(Object.entries(c).map(([k, v]) => [k, v / n])); };
 
@@ -13,12 +16,27 @@ describe('core model (Model doc)', () => {
     expect(neededStyle({ skill: 70, morale: 69 })).toBe('P');
   });
 
-  it('measures style difference on the two axes', () => {
-    expect(styleDifference('D', 'D')).toBe(0);
-    expect(styleDifference('D', 'G')).toBe(1);
-    expect(styleDifference('D', 'P')).toBe(1);
-    expect(styleDifference('D', 'E')).toBe(2);
-    expect(styleDifference('G', 'P')).toBe(2);
+  it('measures style difference on the two axes, from the Readiness Based fit table', () => {
+    const need = { D: 'lowSkill_lowMorale', G: 'lowSkill_highMorale', P: 'highSkill_lowMorale', E: 'highSkill_highMorale' } as const;
+    expect(fitOf(DEFAULT_LENS, 'D', need.D)).toBe(0);
+    expect(fitOf(DEFAULT_LENS, 'D', need.G)).toBe(1);
+    expect(fitOf(DEFAULT_LENS, 'D', need.P)).toBe(1);
+    expect(fitOf(DEFAULT_LENS, 'D', need.E)).toBe(2);
+    expect(fitOf(DEFAULT_LENS, 'G', need.P)).toBe(2);
+    expect(fitOf(DEFAULT_LENS, 'X', need.P)).toBe(2);
+  });
+
+  it('reproduces the quadrant rule exactly: the difference is the number of mismatched ranges (SIMULATION 2)', () => {
+    const home: Record<string, [boolean, boolean]> = { D: [false, false], G: [false, true], P: [true, false], E: [true, true] };
+    const axes: Record<string, [boolean, boolean]> = { lowSkill_lowMorale: [false, false], lowSkill_highMorale: [false, true], highSkill_lowMorale: [true, false], highSkill_highMorale: [true, true] };
+    for (const n of NEEDS) for (const s of DEFAULT_LENS.styles) {
+      const [s1, m1] = home[s.key], [s2, m2] = axes[n];
+      expect(fitOf(DEFAULT_LENS, s.key, n)).toBe((s1 !== s2 ? 1 : 0) + (m1 !== m2 ? 1 : 0));
+    }
+    for (let skill = 0; skill <= 100; skill += 5) for (let morale = 0; morale <= 100; morale += 5) {
+      const n = needOf({ skill, morale });
+      expect(axes[n]).toEqual([skill >= 70, morale >= 70]);
+    }
   });
 
   it('turns a difference into a mismatch 60% of the time', () => {

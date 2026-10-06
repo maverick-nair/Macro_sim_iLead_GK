@@ -1,12 +1,13 @@
 import { blank, UNTAGGED } from './live';
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
-import { mismatchType, styleDifference, trainingMismatch, type Mismatch, type Style, type Triple } from './rules';
+import { needOf } from '../lens';
+import { mismatchType, trainingMismatch, type Mismatch, type Style, type Triple } from './rules';
 import { respond } from './events';
 import { checkBadges } from './score';
 import {
-  addMessage, capacityLeft, effectChanges, firstName, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
-  STYLE_NAMES, stageName, trustChange
+  addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
+  styleName, stageName, trustChange
 } from './sim';
 import type { Band, Change, Evaluation, Interaction, LiveRecord, MemberSim, Outcome, Reason, Sim } from './types';
 
@@ -29,8 +30,8 @@ const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '
 const triple = (t: Triple) => `skill ${signed(t[0])}, morale ${signed(t[1])}, result ${signed(t[2])}`;
 
 /** Plain words for an effect table, used as the reason's rule text. */
-function ruleText(a: Action, o: Option) {
-  const name = a.options.length > 1 ? `${a.name} (${o.label.length > 40 ? STYLE_NAMES[o.style as Style] ?? o.label : o.label})` : a.name;
+function ruleText(sim: Sim, a: Action, o: Option) {
+  const name = a.options.length > 1 ? `${a.name} (${o.label.length > 40 && o.style ? styleName(sim, o.style) : o.label})` : a.name;
   return `${name}: a fitting approach gives ${triple(o.effects.m0)}; a partial miss ${triple(o.effects.m1)}${o.effects.m2 ? `; a clear miss ${triple(o.effects.m2)}` : ''}.`;
 }
 
@@ -47,18 +48,18 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
     const chosen = styles[m.id];
     const wasNeeded = m.neededAtStart;
     // Changing someone's style when what they need has not changed feels erratic (3.1).
-    if (sim.period > 1 && m.lastStyle && chosen !== m.lastStyle && m.neededPrevStart !== null && wasNeeded === m.neededPrevStart && m.lastStyle === wasNeeded) {
-      changes.push(...trustChange(m, sim.config.trustRules.erraticStyleChange, { label: 'Style changed', cause: `You changed how you lead ${firstName(sim, m.id)}, though what ${pr(sim, m.id)} ${pr(sim, m.id) === 'they' ? 'need' : 'needs'} had not changed.`, rule: `Changing someone’s style without a reason lowers trust by ${-sim.config.trustRules.erraticStyleChange}.`, evidence: [{ quote: `${m.lastStyle ? STYLE_NAMES[m.lastStyle] : ''} to ${STYLE_NAMES[chosen]} for ${firstName(sim, m.id)}`, by: 'You', judgedByAI: false }] }));
+    if (sim.period > 1 && m.lastStyle && chosen !== m.lastStyle && m.neededPrevStart !== null && wasNeeded === m.neededPrevStart && fit(sim, m.lastStyle, wasNeeded) === 0) {
+      changes.push(...trustChange(m, sim.config.trustRules.erraticStyleChange, { label: 'Style changed', cause: `You changed how you lead ${firstName(sim, m.id)}, though what ${pr(sim, m.id)} ${pr(sim, m.id) === 'they' ? 'need' : 'needs'} had not changed.`, rule: `Changing someone’s style without a reason lowers trust by ${-sim.config.trustRules.erraticStyleChange}.`, evidence: [{ quote: `${m.lastStyle ? styleName(sim, m.lastStyle) : ''} to ${styleName(sim, chosen)} for ${firstName(sim, m.id)}`, by: 'You', judgedByAI: false }] }));
     }
     m.lastStyle = m.style ?? chosen;
     m.style = chosen;
     const diff = record(sim, m, chosen, 'weeklyStyle');
     const mt = mismatchType(diff, rng, misread(sim, m));
     const reason: Reason = {
-      evidence: [{ quote: `${STYLE_NAMES[chosen]} for ${firstName(sim, m.id)}${notes[m.id] ? `: ${notes[m.id]}` : ''}`, by: 'You', judgedByAI: false }],
+      evidence: [{ quote: `${styleName(sim, chosen)} for ${firstName(sim, m.id)}${notes[m.id] ? `: ${notes[m.id]}` : ''}`, by: 'You', judgedByAI: false }],
       label: mt === 0 ? 'Style fits' : 'Style missed',
       // Never name the needed style: working it out is the game (D54).
-      cause: `You chose ${STYLE_NAMES[chosen]} for ${firstName(sim, m.id)}, and it ${mt === 0 ? 'fit what they needed this week' : mt === 1 ? 'was not quite what they needed' : 'was far from what they needed'}.`,
+      cause: `You chose ${styleName(sim, chosen)} for ${firstName(sim, m.id)}, and it ${mt === 0 ? 'fit what they needed this week' : mt === 1 ? 'was not quite what they needed' : 'was far from what they needed'}.`,
       rule: `The weekly style lands as ${mt === 0 ? 'a fit' : mt === 1 ? 'a partial miss' : 'a clear miss'}: fits give ${triple(w.m0)}, partial misses ${triple(w.m1)}, clear misses ${triple(w.m2 ?? w.m1)}.`
     };
     changes.push(...effectChanges(sim, rng, m, mt === 0 ? w.m0 : mt === 1 ? w.m1 : w.m2 ?? w.m1, reason));
@@ -205,14 +206,14 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   switch (a.rule) {
     case 'weeklyStyle':
       for (const m of sim.members.filter(x => x.away === 0)) {
-        const mt = mismatchType(styleDifference(m.style ?? m.neededAtStart, m.neededAtStart), rng, misread(sim, m));
-        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: `${o.label} with the team. ${firstName(sim, m.id)} is being led ${m.style ? STYLE_NAMES[m.style] : 'without a set style'} this period, which ${mt === 0 ? 'fits' : 'does not fit'} what they need.`, rule: ruleText(a, o), evidence: [] }));
+        const mt = mismatchType(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng, misread(sim, m));
+        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: `${o.label} with the team. ${firstName(sim, m.id)} is being led ${m.style ? styleName(sim, m.style) : 'without a set style'} this period, which ${mt === 0 ? 'fits' : 'does not fit'} what they need.`, rule: ruleText(sim, a, o), evidence: [] }));
       }
       break;
     case 'training':
       for (const m of targets) {
-        const mt = trainingMismatch(styleDifference(m.style ?? m.neededAtStart, m.neededAtStart), rng);
-        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: 'Training', cause: `${firstName(sim, m.id)} went to the ${o.label.toLowerCase()}.`, rule: ruleText(a, o), evidence: [] }));
+        const mt = trainingMismatch(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng);
+        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: 'Training', cause: `${firstName(sim, m.id)} went to the ${o.label.toLowerCase()}.`, rule: ruleText(sim, a, o), evidence: [] }));
         m.away = o.away; m.awayReason = o.away ? 'training' : null; m.awaySetAt = sim.absSub; m.trainedInPeriod = sim.period;
         if (m.trainingRequestedPeriod === sim.period) changes.push(...trustChange(m, 4, { label: 'Request heard', cause: `${firstName(sim, m.id)} asked for training and got it.`, rule: 'Granting a training request raises trust by 4.', evidence: [] }));
       }
@@ -302,7 +303,7 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
     const m = targets[0];
     const top = [...sim.members].filter(x => x.away === 0).sort((x, y) => y.result - x.result)[0];
     const o = a.options[0];
-    changes.push(...effectChanges(sim, rng, m, o.effects.m0, { label: 'Rewarded', cause: `You rewarded ${firstName(sim, m.id)}.`, rule: ruleText(a, o), evidence: [] }));
+    changes.push(...effectChanges(sim, rng, m, o.effects.m0, { label: 'Rewarded', cause: `You rewarded ${firstName(sim, m.id)}.`, rule: ruleText(sim, a, o), evidence: [] }));
     m.recognizedAt = sim.absSub;
     if (!top || top === m) sim.fairRecognitions += 1;
     if (top && top !== m) {
@@ -396,13 +397,13 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     const tagged = targets.length === 1 && !UNTAGGED.has(it.format);
     for (const m of targets) {
       const n = needed(sim, m);
-      const diff = tagged ? record(sim, m, ev.styleUsed, a.key) : styleDifference(ev.styleUsed, n);
+      const diff = tagged ? record(sim, m, ev.styleUsed, a.key) : fit(sim, ev.styleUsed, n);
       if (tagged) changes.push(...intentGap(sim, m, ev));
       const mt = adjust(mismatchType(diff, rng, misread(sim, m)), ev.band);
       const reason: Reason = {
         label: label(firstName(sim, m.id)),
-        cause: `Your approach read as ${ev.confidence < 0.5 ? 'mostly ' : ''}${STYLE_NAMES[ev.styleUsed]}, which ${mt === 0 ? 'fit' : 'did not fit'} what ${firstName(sim, m.id)} needed.`,
-        rule: `${ruleText(a, option)} A conversation that goes very well counts one step better, one that falls flat one step worse.`,
+        cause: `Your approach read as ${ev.confidence < 0.5 ? 'mostly ' : ''}${styleName(sim, ev.styleUsed)}, which ${mt === 0 ? 'fit' : 'did not fit'} what ${firstName(sim, m.id)} needed.`,
+        rule: `${ruleText(sim, a, option)} A conversation that goes very well counts one step better, one that falls flat one step worse.`,
         evidence: quotes(ev)
       };
       changes.push(...effectChanges(sim, rng, m, effectFor(option, mt), reason, { boost: ev.band === 'strong' ? 1.2 : 1 }));
@@ -420,7 +421,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       const reason: Reason = {
         label: `Email to ${firstName(sim, m.id)} ${BAND_WORDS[ev.band]}`,
         cause: `Your email read as ${intent === 'warn' ? 'a warning' : intent === 'neutral' ? 'neutral' : 'congratulations'}; ${firstName(sim, m.id)}'s result has ${trend >= 0 ? 'held or risen' : 'fallen'} recently.`,
-        rule: `${ruleText(a, o)} Congratulate when results hold or rise, warn when they fall.`,
+        rule: `${ruleText(sim, a, o)} Congratulate when results hold or rise, warn when they fall.`,
         evidence: quotes(ev)
       };
       changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), reason, { scale: intent === 'neutral' ? 0.5 : 1 }));
@@ -540,7 +541,7 @@ function intentGap(sim: Sim, m: MemberSim, ev: Evaluation): Change[] {
   if (!gaps.includes(sim.period - 1)) return [];
   return trustChange(m, sim.config.trustRules.intentGap, {
     label: 'Mixed signals',
-    cause: `You said you would lead ${firstName(sim, m.id)} with ${STYLE_NAMES[m.style]}, but in conversation it came across as ${STYLE_NAMES[ev.styleUsed]}, two ${sim.config.time.period.unit}s running.`,
+    cause: `You said you would lead ${firstName(sim, m.id)} with ${styleName(sim, m.style)}, but in conversation it came across as ${styleName(sim, ev.styleUsed)}, two ${sim.config.time.period.unit}s running.`,
     rule: `When what you declare and what you do differ two ${sim.config.time.period.unit}s in a row, trust drops by ${-sim.config.trustRules.intentGap}.`,
     evidence: quotes(ev)
   });
@@ -548,10 +549,9 @@ function intentGap(sim: Sim, m: MemberSim, ev: Evaluation): Change[] {
 
 function createMemberFrom(sim: Sim, id: string): MemberSim {
   const p = person(sim, id);
-  const n = { skill: p.start.skill, morale: p.start.morale };
   return {
     id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? sim.config.trustRules.start, trustCap: sim.config.trustRules.capPerSubPeriod, trustMovedThisSub: 0, style: null, lastStyle: null, lastReaction: null,
-    neededAtStart: n.skill >= sim.config.thresholds.high ? (n.morale >= sim.config.thresholds.high ? 'E' : 'P') : n.morale >= sim.config.thresholds.high ? 'G' : 'D',
+    neededAtStart: needOf(p.start, sim.config.thresholds.high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: sim.period, revealed: false, concernShared: false, lastChange: 0,
     recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale
   };

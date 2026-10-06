@@ -17,6 +17,8 @@ export interface EvaluationInput {
   rubric?: Array<{ key: string }>;
   /** Skills this interaction rates (Report 2.0 linkage matrix); each gets a band as an observation. */
   skills?: string[];
+  /** The lens's styles (D70): the style shown is one of these keys. Readiness Based Leadership when left out. */
+  styles?: Array<{ key: string; name: string; short: string }>;
 }
 
 export interface Evaluator {
@@ -35,12 +37,29 @@ const REPLIES: Record<Band, string[]> = {
   harmful: ['Right. I will just get on with it then.', 'That is not really what I needed to hear.', 'Fine.']
 };
 
-const CUES: Record<Style, RegExp[]> = {
+/** Readiness Based Leadership cues, by its style keys. A lens that keeps a key keeps its cues. */
+const CUES: Record<string, RegExp[]> = {
   D: [/\bi need you to\b/i, /\bstep by step\b/i, /\bhere(?:'s| is) (?:the|my) plan\b/i, /\bin detail\b/i, /\bfirst,? .*then\b/i, /\bexactly\b/i, /\bcheck in (?:daily|every day)\b/i, /\bdo (?:this|it) (?:by|today|now)\b/i],
   G: [/\bthe reason\b/i, /\bwhy (?:this|it) matters\b/i, /\blet me explain\b/i, /\bi(?:'ll| will) (?:coach|guide|show)\b/i, /\bbuy in\b/i, /\bdoes (?:that|this) make sense\b/i, /\bpractise\b|\bpractice\b/i],
   P: [/\btogether\b/i, /\bwhat do you think\b/i, /\bhow can i help\b/i, /\blet'?s\b/i, /\byour (?:ideas|view|input)\b/i, /\bwe can\b/i, /\bhelp me understand\b/i],
   E: [/\byou decide\b/i, /\bup to you\b/i, /\bi trust you\b/i, /\byour call\b/i, /\bown (?:it|this)\b/i, /\bhow you (?:want|choose)\b/i, /\bi(?:'ll| will) step back\b/i]
 };
+const STOP = new Set(['you', 'your', 'yours', 'with', 'they', 'them', 'their', 'that', 'this', 'what', 'when', 'where', 'then', 'than', 'and', 'the', 'for', 'from', 'into', 'over', 'have', 'will', 'just', 'each', 'every', 'more', 'most', 'about', 'while', 'work', 'team']);
+
+/**
+ * Cues for each lens style, in lens order: a key the default lens has keeps its cues; any other style
+ * is read from the words of its name and short line (the mock stands in for the model, which gets the
+ * lens's styles in its input).
+ */
+export function styleCues(styles?: EvaluationInput['styles']): Array<[Style, RegExp[]]> {
+  if (!styles) return Object.entries(CUES);
+  return styles.map(s => {
+    if (CUES[s.key]) return [s.key, CUES[s.key]];
+    const words = [...new Set(`${s.name} ${s.short}`.toLowerCase().match(/[a-z]{4,}/g) ?? [])].filter(w => !STOP.has(w));
+    return [s.key, words.map(w => new RegExp(`\\b${w}`, 'i'))];
+  });
+}
+
 const ACK = /\b(?:sorry|thank(?:s| you)|appreciate|i hear you|i understand|that sounds|must be)\b/i;
 const OPEN_Q = /\b(?:what|how|why|tell me|walk me through)\b[^?]*\?/gi;
 const OPEN_Q_ONE = /\b(?:what|how|why|tell me|walk me through)\b[^?]*\?/i;
@@ -126,8 +145,9 @@ export const heuristicEvaluator: Evaluator = {
     const lines = REPLIES[band];
     return lines[text.length % lines.length];
   },
-  evaluate({ format, text, usedVoice, rubric, skills }) {
-    const scores = (Object.keys(CUES) as Style[]).map(s => [s, CUES[s].filter(rx => rx.test(text)).length] as const);
+  evaluate({ format, text, usedVoice, rubric, skills, styles }) {
+    const cues = styleCues(styles);
+    const scores = cues.map(([s, rxs]) => [s, rxs.filter(rx => rx.test(text)).length] as const);
     const total = scores.reduce((a, [, n]) => a + n, 0);
     const [styleUsed, top] = [...scores].sort((a, b) => b[1] - a[1])[0];
     const openQuestions = (text.match(OPEN_Q) ?? []).length;
@@ -149,9 +169,11 @@ export const heuristicEvaluator: Evaluator = {
     const dimensions = keys.map(key => ({ key, ...dimensionBand(key, text) }));
     const redFlags = RED_FLAGS.filter(([, rx]) => rx.test(text)).map(([k]) => k);
     const band = overallBand(dimensions, redFlags);
-    const cueSentences = sentences(text).filter(s => Object.values(CUES).flat().some(rx => rx.test(s)) || ACK.test(s) || INVITE.test(s));
+    const all = cues.flatMap(([, rxs]) => rxs);
+    const cueSentences = sentences(text).filter(s => all.some(rx => rx.test(s)) || ACK.test(s) || INVITE.test(s));
     return {
-      styleUsed: top > 0 ? styleUsed : 'G',
+      // No cue: the lens's second style (Guiding in Readiness Based Leadership), the middle ground.
+      styleUsed: top > 0 ? styleUsed : cues[Math.min(1, cues.length - 1)][0],
       confidence: total ? top / total : 0.25,
       band,
       evidence: (cueSentences.length ? cueSentences : sentences(text)).slice(0, 2),

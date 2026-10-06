@@ -2,28 +2,16 @@ import type { Rng } from './rng';
 
 /**
  * The iLead core model (docs/SIMULATION.md sections 2 and 3), as pure functions.
- * Skill, morale, result and trust are 0 to 100.
+ * Skill, morale, result and trust are 0 to 100. A member's need and the style difference come from the
+ * storyline's lens (`../lens`: `needOf`, `fitOf`), not from fixed styles (D70).
  */
 
-export type Style = 'D' | 'G' | 'P' | 'E';
+/** A lens style key, for example "D" in Readiness Based Leadership. */
+export type Style = string;
 export type Mismatch = 0 | 1 | 2;
 export type Triple = readonly [number, number, number];
 
 export interface Stats { skill: number; morale: number; result: number }
-
-/** Needed style from skill and morale, High at or above `high` (Model doc, section 4 and 5). */
-export function neededStyle(s: Pick<Stats, 'skill' | 'morale'>, high = 70): Style {
-  const hs = s.skill >= high, hm = s.morale >= high;
-  return !hs && !hm ? 'D' : !hs && hm ? 'G' : hs && !hm ? 'P' : 'E';
-}
-
-const AXES: Record<Style, [boolean, boolean]> = { D: [false, false], G: [false, true], P: [true, false], E: [true, true] };
-
-/** 0 when both skill and morale ranges match, 1 when one does, 2 when neither does. */
-export function styleDifference(a: Style, b: Style): Mismatch {
-  const [s1, m1] = AXES[a], [s2, m2] = AXES[b];
-  return ((s1 !== s2 ? 1 : 0) + (m1 !== m2 ? 1 : 0)) as Mismatch;
-}
 
 /**
  * Mismatch type with the Model doc's randomness: a difference of 1 or 2 shows up with probability

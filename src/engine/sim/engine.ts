@@ -73,7 +73,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
     if (extra) it.turns.push({ id: `t${++sim.seq}`, by: 'you', text: extra.text, voice: extra.usedVoice });
     const text = live.participantText(it);
     if (!text.trim()) throw new IntentError('Say something first', 'empty');
-    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey), skills: config.report.linkage[it.actionKey] ?? [] });
+    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey), skills: config.report.linkage[it.actionKey] ?? [], styles: config.lens.styles });
     // The person opening up in the conversation is what surfaces the concern (Design doc, Evaluation pipeline).
     if (it.concernRevealed) ev.flags.concernSurfaced = true;
     const reply = npcReply ?? (live.lastNpcWords(it) || ((await evaluator.reply?.({ format: it.format, text, band: ev.band })) ?? ''));
