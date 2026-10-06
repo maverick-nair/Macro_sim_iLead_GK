@@ -106,3 +106,14 @@ export const SponsorCallOnBoard: StoryObj = {
     </EngineProvider>
   )
 };
+
+/** The playable board as a portrait tablet lays it out, 834 by 1194 (D73): tap a person for the actions drawer. */
+export const PlayableTablet: StoryObj = {
+  render: () => (
+    <EngineProvider client={createMockClient({ seed: 1 })}>
+      <div style={{ width: 834, minHeight: 1194, display: 'flex', flexDirection: 'column' }}>
+        <EngineBoard onPause={noop} onSettings={noop} layout="tablet" />
+      </div>
+    </EngineProvider>
+  )
+};

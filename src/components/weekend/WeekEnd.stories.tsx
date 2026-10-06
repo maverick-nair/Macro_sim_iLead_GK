@@ -116,3 +116,6 @@ export const FromRunWeek3CheckIn: StoryObj = { render: () => <Frame><FromRun per
 export const FromRunUnlock: StoryObj = { render: () => <Frame><FromRun period={4} reward initial={{ step: 'unlock' }} /></Frame> };
 /** The end of a real run: banner, report and badges, then See your results. */
 export const FromRunEnded: StoryObj = { render: () => <Frame><FromRun period={8} ended /></Frame> };
+
+/** The week end report at 834 on a portrait tablet (D73): one column. */
+export const TabletPortrait: StoryObj = { decorators: [S => <div data-tablet="" style={{ width: 834 }}><S /></div>] };

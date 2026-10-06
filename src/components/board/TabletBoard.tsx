@@ -201,7 +201,7 @@ export function ActionSheet(p: ActionSheetProps) {
   return (
     <Dialog.Root open onOpenChange={o => { if (!o) p.onClose(); }}>
       <Dialog.Overlay className="fixed inset-0 z-45 flex justify-end bg-surface-scrim">
-        <Dialog.Content aria-describedby={undefined} aria-modal="true" aria-label={person ? t('tablet.sheet.aria', { who: person.name }) : t('tablet.sheet.teamTitle')}
+        <Dialog.Content aria-describedby={undefined} aria-labelledby={undefined} aria-modal="true" aria-label={person ? t('tablet.sheet.aria', { who: person.name }) : t('tablet.sheet.teamTitle')}
           onOpenAutoFocus={() => { back.current = p.opener() ?? null; }}
           // Focus already moved on (the pick bar, the outcome, a conversation): leave it. Else back to the opener.
           onCloseAutoFocus={e => {
