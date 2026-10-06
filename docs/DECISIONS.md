@@ -153,7 +153,7 @@ Later component tokens followed the same rule (4 Oct 2026): the action and inbox
 
 **D25. Copy duplicated until M2.** Decided. Style names and descriptions, and mood names, are now in the catalog. The legend, profile, style setting definitions and some toasts still read the scenario data until the engine takes over in M2.
 
-**D26. End screen badges disagree with the data.** Open.
+**D26. End screen badges disagree with the data.** Closed (2026-10-06): since M5 the engine decides badges from the 10 badge rules (D62), so the end screen shows what was earned.
 The design marks the first 4 badges as earned on the End screen, but the scenario has 2 earned. "Pipeline builder" and "Steady hand" show as earned with a "Hint:" detail. Kept as designed; the engine decides in M5.
 
 **D27. AI labels.** Decided.

@@ -78,7 +78,7 @@
 | M4 | Done, approved |
 | Quality review | Done (D57 to D61) |
 | M5 | Done, approved |
-| M6 | Done, awaiting approval |
+| M6 | Done, approved |
 | M7 | Done, approved |
 | Tablet portrait (834) | Done, awaiting approval (D73) |
 | Author chat prototype | Done, awaiting approval (D74) |
