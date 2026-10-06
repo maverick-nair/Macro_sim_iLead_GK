@@ -216,7 +216,7 @@ export const Report = z.object({
   narratives: z.object({
     overall: z.array(Copy).min(1),
     capability: z.object({ low: Copy, mid: Copy, high: Copy }),
-    /** By dominant style, keyed by the lens's style keys. A style without a line adds none. */
+    /** By dominant style, keyed by the lens's style keys. A style without a line adds none; lines for styles the lens does not have are never used. */
     dominant: z.record(z.string(), Copy)
   }).default(DEFAULT_NARRATIVES),
   development: z.record(Key, z.object({ practice: Copy, onTheJob: Copy })).default(DEFAULT_DEVELOPMENT),
@@ -503,7 +503,6 @@ export const StorylineConfig = z.object({
   c.actions.forEach((a, i) => a.options.forEach((o, j) => {
     if (o.style !== undefined && !styleKeys.has(o.style)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'style'], message: `No style called ${o.style} in the lens` });
   }));
-  for (const k of Object.keys(c.report.narratives.dominant)) if (!styleKeys.has(k)) ctx.addIssue({ code: 'custom', path: ['report', 'narratives', 'dominant', k], message: `No style called ${k} in the lens` });
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))
     ctx.addIssue({ code: 'custom', path: ['thresholds'], message: 'Thresholds must rise: low < amber < high' });
 });

@@ -41,6 +41,9 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
   if (sim.phase !== 'style') throw new IntentError('Styles are set at the start of a period', 'wrongPhase');
   const missing = sim.members.filter(m => !styles[m.id]);
   if (missing.length) throw new IntentError(`Set a style for ${missing.map(m => m.id).join(', ')}`, 'missingStyles');
+  const keys = new Set(sim.config.lens.styles.map(s => s.key));
+  const unknown = sim.members.filter(m => !keys.has(styles[m.id]));
+  if (unknown.length) throw new IntentError(`No such style: ${unknown.map(m => styles[m.id]).join(', ')}`, 'unknownStyle');
   const changes: Change[] = [];
   const w = sim.config.weeklyStyle;
   for (const [memberId, text] of Object.entries(notes)) if (text.trim()) sim.styleNotes.push({ period: sim.period, memberId, text: text.trim() });

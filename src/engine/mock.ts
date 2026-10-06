@@ -1,18 +1,20 @@
-import { parseStoryline, type StorylineConfig } from './config';
+import { parseStoryline, type StorylineConfig, type StorylineInput } from './config';
 import { EngineView, Intent, IntentResult } from './contract';
 import { mockStream } from '../ai/mockStream';
 import { EngineError, parse, type EngineClient } from './client';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
+import { withSixStyles } from './storylines/sixStyles';
 import { neededStyles, play, type Policy } from './sim/policies';
 
 /**
  * The mock engine adapter: the same engine code the server runs, in the browser, on a storyline
  * fixture. Loaded lazily by createDefaultClient so it never weighs on the initial bundle.
  */
-export function defaultStoryline(): StorylineConfig {
-  const r = parseStoryline(salesElevator);
+export function defaultStoryline(lens?: string | null): StorylineConfig {
+  // `?lens=six_styles` plays Sales Elevator with the Six Leadership Styles test lens (D70), for demos and tests.
+  const r = parseStoryline(lens === 'six_styles' ? withSixStyles(salesElevator as unknown as StorylineInput) : salesElevator);
   if (!r.ok) throw new Error(r.issues.join('\n'));
   return r.config;
 }
@@ -31,8 +33,8 @@ async function fastForward(engine: ReturnType<typeof createEngine>, config: Stor
   }
 }
 
-export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number } = {}): EngineClient {
-  const config = opts.config ?? defaultStoryline();
+export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number; lens?: string | null } = {}): EngineClient {
+  const config = opts.config ?? defaultStoryline(opts.lens);
   const engine = createEngine(config, { seed: opts.seed ?? 1, evaluator: opts.evaluator });
   const ready = opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
   const wait = async () => { await ready; if (opts.latencyMs) await new Promise(r => setTimeout(r, opts.latencyMs)); };
