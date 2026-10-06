@@ -58,6 +58,13 @@ export interface LiveShellProps {
   onInterrupt?: () => void;
   /** The format's workspace: RolePlayStage, EmailStage, MeetingStage or SponsorStage. */
   children: ReactNode;
+  /**
+   * `tablet`: the portrait tablet's live screen (D73): one column, the brief above the stage with the
+   * goal always showing (or beside the 1:1 portrait, `briefInStage`), the 56px voice composer.
+   */
+  layout?: 'desk' | 'tablet';
+  /** The stage shows the brief itself (the 1:1 on a tablet, beside the portrait). */
+  briefInStage?: boolean;
 }
 
 const HeaderMic = () => (
@@ -121,6 +128,7 @@ export function LiveShell(p: LiveShellProps) {
   const secs = Math.max(0, Math.round(p.timer.seconds));
   const time = t('liveshell.timer.value', { minutes: Math.floor(secs / 60), seconds: String(secs % 60).padStart(2, '0') });
   const npcSpeaking = p.input?.conversation === 'npcSpeaking';
+  const tablet = p.layout === 'tablet';
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Escape' && npcSpeaking && p.onInterrupt) {
       e.preventDefault();
@@ -131,12 +139,12 @@ export function LiveShell(p: LiveShellProps) {
     // Escape anywhere in the shell interrupts the NPC; the controls inside stay the interactive elements.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div onKeyDown={onKeyDown} className="flex flex-1 flex-col">
-      <header className="flex items-center border-b border-line-default bg-surface-material backdrop-blur-(--il-liveshell-header-blur) gap-4 px-6 py-3">
-        <span aria-hidden="true" className="flex size-9 flex-none items-center justify-center rounded-12 bg-(image:--il-fill-brand) text-liveshell-on-signal">
+      <header className="flex items-center border-b border-line-default bg-surface-material backdrop-blur-(--il-liveshell-header-blur) gap-4 px-6 py-3 tablet-portrait:min-h-18 tablet-portrait:gap-3">
+        <span aria-hidden="true" className="flex size-9 flex-none tablet-portrait:hidden items-center justify-center rounded-12 bg-(image:--il-fill-brand) text-liveshell-on-signal">
           <HeaderMic />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
-          <b className="truncate text-17">{t('liveshell.title', { format: p.format, name: p.personName })}</b>
+          <b className="truncate text-17 tablet-portrait:text-18">{t('liveshell.title', { format: p.format, name: p.personName })}</b>
           <span className="text-12 text-fg-secondary">
             {p.meta.action && p.format === 'roleplay'
               ? t('liveshell.subtitle.action', { action: p.meta.action, cost: days(p.meta.cost) })
@@ -144,14 +152,14 @@ export function LiveShell(p: LiveShellProps) {
           </span>
         </div>
         <button type="button" onClick={p.onPause} aria-label={t('liveshell.timer.aria', { paused: p.timer.paused, time, direction: p.timer.counts === 'up' ? 'elapsed' : 'left' })}
-          className={`flex h-8.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-raised px-3 py-0 text-13 font-700 text-fg-primary ${FOCUS}`}>
+          className={`flex h-8.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-raised px-3 py-0 text-13 font-700 text-fg-primary tablet-portrait:h-11 tablet-portrait:rounded-12 ${FOCUS}`}>
           {p.timer.paused ? <PlayIcon /> : <PauseIcon />}
           <span>{time}</span>
         </button>
-        <span className="text-12 text-fg-secondary">{t('liveshell.clock.paused')}</span>
+        <span className="text-12 text-fg-secondary tablet-portrait:hidden">{t('liveshell.clock.paused')}</span>
         {p.hint && (
           <button type="button" onClick={p.hint.onRequest} disabled={!p.hint.available}
-            className={`h-8.5 cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
+            className={`h-8.5 cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 tablet-portrait:h-11 tablet-portrait:rounded-12 tablet-portrait:px-4 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
             {t('liveshell.hint.button', { used: p.hint.text !== null })}
           </button>
         )}
@@ -167,11 +175,11 @@ export function LiveShell(p: LiveShellProps) {
         </div>
       )}
 
-      <div className={`grid min-h-0 flex-1 ${p.briefOpen ? 'grid-cols-(--il-liveshell-body-columns-brief)' : 'grid-cols-(--il-liveshell-body-columns-collapsed)'} gap-5 px-6 pt-5 pb-6`}>
-        <LiveBriefCard format={p.format} brief={p.brief} pronoun={p.pronoun} tip={p.hint?.text ?? null} open={p.briefOpen} onToggle={p.onBriefToggle} />
-        <section aria-label={t('liveshell.stage.aria')} className="@container flex min-h-0 min-w-0 flex-col gap-3.5">
+      <div className={tablet ? 'flex min-h-0 flex-1 flex-col gap-4 px-6 pt-5 pb-7' : `grid min-h-0 flex-1 ${p.briefOpen ? 'grid-cols-(--il-liveshell-body-columns-brief)' : 'grid-cols-(--il-liveshell-body-columns-collapsed)'} gap-5 px-6 pt-5 pb-6`}>
+        {!(tablet && p.briefInStage) && <LiveBriefCard format={p.format} brief={p.brief} pronoun={p.pronoun} tip={p.hint?.text ?? null} open={p.briefOpen} onToggle={p.onBriefToggle} layout={p.layout} />}
+        <section aria-label={t('liveshell.stage.aria')} className={`@container flex min-h-0 min-w-0 flex-col gap-3.5 ${tablet ? 'flex-1' : ''}`}>
           {p.children}
-          {p.input && <LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} />}
+          {p.input && <LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} layout={p.layout} />}
         </section>
       </div>
     </div>

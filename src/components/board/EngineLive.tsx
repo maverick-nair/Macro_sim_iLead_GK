@@ -20,6 +20,8 @@ import { InterviewStage, type Candidate } from '../liveformats/InterviewStage';
 import { PlanForm, type PlanFields, type PlanTextField } from '../liveformats/PlanForm';
 import type { StageNpc, StageTurn } from '../liveformats/shared';
 import type { FinishLive } from './EngineBoard';
+import { LiveBriefCard } from '../liveshell/LiveBriefCard';
+import './tabletMessages';
 
 /**
  * A live interaction on the engine (spec, Live interaction screens). The engine holds the turns;
@@ -50,6 +52,8 @@ export interface EngineLiveProps {
   /** Called once the interaction is left without an evaluation (nothing was said). */
   onDone: () => void;
   onError: (code: string) => void;
+  /** The portrait tablet's live screen (D73): one column, the 1:1 brief beside the portrait, 56px composer. */
+  layout?: 'desk' | 'tablet';
 }
 
 const PLACEHOLDER = '/assets/npc/placeholder.svg';
@@ -61,14 +65,14 @@ const OWN_KEYS = 'input, textarea, select, button, a[href], [contenteditable="tr
 const moodRing = (m: LiveView['brief']['mood']): LiveMood => (m === 'frustrated' || m === 'concerned' ? (m === 'frustrated' ? 'frustrated' : 'guarded') : 'open');
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
-export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, suspended = false, held = false, onPause, onFinish, onDone, onError }: EngineLiveProps) {
+export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, suspended = false, held = false, onPause, onFinish, onDone, onError, layout = 'desk' }: EngineLiveProps) {
   const { t } = useI18n();
   const client = useEngineClient();
   const intent = useIntent();
   const ai = useAiStream();
   const [mode, setMode] = useState<LiveMode>(input === 'text' || !voiceConsent ? 'text' : 'voice');
   const [draft, setDraft] = useState('');
-  const [briefOpen, setBriefOpen] = useState(true);
+  const [briefOpen, setBriefOpen] = useState(layout !== 'tablet');
   const [paused, setPaused] = useState(false);
   const startSeconds = Math.round(lv.minutes * 60);
   const [seconds, setSeconds] = useState(startSeconds);
@@ -413,7 +417,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
           />
         );
       default:
-        return <RolePlayStage person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} onReplay={replay} />;
+        return <RolePlayStage person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} onReplay={replay} layout={layout}
+          aside={layout === 'tablet' ? <LiveBriefCard layout="tablet" bare format="roleplay" brief={brief} pronoun={speaker.pronoun} tip={lv.hint.text} open={briefOpen} onToggle={() => setBriefOpen(o => !o)} periodUnit={v.clock.periodUnit} /> : undefined} />;
     }
   })();
 
@@ -456,6 +461,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
           levels: speech.levels
         }}
         onInterrupt={interrupt}
+        layout={layout}
+        briefInStage={shellFormat === 'roleplay'}
       >
         <div role="status" className={notice ? 'rounded-14 border border-status-attention bg-status-attention-soft px-3.5 py-2.5 text-13' : 'sr-only'}>{notice}</div>
         {stage}

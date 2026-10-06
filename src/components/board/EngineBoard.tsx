@@ -741,7 +741,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <div className={reacting ? 'hidden' : 'flex flex-1 flex-col'}>
             <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
               <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
-                suspended={!!reacting} held={!!app.paused} onPause={app.onPause} onFinish={finishLive} onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
+                suspended={!!reacting} held={!!app.paused} layout={tablet ? 'tablet' : 'desk'} onPause={app.onPause} onFinish={finishLive} onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
             </Suspense>
           </div>
         )}
