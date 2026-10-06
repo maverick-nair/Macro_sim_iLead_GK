@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import { useI18n } from '../i18n';
 import type { Brand } from './types';
 
@@ -23,4 +23,15 @@ export function ClientLogo() {
   }
   if (logo.kind === 'text') return <span className="flex-none text-15 font-800 text-fg-primary">{logo.text}</span>;
   return <span className="flex min-h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo', { name: logo.name })}</span>;
+}
+
+/**
+ * The iLead wordmark with the client's logo before it, 10px apart as in the HUD. Without a client
+ * brand it renders the wordmark alone, exactly as before (no wrapper), so the default theme's layout
+ * does not move.
+ */
+export function WithClientLogo({ children, className = '' }: { children: ReactNode; className?: string }) {
+  const brand = useBrand();
+  if (!brand) return children;
+  return <div className={`flex items-center gap-2.5 ${className}`}><ClientLogo />{children}</div>;
 }
