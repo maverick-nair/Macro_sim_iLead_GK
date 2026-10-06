@@ -1,7 +1,8 @@
-import { lazy, StrictMode, Suspense, useEffect, useMemo } from 'react';
+import { lazy, startTransition, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApiContext, createDefaultApi } from './api';
 import { App } from './app/App';
+import { prefetch } from './app/prefetch';
 import { SmallScreenGate } from './app/SmallScreenGate';
 import { EngineProvider } from './engine/react';
 import { createDefaultClient } from './engine/client';
@@ -19,6 +20,22 @@ const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ 
 // Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
 const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
 
+/** The participant app's clients, made from the launch link once per load. */
+function launch() {
+  const q = new URLSearchParams(location.search);
+  // The launch link names the participant (LMS or GenieKreator); settings and the session are theirs.
+  const participant = q.get('participant') ?? 'local';
+  // `name` stands in for the launch's display name with the mock API (the server reads it from the launch).
+  const name = q.get('name');
+  // `?history=1`: the mock serves one earlier attempt, for the report's progress section (D75).
+  const api = createDefaultApi(participant, name, { client: q.get('client'), themeUrl: q.get('themeUrl'), history: q.get('history') === '1' });
+  const engine = createDefaultClient(participant);
+  // The first screen's reads leave now, while the app is still starting, not after its first render (D78).
+  startTheme(() => api.getTheme());
+  const onEngine = q.get('engine') !== 'off';
+  return { q, api: prefetch(api, ['getScenario', 'getSession']), engine: onEngine ? prefetch(engine, ['view']) : engine };
+}
+
 /**
  * Full screen participant app.
  * `?theme=light` (or `dark`) picks the mode over the client theme's preference, `?client=halden` serves
@@ -27,19 +44,8 @@ const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev')
  * The client theme loads lazily (src/theme, D72): the default theme shows until it lands, and stays on any failure.
  * Laptops, desktops and tablets only (D69): on a smaller screen a notice covers the app (`app/SmallScreenGate.tsx`).
  */
-function Play() {
-  const q = new URLSearchParams(location.search);
-  // The launch link names the participant (LMS or GenieKreator); settings and the session are theirs.
-  const participant = q.get('participant') ?? 'local';
-  // `name` stands in for the launch's display name with the mock API (the server reads it from the launch).
-  const name = q.get('name');
-  const client = q.get('client');
-  const themeUrl = q.get('themeUrl');
-  // `?history=1`: the mock serves one earlier attempt, for the report's progress section (D75).
-  const history = q.get('history') === '1';
-  const api = useMemo(() => createDefaultApi(participant, name, { client, themeUrl, history }), [participant, name, client, themeUrl, history]);
-  const engine = useMemo(() => createDefaultClient(participant), [participant]);
-  useEffect(() => startTheme(() => api.getTheme()), [api]);
+function Play({ launched }: { launched: ReturnType<typeof launch> }) {
+  const { q, api, engine } = launched;
   const { theme: applied } = useThemeState();
   const systemLight = useMediaQuery('(prefers-color-scheme: light)');
   const param = q.get('theme');
@@ -56,18 +62,24 @@ function Play() {
   );
 }
 
+const path = location.pathname.replace(/\/+$/, '');
+const play = !['/screens', '/states', '/author', '/group'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
+const launched = play ? launch() : null;
+
 function Root() {
-  const path = location.pathname.replace(/\/+$/, '');
   if (path === '/screens') return <Suspense><ScreensGallery /></Suspense>;
   if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
   if (path === '/author') return <Suspense><AuthorPage /></Suspense>;
   if (path === '/group') return <Suspense><GroupPage /></Suspense>;
   if (ReportDev && new URLSearchParams(location.search).get('report') === '1') return <Suspense><ReportDev /></Suspense>;
-  return <Play />;
+  return launched && <Play launched={launched} />;
 }
 
-createRoot(document.getElementById('root')!).render(
+// The first render is a transition, so React renders it in slices and yields between them: on a slow
+// CPU one long task after the scripts load was most of the first screen's blocking time (D78).
+const root = createRoot(document.getElementById('root')!);
+startTransition(() => root.render(
   <StrictMode>
     <Root />
   </StrictMode>
-);
+));

@@ -8,7 +8,7 @@ Optional mood variants: ron.happy.jpg, ron.concerned.jpg, ... (happy, neutral, t
 concerned, frustrated), per the GenieKreator Configuration Spec expression set.
 
 Each photo is centre cropped to the 4:5 head and shoulders frame the board uses (faces sit in the
-top third), resized to 480x600, and saved to public/assets/npc/<id>[.<mood>].jpg. The storyline's
+top third), resized to 480x600, and saved as WebP (quality 82, D78) to public/assets/npc/<id>[.<mood>].webp. The storyline's
 `portrait` and `portraits` fields are then set for every person with a file. Calibration values are
 left untouched (unlike re-running the 1.0 importer).
 """
@@ -30,7 +30,7 @@ def prepare(src: Path, dst: Path):
     else:  # too tall: keep the top, where the face is
         nh = round(w * H / W); top = min((h - nh) // 4, h - nh)
         img = img.crop((0, top, w, top + nh))
-    img.resize((W, H), Image.LANCZOS).save(dst, 'JPEG', quality=86, optimize=True, progressive=True)
+    img.resize((W, H), Image.LANCZOS).save(dst, 'WEBP', quality=82, method=6)
 
 def main():
     photos = Path(sys.argv[1])
@@ -46,7 +46,7 @@ def main():
         pid, _, mood = f.stem.partition('.')
         if pid not in ids or (mood and mood not in MOODS):
             print(f'skip {f.name}: unknown person or mood'); continue
-        name = f'{pid}.{mood}.jpg' if mood else f'{pid}.jpg'
+        name = f'{pid}.{mood}.webp' if mood else f'{pid}.webp'
         prepare(f, OUT / name)
         done.setdefault(pid, {})[mood or ''] = f'/assets/npc/{name}'
     if sponsor_id in done and '' in done[sponsor_id]:

@@ -71,7 +71,8 @@ def to_person(name, d):
                start=dict(h), byStage=d['byStage'], profile=prof)
     if pid in CONCERNS: out['hiddenConcern'] = CONCERNS[pid]
     if pid in CONCERN_LINES: out['concernLine'] = CONCERN_LINES[pid]
-    if (ROOT / 'public' / 'assets' / 'npc' / f'{pid}.png').exists(): out['portrait'] = f'/assets/npc/{pid}.png'
+    for ext in ('webp', 'png'):  # the compressed variant first (scripts/assets/optimize.py, D78)
+        if (ROOT / 'public' / 'assets' / 'npc' / f'{pid}.{ext}').exists(): out['portrait'] = f'/assets/npc/{pid}.{ext}'; break
     return out
 
 members = [to_person(n, d) for n, d in people.items() if d['active']]

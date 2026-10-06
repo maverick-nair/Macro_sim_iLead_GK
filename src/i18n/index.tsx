@@ -34,18 +34,28 @@ export interface I18n {
   number: (n: number) => string;
 }
 
+/** Parsed messages per locale, shared by every catalog without overrides (each provider used to parse its own). */
+const shared = new Map<string, Map<string, IntlMessageFormat>>();
+
 export function createI18n(locale = 'en', override?: Partial<Messages>): I18n {
   const base = LOCALES[locale] ?? LOCALES.en;
-  const messages: Messages = { ...LOCALES.en.messages, ...base.messages, ...override };
-  const cache = new Map<string, IntlMessageFormat>();
-  const nf = new Intl.NumberFormat(locale);
+  // The English catalog as is when nothing is overridden: copying ~1500 keys per provider showed in the first load's long task (D78).
+  const messages: Messages = !override && base === LOCALES.en ? base.messages : { ...LOCALES.en.messages, ...base.messages, ...override };
+  let cache = override ? undefined : shared.get(locale);
+  if (!cache) {
+    cache = new Map<string, IntlMessageFormat>();
+    if (!override) shared.set(locale, cache);
+  }
+  const formats = cache;
+  // Made on first use: building an Intl formatter is not free, and many catalogs never format a number.
+  let nf: Intl.NumberFormat | undefined;
   const t = (key: MessageKey, values?: Values): string => {
-    let f = cache.get(key);
+    let f = formats.get(key);
     if (!f) {
       const text = messages[key] ?? registered[key];
       if (text === undefined) return key;
       f = new IntlMessageFormat(text, locale);
-      cache.set(key, f);
+      formats.set(key, f);
     }
     // Intl formats negative numbers with a hyphen; copy rules want the minus sign.
     return String(f.format(values)).replace(/-(?=\d)/g, MINUS);
@@ -55,7 +65,7 @@ export function createI18n(locale = 'en', override?: Partial<Messages>): I18n {
     dir: RTL.has(locale.split('-')[0]) ? 'rtl' : base.dir,
     t,
     delta: n => formatDelta(n, locale),
-    number: n => nf.format(n).replace(/-(?=\d)/g, MINUS)
+    number: n => (nf ??= new Intl.NumberFormat(locale)).format(n).replace(/-(?=\d)/g, MINUS)
   };
 }
 

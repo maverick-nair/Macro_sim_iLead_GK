@@ -23,7 +23,7 @@ async function axe(page: Page) {
   return r.violations.map(v => `${v.id}: ${v.nodes.length} ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
 }
 
-const SIX = ['Vision Setter', 'Coach', 'Harmoniser', 'Collaborator', 'Pace Setter', 'Commander'];
+const SIX = ['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Pace Setter', 'Commander'];
 const OLD = /Directing|Guiding|Partnering|Entrusting/;
 const styles = (page: Page) => page.getByRole('radiogroup', { name: /^Leadership style for/ });
 const sideways = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -52,7 +52,7 @@ for (const width of [1440, 1024]) {
     // The list view: one radio column per style, headed by its letter, named in full for screen readers.
     await page.getByRole('radio', { name: 'List' }).click();
     const table = page.getByRole('table', { name: 'Styles for every team member' });
-    await expect(table.getByRole('columnheader', { name: 'Harmoniser' })).toBeVisible();
+    await expect(table.getByRole('columnheader', { name: 'Harmonizer' })).toBeVisible();
     await expect(table.getByRole('radio', { name: 'Pace Setter for Kent Goldberg' })).toBeVisible();
     expect(await sideways(page)).toBe(0);
     expect(await axe(page)).toEqual([]);

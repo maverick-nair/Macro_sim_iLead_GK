@@ -294,10 +294,10 @@ describe('six style lens', () => {
   it('names six styles from the lens, with their narratives and needs', () => {
     const g = buildGroupReport({ runs, cohort: cohort('development', six) });
     expect(g.cohort.lens).toEqual({ id: 'six_styles', title: 'Six Leadership Styles' });
-    expect(g.styles!.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmoniser', 'Collaborator', 'Pace Setter', 'Commander']);
+    expect(g.styles!.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Pace Setter', 'Commander']);
     expect(g.styles!.preferred.map(p => p.share)).toEqual([0, 60, 0, 0, 0, 40]);
     expect(g.styles!.perStyle.find(s => s.key === 'command')!.narrative[0]).toBe('When the group used Commander, it mostly fit what people needed.');
-    expect(g.styles!.perStyle.find(s => s.key === 'harmony')!.narrative[0]).toBe('The group did not use Harmoniser. It suits people who are capable but drained.');
+    expect(g.styles!.perStyle.find(s => s.key === 'harmony')!.narrative[0]).toBe('The group did not use Harmonizer. It suits people who are capable but drained.');
   });
 
   it('a benchmark of another lens compares everything but the styles', () => {

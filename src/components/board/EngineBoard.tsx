@@ -246,7 +246,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }, []);
 
   // A new period clears the style draft and any half planned action.
-  useEffect(() => { setDraft({}); setNotes({}); setStyleView(x => ({ ...x, summary: false })); setFlow(null); }, [v.clock.period]);
+  const [draftPeriod, setDraftPeriod] = useState(v.clock.period);
+  if (draftPeriod !== v.clock.period) {
+    setDraftPeriod(v.clock.period);
+    setDraft({}); setNotes({}); setStyleView(x => ({ ...x, summary: false })); setFlow(null);
+  }
 
   const styling = v.phase === 'style';
   const ended = v.phase === 'ended';
@@ -719,6 +723,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     if (!oc || reacting || v.live || styling || (tablet && !tabletReady)) return;
     if (shownOutcome.current === oc.id) return;
     shownOutcome.current = oc.id;
+    // A new outcome from the engine is announced when focus cannot move to it (D78 keeps this finding).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (flow || card || endScreen) { setAnnounce(oc.headline); return; }
     const h = headlineIn(outcomeRef.current);
     h?.focus({ preventScroll: true });
@@ -806,6 +812,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const tab: SheetTab = sm && sheet ? sheet : 'team';
     const openActions = v.actions.filter(a => a.scope === 'team' && !tile(a.key, null).block).length;
     const left = t('time.left', { amount: amount(v.clock.capacityLeft) });
+    // The drawer and pick bar props carry handlers that read refs when they run, not while rendering (D78 keeps this finding).
+    /* eslint-disable react-hooks/refs */
     body = (
       <>
         {tablet ? (
@@ -861,6 +869,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         </Suspense>
       </>
     );
+    /* eslint-enable react-hooks/refs */
   }
 
   return (

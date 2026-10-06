@@ -275,6 +275,8 @@ function usePlayable() {
     setTimeout(() => { setMood(m => Math.min(2, m + 1)); speak(Math.min(step.current, KENT_LINES.length - 1)); }, 1200);
   };
   useEffect(() => {
+    // A story's scripted demo starts its first line on mount.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     speak(0);
     return () => clearInterval(stream.current);
     // Start the first line once.

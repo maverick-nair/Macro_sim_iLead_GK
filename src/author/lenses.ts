@@ -86,7 +86,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
     ],
     styles: [
       style('D', 'D', 'High direction', 'lowSkill_lowMorale', ['Directing', 'Show the Way', 'Directing'], 'You set the task and check in closely.', 'You set the task, explain how, and check in closely on each {work}.'),
-      style('G', 'G', 'Direction with support', 'lowSkill_highMorale', ['Guiding', 'Coach Along', 'Guiding'], 'You explain the why and coach as they practise.', 'You explain the why and coach while they practise on real {work}s.'),
+      style('G', 'G', 'Direction with support', 'lowSkill_highMorale', ['Guiding', 'Coach Along', 'Guiding'], 'You explain the why and coach as they practice.', 'You explain the why and coach while they practice on real {work}s.'),
       style('P', 'P', 'Shared decisions', 'highSkill_lowMorale', ['Partnering', 'Work Together', 'Partnering'], 'You decide together and share the work.', 'You decide together and share ownership of the work.'),
       style('E', 'E', 'High autonomy', 'highSkill_highMorale', ['Entrusting', 'Hand Over', 'Entrusting'], 'You hand over the goal and step back.', 'You hand over the goal and step back.')
     ],
@@ -128,7 +128,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
     bestFor: 'Leaders owning both delivery and morale', basedOn: 'Transformational and Transactional Leadership, Burns and Bass', worksWith: 'adaptive',
     npcDesign: 'Each member has an engagement level and an output level.',
     eventDesign: 'Target pressure, recognition moments, underperformance, career conversations, vision setting.',
-    actionClassification: ['Inspiring vision', 'Intellectual challenge', 'Individual attention', 'Role modelling', 'Goal setting', 'Outcome based recognition', 'Corrective action'],
+    actionClassification: ['Inspiring vision', 'Intellectual challenge', 'Individual attention', 'Role modeling', 'Goal setting', 'Outcome based recognition', 'Corrective action'],
     dimensions: [
       dim('team_engagement', 'Team engagement', 'a link between the work and what each person cares about', 'Write what each person cares about most at work, and how this quarter connects to it.', 'Open one 1:1 this week with the person\'s goals before the numbers.'),
       dim('delivery_performance', 'Delivery performance', 'clear actions against the target, followed through', 'Rewrite this week\'s plan as three actions with owners and dates.', 'Check progress on one target midweek, not at the end.'),
@@ -138,7 +138,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
       style('goals', 'SG', 'Goal setting', 'lowSkill_lowMorale', ['Set Clear Goals', 'Plan It Together', 'Set Clear Goals'], 'You agree the target and the steps to it.', 'You agree a clear target for each {work} and the steps that get there.'),
       style('correct', 'CC', 'Corrective action', 'lowSkill_highMorale', ['Correct Course', 'Fix It Together', 'Correct Course'], 'You give direct feedback and fix the approach.', 'You give direct, specific feedback and fix the approach while they learn.'),
       style('attend', 'PA', 'Individual attention', 'highSkill_lowMorale', ['Personal Attention', 'Check In', 'Personal Attention'], 'You give time to the person, not only the task.', 'You give time to the person and what they need, not only the task.'),
-      style('recognise', 'RR', 'Outcome based recognition', 'highSkill_lowMorale', ['Recognise Results', 'Celebrate Wins', 'Recognise Results'], 'You name what they achieved, specifically.', 'You recognise specific results, so effort feels seen.'),
+      style('recognize', 'RR', 'Outcome based recognition', 'highSkill_lowMorale', ['Recognize Results', 'Celebrate Wins', 'Recognize Results'], 'You name what they achieved, specifically.', 'You recognize specific results, so effort feels seen.'),
       style('inspire', 'IV', 'Inspiring vision', 'highSkill_highMorale', ['Inspire the Vision', 'Share the Why', 'Inspire the Vision'], 'You connect the work to a bigger purpose.', 'You connect each {work} to where {company} is heading and why it matters.'),
       style('challenge', 'CT', 'Intellectual challenge', 'highSkill_highMorale', ['Challenge Thinking', 'Spark Ideas', 'Challenge Thinking'], 'You ask them to rethink how it is done.', 'You question the usual way and ask them to find a better one.')
     ],
@@ -177,7 +177,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
   },
   {
     id: 'five_practices', title: 'Five Leadership Practices',
-    description: 'Assess leadership through vision, role modelling, challenging the status quo, enabling others and recognition.',
+    description: 'Assess leadership through vision, role modeling, challenging the status quo, enabling others and recognition.',
     bestFor: 'Senior leaders and high potentials', basedOn: 'Kouzes and Posner', worksWith: 'inspire_deliver',
     npcDesign: 'Members respond to consistency between what the participant says and does.',
     eventDesign: 'Every week has at least one opportunity for each practice.',
@@ -187,12 +187,12 @@ export const LENS_LIBRARY: LibraryLens[] = [
       dim('shared_vision', 'Sharing the vision', 'a future the team can picture and wants', 'Describe where your team will be in a year in three sentences.', 'Share that picture in your next team meeting and ask what it means to them.'),
       dim('question_process', 'Questioning the process', 'small experiments that improve how work gets done', 'List one process your team complains about and one experiment to try.', 'Run that experiment for a week and share what you learned.'),
       dim('enable_others', 'Enabling others', 'trust and room for others to act', 'Name one decision you could hand to the team.', 'Hand it over this week and support, without taking it back.'),
-      dim('encourage', 'Encouraging the heart', 'recognition that is specific and sincere', 'List what each person contributed last month.', 'Recognise one person specifically, in front of the team, this week.')
+      dim('encourage', 'Encouraging the heart', 'recognition that is specific and sincere', 'List what each person contributed last month.', 'Recognize one person specifically, in front of the team, this week.')
     ],
     styles: [
       style('example', 'SE', 'Model the way', 'lowSkill_lowMorale', ['Set the Example', 'Show by Doing', 'Set the Example'], 'You show the standard by doing it yourself.', 'You show the standard on a real {work} and ask them to follow.'),
       style('enable', 'EO', 'Enable others to act', 'lowSkill_highMorale', ['Enable Others', 'Build Them Up', 'Enable Others'], 'You build their skill and trust them to act.', 'You build their skill and confidence so they can act on their own.'),
-      style('encourage', 'EH', 'Encourage the heart', 'highSkill_lowMorale', ['Encourage', 'Lift Spirits', 'Encourage'], 'You recognise effort and lift their spirits.', 'You recognise their contribution and lift their spirits.'),
+      style('encourage', 'EH', 'Encourage the heart', 'highSkill_lowMorale', ['Encourage', 'Lift Spirits', 'Encourage'], 'You recognize effort and lift their spirits.', 'You recognize their contribution and lift their spirits.'),
       style('vision', 'SV', 'Inspire a shared vision', 'highSkill_highMorale', ['Share the Vision', 'Paint the Picture', 'Share the Vision'], 'You paint a future they want to build.', 'You paint a future for {company} that they want to help build.'),
       style('question', 'QP', 'Challenge the process', 'highSkill_highMorale', ['Question the Process', 'Try Something New', 'Question the Process'], 'You invite them to change how it is done.', 'You invite them to test a better way of handling each {work}.')
     ],
@@ -213,7 +213,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
     dimensions: [
       dim('problem_diagnosis', 'Problem diagnosis', 'telling a known fix apart from a change people must make', 'Sort last month\'s problems into known fixes and changes in how people work.', 'Before you solve the next problem, ask whether it needs a fix or a change.'),
       dim('managing_pressure', 'Managing pressure', 'enough pressure to move, without overwhelming people', 'Note when the team felt too much pressure last month, and too little.', 'Name one change this week and pace it so people can keep up.'),
-      dim('mobilising_change', 'Mobilising change', 'the work of change handed back to the people who must change', 'Write the change your team is facing and who needs to do what differently.', 'Ask the team to own one part of the change, and stay close.')
+      dim('mobilizing_change', 'Mobilizing change', 'the work of change handed back to the people who must change', 'Write the change your team is facing and who needs to do what differently.', 'Ask the team to own one part of the change, and stay close.')
     ],
     styles: [
       style('fix', 'F', 'Fixing directly', 'lowSkill_lowMorale', ['Fix It', 'Sort It Out', 'Fix It'], 'You solve the problem with a known fix.', 'You solve it with a known fix, quickly and clearly.'),
@@ -236,7 +236,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
     eventDesign: 'Decisions, problem solving moments, stretch opportunities, debates.',
     actionClassification: ['Asking versus telling', 'Stretching people', 'Debating before deciding', 'Handing over ownership', 'Rescuing'],
     dimensions: [
-      dim('talent_use', 'Talent utilisation', 'use of each person\'s full ability', 'Write each person\'s strongest ability and how much of it the work uses.', 'Give one person a task that uses an ability they rarely get to use.'),
+      dim('talent_use', 'Talent utilization', 'use of each person\'s full ability', 'Write each person\'s strongest ability and how much of it the work uses.', 'Give one person a task that uses an ability they rarely get to use.'),
       dim('decision_quality', 'Decision quality', 'debate before decisions, with the team\'s best thinking', 'Recall a recent decision you made alone and who could have improved it.', 'Bring the next real decision to the team as a question, then decide.'),
       dim('ownership_transfer', 'Ownership transfer', 'ownership handed over and left with the person', 'List the problems people bring you that they could own.', 'When someone brings you a problem this week, ask what they propose.')
     ],
@@ -256,7 +256,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
   },
   {
     id: 'client_model', title: 'Client Leadership Model',
-    description: 'Upload your organisation\'s leadership framework. AI maps it into team behaviour, scoring and the report.',
+    description: 'Upload your organization\'s leadership framework. AI maps it into team behavior, scoring and the report.',
     bestFor: 'Client specific builds', basedOn: 'Client provided framework', worksWith: 'readiness_based',
     npcDesign: 'Generated from the confirmed client framework.',
     eventDesign: 'Generated.', actionClassification: [], dimensions: [], styles: null,

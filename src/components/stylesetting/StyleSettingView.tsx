@@ -1,4 +1,4 @@
-import { useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
+import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { StyleKey } from '../../data/types';
 import { NoWrapButton } from '../../ds/Button';
 import { Heading } from '../Heading';
@@ -143,9 +143,9 @@ export function StyleSettingView(p: StyleSettingViewProps) {
   const confirmDisabled = p.confirmDisabled ?? !complete;
 
   // Focus moves into the summary when it opens, but not when the screen starts on it.
-  const sawOther = useRef(false);
-  const focusSummary = sawOther.current;
-  if (view !== 'summary') sawOther.current = true;
+  const [sawOther, setSawOther] = useState(view !== 'summary');
+  if (view !== 'summary' && !sawOther) setSawOther(true);
+  const focusSummary = sawOther;
 
   const where = t('stylesetting.where', { period: mark(0), total: number(p.periodCount) });
   const tipFor = (id: string) => (p.tooltip === undefined ? undefined : p.tooltip?.id === id ? p.tooltip.style : null);

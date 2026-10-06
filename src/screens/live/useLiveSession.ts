@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { LiveVariant } from '../../data/types';
 import type { AppModel, InputMode } from '../../app/types';
 import type { MicState } from '../../components/live/MicButton';
@@ -128,13 +128,13 @@ export function micHintOf(s: LiveState, input: InputMode): MicHintInput {
 
 export function useLiveSession(props: LiveSessionProps) {
   const propsRef = useRef(props);
-  propsRef.current = props;
+  useLayoutEffect(() => { propsRef.current = props; });
   const scripts = useCallback((): LiveScript => scriptsFor(propsRef.current.variant, propsRef.current.app?.who), []);
 
-  const [state, setRaw] = useState<LiveState>(() => initialStateFor(props.uiState, scripts()));
+  const [state, setRaw] = useState<LiveState>(() => initialStateFor(props.uiState, scriptsFor(props.variant, props.app?.who)));
   /** Latest state, read by timers the way the class read `this.state`. */
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useLayoutEffect(() => { stateRef.current = state; });
 
   /** Class style setState: shallow merges a patch or an updater result. */
   const setState = useCallback((patch: LivePatch) => {

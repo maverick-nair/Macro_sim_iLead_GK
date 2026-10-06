@@ -107,7 +107,7 @@ export function dimensionsOf(id: LeadershipLensModule['primary']['id'], client: 
   if (id !== 'client_model') return LENS_BY_ID[id].dimensions;
   return client.map(d => {
     const example = d.behaviours[0] ? lower(d.behaviours[0].replace(/[.!?]+$/, '')) : lower(d.name);
-    return { key: slug(d.name, 'd'), name: d.name, focus: `${lower(d.name)} (for example, ${example})`, practice: `Pick one ${d.name} behaviour and plan where you will use it this week.`, onTheJob: `Ask a colleague to watch for one ${d.name} behaviour and tell you what they saw.` };
+    return { key: slug(d.name, 'd'), name: d.name, focus: `${lower(d.name)} (for example, ${example})`, practice: `Pick one ${d.name} behavior and plan where you will use it this week.`, onTheJob: `Ask a colleague to watch for one ${d.name} behavior and tell you what they saw.` };
   });
 }
 
@@ -153,7 +153,7 @@ function draftReport(module: LeadershipLensModule, lens: Lens) {
 
 const PERSONA: Record<string, string> = {
   six_styles: '{Pron} reacts strongly to how {pron} is led, and remembers it.',
-  inspire_deliver: '{Pron} cares about {pos} numbers and about feeling recognised.',
+  inspire_deliver: '{Pron} cares about {pos} numbers and about feeling recognized.',
   servant: '{Pron} brings blockers to you rather than working around them.',
   five_practices: '{Pron} watches whether you do what you say.',
   adaptive: '{Pron} finds the changes at {company} unsettling.',

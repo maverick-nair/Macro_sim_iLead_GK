@@ -105,6 +105,8 @@ export function EngineEnd({ view, voiceConsent, send, say, onViewReport, onLookA
     if (dictating === null) return;
     if (speech.status === 'review') {
       const said = speech.transcript.trim();
+      // The speech controller is an external store: its result lands here (D78 keeps this finding).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (said) setAnswers(a => a.map((x, j) => (j === dictating ? `${x} ${said}`.trim() : x)));
       speech.cancel();
       setDictating(null);

@@ -56,8 +56,11 @@ export function applyTheme(theme: AppliedTheme | null, el: HTMLElement = documen
 export function startTheme(fetch: () => Promise<unknown>, inline: unknown = readLaunchTheme()): void {
   if (started) return;
   started = true;
+  // The request goes out with the loader's chunk, not after it (D78).
+  const raw = inline === undefined ? fetch() : null;
+  raw?.catch(() => undefined);
   import('./loader')
-    .then(m => m.loadTheme({ inline, fetch }))
+    .then(m => m.loadTheme({ inline, fetch: () => raw ?? fetch() }))
     .catch(() => null)
     .then(theme => {
       let applied = theme;

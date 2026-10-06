@@ -16,7 +16,7 @@ export const SIX_STYLES_LENS: Lens = {
   styles: [
     { key: 'vision', letter: 'VS', name: 'Vision Setter', short: 'You paint the destination and let them find the route.', description: 'You share where the team is heading and why it matters, then let people choose how to get there.' },
     { key: 'coach', letter: 'CO', name: 'Coach', short: 'You build their strengths for the long run.', description: 'You link their goals to the work and help them grow, one conversation at a time.' },
-    { key: 'harmony', letter: 'HA', name: 'Harmoniser', short: 'You put feelings first and mend relationships.', description: 'You build harmony and heal rifts, so people feel valued and safe.' },
+    { key: 'harmony', letter: 'HA', name: 'Harmonizer', short: 'You put feelings first and mend relationships.', description: 'You build harmony and heal rifts, so people feel valued and safe.' },
     { key: 'collab', letter: 'CL', name: 'Collaborator', short: 'You ask for ideas and decide together.', description: 'You invite views and build agreement before you commit.' },
     { key: 'pace', letter: 'PS', name: 'Pace Setter', short: 'You set a high bar and model it yourself.', description: 'You set demanding standards, lead by example and expect people to keep up.' },
     { key: 'command', letter: 'CM', name: 'Commander', short: 'You give clear orders and expect them followed.', description: 'You take charge and give firm direction. It helps most in a crisis.' }

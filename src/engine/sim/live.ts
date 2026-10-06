@@ -85,7 +85,7 @@ export const personaNpc: NpcModel = {
       const p = sp.persona;
       if (/\b(?:experience|background|previous|before)\b/i.test(said)) return { text: p?.profile.remarks || `I have ${p?.profile.experience || 'some'} of experience in this area.` };
       if (/\b(?:skill|strength|good at)\b/i.test(said)) return { text: `My strengths are ${p?.profile.skills || 'working with clients'}.` };
-      if (/\b(?:why|motivat|interest)\b/i.test(said)) return { text: 'I want a team where I can grow and where results are recognised.' };
+      if (/\b(?:why|motivat|interest)\b/i.test(said)) return { text: 'I want a team where I can grow and where results are recognized.' };
       return { text: pick(['Good question. I would start by understanding the customer, then work out the next step with them.', 'I learned to keep promises small and keep them. That has worked for me.', 'I would ask the team first. They usually know where the problem is.'], ctx.turnsSoFar) };
     }
     const canOpenUp = sp.persona?.concernLine && !ctx.concernRevealed && (sp.trust >= 45 || ACK.test(said)) && (CONCERN_Q.test(said) || (OPEN_Q.test(said) && ctx.turnsSoFar >= 2));

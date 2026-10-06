@@ -75,7 +75,7 @@ describe('Six Leadership Styles, end to end (D70)', () => {
     const random = await play(config, 'random', 3);
     const v = EngineView.parse(good.view);
     expect(v.phase).toBe('ended');
-    expect(v.lens.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmoniser', 'Collaborator', 'Pace Setter', 'Commander']);
+    expect(v.lens.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Pace Setter', 'Commander']);
     expect(v.lens.needs.map(n => n.key)).toEqual([...NEEDS]);
     // The good player reads every need through the fit table and gets every weekly style right.
     expect(v.periods.every(p => p.week.styleFit.correct === p.week.styleFit.total)).toBe(true);

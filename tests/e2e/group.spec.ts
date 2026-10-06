@@ -130,7 +130,7 @@ test('six styles at 834 in the light theme and in dark: six style rows, axe clea
   await open(page, '?lens=six_styles&theme=light');
   await expect(page.getByText('Sales Elevator, Innov8 Elevators · Six Leadership Styles lens')).toBeVisible();
   await expect(page.getByRole('article', { name: 'Pace Setter' })).toBeVisible();
-  await expect(page.getByRole('article', { name: 'Harmoniser' })).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Harmonizer' })).toBeVisible();
   expect(await noSideways(page)).toBe(true);
   expect(await axe(page)).toEqual([]);
   await open(page, '?lens=six_styles');

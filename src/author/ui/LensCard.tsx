@@ -22,8 +22,6 @@ export function LensCard({ lens, n, checked, recommended, name, disabled, onSele
   const about = useId();
   return (
     <div className={`flex flex-col gap-2 rounded-16 border border-solid p-4 ${checked ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'}`}>
-      {/* The label's text (title, description, Best for) sits deeper than the lint rule looks. */}
-      {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className={`flex gap-3 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
         <input type="radio" name={name} value={lens.id} checked={checked} disabled={disabled} onChange={onSelect} aria-labelledby={title} aria-describedby={about}
           className="mt-1 size-4 shrink-0 accent-(--il-color-accent-default)" />

@@ -2,6 +2,11 @@ import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
 import type { ReportViewInput } from './reportContract';
 
+// Zod compiles a fast path for each object schema on its first parse. The views are parsed a few times
+// per minute, so the compile cost is never paid back: on a slow CPU it was most of the first load's
+// long task (D78). The plain path is used instead.
+z.config({ jitless: true });
+
 /**
  * The engine contract: the payloads the engine sends and the intents it accepts. The engine is
  * authoritative and server side; the UI renders these and never computes outcomes, scores or

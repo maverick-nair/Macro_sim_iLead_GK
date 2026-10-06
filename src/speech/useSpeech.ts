@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { createSpeechController, type SpeechController, type SpeechControllerOptions, type SpeechState } from './controller';
 import type { SpeechProvider } from './types';
 
@@ -18,7 +18,10 @@ export type UseSpeech = SpeechState &
  */
 export function useSpeech(provider: SpeechProvider, options: UseSpeechOptions): UseSpeech {
   const latest = useRef(options);
-  latest.current = options;
+  useLayoutEffect(() => { latest.current = options; });
+  // One controller per provider, made with the options of that render; its callbacks read the latest
+  // options when they fire. Reading the ref here is deliberate (D78 keeps this lint finding).
+  /* eslint-disable react-hooks/refs */
   const controller = useMemo(
     () =>
       createSpeechController(provider, {
@@ -30,6 +33,7 @@ export function useSpeech(provider: SpeechProvider, options: UseSpeechOptions): 
       }),
     [provider]
   );
+  /* eslint-enable react-hooks/refs */
   useEffect(() => () => controller.dispose(), [controller]);
   useEffect(() => controller.setConsented(options.consented), [controller, options.consented]);
   useEffect(

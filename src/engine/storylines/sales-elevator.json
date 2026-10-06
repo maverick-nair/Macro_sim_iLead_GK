@@ -104,7 +104,7 @@
         "relations": ""
       },
       "hiddenConcern": "He expected a lot more from this job, and feels it is not what he was promised.",
-      "portrait": "/assets/npc/kent.png",
+      "portrait": "/assets/npc/kent.webp",
       "concernLine": "Honestly? This job is not what I was promised. I expected a lot more when I joined, and nobody seems to remember that."
     },
     {
@@ -154,7 +154,7 @@
         "relations": ""
       },
       "hiddenConcern": "She left Beta Elevators over how she was managed, and watches closely how you lead.",
-      "portrait": "/assets/npc/beth.png",
+      "portrait": "/assets/npc/beth.webp",
       "concernLine": "I left Beta Elevators because of how I was managed there. So yes, I watch closely how things are run here."
     },
     {
@@ -204,7 +204,7 @@
         "relations": ""
       },
       "hiddenConcern": "He has been in Lead Qualification for 3 years and wants to move to Sales Conversion.",
-      "portrait": "/assets/npc/justin.png",
+      "portrait": "/assets/npc/justin.webp",
       "concernLine": "I have been in Lead Qualification for three years. I really want a shot at Sales Conversion."
     },
     {
@@ -253,7 +253,7 @@
         "remarks": "",
         "relations": ""
       },
-      "portrait": "/assets/npc/derick.png"
+      "portrait": "/assets/npc/derick.webp"
     },
     {
       "id": "green",
@@ -301,7 +301,7 @@
         "remarks": "Green Bell has influential contacts to make his proposals work and is the go-to guy in the team for anything proposal related.",
         "relations": ""
       },
-      "portrait": "/assets/npc/green.png"
+      "portrait": "/assets/npc/green.webp"
     },
     {
       "id": "lowe",
@@ -350,7 +350,7 @@
         "relations": ""
       },
       "hiddenConcern": "He feels his technical depth goes unnoticed.",
-      "portrait": "/assets/npc/lowe.png",
+      "portrait": "/assets/npc/lowe.webp",
       "concernLine": "I put a lot of technical depth into my proposals, and it never seems to get noticed."
     },
     {
@@ -399,7 +399,7 @@
         "remarks": "Jack Holt is a top performer at Innov8 and has received a multitude of positive appraisals from his superiors.",
         "relations": ""
       },
-      "portrait": "/assets/npc/jack.png"
+      "portrait": "/assets/npc/jack.webp"
     },
     {
       "id": "peter",
@@ -448,7 +448,7 @@
         "relations": ""
       },
       "hiddenConcern": "His appraisals have gone downhill and he needs encouragement, but he will not ask for it.",
-      "portrait": "/assets/npc/peter.png",
+      "portrait": "/assets/npc/peter.webp",
       "concernLine": "My last appraisals have not gone well. I am trying, but some encouragement would go a long way."
     },
     {
@@ -497,7 +497,7 @@
         "remarks": "Ruth is a perfectionist and highly skilled in conversion and order processing.",
         "relations": ""
       },
-      "portrait": "/assets/npc/ruth.png"
+      "portrait": "/assets/npc/ruth.webp"
     },
     {
       "id": "mandy",
@@ -545,7 +545,7 @@
         "remarks": "Mandy Lobert is popular among her ex-employees to have closed tough deals with clients who had opted for competitor's products.",
         "relations": ""
       },
-      "portrait": "/assets/npc/mandy.png"
+      "portrait": "/assets/npc/mandy.webp"
     }
   ],
   "candidates": [

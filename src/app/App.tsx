@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useApi } from '../api';
 import { Toast } from '../components/feedback/Toast';
 import { I18nProvider, useI18n } from '../i18n';
@@ -130,7 +130,8 @@ export function App(p: AppProps) {
   const api = useApi();
   const [s, setS] = useState<State>(INITIAL);
   const sRef = useRef(s);
-  sRef.current = s;
+  // Latest state for timers and callbacks, updated once the render commits.
+  useLayoutEffect(() => { sRef.current = s; });
   const reactTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const pendingOutcome = useRef<Promise<Outcome> | null>(null);
@@ -281,6 +282,8 @@ export function App(p: AppProps) {
   const resume = useCallback((recap: boolean) => set({ screen: 'board', step: null, overlay: recap ? 'resume' : null }), [set]);
   const returnFocus = () => opener.current;
 
+  // The screens' props carry handlers that read refs when they run, not while rendering (D78 keeps this finding).
+  /* eslint-disable react-hooks/refs */
   return (
     <I18nProvider>
     <BrandContext.Provider value={p.clientTheme?.brand ?? null}>
@@ -337,5 +340,6 @@ export function App(p: AppProps) {
     </BrandContext.Provider>
     </I18nProvider>
   );
+  /* eslint-enable react-hooks/refs */
 }
 

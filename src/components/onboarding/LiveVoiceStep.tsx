@@ -57,6 +57,8 @@ export default function LiveVoiceStep({ sampleName, onNext, onSkip, provider: gi
   useEffect(() => {
     if (take === null) return;
     clearTimeout(limit.current);
+    // The speech controller is an external store: its result lands here (D78 keeps this finding).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSilent(!take);
     if (take) setCheck('heard');
   }, [take]);
@@ -65,6 +67,7 @@ export default function LiveVoiceStep({ sampleName, onNext, onSkip, provider: gi
   useEffect(() => {
     if (speech.status === 'listening' || speech.status === 'finishing') { wasListening.current = true; return; }
     if (speech.status === 'review') { wasListening.current = false; return; }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- as above, the speech controller's status
     if (speech.status === 'idle' && wasListening.current) { wasListening.current = false; clearTimeout(limit.current); if (!speech.error) setSilent(true); }
   }, [speech.status, speech.error]);
 

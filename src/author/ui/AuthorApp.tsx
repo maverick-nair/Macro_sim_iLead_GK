@@ -106,6 +106,8 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
     }
   }, [drafters]);
 
+  // The first question is asked on mount (from the server or the templates); D78 keeps this finding.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void advance(Brief.parse({}), [], {}); }, [advance]);
   useEffect(() => { if (current && !busy) input.current?.focus(); }, [current, busy, editing]);
 
@@ -163,9 +165,8 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
   }
 
   const clientNeeded = !!primary && usesClientModel({ primary, secondary });
-  useEffect(() => {
-    if (clientNeeded && dims === null && brief.framework) setDims(extractFramework(brief.framework));
-  }, [clientNeeded, dims, brief.framework]);
+  // The framework's dimensions are read once, when the client model needs them (state adjusted while rendering).
+  if (clientNeeded && dims === null && brief.framework) setDims(extractFramework(brief.framework));
   const clientReady = !clientNeeded || (dimsConfirmed && (dims?.filter(d => d.name.trim()).length ?? 0) >= 2);
 
   const selection = { primary: primary!, secondary, clientDimensions: (dims ?? []).filter(d => d.name.trim()) };
@@ -299,14 +300,14 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
                   <h3 className="m-0 text-16 font-700">Client Leadership Model</h3>
                   {dims && dims.length > 0 ? (
                     <>
-                      <p className="m-0 text-14 text-fg-secondary">I read these dimensions from your framework. Confirm them or edit them. I map each to team behaviour, an event type and a scoring dimension.</p>
+                      <p className="m-0 text-14 text-fg-secondary">I read these dimensions from your framework. Confirm them or edit them. I map each to team behavior, an event type and a scoring dimension.</p>
                       <ClientFrameworkTable dimensions={dims} disabled={!!draft} confirmed={dimsConfirmed} onChange={d => { setDims(d); setDimsConfirmed(false); }} onConfirm={() => setDimsConfirmed(true)} />
                     </>
                   ) : (
                     <div className="flex flex-col gap-2">
                       <p className="m-0 text-14" role={frameworkMissing ? 'alert' : undefined}>{frameworkMissing
-                        ? 'I could not find dimensions in that text. Paste the framework with a heading for each dimension and its behaviours as a bullet list.'
-                        : 'Paste your leadership framework so I can map it. Use a heading for each dimension and its behaviours as a bullet list.'}</p>
+                        ? 'I could not find dimensions in that text. Paste the framework with a heading for each dimension and its behaviors as a bullet list.'
+                        : 'Paste your leadership framework so I can map it. Use a heading for each dimension and its behaviors as a bullet list.'}</p>
                       <label className="flex flex-col gap-1.5">
                         <span className="text-13 font-600 text-fg-secondary">Framework text</span>
                         <textarea rows={6} className={FIELD} value={frameworkText} onChange={e => setFrameworkText(e.target.value)} />

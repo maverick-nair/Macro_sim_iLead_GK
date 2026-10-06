@@ -12,10 +12,14 @@ const ClientContext = createContext<EngineClient | null>(null);
 export const VIEW_KEY = ['engine', 'view'] as const;
 
 export function EngineProvider({ client, children }: { client?: EngineClient; children: ReactNode }) {
-  const [state] = useState(() => ({
-    client: client ?? createDefaultClient(),
-    queries: new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, refetchOnWindowFocus: false, retry: 1 }, mutations: { retry: false } } })
-  }));
+  const [state] = useState(() => {
+    const c = client ?? createDefaultClient();
+    const queries = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, refetchOnWindowFocus: false, retry: 1 }, mutations: { retry: false } } });
+    // Ask for the view now, before the rest of the first render, not once it has mounted (D78: the first
+    // screen's largest paint waits for it). The query below picks up the same request.
+    void queries.prefetchQuery({ queryKey: VIEW_KEY, queryFn: () => c.view() });
+    return { client: c, queries };
+  });
   return (
     <QueryClientProvider client={state.queries}>
       <ClientContext.Provider value={state.client}><ViewLens>{children}</ViewLens></ClientContext.Provider>

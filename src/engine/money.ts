@@ -8,18 +8,32 @@ export interface MoneySettings {
   display: 'symbol' | 'narrowSymbol' | 'code';
 }
 
-export function moneyFormatter(money: MoneySettings) {
+export type MoneyFormatter = ReturnType<typeof makeFormatter>;
+const formatters = new Map<string, MoneyFormatter>();
+
+/**
+ * Building an Intl formatter is slow (three per call showed in the first load's long task, D78): one
+ * set per currency, locale and display, each formatter made on first use.
+ */
+export function moneyFormatter(money: MoneySettings): MoneyFormatter {
+  const key = `${money.locale}|${money.currency}|${money.display}`;
+  let f = formatters.get(key);
+  if (!f) formatters.set(key, (f = makeFormatter(money)));
+  return f;
+}
+
+function makeFormatter(money: MoneySettings) {
   const base = { style: 'currency' as const, currency: money.currency, currencyDisplay: money.display };
-  const full = new Intl.NumberFormat(money.locale, { ...base, minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  const exact = new Intl.NumberFormat(money.locale, base);
-  const compact = new Intl.NumberFormat(money.locale, { ...base, notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 });
-  const fix = (s: string) => s.replace(/-/g, '\u2212');
+  let full: Intl.NumberFormat | undefined;
+  let exact: Intl.NumberFormat | undefined;
+  let compact: Intl.NumberFormat | undefined;
+  const fix = (s: string) => s.replace(/-/g, '−');
   return {
     /** HUD and board: whole units, "$41,200", "¥4,120,000", "₹41,20,000". */
-    format: (n: number) => fix(full.format(n)),
+    format: (n: number) => fix((full ??= new Intl.NumberFormat(money.locale, { ...base, minimumFractionDigits: 0, maximumFractionDigits: 0 })).format(n)),
     /** Report tables: the currency's own decimals. */
-    exact: (n: number) => fix(exact.format(n)),
+    exact: (n: number) => fix((exact ??= new Intl.NumberFormat(money.locale, base)).format(n)),
     /** Tight spaces: "$240K", "₹24L". */
-    compact: (n: number) => fix(compact.format(n))
+    compact: (n: number) => fix((compact ??= new Intl.NumberFormat(money.locale, { ...base, notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 })).format(n))
   };
 }

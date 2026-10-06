@@ -63,7 +63,7 @@ export interface LensView {
  */
 export const READINESS_STYLES: LensStyle[] = [
   { key: 'D', letter: 'D', name: 'Directing', short: 'You set the task and check in closely.', description: 'You set the task, explain how, and check in closely.' },
-  { key: 'G', letter: 'G', name: 'Guiding', short: 'You explain the why and coach as they practise.', description: 'You explain the why and coach while they practise.' },
+  { key: 'G', letter: 'G', name: 'Guiding', short: 'You explain the why and coach as they practice.', description: 'You explain the why and coach while they practice.' },
   { key: 'P', letter: 'P', name: 'Partnering', short: 'You decide together and share the work.', description: 'You decide together and share ownership of the work.' },
   { key: 'E', letter: 'E', name: 'Entrusting', short: 'You hand over the goal and step back.', description: 'You hand over the goal and step back.' }
 ];

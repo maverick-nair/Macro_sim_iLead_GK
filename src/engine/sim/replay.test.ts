@@ -19,7 +19,9 @@ async function digest(policy: Policy, seed: number) {
   const r = view.report!;
   const facts = { members, money, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
     skills: r.skills.map(s => ({ key: s.key, observations: s.observations, score: s.score, level: s.level, quotes: s.quotes })), summary: r.summary };
-  return createHash('sha256').update(JSON.stringify(facts)).digest('hex').slice(0, 16);
+  // Portraits moved to WebP (D78), an asset change, not a decision: hashed as the PNGs they were recorded with.
+  const json = JSON.stringify(facts).replace(/\/assets\/npc\/(\w+)\.webp/g, '/assets/npc/$1.png');
+  return createHash('sha256').update(json).digest('hex').slice(0, 16);
 }
 
 describe('seeded replay', () => {

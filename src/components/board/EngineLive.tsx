@@ -293,6 +293,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   useEffect(() => {
     if (!planField || speech.status !== 'review') return;
     const said = speech.transcript.trim();
+    // The speech controller is an external store: its result lands here (D78 keeps this finding).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (said) setPlan(f => ({ ...f, [planField]: `${f[planField]} ${said}`.trim() }));
     speech.cancel();
     setPlanField(null);
@@ -301,6 +303,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   useEffect(() => {
     if (!dictating || speech.status !== 'review') return;
     const said = speech.transcript.trim();
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- as above, the speech controller's result
     if (said) setEmail(e => (dictating === 'subject' ? { ...e, subject: `${e.subject} ${said}`.trim() } : { ...e, body: `${e.body} ${said}`.trim() }));
     speech.cancel();
     setDictating(null);

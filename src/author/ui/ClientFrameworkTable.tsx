@@ -29,7 +29,7 @@ export function ClientFrameworkTable({ dimensions, onChange, onConfirm, confirme
           <thead>
             <tr className="text-13 text-fg-secondary">
               <th scope="col" className="w-1/4 p-2 font-700">Dimension</th>
-              <th scope="col" className="p-2 font-700">Observable behaviours (one per line)</th>
+              <th scope="col" className="p-2 font-700">Observable behaviors (one per line)</th>
               <th scope="col" className="w-1/4 p-2 font-700">Levels (comma separated)</th>
               <th scope="col" className="p-2"><span className="sr-only">Remove</span></th>
             </tr>
@@ -38,7 +38,7 @@ export function ClientFrameworkTable({ dimensions, onChange, onConfirm, confirme
             {dimensions.map((d, i) => (
               <tr key={i} className="border-t border-solid border-line-default align-top">
                 <td className="p-2"><input className={FIELD} aria-label={`Dimension ${i + 1} name`} value={d.name} disabled={disabled} onChange={e => set(i, { name: e.target.value })} /></td>
-                <td className="p-2"><textarea className={FIELD} rows={Math.max(2, d.behaviours.length)} aria-label={`Dimension ${i + 1} behaviours`} value={d.behaviours.join('\n')} disabled={disabled} onChange={e => set(i, { behaviours: lines(e.target.value) })} /></td>
+                <td className="p-2"><textarea className={FIELD} rows={Math.max(2, d.behaviours.length)} aria-label={`Dimension ${i + 1} behaviors`} value={d.behaviours.join('\n')} disabled={disabled} onChange={e => set(i, { behaviours: lines(e.target.value) })} /></td>
                 <td className="p-2"><input className={FIELD} aria-label={`Dimension ${i + 1} levels`} value={d.levels.join(', ')} disabled={disabled} onChange={e => set(i, { levels: items(e.target.value) })} /></td>
                 <td className="p-2"><button type="button" className={BUTTON.link} disabled={disabled} onClick={() => onChange(dimensions.filter((_, j) => j !== i))}>Remove<span className="sr-only"> dimension {i + 1}</span></button></td>
               </tr>

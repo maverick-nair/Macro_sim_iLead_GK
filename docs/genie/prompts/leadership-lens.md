@@ -28,7 +28,7 @@ You are the Leadership Lens module inside GenieKreator's iLead Business Simulati
   "brief": { "roleLevel": "First time managers", "industry": "Banking and financial services", "challenge": "Leading through change", "client": "Acme Bank", "teamSize": 10, "process": ["Leads", "Qualify", "Proposal", "Negotiation", "Conversion"], "duration": "full", "region": "india", "language": "English, India", "framework": null, "tone": "professional", "documents": [] },
   "leadership_lens": {
     "library_version": 1,
-    "primary": { "id": "adaptive", "title": "Adaptive Leadership", "npc_design": "...", "event_design": "...", "action_classification": ["Fixing directly", "..."], "scoring_dimensions": ["Problem diagnosis", "Managing pressure", "Mobilising change"] },
+    "primary": { "id": "adaptive", "title": "Adaptive Leadership", "npc_design": "...", "event_design": "...", "action_classification": ["Fixing directly", "..."], "scoring_dimensions": ["Problem diagnosis", "Managing pressure", "Mobilizing change"] },
     "secondary": { "id": "inspire_deliver", "title": "Inspire and Deliver", "report_only_dimensions": ["Team engagement", "Delivery performance", "Balance index"] },
     "client_model": { "used": false, "source_document": "", "confirmed_dimensions": [] },
     "context": { "industry": "Banking and financial services", "role_level": "First time managers", "team_size": "10", "business_challenge": "Leading through change", "client_name": "Acme Bank" },

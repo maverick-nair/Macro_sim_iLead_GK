@@ -103,7 +103,7 @@
   "report.analytics.none": "No spoken conversations",
   "report.method.title": "How this report was made",
   "report.method.facts": "Built from {conversations, plural, one {# conversation} other {# conversations}} and {observations, plural, one {# skill observation} other {# skill observations}}.",
-  "report.method.reviewed": "{reviewed, select, true {Reviewed by an assessor: {count, plural, one {# conversation} other {# conversations}} of {total}. Their judgement replaces the AI's.} other {Not yet reviewed by an assessor}}",
+  "report.method.reviewed": "{reviewed, select, true {Reviewed by an assessor: {count, plural, one {# conversation} other {# conversations}} of {total}. Their judgment replaces the AI's.} other {Not yet reviewed by an assessor}}",
   "report.about.title": "About this report",
   "report.about.simulation": "About the simulation",
   "report.about.read": "How to read this report",

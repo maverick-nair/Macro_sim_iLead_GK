@@ -58,12 +58,15 @@ export interface LanguageStepProps {
   onBegin: () => void;
 }
 
-/** Step 1: what the simulation is, how long it takes, and the language. */
+/**
+ * Step 1: what the simulation is, how long it takes, and the language. It is the first screen of a
+ * launch and its heading is the largest paint, so it shows at once instead of rising in (D78).
+ */
 export function LanguageStep({ title, languages, lang, onLang, onBegin }: LanguageStepProps) {
   const { t } = useI18n();
   return (
     <div className="flex flex-1 items-center justify-center">
-      <div className={`flex w-160 max-w-full flex-col gap-6 ${ENTER}`}>
+      <div className="flex w-160 max-w-full flex-col gap-6">
         <span className={EYEBROW}>{t('onboarding.lang.eyebrow')}</span>
         <h1 tabIndex={-1} className={`${HEADING} text-48 leading-(--il-onboarding-display-leading) tracking-(--il-onboarding-display-tracking)`}>{title}</h1>
         <p className="m-0 text-17 text-pretty text-fg-secondary">{t('onboarding.lang.time')}</p>
