@@ -811,7 +811,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         } : undefined,
         rows: tab === 'profile' ? [] : v.actions.filter(a => a.scope === (tab === 'member' ? 'member' : 'team')).map(a => ({ key: a.key, tile: tile(a.key, tab === 'member' && sm ? sm.id : null) })),
         chosen: f?.key ?? null, flow: drawer, profile, subPeriodUnit: unit,
-        onClose: closeSheet, onPickOnBoard: () => setLowered(true)
+        onClose: closeSheet, onPickOnBoard: () => setLowered(true),
+        opener: () => mainRef.current?.querySelector<HTMLElement>(sm ? '[data-member-card][aria-pressed="true"]' : '[data-dock="actions"]')
       };
     }
     body = (

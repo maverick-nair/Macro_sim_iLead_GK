@@ -137,7 +137,7 @@ export function MemberCard(props: MemberCardProps) {
 
   if (props.layout === 'tablet') {
     return (
-      <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
+      <button type="button" data-member-card="" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
         className={`relative flex min-h-42 w-full flex-col items-start gap-2.5 rounded-18 border border-solid px-3 py-3.5 text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${selected ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
         <img src={img} alt="" className={`size-13 flex-none rounded-round bg-brand-pale-lavender object-cover object-top ring-2 ${MOOD_RING[mood]} ${away ? 'grayscale' : ''}`} />
         {(unread || promise) && (

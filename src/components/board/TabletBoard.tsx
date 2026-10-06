@@ -59,6 +59,12 @@ export interface ActionSheetProps {
   onClose: () => void;
   /** Lowers the drawer so people can be picked on the board (multi person actions). */
   onPickOnBoard: () => void;
+  /**
+   * Where focus goes back to when the drawer closes and nothing else took it, asked when it opens
+   * (the person's card, or the dock's Actions button). The opener itself may be gone by then, such as
+   * the pick bar's Done.
+   */
+  opener: () => HTMLElement | null | undefined;
 }
 
 /**
@@ -72,8 +78,7 @@ export function ActionSheet(p: ActionSheetProps) {
   const { t } = useI18n();
   const fmt = useDays(p.subPeriodUnit);
   const ids = useId();
-  /** Lowering for picks hands focus to the pick bar instead of the opener. */
-  const lowering = useRef(false);
+  const back = useRef<HTMLElement | null>(null);
   const tabs: SheetTab[] = p.person ? ['member', 'team', 'profile'] : ['team'];
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const onTabKey = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
@@ -90,7 +95,13 @@ export function ActionSheet(p: ActionSheetProps) {
     <Dialog.Root open onOpenChange={o => { if (!o) p.onClose(); }}>
       <Dialog.Overlay className="fixed inset-0 z-45 flex justify-end bg-surface-scrim">
         <Dialog.Content aria-describedby={undefined} aria-modal="true" aria-label={t('tablet.sheet.aria', { who: p.person?.name ?? 'team' })}
-          onCloseAutoFocus={e => { if (lowering.current) e.preventDefault(); }}
+          onOpenAutoFocus={() => { back.current = p.opener() ?? null; }}
+          // Focus already moved on (the pick bar, the outcome, a conversation): leave it. Else back to the opener.
+          onCloseAutoFocus={e => {
+            const active = document.activeElement;
+            if (active && active !== document.body) { e.preventDefault(); return; }
+            if (back.current?.isConnected) { e.preventDefault(); back.current.focus({ preventScroll: true }); }
+          }}
           className="flex h-full w-110 max-w-full animate-(--il-tablet-sheet-enter) flex-col gap-4 overflow-auto border-y-0 border-r-0 border-l border-solid border-line-strong bg-surface-solid px-6 pt-5.5 pb-6 text-fg-primary shadow-(--il-tablet-sheet-shadow) outline-0">
           <div className="flex items-center gap-3.5">
             {p.person && <img src={p.person.img} alt="" className={`size-15 flex-none rounded-round bg-brand-pale-lavender object-cover object-top ring-2 ${MOOD_RING[p.person.mood]} ${p.person.away ? 'grayscale' : ''}`} />}
@@ -136,7 +147,7 @@ export function ActionSheet(p: ActionSheetProps) {
                           options={p.rows.map(r => ({ name: r.tile.name, detail: actionSub(t, fmt, r.tile), disabled: !!r.tile.block, aside: fmt(r.tile.days) }))} />}
                   </div>
                   {p.flow
-                    ? <ActionDrawer {...p.flow} layout="tablet" onPickOnBoard={() => { lowering.current = true; p.onPickOnBoard(); }} />
+                    ? <ActionDrawer {...p.flow} layout="tablet" onPickOnBoard={p.onPickOnBoard} />
                     : (
                       <div className="sticky bottom-0 mt-auto flex flex-col gap-2 border-x-0 border-b-0 border-t border-solid border-line-default bg-surface-solid pt-3">
                         <span className="text-center text-12 text-fg-secondary">{t('tablet.sheet.chooseHint')}</span>
@@ -175,7 +186,7 @@ export function TabletDock({ unread, inboxOpen, onInbox, open, left, onActions }
         {t('inbox.title')}
         {unread > 0 && <span aria-hidden="true" className="flex min-h-6 min-w-6 items-center justify-center rounded-pill bg-brand px-1.5 text-12 font-700 text-brand-deep-space">{number(unread)}</span>}
       </button>
-      <button type="button" onClick={onActions}
+      <button type="button" data-dock="actions" onClick={onActions}
         className={`min-h-14 flex-1 cursor-pointer rounded-14 border-0 bg-transparent bg-(image:--il-fill-brand) px-4 py-0 text-16 font-700 text-brand-deep-space ${focus}`}>
         {t('tablet.dock.actions', { n: open, left })}
       </button>
@@ -206,7 +217,7 @@ export function PickBar({ action, limit, picks, onDone, onCancel }: PickBarProps
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <b className="text-15">{t('tablet.pick.bar', { action, limit })}</b>
         <span aria-live="polite" className="text-13 text-fg-secondary">
-          {picks.length ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(picks.map(x => x.name)) : t('tablet.pick.count', { n: 0 })}{' '}{t('tablet.pick.hint')}
+          {t('tablet.pick.count', { n: picks.length, names: new Intl.ListFormat(locale, { type: 'conjunction' }).format(picks.map(x => x.name)) })}{' '}{t('tablet.pick.hint')}
         </span>
       </div>
       <NoWrapButton variant="secondary" size="md" onClick={onCancel}>{t('tablet.pick.cancel')}</NoWrapButton>

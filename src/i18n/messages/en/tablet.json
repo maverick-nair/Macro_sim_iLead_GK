@@ -20,7 +20,7 @@
   "tablet.pick.lower": "Pick people on the board",
   "tablet.pick.aria": "Picking people for {action}",
   "tablet.pick.bar": "{action}: {limit}",
-  "tablet.pick.count": "{n, plural, =0 {Nobody picked yet} one {# picked} other {# picked}}",
+  "tablet.pick.count": "{n, plural, =0 {Nobody picked yet.} other {Picked: {names}.}}",
   "tablet.pick.hint": "Tap people on the board to add or remove them.",
   "tablet.pick.done": "Done",
   "tablet.pick.cancel": "Cancel",
