@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import type { ReactNode } from 'react';
+import { withClientTheme } from '../../stories/clientTheme';
 import { SmallScreenNotice } from './SmallScreenNotice';
 
 const meta: Meta = { title: 'Shell/Small screen notice', parameters: { layout: 'fullscreen' } };
@@ -26,8 +27,8 @@ export const Landscape: StoryObj = { render: () => <Phone width={844} height={39
 /** The browser refused the clipboard: the status says to copy the address instead. */
 export const CopyRefused: StoryObj = { render: () => <Phone><SmallScreenNotice link={LINK} copy={refused} focusOnOpen={false} /></Phone> };
 
-/** The client theme's logo slot beside the iLead mark (pick Client in the toolbar for its accent). */
-export const ClientLogo: StoryObj = { render: () => <Phone><SmallScreenNotice link={LINK} copy={copied} clientLogo focusOnOpen={false} /></Phone> };
+/** The client theme's logo beside the iLead mark (Halden, D71). */
+export const ClientLogo: StoryObj = { decorators: [withClientTheme()], render: () => <Phone><SmallScreenNotice link={LINK} copy={copied} focusOnOpen={false} /></Phone> };
 
 /** The narrowest phones, 320 wide. */
 export const Narrow: StoryObj = { render: () => <Phone width={320} height={640}><SmallScreenNotice link={LINK} copy={copied} focusOnOpen={false} /></Phone> };

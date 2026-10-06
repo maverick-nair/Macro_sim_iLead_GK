@@ -135,9 +135,9 @@
   --grad-spectrum: var(--il-gradient-spectrum);
 }
 
-/* Semantic and component layers. Scoped to the app root so a client theme set on an ancestor
-   (--client-acc and friends) is visible when var() fallbacks resolve, and so color-scheme
-   on the root picks the light-dark() branch. */
+/* Semantic and component layers. Scoped to the app root so a client theme set on :root or another
+   ancestor (--il-theme-*, written by src/theme) is visible when var() fallbacks resolve, and so
+   color-scheme on the root picks the light-dark() branch. */
 .il-theme {
   --il-font-size-11: calc(11px * var(--il-text-scale, 1));
   --il-font-size-12: calc(12px * var(--il-text-scale, 1));
@@ -170,18 +170,18 @@
   --il-color-fg-link: light-dark(var(--il-color-blue-530), var(--il-color-brand-electric-blue));
   --il-color-fg-link-hover: light-dark(var(--il-color-blue-450), var(--il-color-brand-cyber-cyan));
   --il-color-fg-inverse: light-dark(var(--il-color-white), var(--il-color-brand-deep-space));
-  --il-color-surface-card: light-dark(var(--il-color-white), oklch(0.17 0.035 283 / 0.82));
-  --il-color-surface-solid: light-dark(var(--il-color-white), var(--il-color-night-170));
-  --il-color-surface-raised: light-dark(var(--il-color-mist-955), oklch(1 0 0 / 0.06));
-  --il-color-surface-material: light-dark(oklch(1 0 0 / 0.93), oklch(0.16 0.035 284 / 0.93));
+  --il-color-surface-card: var(--il-theme-color-surface-card, light-dark(var(--il-color-white), oklch(0.17 0.035 283 / 0.82)));
+  --il-color-surface-solid: var(--il-theme-color-surface-solid, light-dark(var(--il-color-white), var(--il-color-night-170)));
+  --il-color-surface-raised: var(--il-theme-color-surface-raised, light-dark(var(--il-color-mist-955), oklch(1 0 0 / 0.06)));
+  --il-color-surface-material: var(--il-theme-color-surface-material, light-dark(oklch(1 0 0 / 0.93), oklch(0.16 0.035 284 / 0.93)));
   --il-color-surface-scrim: light-dark(oklch(0.2 0.03 280 / 0.35), oklch(0.05 0.02 285 / 0.66));
   --il-color-line-default: light-dark(var(--il-color-mist-900), oklch(1 0 0 / 0.1));
   --il-color-line-strong: light-dark(var(--il-color-mist-820), oklch(1 0 0 / 0.2));
   --il-color-line-control: light-dark(var(--il-color-mist-600), oklch(1 0 0 / 0.36));
   --il-color-track: light-dark(var(--il-color-mist-920), oklch(1 0 0 / 0.1));
-  --il-color-accent-default: var(--client-acc, light-dark(var(--il-color-blue-530), var(--il-color-brand-electric-blue)));
-  --il-color-accent-secondary: var(--client-acc-2, light-dark(var(--il-color-cyan-520), var(--il-color-brand-cyber-cyan)));
-  --il-color-accent-soft: var(--client-acc-soft, light-dark(var(--il-color-blue-950), oklch(0.62 0.17 250 / 0.18)));
+  --il-color-accent-default: var(--il-theme-color-accent-default, light-dark(var(--il-color-blue-530), var(--il-color-brand-electric-blue)));
+  --il-color-accent-secondary: var(--il-theme-color-accent-secondary, light-dark(var(--il-color-cyan-520), var(--il-color-brand-cyber-cyan)));
+  --il-color-accent-soft: var(--il-theme-color-accent-soft, light-dark(var(--il-color-blue-950), oklch(0.62 0.17 250 / 0.18)));
   --il-color-status-attention: light-dark(var(--il-color-amber-530), var(--il-color-amber-840));
   --il-color-status-attention-soft: light-dark(var(--il-color-amber-960), oklch(0.84 0.14 78 / 0.14));
   --il-color-status-gain: light-dark(var(--il-color-mint-500), var(--il-color-brand-mint-green));
@@ -250,7 +250,7 @@
   --il-color-report-chart-attention: light-dark(var(--il-color-status-attention), var(--il-color-status-attention));
   --il-color-report-chart-cell: light-dark(var(--il-color-surface-raised), var(--il-color-surface-raised));
   --il-color-stylesetting-portrait-shade: light-dark(oklch(0.13 0.03 285 / 0.8), oklch(0.13 0.03 285 / 0.8));
-  --il-fill-brand: var(--client-grad, var(--il-gradient-brand));
+  --il-fill-brand: var(--il-theme-fill-brand, var(--il-gradient-brand));
   --il-fill-product: var(--il-gradient-product);
   --il-fill-spectrum: var(--il-gradient-spectrum);
   --il-fill-event-impact: linear-gradient(135deg,var(--il-color-brand-cyber-cyan),var(--il-color-brand-mint-green));

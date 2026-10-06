@@ -3,9 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { I18nProvider } from '../../i18n';
 import { copyViolations } from '../../i18n/copy';
 import { SMALL_SCREEN } from '../../lib/useMediaQuery';
+import { BrandContext } from '../../theme/brand';
 import { SmallScreenNotice } from './SmallScreenNotice';
 
-const html = (clientLogo = false) => renderToStaticMarkup(<I18nProvider><SmallScreenNotice link="https://ilead.example/play?participant=p1" clientLogo={clientLogo} /></I18nProvider>);
+const HALDEN = { name: 'Halden Group', logo: { kind: 'placeholder' as const, name: 'Halden Group' } };
+const html = (clientLogo = false) => renderToStaticMarkup(<I18nProvider><BrandContext.Provider value={clientLogo ? HALDEN : null}><SmallScreenNotice link="https://ilead.example/play?participant=p1" /></BrandContext.Provider></I18nProvider>);
 const text = (m: string) => m.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 
 describe('the small screen notice (D69)', () => {

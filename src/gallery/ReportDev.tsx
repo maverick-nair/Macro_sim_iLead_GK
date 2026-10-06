@@ -1,9 +1,11 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { HALDEN_THEME } from '../app/clientTheme';
 import type { EngineView } from '../engine/contract';
 import { I18nProvider } from '../i18n';
 import { LoadingScreen } from '../components/shell/LoadingScreen';
 import { EngineReport } from '../components/report/EngineReport';
+import { BrandContext } from '../theme/brand';
+import { resolveTheme } from '../theme/loader';
+import halden from '../theme/samples/halden.json';
 
 /**
  * Dev only (`/?report=1`, never in the production bundle): plays a whole run on the mock engine with an
@@ -14,6 +16,8 @@ import { EngineReport } from '../components/report/EngineReport';
 export function ReportDev() {
   const q = new URLSearchParams(location.search);
   const light = q.get('theme') === 'light';
+  // The sample client theme, through the theme loader (D71).
+  const [client] = useState(() => (q.get('client') === 'halden' ? resolveTheme(halden) : null));
   const [view, setView] = useState<EngineView | null>(null);
   useEffect(() => {
     void import('../engine/mock').then(m => m.playToEnd({
@@ -27,10 +31,11 @@ export function ReportDev() {
   const root: CSSProperties = {
     colorScheme: light ? 'light' : 'dark', minHeight: '100vh',
     background: light ? 'var(--il-backdrop-daylight)' : 'var(--il-backdrop-office)',
-    ...(q.get('client') === 'halden' ? HALDEN_THEME : null)
+    ...client?.vars
   };
   return (
     <I18nProvider>
+      <BrandContext.Provider value={client?.brand ?? null}>
       <div style={root}>
         <div className="il-theme relative flex flex-col overflow-hidden font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]">
           {view
@@ -38,6 +43,7 @@ export function ReportDev() {
             : <LoadingScreen />}
         </div>
       </div>
+      </BrandContext.Provider>
     </I18nProvider>
   );
 }

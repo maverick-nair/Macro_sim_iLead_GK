@@ -1,5 +1,5 @@
 {
-  "$description": "Semantic layer. Meaning, per mode. Each color has a light and a dark value, emitted as light-dark() so color-scheme on the app root picks the mode. `alpha` applies an opacity to an OKLCH primitive. `overridableBy` names the brand variable a GenieKreator theme may set (accent tokens only). `contrast` declares a minimum WCAG 2.2 ratio against another semantic token, checked at build time.",
+  "$description": "Semantic layer. Meaning, per mode. Each color has a light and a dark value, emitted as light-dark() so color-scheme on the app root picks the mode. `alpha` applies an opacity to an OKLCH primitive. `themable` marks a token a GenieKreator theme may set at runtime (accents, the brand fill and surfaces; src/theme, D71). `contrast` declares a minimum WCAG 2.2 ratio against another semantic token, checked at build time.",
   "color": {
     "fg": {
       "primary": {
@@ -33,11 +33,13 @@
           "ref": "color.night.170",
           "alpha": 0.82
         },
+        "themable": true,
         "$description": "Cards over the background image"
       },
       "solid": {
         "light": "{color.white}",
         "dark": "{color.night.170}",
+        "themable": true,
         "$description": "Opaque card, fallback for translucent layers"
       },
       "raised": {
@@ -46,6 +48,7 @@
           "ref": "color.white",
           "alpha": 0.06
         },
+        "themable": true,
         "$description": "Insets, segmented control tracks"
       },
       "material": {
@@ -57,6 +60,7 @@
           "ref": "color.night.160",
           "alpha": 0.93
         },
+        "themable": true,
         "$description": "Translucent overlays and drawers"
       },
       "scrim": {
@@ -109,7 +113,7 @@
       "default": {
         "light": "{color.blue.530}",
         "dark": "{color.brand.electric-blue}",
-        "overridableBy": "client-acc",
+        "themable": true,
         "contrast": {
           "against": "color.surface.solid",
           "min": 3
@@ -119,7 +123,7 @@
       "secondary": {
         "light": "{color.cyan.520}",
         "dark": "{color.brand.cyber-cyan}",
-        "overridableBy": "client-acc-2",
+        "themable": true,
         "contrast": {
           "against": "color.surface.solid",
           "min": 4.5
@@ -132,7 +136,7 @@
           "ref": "color.blue.620",
           "alpha": 0.18
         },
-        "overridableBy": "client-acc-soft",
+        "themable": true,
         "$description": "Selected backgrounds"
       }
     },
@@ -190,7 +194,7 @@
   "fill": {
     "brand": {
       "value": "{gradient.brand}",
-      "overridableBy": "client-grad"
+      "themable": true
     },
     "product": {
       "value": "{gradient.product}"

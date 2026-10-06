@@ -1,6 +1,7 @@
 import { useId, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n, type I18n } from '../../i18n';
+import { ClientLogo } from '../../theme/brand';
 import { onRovingKey } from '../roving';
 import { SPONSOR_TABS, type OnboardingLanguage, type OnboardingSponsor, type PeriodUnit, type SponsorTab, type VoiceCheck } from './types';
 
@@ -30,6 +31,7 @@ export function OnboardingHeader({ step, total }: OnboardingHeaderProps) {
   const { t } = useI18n();
   return (
     <header className="flex items-center gap-5">
+      <ClientLogo />
       <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-onboarding-logo-tracking) text-transparent">{t('hud.logo')}</span>
       <span className="text-13 text-fg-secondary">{t('onboarding.tagline')}</span>
       <span className="flex-1" />

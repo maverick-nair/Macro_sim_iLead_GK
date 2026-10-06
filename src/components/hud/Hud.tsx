@@ -1,13 +1,14 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
+import { ClientLogo } from '../../theme/brand';
 
 export type PeriodUnit = 'year' | 'month' | 'week' | 'day';
 export type SubPeriodUnit = 'quarter' | 'month' | 'week' | 'day' | 'hour';
 
 export interface HudNavItem {
   key: string;
-  /** Rendered only when present. The client theme passes none (DECISIONS D17). */
+  /** Rendered only when present; an item with no label keeps its slot but is not a button. */
   label?: string;
 }
 
@@ -33,8 +34,6 @@ export interface HudScore {
 }
 
 export interface HudProps {
-  /** Shows the client logo placeholder next to the iLead mark. */
-  clientLogo?: boolean;
   nav: HudNavItem[];
   onNav: (key: string) => void;
   clock: HudClock;
@@ -163,7 +162,7 @@ export function Hud(p: HudProps) {
   return (
     <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2">
       <div className="flex items-center gap-2.5">
-        {p.clientLogo && <div className="flex min-h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
+        <ClientLogo />
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
       </div>
       {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
@@ -173,7 +172,7 @@ export function Hud(p: HudProps) {
             {n.label}
           </button>
         ) : (
-          // No label (the client theme, D17): keep the slot the design draws, but not as a nameless button.
+          // No label: keep the slot, but not as a nameless button.
           <span key={n.key} aria-hidden="true" className="h-8 flex-none px-2" />
         )))}
       </nav>}

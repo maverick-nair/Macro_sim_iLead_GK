@@ -1,6 +1,7 @@
 {
   "hud.logo": "iLead",
-  "hud.clientLogo": "Halden Group logo",
+  "hud.clientLogo": "{name} logo",
+  "hud.clientLogoUnnamed": "Client logo",
   "hud.nav.aria": "Game menu",
   "hud.nav.item": "{key, select, objective {Objective} funnel {Funnel} history {History} badges {Badges} more {More} other {}}",
   "hud.clock": "{period} · {subPeriod}",

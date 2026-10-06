@@ -509,16 +509,6 @@ export const tokens = {
   ]
 } as const;
 
-/** Client themes from tokens/themes, as the style object to spread on an ancestor of the app root. */
-export const clientThemes = {
-  "halden": {
-    "--client-acc": "light-dark(oklch(0.5 0.17 0), oklch(0.72 0.17 0))",
-    "--client-acc-2": "light-dark(oklch(0.54 0.15 30), oklch(0.8 0.12 30))",
-    "--client-acc-soft": "light-dark(oklch(0.95 0.025 0), oklch(0.6 0.18 0 / 0.18))",
-    "--client-grad": "linear-gradient(135deg, oklch(0.66 0.19 2), oklch(0.78 0.13 30))"
-  }
-} as const satisfies Record<string, Record<string, string>>;
-
 export type PrimitiveToken = keyof typeof tokens.primitive;
 export type SemanticToken = (typeof tokens.semantic)[number];
 export type ComponentToken = (typeof tokens.component)[number];
