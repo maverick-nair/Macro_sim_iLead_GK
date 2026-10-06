@@ -3,11 +3,19 @@ import { useEffect, useState, type ReactNode } from 'react';
 import type { EngineView } from '../../engine/contract';
 import { DEFAULT_LENS_VIEW, NEEDS } from '../../engine/lens';
 import { DEFAULT_LENS } from '../../engine/lensLibrary';
-import { defaultStoryline, playToEnd } from '../../engine/mock';
+import { playToEnd } from '../../engine/mock';
 import { REPORT_FIXTURE as FX } from '../../data/reportFixture';
 import { BusinessSection } from './BusinessSection';
 import { ReportProvider, type ReportSettings } from './context';
-import { EngineReport } from './EngineReport';
+import { EngineReport, sectionNode } from './EngineReport';
+import { buildReportModel, type SectionModel } from './engine';
+import { parseStoryline, type StorylineInput } from '../../engine/config';
+import { moneyFormatter } from '../../engine/money';
+import { parseReport, type HistoryEntry } from '../../engine/reportContract';
+import salesElevator from '../../engine/storylines/sales-elevator.json';
+import { withSixStyles } from '../../engine/storylines/sixStyles';
+import { useI18n } from '../../i18n';
+import { LensProvider } from '../style/lens';
 import { IntentSection, PairSection, PlanSection } from './IntentPlan';
 import { MomentsSection } from './MomentsSection';
 import { AnalyticsSection, MethodologySection } from './NotesSections';
@@ -151,14 +159,80 @@ export const Business: StoryObj = {
 export const Analytics: StoryObj = { render: () => <Card><AnalyticsSection data={{ conversations: 30, talkRatio: 4.3, openQuestions: 42, recognition: 14, spoken: 6 }} /><AnalyticsSection data={{ conversations: 2, talkRatio: null, openQuestions: 0, recognition: 0, spoken: 0 }} /></Card> };
 export const Methodology: StoryObj = { render: () => <Card><MethodologySection data={{ lines: ['This report comes from what you said and did in the simulation.', 'Your game score never changes a skill rating.'], reviewed: false, conversations: 30, observations: 76 }} /></Card> };
 
+type Purpose = 'development' | 'assessment';
+/** Sales Elevator, or the six styles lens, in a purpose (D75). */
+function storyline(purpose: Purpose = 'development', lens?: 'six_styles') {
+  const base = lens ? withSixStyles(salesElevator as unknown as StorylineInput) : salesElevator;
+  const r = parseStoryline({ ...base, purpose });
+  if (!r.ok) throw new Error(r.issues.join('\n'));
+  return r.config;
+}
+
 /** The whole engine report from a real run (Sales Elevator), played by an automated player. */
-function FromRun({ policy, seed, print, lens }: { policy: 'good' | 'random' | 'passive'; seed: number; print?: boolean; lens?: 'six_styles' }) {
+function FromRun({ policy, seed, print, lens, purpose, history }: { policy: 'good' | 'random' | 'passive'; seed: number; print?: boolean; lens?: 'six_styles'; purpose?: Purpose; history?: boolean }) {
   const [view, setView] = useState<EngineView | null>(null);
   useEffect(() => {
-    void playToEnd({ policy, seed, config: lens ? defaultStoryline(lens) : undefined, reflection: policy === 'good' ? ['Kent taught me that the loudest problem is not always the real one.'] : undefined }).then(setView);
-  }, [policy, seed, lens]);
-  return <div className="flex min-h-screen flex-col">{view && <EngineReport view={view} onBack={noop} print={print} participantName="Jordan Lee" date={new Date(2026, 9, 5)} />}</div>;
+    void playToEnd({ policy, seed, config: lens || purpose ? storyline(purpose, lens) : undefined, reflection: policy === 'good' ? ['Kent taught me that the loudest problem is not always the real one.'] : undefined }).then(setView);
+  }, [policy, seed, lens, purpose]);
+  const getHistory = history ? async () => {
+    const earlier = await playToEnd({ policy: 'random', seed: 11, config: storyline(purpose, lens) });
+    const r = earlier.report as { run: unknown; summary: { level: { name: string } | null } };
+    return [{ attempt: 1, endedAt: '2026-09-21', headline: r.summary.level?.name ?? 'Not enough evidence for an overall level', summary: r.run }];
+  } : undefined;
+  return <div className="flex min-h-screen flex-col">{view && <EngineReport view={view} onBack={noop} print={print} participantName="Jordan Lee" date={new Date(2026, 9, 5)} getHistory={getHistory} />}</div>;
 }
+
+/**
+ * One report 3.0 section from a real run, in a purpose: the engine's numbers and the purpose's narrative
+ * bank, shaped by the same model as the full report.
+ */
+function SectionFromRun({ section, purpose = 'development', lens, policy = 'random', history }: { section: SectionModel['key']; purpose?: Purpose; lens?: 'six_styles'; policy?: 'good' | 'random'; history?: boolean }) {
+  const i18n = useI18n();
+  const [view, setView] = useState<EngineView | null>(null);
+  const [earlier, setEarlier] = useState<HistoryEntry[] | null>(null);
+  useEffect(() => {
+    void playToEnd({ policy, seed: 5, config: storyline(purpose, lens) }).then(setView);
+    if (history) void playToEnd({ policy: 'good', seed: 2, config: storyline(purpose, lens) }).then(v => {
+      const r = parseReport(v.report);
+      setEarlier([{ attempt: 1, endedAt: '2026-09-21', headline: r.verdict?.overall.label ?? r.summary.level?.name ?? '', summary: r.run }]);
+    });
+  }, [purpose, lens, policy, history]);
+  if (!view || (history && !earlier)) return null;
+  const report = parseReport(view.report);
+  const model = buildReportModel(i18n, moneyFormatter(view.money), report, { participantName: 'Jordan Lee', date: new Date(2026, 9, 5), subPeriodUnit: 'day', history: earlier });
+  const s = model.sections.find(x => x.key === section);
+  return (
+    <LensProvider lens={report.lens}>
+      <Card settings={{ purpose }}>{s ? sectionNode(s, model.unit, model.periods) : null}</Card>
+    </LensProvider>
+  );
+}
+
+const both = (section: SectionModel['key'], extra: { lens?: 'six_styles'; history?: boolean } = {}): [StoryObj, StoryObj] => [
+  { render: () => <SectionFromRun section={section} {...extra} /> },
+  { render: () => <SectionFromRun section={section} purpose="assessment" {...extra} /> }
+];
+
+export const [About, AboutAssessment] = both('about');
+/** Assessment leads with the overall verdict, its bar, evidence and review status. */
+export const [SummaryFromRun, SummaryVerdict] = both('summary');
+/** Skills with a score out of 10, what each means and its narrative; assessment adds each skill's verdict. */
+export const [Skills3, Skills3Assessment] = both('skills');
+export const [Objectives, ObjectivesAssessment] = both('objectives');
+export const [Adaptability, AdaptabilityAssessment] = both('adaptability');
+export const [Styles, StylesAssessment] = both('styles');
+/** Six styles (D70): proportion and accuracy for six, the needs by six styles. */
+export const [StylesSixStyles, StylesSixStylesAssessment] = both('styles', { lens: 'six_styles' });
+export const [Consistency, ConsistencyAssessment] = both('consistency');
+export const [Actions, ActionsAssessment] = both('actions');
+/** The member by action matrix, filled by impact with a legend in words; Show as table gives the real table. */
+export const [Distribution, DistributionAssessment] = both('distribution');
+export const [FoodForThought, FoodForThoughtAssessment] = both('thought');
+export const [Takeaways, TakeawaysAssessment] = both('takeaways');
+/** Development: practice per skill, the 90 day path and check ins. Assessment: development needs, listed neutrally. */
+export const [Plan3, Plan3Assessment] = both('plan');
+/** With one earlier attempt (`getHistory`). */
+export const [Progress, ProgressAssessment] = both('progress', { history: true });
 
 export const FromRunGood: StoryObj = { render: () => <FromRun policy="good" seed={3} /> };
 export const FromRunRandom: StoryObj = { render: () => <FromRun policy="random" seed={5} /> };
@@ -170,3 +244,8 @@ export const FromRunTablet: StoryObj = { render: () => <div style={{ width: 834 
 export const FromRunLight: StoryObj = { globals: { theme: 'light' }, render: () => <FromRun policy="good" seed={3} /> };
 /** The Six Leadership Styles lens (D70): six styles in the shares and the grid, the needs as rows, two Report only skills, the lens in the methodology. */
 export const FromRunSixStyles: StoryObj = { render: () => <FromRun policy="good" seed={3} lens="six_styles" /> };
+/** An assessment report: verdicts first, neutral findings, development needs (D75). */
+export const FromRunAssessment: StoryObj = { render: () => <FromRun policy="random" seed={5} purpose="assessment" /> };
+export const FromRunAssessmentPrint: StoryObj = { render: () => <FromRun policy="random" seed={5} purpose="assessment" print /> };
+/** With an earlier attempt: the progress section shows. */
+export const FromRunWithHistory: StoryObj = { render: () => <FromRun policy="good" seed={3} history /> };

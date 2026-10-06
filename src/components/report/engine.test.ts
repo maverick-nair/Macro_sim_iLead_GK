@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { moneyFormatter } from '../../engine/money';
 import { playToEnd } from '../../engine/mock';
 import { parseReport } from '../../engine/reportContract';
+import { parseStoryline } from '../../engine/config';
+import salesElevator from '../../engine/storylines/sales-elevator.json';
 import { createI18n } from '../../i18n';
 import { buildReportModel, listNames, type ReportView } from './engine';
 
@@ -76,6 +78,41 @@ describe('the engine report, shaped for display', () => {
     if (style?.key !== 'style') throw new Error('no style section');
     expect(style.rows.every(r => r.cells.length === report.periods)).toBe(true);
     expect(style.summary).toBe(`You matched ${report.style.matched} of ${report.style.weeklyTotal} choices.`);
+  });
+
+  it('shows progress only with earlier attempts of the same storyline, this attempt last', async () => {
+    const { report, model } = await run('good');
+    const earlier = { attempt: 1, endedAt: '2026-09-21', headline: 'Developing', summary: { ...report.run, score: { ...report.run.score, total: 400 } } };
+    const money = moneyFormatter({ currency: 'USD', locale: 'en-US', display: 'symbol' } as never);
+    const m = (history: unknown) => buildReportModel(i18n, money, report, { date, subPeriodUnit: 'day', history: history as never });
+    expect(model(report).sections.some(s => s.key === 'progress')).toBe(false);
+    const other = m([{ ...earlier, summary: { ...earlier.summary, storyline: { id: 'other', name: 'Other' } } }]);
+    expect(other.sections.some(s => s.key === 'progress')).toBe(false);
+    const p = m([earlier]).sections.find(s => s.key === 'progress');
+    if (p?.key !== 'progress') throw new Error('no progress section');
+    expect(p.data.attempts.map(a => [a.label, a.score, a.current])).toEqual([['Attempt 1', 400, false], ['This attempt', report.score.total, true]]);
+  });
+
+  it('words skills out of 10, and an assessment report leads with its verdict and lists development needs', async () => {
+    const parsed = parseStoryline({ ...salesElevator, purpose: 'assessment' });
+    if (!parsed.ok) throw new Error(parsed.issues.join());
+    const view = await playToEnd({ policy: 'random', seed: 5, config: parsed.config });
+    const report = parseReport(view.report);
+    const m = buildReportModel(i18n, moneyFormatter(view.money), report, { date, subPeriodUnit: 'day' });
+    expect(m.purpose).toBe('assessment');
+    expect(m.header.name).toBe('Your assessment report');
+    const summary = m.sections.find(s => s.key === 'summary');
+    if (summary?.key !== 'summary') throw new Error('no summary');
+    expect(summary.extras.verdict?.label).toBe(report.verdict!.overall.label);
+    expect(summary.extras.verdict?.review).toBe('AI only, not yet reviewed by an assessor');
+    const skills = m.sections.find(s => s.key === 'skills');
+    if (skills?.key !== 'skills') throw new Error('no skills');
+    const rated = skills.rows.find(r => r.level);
+    expect(rated?.more?.outOf10).toMatch(/^\d+(\.\d)? out of 10$/);
+    const plan = m.sections.find(s => s.key === 'plan');
+    if (plan?.key !== 'plan') throw new Error('no plan');
+    expect(plan.items).toEqual([]);
+    expect(plan.extras.needs?.map(n => n.key)).toEqual(report.needs.map(n => n.key));
   });
 
   it('lists names with commas and a final "and"', () => {

@@ -89,7 +89,7 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
         const matched = extras.grid.reduce((a, row, r) => a + row.reduce((b, n, c) => b + (extras.fit[r]?.[c] === 0 ? n : 0), 0), 0);
         return <>
           <p className="m-0 text-14">{t('report.style.capability', { pct: number(extras.capability) })}</p>
-          <div className="grid gap-5 grid-cols-2">
+          <div className="grid gap-5 grid-cols-(--il-report-halves-columns)">
             <ChartBlock
               title={t('report.style.sharesTitle')}
               chart={<StyleSharesChart styles={extras.styles} shares={extras.shares} total={extras.total} dominant={extras.dominant}

@@ -44,7 +44,7 @@ export interface EngineReportProps {
   getHistory?: () => Promise<unknown>;
 }
 
-function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUnit'], periods: number) {
+export function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUnit'], periods: number) {
   switch (s.key) {
     case 'about': return <AboutSection data={s.data} />;
     case 'summary': return <SummarySection narrative={s.narrative} extras={s.extras} />;

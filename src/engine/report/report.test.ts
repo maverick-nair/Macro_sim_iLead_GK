@@ -9,6 +9,7 @@ import { neededStyles, play } from '../sim/policies';
 import { createSim } from '../sim/sim';
 import type { Band, LiveRecord, Sim } from '../sim/types';
 import { buildReport } from './build';
+import { ReportView } from '../reportContract';
 
 /** Report 2.0 rules (docs/genie/scoring-and-report.md 5, 7 and 9). */
 const parsed = parseStoryline(salesElevator);
@@ -111,6 +112,25 @@ describe('the whole report from a run', () => {
     // Every sentence the engine wrote keeps to the copy rules (participant quotes are their own words).
     const engineText = [rep.summary.business, rep.summary.narrative ?? '', ...rep.style.narrative, ...rep.moments.flatMap(m => [m.title, m.situation, m.behaviour, m.impact]), rep.business.bottleneck?.why ?? '', ...rep.plan.flatMap(p => [p.practice, p.onTheJob]), ...rep.methodology.lines, ...rep.skills.map(s => s.anchor ?? '')];
     expect(engineText.flatMap(t => copyViolations(t).map(v => `${v}: ${t}`))).toEqual([]);
+  });
+
+  it('builds the 3.0 sections in both purposes, passes the report contract, and keeps to the copy rules', async () => {
+    for (const purpose of ['development', 'assessment'] as const) {
+      const c = parseStoryline({ ...salesElevator, purpose });
+      if (!c.ok) throw new Error(c.issues.join());
+      const rep = (await play(c.config, 'random', 7)).view.report!;
+      expect(ReportView.safeParse(rep).success).toBe(true);
+      expect(rep.sections).toEqual(DEFAULT_SECTIONS[purpose]);
+      expect(rep.actionSummary.map(a => a.key)).toEqual(c.config.actions.map(a => a.key));
+      expect(rep.skills.every(s => s.narrative.length > 0)).toBe(true);
+      const text = [...rep.about.lines, ...rep.about.howToRead, rep.about.confidentiality, rep.objectives.narrative, rep.adaptability.narrative,
+        ...rep.styleSummary.perStyle.flatMap(s => s.narrative), rep.styleSummary.preferred ?? '', ...Object.values(rep.consistency.narrative).map(x => x ?? ''),
+        ...rep.actionSummary.flatMap(a => [a.description ?? '', a.narrative]), ...rep.thought.flatMap(q => [q.question, q.guide]), ...rep.takeaways,
+        ...Object.values(rep.path ?? {}), ...rep.skills.flatMap(s => [s.narrative, s.description ?? '']), rep.verdict?.overall.label ?? '', rep.verdict?.overall.bar ?? '',
+        ...rep.needs.flatMap(n => [n.anchor ?? '']), rep.summary.business];
+      expect(text.flatMap(t => copyViolations(t).map(v => `${v}: ${t}`))).toEqual([]);
+      expect(text.join(' ')).not.toMatch(/\{\w+\}/);
+    }
   });
 
   it('is only sent once the run has ended', async () => {
