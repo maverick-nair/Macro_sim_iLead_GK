@@ -480,6 +480,18 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
   - The prototype lives at `/group` (lazy), with a mock cohort played by the calibration AI players.
 - **Copy:** "skills", never "competency"; no dashes as punctuation; no emojis.
 
+**D76. The individual report 3.0, built.** Decided 2026-10-06, building D75 (SIMULATION 8.4). Defaults chosen here, all config:
+- **Impact bands** (`report.impact`): the mean net skill + morale + result change per person an action reached. Very low under −2, low −2 to under 3, moderate 3 to under 10, high 10 and up; never used or no change is no impact. A weekly style fit is +6, a fitting 1:1 about +16, a missed one about −10, so the bands split helping from harming.
+- **1.0 actions mapped:** Meet the Team `meet`, Meet Face to Face `f2f`, Set Goals `goals`, Coach Member `coach`, Give Feedback `feedback` (`report.consistencyActions`). Team meetings count as style uses for consistency only (the score still ignores them). Deviations are shares of uses or settings, not of members, so they move smoothly (1.0 printed 18.99%).
+- **Time spent:** share of one to one actions with the top three, the bottom three and the rest, ranked by result at each period start. Team actions are left out: they reach everyone equally.
+- **Score out of 10** is the skill score divided by 10, one decimal, beside the level.
+- **Verdict rules** as in SIMULATION 8.4; default bar Proficient with no skill below Developing; evidence is the live record ids, up to 3 quotes and the review status (assessor, partly, AI only).
+- **Development copy** has no verdict words, so the summary's boxes read "What you do well" and "What to grow next"; assessment reads "Strengths" and "Lowest rated skills", and its business line says "The team".
+- **The report's schema left the first load:** `ReportView`, `RunSummary` and `History` live in `src/engine/reportContract.ts`; `EngineView.report` is checked only as an object and parsed (copy rules applied) by the end screen and the report, both lazy. Initial JS 198.6 KB (was 198.8 KB).
+- **`getHistory`** (proposed `GET /history`, 404 is none): earlier attempts as `{ attempt, endedAt, headline, summary: RunSummary }`. The mock serves one, played by the random player, with `?history=1`; `?purpose=assessment` plays the mock storyline as an assessment.
+- **Print:** each section starts a new page; the distribution matrix, the deviations and progress print as tables. US spelling in the report copy ("Behavior", "favorites", "Practice").
+- **Not built:** the group report (`/group`, `buildGroupReport`) is the next step; it reads `RunSummary`.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

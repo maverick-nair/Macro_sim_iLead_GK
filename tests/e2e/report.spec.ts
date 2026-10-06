@@ -110,6 +110,70 @@ test('a passive run has no overall level, shows every skill without enough evide
   expect(await axe(page)).toEqual([]);
 });
 
+const SECTIONS_3 = ['About this report', 'Your leadership skills', 'Objectives', 'Overall leadership adaptability', 'Leadership styles summary', 'Consistency in styles', 'Summary of actions'];
+
+test('report 3.0 in development: every section, no verdict words, the matrix as a table, progress with history, axe', async ({ page }) => {
+  await open(page, '&history=1');
+  for (const h of [...SECTIONS_3, 'Actions across your team', 'Food for thought', 'Key takeaways', 'Your plan for next week', 'Progress over time']) {
+    await expect(page.getByRole('heading', { level: 2, name: h })).toBeVisible();
+  }
+  await expect(page.getByText('Development report', { exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'Your next 90 days' })).toBeVisible();
+  await expect(page.getByText(/out of 10$/).first()).toBeVisible();
+  // Development never shows verdict words (D75).
+  const text = await page.getByRole('main').innerText();
+  for (const w of ['the bar', 'Development need', 'Verdict']) expect(text).not.toContain(w);
+  // The distribution matrix and its legend in words, then its real table.
+  const matrix = page.getByRole('img', { name: /^Actions by team member: \d+ people/ });
+  await expect(matrix).toBeVisible();
+  await expect(page.getByText('Very low', { exact: true }).first()).toBeVisible();
+  const group = page.getByRole('group', { name: 'Actions by team member' });
+  await group.getByRole('button', { name: 'Show as table' }).click();
+  const table = page.getByRole('table', { name: 'Actions by team member' });
+  await expect(table.getByRole('columnheader', { name: 'Meet face to face' })).toBeVisible();
+  await expect(table.getByRole('rowheader', { name: 'For the team' })).toBeVisible();
+  // Progress: the earlier attempt beside this one.
+  await expect(page.getByRole('rowheader', { name: 'Attempt 1' })).toBeVisible();
+  await expect(page.getByRole('rowheader', { name: 'This attempt' })).toBeVisible();
+  expect(await axe(page)).toEqual([]);
+});
+
+test('report 3.0 in assessment: the verdict first, skill verdicts, development needs, print and axe', async ({ page }) => {
+  await open(page, '&purpose=assessment&policy=random&seed=5');
+  await expect(page.getByText('Assessment report', { exact: true })).toBeVisible();
+  for (const h of [...SECTIONS_3, 'Actions across the team', 'Development needs']) {
+    await expect(page.getByRole('heading', { level: 2, name: h })).toBeVisible();
+  }
+  await expect(page.getByRole('heading', { level: 2, name: 'Food for thought' })).toHaveCount(0);
+  // The overall verdict comes before the summary's narrative, with its bar, evidence and review status.
+  await expect(page.getByText('Overall verdict', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^(Exceeds|Meets|Approaching|Below) the bar$/)).toBeVisible();
+  await expect(page.getByText('The bar: an overall level of Proficient, with no skill below Developing.', { exact: true })).toBeVisible();
+  await expect(page.getByText(/^Based on \d+ conversations · AI only, not yet reviewed by an assessor$/)).toBeVisible();
+  await expect(page.getByText(/^Records: r\d+/)).toBeVisible();
+  await expect(page.getByText(/^Verdict: (Strength|Meets|Development need)$/).first()).toBeVisible();
+  expect(await axe(page)).toEqual([]);
+
+  // Print: a page per section, the matrix as a table.
+  await page.getByRole('button', { name: 'Download PDF' }).click();
+  await expect(page.getByText(/^Page 1 of \d+$/)).toBeVisible();
+  const pages = page.getByRole('article', { name: /^Assessment report, page \d+$/ });
+  expect(await pages.count()).toBeGreaterThanOrEqual(14);
+  await expect(page.getByRole('table', { name: 'Actions by team member' })).toBeVisible();
+  await expect(page.getByRole('table', { name: 'Deviation by comparison' })).toBeVisible();
+  expect(await axe(page)).toEqual([]);
+});
+
+test('report 3.0 with six styles at 834 and in the light theme passes axe', async ({ page }) => {
+  await page.setViewportSize({ width: 834, height: 1194 });
+  await open(page, '&lens=six_styles&theme=light');
+  await expect(page.getByRole('heading', { level: 2, name: 'Leadership styles summary' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'Pace Setter' })).toBeVisible();
+  // Nothing scrolls sideways at tablet width.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  expect(await axe(page)).toEqual([]);
+});
+
 test('print media lays the pages out one per letter sheet', async ({ page }) => {
   await open(page, '&print=1');
   await expect(page.getByText(/^Page 1 of \d+$/)).toBeVisible();
