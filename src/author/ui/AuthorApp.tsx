@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
 import { Brief, type AuthorDraftResponse, type FrameworkDimension, type LeadershipLensModule, type Question, type QuestionId, type Recommendation } from '../../api/author';
-import { HALDEN_THEME } from '../../app/clientTheme';
 import { parseStoryline } from '../../engine/config';
 import type { LensId } from '../../engine/lens';
 import { useMediaQuery } from '../../lib/useMediaQuery';
+import type { AppliedTheme } from '../../theme/types';
 import { guardDraft } from '../copyGuard';
 import { createDrafters, firstAnswer, MockDrafter, type Drafter } from '../drafter';
 import { extractFramework } from '../extract';
@@ -44,7 +44,9 @@ function download(name: string, value: unknown) {
 
 export interface AuthorAppProps {
   theme?: 'dark' | 'light';
-  clientTheme?: boolean;
+  /** The client theme as the theme loader applied it (D72), and the `?client=` value to pass on to "Play this draft". */
+  clientTheme?: AppliedTheme | null;
+  client?: string | null;
   /** Tests and stories pass their own; the app uses the server when configured, else the templates. */
   drafters?: Drafter[];
 }
@@ -54,7 +56,7 @@ export interface AuthorAppProps {
  * Leadership Lens step, the build preview, then confirm and lock, which outputs the lens module and a
  * drafted storyline the participant app can play. For authors, never participants.
  */
-export function AuthorApp({ theme = 'dark', clientTheme = false, drafters: given }: AuthorAppProps) {
+export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, drafters: given }: AuthorAppProps) {
   const drafters = useMemo(() => given ?? createDrafters(), [given]);
   const wide = useMediaQuery('(min-width: 1280px)');
   const [brief, setBrief] = useState<Brief>(() => Brief.parse({}));
@@ -210,7 +212,7 @@ export function AuthorApp({ theme = 'dark', clientTheme = false, drafters: given
     for (const s of [sessionStorage, localStorage]) { try { s.setItem(DRAFT_KEY, json); } catch { /* storage blocked */ } }
     const q = new URLSearchParams({ storyline: 'draft', start: 'onboarding', participant: 'author_draft' });
     if (theme === 'light') q.set('theme', 'light');
-    if (clientTheme) q.set('client', 'halden');
+    if (client) q.set('client', client);
     window.open(`/?${q}`, '_blank');
   }
 
@@ -222,7 +224,7 @@ export function AuthorApp({ theme = 'dark', clientTheme = false, drafters: given
   const q = editing ? null : current;
   const editingPrompt = editing ? log.find((e): e is Extract<Entry, { kind: 'qa' }> => e.kind === 'qa' && e.id === editing)?.prompt : null;
   const askId = editing ?? q?.question.id;
-  const style: CSSProperties = { colorScheme: theme, background: theme === 'dark' ? 'var(--il-backdrop-office)' : 'var(--il-backdrop-daylight)', ...(clientTheme ? HALDEN_THEME : null) };
+  const style: CSSProperties = { colorScheme: theme, background: theme === 'dark' ? 'var(--il-backdrop-office)' : 'var(--il-backdrop-daylight)', ...clientTheme?.vars };
 
   return (
     <div className="il-theme min-h-screen font-sans text-14 leading-(--il-app-leading) text-fg-primary" style={style}>
