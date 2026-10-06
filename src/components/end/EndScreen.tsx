@@ -82,7 +82,7 @@ export function EndScreen(p: EndScreenProps) {
         </div>
       </section>
 
-      <section aria-label={t('end.results.aria')} className="relative grid grid-cols-(--il-end-results-columns) text-large:grid-cols-(--il-end-results-columns-large) gap-3">
+      <section aria-label={t('end.results.aria')} className="relative grid grid-cols-(--il-end-results-columns) text-large:grid-cols-(--il-end-results-columns-large) gap-3 tablet-portrait:grid-cols-3">
         <div className={`${TILE} gap-2`}>
           <span className="text-12 text-fg-secondary">{t('end.results.target')}</span>
           <b className="text-24">

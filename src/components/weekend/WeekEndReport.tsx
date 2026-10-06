@@ -52,7 +52,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
     : t('weekend.pulse.title');
 
   return (
-    <div className="grid flex-1 animate-(--il-weekend-enter) grid-cols-(--il-weekend-report-columns) gap-5">
+    <div className="grid flex-1 animate-(--il-weekend-enter) grid-cols-(--il-weekend-report-columns) gap-5 tablet-portrait:grid-cols-1">
       <div className="flex flex-col gap-5">
         <section aria-labelledby={`${id}funnel`} className={`${CARD} gap-3`}>
           <div className="flex justify-between">
