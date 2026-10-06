@@ -89,6 +89,8 @@ export function buildReport(sim: Sim) {
   const dom = dominant(choices.map(d => d.chosen));
   const cap = capability(sim);
   const grid = NEEDS.map(need => styles.map(used => choices.filter(d => d.need === need && d.chosen === used).length));
+  // The lens's fit table in the grid's shape: sent with the report, once the run has ended.
+  const fitGrid = NEEDS.map(need => styles.map(used => c.lens.fit[need][used] ?? 2));
   const capNarrative = cap < 40 ? r.narratives.capability.low : cap < 70 ? r.narratives.capability.mid : r.narratives.capability.high;
   const weekly = choices.filter(d => d.source === 'weeklyStyle');
   const weeks = all.map(m => ({
@@ -193,7 +195,7 @@ export function buildReport(sim: Sim) {
       strengths, priorities, business: businessLine,
       narrative: overall === null ? null : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null
     },
-    style: { shares, total: choices.length, dominant: dom, capability: roundHalfUp(cap), grid, matched, weeklyTotal: weekly.length, weeks,
+    style: { shares, total: choices.length, dominant: dom, capability: roundHalfUp(cap), grid, fit: fitGrid, matched, weeklyTotal: weekly.length, weeks,
       narrative: [capNarrative, ...(domLine ? [domLine] : [])] },
     intent,
     skills: skills.map(({ rawScore: _r, order: _o, ...s }) => s),

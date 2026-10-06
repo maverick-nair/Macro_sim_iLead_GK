@@ -17,7 +17,7 @@ async function digest(policy: Policy, seed: number) {
   const { view } = await play(config, policy, seed);
   const { members, money, periods, score, history, badges } = view;
   const r = view.report!;
-  const facts = { members, money, periods, score, history, badges, style: r.style, intent: r.intent, moments: r.moments, people: r.people,
+  const facts = { members, money, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
     skills: r.skills.map(s => ({ key: s.key, observations: s.observations, score: s.score, level: s.level, quotes: s.quotes })), summary: r.summary };
   return createHash('sha256').update(JSON.stringify(facts)).digest('hex').slice(0, 16);
 }

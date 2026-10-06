@@ -5,6 +5,7 @@ import { useI18n, type I18n } from '../../i18n';
 import { ActionTile, type ActionTileProps } from '../action/ActionTile';
 import { SubPeriodUnitContext, type PeriodUnit, type SubPeriodUnit } from '../action/days';
 import { LOW_BELOW } from '../metric/MetricBar';
+import { useStyleName } from '../style/lens';
 
 /** Fact rows under the stats, in the order given. The style row always comes first, from `style`. */
 export type ProfileFactKey = 'previous' | 'tenure' | 'experience' | 'skills' | 'remarks' | 'careerGoal' | 'relationships';
@@ -147,6 +148,7 @@ export function PromiseLine({ promise }: { promise: ProfilePromise }) {
 export function ProfilePanel(props: ProfilePanelProps) {
   const { name, title, img, mood, away = false, stats, style, facts, shared, periodUnit, subPeriodUnit, timeline, promises, actions, onClose } = props;
   const { t, number } = useI18n();
+  const styleName = useStyleName();
   const ref = useRef<HTMLDivElement>(null);
   const interactionsId = useId();
 
@@ -196,7 +198,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
             ))}
           </div>
           {shared && <div className="rounded-12 bg-accent-soft px-3 py-2.5 text-13"><b>{t('profile.shared')}</b> {shared}</div>}
-          {factRow(t('profile.fact.label', { key: 'style', unit: periodUnit }), style ? t('style.name', { style }) : t('profile.fact.empty', { key: 'style' }))}
+          {factRow(t('profile.fact.label', { key: 'style', unit: periodUnit }), style ? styleName(style) : t('profile.fact.empty', { key: 'style' }))}
           {facts.map(f => factRow(t('profile.fact.label', { key: f.key, unit: periodUnit }), f.value ?? t('profile.fact.empty', { key: f.key })))}
         </div>
       </div>

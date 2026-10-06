@@ -3,7 +3,7 @@ import type { StyleKey } from '../../data/types';
 import { NoWrapButton } from '../../ds/Button';
 import { Heading } from '../Heading';
 import { useI18n } from '../../i18n';
-import { STYLE_KEYS } from '../style/StyleControl';
+import { useLens } from '../style/lens';
 import { mark, rich } from './rich';
 import { StyleSettingCard } from './StyleSettingCard';
 import { StyleSettingList } from './StyleSettingList';
@@ -88,13 +88,24 @@ function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange
   );
 }
 
-/** The sponsor's prompt, then the four style definitions. */
+/**
+ * Grid for the intro. Four styles sit beside the sponsor's prompt as designed; any other count puts the
+ * prompt on its own row and the styles under it, all in one row from 1280 wide, in rows of three below.
+ */
+const WIDE: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 5: 'grid-cols-3 wide:grid-cols-5', 6: 'grid-cols-3 wide:grid-cols-6' };
+const introGrid = (n: number) => (n === 4
+  ? { className: 'grid-cols-(--il-stylesetting-intro-columns)', prompt: '' }
+  : { className: WIDE[n] ?? 'grid-cols-3', prompt: 'col-span-full' });
+
+/** The sponsor's prompt, then the lens's style definitions. */
 function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine: string }) {
   const { t } = useI18n();
+  const lens = useLens();
   const defsId = useId();
+  const grid = introGrid(lens.styles.length);
   return (
-    <div id={defsId} className="grid grid-cols-(--il-stylesetting-intro-columns) gap-3">
-      <div className="flex items-center gap-3 rounded-18 border border-line-default bg-surface-card px-3.5 py-3">
+    <div id={defsId} className={`grid ${grid.className} gap-3`}>
+      <div className={`flex items-center gap-3 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 ${grid.prompt}`}>
         <span aria-hidden="true" className="flex size-11 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">{initials(sponsorName)}</span>
         <span className="text-14 text-pretty">
           <span className="sr-only">{t('stylesetting.sponsor.says', { name: sponsorName })}</span>
@@ -103,12 +114,12 @@ function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine:
         <a href={`#${defsId}`} className={`sr-only text-13 font-700 focus:not-sr-only ${focus}`}>{t('stylesetting.sponsor.definitions')}</a>
       </div>
       <div role="list" aria-label={t('stylesetting.definitions.aria')} className="contents">
-        {STYLE_KEYS.map(k => (
-          <div key={k} role="listitem" className="flex items-start gap-2.5 rounded-18 border border-line-default bg-surface-card px-3.5 py-3">
-            <span aria-hidden="true" className="flex size-7.5 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">{t('style.letter', { style: k })}</span>
+        {lens.styles.map(s => (
+          <div key={s.key} role="listitem" className="flex items-start gap-2.5 rounded-18 border border-line-default bg-surface-card px-3.5 py-3">
+            <span aria-hidden="true" className={`flex size-7.5 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
             <span className="flex flex-col">
-              <b className="text-14">{t('style.name', { style: k })}</b>
-              <span className="text-12 leading-(--il-stylesetting-intro-leading) text-fg-secondary">{t('style.description', { style: k })}</span>
+              <b className="text-14">{s.name}</b>
+              <span className="text-12 leading-(--il-stylesetting-intro-leading) text-fg-secondary">{s.description}</span>
             </span>
           </div>
         ))}

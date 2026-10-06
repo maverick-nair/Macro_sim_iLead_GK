@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import type { PeriodUnit } from '../action/days';
 
 export type { PeriodUnit };
-export type StyleKey = 'D' | 'G' | 'P' | 'E';
-export const STYLE_KEYS: readonly StyleKey[] = ['D', 'G', 'P', 'E'];
+/** A lens style key (D70); names come with the report's lens. */
+export type StyleKey = string;
 export type Tone = 'gain' | 'attention' | 'neutral';
 
 /** A verbatim quote and where it was said ("Week 2, 1:1 with Kent"). */
@@ -85,8 +85,13 @@ export interface StyleExtras {
   total: number;
   dominant: StyleKey[];
   capability: number;
-  /** Rows: the style needed (D, G, P, E); columns: the style used. */
+  /** Rows: the four needs; columns: the style used, in the lens's order. */
   grid: number[][];
+  /** The lens's style difference per grid cell: 0 fits. */
+  fit: number[][];
+  /** The lens's styles and needs, in the grid's order (D70). */
+  styles: Array<{ key: StyleKey; letter: string; name: string }>;
+  needs: Array<{ key: string; label: string; short: string }>;
   narrative: string[];
 }
 

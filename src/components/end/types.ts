@@ -5,7 +5,8 @@ import type { BadgeChipProps } from '../gamification/Badge';
 export type { PeriodUnit };
 
 export type MetricKey = 'skill' | 'morale' | 'result' | 'trust';
-export type StyleKey = 'D' | 'G' | 'P' | 'E';
+/** A lens style key (D70). */
+export type StyleKey = string;
 export type Tone = 'gain' | 'decline' | 'neutral';
 
 /** A tier of the Leadership Score, lowest first. */

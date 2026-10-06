@@ -34,8 +34,8 @@ describe('live shell copy', () => {
     expect(t('liveshell.subtitle', { format: 'email', cost: 'No days', topic: '', minutes: 0 })).toBe('No days used');
   });
   it('words the brief style row and lists who is reacting', () => {
-    expect(t('liveshell.brief.styleValue', { style: 'D' })).toBe('Directing. You set the task and check in closely.');
-    expect(t('liveshell.brief.styleValue', { style: 'none' })).toBe('Not set yet');
+    expect(t('liveshell.brief.styleValue', { name: 'Directing', short: 'You set the task and check in closely.' })).toBe('Directing. You set the task and check in closely.');
+    expect(t('liveshell.brief.styleNone')).toBe('Not set yet');
     expect(t('liveshell.reacting.lead', { count: 3, rest: 'Kent, Beth', last: 'Jack' })).toBe('Kent, Beth and Jack are taking in what you said.');
     expect(t('liveshell.reacting.lead', { count: 1, rest: '', last: 'Kent' })).toBe('Kent is taking in what you said.');
   });

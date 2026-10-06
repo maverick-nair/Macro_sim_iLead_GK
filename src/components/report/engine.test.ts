@@ -52,7 +52,7 @@ describe('the engine report, shaped for display', () => {
     if (intent?.key !== 'intent') throw new Error('no intent section');
     const first = report.intent[0];
     expect(intent.cards[0].verdict).toBe(i18n.t('report.intent.verdict', { status: first.status }));
-    expect(intent.cards[0].did).toContain(i18n.t('style.name', { style: first.intent[0] }));
+    expect(intent.cards[0].did).toContain(report.lens.styles.find(x => x.key === first.intent[0])!.name);
   });
 
   it('builds the plan from the engine plan, the first reflection answer and the check in date', async () => {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { EngineView } from '../../engine/contract';
 import { moneyFormatter } from '../../engine/money';
 import { useI18n } from '../../i18n';
+import { LensProvider } from '../style/lens';
 import { BusinessSection } from './BusinessSection';
 import { ReportProvider } from './context';
 import { buildReportModel, type SectionModel } from './engine';
@@ -123,6 +124,7 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
   }
 
   return (
+    <LensProvider lens={view.report?.lens ?? view.lens}>
     <ReportProvider value={{ print, tables: 'toggle' }}>
       <ReportDocument
         landmark
@@ -137,6 +139,7 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
         )}
       />
     </ReportProvider>
+    </LensProvider>
   );
 }
 

@@ -15,6 +15,8 @@
 @custom-variant text-large (&:where([data-text-large], [data-text-large] *));
 /* A window or tablet narrower than the 1024 design (744 to 1023, D69): rows that hold a line at 1024 may wrap. */
 @custom-variant tablet (@media (max-width: 1023.98px));
+/* 1280 and wider: the design's full width layouts (a lens's style definitions in one row). */
+@custom-variant wide (@media (min-width: 1280px));
 /* A live stage narrower than 560, as beside the open brief on a tablet (D69): its columns stack. The
    stage section is the container; at 1024 and up it is wider, so nothing changes there. */
 @custom-variant stage-narrow (@container (max-width: 559.98px));

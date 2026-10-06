@@ -208,7 +208,9 @@ export const ReportView = z.object({
   style: z.object({
     shares: z.record(StyleKey, z.number().int()), total: z.number().int(), dominant: z.array(StyleKey), capability: Num,
     /** Rows: the four needs, in `lens.needs` order; columns: the style used, in `lens.styles` order. */
-    grid: z.array(z.array(z.number().int())), matched: z.number().int(), weeklyTotal: z.number().int(),
+    grid: z.array(z.array(z.number().int())),
+    /** The lens's style difference per grid cell (0 fits), so the report can outline what fit. */
+    fit: z.array(z.array(z.number().int().min(0).max(2))), matched: z.number().int(), weeklyTotal: z.number().int(),
     weeks: z.array(z.object({ memberId: Id, name: Text, left: z.boolean(), cells: z.array(z.object({ period: z.number().int(), chosen: StyleKey, fit: z.number().int().min(0).max(2) }).nullable()) })),
     narrative: z.array(Text)
   }),

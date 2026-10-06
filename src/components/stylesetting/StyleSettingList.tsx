@@ -1,7 +1,8 @@
 import { useId } from 'react';
 import type { StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
-import { STYLE_KEYS, StyleRadio } from '../style/StyleControl';
+import { StyleRadio } from '../style/StyleControl';
+import { useLens, useStyleName } from '../style/lens';
 import { StatsLine } from './StyleSettingCard';
 import { portraitBackdrop, type PeriodUnit, type StyleSettingMember } from './types';
 
@@ -15,6 +16,9 @@ export function StyleAvatar({ img, away, size }: { img: string; away: boolean; s
 }
 
 const grid = 'grid grid-cols-(--il-stylesetting-list-columns) gap-3';
+/** The list's columns for a lens with other than four styles: one narrower radio column per style. */
+const columns = (n: number) => (n === 4 ? undefined
+  : { gridTemplateColumns: `var(--il-stylesetting-list-lead-lens) repeat(${n}, var(--il-stylesetting-list-radio-lens)) var(--il-stylesetting-list-reason-lens)` });
 
 export interface StyleSettingRowProps {
   member: StyleSettingMember;
@@ -26,13 +30,15 @@ export interface StyleSettingRowProps {
 
 /**
  * One member in the list view: portrait, name and stage, stats, last period's style and reaction,
- * the four style radios as one radio group (one tab stop, arrow keys move and pick), and the reason.
+ * one radio per lens style as one radio group (one tab stop, arrow keys move and pick), and the reason.
  */
 export function StyleSettingRow({ member: m, periodUnit, radioPrefix, onStyle }: StyleSettingRowProps) {
   const { t } = useI18n();
+  const lens = useLens();
+  const styleName = useStyleName();
   const pos = m.lastReaction === 'pos';
   return (
-    <div role="row" className={`${grid} items-center border-b border-line-default px-4.5 py-2.5`}>
+    <div role="row" style={columns(lens.styles.length)} className={`${grid} items-center border-b border-line-default px-4.5 py-2.5`}>
       <div role="rowheader" className="flex items-center gap-2.5">
         <StyleAvatar img={m.img} away={m.away} size="md" />
         <span className="flex flex-col">
@@ -43,14 +49,14 @@ export function StyleSettingRow({ member: m, periodUnit, radioPrefix, onStyle }:
       </div>
       <span role="cell" className="text-13"><StatsLine member={m} short /></span>
       <span role="cell" className="text-13">
-        {m.lastStyle === null ? t('stylesetting.last.none', { unit: periodUnit }) : m.lastReaction === null ? t('style.name', { style: m.lastStyle }) : (
-          <><span aria-hidden="true" className={pos ? 'text-status-gain' : 'text-status-decline'}>{t('stylesetting.reaction.arrow', { reaction: m.lastReaction })}</span> {t('stylesetting.last.list', { style: t('style.name', { style: m.lastStyle }), reaction: t('stylesetting.reaction', { reaction: m.lastReaction }) })}</>
+        {m.lastStyle === null ? t('stylesetting.last.none', { unit: periodUnit }) : m.lastReaction === null ? styleName(m.lastStyle) : (
+          <><span aria-hidden="true" className={pos ? 'text-status-gain' : 'text-status-decline'}>{t('stylesetting.reaction.arrow', { reaction: m.lastReaction })}</span> {t('stylesetting.last.list', { style: styleName(m.lastStyle), reaction: t('stylesetting.reaction', { reaction: m.lastReaction }) })}</>
         )}
       </span>
-      {/* No boxes of their own: the four radios stay grid items under their column headers. */}
-      <div role="cell" aria-colspan={4} className="contents">
+      {/* No boxes of their own: the radios stay grid items under their column headers. */}
+      <div role="cell" aria-colspan={lens.styles.length} className="contents">
         <div role="radiogroup" aria-label={t('style.group.aria', { name: m.name })} className="contents">
-          {STYLE_KEYS.map(k => <StyleRadio key={k} style={k} memberName={m.name} name={`${radioPrefix}${m.id}`} checked={m.style === k} onSelect={onStyle} />)}
+          {lens.styles.map(({ key: k }) => <StyleRadio key={k} style={k} memberName={m.name} name={`${radioPrefix}${m.id}`} checked={m.style === k} onSelect={onStyle} />)}
         </div>
       </div>
       <span role="cell" className="text-13 text-fg-secondary">{m.rationale || t('stylesetting.rationale.none')}</span>
@@ -67,14 +73,15 @@ export interface StyleSettingListProps {
 /** The list view: a table with one row per member, the fastest path for keyboards and screen readers. */
 export function StyleSettingList({ members, periodUnit, onStyle }: StyleSettingListProps) {
   const { t } = useI18n();
+  const lens = useLens();
   const prefix = useId() + 'style-';
   return (
     <div role="table" aria-label={t('stylesetting.list.aria')} className="overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-12">
-      <div role="row" className={`${grid} border-b border-line-default px-4.5 py-3 text-12 font-700 tracking-(--il-stylesetting-list-header-tracking) text-fg-secondary uppercase`}>
+      <div role="row" style={columns(lens.styles.length)} className={`${grid} border-b border-line-default px-4.5 py-3 text-12 font-700 tracking-(--il-stylesetting-list-header-tracking) text-fg-secondary uppercase`}>
         <span role="columnheader">{t('stylesetting.list.member')}</span>
         <span role="columnheader">{t('stylesetting.list.stats')}</span>
         <span role="columnheader">{t('stylesetting.list.last', { unit: periodUnit })}</span>
-        {STYLE_KEYS.map(k => <span key={k} role="columnheader" className="text-center">{t('style.name', { style: k })}</span>)}
+        {lens.styles.map(s => <span key={s.key} role="columnheader" className="text-center">{s.name}</span>)}
         <span role="columnheader">{t('stylesetting.list.reason')}</span>
       </div>
       {members.map(m => <StyleSettingRow key={m.id} member={m} periodUnit={periodUnit} radioPrefix={prefix} onStyle={k => onStyle(m.id, k)} />)}

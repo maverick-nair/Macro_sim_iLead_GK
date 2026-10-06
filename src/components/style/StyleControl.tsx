@@ -2,8 +2,7 @@ import * as ToggleGroup from '@radix-ui/react-toggle-group';
 import { useId, useState, type KeyboardEvent, type MouseEvent } from 'react';
 import type { StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
-
-export const STYLE_KEYS: readonly StyleKey[] = ['D', 'G', 'P', 'E'];
+import { styleOf, useLens } from './lens';
 
 /** Board cards use the compact control; the style setting screen uses the roomier one. */
 const SIZES = {
@@ -20,12 +19,12 @@ export interface StyleTooltipProps {
 
 /** Full name and meaning of a style, shown above a segment on hover or focus. */
 export function StyleTooltip({ style, align, size = 'sm' }: StyleTooltipProps) {
-  const { t } = useI18n();
+  const s = styleOf(useLens(), style);
   const place = align === 'start' ? 'left-0' : 'left-full -translate-x-full';
   return (
     <div role="tooltip" className={`absolute bottom-full z-45 mb-2.5 flex flex-col gap-0.5 rounded-12 bg-(--il-style-tooltip-bg) px-3 py-2.5 text-(color:--il-style-tooltip-fg) pointer-events-none ${place} ${SIZES[size].tip}`}>
-      <b className="text-13">{t('style.name', { style })}</b>
-      <span className="text-12 leading-(--il-style-tooltip-leading)">{t('style.description', { style })}</span>
+      <b className="text-13">{s.name}</b>
+      <span className="text-12 leading-(--il-style-tooltip-leading)">{s.description}</span>
     </div>
   );
 }
@@ -56,12 +55,23 @@ export interface StyleControlProps {
 }
 
 /**
- * The D, G, P, E segmented control. A Radix toggle group in single mode: a radiogroup with one tab
- * stop, arrow keys move between letters (showing each tooltip on focus), Enter or Space picks.
- * Picking never clears the choice, and clicks never reach a parent card.
+ * Columns for the lens's 2 to 6 letters. Up to four share the row as designed. Five or six shrink to
+ * fit the card with a pointer, and wrap to rows of three on a touch screen, where each letter keeps
+ * its 44px target (D69).
+ */
+const COLUMNS: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' };
+const columns = (n: number) => COLUMNS[n] ?? 'grid-cols-(--il-style-segment-columns-many) pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-18';
+
+/**
+ * The style segmented control: one letter per lens style (D, G, P, E by default). A Radix toggle group
+ * in single mode: a radiogroup with one tab stop, arrow keys move between letters (showing each tooltip
+ * on focus), Enter or Space picks. Picking never clears the choice, and clicks never reach a parent card.
  */
 export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip, onTooltipChange, disabled = false, disabledReason, onDisabledPick }: StyleControlProps) {
   const { t } = useI18n();
+  const lens = useLens();
+  const n = lens.styles.length;
+
   const reasonId = useId();
   const described = disabled && disabledReason ? reasonId : undefined;
   const [own, setOwn] = useState<StyleKey | null>(null);
@@ -86,15 +96,15 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
       aria-label={t('style.group.aria', { name: memberName })}
       aria-disabled={disabled || undefined}
       onClick={stop}
-      className={`grid grid-cols-4 gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.5 ${disabled ? 'opacity-60' : ''}`}
+      className={`grid ${columns(n)} gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.5 ${disabled ? 'opacity-60' : ''}`}
     >
-      {STYLE_KEYS.map((k, i) => {
+      {lens.styles.map(({ key: k, letter, name, description }, i) => {
         const on = value === k;
         return (
           <div key={k} className="relative">
             <ToggleGroup.Item
               value={k}
-              aria-label={t('style.option.aria', { style: t('style.name', { style: k }), description: t('style.description', { style: k }) })}
+              aria-label={t('style.option.aria', { style: name, description })}
               aria-disabled={disabled || undefined}
               aria-describedby={described}
               onMouseEnter={show(k)}
@@ -104,9 +114,9 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
               onKeyDown={onKey}
               className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-pill border-0 p-0 font-700 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}
             >
-              {t('style.letter', { style: k })}
+              {letter}
             </ToggleGroup.Item>
-            {tip === k && <StyleTooltip style={k} align={i < 2 ? 'start' : 'end'} size={size} />}
+            {tip === k && <StyleTooltip style={k} align={i < n / 2 ? 'start' : 'end'} size={size} />}
           </div>
         );
       })}
@@ -118,7 +128,7 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
 export interface StyleRadioProps {
   style: StyleKey;
   memberName: string;
-  /** Shared by the four radios of one member, so arrow keys move within that row. */
+  /** Shared by the radios of one member, so arrow keys move within that row. */
   name: string;
   checked: boolean;
   onSelect: (style: StyleKey) => void;
@@ -127,6 +137,7 @@ export interface StyleRadioProps {
 /** One cell of the style setting list view: a native radio, the fastest path for keyboards and screen readers. */
 export function StyleRadio({ style, memberName, name, checked, onSelect }: StyleRadioProps) {
   const { t } = useI18n();
+  const lens = useLens();
   return (
     <label className="flex cursor-pointer justify-center">
       <input
@@ -134,7 +145,7 @@ export function StyleRadio({ style, memberName, name, checked, onSelect }: Style
         name={name}
         checked={checked}
         onChange={() => onSelect(style)}
-        aria-label={t('style.option.for', { style: t('style.name', { style }), name: memberName })}
+        aria-label={t('style.option.for', { style: styleOf(lens, style).name, name: memberName })}
         className="size-5 cursor-pointer accent-brand-electric-blue"
       />
     </label>

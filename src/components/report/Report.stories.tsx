@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { EngineView } from '../../engine/contract';
+import { DEFAULT_LENS, DEFAULT_LENS_VIEW, NEEDS } from '../../engine/lens';
 import { playToEnd } from '../../engine/mock';
 import { REPORT_FIXTURE as FX } from '../../data/reportFixture';
 import { BusinessSection } from './BusinessSection';
@@ -70,7 +71,8 @@ export const StyleFitEngine: StoryObj = {
   render: () => (
     <Card>
       <StyleFitSection unit="week" periods={[1, 2, 3, 4, 5, 6, 7, 8]} rows={fitRows} summary="You matched 31 of 48 choices."
-        extras={{ shares: { D: 29, G: 13, P: 36, E: 22 }, total: 100, dominant: ['P'], capability: 69, grid: [[20, 4, 2, 0], [5, 6, 3, 1], [2, 2, 25, 4], [2, 1, 6, 17]], narrative: ['You matched what people needed a good part of the time. The misses cluster around a few people; look at them first.'] }} />
+        extras={{ shares: { D: 29, G: 13, P: 36, E: 22 }, total: 100, dominant: ['P'], capability: 69, grid: [[20, 4, 2, 0], [5, 6, 3, 1], [2, 2, 25, 4], [2, 1, 6, 17]],
+          fit: NEEDS.map(n => DEFAULT_LENS.styles.map(s => DEFAULT_LENS.fit[n][s.key])), styles: DEFAULT_LENS_VIEW.styles, needs: DEFAULT_LENS_VIEW.needs, narrative: ['You matched what people needed a good part of the time. The misses cluster around a few people; look at them first.'] }} />
     </Card>
   )
 };

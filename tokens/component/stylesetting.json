@@ -13,6 +13,9 @@
     },
     "list": {
       "columns": { "value": "minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr)", "$description": "Member, stats, last period, four style radios, reason" },
+      "lead-lens": { "value": "minmax(200px,1.4fr) minmax(150px,1fr) minmax(150px,1fr)", "$description": "A lens with other than four styles: member, stats and last period columns" },
+      "radio-lens": { "value": "minmax(72px,96px)", "$description": "A lens with other than four styles: one narrower radio column per style" },
+      "reason-lens": { "value": "minmax(160px,1.1fr)", "$description": "A lens with other than four styles: the reason column" },
       "header-tracking": { "value": "{tracking.label}" }
     },
     "summary": {

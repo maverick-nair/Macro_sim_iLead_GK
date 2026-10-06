@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n';
 import type { PeriodUnit } from '../action/days';
 import { Heading, type HeadingLevel } from '../Heading';
 import { MemberCard, type MemberCardProps } from '../member/MemberCard';
-import { STYLE_KEYS } from '../style/StyleControl';
+import { useLens } from '../style/lens';
 
 /** The line beside the heading: nobody selected, one person selected, or picking people for an action. */
 export type TeamBoardHint = { kind: 'idle' } | { kind: 'selected'; name: string } | { kind: 'picking' };
@@ -42,17 +42,18 @@ const HelpIcon = () => (
   </svg>
 );
 
-/** Explains the four leadership style letters on the cards, from more support to more freedom. */
+/** Explains the lens's style letters on the cards, from more support to more freedom. */
 function StyleLegend({ id, periodUnit }: { id: string; periodUnit: PeriodUnit }) {
   const { t } = useI18n();
+  const lens = useLens();
   return (
     <div id={id} role="dialog" aria-label={t('team.legend.title')}
       className={`absolute top-full right-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-18 border border-line-strong bg-surface-material p-4`}>
       <span className="text-13 text-fg-secondary">{t('team.legend.intro', { unit: periodUnit })}</span>
-      {STYLE_KEYS.map(k => (
-        <div key={k} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">
-          <span className="flex size-8 items-center justify-center rounded-round bg-brand font-700 text-brand-deep-space">{t('style.letter', { style: k })}</span>
-          <span className="flex flex-col"><b>{t('style.name', { style: k })}</b><span className="text-13 text-fg-secondary">{t('style.description', { style: k })}</span></span>
+      {lens.styles.map(s => (
+        <div key={s.key} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">
+          <span className={`flex size-8 items-center justify-center rounded-round bg-brand font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
+          <span className="flex flex-col"><b>{s.name}</b><span className="text-13 text-fg-secondary">{s.description}</span></span>
         </div>
       ))}
       <div className="flex justify-between border-t border-line-default pt-1 text-12 text-fg-secondary"><span>{t('team.legend.support')}</span><span>{t('team.legend.freedom')}</span></div>

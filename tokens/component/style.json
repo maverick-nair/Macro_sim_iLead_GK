@@ -1,7 +1,9 @@
 {
   "style": {
     "segment": {
-      "transition": { "value": "background {duration.fast} {easing.brand}", "$description": "Selected letter fill" }
+      "transition": { "value": "background {duration.fast} {easing.brand}", "$description": "Selected letter fill" },
+      "columns-many": { "value": "repeat(auto-fit,minmax(1.75rem,1fr))", "$description": "Five or six letters shrink to fit the card" },
+      "columns-touch": { "value": "repeat(3,minmax(0,1fr))", "$description": "Five or six letters on a touch screen wrap to rows of three, each a 44px target" }
     },
     "tooltip": {
       "bg": { "value": "{color.fg.primary}", "$description": "Inverted: the tooltip uses the text color as its fill" },
