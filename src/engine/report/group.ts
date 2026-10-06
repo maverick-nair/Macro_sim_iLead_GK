@@ -287,7 +287,7 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
   const best = [...actionRows].filter(a => a.mean !== null && a.used > 0).sort((x, y) => y.mean! - x.mean!)[0];
   const actions = shown ? {
     rows: actionRows,
-    narrative: most && most.frequency > 0 && best ? fill(P.actions, { action: most.name, best: best.name }) : null,
+    narrative: most && most.frequency > 0 && best ? fill(most.name === best.name && P.actionsSame ? P.actionsSame : P.actions, { action: most.name, best: best.name }) : null,
     prompts: P.prompts.actions
   } : null;
 

@@ -54,13 +54,15 @@ export interface DataTableProps {
   rows: Array<{ key: string; header: string; cells: string[] }>;
   /** A visually hidden copy beside a chart. */
   hidden?: boolean;
+  /** Keep the caption for screen readers only, when a visible heading already names the table. */
+  captionHidden?: boolean;
 }
 
 /** The data behind a chart, as a real table: caption, column headers and row headers. Scrolls sideways when wide. */
-export function DataTable({ caption, columns, rows, hidden }: DataTableProps) {
+export function DataTable({ caption, columns, rows, hidden, captionHidden }: DataTableProps) {
   const table = (
     <table className="w-full border-collapse text-13">
-      <caption className={hidden ? 'sr-only' : 'pb-1.5 text-left text-12 text-fg-secondary'}>{caption}</caption>
+      <caption className={hidden || captionHidden ? 'sr-only' : 'pb-1.5 text-left text-12 text-fg-secondary'}>{caption}</caption>
       <thead>
         <tr>
           {columns.map((c, i) => (

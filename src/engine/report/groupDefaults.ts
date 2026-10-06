@@ -77,6 +77,7 @@ export const DEFAULT_GROUP_COPY = {
   },
   funnel: 'Over {count} {unit}s the group averaged {actual} conversions against an ideal of {ideal}: {pct}% of what was possible.',
   actions: 'The action the group used most was {action}. The action that did the most for the people it reached was {best}.',
+  actionsSame: 'The action the group used most, {action}, was also the one that did the most for the people it reached.',
   attention: {
     top: 'The group spent most of its one to one time with top performers.',
     average: 'The group spent most of its one to one time with average performers.',
@@ -141,7 +142,7 @@ export const DEFAULT_GROUP_COPY = {
   ]
 };
 
-export type GroupCopy = typeof DEFAULT_GROUP_COPY;
+export type GroupCopy = Omit<typeof DEFAULT_GROUP_COPY, 'actionsSame'> & { actionsSame?: string };
 
 /** The group report's settings (D77): withheld below `minimumCohort` participants in development; aggregates read runs at `completeAt`% or more. */
 export const DEFAULT_GROUP = { minimumCohort: 5, completeAt: 100 };

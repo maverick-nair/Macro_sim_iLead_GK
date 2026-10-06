@@ -200,7 +200,7 @@ describe('buildGroupReport, development', () => {
     expect(g.funnel!.narrative).toBe('Over 1 weeks the group averaged 0.7 conversions against an ideal of 1: 70% of what was possible.');
     const coach = g.actions!.rows.find(r => r.key === 'coach')!;
     expect(coach).toMatchObject({ frequency: 3, used: 100, mean: 12, impact: 'high' });
-    expect(g.actions!.narrative).toBe('The action the group used most was Coach member. The action that did the most for the people it reached was Coach member.');
+    expect(g.actions!.narrative).toBe('The action the group used most, Coach member, was also the one that did the most for the people it reached.');
     expect(g.attention!.group).toEqual({ top: 20, average: 30, bottom: 50 });
     expect(g.attention!.narrative).toBe(DEFAULT_GROUP_COPY.attention.bottom);
     expect(g.takeaways.map(t => t.key)).toEqual(['skills', 'leadership', 'results', 'styles', 'actions', 'attention']);

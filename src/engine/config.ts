@@ -258,6 +258,8 @@ export const GroupCopy = z.object({
   consistency: z.object({ neededUsed: Bands3, intendedUsed: Bands3, neededIntended: Bands3 }),
   funnel: Copy,
   actions: Copy,
+  /** When the most used action is also the one with the most impact. */
+  actionsSame: Copy.optional(),
   attention: z.object({ top: Copy, average: Copy, bottom: Copy, even: Copy }),
   verdicts: Copy,
   prompts: z.object({ skills: Prompts, business: Prompts, styles: Prompts, funnel: Prompts, actions: Prompts, attention: Prompts }),

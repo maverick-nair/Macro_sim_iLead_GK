@@ -125,6 +125,7 @@ export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }
         <p className="m-0 text-12 text-fg-secondary">{t('group.verdicts.participantsNote')}</p>
         <DataTable
           caption={t('group.verdicts.participantsTitle')}
+          captionHidden
           columns={(['name', 'completion', 'level', 'verdict', 'review'] as const).map(c => t('group.verdicts.participantColumn', { column: c }))}
           rows={data.participants.map((p, i) => ({ key: `${i}${p.name}`, header: p.name, cells: [`${Math.round(p.completion)}%`, p.level ?? t('group.verdicts.noLevel'), p.label ?? none, t('group.verdicts.review', { review: p.review })] }))}
         />
