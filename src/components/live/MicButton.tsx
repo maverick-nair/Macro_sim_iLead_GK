@@ -13,6 +13,8 @@ export interface MicButtonProps {
   mode: 'voice' | 'text';
   /** Starts listening, or stops and goes to review while listening. */
   onPress: () => void;
+  /** `tablet`: 56px in both modes, as the tablet's voice composer (D72). */
+  layout?: 'desk' | 'tablet';
 }
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
@@ -36,12 +38,12 @@ const MicOffIcon = () => (
 );
 
 /** The mic button of the live reply bar. Renders state only; the speech provider lives elsewhere. */
-export function MicButton({ state, mode, onPress }: MicButtonProps) {
+export function MicButton({ state, mode, onPress, layout = 'desk' }: MicButtonProps) {
   const { t } = useI18n();
   const denied = state === 'denied';
   const listening = state === 'listening';
   const voice = mode === 'voice' && !denied;
-  const box = voice ? 'size-15' : 'size-12';
+  const box = layout === 'tablet' ? 'size-14' : voice ? 'size-15' : 'size-12';
   const look = denied
     ? 'bg-track text-fg-secondary'
     : listening
