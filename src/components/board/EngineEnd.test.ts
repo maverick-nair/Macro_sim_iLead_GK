@@ -1,3 +1,4 @@
+import { parseReport } from '../../engine/reportContract';
 import { describe, expect, it } from 'vitest';
 import { parseStoryline } from '../../engine/config';
 import { EngineView } from '../../engine/contract';
@@ -21,7 +22,7 @@ describe('the end screen on the engine', () => {
   it('shows the report as the engine sent it', async () => {
     const view = await endedRun('good');
     expect(view.phase).toBe('ended');
-    const report = view.report!;
+    const report = parseReport(view.report);
     const p = endScreenProps(i18n, view, report);
     // Tier and score: the engine's tier, its tiers lowest first, the total rounded for display.
     expect(p.tier).toBe(report.score.tier.key);
@@ -51,7 +52,7 @@ describe('the end screen on the engine', () => {
 
   it('says how conversions compare with the ideal pace', async () => {
     const view = await endedRun('passive');
-    const report = view.report!;
+    const report = parseReport(view.report);
     const p = endScreenProps(i18n, view, report);
     const ideal = Math.round(report.business.funnel.at(-1)!.cumulativeIdeal);
     const diff = report.results.conversions - ideal;

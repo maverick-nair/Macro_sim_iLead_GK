@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import { REPORT_PAGE_RULE } from '../../styles/print';
-import { useReport } from './context';
+import { usePurpose, useReport } from './context';
 import { paginate, splitAt } from './paginate';
 import type { ReportBlock } from './types';
 import './messages';
@@ -35,7 +35,7 @@ export interface ReportDocumentProps {
  * then packed into pages before the browser paints, so the footers count the pages that print.
  */
 export function ReportDocument({ blocks, toolbar, footer, landmark = false }: ReportDocumentProps) {
-  const { print } = useReport();
+  const { print, purpose = 'development' } = useReport();
   const { t } = useI18n();
   const Outer = landmark ? 'main' : 'div';
   const outer = print
@@ -46,7 +46,7 @@ export function ReportDocument({ blocks, toolbar, footer, landmark = false }: Re
       {toolbar && <div className={`w-full print:hidden ${print ? 'scheme-dark' : ''}`}>{toolbar}</div>}
       {print && <style>{REPORT_PAGE_RULE}</style>}
       {print ? <PrintPages blocks={blocks} footer={footer} /> : splitAt(blocks, b => !!b.card).map((group, i) => (
-        <article key={group[0].key} aria-label={t('report.page', { n: i + 1 })} className={`${WEB_PAGE} rounded-28 p-8`}>
+        <article key={group[0].key} aria-label={t('report.page', { n: i + 1, purpose })} className={`${WEB_PAGE} rounded-28 p-8`}>
           {group.map(b => <Fragment key={b.key}>{b.node}</Fragment>)}
         </article>
       ))}
@@ -58,6 +58,7 @@ type Layout = { phase: 'measure' } | { phase: 'paged'; pages: number[][]; tall: 
 
 function PrintPages({ blocks, footer }: { blocks: ReportBlock[]; footer: ReportFooter }) {
   const { t } = useI18n();
+  const purpose = usePurpose();
   const signature = blocks.map(b => `${b.key}${b.pageBreak ? '!' : ''}`).join('|');
   const [layout, setLayout] = useState<Layout & { signature: string }>({ phase: 'measure', signature });
   const tall = useRef<HTMLElement>(null);
@@ -97,7 +98,7 @@ function PrintPages({ blocks, footer }: { blocks: ReportBlock[]; footer: ReportF
   if (layout.phase === 'measure') {
     return (
       <>
-        <article ref={tall} aria-label={t('report.page', { n: 1 })} className={`${PRINT_PAGE} min-h-(--il-report-print-page-height)`}>
+        <article ref={tall} aria-label={t('report.page', { n: 1, purpose })} className={`${PRINT_PAGE} min-h-(--il-report-print-page-height)`}>
           {blocks.map(b => <Fragment key={b.key}>{b.node}</Fragment>)}
           {pageFooter(1, 1)}
         </article>
@@ -112,7 +113,7 @@ function PrintPages({ blocks, footer }: { blocks: ReportBlock[]; footer: ReportF
   const total = layout.pages.length;
   return layout.pages.map((page, i) => (
     <div key={blocks[page[0]].key} className={SHEET}>
-      <article aria-label={t('report.page', { n: i + 1 })}
+      <article aria-label={t('report.page', { n: i + 1, purpose })}
         className={`${PRINT_PAGE} ${layout.tall[i] ? 'min-h-(--il-report-print-page-height)' : 'h-(--il-report-print-page-height)'}`}>
         {page.map(b => <Fragment key={blocks[b].key}>{blocks[b].node}</Fragment>)}
         {pageFooter(i + 1, total)}

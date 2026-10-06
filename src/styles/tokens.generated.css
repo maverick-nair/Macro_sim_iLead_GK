@@ -489,6 +489,13 @@
   --il-report-print-scale: 0.8;
   --il-report-print-shadow: var(--il-shadow-report-page);
   --il-report-print-desk: var(--il-color-desk-300);
+  --il-report-halves-columns: repeat(auto-fit,minmax(min(100%,420px),1fr));
+  --il-report-tiles-columns: repeat(auto-fill,minmax(min(100%,240px),1fr));
+  --il-report-dist-name: calc(150px + (var(--il-text-scale, 1) - 1) * 90px);
+  --il-report-dist-cell: calc(38px * var(--il-text-scale, 1));
+  --il-report-dist-head: calc(132px * var(--il-text-scale, 1));
+  --il-report-dist-low: repeating-linear-gradient(90deg, var(--il-color-line-control) 0 1px, transparent 1px 5px);
+  --il-report-meter-height: 10px;
   --il-smallscreen-glow: radial-gradient(140% 60% at 50% 0%, var(--il-color-accent-soft), transparent 70%);
   --il-smallscreen-title-leading: 1.2;
   --il-style-segment-transition: background var(--il-duration-fast) var(--il-easing-brand);

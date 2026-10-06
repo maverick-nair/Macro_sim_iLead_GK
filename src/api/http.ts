@@ -1,4 +1,5 @@
 import type { Outcome, Scenario } from '../data/types';
+import type { HistoryEntry } from '../engine/reportContract';
 import { ApiError, type IleadApi, type Leaderboard, type SessionSnapshot } from './types';
 
 /**
@@ -47,6 +48,14 @@ export function createHttpApi(baseUrl: string, opts: { getToken?: () => string |
     getTheme: async () => {
       try {
         return await request<unknown>('GET', '/theme');
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 404) return null;
+        throw e;
+      }
+    },
+    getHistory: async () => {
+      try {
+        return await request<HistoryEntry[]>('GET', '/history');
       } catch (e) {
         if (e instanceof ApiError && e.status === 404) return null;
         throw e;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApi } from '../../api';
 import type { EngineView, Intent } from '../../engine/contract';
+import { parseReport, type ReportView } from '../../engine/reportContract';
 import { useI18n, type I18n } from '../../i18n';
 import { createSpeech, useSpeech } from '../../speech';
 import { answersFor, pickMoments, portraitOf, reflectionKey, saveState, tiersAscending, toneOf } from '../end/display';
@@ -15,7 +16,7 @@ import type { BadgeChipProps } from '../gamification/Badge';
 import '../end/messages';
 
 const PLACEHOLDER = '/assets/npc/placeholder.svg';
-type Report = NonNullable<EngineView['report']>;
+type Report = ReportView;
 type Submit = Extract<Intent, { type: 'submitReflection' }>;
 
 /** The end screen's content, without the reflection and the buttons' events. */
@@ -79,7 +80,8 @@ export function EngineEnd({ view, voiceConsent, send, say, onViewReport, onLookA
   const i18n = useI18n();
   const { t } = i18n;
   const api = useApi();
-  const report = view.report;
+  // The report's contract applies the copy rules to its text (D76).
+  const report = useMemo(() => (view.report ? parseReport(view.report) : null), [view.report]);
   const questions = useMemo(() => report?.questions ?? [], [report]);
   const [answers, setAnswers] = useState(() => answersFor(questions, report?.reflection?.answers));
   const [rating, setRating] = useState<number | null>(() => report?.reflection?.rating ?? null);

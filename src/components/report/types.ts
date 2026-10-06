@@ -60,8 +60,14 @@ export interface SkillRowData {
   reportOnly?: boolean;
   /** The first evidence quote, beside the bar as in the design. */
   quote: ReportQuote | null;
-  /** Engine only: the anchor, observation count, Harmful cap and further quotes. */
-  more?: { anchor: string | null; observations: number; capped: boolean; quotes: ReportQuote[] };
+  /**
+   * Engine only: the anchor, observation count, Harmful cap and further quotes; in report 3.0 also the
+   * score out of 10, what the skill means, its narrative and, in assessment, its verdict.
+   */
+  more?: {
+    anchor: string | null; observations: number; capped: boolean; quotes: ReportQuote[];
+    outOf10?: string | null; description?: string | null; narrative?: string | null; verdict?: { label: string; tone: Tone; review: string } | null;
+  };
 }
 
 /** A week in the style fit heatmap: the style chosen and how it fit (0 matched, 1 one step off, 2 missed). */
@@ -180,4 +186,96 @@ export interface SummaryExtras {
   strengths: string[];
   priorities: string[];
   business: string;
+  /** Assessment only: the overall verdict, shown first (D75). */
+  verdict?: VerdictData | null;
+}
+
+// ---------------------------------------------------------------- Report 3.0 (D75, D76)
+
+/** Why the storyline runs: development reports carry no verdict words. */
+export type Purpose = 'development' | 'assessment';
+export type ImpactBand = 'none' | 'veryLow' | 'low' | 'moderate' | 'high';
+
+/** An assessment verdict with what it rests on. */
+export interface VerdictData {
+  key: string | null;
+  label: string;
+  /** "The bar: an overall level of Proficient, with no skill below Developing." */
+  bar: string;
+  /** "Based on 23 conversations". */
+  evidence: string;
+  /** "AI only, not yet reviewed by an assessor". */
+  review: string;
+  /** "Records: r8, r16". */
+  records: string;
+  quotes: ReportQuote[];
+  tone: Tone;
+}
+
+export interface AboutData {
+  lines: string[];
+  howToRead: string[];
+  confidentiality: string;
+}
+
+export interface ObjectivesData {
+  revenue: number;
+  target: number;
+  money: (n: number) => string;
+  /** "112%". */
+  share: string;
+  conversions: number;
+  team: Array<{ key: 'skill' | 'morale' | 'result'; label: string; start: number; end: number }>;
+  narrative: string;
+}
+
+export interface AdaptabilityData {
+  pct: number;
+  narrative: string;
+}
+
+export interface StylesData {
+  styles: Array<{ key: StyleKey; letter: string; name: string; count: number; proportion: number; accuracy: number | null; narrative: string[] }>;
+  needs: StyleExtras['needs'];
+  grid: number[][];
+  fit: number[][];
+  preferred: string | null;
+}
+
+export interface ConsistencyData {
+  /** The actions compared, as names. */
+  actions: string[];
+  deviations: Array<{ key: 'neededUsed' | 'intendedUsed' | 'neededIntended'; value: number | null; narrative: string | null }>;
+  members: Array<{ id: string; name: string; needed: string | null; intended: string | null; used: string | null }>;
+}
+
+export interface ActionRowData {
+  key: string;
+  name: string;
+  description: string | null;
+  narrative: string;
+  frequency: number;
+  impact: ImpactBand;
+}
+
+export interface DistributionData {
+  actions: Array<{ key: string; name: string }>;
+  members: Array<{ id: string; name: string; left: boolean; cells: Array<{ count: number; impact: ImpactBand }> }>;
+  totals: number[];
+}
+
+export interface ThoughtData {
+  items: Array<{ question: string; guide: string }>;
+}
+
+/** The plan's 3.0 parts: the 90 day path and check ins (development), or the development needs (assessment). */
+export interface PlanExtras {
+  path?: { day30: string; day60: string; day90: string } | null;
+  checkIns?: string[];
+  needs?: Array<{ key: string; name: string; text: string; anchor: string | null }>;
+}
+
+export interface ProgressData {
+  attempts: Array<{ key: string; label: string; current: boolean; headline: string; score: number; adaptability: number; target: number; skills: Array<number | null> }>;
+  skills: Array<{ key: string; name: string }>;
 }

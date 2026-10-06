@@ -35,7 +35,10 @@ export function defaultStoryline(lens?: string | null): StorylineConfig {
     if (draft) return draft;
   }
   // `?lens=six_styles` plays Sales Elevator with the Six Leadership Styles test lens (D70), for demos and tests.
-  const r = parseStoryline(lens === 'six_styles' ? withSixStyles(salesElevator as unknown as StorylineInput) : salesElevator);
+  const base = lens === 'six_styles' ? withSixStyles(salesElevator as unknown as StorylineInput) : salesElevator as unknown as StorylineInput;
+  // `?purpose=assessment` plays it as an assessment, so the report carries verdicts (D75).
+  const purpose = new URLSearchParams(globalThis.location?.search ?? '').get('purpose');
+  const r = parseStoryline(purpose === 'assessment' || purpose === 'development' ? { ...base, purpose } : base);
   if (!r.ok) throw new Error(r.issues.join('\n'));
   return r.config;
 }

@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
-import { levelSegments } from './display';
+import { levelSegments, TONE_TEXT } from './display';
 import type { ReportQuote, SkillRowData } from './types';
 import './messages';
 
@@ -40,20 +40,29 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
           : t('report.skills.ariaNone', { skill: k.name });
         return (
           <div key={k.key} className="grid items-center gap-3.5 border-t border-line-default py-2.5 grid-cols-(--il-report-skills-columns)">
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${k.more?.description ? 'self-start' : ''}`}>
               <b className="text-14">{k.name}</b>
               {k.reportOnly && <span className="rounded-pill bg-surface-raised px-2 py-0.5 text-12 font-700 text-fg-secondary">{t('report.skills.reportOnly')}</span>}
+              {k.more?.description && <span className="basis-full text-12 text-fg-secondary text-pretty">{k.more.description}</span>}
             </span>
-            <div className="flex items-center gap-2 text-large:flex-wrap">
+            <div className={`flex items-center gap-2 text-large:flex-wrap ${k.more?.outOf10 !== undefined ? 'flex-wrap self-start' : ''}`}>
               <div role="img" aria-label={aria} className="flex gap-0.75">
                 {levelSegments(k.level?.index ?? null, levels.length).map((on, i) => (
                   <span key={i} className={`h-2 w-6.5 rounded-4 ${on ? 'bg-accent-default' : 'bg-track'}`}></span>
                 ))}
               </div>
               <span aria-hidden="true" className={`text-12 font-700 ${k.level ? '' : 'text-fg-secondary'}`}>{label}</span>
+              {k.more?.outOf10 && <span className="basis-full text-13 font-700">{k.more.outOf10}</span>}
             </div>
             {k.more ? (
               <div className="flex flex-col gap-1">
+                {k.more.verdict && (
+                  <span className="flex flex-wrap items-baseline gap-x-2 text-13">
+                    <b className={TONE_TEXT[k.more.verdict.tone]}>{t('report.skills.verdict', { label: k.more.verdict.label })}</b>
+                    <span className="text-12 text-fg-secondary">{k.more.verdict.review}</span>
+                  </span>
+                )}
+                {k.more.narrative && <span className="text-13 text-pretty">{k.more.narrative}</span>}
                 {k.more.anchor && <span className="text-13 text-pretty">{k.more.anchor}</span>}
                 {k.quote && <Quote q={k.quote} />}
                 {k.more.quotes.map(q => <Quote key={q.text} q={q} />)}

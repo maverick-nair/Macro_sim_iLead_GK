@@ -69,3 +69,25 @@ export function talkRatio(ratio: number | null): number | null {
 
 /** Whole numbers for funnel counts over a run (the engine keeps fractions of a deal). */
 export const wholeCount = (n: number) => Math.round(n);
+
+/** The tone of a verdict: meeting or beating the bar reads as a gain, falling short needs attention, none is neutral. */
+export function verdictTone(key: string | null): Tone {
+  if (key === 'exceeds' || key === 'meets' || key === 'strength') return 'gain';
+  if (key === 'approaching' || key === 'below' || key === 'development') return 'attention';
+  return 'neutral';
+}
+
+/**
+ * How an impact band looks in the actions across the team matrix and its legend. Never colour alone:
+ * no impact is a dashed outline, very low is hatched, low has thin upright lines, moderate is a soft
+ * fill with an outline, high is a solid fill.
+ */
+export function impactClass(band: 'none' | 'veryLow' | 'low' | 'moderate' | 'high'): string {
+  switch (band) {
+    case 'none': return 'border border-dashed border-line-default bg-transparent text-fg-secondary';
+    case 'veryLow': return 'border border-solid border-status-attention bg-(image:--il-report-fit-missed) text-fg-primary';
+    case 'low': return 'border border-solid border-line-control bg-(image:--il-report-dist-low) text-fg-primary';
+    case 'moderate': return 'border border-solid border-accent-default bg-accent-soft text-fg-primary';
+    case 'high': return 'border-0 bg-accent-default text-fg-on-accent';
+  }
+}

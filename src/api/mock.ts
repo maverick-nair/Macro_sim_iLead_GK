@@ -38,7 +38,7 @@ function sampleCohort(participant: string) {
  * `themeUrl` (a path on this site) serves any theme JSON, standing in for `GET /theme`. Both load on
  * demand, outside the first load.
  */
-export interface MockThemeOptions { client?: string | null; themeUrl?: string | null }
+export interface MockThemeOptions { client?: string | null; themeUrl?: string | null; history?: boolean }
 
 async function mockTheme({ client, themeUrl }: MockThemeOptions): Promise<unknown> {
   if (themeUrl && /^\/(?!\/)/.test(themeUrl)) {
@@ -80,6 +80,9 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
       const me = all.find(e => e.you)!;
       return wait({ entries: top.some(e => e.you) ? top : [...top, me], total: all.length });
     },
-    getTheme: () => mockTheme(opts)
+    getTheme: () => mockTheme(opts),
+    // `history: true` (`?history=1`): one earlier attempt, played by the calibration's random player, for
+    // demos of the report's progress section. It loads the engine on demand, outside the first load.
+    getHistory: async () => (opts.history ? (await import('./mockHistory')).mockHistory() : wait(null, 0))
   };
 }

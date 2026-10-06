@@ -33,7 +33,9 @@ function Play() {
   const name = q.get('name');
   const client = q.get('client');
   const themeUrl = q.get('themeUrl');
-  const api = useMemo(() => createDefaultApi(participant, name, { client, themeUrl }), [participant, name, client, themeUrl]);
+  // `?history=1`: the mock serves one earlier attempt, for the report's progress section (D75).
+  const history = q.get('history') === '1';
+  const api = useMemo(() => createDefaultApi(participant, name, { client, themeUrl, history }), [participant, name, client, themeUrl, history]);
   const engine = useMemo(() => createDefaultClient(participant), [participant]);
   useEffect(() => startTheme(() => api.getTheme()), [api]);
   const { theme: applied } = useThemeState();

@@ -1,7 +1,8 @@
 import { useId, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import { TONE_TEXT } from './display';
-import type { IntentCardData, PlanItemData } from './types';
+import { usePurpose } from './context';
+import type { IntentCardData, PlanExtras, PlanItemData } from './types';
 import './messages';
 
 const CARD = 'flex flex-col gap-1 rounded-16 border border-line-default px-3.5 py-3 text-13';
@@ -61,13 +62,34 @@ export interface PlanSectionProps {
   /** "Check in on 19 October 2026", engine only. */
   checkIn?: string | null;
   alone?: boolean;
+  /** Report 3.0: the 90 day path and check ins (development), or the development needs (assessment). */
+  extras?: PlanExtras;
 }
 
-/** "Your plan for next week": three numbered steps, built from the reflection when there is one. */
-export function PlanSection({ items, reflection, checkIn, alone = true }: PlanSectionProps) {
+/**
+ * "Your plan for next week": three numbered steps, built from the reflection when there is one, then the
+ * 90 day path and the check ins. In an assessment report, "Development needs": the skills below the bar,
+ * listed neutrally against it.
+ */
+export function PlanSection({ items, reflection, checkIn, alone = true, extras }: PlanSectionProps) {
   const { t, number } = useI18n();
+  const purpose = usePurpose();
+  if (purpose === 'assessment') {
+    return (
+      <Column title={t('report.plan.title', { purpose })} alone={alone}>
+        {!extras?.needs?.length && <p className="m-0 text-14 text-fg-secondary">{t('report.plan.noNeeds')}</p>}
+        {extras?.needs?.map(n => (
+          <div key={n.key} className={CARD}>
+            <b className="text-14">{n.name}</b>
+            <span className="text-pretty">{n.text}</span>
+            {n.anchor && <span className="text-fg-secondary text-pretty">{n.anchor}</span>}
+          </div>
+        ))}
+      </Column>
+    );
+  }
   return (
-    <Column title={t('report.plan.title')} alone={alone}>
+    <Column title={t('report.plan.title', { purpose })} alone={alone}>
       {items.map((p, i) => (
         <div key={p.key} className="grid grid-cols-(--il-report-plan-columns) gap-2.5 rounded-16 border border-line-default px-3.5 py-3 text-14">
           <b className="flex min-h-7 min-w-7 self-start items-center justify-center rounded-round px-1 bg-(image:--il-fill-brand) text-13 text-brand-deep-space">{number(i + 1)}</b>
@@ -82,7 +104,23 @@ export function PlanSection({ items, reflection, checkIn, alone = true }: PlanSe
         </div>
       ))}
       {reflection && <span className="text-12 text-fg-secondary">{t('report.plan.reflection', { text: reflection })}</span>}
-      {checkIn && <span className="text-13 font-600">{checkIn}</span>}
+      {checkIn && !extras?.checkIns?.length && <span className="text-13 font-600">{checkIn}</span>}
+      {extras?.path && (
+        <>
+          <h3 className="m-0 mt-2 text-15 font-700">{t('report.plan.pathTitle')}</h3>
+          <ol className="m-0 grid list-none gap-2.5 p-0 grid-cols-(--il-report-tiles-columns)">
+            {[extras.path.day30, extras.path.day60, extras.path.day90].map(step => <li key={step} className={`${CARD} text-pretty`}>{step}</li>)}
+          </ol>
+        </>
+      )}
+      {extras?.checkIns && extras.checkIns.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <h3 className="m-0 text-15 font-700">{t('report.plan.checkIns')}</h3>
+          <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-13 font-600">
+            {extras.checkIns.map(d => <li key={d}>{d}</li>)}
+          </ul>
+        </div>
+      )}
     </Column>
   );
 }

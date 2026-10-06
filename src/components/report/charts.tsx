@@ -169,6 +169,79 @@ export function TrajectoryChart({ points, label }: { points: Array<Record<Trajec
   );
 }
 
+/** How a bar series looks: a solid fill, an outline, or hatching, so series read without colour. */
+export type BarLook = 'solid' | 'outline' | 'hatch';
+export interface BarSeries { key: string; label: string; look: BarLook }
+export interface BarRow { key: string; label: string; values: Array<{ value: number; text: string }> }
+
+/**
+ * Horizontal bars, one group per row and one bar per series, each with its value written at its end
+ * (report 3.0: revenue against target, the team at the start and the end, style proportion and accuracy,
+ * deviations, action frequency, skill scores by attempt). Series differ by fill, outline or hatching.
+ */
+export function BarsChart({ rows, series, max, label }: { rows: BarRow[]; series: BarSeries[]; max?: number; label: string }) {
+  const id = useId().replace(/[^a-zA-Z0-9_]/g, '');
+  const W = 520, LEFT = 160, RIGHT = 116, BAR = 14, GAP = 4, PAD = 14, LINE = 15;
+  const bars = series.length * BAR + (series.length - 1) * GAP;
+  // Long labels wrap onto lines of their own; each row is as tall as its label or its bars.
+  const lines = rows.map(r => wrapLabel(r.label, 22));
+  const heights = lines.map(l => Math.max(bars, l.length * LINE) + PAD);
+  const tops = heights.map((_, i) => heights.slice(0, i).reduce((a, b) => a + b, 0));
+  const H = Math.max(bars + PAD, heights.reduce((a, b) => a + b, 0));
+  const x = scaleLinear({ domain: [0, max ?? chartMax(rows.flatMap(r => r.values.map(v => v.value)))], range: [0, W - LEFT - RIGHT] });
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={SVG} role="img" aria-label={label}>
+      <PatternLines id={`${id}hatch`} height={6} width={6} orientation={['diagonal']} strokeWidth={2} className="stroke-report-chart-series" />
+      {rows.map((r, i) => (
+        <Group key={r.key} top={tops[i] + PAD / 2}>
+          <text x={0} y={(heights[i] - PAD) / 2 - ((lines[i].length - 1) * LINE) / 2} dominantBaseline="central" className={LABEL}>
+            {lines[i].map((l, k) => <tspan key={k} x={0} dy={k ? LINE : 0}>{l}</tspan>)}
+          </text>
+          {series.map((s, j) => {
+            const v = r.values[j];
+            if (!v) return null;
+            const top = (heights[i] - PAD - bars) / 2 + j * (BAR + GAP), w = Math.max(0, x(Math.max(0, v.value)));
+            return (
+              <Group key={s.key} top={top}>
+                <Bar x={LEFT} y={0} width={W - LEFT - RIGHT} height={BAR} rx={3} className="fill-report-chart-cell" />
+                <Bar x={LEFT} y={0} width={w} height={BAR} rx={3}
+                  className={s.look === 'solid' ? 'fill-report-chart-series' : 'stroke-report-chart-series'}
+                  fill={s.look === 'hatch' ? `url(#${id}hatch)` : s.look === 'outline' ? 'none' : undefined}
+                  strokeWidth={s.look === 'solid' ? 0 : 1.5} />
+                <text x={LEFT + w + 8} y={BAR / 2} dominantBaseline="central" className={MUTED}>{v.text}</text>
+              </Group>
+            );
+          })}
+        </Group>
+      ))}
+    </svg>
+  );
+}
+
+/** Splits a chart label into lines of about `max` characters, at spaces. */
+export function wrapLabel(text: string, max: number): string[] {
+  const out: string[] = [];
+  for (const word of text.split(/\s+/).filter(Boolean)) {
+    const last = out.at(-1);
+    if (last !== undefined && (last + ' ' + word).length <= max) out[out.length - 1] = `${last} ${word}`;
+    else out.push(word);
+  }
+  return out.length ? out : [''];
+}
+
+/** A legend swatch for a bar series. */
+export function BarSwatch({ look }: { look: BarLook }) {
+  const id = useId().replace(/[^a-zA-Z0-9_]/g, '');
+  return (
+    <svg viewBox="0 0 16 10" className="h-2.5 w-4" aria-hidden="true">
+      <PatternLines id={`${id}h`} height={4} width={4} orientation={['diagonal']} strokeWidth={1.5} className="stroke-report-chart-series" />
+      <Bar x={0.75} y={0.75} width={14.5} height={8.5} rx={2}
+        className={look === 'solid' ? 'fill-report-chart-series' : 'stroke-report-chart-series'}
+        fill={look === 'hatch' ? `url(#${id}h)` : look === 'outline' ? 'none' : undefined} strokeWidth={look === 'solid' ? 0 : 1.5} />
+    </svg>
+  );
+}
+
 /** A short sample of each line pattern, for the legend. */
 export function LineSample({ metric }: { metric: TrajectoryMetric }) {
   const l = TRAJECTORY_LINES[metric];

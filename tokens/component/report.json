@@ -1,50 +1,152 @@
 {
   "report": {
-    "width": { "value": "1180px", "$description": "Web view column" },
+    "width": {
+      "value": "1180px",
+      "$description": "Web view column"
+    },
     "logo": {
-      "tracking": { "value": "{tracking.logo}" }
+      "tracking": {
+        "value": "{tracking.logo}"
+      }
     },
     "title": {
-      "tracking": { "value": "{tracking.logo}", "$description": "The participant's name" },
-      "leading": { "value": "1.05" }
+      "tracking": {
+        "value": "{tracking.logo}",
+        "$description": "The participant's name"
+      },
+      "leading": {
+        "value": "1.05"
+      }
     },
     "lede": {
-      "leading": { "value": "1.65", "$description": "The opening paragraph" }
+      "leading": {
+        "value": "1.65",
+        "$description": "The opening paragraph"
+      }
     },
     "team": {
-      "columns": { "value": "repeat(5,minmax(0,1fr))", "$description": "Small multiples: revenue and the four team metrics" },
-      "columns-large": { "value": "repeat(auto-fill, minmax(min(100%, 280px), 1fr))", "$description": "Text above 100% (D56): fewer small multiples per row" }
+      "columns": {
+        "value": "repeat(5,minmax(0,1fr))",
+        "$description": "Small multiples: revenue and the four team metrics"
+      },
+      "columns-large": {
+        "value": "repeat(auto-fill, minmax(min(100%, 280px), 1fr))",
+        "$description": "Text above 100% (D56): fewer small multiples per row"
+      }
     },
     "skills": {
-      "columns": { "value": "calc(200px + (var(--il-text-scale, 1) - 1) * 60px) 200px minmax(0,1fr)", "$description": "Skill, level bar, evidence. The skill column grows with the text size so long skill names fit (260px at 200%, D56)" }
+      "columns": {
+        "value": "calc(200px + (var(--il-text-scale, 1) - 1) * 60px) 200px minmax(0,1fr)",
+        "$description": "Skill, level bar, evidence. The skill column grows with the text size so long skill names fit (260px at 200%, D56)"
+      }
     },
     "pair": {
-      "columns": { "value": "1fr 1fr", "$description": "Intent and action beside the plan" }
+      "columns": {
+        "value": "1fr 1fr",
+        "$description": "Intent and action beside the plan"
+      }
     },
     "fit": {
-      "name": { "value": "150px", "$description": "Name column of the style fit heatmap" },
-      "missed": { "value": "repeating-linear-gradient(45deg, {color.status.attention-soft} 0 3px, transparent 3px 7px)", "$description": "A missed week: hatched, so it reads without colour" },
-      "missed-swatch": { "value": "repeating-linear-gradient(45deg, {color.status.attention} 0 2px, transparent 2px 5px)", "$description": "The legend swatch for a missed week" }
+      "name": {
+        "value": "150px",
+        "$description": "Name column of the style fit heatmap"
+      },
+      "missed": {
+        "value": "repeating-linear-gradient(45deg, {color.status.attention-soft} 0 3px, transparent 3px 7px)",
+        "$description": "A missed week: hatched, so it reads without colour"
+      },
+      "missed-swatch": {
+        "value": "repeating-linear-gradient(45deg, {color.status.attention} 0 2px, transparent 2px 5px)",
+        "$description": "The legend swatch for a missed week"
+      }
     },
     "plan": {
-      "columns": { "value": "minmax(28px, max-content) minmax(0,1fr)", "$description": "Number badge and the step. The badge column grows with the badge at large text (D56)" }
+      "columns": {
+        "value": "minmax(28px, max-content) minmax(0,1fr)",
+        "$description": "Number badge and the step. The badge column grows with the badge at large text (D56)"
+      }
     },
-    "stats-large": { "value": "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", "$description": "Analytics stats at text above 100% (D56): fewer per row" },
+    "stats-large": {
+      "value": "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
+      "$description": "Analytics stats at text above 100% (D56): fewer per row"
+    },
     "cards": {
-      "columns": { "value": "repeat(auto-fill,minmax(260px,1fr))", "$description": "Key moments and people cards" }
+      "columns": {
+        "value": "repeat(auto-fill,minmax(260px,1fr))",
+        "$description": "Key moments and people cards"
+      }
     },
     "chart": {
-      "max": { "value": "560px", "$description": "Widest a single chart grows in the web view" }
+      "max": {
+        "value": "560px",
+        "$description": "Widest a single chart grows in the web view"
+      }
     },
     "print": {
-      "page-width": { "value": "1020px", "$description": "A letter page at 120 px per inch, shown at 0.8: 8.5 by 11 inches at 96 px per inch" },
-      "page-height": { "value": "1320px" },
-      "zoom": { "value": "0.8" },
-      "sheet-width": { "value": "8.5in", "$description": "A US letter sheet. When printing, each page is scaled to it with a transform: Chrome fragments zoomed content at the wrong height" },
-      "sheet-height": { "value": "11in" },
-      "scale": { "value": "0.8", "$description": "Printing: the page scaled to the sheet" },
-      "shadow": { "value": "{shadow.report-page}" },
-      "desk": { "value": "{color.desk.300}", "$description": "Behind the pages in the print preview" }
+      "page-width": {
+        "value": "1020px",
+        "$description": "A letter page at 120 px per inch, shown at 0.8: 8.5 by 11 inches at 96 px per inch"
+      },
+      "page-height": {
+        "value": "1320px"
+      },
+      "zoom": {
+        "value": "0.8"
+      },
+      "sheet-width": {
+        "value": "8.5in",
+        "$description": "A US letter sheet. When printing, each page is scaled to it with a transform: Chrome fragments zoomed content at the wrong height"
+      },
+      "sheet-height": {
+        "value": "11in"
+      },
+      "scale": {
+        "value": "0.8",
+        "$description": "Printing: the page scaled to the sheet"
+      },
+      "shadow": {
+        "value": "{shadow.report-page}"
+      },
+      "desk": {
+        "value": "{color.desk.300}",
+        "$description": "Behind the pages in the print preview"
+      }
+    },
+    "halves": {
+      "columns": {
+        "value": "repeat(auto-fit,minmax(min(100%,420px),1fr))",
+        "$description": "Two charts side by side, one above the other when narrow or at large text (report 3.0)"
+      }
+    },
+    "tiles": {
+      "columns": {
+        "value": "repeat(auto-fill,minmax(min(100%,240px),1fr))",
+        "$description": "Style cards, deviation tiles, the 90 day path and food for thought"
+      }
+    },
+    "dist": {
+      "name": {
+        "value": "calc(150px + (var(--il-text-scale, 1) - 1) * 90px)",
+        "$description": "Name column of the actions across the team matrix; grows with the text size (D56)"
+      },
+      "cell": {
+        "value": "calc(38px * var(--il-text-scale, 1))",
+        "$description": "Narrowest cell of the actions across the team matrix"
+      },
+      "head": {
+        "value": "calc(132px * var(--il-text-scale, 1))",
+        "$description": "Height of the matrix's upright action names"
+      },
+      "low": {
+        "value": "repeating-linear-gradient(90deg, {color.line.control} 0 1px, transparent 1px 5px)",
+        "$description": "Low impact: thin upright lines, so it reads without colour"
+      }
+    },
+    "meter": {
+      "height": {
+        "value": "10px",
+        "$description": "Adaptability and accuracy meters"
+      }
     }
   }
 }

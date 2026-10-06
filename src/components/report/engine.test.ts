@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { moneyFormatter } from '../../engine/money';
 import { playToEnd } from '../../engine/mock';
+import { parseReport } from '../../engine/reportContract';
 import { createI18n } from '../../i18n';
 import { buildReportModel, listNames, type ReportView } from './engine';
 
@@ -10,14 +11,15 @@ const date = new Date(2026, 9, 5);
 async function run(policy: 'good' | 'random', reflection?: string[]) {
   const view = await playToEnd({ policy, seed: 3, reflection });
   const money = moneyFormatter(view.money);
-  return { view, report: view.report!, model: (r: ReportView, name: string | null = 'Jordan Lee') => buildReportModel(i18n, money, r, { participantName: name, date, subPeriodUnit: view.clock.subPeriodUnit }) };
+  return { view, report: parseReport(view.report), model: (r: ReportView, name: string | null = 'Jordan Lee') => buildReportModel(i18n, money, r, { participantName: name, date, subPeriodUnit: view.clock.subPeriodUnit }) };
 }
 
 describe('the engine report, shaped for display', () => {
   it('keeps the author\'s section order and puts the team over the run after the summary', async () => {
     const { report, model } = await run('good');
     const m = model(report);
-    expect(m.sections.map(s => s.key)).toEqual(report.sections);
+    // Progress shows only with earlier attempts.
+    expect(m.sections.map(s => s.key)).toEqual(report.sections.filter(s => s !== 'progress'));
     const reordered = model({ ...report, sections: ['plan', 'skills'] });
     expect(reordered.sections.map(s => s.key)).toEqual(['plan', 'skills']);
     expect(m.team.map(s => s.key)).toEqual(['revenue', 'skill', 'morale', 'result', 'trust']);

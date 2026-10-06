@@ -68,7 +68,7 @@ export function buildReport(sim: Sim) {
       why: low && stat ? `${firstName(sim, low.id)} owns the stage with the lowest result there; ${stat} is ${low[stat]}, the weakest of ${pr(sim, low.id)} numbers.` : null };
   })() : null;
   const share = sim.funnel.value / c.money.target;
-  const businessLine = `You reached ${Math.round(share * 100)}% of the ${money.format(c.money.target)} target with ${Math.floor(sim.funnel.conversions)} deals${bottleneck ? `; ${bottleneck.name} was the bottleneck in ${bottleneck.periods} of ${sim.periods.length} ${unit}s` : ''}.`;
+  const businessLine = `${purpose === 'assessment' ? 'The team reached' : 'You reached'} ${Math.round(share * 100)}% of the ${money.format(c.money.target)} target with ${Math.floor(sim.funnel.conversions)} deals${bottleneck ? `; ${bottleneck.name} was the bottleneck in ${bottleneck.periods} of ${sim.periods.length} ${unit}s` : ''}.`;
 
   // ---- 2. Style flexibility and fit (3): the lens's styles (D70); grid rows are the four needs, columns the styles.
   const styles: Style[] = c.lens.styles.map(s => s.key);
@@ -235,7 +235,7 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
   };
   const verdict = run.verdict ? (() => {
     const primary = skills.filter(s => !s.reportOnly && s.level !== null);
-    const ids = [...new Set(primary.flatMap(s => s.recordIds))];
+    const ids = [...new Set(primary.flatMap(s => s.recordIds))].sort((a, b) => Number(a.slice(1)) - Number(b.slice(1)) || a.localeCompare(b));
     // The words behind the verdict: the best and the weakest rated skills' first quotes.
     const sorted = [...primary].sort((a, b) => b.rawScore! - a.rawScore! || a.order - b.order);
     const quotes = [sorted[0], sorted.at(-1), sorted[1]].filter((s): s is SkillRating => !!s).flatMap(s => s.quotes.slice(0, 1))

@@ -1,5 +1,6 @@
 import type { Settings, PlannedAction } from '../app/types';
 import type { LiveVariant, Outcome, Scenario, StyleKey } from '../data/types';
+import type { HistoryEntry } from '../engine/reportContract';
 
 /**
  * The iLead participant API.
@@ -44,6 +45,12 @@ export interface IleadApi {
    * simulation uses the iLead theme. The theme loader validates and corrects it (D72).
    */
   getTheme(): Promise<unknown>;
+  /**
+   * The participant's earlier attempts at this simulation (D75), oldest first: each attempt's run summary
+   * (`RunSummary`) and its report headline, for the report's progress section. Null when there are none
+   * (proposed `GET /history`, 404 is none). The report parses it with `History` (src/engine/reportContract.ts).
+   */
+  getHistory(): Promise<HistoryEntry[] | null>;
 }
 
 export interface LeaderboardResult { score: number; conversions: number; capability: number }

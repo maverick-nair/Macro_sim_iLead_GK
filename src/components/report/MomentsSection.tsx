@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
+import { usePurpose } from './context';
 import type { MomentData } from './types';
 import './messages';
 
@@ -9,6 +10,7 @@ import './messages';
  */
 export function MomentsSection({ moments }: { moments: MomentData[] }) {
   const { t } = useI18n();
+  const purpose = usePurpose();
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
@@ -19,7 +21,7 @@ export function MomentsSection({ moments }: { moments: MomentData[] }) {
           <article key={m.key} aria-labelledby={`${id}${m.key}`} className="flex flex-col gap-2 rounded-16 border border-line-default px-3.5 py-3 text-13">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className={`rounded-pill border px-2 py-0.5 text-12 font-700 ${m.kind === 'best' ? 'border-status-gain text-status-gain' : 'border-status-attention text-status-attention'}`}>
-                {t('report.moments.kind', { kind: m.kind })}
+                {t('report.moments.kind', { kind: m.kind, purpose })}
               </span>
               <span className="text-12 text-fg-secondary">{m.when}</span>
             </div>

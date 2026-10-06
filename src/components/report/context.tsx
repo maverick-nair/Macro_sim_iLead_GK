@@ -10,9 +10,14 @@ import './messages';
 export interface ReportSettings {
   print: boolean;
   tables: 'toggle' | 'hidden';
+  /** Development (the default) or assessment: the words the chrome uses (D75). */
+  purpose?: 'development' | 'assessment';
 }
 
 const ReportContext = createContext<ReportSettings>({ print: false, tables: 'toggle' });
+
+/** The report's purpose, development unless an assessment report says otherwise. */
+export const usePurpose = () => useContext(ReportContext).purpose ?? 'development';
 
 export function ReportProvider({ value, children }: { value: ReportSettings; children: ReactNode }) {
   return <ReportContext.Provider value={value}>{children}</ReportContext.Provider>;

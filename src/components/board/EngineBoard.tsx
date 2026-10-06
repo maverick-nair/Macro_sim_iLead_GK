@@ -760,7 +760,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {endView === 'end'
           ? <EngineEnd view={v} voiceConsent={!!app.voiceConsent} send={async i => !!(await send(i))} say={say}
               onViewReport={print => setEndView(print ? 'print' : 'report')} onLookAtBoard={() => setEndView('board')} />
-          : <EngineReport view={v} print={endView === 'print'} onBack={() => setEndView('end')} participantName={profileName} getPdf={() => api.reportPdf()}
+          : <EngineReport view={v} print={endView === 'print'} onBack={() => setEndView('end')} participantName={profileName} getPdf={() => api.reportPdf()} getHistory={() => api.getHistory()}
               onEmail={() => { void api.emailReport().then(() => say(t('board.report.emailSent')), () => say(t('board.report.emailFailed'))); }} />}
       </Suspense>
     );
