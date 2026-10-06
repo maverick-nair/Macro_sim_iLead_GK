@@ -4,7 +4,7 @@
  * about one participant. Adapted from the intent of the 1.0 group report and rewritten in iLead's copy
  * style: "skills", no dashes, no emojis, US spelling.
  *
- * Placeholders: {n} participants, {completed}, {min}, {pct}, {share}, {unit}, {count} (periods),
+ * Placeholders: {diff} ("1 point", "0.6 points"), {n} participants, {completed}, {min}, {pct}, {share}, {unit}, {count} (periods),
  * {skill}, {style}, {styles}, {needs}, {action}, {best}, {actual}, {ideal}, {diff}, {met}, {total}.
  * Level lists (`skill`) are read in proportion to the rating scale, lowest level first.
  */
@@ -24,7 +24,7 @@ export const DEFAULT_GROUP_COPY = {
     development: 'This report is confidential to your organization. It shows group results only: no participant is named or ranked, and results are withheld for groups of fewer than {min} participants.',
     assessment: 'This report is confidential. It names participants and their verdicts, so share it only with the people your organization has authorized to see assessment results.'
   },
-  withheld: 'Group results are withheld for now. {completed} of {n} participants completed the simulation, and this report needs at least {min} to keep individual results private. The results appear once more participants finish.',
+  withheld: 'Group results are withheld for now. {completed} of {n} participants completed the simulation, and this report needs at least {min} to keep individual results private. The results appear once at least {min} participants have completed the simulation.',
   completion: '{completed} of {n} participants completed the simulation ({pct}%).',
   skill: [
     'The group is at an early stage in {skill}. Most participants rarely showed it, or showed it in ways that did not help the person. This is the place to start.',
@@ -35,9 +35,9 @@ export const DEFAULT_GROUP_COPY = {
   ],
   skillNone: 'Too few participants showed {skill} for a group level.',
   compare: {
-    above: 'The group is {diff} points above the benchmark.',
+    above: 'The group is {diff} above the benchmark.',
     level: 'The group is in line with the benchmark.',
-    below: 'The group is {diff} points below the benchmark.'
+    below: 'The group is {diff} below the benchmark.'
   },
   business: {
     below: 'On average the group reached {share} of the target. Revenue follows people: the gap usually starts with team members whose skill or morale held a stage of the funnel back.',

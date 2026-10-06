@@ -1,4 +1,5 @@
 import type { Outcome, Scenario } from '../data/types';
+import type { GroupReport } from '../engine/groupContract';
 import type { HistoryEntry } from '../engine/reportContract';
 import { ApiError, type IleadApi, type Leaderboard, type SessionSnapshot } from './types';
 
@@ -56,6 +57,15 @@ export function createHttpApi(baseUrl: string, opts: { getToken?: () => string |
     getHistory: async () => {
       try {
         return await request<HistoryEntry[]>('GET', '/history');
+      } catch (e) {
+        if (e instanceof ApiError && e.status === 404) return null;
+        throw e;
+      }
+    },
+    // A server that stores only run summaries answers `POST /cohort/report` (`GroupReportRequest`) instead, with the same report.
+    getGroupReport: async cohortId => {
+      try {
+        return await request<GroupReport>('GET', `/cohort/${encodeURIComponent(cohortId)}/report`);
       } catch (e) {
         if (e instanceof ApiError && e.status === 404) return null;
         throw e;

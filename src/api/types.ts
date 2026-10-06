@@ -1,5 +1,6 @@
 import type { Settings, PlannedAction } from '../app/types';
 import type { LiveVariant, Outcome, Scenario, StyleKey } from '../data/types';
+import type { GroupReport } from '../engine/groupContract';
 import type { HistoryEntry } from '../engine/reportContract';
 
 /**
@@ -51,6 +52,13 @@ export interface IleadApi {
    * (proposed `GET /history`, 404 is none). The report parses it with `History` (src/engine/reportContract.ts).
    */
   getHistory(): Promise<HistoryEntry[] | null>;
+  /**
+   * The group report for a cohort (D75, D77), for the organization, not the participant: proposed
+   * `GET /cohort/{id}/report`, built on the server by `buildGroupReport` from the cohort's run summaries
+   * (or `POST /cohort/report` with `GroupReportRequest` where the server stores only summaries). Null
+   * when there is no such cohort (404). The page parses it with `GroupReport` (src/engine/groupContract.ts).
+   */
+  getGroupReport(cohortId: string): Promise<GroupReport | null>;
 }
 
 export interface LeaderboardResult { score: number; conversions: number; capability: number }

@@ -1,6 +1,7 @@
 import { DEFAULT_SCENARIO } from '../data/scenario';
 import type { Scenario } from '../data/types';
 import type { Settings } from '../app/types';
+import type { MockGroupOptions } from './mockGroup';
 import type { IleadApi } from './types';
 
 /**
@@ -38,7 +39,7 @@ function sampleCohort(participant: string) {
  * `themeUrl` (a path on this site) serves any theme JSON, standing in for `GET /theme`. Both load on
  * demand, outside the first load.
  */
-export interface MockThemeOptions { client?: string | null; themeUrl?: string | null; history?: boolean }
+export interface MockThemeOptions { client?: string | null; themeUrl?: string | null; history?: boolean; group?: MockGroupOptions }
 
 async function mockTheme({ client, themeUrl }: MockThemeOptions): Promise<unknown> {
   if (themeUrl && /^\/(?!\/)/.test(themeUrl)) {
@@ -83,6 +84,8 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
     getTheme: () => mockTheme(opts),
     // `history: true` (`?history=1`): one earlier attempt, played by the calibration's random player, for
     // demos of the report's progress section. It loads the engine on demand, outside the first load.
-    getHistory: async () => (opts.history ? (await import('./mockHistory')).mockHistory() : wait(null, 0))
+    getHistory: async () => (opts.history ? (await import('./mockHistory')).mockHistory() : wait(null, 0)),
+    // A cohort played by the AI players, with the cached benchmark (`group`: purpose, lens, size). Loaded on demand.
+    getGroupReport: async cohortId => (await import('./mockGroup')).mockGroupReport(cohortId, opts.group)
   };
 }

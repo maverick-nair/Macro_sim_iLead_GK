@@ -6,8 +6,8 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 const LINK = `cursor-pointer border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary ${FOCUS}`;
 
 export interface ReportToolbarProps {
-  /** Web view: back to the results. Print view: back to the web view. */
-  onBack: () => void;
+  /** Web view: back to the results (absent where there is nowhere to go back to, as in the group report). Print view: back to the web view. */
+  onBack?: () => void;
   /** Absent when there is nowhere to send the report (no email service yet). */
   onEmail?: () => void;
   /** Web view: opens the print view and the browser's print dialog. Print view: prints again. */
@@ -21,7 +21,7 @@ export function ReportToolbar({ onBack, onEmail, onDownload, print = false }: Re
   const { t } = useI18n();
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <button type="button" onClick={onBack} className={LINK}>{t('report.toolbar.back', { print: String(print) })}</button>
+      {onBack && <button type="button" onClick={onBack} className={LINK}>{t('report.toolbar.back', { print: String(print) })}</button>}
       <span className="flex-1"></span>
       {onEmail && <NoWrapButton variant="secondary" size="sm" onClick={onEmail}>{t('report.toolbar.email')}</NoWrapButton>}
       {onDownload && <NoWrapButton variant="primary" size="sm" onClick={onDownload}>{t('report.toolbar.download', { print: String(print) })}</NoWrapButton>}

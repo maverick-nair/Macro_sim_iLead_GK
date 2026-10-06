@@ -35,5 +35,5 @@ import time from './time.json';
 
 export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...smallscreen, ...style, ...stylesetting, ...team, ...time };
 
-/** Loaded with their screens: './end.json', './report.json', './tablet.json' (the tablet board, D73), './weekend.json'. */
-export type LazyMessages = typeof import('./end.json') & typeof import('./report.json') & typeof import('./tablet.json') & typeof import('./weekend.json');
+/** Loaded with their screens: './end.json', './group.json' (the group report, D77), './report.json', './tablet.json' (the tablet board, D73), './weekend.json'. */
+export type LazyMessages = typeof import('./end.json') & typeof import('./group.json') & typeof import('./report.json') & typeof import('./tablet.json') & typeof import('./weekend.json');

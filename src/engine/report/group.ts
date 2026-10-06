@@ -176,7 +176,7 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
   const compare = (group: number | null, base: number | null | undefined, near: number, digits: (d: number) => number) => {
     if (group === null || base === null || base === undefined) return null;
     const d = digits(group - base);
-    return Math.abs(d) < near ? P.compare.level : fill(d > 0 ? P.compare.above : P.compare.below, { diff: Math.abs(d) });
+    return Math.abs(d) < near ? P.compare.level : fill(d > 0 ? P.compare.above : P.compare.below, { diff: `${Math.abs(d)} ${Math.abs(d) === 1 ? 'point' : 'points'}` });
   };
   const rated = (score: number | null) => ({ score, outOf10: score === null ? null : r1(score / 10), level: score === null ? null : { index: levelOf(scale, score), name: scale[levelOf(scale, score)].name } });
 
@@ -325,6 +325,7 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
     version: 1,
     cohort: { name: cohort.name, date: cohort.date, purpose, storyline: { id: c.id, name: c.name, organisation: c.organisation ?? null }, lens: { id: lens.id, title: lens.title } },
     participants: n, completed, periodUnit: unit,
+    money: { currency: c.money.currency, locale: c.money.locale, display: c.money.display },
     sections: (purpose === 'assessment' ? ASSESSMENT_SECTIONS : DEVELOPMENT_SECTIONS).filter(s => present[s]),
     withheld,
     benchmark: b ? { participants: b.participants } : null,

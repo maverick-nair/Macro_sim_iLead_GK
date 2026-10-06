@@ -70,6 +70,8 @@ export const GroupReport = z.object({
   participants: Count,
   completed: Count,
   periodUnit: z.string(),
+  /** How the storyline formats money (src/engine/money.ts). */
+  money: z.object({ currency: z.string().length(3), locale: z.string().min(2), display: z.enum(['symbol', 'narrowSymbol', 'code']) }),
   /** In the order shown, for the cohort's purpose. */
   sections: z.array(GroupSection),
   /** Development only: below the minimum cohort size the aggregates are withheld (privacy). */
