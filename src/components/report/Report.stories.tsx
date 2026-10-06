@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useState, type ReactNode } from 'react';
 import type { EngineView } from '../../engine/contract';
-import { DEFAULT_LENS, DEFAULT_LENS_VIEW, NEEDS } from '../../engine/lens';
+import { DEFAULT_LENS_VIEW, NEEDS } from '../../engine/lens';
+import { DEFAULT_LENS } from '../../engine/lensLibrary';
 import { defaultStoryline, playToEnd } from '../../engine/mock';
 import { REPORT_FIXTURE as FX } from '../../data/reportFixture';
 import { BusinessSection } from './BusinessSection';

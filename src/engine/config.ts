@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
-import { DEFAULT_LENS, LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
+import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
+import { DEFAULT_LENS } from './lensLibrary';
 import { DEFAULT_DEVELOPMENT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE, DEFAULT_SKILLS } from './report/defaults';
 
 /**

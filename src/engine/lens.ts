@@ -57,34 +57,21 @@ export interface LensView {
 }
 
 /**
- * Readiness Based Leadership, the default and the Sales Elevator storyline. Each style has a home
- * quadrant (Directing low skill and low morale, Guiding low skill and high morale, Partnering high
- * skill and low morale, Entrusting both high); its difference to a need is the number of ranges that
- * do not match, which is exactly the rule in docs/SIMULATION.md section 2.
+ * Readiness Based Leadership as participants see it: Directing, Guiding, Partnering and Entrusting, and
+ * the names of the four needs. The author facing parts (description, source) and the fit table live in
+ * `./lensLibrary`, which only the engine and authoring load, so they stay out of the participant bundle.
  */
-export const DEFAULT_LENS: Lens = {
-  id: 'readiness_based',
-  title: 'Readiness Based Leadership',
-  description: 'Build a team whose members need different leadership at different moments. Participants win by reading each person and adapting.',
-  basedOn: 'Situational leadership research, Hersey and Blanchard',
-  styles: [
-    { key: 'D', letter: 'D', name: 'Directing', short: 'You set the task and check in closely.', description: 'You set the task, explain how, and check in closely.' },
-    { key: 'G', letter: 'G', name: 'Guiding', short: 'You explain the why and coach as they practise.', description: 'You explain the why and coach while they practise.' },
-    { key: 'P', letter: 'P', name: 'Partnering', short: 'You decide together and share the work.', description: 'You decide together and share ownership of the work.' },
-    { key: 'E', letter: 'E', name: 'Entrusting', short: 'You hand over the goal and step back.', description: 'You hand over the goal and step back.' }
-  ],
-  needs: {
-    lowSkill_lowMorale: { label: 'Learning and unsure', short: 'Low skill, low morale' },
-    lowSkill_highMorale: { label: 'Keen to learn', short: 'Low skill, high morale' },
-    highSkill_lowMorale: { label: 'Capable but cautious', short: 'High skill, low morale' },
-    highSkill_highMorale: { label: 'Ready to run with it', short: 'High skill, high morale' }
-  },
-  fit: {
-    lowSkill_lowMorale: { D: 0, G: 1, P: 1, E: 2 },
-    lowSkill_highMorale: { D: 1, G: 0, P: 2, E: 1 },
-    highSkill_lowMorale: { D: 1, G: 2, P: 0, E: 1 },
-    highSkill_highMorale: { D: 2, G: 1, P: 1, E: 0 }
-  }
+export const READINESS_STYLES: LensStyle[] = [
+  { key: 'D', letter: 'D', name: 'Directing', short: 'You set the task and check in closely.', description: 'You set the task, explain how, and check in closely.' },
+  { key: 'G', letter: 'G', name: 'Guiding', short: 'You explain the why and coach as they practise.', description: 'You explain the why and coach while they practise.' },
+  { key: 'P', letter: 'P', name: 'Partnering', short: 'You decide together and share the work.', description: 'You decide together and share ownership of the work.' },
+  { key: 'E', letter: 'E', name: 'Entrusting', short: 'You hand over the goal and step back.', description: 'You hand over the goal and step back.' }
+];
+export const READINESS_NEEDS: Record<NeedKey, LensNeed> = {
+  lowSkill_lowMorale: { label: 'Learning and unsure', short: 'Low skill, low morale' },
+  lowSkill_highMorale: { label: 'Keen to learn', short: 'Low skill, high morale' },
+  highSkill_lowMorale: { label: 'Capable but cautious', short: 'High skill, low morale' },
+  highSkill_highMorale: { label: 'Ready to run with it', short: 'High skill, high morale' }
 };
 
 /** A member's need: High at or above `high` (Model doc, sections 4 and 5). */
@@ -113,4 +100,7 @@ export function lensView(lens: Lens): LensView {
 }
 
 /** The default lens as the participant sees it: what design fixtures and stories render with. */
-export const DEFAULT_LENS_VIEW: LensView = lensView(DEFAULT_LENS);
+export const DEFAULT_LENS_VIEW: LensView = {
+  id: 'readiness_based', title: 'Readiness Based Leadership', styles: READINESS_STYLES,
+  needs: NEEDS.map(key => ({ key, ...READINESS_NEEDS[key] }))
+};

@@ -1,5 +1,6 @@
 import type { StorylineConfig } from '../config';
-import { bestStyle, DEFAULT_LENS, needOf, type Lens } from '../lens';
+import { bestStyle, needOf, type Lens } from '../lens';
+import { DEFAULT_LENS } from '../lensLibrary';
 import { createEngine, type Engine } from './engine';
 import type { Rng } from './rng';
 import { createRng } from './rng';

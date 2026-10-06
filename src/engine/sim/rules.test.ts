@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from './rng';
-import { bestStyle, DEFAULT_LENS, fitOf, needOf, NEEDS } from '../lens';
+import { bestStyle, fitOf, needOf, NEEDS } from '../lens';
+import { DEFAULT_LENS } from '../lensLibrary';
 import { applyEffect, applyTrust, mismatchType, trainingMismatch, trustMultiplier } from './rules';
 
 const neededStyle = (s: { skill: number; morale: number }) => bestStyle(DEFAULT_LENS, needOf(s));
