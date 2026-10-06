@@ -448,6 +448,38 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Storyline.** New optional `intro` (the sponsor's welcome letter); onboarding uses it when present. A Client Leadership Model plays on the Readiness Based styles; its confirmed dimensions become the skills.
 - **Play this draft** stores the storyline (`ilead.author.draft`, session and local storage) and opens `/?storyline=draft&start=onboarding`; the mock engine (already lazy) parses it and falls back to Sales Elevator with a console warning.
 
+**D75. Report 3.0: the full individual report, the group report, and purpose aware findings.** Decided 2026-10-06 (product owner; samples in `docs/reports/`).
+- **Purpose drives the report.** The storyline's purpose is `development` or `assessment` (today's `use: 'selection'` reads as assessment). Assessment reports carry verdicts and the full findings. Development reports carry no verdict words: they frame every finding as the next step and lead into practice in the real job.
+- **Verdicts (assessment).** An overall verdict against an authored bar (default: overall level Proficient, no skill below Developing): "Exceeds the bar", "Meets the bar", "Approaching the bar", "Below the bar". Each skill also gets Strength, Meets or Development need. Labels and the bar are config. Every verdict cites its evidence and says whether an assessor reviewed it.
+- **Individual report, added from the 1.0 sample** (lens aware, so style grids use the lens's needs and styles):
+  - About the simulation and how to read the report, and a confidentiality note.
+  - Skills with a score out of 10 beside the level, and a narrative per skill.
+  - Objectives: revenue against target, conversions, team skill, morale and result at start and end.
+  - Overall leadership adaptability (share of style choices that fitted).
+  - Styles summary: proportion and accuracy per style with a narrative, and the preferred style.
+  - Consistency: needed against used, intended against used, needed against intended, as deviations with narratives.
+  - Summary of actions: impact (none, very low, low, moderate, high) and frequency per action, with a narrative.
+  - Distribution of actions across team members: a member by action matrix of counts coloured by impact, members ordered by impact.
+  - Food for thought: reflective questions with a guiding line each.
+  - Key takeaways.
+  - Progress over time: the development plan with real world practice and check ins, and a comparison with earlier attempts when there are any (`getHistory`, proposed).
+- **Group report (new), for the organisation:**
+  - Cover with the number of participants.
+  - Skills: group average against the benchmark, with level and narrative.
+  - The share of the group at each level per skill.
+  - Completion rate.
+  - Business achievement: best revenue against target, average conversions and revenue against the benchmark, the share who beat the target, and skill, morale and result against the benchmark.
+  - Leadership style adaptability and preferred styles.
+  - Styles distribution and consistency.
+  - The funnel, ideal against actual, week by week.
+  - Actions by frequency and impact.
+  - Time spent with top, average and bottom performers.
+  - Key takeaways as organisational questions by section.
+  - Assessment purpose adds the verdict distribution and a participant table.
+  - The benchmark is everyone who has played the simulation (server data). The aggregation is a pure function (`buildGroupReport`) the server can reuse.
+  - The prototype lives at `/group` (lazy), with a mock cohort played by the calibration AI players.
+- **Copy:** "skills", never "competency"; no dashes as punctuation; no emojis.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
