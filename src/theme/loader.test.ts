@@ -145,6 +145,25 @@ describe('contrast correction', () => {
     expect(auditTheme(TABLE, slots).filter(r => !r.pass)).toEqual([]);
   });
 
+  it('drops a colour no lightness can fix back to the default, and says so', () => {
+    // Synthetic: x must reach 5:1 on white and on black, which no colour can.
+    const table = {
+      nodes: { white: { $value: '#ffffff' }, black: { $value: '#000000' }, x: { light: '{black}', dark: '{white}', themable: true }, y: { light: '{black}', dark: '{white}', themable: true } },
+      pairs: [{ fg: 'x', bg: ['white', 'black'], min: 5 }, { fg: 'y', bg: 'white', min: 4.5, modes: ['light' as const] }]
+    };
+    const slot = (token: string, mode: 'light' | 'dark', source: string) => ({ token, mode, stop: 0, source, color: toOklch(parseColor(source)!), corrected: false });
+    const slots = new Map([
+      ['x', { light: [slot('x', 'light', '#777777')], dark: [slot('x', 'dark', '#777777')] }],
+      ['y', { light: [slot('y', 'light', '#999999')], dark: [slot('y', 'dark', '#999999')] }]
+    ]);
+    const { corrections, dropped } = correctContrast(table, slots);
+    expect(dropped).toEqual(['x']);
+    expect([...slots.keys()]).toEqual(['y']);
+    expect(corrections.map(c => `${c.token} ${c.mode}`)).toEqual(['y light']);
+    // x is back on its default (this synthetic default fails too; the real defaults pass by the token build).
+    expect(auditTheme(table, slots).filter(r => !r.pass).map(r => `${r.fg} on ${r.against} ${r.mode}`)).toEqual(['x on white dark', 'x on black light']);
+  });
+
   it('corrects each stop of the brand gradient on its own', () => {
     const slots = slotsFor({ version: 1, colors: { brand: { from: '#ffffff', to: '#101010' } } });
     correctContrast(TABLE, slots);
