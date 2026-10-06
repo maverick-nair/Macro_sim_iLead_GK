@@ -14,7 +14,8 @@ const out = build(src);
 const files: Record<string, string> = {
   'src/styles/tokens.generated.css': out.tokensCss,
   'src/styles/tailwind-theme.generated.css': out.tailwindCss,
-  'src/styles/tokens.generated.ts': out.manifestTs
+  'src/styles/tokens.generated.ts': out.manifestTs,
+  'src/theme/tokens.generated.ts': out.themeTs
 };
 
 const failing = out.contrast.filter(c => !c.pass);

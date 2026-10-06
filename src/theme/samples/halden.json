@@ -1,0 +1,12 @@
+{
+  "$description": "Halden Group, the sample client theme (frame b15, `?client=halden`). A GenieKreator theme config like any other: the mock API serves it from getTheme and the loader validates, corrects and applies it at runtime (D72). It has no logo image, so the brand mark shows the design's placeholder.",
+  "version": 1,
+  "id": "halden",
+  "name": "Halden Group",
+  "colors": {
+    "accent": { "light": "oklch(0.5 0.17 0)", "dark": "oklch(0.72 0.17 0)" },
+    "accentSecondary": { "light": "oklch(0.54 0.15 30)", "dark": "oklch(0.8 0.12 30)" },
+    "accentSoft": { "light": "oklch(0.95 0.025 0)", "dark": "oklch(0.6 0.18 0 / 0.18)" },
+    "brand": { "from": "oklch(0.66 0.19 2)", "to": "oklch(0.78 0.13 30)", "angle": 135 }
+  }
+}

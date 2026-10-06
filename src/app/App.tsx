@@ -10,7 +10,8 @@ import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { PauseDialog, ResumeDialog, SessionExpiredDialog } from '../components/settings/SessionDialogs';
 import { LoadingScreen } from '../components/shell/LoadingScreen';
 import { Onboarding } from '../screens/Onboarding';
-import { HALDEN_THEME } from './clientTheme';
+import { BrandContext } from '../theme/brand';
+import type { AppliedTheme } from '../theme/types';
 import { EngineOnboarding } from './EngineOnboarding';
 import { useEngineView } from '../engine/react';
 import { runInProgress, showsRecap } from './resume';
@@ -35,7 +36,12 @@ import type { AppActions, AppModel, Overlay, PlannedAction, Screen, Settings } f
  */
 export interface AppProps {
   theme?: 'dark' | 'light';
-  clientTheme?: boolean;
+  /**
+   * A client theme from the theme loader (D72): its brand mark, and its custom properties scoped to
+   * this app root, so a gallery frame or story can show one theme beside another. In play the
+   * bootstrap also writes them on :root.
+   */
+  clientTheme?: AppliedTheme | null;
   screen?: Screen;
   variant?: LiveVariant;
   uiState?: string;
@@ -255,13 +261,13 @@ export function App(p: AppProps) {
   const rootVars: CSSProperties & Record<string, string | number> = {
     colorScheme: dark ? 'dark' : 'light', minHeight: minH, '--il-text-scale': s.settings.text / 100,
     background: dark ? 'var(--il-backdrop-office)' : 'var(--il-backdrop-daylight)',
-    ...(p.clientTheme ? HALDEN_THEME : null)
+    ...p.clientTheme?.vars
   };
 
   const app: AppModel | null = s.ready && D ? {
     members: D.members.map(m => ({ ...m, ...s.stats[m.id], style: s.styles[m.id], img: `/assets/npc/${m.id}.png` })),
     capacity: s.capacity, week: s.week, day: s.day, outcome: s.outcome, who: s.who, opened: s.opened, planned: s.planned, settings: s.settings,
-    frozen, minH, clock: `${Math.floor(s.secs / 60)}:${String(s.secs % 60).padStart(2, '0')}`, showClock: s.settings.clock, client: !!p.clientTheme, dark
+    frozen, minH, clock: `${Math.floor(s.secs / 60)}:${String(s.secs % 60).padStart(2, '0')}`, showClock: s.settings.clock, client: !!p.clientTheme?.brand, dark
   } : null;
 
   const scr = s.ready ? s.screen : null;
@@ -277,6 +283,7 @@ export function App(p: AppProps) {
 
   return (
     <I18nProvider>
+    <BrandContext.Provider value={p.clientTheme?.brand ?? null}>
     <div style={rootVars} data-text-large={s.settings.text > 100 ? '' : undefined} className={s.settings.reduced ? 'il-reduced-motion' : undefined}>
       <div className={THEME_ROOT}>
         {/* Everything behind an open dialog is inert: no focus, no clicks, hidden from screen readers. */}
@@ -290,7 +297,7 @@ export function App(p: AppProps) {
                 : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
               {engine && (scr === 'style' || scr === 'board') && (
                 <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
-                  <EngineBoard client={!!p.clientTheme} voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
+                  <EngineBoard voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
                     paused={!!s.overlay || held} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
                     actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })} />
                 </div>
@@ -327,6 +334,7 @@ export function App(p: AppProps) {
         <Toast message={s.toast} />
       </div>
     </div>
+    </BrandContext.Provider>
     </I18nProvider>
   );
 }

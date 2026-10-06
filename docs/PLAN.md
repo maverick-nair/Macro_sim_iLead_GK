@@ -65,7 +65,7 @@
 
 **Performance:**
 - The board route's initial JS stays under 200 KB gzipped. The mock engine, the live screen, the galleries and every ported screen past onboarding load on demand.
-- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4 and is 196.3 KB now (5 Oct 2026, D69).
+- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4, 196.3 KB at D69 and is 197.3 KB now (6 Oct 2026, D72: the theme bootstrap; the theme loader is a lazy chunk).
 
 ## Status
 
@@ -79,7 +79,8 @@
 | Quality review | Done (D57 to D61) |
 | M5 | Done, approved |
 | M6 | Done, awaiting approval |
-| M7 to M8 | Not started |
+| M7 | Done, awaiting approval (D72) |
+| M8 | Not started |
 
 ## Milestones
 

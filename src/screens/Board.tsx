@@ -274,11 +274,10 @@ export function Board(props: BoardProps) {
     .filter(i => !q || i.name.toLowerCase().includes(q)).slice(0, 9);
 
   const isOffline = props.uiState === 'offline';
-  // Faithful to the design (DECISIONS D17): in client mode the nav buttons render with no label and do nothing.
+  // A client theme's nav reads Objective, History and More, as the design chat intended (D17, fixed in M7: D72).
   const navKeys = app.client ? ['objective', 'history', 'more'] : ['objective', 'funnel', 'history', 'badges', 'more'];
-  const nav = navKeys.map(key => (app.client ? { key } : { key, label: t('hud.nav.item', { key }) }));
+  const nav = navKeys.map(key => ({ key, label: t('hud.nav.item', { key }) }));
   const onNav = (key: string) => {
-    if (app.client) return;
     const n = t('hud.nav.item', { key });
     act.say(key === 'more' ? 'More: Tutorial, Funnel, Leaderboard, Badges and Help.' : `${n} opens as a panel over the board.`);
   };
@@ -286,7 +285,7 @@ export function Board(props: BoardProps) {
   // TODO(M2): the engine supplies the clock, score and streak; these are the prototype's fixed values.
   // The prototype's fixture scores its pillars out of 1000 (125 a week over 8 weeks); the engine's are 0 to 100.
   const hud: HudProps = {
-    clientLogo: app.client, nav, onNav,
+    nav, onNav,
     clock: { period: app.week, periodUnit: 'week', subPeriod: app.day, subPeriodUnit: 'day', capacity: 5, capacityLeft: cap },
     sessionClock: app.showClock ? app.clock : null, onPause: () => act.overlay('paused'),
     score: { total: 1240, business: 420, people: 510, leadership: 310 }, pillarScale: 125 * 8,

@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { TokenError, type ClientTheme, type ContrastPair, type TokenSources } from './pipeline';
+import { TokenError, type ContrastPair, type TokenSources } from './pipeline';
 
 /** Deep merges token trees. Two files defining the same path is an error, so parallel edits stay safe. */
 export function mergeTrees(trees: Array<{ file: string; tree: Record<string, unknown> }>): Record<string, unknown> {
@@ -31,18 +31,9 @@ function readLayer(dir: string): Record<string, unknown> {
   return mergeTrees(files.map(f => ({ file: path.join(path.basename(dir), f), tree: JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) })));
 }
 
-/** Client themes: one file per theme in tokens/themes, named after the file. `$` keys are metadata. */
-function readThemes(dir: string): Record<string, ClientTheme> {
-  if (!fs.existsSync(dir)) return {};
-  return Object.fromEntries(fs.readdirSync(dir).filter(f => f.endsWith('.json')).sort().map(f => {
-    const tree = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')) as Record<string, unknown>;
-    return [path.basename(f, '.json'), Object.fromEntries(Object.entries(tree).filter(([k]) => !k.startsWith('$'))) as ClientTheme];
-  }));
-}
-
 /**
  * Loads tokens/primitive/*.json, tokens/semantic/*.json, tokens/component/*.json, tokens/legacy.json,
- * the extra contrast pairs in tokens/contrast.json and the client themes in tokens/themes/*.json.
+ * and the extra contrast pairs in tokens/contrast.json. Client themes are runtime config (src/theme, D72).
  */
 export function loadSources(root: string): TokenSources {
   const t = path.join(root, 'tokens');
@@ -52,7 +43,6 @@ export function loadSources(root: string): TokenSources {
     semantic: readLayer(path.join(t, 'semantic')),
     component: readLayer(path.join(t, 'component')),
     legacy: JSON.parse(fs.readFileSync(path.join(t, 'legacy.json'), 'utf8')),
-    contrast: fs.existsSync(contrastFile) ? (JSON.parse(fs.readFileSync(contrastFile, 'utf8')) as { pairs: ContrastPair[] }).pairs : [],
-    themes: readThemes(path.join(t, 'themes'))
+    contrast: fs.existsSync(contrastFile) ? (JSON.parse(fs.readFileSync(contrastFile, 'utf8')) as { pairs: ContrastPair[] }).pairs : []
   };
 }
