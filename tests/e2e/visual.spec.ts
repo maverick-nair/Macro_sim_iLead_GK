@@ -243,8 +243,15 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await confirmStyles(page);
           await dismissCards(page);
           await page.getByRole('button', { name: /End week/ }).click();
-          await dismissCards(page);
-          await expect(page.getByRole('button', { name: /^See your week$/ })).toBeVisible();
+          // Cards for the week's end can still come in: close each until the week end shows.
+          const see = page.getByRole('button', { name: /^See your week$/ });
+          const gotIt = page.getByRole('button', { name: 'Got it' });
+          for (let i = 0; i < 6; i++) {
+            await expect(see.or(gotIt).first()).toBeVisible();
+            if (!(await gotIt.count())) break;
+            await dismissCards(page);
+          }
+          await expect(see).toBeVisible();
           await still(page, `${theme}-${w}-weekend`);
           await page.getByRole('button', { name: /^See your week$/ }).click();
           await expect(page.getByRole('button', { name: /^(Continue|Nice|Next)$/ }).first()).toBeVisible();

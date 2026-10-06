@@ -500,10 +500,21 @@ for (const [theme, q] of Object.entries(THEMES)) {
 
 // ---- Keyboard only ----
 
+/** Event cards, one after another, closed with Enter on Got it (each takes focus as it opens). */
+async function cardsByKeyboard(page: Page) {
+  const gotIt = page.getByRole('button', { name: 'Got it' });
+  for (let i = 0; i < 6 && (await gotIt.count()); i++) {
+    const title = await page.getByRole('dialog').getByRole('heading').first().textContent();
+    await press(page, gotIt.first());
+    await expect(page.getByRole('heading', { name: title ?? '' })).toHaveCount(0);
+  }
+}
+
 /** Presses Tab until the target has focus (so it is reachable), then a key. */
 async function tabTo(page: Page, target: Locator, max = 120) {
   for (let i = 0; i < max; i++) {
-    if (await target.evaluate(el => el === document.activeElement).catch(() => false)) return;
+    // A short timeout: a locator waits for its element, and a card can close while we look for it.
+    if (await target.evaluate(el => el === document.activeElement, undefined, { timeout: 1000 }).catch(() => false)) return;
     await page.keyboard.press('Tab');
   }
   throw new Error(`Not reachable by Tab: ${target.toString()}`);
@@ -511,7 +522,7 @@ async function tabTo(page: Page, target: Locator, max = 120) {
 /** Presses Tab until focus is inside the group (a radio group takes one Tab stop, on its checked or first radio). */
 async function tabInto(page: Page, group: Locator, max = 120) {
   for (let i = 0; i < max; i++) {
-    if (await group.evaluate(el => el.contains(document.activeElement)).catch(() => false)) return;
+    if (await group.evaluate(el => el.contains(document.activeElement), undefined, { timeout: 1000 }).catch(() => false)) return;
     await page.keyboard.press('Tab');
   }
   throw new Error(`Not reachable by Tab: ${group.toString()}`);
@@ -543,7 +554,7 @@ test.describe('keyboard only', () => {
     await expect(page.getByRole('heading', { name: /Styles are set for week 1/ })).toBeFocused();
     await press(page, page.getByRole('button', { name: 'Dismiss outcome' }));
     // Event cards take focus; Enter on Got it closes each.
-    for (let i = 0; i < 4 && (await page.getByRole('button', { name: 'Got it' }).count()); i++) await press(page, page.getByRole('button', { name: 'Got it' }));
+    await cardsByKeyboard(page);
 
     // Pick Kent by keyboard, then the action, its option, confirm.
     const kent = page.getByRole('button', { name: /^Kent Goldberg, Lead/ });
@@ -574,7 +585,7 @@ test.describe('keyboard only', () => {
     await expect(page.getByText('How it landed')).toBeVisible({ timeout: 15_000 });
     await expect(page.getByRole('region', { name: 'Outcome' }).getByRole('heading', { level: 2 })).toBeFocused();
     await press(page, page.getByRole('button', { name: 'Dismiss outcome' }));
-    for (let i = 0; i < 4 && (await page.getByRole('button', { name: 'Got it' }).count()); i++) await press(page, page.getByRole('button', { name: 'Got it' }));
+    await cardsByKeyboard(page);
 
     // A team action by keyboard.
     await press(page, page.getByRole('button', { name: /Energize the team/ }));
@@ -585,11 +596,11 @@ test.describe('keyboard only', () => {
     await press(page, page.getByRole('button', { name: /^Confirm/ }));
     await expect(page.getByText('How it landed')).toBeVisible({ timeout: 15_000 });
     await press(page, page.getByRole('button', { name: 'Dismiss outcome' }));
-    for (let i = 0; i < 4 && (await page.getByRole('button', { name: 'Got it' }).count()); i++) await press(page, page.getByRole('button', { name: 'Got it' }));
+    await cardsByKeyboard(page);
 
     // End the week and walk the week end with Enter, into week 2.
     await press(page, page.getByRole('button', { name: /End week/ }));
-    for (let i = 0; i < 4 && (await page.getByRole('button', { name: 'Got it' }).count()); i++) await press(page, page.getByRole('button', { name: 'Got it' }));
+    await cardsByKeyboard(page);
     await expect(page.getByText('End of week 1')).toBeVisible();
     await press(page, page.getByRole('button', { name: /^See your week$/ }));
     const step = page.getByRole('button', { name: /^(Continue|Nice|Take this reward|Next|Set styles for week 2)$/ });
