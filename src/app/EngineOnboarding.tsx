@@ -71,7 +71,7 @@ export function EngineOnboarding({ act, minHeight }: { act: AppActions; minHeigh
       sponsor={{
         name: sponsor.name, initials: initials(sponsor.name), img: sponsor.img,
         role: t('onboarding.sponsor.role', { title: sponsor.title, organisation: storyline.organisation ?? 'none' }),
-        letter: engineLetter(i18n, view), video: null
+        letter: storyline.intro ?? engineLetter(i18n, view), video: null
       }}
       organisation={storyline.organisation}
       sampleName={view.members[0]?.name.split(' ')[0] ?? ''}

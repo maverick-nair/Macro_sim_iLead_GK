@@ -112,7 +112,7 @@ export function buildView(sim: Sim) {
   return {
     phase: sim.phase,
     /** Read only storyline identity, for onboarding. */
-    storyline: { name: c.name, organisation: c.organisation ?? null },
+    storyline: { name: c.name, organisation: c.organisation ?? null, ...(c.intro ? { intro: c.intro } : null) },
     /** The lens's styles and needs; never the fit table or the source (D70). */
     lens: lensView(c.lens),
     clock: {
