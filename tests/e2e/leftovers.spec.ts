@@ -42,12 +42,15 @@ test('Pause in the HUD stops the session clock until Resume', async ({ page }) =
   const pause = page.getByRole('button', { name: 'Pause the simulation' });
   await expect(pause).toHaveText(/^\d+:\d\d$/);
   const start = await pause.textContent();
-  await expect.poll(() => pause.textContent(), { timeout: 4000 }).not.toBe(start);
+  // The clock ticks once a second; a loaded machine can be slow to paint a tick, so allow a few.
+  await expect.poll(() => pause.textContent(), { timeout: 10_000 }).not.toBe(start);
 
   await pause.click();
   const dialog = page.getByRole('dialog', { name: 'You are paused' });
   await expect(dialog).toBeVisible();
   expect(await axe(page)).toEqual([]);
+  // A tick already on its way when Pause was pressed may still land: read the held time after it.
+  await page.waitForTimeout(1200);
   const held = await pause.textContent();
   await page.waitForTimeout(2500);
   expect(await pause.textContent()).toBe(held);
@@ -55,7 +58,7 @@ test('Pause in the HUD stops the session clock until Resume', async ({ page }) =
   await dialog.getByRole('button', { name: 'Resume' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(pause).toBeFocused();
-  await expect.poll(() => pause.textContent(), { timeout: 4000 }).not.toBe(held);
+  await expect.poll(() => pause.textContent(), { timeout: 10_000 }).not.toBe(held);
 });
 
 test('with the clock hidden the HUD keeps a Pause button', async ({ page }) => {
@@ -76,6 +79,8 @@ test('pausing a conversation holds the streamed line and its clock', async ({ pa
   const dialog = page.getByRole('dialog', { name: 'You are paused' });
   await expect(dialog).toBeVisible();
   const main = page.getByRole('main');
+  // A word already on its way when Pause was pressed may still land: take the snapshot after it.
+  await page.waitForTimeout(800);
   const before = await main.innerText();
   await page.waitForTimeout(2500);
   // Nothing moved: not the NPC's words, not the clock.

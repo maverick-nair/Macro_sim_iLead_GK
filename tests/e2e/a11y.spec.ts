@@ -131,6 +131,16 @@ async function teamAction(page: Page, w: Width, action: RegExp, option?: RegExp)
   }
 }
 
+/** The scheduled sponsor briefing: from the inbox rail where it shows (1440), otherwise from the inbox. */
+async function openBriefing(page: Page) {
+  const direct = page.getByRole('button', { name: /Briefing with Paula/ });
+  if (await direct.count()) return direct.first().click();
+  await page.getByRole('button', { name: /^Inbox/ }).click();
+  const inbox = page.getByRole('dialog', { name: 'Inbox' });
+  const item = inbox.locator('div').filter({ has: page.getByText('Briefing with Paula', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last();
+  await item.getByRole('button').last().click();
+}
+
 /** Waits for the NPC's line to finish streaming. */
 async function quiet(page: Page) {
   await expect(page.getByText('AI persona').first()).toBeVisible({ timeout: 20_000 });
@@ -374,7 +384,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await scan(page, 'live: sponsor call');
 
           await toBoard(page, q, 'period=4');
-          await page.getByRole('button', { name: /Briefing with Paula/ }).first().click();
+          await openBriefing(page);
           await expect(page.getByText(/Sponsor briefing with Paula/).first()).toBeVisible({ timeout: 20_000 });
           await quiet(page);
           await scan(page, 'live: sponsor briefing');
@@ -455,6 +465,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           if (w < 1280) {
             await page.getByText('Your simulation so far').click();
             await scan(page, 'author: summary open');
+            await page.getByText('Your simulation so far').click();
           }
           await page.getByRole('button', { name: 'Confirm lens and preview the build' }).click();
           await expect(page.getByRole('heading', { name: 'Build preview' })).toBeVisible();
@@ -497,6 +508,15 @@ async function tabTo(page: Page, target: Locator, max = 120) {
   }
   throw new Error(`Not reachable by Tab: ${target.toString()}`);
 }
+/** Presses Tab until focus is inside the group (a radio group takes one Tab stop, on its checked or first radio). */
+async function tabInto(page: Page, group: Locator, max = 120) {
+  for (let i = 0; i < max; i++) {
+    if (await group.evaluate(el => el.contains(document.activeElement)).catch(() => false)) return;
+    await page.keyboard.press('Tab');
+  }
+  throw new Error(`Not reachable by Tab: ${group.toString()}`);
+}
+
 async function press(page: Page, target: Locator, key = 'Enter') {
   await tabTo(page, target);
   await page.keyboard.press(key);
@@ -508,12 +528,13 @@ test.describe('keyboard only', () => {
   test('a full week and a live conversation, without the mouse', async ({ page }) => {
     test.setTimeout(180_000);
     await page.goto('/?start=board');
-    // Style setting: each person's style is a radio group; arrows move within it, Space picks.
+    // Style setting: each person's style is a radio group; arrows move within it, Enter picks (D22).
     const groups = page.getByRole('radiogroup', { name: /^Leadership style for/ });
     await expect(groups).toHaveCount(10, { timeout: 30_000 });
     for (const g of await groups.all()) {
       await press(page, g.getByRole('radio').first(), 'ArrowRight');
-      await page.keyboard.press('Space');
+      await expect(g.getByRole('radio').nth(1)).toBeFocused();
+      await page.keyboard.press('Enter');
       await expect(g.getByRole('radio').nth(1)).toBeChecked();
     }
     await press(page, page.getByRole('button', { name: 'Review and confirm' }));
@@ -531,7 +552,7 @@ test.describe('keyboard only', () => {
     await press(page, page.getByRole('button', { name: /Meet face to face/ }));
     await expect(page.getByRole('heading', { name: 'Meet face to face' })).toBeFocused();
     const option = page.getByRole('radio', { name: /Energize the person/ });
-    await tabTo(page, page.getByRole('radio').first());
+    await tabInto(page, page.getByRole('radiogroup', { name: 'Choose an option' }));
     for (let i = 0; i < 6 && !(await option.evaluate(el => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Space');
     await expect(option).toBeChecked();
@@ -558,7 +579,7 @@ test.describe('keyboard only', () => {
     // A team action by keyboard.
     await press(page, page.getByRole('button', { name: /Energize the team/ }));
     const lunch = page.getByRole('radio', { name: 'Team Lunch' });
-    await tabTo(page, page.getByRole('radio').first());
+    await tabInto(page, page.getByRole('radiogroup', { name: 'Choose an option' }));
     for (let i = 0; i < 4 && !(await lunch.evaluate(el => el === document.activeElement)); i++) await page.keyboard.press('ArrowDown');
     await page.keyboard.press('Space');
     await press(page, page.getByRole('button', { name: /^Confirm/ }));

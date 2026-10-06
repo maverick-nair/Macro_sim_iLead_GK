@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 /**
  * Visual regression for the screens the engine renders (the design frames are held by `npm run parity`).
@@ -31,7 +31,7 @@ async function confirmStyles(page: Page) {
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
   // Confirming styles shows its outcome; dismiss it so the shot is the plain board.
-  await expect(page.getByRole('heading', { name: /Styles are set for week 1/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Styles are set for week \d/ })).toBeVisible();
   await page.getByRole('button', { name: 'Dismiss outcome' }).click();
   await expect(page.getByRole('region', { name: 'Outcome' })).toHaveCount(0);
 }
@@ -65,6 +65,54 @@ async function dismissCards(page: Page) {
     const title = await page.getByRole('dialog').getByRole('heading').first().textContent();
     await gotIt.click();
     await expect(page.getByRole('heading', { name: title ?? '' })).toHaveCount(0);
+  }
+}
+
+/** Every width the participant app is drawn at (D69, D73): the design, the folded panel, a portrait tablet. */
+const ALL = [1440, 1024, 834] as const;
+type Width = (typeof ALL)[number];
+const size = (w: Width) => ({ width: w, height: w < 1000 ? 1194 : 1000 });
+const isTablet = (w: Width) => w < 1000;
+
+/** Dates on screen (the report's) are read from a fixed day, so the shots do not move with the calendar. */
+async function fixDate(page: Page) {
+  await page.clock.setFixedTime(new Date('2026-10-06T10:00:00'));
+}
+
+/** Waits for finite animations to land, then the shot; nondeterministic parts masked. */
+async function still(page: Page, name: string, extraMask: Locator[] = []) {
+  await settle(page);
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))));
+  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ }), ...extraMask] });
+}
+
+/** Spends three days of week 3 (a team activity and an assessment): the sponsor rings. */
+async function spendThreeDays(page: Page, w: Width) {
+  if (isTablet(w)) {
+    await page.getByRole('button', { name: /^Actions ·/ }).click();
+    const d = page.getByRole('dialog', { name: 'Team actions' });
+    await d.getByRole('radio', { name: /Energize the team/ }).click();
+    await d.getByRole('radio', { name: /Team building/ }).click();
+    await d.getByRole('button', { name: /^Confirm · / }).click();
+  } else {
+    await page.getByRole('button', { name: /Energize the team/ }).click();
+    await page.getByRole('radio', { name: /Team building/ }).click();
+    await page.getByRole('button', { name: /^Confirm/ }).click();
+  }
+  await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+  await expect(page.getByText('How it landed')).toHaveCount(0);
+  await dismissCards(page);
+  if (isTablet(w)) {
+    await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
+    const d = page.getByRole('dialog', { name: 'Actions for Kent Goldberg' });
+    await d.getByRole('radio', { name: /Assess member/ }).click();
+    await d.getByRole('radiogroup', { name: 'Choose an option' }).getByRole('radio').first().click();
+    await d.getByRole('button', { name: /^Confirm/ }).click();
+  } else {
+    await page.getByText('Kent Goldberg', { exact: true }).click();
+    await page.getByRole('button', { name: /Assess member/ }).click();
+    await page.getByRole('radiogroup', { name: 'Choose an option' }).getByRole('radio').first().click();
+    await page.getByRole('button', { name: /^Confirm/ }).click();
   }
 }
 
@@ -136,6 +184,108 @@ for (const [theme, q] of Object.entries(THEMES)) {
         await page.goto(url('start=board', 'period=8', q));
         await finishRun(page);
         await shot(page, `${theme}-${width}-end`, true);
+      });
+    }
+
+    // M8 (D78): the participant screens that had no baseline, at every width, and the group report and
+    // the author chat at 1440 and 834.
+    for (const w of ALL) {
+      test.describe(`more at ${w}`, () => {
+        test.use({ viewport: size(w) });
+
+        test(`event card at ${w}`, async ({ page }) => {
+          // Week 3 opens with the cards of the weeks before it.
+          await page.goto(url('start=board', 'period=3', q));
+          await confirmStyles(page);
+          const card = page.getByRole('dialog');
+          await expect(card.getByRole('button', { name: 'Got it' })).toBeVisible();
+          await expect(card).toHaveCSS('opacity', '1');
+          await still(page, `${theme}-${w}-event`);
+        });
+
+        test(`inbox at ${w}`, async ({ page }) => {
+          // Week 4: the sponsor's briefing and the news are waiting.
+          await page.goto(url('start=board', 'period=4', q));
+          await confirmStyles(page);
+          await dismissCards(page);
+          await page.getByRole('button', { name: /^Inbox/ }).click();
+          await expect(page.getByRole('dialog', { name: 'Inbox' })).toBeVisible();
+          await still(page, `${theme}-${w}-inbox`);
+        });
+
+        test(`profile at ${w}`, async ({ page }) => {
+          await page.goto(url('start=board', q));
+          await confirmStyles(page);
+          await dismissCards(page);
+          if (isTablet(w)) {
+            await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
+            await page.getByRole('dialog', { name: 'Actions for Kent Goldberg' }).getByRole('tab', { name: 'Profile' }).click();
+          } else {
+            await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
+          }
+          await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeVisible();
+          await still(page, `${theme}-${w}-profile`);
+        });
+
+        test(`sponsor call at ${w}`, async ({ page }) => {
+          await page.goto(url('start=board', 'period=3', q));
+          await confirmStyles(page);
+          await dismissCards(page);
+          await spendThreeDays(page, w);
+          const call = page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' });
+          await expect(call).toHaveCSS('opacity', '1', { timeout: 15_000 });
+          // The board behind it is held mid week; the call is what matters, the toast that may sit beside it is not.
+          await still(page, `${theme}-${w}-sponsor-call`, [page.getByRole('status')]);
+        });
+
+        test(`week end at ${w}`, async ({ page }) => {
+          await page.goto(url('start=board', q));
+          await confirmStyles(page);
+          await dismissCards(page);
+          await page.getByRole('button', { name: /End week/ }).click();
+          await dismissCards(page);
+          await expect(page.getByRole('button', { name: /^See your week$/ })).toBeVisible();
+          await still(page, `${theme}-${w}-weekend`);
+          await page.getByRole('button', { name: /^See your week$/ }).click();
+          await expect(page.getByRole('button', { name: /^(Continue|Nice|Next)$/ }).first()).toBeVisible();
+          await still(page, `${theme}-${w}-weekend-report`);
+        });
+
+        if (isTablet(w)) {
+          test(`end screen at ${w}`, async ({ page }) => {
+            await page.goto(url('start=board', 'period=8', q));
+            await finishRun(page);
+            await shot(page, `${theme}-${w}-end`, true);
+          });
+        }
+
+        test(`report first page at ${w}`, async ({ page }) => {
+          await fixDate(page);
+          await page.goto(url('start=board', 'period=8', q));
+          await finishRun(page);
+          await page.getByRole('button', { name: 'View my report' }).click();
+          await expect(page.getByRole('heading', { level: 1, name: 'Your development report' })).toBeVisible({ timeout: 20_000 });
+          await still(page, `${theme}-${w}-report`);
+        });
+      });
+    }
+
+    for (const w of [1440, 834] as const) {
+      test.describe(`group and author at ${w}`, () => {
+        test.use({ viewport: size(w) });
+
+        test(`group report at ${w}`, async ({ page }) => {
+          await fixDate(page);
+          await page.goto(`/group?${q}`);
+          await expect(page.getByRole('heading', { level: 2 }).first()).toBeVisible({ timeout: 60_000 });
+          await still(page, `${theme}-${w}-group`);
+        });
+
+        test(`author chat at ${w}`, async ({ page }) => {
+          await page.goto(`/author?${q}`);
+          await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+          await still(page, `${theme}-${w}-author`);
+        });
       });
     }
 

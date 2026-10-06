@@ -83,7 +83,7 @@
 | Tablet portrait (834) | Done, approved (D73) |
 | Author chat prototype | Done, approved (D74) |
 | Report 3.0 and group report | Done, approved (D75 to D77) |
-| M8 | In progress |
+| M8 | Done, awaiting approval (D78) |
 
 ## Milestones
 
@@ -122,10 +122,14 @@ Each one ends with a demo, a summary and a stop for approval.
 - The Halden sample theme. Fixes D17.
 - Needs D19 for the config schema.
 
-**M8. Hardening.**
+**M8. Hardening.** Done, awaiting approval (D78).
 - axe on every route, Web Vitals budgets and visual baselines for light, dark and client at 1440, 1024 and 834 (see D15 and D69: phones are not supported, 390 holds only the small screen notice).
+  - `tests/e2e/a11y.spec.ts`: every route and major state in the three themes at the three widths, the notice at 390, a corrected custom theme, and a keyboard only week with a live conversation.
+  - `npm run vitals` (`scripts/vitals.ts`): LCP, CLS, TBT, INP and transfer on a throttled production build, in CI.
+  - Baselines added for the event card, sponsor call, inbox, profile, week end, end screen at 834 and the report's first page, and `/group` and `/author` at 1440 and 834.
 - Preflight on and legacy aliases removed (D6, D7).
-- Handoff docs.
+- Lint at 0 warnings, US spelling in lens and report copy, the flaky inbox and pause tests made robust.
+- Handoff docs: `docs/HANDOFF.md` and the JSON Schemas in `docs/schemas/` (`npm run schemas`).
 
 ## Running M0
 

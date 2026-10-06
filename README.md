@@ -14,11 +14,15 @@ npm run lint             # ESLint (TypeScript, React hooks, jsx-a11y)
 npm run build            # token check, unit tests, typecheck, production build to dist/, bundle budget
 npm run parity           # every frame vs the Claude Design prototype (add --prod for the build)
 npm run storybook:smoke  # every story in dark, light, the Halden and the corrected Brightwater client themes, fails on render errors
-npm run e2e              # Playwright flows on the mock engine, with axe (WCAG 2.2 AA)
+npm run e2e              # Playwright flows on the mock engine, axe on every route (tests/e2e/a11y.spec.ts, WCAG 2.2 AA) and visual baselines
+npm run vitals           # Web Vitals budgets on a throttled production build (scripts/vitals.ts, D78)
+npm run schemas          # regenerate the handoff JSON Schemas in docs/schemas from the Zod contracts
 npm run calibrate -- sales-elevator   # tune a storyline so it plays well (add --check to verify)
 ```
 
-CI (`.github/workflows/ci.yml`) runs on every push and pull request: token check, lint, build, Storybook smoke, the Playwright flows and parity.
+CI (`.github/workflows/ci.yml`) runs on every push and pull request: token check, lint, build, Storybook smoke, the Playwright flows, parity and the Web Vitals budgets.
+
+For the server and GenieKreator teams: `docs/HANDOFF.md` (architecture, the engine contract, every proposed endpoint, the config and report schemas, how to run, test and release, budgets, known limits).
 
 Component rules: `docs/COMPONENTS.md`.
 
@@ -53,7 +57,7 @@ scripts/      Token pipeline, calibration, bundle budget, storyline import, port
 tests/        Playwright flows (e2e/) and the design parity harness (visual/)
 calibration/  Calibration reports, one per storyline
 docs/         Spec, plan, decision log
-public/       NPC portraits, backgrounds, Manrope fonts
+public/       NPC portraits and backgrounds (WebP, with their PNG sources), Manrope fonts (WOFF2, with their TTF sources); `python3 scripts/assets/optimize.py` makes the compressed variants
 ```
 
 ## Backend

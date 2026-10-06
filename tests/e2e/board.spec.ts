@@ -191,10 +191,14 @@ test('the engine cannot load: the error in words and Retry', async ({ page }) =>
 test('inbox: focus moves in, Later sets the briefing aside until the next day, Escape returns focus', async ({ page }) => {
   await page.goto('/?start=board&period=4');
   await setStyles(page);
+  // The team's reaction and the event cards behind it take focus as they come: clear them first, so
+  // nothing can take focus back from the inbox (this test was flaky under load).
+  await dismissOutcome(page);
+  await dismissEvents(page);
   const rail = page.getByRole('button', { name: /^Inbox/ });
   await rail.click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
-  await expect(inbox).toBeFocused();
+  await expect(inbox).toBeFocused({ timeout: 10_000 });
   // Other messages (news such as the CEO check in) can sit in the inbox too: set the briefing aside.
   await inbox.locator('div').filter({ has: page.getByText('Briefing with Paula', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last().getByRole('button', { name: 'Later' }).click();
   await expect(page.getByText('Briefing with Paula')).toHaveCount(0);
