@@ -79,7 +79,7 @@
 | Quality review | Done (D57 to D61) |
 | M5 | Done, approved |
 | M6 | Done, awaiting approval |
-| M7 | Done, awaiting approval (D72) |
+| M7 | Done, approved |
 | M8 | Not started |
 
 ## Milestones
