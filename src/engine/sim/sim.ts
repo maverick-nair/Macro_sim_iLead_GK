@@ -4,7 +4,7 @@ import { fitOf, needOf, type NeedKey } from '../lens';
 import { applyEffect, applyTrust, clamp, type Mismatch, type Style, type Triple } from './rules';
 import { runEvents, scheduleEvents } from './events';
 import { checkBadges } from './score';
-import type { Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
+import type { ActionRecord, Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
 
 /**
  * Simulation state and the passage of time: funnel, scheduled events, triggers, promises and
@@ -31,7 +31,8 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     runStart: { morale: 0, trust: 0 }, liveRecords: [], styleNotes: [], attention: {}, reflection: null, fairRecognitions: 0, hireBudget: false, freeTeamActivity: false, checkInPeriod: null,
     events: { schedule: {}, fired: [], pending: [] }, pulseAtStart: 0,
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
-    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start
+    periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start,
+    actionRecords: [], periodStartResults: []
   };
   sim.events.schedule = scheduleEvents(sim);
   markPeriodStart(sim);
@@ -120,6 +121,17 @@ export function sponsorChange(sim: Sim, delta: number, text: string): Change[] {
   return [{ subject: 'sponsor', metric: 'confidence', from, to: sim.sponsor.value, delta: d, reason: { label: text, cause: text, rule: sponsorRule(sim), evidence: [] } }];
 }
 
+/** Adds the skill, morale and result part of these changes to an action record, per member. */
+export function addEffects(rec: ActionRecord | undefined, changes: Change[]) {
+  if (!rec) return;
+  for (const c of changes) {
+    const i = (['skill', 'morale', 'result'] as const).indexOf(c.metric as 'skill');
+    if (i < 0 || c.subject === 'team' || c.subject === 'sponsor') continue;
+    const e = (rec.effects[c.subject] ??= [0, 0, 0]);
+    e[i as 0 | 1 | 2] += c.delta;
+  }
+}
+
 export function log(sim: Sim, entry: Omit<LogEntry, 'id' | 'period' | 'sub'>) {
   sim.log.push({ id: nextId(sim, 'l'), period: sim.period, sub: sim.sub, ...entry });
 }
@@ -140,6 +152,7 @@ function markPeriodStart(sim: Sim) {
     kpis: { skill: teamAverage(sim, 'skill'), morale: teamAverage(sim, 'morale'), result: teamAverage(sim, 'result'), trust: teamAverage(sim, 'trust') }
   };
   for (const m of sim.members) { m.neededPrevStart = sim.period > 1 ? m.neededAtStart : null; m.neededAtStart = needed(sim, m); }
+  sim.periodStartResults[sim.period - 1] = Object.fromEntries(sim.members.map(m => [m.id, m.result]));
   sim.touched = [];
   sim.touchedTeam = false;
   sim.sponsorAtStart = sim.sponsor.value;

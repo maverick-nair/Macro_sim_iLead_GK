@@ -134,6 +134,8 @@ export interface Interaction {
   /** Team meeting: who has the floor, and who has a hand up to speak. */
   floor?: string;
   hands?: string[];
+  /** The action record this conversation adds its effects to (the report's action summary). */
+  recordId?: string;
 }
 
 export interface InboxMessage {
@@ -210,6 +212,26 @@ export interface NewsItem { key: string; card: CardKind; title: string; body: st
 
 /** A style tagged choice: the style chosen, the person's need then, and the lens's difference for it. */
 export interface Decision { memberId: string; chosen: Style; need: NeedKey; mismatch: Mismatch; source: string; period?: number }
+
+/**
+ * One action taken, for the report's summary of actions and its distribution across the team (D76).
+ * `effects` is the net skill, morale and result change it made per member, from every change the
+ * action caused (the decision, the conversation, ripples and an event answered by it). `reached` lists
+ * everyone it applied to: the people picked, or everyone available for a team action. `uses` is the
+ * style the participant showed each person, with that person's need then: style tagged options and
+ * conversations, team meetings included (only for the report's consistency, never the score).
+ */
+export interface ActionRecord {
+  id: string;
+  period: number;
+  sub: number;
+  actionKey: string;
+  optionKey: string | null;
+  scope: 'team' | 'member';
+  reached: string[];
+  effects: Record<string, [number, number, number]>;
+  uses: Array<{ memberId: string; style: Style; need: NeedKey }>;
+}
 
 export interface LogEntry {
   id: string;
@@ -347,6 +369,10 @@ export interface Sim {
   pulseAtStart: number;
   /** Periods in which someone's shown style differed from the declared one (intent vs action). */
   intentGaps: Record<string, number[]>;
+  /** Every action taken, with what it did to each person (the report's actions and distribution). */
+  actionRecords: ActionRecord[];
+  /** Each member's result at the start of each period, for time spent with top and bottom performers. */
+  periodStartResults: Array<Record<string, number>>;
 }
 
 export type { Mismatch, NeedKey, Style, Triple };

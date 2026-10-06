@@ -2,7 +2,10 @@ import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
 import { DEFAULT_LENS } from './lensLibrary';
-import { DEFAULT_DEVELOPMENT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE, DEFAULT_SKILLS } from './report/defaults';
+import {
+  DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_PATH,
+  DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
+} from './report/defaults';
 
 /**
  * Storyline configuration authored in GenieKreator. The engine only runs on a config that passes
@@ -198,22 +201,58 @@ export const Gamification = z.object({
  * framework with its anchors, which interactions rate which skills, the rating scale, and the authored
  * copy the report is worded from. Defaults are the iLead 2.0 framework.
  */
-export const REPORT_SECTIONS = ['summary', 'style', 'intent', 'skills', 'moments', 'people', 'business', 'analytics', 'plan', 'methodology'] as const;
+export const REPORT_SECTIONS = [
+  'about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution',
+  'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
+] as const;
+export type ReportSection = (typeof REPORT_SECTIONS)[number];
+/** Why the storyline runs (D75): development reports never show verdicts; assessment reports do. */
+export const PURPOSES = ['development', 'assessment'] as const;
+export type Purpose = (typeof PURPOSES)[number];
+/** The report's sections when the author leaves `report.sections` out: they differ by purpose (D76). */
+export const DEFAULT_SECTIONS: Record<Purpose, ReportSection[]> = {
+  development: ['about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'],
+  assessment: ['about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'consistency', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'plan', 'progress', 'methodology']
+};
+
+const Bands3 = z.object({ low: Copy, mid: Copy, high: Copy });
+/** One purpose's narrative bank (D75, defaults in report/defaults.ts). */
+const PurposeCopy = z.object({
+  about: z.array(Copy).min(1).max(4),
+  howToRead: z.array(Copy).min(1).max(6),
+  confidentiality: Copy,
+  /** By overall level, lowest first, read in proportion to the scale. Left out, `narratives.overall`. */
+  overall: z.array(Copy).min(1).optional(),
+  /** By skill level, lowest first, read in proportion to the scale. {skill} is the skill's name. */
+  skill: z.array(Copy).min(1),
+  skillNone: Copy,
+  /** By share of target: under 60%, under 100%, reached. */
+  objectives: z.object({ below: Copy, near: Copy, met: Copy }),
+  /** By contextual capability: under 40%, under 70%, 70% and up. */
+  adaptability: Bands3,
+  /** Per style, by its accuracy (under 40%, under 70%, 70% and up), and whether people needed it more or less often than it was used. */
+  style: z.object({ unused: Copy, low: Copy, mid: Copy, high: Copy, under: Copy, over: Copy }),
+  preferred: Copy,
+  /** By deviation: under 25%, under 50%, 50% and up. */
+  consistency: z.object({ neededUsed: Bands3, intendedUsed: Bands3, neededIntended: Bands3 }),
+  actions: z.object({ unused: Copy, none: Copy, veryLow: Copy, low: Copy, moderate: Copy, high: Copy })
+});
 export const Report = z.object({
   /**
    * The primary lens's scoring dimensions are the skills (D70). `reportOnly` marks a secondary lens's
    * dimensions: scored from conversations and shown in the report, never in the Leadership Score,
    * badges or the summary.
    */
-  skills: z.array(z.object({ key: Key, name: Copy, anchors: z.array(Copy).min(3).max(7), reportOnly: z.boolean().default(false) })).min(2)
-    .default(() => DEFAULT_SKILLS.map(s => ({ ...s, anchors: [...s.anchors], reportOnly: false }))),
+  skills: z.array(z.object({ key: Key, name: Copy, anchors: z.array(Copy).min(3).max(7), reportOnly: z.boolean().default(false), description: Copy.optional() })).min(2)
+    .default(() => DEFAULT_SKILLS.map(s => ({ ...s, anchors: [...s.anchors], reportOnly: false, description: DEFAULT_SKILL_DESCRIPTIONS[s.key] }))),
   linkage: z.record(Key, z.array(Key).min(1).max(4)).default(DEFAULT_LINKAGE),
   scale: z.array(z.object({ name: Copy, min: Score })).min(3).max(7).default(DEFAULT_SCALE),
   minObservations: z.number().int().min(1).max(5).default(2),
   evidencePerSkill: z.number().int().min(0).max(4).default(2),
   /** Day count from the report date to the development plan's check in. */
   checkInDays: z.number().int().min(1).max(90).default(14),
-  sections: z.array(z.enum(REPORT_SECTIONS)).min(1).default([...REPORT_SECTIONS]),
+  /** In the order shown. Left out, the purpose's default (`DEFAULT_SECTIONS`). */
+  sections: z.array(z.enum(REPORT_SECTIONS)).min(1).optional(),
   narratives: z.object({
     overall: z.array(Copy).min(1),
     capability: z.object({ low: Copy, mid: Copy, high: Copy }),
@@ -223,6 +262,25 @@ export const Report = z.object({
   development: z.record(Key, z.object({ practice: Copy, onTheJob: Copy })).default(DEFAULT_DEVELOPMENT),
   recognitionPhrases: z.array(z.string().min(2)).default(DEFAULT_RECOGNITION),
   methodology: z.array(Copy).min(1).default(DEFAULT_METHODOLOGY),
+  /** Narrative banks for development and assessment reports (D75). */
+  purposeCopy: z.object({ development: PurposeCopy, assessment: PurposeCopy }).default(DEFAULT_PURPOSE_COPY),
+  /** What each action is for, by action key (the summary of actions). */
+  actionCopy: z.record(Key, Copy).default(DEFAULT_ACTION_COPY),
+  /** Food for thought: questions with a guiding line each. */
+  thought: z.array(z.object({ question: Copy, guide: Copy })).max(8).default(DEFAULT_THOUGHT),
+  takeaways: z.array(Copy).max(10).default(DEFAULT_TAKEAWAYS),
+  /** The development plan's 30, 60 and 90 day path; {skills} names the skills to develop. */
+  path: z.object({ day30: Copy, day60: Copy, day90: Copy }).default(DEFAULT_PATH),
+  /** Impact bands for actions (D76): the mean net skill + morale + result change per person reached. */
+  impact: z.object({ low: z.number(), moderate: z.number(), high: z.number() }).default(DEFAULT_IMPACT),
+  /** Actions whose styles the consistency section compares (the 1.0 report's five). */
+  consistencyActions: z.array(Key).default(DEFAULT_CONSISTENCY_ACTIONS),
+  /** Assessment purpose: the bar (positions on the rating scale) and the verdict labels (D75). */
+  assessment: z.object({
+    bar: z.object({ overall: z.number().int().min(0), floor: z.number().int().min(0) }),
+    labels: z.object({ exceeds: Copy, meets: Copy, approaching: Copy, below: Copy, insufficient: Copy }),
+    skillLabels: z.object({ strength: Copy, meets: Copy, development: Copy })
+  }).default(DEFAULT_ASSESSMENT),
   /** Reflection questions on the end screen. */
   reflection: z.array(Copy).min(0).max(3).default(['What did you learn about adapting your style to each person?', 'What will you do differently with your real team next week?'])
 }).superRefine((r, ctx) => {
@@ -230,6 +288,9 @@ export const Report = z.object({
   for (const [k, list] of Object.entries(r.linkage)) for (const sk of list) if (!keys.has(sk)) ctx.addIssue({ code: 'custom', path: ['linkage', k], message: `No skill called ${sk}` });
   if (r.skills.some(s => s.anchors.length !== r.scale.length)) ctx.addIssue({ code: 'custom', path: ['skills'], message: `Give one anchor per level (${r.scale.length})` });
   if (r.scale[0].min !== 0 || r.scale.some((l, i) => i > 0 && l.min <= r.scale[i - 1].min)) ctx.addIssue({ code: 'custom', path: ['scale'], message: 'Levels start at 0 and rise' });
+  if (!(r.impact.low < r.impact.moderate && r.impact.moderate < r.impact.high)) ctx.addIssue({ code: 'custom', path: ['impact'], message: 'Impact bands must rise: low < moderate < high' });
+  const { overall, floor } = r.assessment.bar;
+  if (overall >= r.scale.length || floor > overall) ctx.addIssue({ code: 'custom', path: ['assessment', 'bar'], message: `The bar is a level from 0 to ${r.scale.length - 1}, with the floor at or below it` });
 });
 
 /** A lens style key: a short id such as "D" or "coach". */
@@ -433,8 +494,10 @@ export const StorylineConfig = z.object({
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),
   gamification: Gamification.default(() => Gamification.parse({})),
   report: Report.default(() => Report.parse({})),
-  /** Use declaration (Configuration Spec, Governance): development or selection. Selection turns the leaderboard off by default. */
+  /** Use declaration (Configuration Spec, Governance): development or selection. Selection turns the leaderboard off by default. Kept as an alias: selection reads as the assessment purpose. */
   use: z.enum(['development', 'selection']).default('development'),
+  /** Why the storyline runs (D75). Left out, `use` decides: selection is assessment, otherwise development. */
+  purpose: z.enum(PURPOSES).optional(),
   actions: z.array(Action).min(1),
   /** Weekly style setting effect per period (docs/SIMULATION.md 4.4). */
   weeklyStyle: EffectTable,
@@ -512,6 +575,11 @@ export const StorylineConfig = z.object({
 
 export type StorylineConfig = z.output<typeof StorylineConfig>;
 export type StorylineInput = z.input<typeof StorylineConfig>;
+
+/** The storyline's purpose: `purpose` when authored, else `use: 'selection'` reads as assessment (D75). */
+export function purposeOf(c: Pick<StorylineConfig, 'purpose' | 'use'>): Purpose {
+  return c.purpose ?? (c.use === 'selection' ? 'assessment' : 'development');
+}
 
 /** Parses a storyline, returning readable issues instead of throwing. */
 export function parseStoryline(input: unknown): { ok: true; config: StorylineConfig } | { ok: false; issues: string[] } {

@@ -6,10 +6,10 @@ import { mismatchType, trainingMismatch, type Mismatch, type Style, type Triple 
 import { respond } from './events';
 import { checkBadges } from './score';
 import {
-  addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
+  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
   styleName, stageName, trustChange
 } from './sim';
-import type { Band, Change, Evaluation, Interaction, LiveRecord, MemberSim, Outcome, Reason, Sim } from './types';
+import type { ActionRecord, Band, Change, Evaluation, Interaction, LiveRecord, MemberSim, Outcome, Reason, Sim } from './types';
 
 /** Actions and live interactions (docs/SIMULATION.md sections 4 and 5). */
 
@@ -241,6 +241,14 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   const choice = { quote: a.options.length > 1 ? `${a.name}: ${o.label}` : a.name, by: 'You', judgedByAI: false };
   for (const c of changes) if (!c.reason.evidence.length) c.reason = { ...c.reason, evidence: [choice] };
 
+  // The report's record of this action (D76): who it reached and what it did to each of them.
+  const rec: ActionRecord = {
+    id: `a${sim.actionRecords.length + 1}`, period: sim.period, sub: sim.sub, actionKey: a.key, optionKey: o.key, scope: a.scope,
+    reached: a.rule === 'hire' ? [] : a.scope === 'team' ? sim.members.filter(m => m.away === 0).map(m => m.id) : [...input.memberIds],
+    effects: {}, uses: []
+  };
+  sim.actionRecords.push(rec);
+
   let interactionId: string | null = null;
   if (a.kind === 'static') {
     changes.push(...keepPromises(sim, a.key, input.memberIds));
@@ -267,8 +275,10 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
       candidates: a.rule === 'hire' ? interviewees(sim) : undefined, candidate: a.rule === 'hire' ? 0 : undefined,
       budget: a.rule === 'hire' && sim.hireBudget ? true : undefined });
     // Hybrid decisions are locked before the conversation (spec).
+    sim.interactions[interactionId].recordId = rec.id;
     if (a.rule === 'swap' || a.rule === 'reward' || a.rule === 'fire') changes.push(...hybridDecision(sim, rng, a, targets, input.stage));
   }
+  addEffects(rec, changes);
   if (a.scope === 'team') sim.touchedTeam = true;
   sim.touched.push(...input.memberIds);
   // Attention per person for the report: a team action counts for everyone, its days for no one.
@@ -362,6 +372,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   const vp = (sim.voicePeriods[sim.period] ??= { voice: 0, total: 0 });
   vp.total++; if (ev.usedVoice) vp.voice++;
 
+  const useRecord = it.recordId ? sim.actionRecords.find(r => r.id === it.recordId) : undefined;
   const table = a?.live.consequences?.[ev.band];
   let sponsorLine: string | null = null;
   if (it.actionKey === 'sponsor') {
@@ -400,6 +411,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     const tagged = targets.length === 1 && !UNTAGGED.has(it.format);
     for (const m of targets) {
       const n = needed(sim, m);
+      useRecord?.uses.push({ memberId: m.id, style: ev.styleUsed, need: n });
       const diff = tagged ? record(sim, m, ev.styleUsed, a.key) : fit(sim, ev.styleUsed, n);
       if (tagged) changes.push(...intentGap(sim, m, ev));
       const mt = adjust(mismatchType(diff, rng, misread(sim, m)), ev.band);
@@ -478,6 +490,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   }
   // Live interaction record for the week score and the Leadership pillar; an expected response to an event; badges.
   changes.push(...respond(sim, rng, it.actionKey, it.memberIds, it.replyTo));
+  addEffects(useRecord, changes);
   sim.liveRecords.push(liveRecord(sim, it, ev, changes, a?.name, replyMsg));
   checkBadges(sim, 'interaction');
 

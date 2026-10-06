@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { copyViolations } from '../../i18n/copy';
 import { EngineView } from '../contract';
-import { parseStoryline, type StorylineConfig } from '../config';
+import { DEFAULT_SECTIONS, parseStoryline, type StorylineConfig } from '../config';
 import salesElevator from '../storylines/sales-elevator.json';
 import { createEngine } from '../sim/engine';
 import { heuristicEvaluator } from '../sim/evaluator';
@@ -100,7 +100,7 @@ describe('the whole report from a run', () => {
     expect(EngineView.safeParse(r.view).success).toBe(true);
     const rep = r.view.report!;
     expect(rep.available).toBe(true);
-    expect(rep.sections).toHaveLength(10);
+    expect(rep.sections).toEqual(DEFAULT_SECTIONS.development);
     expect(rep.moments.length).toBeGreaterThanOrEqual(5);
     expect(rep.moments.length).toBeLessThanOrEqual(7);
     expect(new Set(rep.moments.map(m => m.title)).size).toBe(rep.moments.length);

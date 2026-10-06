@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
+import type { ReportViewInput } from './reportContract';
 
 /**
  * The engine contract: the payloads the engine sends and the intents it accepts. The engine is
@@ -189,47 +190,6 @@ export const PeriodSummary = z.object({
   news: z.array(z.object({ key: Id, card: CardKind, title: Text, body: Text, impact: Text.nullable() }))
 });
 
-/**
- * Report 2.0 (scoring-and-report.md 5 and 7), sent once the run has ended. Every element traces to the
- * run or to authored copy; sentences are server content (D60).
- */
-const Quote = z.object({ text: Text, when: Text });
-const Level = z.object({ index: z.number().int().min(0), name: Text });
-export const ReportView = z.object({
-  available: z.boolean(),
-  storyline: z.object({ name: Text, organisation: Text.nullable() }),
-  /** The lens, and the secondary lens whose skills are report only. */
-  lens: LensView.extend({ secondary: z.object({ id: Id, title: Text }).nullable() }),
-  periods: z.number().int(), periodUnit: PeriodUnit,
-  sections: z.array(z.enum(['summary', 'style', 'intent', 'skills', 'moments', 'people', 'business', 'analytics', 'plan', 'methodology'])),
-  score: z.object({ total: Num, max: Num, tier: z.object({ key: Id, name: Text }) }),
-  results: z.object({ revenue: Num, target: Num, share: Num, conversions: z.number().int(), kpis: z.array(z.object({ metric: MetricKey, start: Num, end: Num, series: z.array(Num) })) }),
-  summary: z.object({ level: Level.nullable(), strengths: z.array(Id), priorities: z.array(Id), business: Text, narrative: Text.nullable() }),
-  style: z.object({
-    shares: z.record(StyleKey, z.number().int()), total: z.number().int(), dominant: z.array(StyleKey), capability: Num,
-    /** Rows: the four needs, in `lens.needs` order; columns: the style used, in `lens.styles` order. */
-    grid: z.array(z.array(z.number().int())),
-    /** The lens's style difference per grid cell (0 fits), so the report can outline what fit. */
-    fit: z.array(z.array(z.number().int().min(0).max(2))), matched: z.number().int(), weeklyTotal: z.number().int(),
-    weeks: z.array(z.object({ memberId: Id, name: Text, left: z.boolean(), cells: z.array(z.object({ period: z.number().int(), chosen: StyleKey, fit: z.number().int().min(0).max(2) }).nullable()) })),
-    narrative: z.array(Text)
-  }),
-  intent: z.array(z.object({ memberId: Id, name: Text, intent: z.array(StyleKey), shown: z.array(StyleKey), status: z.enum(['aligned', 'gap', 'noEvidence']), quote: Quote.nullable(), note: z.object({ text: Text, period: z.number().int() }).nullable(), trustCost: Num })),
-  /** `reportOnly`: a secondary lens's skill, never in the score, badges or summary (D70). */
-  skills: z.array(z.object({ key: Id, name: Text, reportOnly: z.boolean(), observations: z.number().int(), score: Num.nullable(), capped: z.boolean(), level: Level.nullable(), anchor: Text.nullable(), quotes: z.array(Quote) })),
-  scale: z.array(z.object({ name: Text, min: Num })),
-  moments: z.array(z.object({ id: Id, kind: z.enum(['best', 'revisit']), period: z.number().int(), memberId: Id.nullable(), title: Text, situation: Text, behaviour: Text, quote: Text.nullable(), impact: Text, intent: StyleKey.nullable() })),
-  people: z.array(z.object({ memberId: Id, name: Text, img: z.string().nullable(), left: z.boolean(), start: z.object({ morale: Num, trust: Num, result: Num }),
-    series: z.array(z.object({ period: z.number().int(), morale: Num, trust: Num, result: Num })), actions: z.number().int(), days: Num, resultChange: Num })),
-  business: z.object({ revenue: z.array(z.object({ period: z.number().int(), value: Num, pace: Num })), funnel: z.array(z.object({ stage: Id, name: Text, cumulative: Num, cumulativeIdeal: Num })),
-    bottleneck: z.object({ stage: Id, name: Text, periods: z.number().int(), why: Text.nullable() }).nullable(), conversions: z.number().int() }),
-  analytics: z.object({ conversations: z.number().int(), talkRatio: Num.nullable(), openQuestions: z.number().int(), recognition: z.number().int(), spoken: z.number().int() }),
-  plan: z.array(z.object({ skill: Id, name: Text, enoughEvidence: z.boolean(), practice: Text, onTheJob: Text })), checkInDays: z.number().int(),
-  reflection: z.object({ answers: z.array(z.string()), rating: z.number().int().nullable() }).nullable(), questions: z.array(Text),
-  methodology: z.object({ lines: z.array(Text), reviewed: z.boolean(), reviewedCount: z.number().int().default(0), conversations: z.number().int(), observations: z.number().int() }),
-  badges: z.number().int(), gamificationTiers: z.array(z.object({ key: Id, name: Text, min: Num }))
-});
-
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
@@ -281,8 +241,12 @@ export const EngineView = z.object({
   history: z.array(LogEntry),
   live: LiveView.nullable(),
   liveCap: z.object({ cap: z.number().int(), used: z.number().int() }),
-  /** The development report, once the run has ended. */
-  report: ReportView.nullable()
+  /**
+   * The report, once the run has ended. Its schema is `ReportView` in `./reportContract`, which the end
+   * screen and the report (both loaded on demand) parse with `parseReport`; the first load only checks
+   * that it is an object, so the report's schema stays out of it (D76).
+   */
+  report: z.custom<ReportViewInput>(v => typeof v === 'object' && v !== null, 'The report must be an object').nullable()
 });
 
 /** What the participant asks for. The engine answers with a new view. */

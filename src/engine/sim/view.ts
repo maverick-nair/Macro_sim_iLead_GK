@@ -1,5 +1,6 @@
 import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, speakerFor, turnLimit } from './live';
+import { purposeOf } from '../config';
 import { lensView } from '../lens';
 import { buildReport } from '../report/build';
 import { finalScore } from './period';
@@ -162,7 +163,7 @@ export function buildView(sim: Sim) {
     streak: sim.streak,
     gamification: {
       weights: c.gamification.weights, stars: c.gamification.stars, streak: c.gamification.streak, tiers: c.gamification.tiers,
-      leaderboard: { ...c.gamification.leaderboard, enabled: c.gamification.leaderboard.enabled ?? c.use !== 'selection' },
+      leaderboard: { ...c.gamification.leaderboard, enabled: c.gamification.leaderboard.enabled ?? purposeOf(c) !== 'assessment' },
       celebration: c.gamification.celebration
     },
     periods: sim.periods,

@@ -1,5 +1,5 @@
 import type { AuthorDraftResponse, Brief, FrameworkDimension, LeadershipLensModule } from '../api/author';
-import { REPORT_SECTIONS, type StorylineInput } from '../engine/config';
+import { DEFAULT_SECTIONS, REPORT_SECTIONS, type StorylineInput } from '../engine/config';
 import { bestStyle, NEEDS, type Lens, type LensStyle, type NeedKey } from '../engine/lens';
 import { DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE } from '../engine/report/defaults';
 import salesElevator from '../engine/storylines/sales-elevator.json';
@@ -345,14 +345,18 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
 }
 
 const SECTION_NAMES: Record<(typeof REPORT_SECTIONS)[number], string> = {
-  summary: 'Summary', style: 'Leadership style', intent: 'Intent and action', skills: 'Skills', moments: 'Key moments', people: 'People',
-  business: 'Business results', analytics: 'Conversation analytics', plan: 'Development plan', methodology: 'Methodology'
+  about: 'About the simulation', summary: 'Summary', skills: 'Skills', objectives: 'Objectives', adaptability: 'Leadership adaptability',
+  styles: 'Leadership styles summary', style: 'Leadership style', consistency: 'Consistency in styles', intent: 'Intent and action',
+  actions: 'Summary of actions', distribution: 'Actions across the team', moments: 'Key moments', people: 'People',
+  business: 'Business results', analytics: 'Conversation analytics', thought: 'Food for thought', takeaways: 'Key takeaways',
+  plan: 'Development plan', progress: 'Progress over time', methodology: 'Methodology'
 };
 
 /** The build preview (module step 6), from a drafted storyline. */
 export function previewOf(storyline: StorylineInput): AuthorDraftResponse['preview'] {
   const first = storyline.events?.[0];
-  const sections = (storyline.report?.sections ?? REPORT_SECTIONS) as Array<(typeof REPORT_SECTIONS)[number]>;
+  const purpose = storyline.purpose ?? (storyline.use === 'selection' ? 'assessment' : 'development');
+  const sections = (storyline.report?.sections ?? DEFAULT_SECTIONS[purpose]) as Array<(typeof REPORT_SECTIONS)[number]>;
   return {
     teamSize: storyline.members.length,
     sampleEvent: { title: first?.title ?? '', body: first?.body.he.replace('{name}', storyline.members[0].name.split(' ')[0]) ?? '' },
