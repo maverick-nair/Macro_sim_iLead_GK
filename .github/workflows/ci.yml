@@ -1,7 +1,8 @@
 name: CI
 
 # Every push and pull request: tokens, lint, unit tests, types, build with the bundle budget,
-# Storybook smoke, end to end flows with axe, and design parity against the Claude Design prototype.
+# Storybook smoke, end to end flows with axe, design parity against the Claude Design prototype, and the
+# Web Vitals budgets on a throttled production build.
 on:
   push:
   pull_request:
@@ -23,11 +24,13 @@ jobs:
       - run: npm run storybook:smoke
       - run: npx playwright test
       - run: npm run parity
+      - run: npm run vitals -- --json vitals.json
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: failures
           path: |
             test-results
+            vitals.json
             .visual-cache/diff
           if-no-files-found: ignore

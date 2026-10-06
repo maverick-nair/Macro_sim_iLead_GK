@@ -9,6 +9,14 @@ import type { EngineView, Intent, IntentResult } from './contract';
  * replaces it with the view the engine returns. The UI never patches the view itself.
  */
 const ClientContext = createContext<EngineClient | null>(null);
+
+/** Starts loading the people's portraits (the board's largest paint is one of them). */
+function warmPortraits(view: EngineView | undefined) {
+  if (!view || typeof Image === 'undefined') return;
+  for (const src of new Set([...view.members.map(m => m.img), view.sponsor.img])) {
+    if (src) new Image().src = src;
+  }
+}
 export const VIEW_KEY = ['engine', 'view'] as const;
 
 export function EngineProvider({ client, children }: { client?: EngineClient; children: ReactNode }) {
@@ -17,7 +25,8 @@ export function EngineProvider({ client, children }: { client?: EngineClient; ch
     const queries = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, refetchOnWindowFocus: false, retry: 1 }, mutations: { retry: false } } });
     // Ask for the view now, before the rest of the first render, not once it has mounted (D78: the first
     // screen's largest paint waits for it). The query below picks up the same request.
-    void queries.prefetchQuery({ queryKey: VIEW_KEY, queryFn: () => c.view() });
+    // The team's portraits are asked for as soon as the view names them, before the board renders.
+    void queries.prefetchQuery({ queryKey: VIEW_KEY, queryFn: () => c.view() }).then(() => warmPortraits(queries.getQueryData<EngineView>(VIEW_KEY)));
     return { client: c, queries };
   });
   return (

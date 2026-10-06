@@ -1,12 +1,12 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { createDefaultApi } from '../api';
 import { SmallScreenGate } from '../app/SmallScreenGate';
 import { parseGroupReport, type GroupReport } from '../engine/groupContract';
 import { I18nProvider, useI18n } from '../i18n';
 import { BrandContext } from '../theme/brand';
-import { startTheme, useThemeState } from '../theme/bootstrap';
+import { useThemeState } from '../theme/bootstrap';
 import type { AppliedTheme } from '../theme/types';
 import { GroupReportView } from './GroupReportView';
+import { groupLaunch, startGroup } from './launch';
 import './messages';
 
 type State = { kind: 'loading' } | { kind: 'ready'; report: GroupReport } | { kind: 'missing' } | { kind: 'failed' };
@@ -18,30 +18,22 @@ type State = { kind: 'loading' } | { kind: 'ready'; report: GroupReport } | { ki
  * cohort under the minimum size). `?theme=light`, `?client=halden` or `?themeUrl=` theme it like the
  * participant app (D72); `?print=1` opens the print view. Below 744 wide the small screen notice covers it (D69).
  */
-export default function GroupPage() {
-  const q = new URLSearchParams(location.search);
-  const client = q.get('client');
-  const themeUrl = q.get('themeUrl');
-  const purpose = q.get('purpose') === 'assessment' ? 'assessment' : 'development';
-  const lens = q.get('lens');
-  const size = q.get('size') ? Number(q.get('size')) : null;
-  const cohort = q.get('cohort') ?? '3';
+export default function GroupPage({ started }: { started?: ReturnType<typeof startGroup> }) {
   // Launch parameters, read once.
-  const [api] = useState(() => createDefaultApi('group', null, { client, themeUrl, group: { purpose, lens, size } }));
-  useEffect(() => startTheme(() => api.getTheme()), [api]);
+  const [{ q, report }] = useState(() => started ?? startGroup(groupLaunch()));
   const { theme: applied } = useThemeState();
   const theme = q.get('theme') === 'light' || (q.get('theme') !== 'dark' && applied?.mode === 'light') ? 'light' : 'dark';
   const [state, setState] = useState<State>({ kind: 'loading' });
   useEffect(() => {
     let alive = true;
-    api.getGroupReport(cohort).then(raw => {
+    report.then(raw => {
       if (alive) setState(raw ? { kind: 'ready', report: parseGroupReport(raw) } : { kind: 'missing' });
     }, e => {
       console.warn('Group report failed to load', e);
       if (alive) setState({ kind: 'failed' });
     });
     return () => { alive = false; };
-  }, [api, cohort]);
+  }, [report]);
   return (
     <I18nProvider>
       <BrandContext.Provider value={applied?.brand ?? null}>

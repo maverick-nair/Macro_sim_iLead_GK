@@ -1,8 +1,9 @@
-import { lazy, startTransition, StrictMode, Suspense } from 'react';
+import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ApiContext, createDefaultApi } from './api';
 import { App } from './app/App';
 import { prefetch } from './app/prefetch';
+import { groupLaunch, startGroup } from './group/launch';
 import { SmallScreenGate } from './app/SmallScreenGate';
 import { EngineProvider } from './engine/react';
 import { createDefaultClient } from './engine/client';
@@ -65,21 +66,19 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
 const path = location.pathname.replace(/\/+$/, '');
 const play = !['/screens', '/states', '/author', '/group'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
 const launched = play ? launch() : null;
+const group = path === '/group' ? startGroup(groupLaunch()) : undefined;
 
 function Root() {
   if (path === '/screens') return <Suspense><ScreensGallery /></Suspense>;
   if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
   if (path === '/author') return <Suspense><AuthorPage /></Suspense>;
-  if (path === '/group') return <Suspense><GroupPage /></Suspense>;
+  if (path === '/group') return <Suspense><GroupPage started={group} /></Suspense>;
   if (ReportDev && new URLSearchParams(location.search).get('report') === '1') return <Suspense><ReportDev /></Suspense>;
   return launched && <Play launched={launched} />;
 }
 
-// The first render is a transition, so React renders it in slices and yields between them: on a slow
-// CPU one long task after the scripts load was most of the first screen's blocking time (D78).
-const root = createRoot(document.getElementById('root')!);
-startTransition(() => root.render(
+createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Root />
   </StrictMode>
-));
+);
