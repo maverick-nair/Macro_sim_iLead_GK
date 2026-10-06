@@ -120,8 +120,8 @@ describe('AI stream store', () => {
     s.token(' there');
     s.token(' friend');
     await tick();
-    // At most the token already asked for lands; the rest wait.
-    expect(store.getState().text.length).toBeLessThanOrEqual('Hello there'.length);
+    // Nothing lands, not even the token already asked for: the hold is immediate.
+    expect(store.getState().text).toBe('Hello');
     expect(store.getState().streaming).toBe(true);
     store.hold(false);
     await tick();
