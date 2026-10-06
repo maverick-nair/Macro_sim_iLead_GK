@@ -1,0 +1,595 @@
+{
+  "version": 1,
+  "storyline": {
+    "id": "sales_elevator",
+    "name": "Sales Elevator, Innov8 Elevators"
+  },
+  "lens": {
+    "id": "readiness_based",
+    "styles": [
+      "D",
+      "G",
+      "P",
+      "E"
+    ]
+  },
+  "participants": 300,
+  "completed": 267,
+  "completeAt": 100,
+  "completion": {
+    "average": 94.3,
+    "buckets": [
+      {
+        "key": "upTo50",
+        "count": 20,
+        "share": 6.67
+      },
+      {
+        "key": "to80",
+        "count": 9,
+        "share": 3
+      },
+      {
+        "key": "to100",
+        "count": 4,
+        "share": 1.33
+      },
+      {
+        "key": "full",
+        "count": 267,
+        "share": 89
+      }
+    ]
+  },
+  "skills": [
+    {
+      "key": "situational_flexibility",
+      "reportOnly": false,
+      "rated": 234,
+      "score": 60.73,
+      "levels": [
+        35,
+        96,
+        37,
+        66
+      ],
+      "unrated": 33
+    },
+    {
+      "key": "coaching_for_growth",
+      "reportOnly": false,
+      "rated": 232,
+      "score": 62.01,
+      "levels": [
+        39,
+        41,
+        110,
+        42
+      ],
+      "unrated": 35
+    },
+    {
+      "key": "difficult_conversations",
+      "reportOnly": false,
+      "rated": 233,
+      "score": 85.29,
+      "levels": [
+        0,
+        0,
+        75,
+        57,
+        101
+      ],
+      "unrated": 34
+    },
+    {
+      "key": "goal_setting",
+      "reportOnly": false,
+      "rated": 233,
+      "score": 69.7,
+      "levels": [
+        1,
+        9,
+        217,
+        6
+      ],
+      "unrated": 34
+    },
+    {
+      "key": "giving_feedback",
+      "reportOnly": false,
+      "rated": 134,
+      "score": 66.78,
+      "levels": [
+        0,
+        8,
+        126
+      ],
+      "unrated": 133
+    },
+    {
+      "key": "recognition_fairness",
+      "reportOnly": false,
+      "rated": 134,
+      "score": 46.68,
+      "levels": [
+        39,
+        86,
+        9
+      ],
+      "unrated": 133
+    },
+    {
+      "key": "communicating_change",
+      "reportOnly": false,
+      "rated": 130,
+      "score": 45.36,
+      "levels": [
+        56,
+        58,
+        16
+      ],
+      "unrated": 137
+    },
+    {
+      "key": "results_ownership",
+      "reportOnly": false,
+      "rated": 204,
+      "score": 69.58,
+      "levels": [
+        63,
+        40,
+        1,
+        0,
+        100
+      ],
+      "unrated": 63
+    }
+  ],
+  "overall": {
+    "rated": 234,
+    "score": 68.26,
+    "levels": [
+      0,
+      116,
+      18,
+      100
+    ],
+    "unrated": 33
+  },
+  "objectives": {
+    "target": 240000,
+    "revenue": 172373.82,
+    "conversions": 5.21,
+    "share": 71.82,
+    "beatTarget": 68,
+    "team": {
+      "skill": {
+        "start": 56,
+        "end": 62.79
+      },
+      "morale": {
+        "start": 54,
+        "end": 30.31
+      },
+      "result": {
+        "start": 59,
+        "end": 56.53
+      },
+      "trust": {
+        "start": 50,
+        "end": 55.69
+      }
+    }
+  },
+  "styles": {
+    "adaptability": 41.81,
+    "preferred": {
+      "D": 92.67,
+      "G": 97,
+      "P": 20.67,
+      "E": 56.67
+    },
+    "perStyle": [
+      {
+        "key": "D",
+        "count": 6689,
+        "fitted": 4856,
+        "needed": 10861,
+        "proportion": 28.85,
+        "accuracy": 72.6,
+        "neededShare": 46.85
+      },
+      {
+        "key": "G",
+        "count": 4489,
+        "fitted": 853,
+        "needed": 1834,
+        "proportion": 19.36,
+        "accuracy": 19,
+        "neededShare": 7.91
+      },
+      {
+        "key": "P",
+        "count": 5121,
+        "fitted": 3247,
+        "needed": 8507,
+        "proportion": 22.09,
+        "accuracy": 63.41,
+        "neededShare": 36.7
+      },
+      {
+        "key": "E",
+        "count": 6883,
+        "fitted": 1163,
+        "needed": 1980,
+        "proportion": 29.69,
+        "accuracy": 16.9,
+        "neededShare": 8.54
+      }
+    ]
+  },
+  "consistency": {
+    "neededUsed": 63.13,
+    "intendedUsed": 42.95,
+    "neededIntended": 57.37
+  },
+  "funnel": [
+    {
+      "period": 1,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 51.18,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 19.01,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 4.6,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 1.69,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.68,
+          "ideal": 1.11
+        }
+      ]
+    },
+    {
+      "period": 2,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 50.89,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 18.52,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 4.32,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 1.5,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.59,
+          "ideal": 1.11
+        }
+      ]
+    },
+    {
+      "period": 3,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 51.11,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 17.86,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 3.69,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 1.5,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.58,
+          "ideal": 1.11
+        }
+      ]
+    },
+    {
+      "period": 4,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 52.14,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 19.04,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 4.42,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 1.89,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.74,
+          "ideal": 1.11
+        }
+      ]
+    },
+    {
+      "period": 5,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 53.77,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 20.05,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 4.81,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 2.09,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.84,
+          "ideal": 1.11
+        }
+      ]
+    },
+    {
+      "period": 6,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 53.32,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 19.57,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 4.69,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 2.02,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.81,
+          "ideal": 1.11
+        }
+      ]
+    },
+    {
+      "period": 7,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 51.99,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 18.7,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 4.43,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 1.89,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.74,
+          "ideal": 1.11
+        }
+      ]
+    },
+    {
+      "period": 8,
+      "runs": 267,
+      "stages": [
+        {
+          "stage": "leads",
+          "actual": 52.03,
+          "ideal": 61.93
+        },
+        {
+          "stage": "qualify",
+          "actual": 18.84,
+          "ideal": 25.78
+        },
+        {
+          "stage": "proposal",
+          "actual": 4.47,
+          "ideal": 6.44
+        },
+        {
+          "stage": "negotiation",
+          "actual": 1.92,
+          "ideal": 2.68
+        },
+        {
+          "stage": "conversion",
+          "actual": 0.77,
+          "ideal": 1.11
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "key": "meet",
+      "frequency": 0.81,
+      "used": 121,
+      "reached": 1967,
+      "mean": 5.33
+    },
+    {
+      "key": "energize",
+      "frequency": 2.4,
+      "used": 134,
+      "reached": 5667,
+      "mean": 2.41
+    },
+    {
+      "key": "email",
+      "frequency": 1.28,
+      "used": 128,
+      "reached": 342,
+      "mean": 0.9
+    },
+    {
+      "key": "training",
+      "frequency": 2.87,
+      "used": 134,
+      "reached": 767,
+      "mean": 5.16
+    },
+    {
+      "key": "swap",
+      "frequency": 0,
+      "used": 0,
+      "reached": 0,
+      "mean": null
+    },
+    {
+      "key": "hire",
+      "frequency": 0,
+      "used": 0,
+      "reached": 0,
+      "mean": null
+    },
+    {
+      "key": "fire",
+      "frequency": 0,
+      "used": 0,
+      "reached": 0,
+      "mean": null
+    },
+    {
+      "key": "f2f",
+      "frequency": 2.28,
+      "used": 185,
+      "reached": 608,
+      "mean": 7.56
+    },
+    {
+      "key": "assess",
+      "frequency": 0,
+      "used": 0,
+      "reached": 0,
+      "mean": null
+    },
+    {
+      "key": "reward",
+      "frequency": 1.1,
+      "used": 121,
+      "reached": 548,
+      "mean": -5.88
+    },
+    {
+      "key": "goals",
+      "frequency": 1.14,
+      "used": 121,
+      "reached": 305,
+      "mean": -4.85
+    },
+    {
+      "key": "coach",
+      "frequency": 6.05,
+      "used": 225,
+      "reached": 1615,
+      "mean": 9.3
+    },
+    {
+      "key": "feedback",
+      "frequency": 1.16,
+      "used": 125,
+      "reached": 311,
+      "mean": 1.05
+    }
+  ],
+  "attention": {
+    "top": 20.53,
+    "average": 31.4,
+    "bottom": 48.07
+  },
+  "verdicts": {
+    "assessed": 150,
+    "counts": {
+      "exceeds": 37,
+      "meets": 10,
+      "approaching": 56,
+      "below": 8,
+      "none": 39
+    }
+  }
+}

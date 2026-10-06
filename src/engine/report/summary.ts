@@ -83,6 +83,8 @@ export interface RunSummary {
     top: number | null; average: number | null; bottom: number | null;
     periods: Array<{ period: number; actions: number; top: number | null; average: number | null; bottom: number | null }>;
   };
+  /** Live conversations in the run, and how many an assessor reviewed (D67): the group report's review status. Absent in summaries stored before D77. */
+  review?: { conversations: number; reviewed: number };
   /** Assessment purpose only (D75): the verdict keys. Labels and evidence are in the report. */
   verdict: { overall: VerdictKey | null; skills: Record<string, SkillVerdictKey | null> } | null;
 }
@@ -249,6 +251,8 @@ export function summarizeRun(sim: Sim): RunSummary {
     objectives,
     funnel: sim.periods.map(p => ({ period: p.period, stages: p.funnel.map(f => ({ stage: f.stage, actual: r2(f.throughput), ideal: r2(f.ideal) })) })),
     skills, overall: { score: overall.score === null ? null : r2(overall.score), level: overall.level },
-    styles: stylesOut, consistency, actions, distribution, attention, verdict
+    styles: stylesOut, consistency, actions, distribution, attention,
+    review: { conversations: sim.liveRecords.length, reviewed: sim.liveRecords.filter(r => r.reviewed).length },
+    verdict
   };
 }

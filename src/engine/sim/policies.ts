@@ -17,6 +17,12 @@ import type { EngineView } from './view';
  * would from the cards, and picks the style with the lens's fit table. It never reads hidden engine state.
  */
 export type Policy = 'passive' | 'random' | 'good';
+/**
+ * Players for the group report's mock cohort (D77), on top of the calibration's three:
+ * - oneStyle: leads everyone in one style all run (the style picked by the seed), with the good player's actions in that style's words.
+ * - careless: random styles and random actions, says little ("Please do better this week.") and leaves the inbox unanswered.
+ */
+export type Player = Policy | 'oneStyle' | 'careless';
 
 type LensLike = Pick<Lens, 'styles' | 'fit'>;
 
@@ -53,20 +59,28 @@ async function setStyles(engine: Engine, v: EngineView, pick: (m: EngineView['me
   return engine.dispatch({ type: 'confirmStyles', styles: Object.fromEntries(v.members.map(m => [m.id, pick(m)])) });
 }
 
-export async function play(config: StorylineConfig, policy: Policy, seed: number) {
+/**
+ * Plays a run with an automated player. `stopAfter` leaves the run unfinished after that many periods,
+ * as a participant who stops part way does (the group report's completion rate); read it with `engine.summary()`.
+ */
+export async function play(config: StorylineConfig, policy: Player, seed: number, opts: { stopAfter?: number } = {}) {
   const engine = createEngine(config, { seed });
   const rng: Rng = createRng(seed ^ 0x9e3779b9);
   const first: Record<string, Style> = {};
   const lens = config.lens;
   const keys = lens.styles.map(s => s.key);
+  // The one style player's style, from the seed alone, so the other players' random draws stay as they were.
+  const one = keys[seed % keys.length];
   let v = engine.view();
   const high = config.thresholds.high;
   while (v.phase !== 'ended') {
+    if (opts.stopAfter !== undefined && v.clock.period > opts.stopAfter) break;
     if (v.phase === 'style') {
       const good = policy === 'good' ? await neededStyles(engine, high, lens) : {};
       v = engine.view();
       v = (await setStyles(engine, v, m => {
         if (policy === 'good') return good[m.id];
+        if (policy === 'oneStyle') return one;
         if (policy === 'passive') return (first[m.id] ??= rng.pick(keys));
         return rng.pick(keys);
       })).view;
@@ -74,16 +88,18 @@ export async function play(config: StorylineConfig, policy: Policy, seed: number
     if (policy !== 'passive') {
       let guard = 20;
       while (v.clock.capacityLeft >= 1 && guard-- > 0) {
-        const step = policy === 'good' ? goodStep(v, high, lens) : randomStep(v, rng, lens);
+        const step = policy === 'good' ? goodStep(v, high, lens) : policy === 'oneStyle' ? goodStep(v, high, lens, one) : randomStep(v, rng, lens);
         if (!step) break;
         const r = await engine.dispatch({ type: 'planAction', ...step.intent });
         v = r.view;
-        if (r.interactionId) v = (await engine.dispatch({ type: 'submitInteraction', interactionId: r.interactionId, text: step.say })).view;
+        if (r.interactionId) v = (await engine.dispatch({ type: 'submitInteraction', interactionId: r.interactionId, text: policy === 'careless' ? PLAIN : step.say })).view;
       }
       for (const msg of v.inbox.filter(x => x.from !== 'news' && x.kind !== 'news')) {
+        if (policy === 'careless') break;
         if (policy === 'random' && rng.chance(0.5)) continue;
         const o = await engine.dispatch({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: msg.id });
-        v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: policy === 'good' ? (msg.briefing ? BRIEF : SAY.P) : PLAIN })).view;
+        const words = policy === 'good' ? (msg.briefing ? BRIEF : SAY.P) : policy === 'oneStyle' ? (msg.briefing ? BRIEF : say(lens, one)) : PLAIN;
+        v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: words })).view;
       }
     }
     const end = await engine.dispatch({ type: 'endPeriod' });
@@ -99,7 +115,8 @@ type Step = { intent: { action: string; option?: string; memberIds: string[] }; 
 /** The team meeting line: Partnering in Readiness Based Leadership, otherwise the style that fits capable but cautious people. */
 const teamSay = (lens: LensLike) => (lens.styles.some(s => s.key === 'P') ? SAY.P : say(lens, bestStyle(lens, 'highSkill_lowMorale')));
 
-function goodStep(v: EngineView, high: number, lens: LensLike): Step | null {
+/** The good player's next step; with `voice`, the same actions spoken in that one style's words. */
+function goodStep(v: EngineView, high: number, lens: LensLike, voice?: Style): Step | null {
   const free = (key: string, id?: string) => {
     const a = v.actions.find(x => x.key === key);
     return a && (id ? !a.blockedFor[id] : !a.blocked);
@@ -107,10 +124,10 @@ function goodStep(v: EngineView, high: number, lens: LensLike): Step | null {
   // Help the weakest available member with a fitting one to one.
   const weakest = [...v.members].filter(m => m.away === 0).sort((a, b) => (statsOf(a).morale + statsOf(a).result) - (statsOf(b).morale + statsOf(b).result))[0];
   if (!weakest) return null;
-  const words = say(lens, bestStyle(lens, needOf(statsOf(weakest), high)));
+  const words = say(lens, voice ?? bestStyle(lens, needOf(statsOf(weakest), high)));
   if (statsOf(weakest).skill < 50 && free('coach', weakest.id)) return { intent: { action: 'coach', memberIds: [weakest.id] }, say: words };
   if (free('f2f', weakest.id)) return { intent: { action: 'f2f', memberIds: [weakest.id] }, say: words };
-  if (free('meet')) return { intent: { action: 'meet', memberIds: [] }, say: teamSay(lens) };
+  if (free('meet')) return { intent: { action: 'meet', memberIds: [] }, say: voice ? say(lens, voice) : teamSay(lens) };
   if (free('goals', weakest.id)) return { intent: { action: 'goals', memberIds: [weakest.id] }, say: words };
   return null;
 }

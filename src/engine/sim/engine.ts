@@ -8,6 +8,7 @@ import { createSim, log, member } from './sim';
 import type { Band, Change, Outcome, PeriodSummary, Turn } from './types';
 import * as live from './live';
 import { buildView, type EngineView } from './view';
+import { summarizeRun, type RunSummary } from '../report/summary';
 
 /**
  * The iLead engine. Authoritative: the UI sends intents and renders the returned view.
@@ -55,6 +56,11 @@ export interface Engine {
    * applied stay, since the run is history.
    */
   review(input: { recordId: string; band: Band; skills?: Record<string, Band> }): EngineView;
+  /**
+   * The run summary at any point (D76, D77), for a run that ended or one left unfinished: what the server
+   * stores per attempt and the group report aggregates. Server tooling, not a participant intent.
+   */
+  summary(): RunSummary;
 }
 
 export { IntentError };
@@ -163,6 +169,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
 
   return {
     view: () => buildView(sim),
+    summary: () => summarizeRun(sim),
     review({ recordId, band, skills }) {
       const rec = sim.liveRecords.find(r => r.id === recordId);
       if (!rec) throw new IntentError('No such interaction', 'unknownInteraction');

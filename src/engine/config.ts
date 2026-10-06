@@ -237,6 +237,32 @@ const PurposeCopy = z.object({
   consistency: z.object({ neededUsed: Bands3, intendedUsed: Bands3, neededIntended: Bands3 }),
   actions: z.object({ unused: Copy, none: Copy, veryLow: Copy, low: Copy, moderate: Copy, high: Copy })
 });
+const Prompts = z.array(Copy).max(4);
+/** The group report's narrative bank (D77, defaults in report/groupDefaults.ts). Replaced as a whole. */
+export const GroupCopy = z.object({
+  about: z.array(Copy).min(1).max(4),
+  howToRead: z.array(Copy).min(1).max(6),
+  /** How to read the benchmark; shown only with one. {n} is its number of participants. */
+  benchmark: Copy,
+  confidentiality: z.object({ development: Copy, assessment: Copy }),
+  withheld: Copy,
+  completion: Copy,
+  /** By group level, lowest first, read in proportion to the scale. */
+  skill: z.array(Copy).min(1),
+  skillNone: Copy,
+  compare: z.object({ above: Copy, level: Copy, below: Copy }),
+  business: z.object({ below: Copy, near: Copy, met: Copy }),
+  adaptability: Bands3,
+  preferred: Copy,
+  style: z.object({ unused: Copy, low: Copy, mid: Copy, high: Copy, under: Copy, over: Copy }),
+  consistency: z.object({ neededUsed: Bands3, intendedUsed: Bands3, neededIntended: Bands3 }),
+  funnel: Copy,
+  actions: Copy,
+  attention: z.object({ top: Copy, average: Copy, bottom: Copy, even: Copy }),
+  verdicts: Copy,
+  prompts: z.object({ skills: Prompts, business: Prompts, styles: Prompts, funnel: Prompts, actions: Prompts, attention: Prompts }),
+  takeaways: z.array(z.object({ key: Key, title: Copy, questions: z.array(Copy).min(1).max(6) })).max(8)
+});
 export const Report = z.object({
   /**
    * The primary lens's scoring dimensions are the skills (D70). `reportOnly` marks a secondary lens's
@@ -281,6 +307,12 @@ export const Report = z.object({
     labels: z.object({ exceeds: Copy, meets: Copy, approaching: Copy, below: Copy, insufficient: Copy }),
     skillLabels: z.object({ strength: Copy, meets: Copy, development: Copy })
   }).default(DEFAULT_ASSESSMENT),
+  /**
+   * The group report (D77): in development, aggregates are withheld below `minimumCohort` participants;
+   * aggregates read runs completed to `completeAt`% or more; `copy` replaces the narrative bank (left out, the defaults).
+   */
+  group: z.object({ minimumCohort: z.number().int().min(1).max(100).default(5), completeAt: z.number().min(1).max(100).default(100), copy: GroupCopy.optional() })
+    .default({ minimumCohort: 5, completeAt: 100 }),
   /** Reflection questions on the end screen. */
   reflection: z.array(Copy).min(0).max(3).default(['What did you learn about adapting your style to each person?', 'What will you do differently with your real team next week?'])
 }).superRefine((r, ctx) => {

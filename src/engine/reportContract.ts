@@ -68,6 +68,7 @@ export const RunSummary = z.object({
     top: Pct.nullable(), average: Pct.nullable(), bottom: Pct.nullable(),
     periods: z.array(z.object({ period: Int, actions: Int.min(0), top: Pct.nullable(), average: Pct.nullable(), bottom: Pct.nullable() }))
   }),
+  review: z.object({ conversations: Int.min(0), reviewed: Int.min(0) }).optional(),
   verdict: z.object({ overall: VerdictKey.nullable(), skills: z.record(Id, SkillVerdictKey.nullable()) }).nullable()
 });
 
