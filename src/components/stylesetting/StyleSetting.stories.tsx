@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState, type ReactNode } from 'react';
 import type { StyleKey } from '../../data/types';
+import { SIX_STYLES_VIEW } from '../../engine/storylines/sixStyles';
+import { LensProvider } from '../style/lens';
 import { LastPeriodTag } from './LastPeriodTag';
 import { StyleSettingCard } from './StyleSettingCard';
 import { StyleSettingView, type StyleSettingLayout, type StyleSettingTooltip, type StyleSettingViewMode, type StyleSettingViewProps } from './StyleSettingView';
@@ -163,3 +165,18 @@ export const CardUnset: StoryObj = { render: () => <OneCard member={{ ...TEAM[2]
 /** Tablet size, 834 wide (an iPad held upright, D69): the 1440 layout, its cards wrapping. */
 export const Tablet: StoryObj = { render: () => <Screen width={834}><StyleSettingView {...base} /></Screen> };
 export const TabletSummary: StoryObj = { render: () => <Screen width={834}><StyleSettingView {...base} view="summary" /></Screen> };
+
+/** The design's team on the Six Leadership Styles lens (D70): week 2 choices mapped to six styles. */
+const SIX_KEYS: Record<string, string> = { D: 'command', G: 'coach', P: 'collab', E: 'vision' };
+const SIX_TEAM = TEAM.map((m, i) => ({ ...m, style: i === 3 ? 'harmony' : i === 8 ? 'pace' : m.style && SIX_KEYS[m.style], lastStyle: m.lastStyle && SIX_KEYS[m.lastStyle] }));
+const Six = ({ children }: { children: ReactNode }) => <LensProvider lens={SIX_STYLES_VIEW}>{children}</LensProvider>;
+
+/** Six styles at 1440: six definitions in one row under the sponsor's prompt, six letters on every card. */
+export const SixStyles: StoryObj = { render: () => <Six><Static members={SIX_TEAM} /></Six> };
+/** Six styles at 1024: the definitions in rows of three, the letters shrink to fit the card. */
+export const SixStyles1024: StoryObj = { render: () => <Six><Screen width={1024}><StyleSettingView {...base} members={SIX_TEAM} /></Screen></Six> };
+/** Six styles in the list view: one narrower radio column per style. */
+export const SixStylesList: StoryObj = { render: () => <Six><Static members={SIX_TEAM} view="list" /></Six> };
+export const SixStylesSummary: StoryObj = { render: () => <Six><Static members={SIX_TEAM} view="summary" /></Six> };
+/** Everything works with six styles. */
+export const SixStylesInteractive: StoryObj = { render: () => <Six><Live members={SIX_TEAM} /></Six> };

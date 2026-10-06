@@ -81,7 +81,10 @@ export function StyleSettingList({ members, periodUnit, onStyle }: StyleSettingL
         <span role="columnheader">{t('stylesetting.list.member')}</span>
         <span role="columnheader">{t('stylesetting.list.stats')}</span>
         <span role="columnheader">{t('stylesetting.list.last', { unit: periodUnit })}</span>
-        {lens.styles.map(s => <span key={s.key} role="columnheader" className="text-center">{s.name}</span>)}
+        {/* Five or six styles head their columns with the letter (the definitions above name them); screen readers hear the name. */}
+        {lens.styles.map(s => (lens.styles.length > 4
+          ? <span key={s.key} role="columnheader" className="text-center"><span aria-hidden="true">{s.letter}</span><span className="sr-only">{s.name}</span></span>
+          : <span key={s.key} role="columnheader" className="text-center">{s.name}</span>))}
         <span role="columnheader">{t('stylesetting.list.reason')}</span>
       </div>
       {members.map(m => <StyleSettingRow key={m.id} member={m} periodUnit={periodUnit} radioPrefix={prefix} onStyle={k => onStyle(m.id, k)} />)}

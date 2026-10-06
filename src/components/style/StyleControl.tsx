@@ -6,8 +6,8 @@ import { styleOf, useLens } from './lens';
 
 /** Board cards use the compact control; the style setting screen uses the roomier one. */
 const SIZES = {
-  sm: { segment: 'min-h-6.5 text-12', tip: 'w-52.5 shadow-(--il-style-tooltip-shadow)' },
-  md: { segment: 'min-h-7.5 text-13', tip: 'w-50' }
+  sm: { segment: 'min-h-6.5 text-12', many: 'min-h-6.5 text-11', tip: 'w-52.5 shadow-(--il-style-tooltip-shadow)' },
+  md: { segment: 'min-h-7.5 text-13', many: 'min-h-7.5 text-12', tip: 'w-50' }
 } as const;
 
 export interface StyleTooltipProps {
@@ -55,12 +55,15 @@ export interface StyleControlProps {
 }
 
 /**
- * Columns for the lens's 2 to 6 letters. Up to four share the row as designed. Five or six shrink to
- * fit the card with a pointer, and wrap to rows of three on a touch screen, where each letter keeps
- * its 44px target (D69).
+ * Columns for the lens's 2 to 6 letters, all in one row as designed. Five or six letters shrink with a
+ * mouse or trackpad, and wrap to rows of three on a touch screen, where each keeps its 44px target (D69).
  */
-const COLUMNS: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4' };
-const columns = (n: number) => COLUMNS[n] ?? 'grid-cols-(--il-style-segment-columns-many) pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-18';
+const COLUMNS: Record<number, string> = {
+  2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4',
+  5: 'grid-cols-5 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-18',
+  6: 'grid-cols-6 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-18'
+};
+const columns = (n: number) => COLUMNS[n] ?? 'grid-cols-4';
 
 /**
  * The style segmented control: one letter per lens style (D, G, P, E by default). A Radix toggle group
@@ -112,7 +115,7 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
               onFocus={show(k)}
               onBlur={hide(k)}
               onKeyDown={onKey}
-              className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-pill border-0 p-0 font-700 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}
+              className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-pill border-0 p-0 font-700 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${n > 4 ? SIZES[size].many : SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}
             >
               {letter}
             </ToggleGroup.Item>

@@ -31,6 +31,7 @@
   "report.skills.title": "Your leadership skills",
   "report.skills.note": "Shown only here, never during play. Based on what you said and did.",
   "report.skills.noEvidence": "Not enough evidence",
+  "report.skills.reportOnly": "Report only",
   "report.skills.aria": "{skill}: {level}, level {n} of {total}",
   "report.skills.ariaNone": "{skill}: not enough evidence for a level",
   "report.skills.observations": "{n, plural, one {{count} observation} other {{count} observations}}",

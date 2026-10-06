@@ -492,7 +492,6 @@
   --il-smallscreen-glow: radial-gradient(140% 60% at 50% 0%, var(--il-color-accent-soft), transparent 70%);
   --il-smallscreen-title-leading: 1.2;
   --il-style-segment-transition: background var(--il-duration-fast) var(--il-easing-brand);
-  --il-style-segment-columns-many: repeat(auto-fit,minmax(1.75rem,1fr));
   --il-style-segment-columns-touch: repeat(3,minmax(0,1fr));
   --il-style-tooltip-bg: var(--il-color-fg-primary);
   --il-style-tooltip-fg: var(--il-color-fg-inverse);
@@ -504,9 +503,9 @@
   --il-stylesetting-portrait-overlay: linear-gradient(180deg, transparent 50%, var(--il-color-stylesetting-portrait-shade));
   --il-stylesetting-portrait-position: center 12%;
   --il-stylesetting-list-columns: minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr);
-  --il-stylesetting-list-lead-lens: minmax(200px,1.4fr) minmax(150px,1fr) minmax(150px,1fr);
-  --il-stylesetting-list-radio-lens: minmax(72px,96px);
-  --il-stylesetting-list-reason-lens: minmax(160px,1.1fr);
+  --il-stylesetting-list-lead-lens: minmax(160px,1.4fr) minmax(110px,1fr) minmax(110px,1fr);
+  --il-stylesetting-list-radio-lens: minmax(52px,96px);
+  --il-stylesetting-list-reason-lens: minmax(100px,1.1fr);
   --il-stylesetting-list-header-tracking: var(--il-tracking-label);
   --il-stylesetting-summary-scrim-blur: 6px;
   --il-stylesetting-summary-enter: ilIn var(--il-duration-base) ease;

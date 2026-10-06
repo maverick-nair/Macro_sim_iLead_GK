@@ -136,7 +136,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       case 'skills':
         return {
           key, levels: r.scale.map(s => s.name),
-          rows: r.skills.map(s => ({ key: s.key, name: s.name, level: s.level, quote: s.quotes[0] ?? null, more: { anchor: s.anchor, observations: s.observations, capped: s.capped, quotes: s.quotes.slice(1) } }))
+          rows: r.skills.map(s => ({ key: s.key, name: s.name, reportOnly: s.reportOnly, level: s.level, quote: s.quotes[0] ?? null, more: { anchor: s.anchor, observations: s.observations, capped: s.capped, quotes: s.quotes.slice(1) } }))
         };
       case 'moments':
         return {

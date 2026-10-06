@@ -461,7 +461,6 @@ export const tokens = {
     "smallscreen.glow",
     "smallscreen.title.leading",
     "style.segment.transition",
-    "style.segment.columns-many",
     "style.segment.columns-touch",
     "style.tooltip.bg",
     "style.tooltip.fg",

@@ -56,6 +56,8 @@ export interface SkillRowData {
   name: string;
   /** Null: not enough evidence. */
   level: { index: number; name: string } | null;
+  /** A secondary lens's skill (D70): tagged "Report only", never in the score. */
+  reportOnly?: boolean;
   /** The first evidence quote, beside the bar as in the design. */
   quote: ReportQuote | null;
   /** Engine only: the anchor, observation count, Harmful cap and further quotes. */
