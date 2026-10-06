@@ -138,5 +138,51 @@ for (const [theme, q] of Object.entries(THEMES)) {
         await shot(page, `${theme}-${width}-end`, true);
       });
     }
+
+    // A tablet held upright, 834 by 1194 (D73): the tablet board, its actions drawer, the 1:1 and style setting.
+    test.describe('tablet at 834', () => {
+      test.use({ viewport: { width: 834, height: 1194 } });
+
+      test('style setting at 834', async ({ page }) => {
+        await page.goto(url('start=board', q));
+        await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10);
+        await shot(page, `${theme}-834-styles`);
+      });
+
+      test('board at 834', async ({ page }) => {
+        await page.goto(url('start=board', q));
+        await confirmStyles(page);
+        await dismissEvents(page);
+        await expect(page.getByRole('navigation', { name: 'Board tools' })).toBeVisible();
+        await shot(page, `${theme}-834-board`);
+      });
+
+      test('actions drawer at 834', async ({ page }) => {
+        await page.goto(url('start=board', q));
+        await confirmStyles(page);
+        await dismissEvents(page);
+        await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
+        const drawer = page.getByRole('dialog', { name: 'Actions for Kent Goldberg' });
+        await drawer.getByRole('radio', { name: /Meet face to face/ }).click();
+        await expect(drawer.getByRole('button', { name: 'Confirm and start · 1 day' })).toBeVisible();
+        await shot(page, `${theme}-834-drawer`);
+      });
+
+      test('1:1 at 834', async ({ page }) => {
+        await page.goto(url('start=board', q));
+        await confirmStyles(page);
+        await dismissEvents(page);
+        await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
+        const drawer = page.getByRole('dialog', { name: 'Actions for Kent Goldberg' });
+        await drawer.getByRole('radio', { name: /Meet face to face/ }).click();
+        await drawer.getByRole('radio', { name: /Energize the person/ }).click();
+        await drawer.getByRole('button', { name: /Confirm and start/ }).click();
+        await dismissEvents(page);
+        await expect(page.getByText('1:1 with Kent Goldberg')).toBeVisible();
+        await expect(page.getByRole('textbox').last()).toBeEditable({ timeout: 15_000 });
+        await expect(page.getByText(/is speaking\. Talk to interrupt/)).toHaveCount(0, { timeout: 15_000 });
+        await shot(page, `${theme}-834-live`);
+      });
+    });
   });
 }

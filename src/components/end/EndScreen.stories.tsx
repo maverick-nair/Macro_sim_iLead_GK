@@ -123,3 +123,5 @@ export const FromRunPassive: StoryObj = { render: () => <FromRun policy="passive
 /** A random run without voice consent: the mic says voice is off. */
 export const FromRunNoVoice: StoryObj = { render: () => <FromRun policy="random" voiceConsent={false} /> };
 
+/** The end screen at 834 on a portrait tablet (D73): the result tiles three a row. */
+export const TabletPortrait: Story = { decorators: [S => <div data-tablet="" style={{ width: 834 }}><S /></div>] };

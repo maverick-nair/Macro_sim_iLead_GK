@@ -10,6 +10,8 @@ export interface ActionOption {
   detail: string;
   /** The engine refuses this choice (a full stage): shown, with its reason in `detail`, but not selectable. */
   disabled?: boolean;
+  /** A short value at the end of the row, such as the cost (the tablet drawer's action rows). */
+  aside?: string;
 }
 
 export interface OptionCardsProps {
@@ -17,13 +19,17 @@ export interface OptionCardsProps {
   /** Index of the chosen option, or null before one is chosen. */
   value: number | null;
   onChange: (index: number) => void;
+  /** The group's name. Defaults to the action's options. */
+  label?: string;
+  /** `lg`: the tablet's large radio rows, 64px tall (D72). */
+  size?: 'md' | 'lg';
 }
 
 /**
  * Radio cards for a static action's options. One tab stop for the group; arrow keys, Home and End
  * move and select, as in a native radio group.
  */
-export function OptionCards({ options, value, onChange }: OptionCardsProps) {
+export function OptionCards({ options, value, onChange, label, size = 'md' }: OptionCardsProps) {
   const { t } = useI18n();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
   const enabled = options.map((o, i) => (o.disabled ? -1 : i)).filter(i => i >= 0);
@@ -42,18 +48,20 @@ export function OptionCards({ options, value, onChange }: OptionCardsProps) {
     refs.current[next]?.focus();
   };
   return (
-    <div role="radiogroup" aria-label={t('action.drawer.options')} className="flex flex-col gap-2">
+    <div role="radiogroup" aria-label={label ?? t('action.drawer.options')} className="flex flex-col gap-2">
       {options.map((o, i) => {
         const on = value === i;
         const ring = on ? 'border-accent-secondary' : 'border-line-default';
+        const lg = size === 'lg';
         return (
           <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
             aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex items-start ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} gap-2.5 rounded-14 border-(length:--il-action-option-border-width) p-3 text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : 'bg-surface-raised'}`}>
-            <span aria-hidden="true" className={`mt-0.25 flex size-4.5 flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
+            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-16 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-14 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
+            <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
               <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
             </span>
-            <span className="flex flex-col"><b className="text-13">{o.name}</b><span className="text-12 text-fg-secondary">{o.detail}</span></span>
+            <span className="flex min-w-0 flex-1 flex-col"><b className={lg ? 'text-15' : 'text-13'}>{o.name}</b><span className="text-12 text-fg-secondary">{o.detail}</span></span>
+            {o.aside && <span className="flex-none text-13 text-fg-secondary">{o.aside}</span>}
           </button>
         );
       })}
@@ -107,6 +115,34 @@ export interface ActionDrawerProps {
   onBack: () => void;
 }
 
+/** Who is picked for an action, as chips with their photo. */
+export function PickedChips({ picks }: { picks: PickedPerson[] }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {picks.map(pk => (
+        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
+          <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/** The soft prerequisite warning with Assess first and Continue anyway. */
+export function NudgeNote({ nudge }: { nudge: ActionNudge }) {
+  const { t } = useI18n();
+  const fmt = useDays();
+  return (
+    <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
+      <span className="text-pretty">{t('action.drawer.nudge', { name: nudge.name, area: nudge.area, cost: fmt(nudge.days) })}</span>
+      <div className="flex gap-2">
+        <NoWrapButton variant="secondary" size="sm" onClick={nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
+        <NoWrapButton variant="ghost" size="sm" onClick={nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
+      </div>
+    </div>
+  );
+}
+
 /** The action flow that replaces the actions list once an action is chosen. */
 export function ActionDrawer(p: ActionDrawerProps) {
   const { t } = useI18n();
@@ -130,23 +166,9 @@ export function ActionDrawer(p: ActionDrawerProps) {
       <div className="flex flex-col gap-2">
         <span className="text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
         {p.people.mode === 'pick' && <span className="text-13 text-fg-secondary">{t('action.drawer.pickHint', { limit: p.people.limit })}</span>}
-        <div className="flex flex-wrap gap-1.5">
-          {p.picks.map(pk => (
-            <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
-              <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
-            </span>
-          ))}
-        </div>
+        <PickedChips picks={p.picks} />
       </div>
-      {p.nudge && (
-        <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
-          <span className="text-pretty">{t('action.drawer.nudge', { name: p.nudge.name, area: p.nudge.area, cost: fmt(p.nudge.days) })}</span>
-          <div className="flex gap-2">
-            <NoWrapButton variant="secondary" size="sm" onClick={p.nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
-            <NoWrapButton variant="ghost" size="sm" onClick={p.nudge.onContinue}>{t('action.drawer.continue')}</NoWrapButton>
-          </div>
-        </div>
-      )}
+      {p.nudge && <NudgeNote nudge={p.nudge} />}
       <div aria-live="polite" className="mt-auto rounded-14 bg-surface-raised p-3 text-13 text-pretty">{p.summary}</div>
       <div className="w-full"><Button variant="primary" size="lg" disabled={!p.canConfirm} onClick={p.onConfirm}>{t('action.drawer.cta', { cta: p.cta })}</Button></div>
     </div>

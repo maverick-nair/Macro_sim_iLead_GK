@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tablet style setting</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+.tile{padding:12px 14px;border-radius:14px;background:#12122A;border:1px solid rgba(222,233,255,0.08);display:flex;flex-direction:column;gap:6px;min-width:0}
+.ib{width:44px;height:44px;border-radius:12px;border:1px solid rgba(222,233,255,0.12);background:rgba(222,233,255,0.03);color:#D6DBEE;display:flex;align-items:center;justify-content:center}
+.st{height:44px;border-radius:12px;border:1px solid rgba(222,233,255,0.12);background:transparent;color:#D6DBEE;font:800 15px Manrope,sans-serif;flex:1}
+</style>
+</helmet>
+<div style="width: 834px; height: 1194px; box-sizing: border-box; background: radial-gradient(700px 500px at 50% 0%, #15163A 0%, #0A0A1A 70%); color: #F1F4FF; font-family: Manrope, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 72px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(222,233,255,0.06)">
+    <span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">i<span style="color: #43D6E8">Lead</span></span>
+    <span style="font-size: 14px; margin-left: 6px"><b>Week 1</b> <span style="color: #8C94B4">of 8 · Style setting</span></span>
+    <span style="flex: 1"></span>
+    <span style="font-size: 14px; color: #A6AECB">4 of 10 set</span>
+  </header>
+  <section aria-label="The four styles" style="padding: 18px 24px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+    <sc-for list="{{legend}}" as="l" hint-placeholder-count="4">
+      <div class="tile" style="flex-direction: row; align-items: center; gap: 10px"><span style="width: 32px; height: 32px; flex: none; border-radius: 50%; background: #2F9BFF; color: #04101F; font-weight: 800; display: flex; align-items: center; justify-content: center">{{l.k}}</span><span style="display: flex; flex-direction: column"><b style="font-size: 14px">{{l.n}}</b><span style="font-size: 11px; color: #8C94B4">{{l.d}}</span></span></div>
+    </sc-for>
+  </section>
+  <p style="margin: 14px 24px 0; font-size: 14px; color: #A6AECB">"To each their own. Your people need different things from you this week." Paula, your sponsor</p>
+  <main aria-label="Your team" style="flex: 1; min-height: 0; padding: 16px 24px 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-content: start; overflow: hidden">
+    <sc-for list="{{people}}" as="m" hint-placeholder-count="9">
+      <article style="border-radius: 18px; background: #12122A; border: 1px solid {{m.border}}; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+        <div style="display: flex; gap: 12px; align-items: center"><img src="{{m.img}}" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: top; background: #DCE6F7"><span style="display: flex; flex-direction: column"><b style="font-size: 15px">{{m.n}}</b><span style="font-size: 12px; color: #8C94B4">{{m.stage}}</span></span></div>
+        <div role="radiogroup" aria-label="Style for {{m.n}}" style="display: flex; gap: 6px">
+          <sc-for list="{{m.opts}}" as="o" hint-placeholder-count="4"><button type="button" role="radio" aria-checked="{{o.on}}" class="st" style="background: {{o.bg}}; color: {{o.fg}}; border-color: {{o.bd}}">{{o.k}}</button></sc-for>
+        </div>
+        <span style="font-size: 12px; color: {{m.nc}}">{{m.note}}</span>
+      </article>
+    </sc-for>
+  </main>
+  <footer style="margin: 16px 24px 24px; padding: 10px 10px 10px 20px; border-radius: 20px; background: rgba(18,18,42,0.92); border: 1px solid rgba(222,233,255,0.1); display: flex; align-items: center; gap: 12px">
+    <span style="flex: 1; font-size: 14px; color: #A6AECB">Set a style for everyone, then review the week's plan.</span>
+    <button type="button" style="height: 56px; padding: 0 24px; border-radius: 14px; border: 0; background: #2F9BFF; color: #04101F; font: 800 16px Manrope, sans-serif">Review and confirm</button>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":834,"height":1194}}'>
+class Component extends DCLogic {
+  renderVals() {
+const img = { kent: '/_blob/591e30ff8363f46b3929b9e1cc60c1d3', beth: '/_blob/03a9b43b1a4724fec350a8fb8b50f901', justin: '/_blob/df764ce0defd433843ec0193ca55914d', derick: '/_blob/9f5a55035d40bd976f042e174ffc9d22', green: '/_blob/4a96b92108fe93197fa623e861a79e03', lowe: '/_blob/a19adc6ec80ed6aea62b27c45c3c6a0e', jack: '/_blob/4b523a9a5d6fdf04e3244986868c6ec0', peter: '/_blob/a0910603ea748084eb5db8a73e9b503d', ruth: '/_blob/e19bda513a19220c24c159505e25ee17', mandy: '/_blob/35f2ae3bcc7eb301d495cb45854c903f' };
+    const K = ['D', 'G', 'P', 'E'];
+    const m = (id, n, stage, set) => ({ img: img[id], n, stage, border: set ? 'rgba(47,155,255,0.45)' : 'rgba(222,233,255,0.08)', note: set ? 'Set: ' + { D: 'Directing', G: 'Guiding', P: 'Partnering', E: 'Entrusting' }[set] : 'No style yet', nc: set ? '#8FCBFF' : '#8C94B4',
+      opts: K.map(k => ({ k, on: k === set ? 'true' : 'false', bg: k === set ? '#2F9BFF' : 'transparent', fg: k === set ? '#04101F' : '#D6DBEE', bd: k === set ? '#2F9BFF' : 'rgba(222,233,255,0.12)' })) });
+    return {
+      legend: [{ k: 'D', n: 'Directing', d: 'Set the task, check closely' }, { k: 'G', n: 'Guiding', d: 'Explain why, coach' }, { k: 'P', n: 'Partnering', d: 'Decide together' }, { k: 'E', n: 'Entrusting', d: 'Hand over the goal' }],
+      people: [m('kent', 'Kent Goldberg', 'Leads', 'G'), m('beth', 'Beth Killiney', 'Leads', 'E'), m('justin', 'Justin Keel', 'Qualify', 'D'), m('derick', 'Derick Kaynes', 'Qualify', 'G'), m('green', 'Green Bell', 'Proposal', ''), m('lowe', 'Lowe Rex', 'Proposal', ''), m('jack', 'Jack Holt', 'Negotiation', ''), m('peter', 'Peter Higgins', 'Negotiation', ''), m('ruth', 'Ruth Ether', 'Conversion', ''), m('mandy', 'Mandy Lobert', 'Conversion', '')]
+    };
+  }
+}
+</script>
+</body>
+</html>

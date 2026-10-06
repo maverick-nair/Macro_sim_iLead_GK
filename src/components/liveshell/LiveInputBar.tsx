@@ -31,6 +31,8 @@ export interface LiveInputBarProps {
   levels: number[];
   /** The last capture was poor audio: the transcript has gaps to fix. */
   partial?: boolean;
+  /** `tablet`: the tablet's voice composer, 56px mic and send (D72). */
+  layout?: 'desk' | 'tablet';
 }
 
 /** The state line above the reply, in the order the design checks it. */
@@ -96,7 +98,7 @@ export function LiveInputBar(p: LiveInputBarProps) {
           <b>{t('liveshell.partial.title')}</b> {t('liveshell.partial.body')}
         </div>
       )}
-      <div className={`flex items-end gap-2.5 rounded-24 border border-solid bg-surface-material p-2.5 ${listening ? 'border-voice-listening shadow-(--il-liveshell-reply-listening-ring)' : 'border-line-control'}`}>
+      <div className={`flex items-end ${p.layout === 'tablet' ? 'gap-3 rounded-22 p-3' : 'gap-2.5 rounded-24 p-2.5'} border border-solid bg-surface-material ${listening ? 'border-voice-listening shadow-(--il-liveshell-reply-listening-ring)' : 'border-line-control'}`}>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <MicStatus status={micStatusFor(p)} speaker={p.speakerName} />
           {listening ? (
@@ -110,9 +112,9 @@ export function LiveInputBar(p: LiveInputBarProps) {
           )}
         </div>
         {canRedo && <RecordAgainButton onPress={p.onRecordAgain!} />}
-        <MicButton state={mic} mode={mode} onPress={pressMic} />
+        <MicButton state={mic} mode={mode} onPress={pressMic} layout={p.layout} />
         <button type="button" onClick={p.onSend} disabled={cantSend} aria-label={t('liveshell.reply.send')}
-          className={`flex size-12 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-brand-deep-space ${listening || closed ? 'bg-track' : 'bg-transparent bg-(image:--il-fill-brand)'} ${FOCUS}`}>
+          className={`flex ${p.layout === 'tablet' ? 'size-14' : 'size-12'} flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-brand-deep-space ${listening || closed ? 'bg-track' : 'bg-transparent bg-(image:--il-fill-brand)'} ${FOCUS}`}>
           <SendIcon />
         </button>
       </div>

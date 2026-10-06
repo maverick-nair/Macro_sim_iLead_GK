@@ -513,6 +513,10 @@
   --il-switch-track-off: var(--il-color-control-track-off);
   --il-switch-thumb-on: var(--il-color-brand-deep-space);
   --il-switch-thumb-off: var(--il-color-brand-pale-lavender);
+  --il-tablet-board-height: calc(100dvh - var(--il-app-safe-top) - var(--il-app-safe-bottom));
+  --il-tablet-sheet-shadow: -30px 0 80px var(--il-color-elevation-panel);
+  --il-tablet-sheet-enter: ilIn var(--il-duration-base) ease;
+  --il-tablet-dock-shadow: 0 20px 50px var(--il-color-elevation-drawer);
   --il-team-title-tracking: var(--il-tracking-title);
   --il-team-legend-width: 360px;
   --il-team-legend-columns: 32px 1fr;

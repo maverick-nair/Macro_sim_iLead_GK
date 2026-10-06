@@ -180,3 +180,6 @@ export const SixStylesList: StoryObj = { render: () => <Six><Static members={SIX
 export const SixStylesSummary: StoryObj = { render: () => <Six><Static members={SIX_TEAM} view="summary" /></Six> };
 /** Everything works with six styles. */
 export const SixStylesInteractive: StoryObj = { render: () => <Six><Live members={SIX_TEAM} /></Six> };
+
+/** Portrait tablet, 834 wide (D73): the styles as a strip, cards three a row, the confirm bar at the bottom. */
+export const TabletPortrait: StoryObj = { render: () => <div data-tablet=""><Screen width={834}><StyleSettingView {...base} /></Screen></div> };

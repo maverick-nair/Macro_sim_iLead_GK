@@ -94,7 +94,7 @@ function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange
  */
 const WIDE: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 5: 'grid-cols-3 wide:grid-cols-5', 6: 'grid-cols-3 wide:grid-cols-6' };
 const introGrid = (n: number) => (n === 4
-  ? { className: 'grid-cols-(--il-stylesetting-intro-columns)', prompt: '' }
+  ? { className: 'grid-cols-(--il-stylesetting-intro-columns) tablet-portrait:grid-cols-4', prompt: 'tablet-portrait:col-span-full' }
   : { className: WIDE[n] ?? 'grid-cols-3', prompt: 'col-span-full' });
 
 /** The sponsor's prompt, then the lens's style definitions. */
@@ -152,7 +152,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
 
   const Root = p.embedded ? 'div' : 'main';
   return (
-    <Root className="flex flex-1 flex-col gap-4.5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
+    <Root className="flex flex-1 flex-col gap-4.5 px-8 pt-5 pb-8 tablet-portrait:px-6 tablet-portrait:pb-30" style={{ minHeight: p.minHeight }}>
       <header className="flex items-center gap-4">
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-stylesetting-logo-tracking) text-transparent">{t('hud.logo')}</span>
         {/* The screen's heading is the visible "Week 2 of 8 · Style setting", styled as designed. */}
@@ -164,13 +164,18 @@ export function StyleSettingView(p: StyleSettingViewProps) {
           {t('stylesetting.progress', { set: number(set), total: number(members.length) })}
         </span>
         <LayoutToggle value={layout} onChange={p.onViewChange} />
-        <NoWrapButton variant="primary" size="md" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton>
+        <span className="contents tablet-portrait:hidden"><NoWrapButton variant="primary" size="md" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton></span>
       </header>
+      {/* A portrait tablet confirms from a bar at the bottom, in reach of a thumb (D73). */}
+      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-20 border border-line-default bg-surface-material py-2.5 pr-2.5 pl-5 backdrop-blur-20">
+        <span className="flex-1 text-14 text-fg-secondary">{t('stylesetting.bar')}</span>
+        <NoWrapButton variant="primary" size="lg" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton>
+      </div>
 
       <Intro sponsorName={p.sponsorName} sponsorLine={p.sponsorLine} />
 
       {layout === 'cards' && (
-        <div className="grid grid-cols-5 gap-3.5">
+        <div className="grid grid-cols-5 gap-3.5 tablet-portrait:grid-cols-3">
           {members.map(m => (
             <StyleSettingCard key={m.id} member={m} periodUnit={periodUnit}
               onStyle={k => p.onStyle(m.id, k)} onRationale={text => p.onRationale(m.id, text)}

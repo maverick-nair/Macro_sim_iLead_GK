@@ -15,6 +15,9 @@
 @custom-variant text-large (&:where([data-text-large], [data-text-large] *));
 /* A window or tablet narrower than the 1024 design (744 to 1023, D69): rows that hold a line at 1024 may wrap. */
 @custom-variant tablet (@media (max-width: 1023.98px));
+/* The portrait tablet layouts (D73): inside a root marked `data-tablet` (the board sets it when the window is
+   744 to 1023 wide and upright, `TABLET` in useMediaQuery; stories set it to show the tablet layout at any size). */
+@custom-variant tablet-portrait (&:where([data-tablet], [data-tablet] *));
 /* 1280 and wider: the design's full width layouts (a lens's style definitions in one row). */
 @custom-variant wide (@media (min-width: 1280px));
 /* A live stage narrower than 560, as beside the open brief on a tablet (D69): its columns stack. The

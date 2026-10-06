@@ -160,12 +160,12 @@ export function Hud(p: HudProps) {
   const rich = p.breakdown !== undefined;
 
   return (
-    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2">
-      <div className="flex items-center gap-2.5">
+    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2 tablet-portrait:min-h-18 tablet-portrait:flex-nowrap tablet-portrait:gap-3 tablet-portrait:border-b tablet-portrait:border-line-default">
+      <div className="flex items-center gap-2.5 tablet-portrait:-order-3">
         <ClientLogo />
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
       </div>
-      {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
+      {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden tablet-portrait:hidden">
         {p.nav.map(n => (n.label ? (
           <button key={n.key} type="button" onClick={() => p.onNav(n.key)}
             className={`min-h-8 flex-none cursor-pointer rounded-pill border-0 bg-transparent px-2 py-0 text-13 font-600 text-fg-secondary hover:bg-surface-raised hover:text-fg-primary ${focus}`}>
@@ -176,30 +176,30 @@ export function Hud(p: HudProps) {
           <span key={n.key} aria-hidden="true" className="h-8 flex-none px-2" />
         )))}
       </nav>}
-      <div className="min-w-0 flex-1" />
-      <span className="flex-none text-13 text-fg-secondary">{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
-      <div role="group" aria-label={capAria} className="flex items-center gap-2">
-        <div className={`flex gap-0.25 ${pulse ? 'animate-(--il-hud-capacity-pulse)' : ''}`}>
+      <div className="min-w-0 flex-1 tablet-portrait:-order-1" />
+      <span className="flex-none text-13 text-fg-secondary tablet-portrait:-order-2 tablet-portrait:text-14">{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
+      <div role="group" aria-label={capAria} className="flex items-center gap-2 tablet-portrait:-order-2">
+        <div className={`flex gap-0.25 tablet-portrait:hidden ${pulse ? 'animate-(--il-hud-capacity-pulse)' : ''}`}>
           {slots.map((v, i) => <Bolt key={i} left={v} />)}
         </div>
         <span className="text-13 text-fg-secondary">{around(t('time.left', { amount: MARK }), v => <b className="text-fg-primary">{v}</b>, amount)}</span>
       </div>
       {(p.sessionClock !== null || p.alwaysPause) && (
         <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined}
-          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary ${focus}`}>
+          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:px-3.5 ${focus}`}>
           <Pause />{p.sessionClock ?? t('hud.pause.label')}
         </button>
       )}
       {/* Focus leaving the score (and the breakdown, which can hold controls) closes it; Escape inside it closes it and returns to the score. */}
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a mouse hover opens the breakdown (not a touch, whose emulated hover would fight the tap); the button is the control */}
-      <div ref={wrap} className="relative" onPointerEnter={e => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={e => { if (e.pointerType === 'mouse') setOpen(false); }}
+      <div ref={wrap} className="relative tablet-portrait:-order-1" onPointerEnter={e => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={e => { if (e.pointerType === 'mouse') setOpen(false); }}
         onBlur={e => { if (!wrap.current?.contains(e.relatedTarget as Node | null)) setOpen(false); }}
         onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); scoreButton.current?.focus(); } }}>
         {/* A disclosure: Enter, Space (a click with no pointer) and a tap toggle the breakdown. A mouse click keeps it open, since hovering already opened it. */}
         <button ref={scoreButton} type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
           onPointerDown={e => { touch.current = e.pointerType !== 'mouse'; }}
           onClick={e => setOpen(e.detail === 0 || touch.current ? !open : true)}
-          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
+          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:border tablet-portrait:border-line-strong tablet-portrait:px-3.5 ${focus}`}>
           <Star />{number(score.total)}
         </button>
         {open && (
@@ -220,13 +220,13 @@ export function Hud(p: HudProps) {
           </div>
         )}
       </div>
-      <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700"><Flame />{number(p.streak)}</span>
+      <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700 tablet-portrait:-order-1"><Flame />{number(p.streak)}</span>
       <button type="button" onClick={p.onPalette} aria-label={t('hud.palette.aria')}
-        className={`min-h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary ${focus}`}>
+        className={`min-h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary tablet-portrait:hidden ${focus}`}>
         {t('hud.palette.key')}
       </button>
       <button type="button" onClick={p.onSettings} aria-label={t('hud.settings.aria')}
-        className={`flex size-8 cursor-pointer items-center justify-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:bg-surface-raised ${focus}`}>
+        className={`flex size-8 cursor-pointer items-center justify-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:bg-surface-raised tablet-portrait:-order-1 tablet-portrait:size-11 tablet-portrait:rounded-12 tablet-portrait:border tablet-portrait:border-line-default ${focus}`}>
         <Sliders />
       </button>
       {/* The number is its own flex item, 8px from the words, as the design renders it. */}

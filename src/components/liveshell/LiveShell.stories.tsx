@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { MicState } from '../live/MicButton';
 import { EmailStage, type EmailField, type EmailStageProps } from './EmailStage';
+import { LiveBriefCard } from './LiveBriefCard';
 import { LiveShell, type LiveShellProps } from './LiveShell';
 import { MeetingStage, type MeetingAttendee } from './MeetingStage';
 import { ReactingScreen } from './ReactingScreen';
@@ -360,4 +361,35 @@ export const PlayableSponsor: StoryObj = {
       </Frame>
     );
   }
+};
+
+// The portrait tablet layout (D73), 834 wide: one column, the 1:1 goal beside the portrait, 56px composer.
+const TabletFrame = ({ children }: { children: ReactNode }) => (
+  <div data-tablet="" style={{ width: 834, minHeight: 1194, display: 'flex', flexDirection: 'column' }}>{children}</div>
+);
+const tabletBrief = (format: DesignedFormat, open = false) => (
+  <LiveBriefCard layout="tablet" bare format={format} brief={BRIEFS[format]} pronoun="he" tip={null} open={open} onToggle={noop} />
+);
+
+/** 1:1 by voice at 834 (the approved Tablet frame): the goal beside the portrait, the log, the voice composer. */
+export const TabletPortrait1on1: StoryObj = {
+  render: () => (
+    <TabletFrame>
+      <LiveShell {...shell({ mic: 'listening', draft: words(YOU_LINES[0], 9) }, rolePlay({ layout: 'tablet', aside: tabletBrief('roleplay'), turns: [npc(0), you(0), npc(1)] }))} layout="tablet" briefInStage />
+    </TabletFrame>
+  )
+};
+/** The 1:1 at 834 with the whole brief open under the goal. */
+export const TabletPortraitBriefOpen: StoryObj = {
+  render: () => <TabletFrame><LiveShell {...shell({ mode: 'text' }, rolePlay({ layout: 'tablet', aside: tabletBrief('roleplay', true) }))} layout="tablet" briefInStage /></TabletFrame>
+};
+/** The team meeting at 834: the same shell, the brief's goal above the stage. */
+export const TabletPortraitMeeting: StoryObj = {
+  render: () => <TabletFrame><LiveShell {...shell({ format: 'meeting', conversation: 'npcSpeaking', speaker: 'Green', briefOpen: false }, meeting())} layout="tablet" /></TabletFrame>
+};
+/** The email at 834. */
+export const TabletPortraitEmail: StoryObj = { render: () => <TabletFrame><LiveShell {...shell({ format: 'email', briefOpen: false }, email())} layout="tablet" /></TabletFrame> };
+/** The sponsor briefing at 834. */
+export const TabletPortraitSponsor: StoryObj = {
+  render: () => <TabletFrame><LiveShell {...shell({ format: 'sponsor', conversation: 'npcSpeaking', speaker: 'Priya', briefOpen: false }, sponsor({ speaking: true }))} layout="tablet" /></TabletFrame>
 };

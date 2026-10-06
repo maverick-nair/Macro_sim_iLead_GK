@@ -63,7 +63,7 @@ function StyleLegend({ id, periodUnit }: { id: string; periodUnit: PeriodUnit })
 }
 
 /** A stage header: name, headcount, then the ideal or, on the bottleneck, a warning. */
-function StageHeader({ name, count, ideal, bottleneck, periodUnit }: Omit<StageColumn, 'cards' | 'key'> & { periodUnit: PeriodUnit }) {
+export function StageHeader({ name, count, ideal, bottleneck, periodUnit }: Omit<StageColumn, 'cards' | 'key'> & { periodUnit: PeriodUnit }) {
   const { t, number } = useI18n();
   return (
     <div className={`flex flex-col gap-0.5 rounded-12 border px-3 py-2 ${bottleneck ? 'border-status-attention bg-status-attention-soft' : 'border-line-default bg-surface-card'}`}>
