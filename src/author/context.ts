@@ -71,10 +71,10 @@ export const OTHER_CHALLENGES = ['Growing a new market', 'Building a new team'];
 export interface Region { id: 'global' | 'us' | 'uk' | 'india' | 'singapore' | 'uae' | 'australia'; label: string; locale: string; currency: string; rate: number; keywords: RegExp }
 export const REGIONS: Region[] = [
   { id: 'global', label: 'English, global', locale: 'en-US', currency: 'USD', rate: 1, keywords: /\b(global|international|worldwide)\b/i },
-  { id: 'us', label: 'English, United States', locale: 'en-US', currency: 'USD', rate: 1, keywords: /(usa|united states|america\w*)/i },
+  { id: 'us', label: 'English, United States', locale: 'en-US', currency: 'USD', rate: 1, keywords: /\b(usa|united states|america\w*)\b/i },
   { id: 'uk', label: 'English, United Kingdom', locale: 'en-GB', currency: 'GBP', rate: 0.8, keywords: /\b(uk|united kingdom|britain|british|england|london)\b/i },
   { id: 'india', label: 'English, India', locale: 'en-IN', currency: 'INR', rate: 80, keywords: /\b(india\w*|mumbai|bengaluru|bangalore|delhi)\b/i },
-  { id: 'singapore', label: 'English, Singapore', locale: 'en-SG', currency: 'SGD', rate: 1.3, keywords: /(singapore|southeast asia|apac)/i },
+  { id: 'singapore', label: 'English, Singapore', locale: 'en-SG', currency: 'SGD', rate: 1.3, keywords: /\b(singapore|southeast asia|apac)\b/i },
   { id: 'uae', label: 'English, UAE', locale: 'en-AE', currency: 'AED', rate: 3.7, keywords: /\b(uae|dubai|abu dhabi|middle east|gcc)\b/i },
   { id: 'australia', label: 'English, Australia', locale: 'en-AU', currency: 'AUD', rate: 1.5, keywords: /\b(australia\w*|sydney|melbourne)\b/i }
 ];

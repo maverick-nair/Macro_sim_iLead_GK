@@ -48,7 +48,7 @@ export function describe(brief: Brief, id: QuestionId): string {
 const chips = (labels: readonly string[]) => labels.map(l => ({ label: l, value: l }));
 
 /** The question as the chat asks it. */
-export function questionFor(id: QuestionId, brief: Brief): Question {
+export function questionFor(id: QuestionId, _brief?: Brief): Question {
   const q = ((): Omit<Question, 'id'> => {
     switch (id) {
       case 'role_level': return { prompt: 'Who are your participants?', help: 'Their role level shapes the team they lead and the lens we suggest.', chips: chips(ROLE_LEVELS.map(r => r.label)), input: 'text', placeholder: 'For example, first time sales managers' };
