@@ -413,6 +413,8 @@ export const StorylineConfig = z.object({
   name: z.string(),
   /** The organisation the participant joins (Configuration Spec, Organisation name), as the sponsor and consent screens name it. */
   organisation: z.string().min(1).optional(),
+  /** The sponsor's authored welcome letter (onboarding), drafted by the author chat (D74). Left out, onboarding words one from the storyline's facts. */
+  intro: z.object({ welcome: z.array(Copy).min(1).max(4), product: z.array(Copy).min(1).max(4), targets: z.array(Copy).min(1).max(4) }).optional(),
   /** The leadership lens: styles, needs and fit (D70). Readiness Based Leadership when left out. */
   lens: Lens.default(() => structuredClone(DEFAULT_LENS)),
   money: Money,
