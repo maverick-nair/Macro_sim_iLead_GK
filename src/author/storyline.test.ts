@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+import { draftStoryline as storedDraft, DRAFT_KEY } from '../engine/mock';
+import { DRAFT_KEY as AUTHOR_KEY } from './ui/AuthorApp';
 import { Brief, LeadershipLensModule } from '../api/author';
 import { parseStoryline } from '../engine/config';
 import { LENS_IDS, type LensId } from '../engine/lens';
@@ -8,23 +10,10 @@ import { guardDraft } from './copyGuard';
 import { MockDrafter } from './drafter';
 import { extractFramework } from './extract';
 import { LENS_BY_ID } from './lenses';
+import { SAMPLE_FRAMEWORK } from './fixtures';
 import { buildModule } from './module';
 
-export const SAMPLE_FRAMEWORK = `# Acme Leadership Compass
 
-## Customer Obsession
-- Starts every plan with the customer's problem
-- Brings customer stories into team meetings
-
-## Bold Ownership
-- Owns outcomes end to end
-- Raises risks early and offers a fix
-
-## Growing People
-- Gives specific, timely feedback
-- Makes time for coaching every week
-
-Levels: Emerging, Practising, Role model`;
 
 const brief = (over: Partial<Brief> = {}): Brief => Brief.parse({
   roleLevel: 'First time managers', industry: 'Banking and financial services', challenge: 'Leading through change or transformation',
@@ -91,5 +80,22 @@ describe('the mock drafter', () => {
     const module = buildModule(b, { primary: 'adaptive', secondary: null, clientDimensions: [] }, true);
     const [a, c] = await Promise.all([new MockDrafter().draft({ brief: b, leadership_lens: module }), new MockDrafter().draft({ brief: b, leadership_lens: module })]);
     expect(JSON.stringify(a)).toBe(JSON.stringify(c));
+  });
+});
+
+describe('the participant side draft hook', () => {
+  it('plays a valid stored draft, and falls back to Sales Elevator with a warning otherwise', async () => {
+    expect(AUTHOR_KEY).toBe(DRAFT_KEY);
+    const b = brief();
+    const r = await new MockDrafter().draft({ brief: b, leadership_lens: buildModule(b, { primary: 'six_styles', secondary: null, clientDimensions: [] }, true) });
+    const store = (v: string | null) => ({ getItem: (k: string) => (k === DRAFT_KEY ? v : null) });
+    expect(storedDraft([store(JSON.stringify(r.storyline))])?.organisation).toBe('Acme Bank');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    expect(storedDraft([store('{"id":"x"}')])).toBeNull();
+    expect(storedDraft([store('not json')])).toBeNull();
+    expect(storedDraft([undefined, store(null)])).toBeNull();
+    expect(warn).toHaveBeenCalledTimes(3);
+    expect(warn.mock.calls[0][0]).toMatch(/^Draft storyline not used, playing Sales Elevator: /);
+    warn.mockRestore();
   });
 });

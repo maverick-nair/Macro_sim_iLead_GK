@@ -357,7 +357,7 @@ export function AuthorApp({ theme = 'dark', clientTheme = false, drafters: given
           )}
         </main>
         {wide && (
-          <aside aria-labelledby="author-summary" className={`${CARD} sticky top-6 flex max-h-[calc(100vh-3rem)] flex-col gap-4 self-start overflow-auto p-5`}>
+          <aside aria-labelledby="author-summary" className={`${CARD} flex flex-col gap-4 self-start p-5`}>
             <h2 id="author-summary" className="m-0 text-20 font-700">Your simulation so far</h2>
             {summary}
           </aside>

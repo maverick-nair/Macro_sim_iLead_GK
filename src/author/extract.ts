@@ -28,19 +28,18 @@ export function extractFramework(text: string): FrameworkDimension[] {
   let inLevels = false;
   for (const raw of text.split(/\r?\n/)) {
     if (!raw.trim()) continue;
+    // "Levels: a, b" on its own line, or a "Levels" section, applies to every dimension.
     const levelLine = raw.match(LEVEL_LINE);
-    if (levelLine && !raw.trim().endsWith(':')) {
-      const names = list(levelLine[1]);
-      if (current) current.levels = names; else shared = names;
-      continue;
-    }
+    if (levelLine && !raw.trim().endsWith(':')) { shared = list(levelLine[1]); inLevels = false; continue; }
     const bullet = raw.match(BULLET);
     if (bullet) {
       const item = clean(bullet[1]);
       if (!item) continue;
-      if (inLevels) {
-        if (current) current.levels.push(item); else shared.push(item);
-      } else if (current) current.behaviours.push(item);
+      // "- Levels: a, b" under a dimension is that dimension's own.
+      const own = item.match(LEVEL_LINE);
+      if (inLevels) shared.push(item);
+      else if (current && own) current.levels = list(own[1]);
+      else if (current) current.behaviours.push(item);
       continue;
     }
     const heading = raw.match(HEADING);

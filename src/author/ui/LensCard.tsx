@@ -40,12 +40,14 @@ export function LensCard({ lens, n, checked, recommended, name, disabled, onSele
         <button type="button" className={BUTTON.link} aria-expanded={open} aria-controls={detail} onClick={() => setOpen(o => !o)}>
           {open ? 'Less detail' : 'More detail'}<span className="sr-only"> about {lens.title}</span>
         </button>
-        <dl id={detail} hidden={!open} className="m-0 mt-2 grid gap-1 text-13">
+        <div id={detail} hidden={!open}>
+        <dl className="m-0 mt-2 grid gap-1 text-13">
           <div><dt className="inline font-700">Based on: </dt><dd className="inline m-0 text-fg-secondary">{lens.basedOn}</dd></div>
           <div><dt className="inline font-700">Team: </dt><dd className="inline m-0 text-fg-secondary">{lens.npcDesign}</dd></div>
           <div><dt className="inline font-700">Events: </dt><dd className="inline m-0 text-fg-secondary">{lens.eventDesign}</dd></div>
           {lens.dimensions.length > 0 && <div><dt className="inline font-700">Scoring: </dt><dd className="inline m-0 text-fg-secondary">{lens.dimensions.map(d => d.name).join(', ')}</dd></div>}
         </dl>
+        </div>
       </div>
     </div>
   );
