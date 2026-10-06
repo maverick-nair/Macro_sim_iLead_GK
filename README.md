@@ -65,7 +65,15 @@ Two clients talk to the server. Each has an in-browser mock, used when nothing i
 
 Voice and AI text on the engine board use `src/speech` and `src/ai` (`docs/SPEECH.md`). `VITE_ILEAD_SPEECH_URL` turns on real microphone capture with server transcription; without it a scripted mock voice stands in. The prototype's live screen (`src/screens/Live.tsx`, used by the galleries and `?engine=off`) still simulates voice, NPC speech and the waveform in `src/screens/live/useLiveSession.ts`.
 
-The three variables are listed in `.env.example`; copy it to `.env.local` to set them.
+The variables are listed in `.env.example`; copy it to `.env.local` to set them.
+
+## Author chat prototype
+
+`/author` is GenieKreator's author chat for iLead (D70, D74), for L&D authors rather than participants. It asks 5 to 10 questions, recommends a leadership lens, previews the build, then locks the lens and drafts a storyline. "Play this draft" opens the participant app on it (`/?storyline=draft&start=onboarding`); "Download config" saves the storyline JSON. `?theme=light` and `?client=halden` theme it.
+
+- Code: `src/author` (question policy, recommendation, lens library, mock drafter, copy guard) and `src/author/ui` (components, with stories under "Author chat"). API shapes: `src/api/author.ts`. Server prompts: `docs/genie/prompts/author-chat.md` and `docs/genie/prompts/leadership-lens.md`.
+- `VITE_GENIE_URL` points the chat at the server (`POST /author/turn`, `POST /author/draft`). Unset, or when the server answers 404 or 501, the chat drafts from templates and says so.
+- It is lazy loaded and adds about 0.1 KB to the participant's first load.
 
 ## Design tokens
 

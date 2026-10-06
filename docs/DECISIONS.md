@@ -433,6 +433,13 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Halden** is a sample config (`src/theme/samples/halden.json`) through the same path, output identical to the old build time theme, so its baselines hold. **D17 fixed:** its prototype nav reads Objective, History and More (b15 still within 0.05%).
 - **Brand mark.** The client's logo shows before the iLead wordmark in the HUD, onboarding, the small screen notice and the report header. The client onboarding baselines were refreshed for it (reviewed). Style setting, week end, the end screen and the loading screen keep the wordmark alone for now.
 
+**D74. The author chat prototype.** Decided 2026-10-06, building D70.
+- **Where.** `/author`, for authors only, lazy loaded (`src/author`). The participant first load grows by 0.1 KB (the route), measured 199.0 KB before and 199.1 KB after on the D72 base.
+- **Flow.** 5 to 10 questions (role level, industry, challenge, client, team size, work process, duration, language and region, framework, tone), skipping what answers or uploads cover and confirming covered ones when fewer than 5 would be asked; then the lens step (module steps 1 to 5, D70 precedence), the build preview, confirm and lock, the module JSON and a drafted storyline. Changing the lens after the draft warns first.
+- **Drafting.** `Drafter`: `ServerDrafter` (proposed `POST /author/turn` and `POST /author/draft`, Zod shapes in `src/api/author.ts`, prompts in `docs/genie/prompts/`; 404 or 501 falls back) or `MockDrafter` (rules and templates, no model: "Draft made from templates"). Every draft must pass the storyline schema and the copy guard (`src/author/copyGuard.ts`), or the templates draft instead. Sales Elevator supplies the calibrated mechanics; drafts are `calibrated: false`.
+- **Storyline.** New optional `intro` (the sponsor's welcome letter); onboarding uses it when present. A Client Leadership Model plays on the Readiness Based styles; its confirmed dimensions become the skills.
+- **Play this draft** stores the storyline (`ilead.author.draft`, session and local storage) and opens `/?storyline=draft&start=onboarding`; the mock engine (already lazy) parses it and falls back to Sales Elevator with a console warning.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
