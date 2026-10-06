@@ -1,0 +1,287 @@
+{
+  "title": "author-draft-request",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "brief": {
+      "type": "object",
+      "properties": {
+        "roleLevel": {
+          "type": "string"
+        },
+        "industry": {
+          "type": "string"
+        },
+        "challenge": {
+          "type": "string"
+        },
+        "client": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "teamSize": {
+          "type": "integer",
+          "minimum": 6,
+          "maximum": 12
+        },
+        "process": {
+          "minItems": 3,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "full",
+            "standard",
+            "lite"
+          ]
+        },
+        "region": {
+          "type": "string",
+          "enum": [
+            "global",
+            "us",
+            "uk",
+            "india",
+            "singapore",
+            "uae",
+            "australia"
+          ]
+        },
+        "language": {
+          "type": "string"
+        },
+        "framework": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "professional",
+            "warm",
+            "direct"
+          ]
+        },
+        "documents": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "leadership_lens": {
+      "type": "object",
+      "properties": {
+        "library_version": {
+          "type": "number",
+          "const": 1
+        },
+        "primary": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": [
+                "readiness_based",
+                "six_styles",
+                "inspire_deliver",
+                "servant",
+                "five_practices",
+                "adaptive",
+                "team_amplifier",
+                "client_model"
+              ]
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "npc_design": {
+              "type": "string"
+            },
+            "event_design": {
+              "type": "string"
+            },
+            "action_classification": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scoring_dimensions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "id",
+            "title",
+            "npc_design",
+            "event_design",
+            "action_classification",
+            "scoring_dimensions"
+          ]
+        },
+        "secondary": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "enum": [
+                    "readiness_based",
+                    "six_styles",
+                    "inspire_deliver",
+                    "servant",
+                    "five_practices",
+                    "adaptive",
+                    "team_amplifier",
+                    "client_model"
+                  ]
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "report_only_dimensions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "report_only_dimensions"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "client_model": {
+          "type": "object",
+          "properties": {
+            "used": {
+              "type": "boolean"
+            },
+            "source_document": {
+              "type": "string"
+            },
+            "confirmed_dimensions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "behaviours": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "levels": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "behaviours",
+                  "levels"
+                ]
+              }
+            }
+          },
+          "required": [
+            "used",
+            "source_document",
+            "confirmed_dimensions"
+          ]
+        },
+        "context": {
+          "type": "object",
+          "properties": {
+            "industry": {
+              "type": "string"
+            },
+            "role_level": {
+              "type": "string"
+            },
+            "team_size": {
+              "type": "string"
+            },
+            "business_challenge": {
+              "type": "string"
+            },
+            "client_name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "industry",
+            "role_level",
+            "team_size",
+            "business_challenge",
+            "client_name"
+          ]
+        },
+        "locked": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "library_version",
+        "primary",
+        "secondary",
+        "client_model",
+        "context",
+        "locked"
+      ]
+    }
+  },
+  "required": [
+    "brief",
+    "leadership_lens"
+  ]
+}

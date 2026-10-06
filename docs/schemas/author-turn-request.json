@@ -1,0 +1,133 @@
+{
+  "title": "author-turn-request",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "brief": {
+      "type": "object",
+      "properties": {
+        "roleLevel": {
+          "type": "string"
+        },
+        "industry": {
+          "type": "string"
+        },
+        "challenge": {
+          "type": "string"
+        },
+        "client": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "teamSize": {
+          "type": "integer",
+          "minimum": 6,
+          "maximum": 12
+        },
+        "process": {
+          "minItems": 3,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "duration": {
+          "type": "string",
+          "enum": [
+            "full",
+            "standard",
+            "lite"
+          ]
+        },
+        "region": {
+          "type": "string",
+          "enum": [
+            "global",
+            "us",
+            "uk",
+            "india",
+            "singapore",
+            "uae",
+            "australia"
+          ]
+        },
+        "language": {
+          "type": "string"
+        },
+        "framework": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "professional",
+            "warm",
+            "direct"
+          ]
+        },
+        "documents": {
+          "default": [],
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "text": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "text"
+            ]
+          }
+        }
+      }
+    },
+    "asked": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "role_level",
+          "industry",
+          "challenge",
+          "client",
+          "team_size",
+          "process",
+          "duration",
+          "language",
+          "framework",
+          "tone"
+        ]
+      }
+    },
+    "answers": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "brief",
+    "asked",
+    "answers"
+  ]
+}

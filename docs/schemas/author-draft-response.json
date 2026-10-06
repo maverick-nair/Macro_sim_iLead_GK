@@ -1,0 +1,92 @@
+{
+  "title": "author-draft-response",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "storyline": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
+    "preview": {
+      "type": "object",
+      "properties": {
+        "teamSize": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "sampleEvent": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string"
+            },
+            "body": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "title",
+            "body"
+          ]
+        },
+        "styles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "short": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "short"
+            ]
+          }
+        },
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "reportOnly": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "reportOnly"
+            ]
+          }
+        },
+        "reportSections": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "teamSize",
+        "sampleEvent",
+        "styles",
+        "dimensions",
+        "reportSections"
+      ]
+    }
+  },
+  "required": [
+    "storyline",
+    "preview"
+  ]
+}

@@ -1,0 +1,388 @@
+{
+  "title": "author-turn-response",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "question"
+        },
+        "brief": {
+          "type": "object",
+          "properties": {
+            "roleLevel": {
+              "type": "string"
+            },
+            "industry": {
+              "type": "string"
+            },
+            "challenge": {
+              "type": "string"
+            },
+            "client": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "teamSize": {
+              "type": "integer",
+              "minimum": 6,
+              "maximum": 12
+            },
+            "process": {
+              "minItems": 3,
+              "maxItems": 6,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "full",
+                "standard",
+                "lite"
+              ]
+            },
+            "region": {
+              "type": "string",
+              "enum": [
+                "global",
+                "us",
+                "uk",
+                "india",
+                "singapore",
+                "uae",
+                "australia"
+              ]
+            },
+            "language": {
+              "type": "string"
+            },
+            "framework": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tone": {
+              "type": "string",
+              "enum": [
+                "professional",
+                "warm",
+                "direct"
+              ]
+            },
+            "documents": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "text"
+                ]
+              }
+            }
+          }
+        },
+        "question": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": [
+                "role_level",
+                "industry",
+                "challenge",
+                "client",
+                "team_size",
+                "process",
+                "duration",
+                "language",
+                "framework",
+                "tone"
+              ]
+            },
+            "prompt": {
+              "type": "string",
+              "minLength": 1
+            },
+            "help": {
+              "type": "string"
+            },
+            "chips": {
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "detail": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "label",
+                  "value"
+                ]
+              }
+            },
+            "input": {
+              "type": "string",
+              "enum": [
+                "text",
+                "number",
+                "framework"
+              ]
+            },
+            "placeholder": {
+              "type": "string"
+            },
+            "confirm": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "prompt",
+            "chips",
+            "input"
+          ]
+        },
+        "progress": {
+          "type": "object",
+          "properties": {
+            "n": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "about": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 10
+            }
+          },
+          "required": [
+            "n",
+            "about"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "brief",
+        "question",
+        "progress"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "lens"
+        },
+        "brief": {
+          "type": "object",
+          "properties": {
+            "roleLevel": {
+              "type": "string"
+            },
+            "industry": {
+              "type": "string"
+            },
+            "challenge": {
+              "type": "string"
+            },
+            "client": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "teamSize": {
+              "type": "integer",
+              "minimum": 6,
+              "maximum": 12
+            },
+            "process": {
+              "minItems": 3,
+              "maxItems": 6,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "full",
+                "standard",
+                "lite"
+              ]
+            },
+            "region": {
+              "type": "string",
+              "enum": [
+                "global",
+                "us",
+                "uk",
+                "india",
+                "singapore",
+                "uae",
+                "australia"
+              ]
+            },
+            "language": {
+              "type": "string"
+            },
+            "framework": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tone": {
+              "type": "string",
+              "enum": [
+                "professional",
+                "warm",
+                "direct"
+              ]
+            },
+            "documents": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "text"
+                ]
+              }
+            }
+          }
+        },
+        "recommendation": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": [
+                "readiness_based",
+                "six_styles",
+                "inspire_deliver",
+                "servant",
+                "five_practices",
+                "adaptive",
+                "team_amplifier",
+                "client_model"
+              ]
+            },
+            "reason": {
+              "type": "string",
+              "minLength": 1
+            },
+            "rule": {
+              "type": "string",
+              "enum": [
+                "client_framework",
+                "challenge",
+                "role_level",
+                "default"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "reason",
+            "rule"
+          ]
+        },
+        "framework": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "behaviours": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "levels": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "behaviours",
+                  "levels"
+                ]
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "brief",
+        "recommendation",
+        "framework"
+      ]
+    }
+  ]
+}

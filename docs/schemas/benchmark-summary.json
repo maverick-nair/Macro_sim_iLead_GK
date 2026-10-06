@@ -1,0 +1,590 @@
+{
+  "title": "benchmark-summary",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "storyline": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name"
+      ]
+    },
+    "lens": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "styles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "styles"
+      ]
+    },
+    "participants": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "completed": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "completeAt": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "completion": {
+      "type": "object",
+      "properties": {
+        "average": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "buckets": {
+          "minItems": 4,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "enum": [
+                  "upTo50",
+                  "to80",
+                  "to100",
+                  "full"
+                ]
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "share": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "key",
+              "count",
+              "share"
+            ]
+          }
+        }
+      },
+      "required": [
+        "average",
+        "buckets"
+      ]
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reportOnly": {
+            "type": "boolean"
+          },
+          "rated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "score": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "unrated": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "key",
+          "reportOnly",
+          "rated",
+          "score",
+          "levels",
+          "unrated"
+        ]
+      }
+    },
+    "overall": {
+      "type": "object",
+      "properties": {
+        "rated": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "score": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "levels": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "unrated": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "rated",
+        "score",
+        "levels",
+        "unrated"
+      ]
+    },
+    "objectives": {
+      "type": "object",
+      "properties": {
+        "target": {
+          "type": "number"
+        },
+        "revenue": {
+          "type": "number"
+        },
+        "conversions": {
+          "type": "number"
+        },
+        "share": {
+          "type": "number"
+        },
+        "beatTarget": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "team": {
+          "type": "object",
+          "properties": {
+            "skill": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ]
+            },
+            "morale": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ]
+            },
+            "result": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ]
+            },
+            "trust": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ]
+            }
+          },
+          "required": [
+            "skill",
+            "morale",
+            "result",
+            "trust"
+          ]
+        }
+      },
+      "required": [
+        "target",
+        "revenue",
+        "conversions",
+        "share",
+        "beatTarget",
+        "team"
+      ]
+    },
+    "styles": {
+      "type": "object",
+      "properties": {
+        "adaptability": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "preferred": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+          },
+          "additionalProperties": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "perStyle": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "fitted": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "needed": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "proportion": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "accuracy": {
+                "anyOf": [
+                  {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "neededShare": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "key",
+              "count",
+              "fitted",
+              "needed",
+              "proportion",
+              "accuracy",
+              "neededShare"
+            ]
+          }
+        }
+      },
+      "required": [
+        "adaptability",
+        "preferred",
+        "perStyle"
+      ]
+    },
+    "consistency": {
+      "type": "object",
+      "properties": {
+        "neededUsed": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "intendedUsed": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "neededIntended": {
+          "anyOf": [
+            {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "neededUsed",
+        "intendedUsed",
+        "neededIntended"
+      ]
+    },
+    "funnel": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "runs": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "stages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stage": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "actual": {
+                  "type": "number"
+                },
+                "ideal": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "stage",
+                "actual",
+                "ideal"
+              ]
+            }
+          }
+        },
+        "required": [
+          "period",
+          "runs",
+          "stages"
+        ]
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "frequency": {
+            "type": "number",
+            "minimum": 0
+          },
+          "used": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "reached": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "mean": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "frequency",
+          "used",
+          "reached",
+          "mean"
+        ]
+      }
+    },
+    "attention": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "top": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "average": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "bottom": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "top",
+            "average",
+            "bottom"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "verdicts": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "assessed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "counts": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "assessed",
+            "counts"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "version",
+    "storyline",
+    "lens",
+    "participants",
+    "completed",
+    "completeAt",
+    "completion",
+    "skills",
+    "overall",
+    "objectives",
+    "styles",
+    "consistency",
+    "funnel",
+    "actions",
+    "attention",
+    "verdicts"
+  ]
+}

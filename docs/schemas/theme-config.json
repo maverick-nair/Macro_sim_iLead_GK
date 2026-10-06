@@ -1,0 +1,332 @@
+{
+  "title": "theme-config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_.]{0,47}$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 60
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "dark",
+        "light",
+        "system"
+      ]
+    },
+    "colors": {
+      "type": "object",
+      "properties": {
+        "accent": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 80
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "dark": {
+                  "type": "string",
+                  "maxLength": 80
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "accentSecondary": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 80
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "dark": {
+                  "type": "string",
+                  "maxLength": 80
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "accentSoft": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 80
+            },
+            {
+              "type": "object",
+              "properties": {
+                "light": {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                "dark": {
+                  "type": "string",
+                  "maxLength": 80
+                }
+              },
+              "required": [
+                "light",
+                "dark"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "brand": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "light": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "dark": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  },
+                  "required": [
+                    "light",
+                    "dark"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "to": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "light": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "dark": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  },
+                  "required": [
+                    "light",
+                    "dark"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "angle": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 360
+            }
+          },
+          "required": [
+            "from",
+            "to"
+          ],
+          "additionalProperties": false
+        },
+        "surface": {
+          "type": "object",
+          "properties": {
+            "solid": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "light": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "dark": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  },
+                  "required": [
+                    "light",
+                    "dark"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "card": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "light": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "dark": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  },
+                  "required": [
+                    "light",
+                    "dark"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "raised": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "light": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "dark": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  },
+                  "required": [
+                    "light",
+                    "dark"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "material": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 80
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "light": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "dark": {
+                      "type": "string",
+                      "maxLength": 80
+                    }
+                  },
+                  "required": [
+                    "light",
+                    "dark"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "logo": {
+      "type": "object",
+      "properties": {
+        "src": {
+          "type": "string",
+          "maxLength": 200000
+        },
+        "alt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        }
+      },
+      "additionalProperties": false
+    },
+    "font": {
+      "type": "string",
+      "enum": [
+        "Manrope",
+        "Inter",
+        "IBM Plex Sans",
+        "Source Sans 3",
+        "Nunito Sans",
+        "Work Sans",
+        "Lato",
+        "Open Sans",
+        "System"
+      ]
+    },
+    "radiusScale": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 2
+    }
+  },
+  "required": [
+    "version"
+  ],
+  "additionalProperties": false
+}

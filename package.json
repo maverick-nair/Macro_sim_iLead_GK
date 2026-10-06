@@ -19,6 +19,8 @@
     "storybook:smoke": "storybook build -o storybook-static --quiet && tsx tests/visual/stories-smoke.ts storybook-static",
     "calibrate": "tsx scripts/calibrate.ts",
     "benchmark": "tsx scripts/benchmark.ts",
+    "schemas": "tsx scripts/schemas.ts",
+    "vitals": "tsx scripts/vitals.ts",
     "e2e": "playwright test",
     "lint": "eslint ."
   },

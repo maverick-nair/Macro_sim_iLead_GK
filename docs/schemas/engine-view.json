@@ -1,0 +1,3390 @@
+{
+  "title": "engine-view",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "phase": {
+      "type": "string",
+      "enum": [
+        "style",
+        "board",
+        "periodEnd",
+        "ended"
+      ]
+    },
+    "storyline": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "organisation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "intro": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "welcome": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "product": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "targets": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "required": [
+                "welcome",
+                "product",
+                "targets"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "organisation"
+      ]
+    },
+    "lens": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string"
+        },
+        "styles": {
+          "minItems": 2,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+              },
+              "letter": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2
+              },
+              "name": {
+                "type": "string"
+              },
+              "short": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "letter",
+              "name",
+              "short",
+              "description"
+            ]
+          }
+        },
+        "needs": {
+          "minItems": 4,
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "enum": [
+                  "lowSkill_lowMorale",
+                  "lowSkill_highMorale",
+                  "highSkill_lowMorale",
+                  "highSkill_highMorale"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "short": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "key",
+              "label",
+              "short"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "styles",
+        "needs"
+      ]
+    },
+    "clock": {
+      "type": "object",
+      "properties": {
+        "period": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "periods": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "periodUnit": {
+          "type": "string",
+          "enum": [
+            "year",
+            "month",
+            "week",
+            "day"
+          ]
+        },
+        "subPeriod": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "subPeriodUnit": {
+          "type": "string",
+          "enum": [
+            "quarter",
+            "month",
+            "week",
+            "day",
+            "hour"
+          ]
+        },
+        "capacity": {
+          "type": "number"
+        },
+        "capacityLeft": {
+          "type": "number"
+        },
+        "costStep": {
+          "type": "number"
+        },
+        "runShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "period",
+        "periods",
+        "periodUnit",
+        "subPeriod",
+        "subPeriodUnit",
+        "capacity",
+        "capacityLeft",
+        "costStep",
+        "runShare"
+      ]
+    },
+    "money": {
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "string"
+        },
+        "locale": {
+          "type": "string"
+        },
+        "display": {
+          "type": "string",
+          "enum": [
+            "symbol",
+            "narrowSymbol",
+            "code"
+          ]
+        },
+        "target": {
+          "type": "number"
+        },
+        "value": {
+          "type": "number"
+        },
+        "valueThisPeriod": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "currency",
+        "locale",
+        "display",
+        "target",
+        "value",
+        "valueThisPeriod"
+      ]
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "pronoun": {
+            "type": "string",
+            "enum": [
+              "he",
+              "she",
+              "they"
+            ]
+          },
+          "stage": {
+            "type": "string",
+            "minLength": 1
+          },
+          "skill": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "morale": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "trust": {
+            "anyOf": [
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "style": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastStyle": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lastReaction": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "pos",
+                  "neg"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "mood": {
+            "type": "string",
+            "enum": [
+              "happy",
+              "neutral",
+              "thinking",
+              "concerned",
+              "frustrated"
+            ]
+          },
+          "img": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "away": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "awayReason": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "training",
+                  "leave"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "statsRevealed": {
+            "type": "boolean"
+          },
+          "shared": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "careerGoal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "assessedStages": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "assessments": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "morale": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "result": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "skill",
+                "morale",
+                "result"
+              ]
+            }
+          },
+          "unread": {
+            "type": "boolean"
+          },
+          "promise": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile": {
+            "type": "object",
+            "properties": {
+              "previous": {
+                "type": "string"
+              },
+              "tenure": {
+                "type": "string"
+              },
+              "experience": {
+                "type": "string"
+              },
+              "skills": {
+                "type": "string"
+              },
+              "remarks": {
+                "type": "string"
+              },
+              "relations": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "previous",
+              "tenure",
+              "experience",
+              "skills",
+              "remarks",
+              "relations"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "title",
+          "pronoun",
+          "stage",
+          "skill",
+          "morale",
+          "result",
+          "trust",
+          "style",
+          "lastStyle",
+          "lastReaction",
+          "mood",
+          "img",
+          "away",
+          "awayReason",
+          "statsRevealed",
+          "shared",
+          "careerGoal",
+          "assessedStages",
+          "assessments",
+          "unread",
+          "promise",
+          "profile"
+        ]
+      }
+    },
+    "kpis": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "metric": {
+            "type": "string",
+            "enum": [
+              "skill",
+              "morale",
+              "result",
+              "trust"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "start": {
+            "type": "number"
+          },
+          "trend": {
+            "type": "string",
+            "enum": [
+              "up",
+              "down",
+              "flat"
+            ]
+          }
+        },
+        "required": [
+          "metric",
+          "value",
+          "start",
+          "trend"
+        ]
+      }
+    },
+    "pulse": {
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "start": {
+          "type": "number"
+        },
+        "trend": {
+          "type": "string",
+          "enum": [
+            "up",
+            "down",
+            "flat"
+          ]
+        },
+        "upbeat": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "steady": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "struggling": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "value",
+        "start",
+        "trend",
+        "upbeat",
+        "steady",
+        "struggling"
+      ]
+    },
+    "maxPerStage": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "funnel": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "members": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "ideal": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "throughput": {
+            "type": "number"
+          },
+          "idealThroughput": {
+            "type": "number"
+          },
+          "bottleneck": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "members",
+          "ideal",
+          "throughput",
+          "idealThroughput",
+          "bottleneck"
+        ]
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "team",
+              "member"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "live",
+              "static",
+              "hybrid"
+            ]
+          },
+          "format": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "cost": {
+            "type": "number"
+          },
+          "perk": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "hireBudget",
+                  "noCooldown"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "targets": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ],
+            "items": false,
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "prerequisite": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "type": "string"
+                },
+                "blocked": {
+                  "anyOf": [
+                    {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "locked"
+                            },
+                            "period": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "period"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "capacity"
+                            },
+                            "need": {
+                              "type": "number"
+                            },
+                            "have": {
+                              "type": "number"
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "need",
+                            "have"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "cooldown"
+                            },
+                            "in": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "in"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "away"
+                            },
+                            "kind": {
+                              "type": "string",
+                              "enum": [
+                                "training",
+                                "leave"
+                              ]
+                            },
+                            "for": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "kind",
+                            "for"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "rewarded"
+                            },
+                            "in": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "in"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "gone"
+                            }
+                          },
+                          "required": [
+                            "reason"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "lastInStage"
+                            },
+                            "stage": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "stage"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "noCover"
+                            },
+                            "stage": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "stage"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "teamFull"
+                            }
+                          },
+                          "required": [
+                            "reason"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "liveCap"
+                            },
+                            "cap": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 9007199254740991
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "cap"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "reason": {
+                              "type": "string",
+                              "const": "stageFull"
+                            },
+                            "stage": {
+                              "type": "string",
+                              "minLength": 1
+                            }
+                          },
+                          "required": [
+                            "reason",
+                            "stage"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "cost": {
+                  "type": "number"
+                },
+                "away": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "targets": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "prefixItems": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "number"
+                        }
+                      ],
+                      "items": false,
+                      "minItems": 2,
+                      "maxItems": 2
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "distinctStages": {
+                  "type": "boolean"
+                },
+                "pickStage": {
+                  "type": "boolean"
+                },
+                "stages": {
+                  "anyOf": [
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "blocked": {
+                            "anyOf": [
+                              {
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "locked"
+                                      },
+                                      "period": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "period"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "capacity"
+                                      },
+                                      "need": {
+                                        "type": "number"
+                                      },
+                                      "have": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "need",
+                                      "have"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "cooldown"
+                                      },
+                                      "in": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "in"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "away"
+                                      },
+                                      "kind": {
+                                        "type": "string",
+                                        "enum": [
+                                          "training",
+                                          "leave"
+                                        ]
+                                      },
+                                      "for": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "kind",
+                                      "for"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "rewarded"
+                                      },
+                                      "in": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "in"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "gone"
+                                      }
+                                    },
+                                    "required": [
+                                      "reason"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "lastInStage"
+                                      },
+                                      "stage": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "stage"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "noCover"
+                                      },
+                                      "stage": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "stage"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "teamFull"
+                                      }
+                                    },
+                                    "required": [
+                                      "reason"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "liveCap"
+                                      },
+                                      "cap": {
+                                        "type": "integer",
+                                        "minimum": 1,
+                                        "maximum": 9007199254740991
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "cap"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "reason": {
+                                        "type": "string",
+                                        "const": "stageFull"
+                                      },
+                                      "stage": {
+                                        "type": "string",
+                                        "minLength": 1
+                                      }
+                                    },
+                                    "required": [
+                                      "reason",
+                                      "stage"
+                                    ]
+                                  }
+                                ]
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "key",
+                          "blocked"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "label",
+                "blocked",
+                "cost",
+                "away",
+                "targets",
+                "distinctStages",
+                "pickStage",
+                "stages"
+              ]
+            }
+          },
+          "blocked": {
+            "anyOf": [
+              {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "locked"
+                      },
+                      "period": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "period"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "capacity"
+                      },
+                      "need": {
+                        "type": "number"
+                      },
+                      "have": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "need",
+                      "have"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "cooldown"
+                      },
+                      "in": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "in"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "away"
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "training",
+                          "leave"
+                        ]
+                      },
+                      "for": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "kind",
+                      "for"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "rewarded"
+                      },
+                      "in": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "in"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "gone"
+                      }
+                    },
+                    "required": [
+                      "reason"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "lastInStage"
+                      },
+                      "stage": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "stage"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "noCover"
+                      },
+                      "stage": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "stage"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "teamFull"
+                      }
+                    },
+                    "required": [
+                      "reason"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "liveCap"
+                      },
+                      "cap": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "cap"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "const": "stageFull"
+                      },
+                      "stage": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "reason",
+                      "stage"
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "blockedFor": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "locked"
+                        },
+                        "period": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "period"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "capacity"
+                        },
+                        "need": {
+                          "type": "number"
+                        },
+                        "have": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "need",
+                        "have"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "cooldown"
+                        },
+                        "in": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "in"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "away"
+                        },
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "training",
+                            "leave"
+                          ]
+                        },
+                        "for": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "kind",
+                        "for"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "rewarded"
+                        },
+                        "in": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "in"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "gone"
+                        }
+                      },
+                      "required": [
+                        "reason"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "lastInStage"
+                        },
+                        "stage": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "stage"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "noCover"
+                        },
+                        "stage": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "stage"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "teamFull"
+                        }
+                      },
+                      "required": [
+                        "reason"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "liveCap"
+                        },
+                        "cap": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 9007199254740991
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "cap"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "reason": {
+                          "type": "string",
+                          "const": "stageFull"
+                        },
+                        "stage": {
+                          "type": "string",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "reason",
+                        "stage"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "key",
+          "rule",
+          "name",
+          "description",
+          "scope",
+          "kind",
+          "format",
+          "cost",
+          "perk",
+          "targets",
+          "prerequisite",
+          "options",
+          "blocked",
+          "blockedFor"
+        ]
+      }
+    },
+    "promises": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "memberId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "kept",
+              "broken"
+            ]
+          },
+          "dueInSubPeriods": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "memberId",
+          "text",
+          "state",
+          "dueInSubPeriods"
+        ]
+      }
+    },
+    "inbox": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "from": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "chat",
+              "email",
+              "sponsor",
+              "news"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "urgent": {
+            "type": "boolean"
+          },
+          "state": {
+            "type": "string"
+          },
+          "briefing": {
+            "type": "boolean"
+          },
+          "dueInSubPeriods": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "from",
+          "kind",
+          "title",
+          "body",
+          "urgent",
+          "state",
+          "briefing",
+          "dueInSubPeriods"
+        ]
+      }
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "card": {
+            "type": "string",
+            "enum": [
+              "impact",
+              "signal",
+              "capacity",
+              "diagnostic",
+              "opportunity",
+              "crisis"
+            ]
+          },
+          "delivery": {
+            "type": "string",
+            "enum": [
+              "modal",
+              "sponsorCall"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "memberId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "metric": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "skill",
+                        "morale",
+                        "result",
+                        "trust"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "const": "confidence"
+                    }
+                  ]
+                },
+                "from": {
+                  "type": "number"
+                },
+                "to": {
+                  "type": "number"
+                },
+                "delta": {
+                  "type": "number"
+                },
+                "reason": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "cause": {
+                      "type": "string"
+                    },
+                    "rule": {
+                      "type": "string"
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "quote": {
+                            "type": "string"
+                          },
+                          "by": {
+                            "type": "string"
+                          },
+                          "judgedByAI": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "quote",
+                          "by",
+                          "judgedByAI"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "cause",
+                    "rule",
+                    "evidence"
+                  ]
+                }
+              },
+              "required": [
+                "subject",
+                "metric",
+                "from",
+                "to",
+                "delta",
+                "reason"
+              ]
+            }
+          },
+          "label": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "messageId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "card",
+          "delivery",
+          "title",
+          "body",
+          "memberId",
+          "changes",
+          "label",
+          "messageId"
+        ]
+      }
+    },
+    "outcome": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "actionKey": {
+              "type": "string",
+              "minLength": 1
+            },
+            "speaker": {
+              "type": "string",
+              "minLength": 1
+            },
+            "headline": {
+              "type": "string"
+            },
+            "reply": {
+              "type": "string"
+            },
+            "affected": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "reactions": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "minLength": 1
+              },
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "changes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "subject": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "metric": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "enum": [
+                          "skill",
+                          "morale",
+                          "result",
+                          "trust"
+                        ]
+                      },
+                      {
+                        "type": "string",
+                        "const": "confidence"
+                      }
+                    ]
+                  },
+                  "from": {
+                    "type": "number"
+                  },
+                  "to": {
+                    "type": "number"
+                  },
+                  "delta": {
+                    "type": "number"
+                  },
+                  "reason": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string"
+                      },
+                      "cause": {
+                        "type": "string"
+                      },
+                      "rule": {
+                        "type": "string"
+                      },
+                      "evidence": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "quote": {
+                              "type": "string"
+                            },
+                            "by": {
+                              "type": "string"
+                            },
+                            "judgedByAI": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "quote",
+                            "by",
+                            "judgedByAI"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "cause",
+                      "rule",
+                      "evidence"
+                    ]
+                  }
+                },
+                "required": [
+                  "subject",
+                  "metric",
+                  "from",
+                  "to",
+                  "delta",
+                  "reason"
+                ]
+              }
+            },
+            "ripple": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "changed": {
+              "maxItems": 2,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "from": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string"
+                },
+                "img": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "img"
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "actionKey",
+            "speaker",
+            "headline",
+            "reply",
+            "affected",
+            "reactions",
+            "changes",
+            "ripple",
+            "changed",
+            "from"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "score": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "business": {
+          "type": "number"
+        },
+        "people": {
+          "type": "number"
+        },
+        "leadership": {
+          "type": "number"
+        },
+        "capability": {
+          "type": "number"
+        },
+        "live": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "bonus": {
+          "type": "number"
+        },
+        "tier": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "name"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "total",
+        "max",
+        "business",
+        "people",
+        "leadership",
+        "capability",
+        "live",
+        "bonus",
+        "tier"
+      ]
+    },
+    "streak": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "gamification": {
+      "type": "object",
+      "properties": {
+        "weights": {
+          "type": "object",
+          "properties": {
+            "business": {
+              "type": "number"
+            },
+            "people": {
+              "type": "number"
+            },
+            "leadership": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "business",
+            "people",
+            "leadership"
+          ]
+        },
+        "stars": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "streak": {
+          "type": "object",
+          "properties": {
+            "length": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "minStars": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "bonus": {
+              "type": "number"
+            },
+            "cap": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "length",
+            "minStars",
+            "bonus",
+            "cap"
+          ]
+        },
+        "tiers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "type": "string"
+              },
+              "min": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "key",
+              "name",
+              "min"
+            ]
+          }
+        },
+        "leaderboard": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "scope": {
+              "type": "string",
+              "enum": [
+                "cohort",
+                "unit",
+                "global"
+              ]
+            },
+            "size": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            },
+            "anonymous": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "scope",
+            "size",
+            "anonymous"
+          ]
+        },
+        "celebration": {
+          "type": "string",
+          "enum": [
+            "none",
+            "subtle",
+            "full"
+          ]
+        }
+      },
+      "required": [
+        "weights",
+        "stars",
+        "streak",
+        "tiers",
+        "leaderboard",
+        "celebration"
+      ]
+    },
+    "periods": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "headline": {
+            "type": "string"
+          },
+          "line": {
+            "type": "string"
+          },
+          "week": {
+            "type": "object",
+            "properties": {
+              "score": {
+                "type": "number"
+              },
+              "stars": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              },
+              "styleFit": {
+                "type": "object",
+                "properties": {
+                  "correct": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "pct": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "correct",
+                  "total",
+                  "pct"
+                ]
+              },
+              "live": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "count": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "mean": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "count",
+                      "mean"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "funnel": {
+                "type": "object",
+                "properties": {
+                  "output": {
+                    "type": "number"
+                  },
+                  "ideal": {
+                    "type": "number"
+                  },
+                  "pct": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "output",
+                  "ideal",
+                  "pct"
+                ]
+              }
+            },
+            "required": [
+              "score",
+              "stars",
+              "styleFit",
+              "live",
+              "funnel"
+            ]
+          },
+          "kpis": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "enum": [
+                "skill",
+                "morale",
+                "result",
+                "trust"
+              ]
+            },
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ]
+            },
+            "required": [
+              "skill",
+              "morale",
+              "result",
+              "trust"
+            ]
+          },
+          "valueThisPeriod": {
+            "type": "number"
+          },
+          "valueIdeal": {
+            "type": "number"
+          },
+          "cumulativeValue": {
+            "type": "number"
+          },
+          "pace": {
+            "type": "number"
+          },
+          "streak": {
+            "type": "object",
+            "properties": {
+              "count": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              "bonus": {
+                "type": "number"
+              },
+              "total": {
+                "type": "number"
+              },
+              "next": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "count",
+              "bonus",
+              "total",
+              "next"
+            ]
+          },
+          "newBadges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "reason"
+              ]
+            }
+          },
+          "sponsor": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "number"
+              },
+              "to": {
+                "type": "number"
+              },
+              "fromLevel": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "wavering",
+                  "steady",
+                  "confident",
+                  "champion"
+                ]
+              },
+              "toLevel": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "wavering",
+                  "steady",
+                  "confident",
+                  "champion"
+                ]
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "fromLevel",
+              "toLevel"
+            ]
+          },
+          "pulse": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "number"
+              },
+              "to": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          },
+          "funnel": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "stage": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "throughput": {
+                  "type": "number"
+                },
+                "ideal": {
+                  "type": "number"
+                },
+                "cumulative": {
+                  "type": "number"
+                },
+                "cumulativeIdeal": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "stage",
+                "throughput",
+                "ideal",
+                "cumulative",
+                "cumulativeIdeal"
+              ]
+            }
+          },
+          "bottleneck": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unlockOffer": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "checkIn": {
+            "type": "boolean"
+          },
+          "news": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "card": {
+                  "type": "string",
+                  "enum": [
+                    "impact",
+                    "signal",
+                    "capacity",
+                    "diagnostic",
+                    "opportunity",
+                    "crisis"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "impact": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "card",
+                "title",
+                "body",
+                "impact"
+              ]
+            }
+          }
+        },
+        "required": [
+          "period",
+          "headline",
+          "line",
+          "week",
+          "kpis",
+          "valueThisPeriod",
+          "valueIdeal",
+          "cumulativeValue",
+          "pace",
+          "streak",
+          "newBadges",
+          "sponsor",
+          "pulse",
+          "funnel",
+          "bottleneck",
+          "unlockOffer",
+          "checkIn",
+          "news"
+        ]
+      }
+    },
+    "badges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rule": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "earned": {
+            "type": "boolean"
+          },
+          "period": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "key",
+          "rule",
+          "name",
+          "description",
+          "earned",
+          "period",
+          "reason"
+        ]
+      }
+    },
+    "sponsor": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "img": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "styleLine": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        },
+        "unlockAt": {
+          "type": "number"
+        },
+        "checkInBelow": {
+          "type": "number"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "low",
+            "wavering",
+            "steady",
+            "confident",
+            "champion"
+          ]
+        },
+        "causes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string"
+              },
+              "delta": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "text",
+              "delta"
+            ]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "title",
+        "img",
+        "styleLine",
+        "value",
+        "unlockAt",
+        "checkInBelow",
+        "level",
+        "causes"
+      ]
+    },
+    "pendingReward": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "perks": {
+      "type": "object",
+      "properties": {
+        "bonusDay": {
+          "type": "boolean"
+        },
+        "hireBudget": {
+          "type": "boolean"
+        },
+        "teamActivity": {
+          "type": "boolean"
+        },
+        "checkIn": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "bonusDay",
+        "hireBudget",
+        "teamActivity",
+        "checkIn"
+      ]
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "sub": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "style",
+              "action",
+              "interaction",
+              "event",
+              "trigger",
+              "periodEnd"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "memberIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "metric": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "skill",
+                        "morale",
+                        "result",
+                        "trust"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "const": "confidence"
+                    }
+                  ]
+                },
+                "from": {
+                  "type": "number"
+                },
+                "to": {
+                  "type": "number"
+                },
+                "delta": {
+                  "type": "number"
+                },
+                "reason": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string"
+                    },
+                    "cause": {
+                      "type": "string"
+                    },
+                    "rule": {
+                      "type": "string"
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "quote": {
+                            "type": "string"
+                          },
+                          "by": {
+                            "type": "string"
+                          },
+                          "judgedByAI": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "quote",
+                          "by",
+                          "judgedByAI"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "cause",
+                    "rule",
+                    "evidence"
+                  ]
+                }
+              },
+              "required": [
+                "subject",
+                "metric",
+                "from",
+                "to",
+                "delta",
+                "reason"
+              ]
+            }
+          },
+          "quote": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "period",
+          "sub",
+          "kind",
+          "title",
+          "memberIds",
+          "changes"
+        ]
+      }
+    },
+    "live": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "format": {
+              "type": "string",
+              "enum": [
+                "roleplay",
+                "email",
+                "meeting",
+                "sponsor",
+                "chat",
+                "interview",
+                "plan"
+              ]
+            },
+            "actionKey": {
+              "type": "string",
+              "minLength": 1
+            },
+            "actionName": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "optionLabel": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "oneShot": {
+              "type": "boolean"
+            },
+            "people": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "img": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "img"
+                ]
+              }
+            },
+            "speaker": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "type": "string"
+                },
+                "img": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "img"
+              ]
+            },
+            "raisedHands": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "brief": {
+              "type": "object",
+              "properties": {
+                "goal": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "known": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "mood": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "happy",
+                        "neutral",
+                        "thinking",
+                        "concerned",
+                        "frustrated"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "promises": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "declaredStyle": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "goal",
+                "known",
+                "mood",
+                "promises",
+                "declaredStyle"
+              ]
+            },
+            "turns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "by": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": "string"
+                  },
+                  "voice": {
+                    "type": "boolean"
+                  },
+                  "interrupted": {
+                    "type": "boolean"
+                  },
+                  "aiGenerated": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "id",
+                  "by",
+                  "text",
+                  "voice",
+                  "interrupted",
+                  "aiGenerated"
+                ]
+              }
+            },
+            "turnLimit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            },
+            "turnsLeft": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "minutes": {
+              "type": "number"
+            },
+            "closed": {
+              "type": "boolean"
+            },
+            "hint": {
+              "type": "object",
+              "properties": {
+                "mode": {
+                  "type": "string",
+                  "enum": [
+                    "off",
+                    "onRequest"
+                  ]
+                },
+                "text": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "mode",
+                "text"
+              ]
+            },
+            "candidates": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "img": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "cv": {
+                        "type": "object",
+                        "properties": {
+                          "previous": {
+                            "type": "string"
+                          },
+                          "experience": {
+                            "type": "string"
+                          },
+                          "skills": {
+                            "type": "string"
+                          },
+                          "remarks": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "previous",
+                          "experience",
+                          "skills",
+                          "remarks"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "img",
+                      "title",
+                      "cv"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "candidate": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "replyTo": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "id",
+            "format",
+            "actionKey",
+            "actionName",
+            "optionLabel",
+            "oneShot",
+            "people",
+            "speaker",
+            "raisedHands",
+            "brief",
+            "turns",
+            "turnLimit",
+            "turnsLeft",
+            "minutes",
+            "closed",
+            "hint",
+            "candidates",
+            "candidate",
+            "replyTo"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "liveCap": {
+      "type": "object",
+      "properties": {
+        "cap": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        },
+        "used": {
+          "type": "integer",
+          "minimum": -9007199254740991,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "cap",
+        "used"
+      ]
+    },
+    "report": {
+      "anyOf": [
+        {},
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "required": [
+    "phase",
+    "storyline",
+    "lens",
+    "clock",
+    "money",
+    "members",
+    "kpis",
+    "pulse",
+    "maxPerStage",
+    "funnel",
+    "actions",
+    "promises",
+    "inbox",
+    "cards",
+    "outcome",
+    "score",
+    "streak",
+    "gamification",
+    "periods",
+    "badges",
+    "sponsor",
+    "pendingReward",
+    "perks",
+    "history",
+    "live",
+    "liveCap",
+    "report"
+  ]
+}
