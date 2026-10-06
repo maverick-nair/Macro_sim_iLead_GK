@@ -80,6 +80,7 @@
 | M5 | Done, approved |
 | M6 | Done, awaiting approval |
 | M7 | Done, awaiting approval (D72) |
+| Tablet portrait (834) | Done, awaiting approval (D73) |
 | M8 | Not started |
 
 ## Milestones

@@ -4,7 +4,7 @@ import { expect, test, type Page } from '@playwright/test';
 /**
  * Laptops, desktops and tablets only (D69). Under 744 wide, or under 500 tall on a touch screen (a
  * phone held sideways), a notice covers the app. The app stays mounted underneath, so widening the
- * window or turning the device brings it back where it was. Tablets (744 to 1023) play the 1024 layouts.
+ * window or turning the device brings it back where it was. Tablets (744 to 1023) play: upright the tablet layouts (D73), sideways the 1024 layouts.
  */
 
 const errors: string[] = [];
@@ -124,7 +124,7 @@ test('a laptop window shorter than 500 still plays: only touch screens that shor
 });
 
 for (const width of [744, 834, 900, 1023]) {
-  test(`the board at ${width} wide uses the 1024 layout without scrolling sideways`, async ({ page }) => {
+  test(`the board at ${width} wide (upright, the tablet layout, D73) plays without scrolling sideways`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto('/?start=board');
     await expect(styles(page)).toHaveCount(10);
