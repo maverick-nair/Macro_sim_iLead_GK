@@ -75,6 +75,15 @@ The variables are listed in `.env.example`; copy it to `.env.local` to set them.
 - `VITE_GENIE_URL` points the chat at the server (`POST /author/turn`, `POST /author/draft`). Unset, or when the server answers 404 or 501, the chat drafts from templates and says so.
 - It is lazy loaded and adds about 0.1 KB to the participant's first load.
 
+## Group report
+
+`/group` is the organization's group report (D75, D77): a cohort's results against the benchmark of everyone who has played, web and print, for L&D and leaders rather than participants. It is lazy loaded and stays out of the participant's first load.
+
+- Engine: `buildGroupReport` and `summarizeBenchmark` in `src/engine/report/group.ts`, pure functions of run summaries the server can reuse; contract in `src/engine/groupContract.ts`; narrative bank `report.group.copy` (defaults in `src/engine/report/groupDefaults.ts`). Rules: `docs/SIMULATION.md` 8.5.
+- API: `getGroupReport(cohortId)`, proposed `GET /cohort/{id}/report` (404 is none), or `POST /cohort/report` with `GroupReportRequest` for a server that stores only summaries.
+- Mock: a cohort played by the calibration's AI players (strong, one style, careless, random, passive; every ninth stops part way): 37 participants for development, 18 for assessment. `?purpose=assessment`, `?lens=six_styles`, `?size=3` (under the minimum cohort size), `?print=1`, `?theme=light`, `?client=halden`. The benchmark is 300 seeded runs per lens, cached in `src/api/samples`: `npm run benchmark` rewrites it, `npm run benchmark -- --check` fails when it no longer matches the engine.
+- Download PDF opens the print view (letter pages, a page per section, tables where charts would not print) and the browser's print dialog. Code: `src/group`, stories under "Report/Group report".
+
 ## Design tokens
 
 Edit `tokens/**/*.json`, then run `npm run tokens`. The pipeline writes `src/styles/tokens.generated.css`, a Tailwind theme that exposes only tokens, and a typed manifest. It fails on unknown references, missing light or dark values, and any contrast pair below its WCAG minimum. Pairs are declared on semantic tokens and in `tokens/contrast.json`, and are checked in light and dark. It also writes `src/theme/tokens.generated.ts`, the pairs and token table the runtime theme loader corrects against (see Themes). Never edit the generated files.

@@ -2,7 +2,7 @@ import { parseStoryline, type Purpose, type StorylineConfig, type StorylineInput
 import { BenchmarkSummary, type GroupReport } from '../engine/groupContract';
 import salesElevator from '../engine/storylines/sales-elevator.json';
 import { withSixStyles } from '../engine/storylines/sixStyles';
-import { buildGroupReport } from '../engine/report/group';
+import { buildGroupReport, summarizeBenchmark } from '../engine/report/group';
 import type { RunSummary } from '../engine/report/summary';
 import { play, type Player } from '../engine/sim/policies';
 
@@ -66,7 +66,6 @@ const BENCHMARK_SEED = 10_000;
 
 /** The mock benchmark: 300 seeded runs, half played as assessments, summarized as the server stores it. */
 export async function playBenchmark(lens: string | null | undefined, runs = BENCHMARK_RUNS) {
-  const { summarizeBenchmark } = await import('../engine/report/group');
   const development = mockStoryline(lens, 'development'), assessment = mockStoryline(lens, 'assessment');
   const out: RunSummary[] = [];
   for (let i = 0; i < runs; i++) out.push(await playOne(i % 2 ? assessment : development, i, BENCHMARK_SEED + i, BENCHMARK_MIX));

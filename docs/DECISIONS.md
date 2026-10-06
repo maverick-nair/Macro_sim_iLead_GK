@@ -492,6 +492,14 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Print:** each section starts a new page; the distribution matrix, the deviations and progress print as tables. US spelling in the report copy ("Behavior", "favorites", "Practice").
 - **Not built:** the group report (`/group`, `buildGroupReport`) is the next step; it reads `RunSummary`.
 
+**D77. The group report, built.** Decided 2026-10-06, building D75 (SIMULATION 8.5, README "Group report"). Defaults chosen here, all config (`report.group`):
+- **Aggregation** is `buildGroupReport` over run summaries, pure, with `summarizeBenchmark` the server's stored benchmark (averages and distributions only); the group's numbers use the same function. The completion rate counts everyone; other averages read runs completed to `completeAt` (default 100%).
+- **Privacy:** development shows no verdicts, names or ranking, and withholds aggregates below `minimumCohort` (default 5) participants who completed. Assessment adds the verdict distribution and a participant table in name order, and has no minimum.
+- **Defaults:** group levels from the mean score on the storyline's scale; "in line with the benchmark" within 0.5 of 10 for skills and 3 points for adaptability; style and consistency bands as the individual report; time spent "evenly" within 10 points. Organizational takeaways in six groups, adapted from the 1.0 sample.
+- **Run summary** gains `review` (conversations and how many an assessor reviewed), optional for summaries stored before. `Engine.summary()` summarizes a run at any point, so unfinished runs count in the completion rate.
+- **Mock:** two more AI players (one style, careless) and `stopAfter`, leaving the calibration players' draws as they were (calibration unchanged); the benchmark is 300 seeded runs per lens, cached (`npm run benchmark`).
+- **Bundle:** `/group` is lazy; initial JS 198.8 KB of 200 (was 198.6 KB: the route and `getGroupReport` on the API adapters).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
