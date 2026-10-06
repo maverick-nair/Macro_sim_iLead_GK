@@ -22,7 +22,7 @@ const stories = Object.values(index.entries).filter(e => e.type === 'story');
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 let failed = 0;
-for (const theme of ['dark', 'light', 'client']) {
+for (const theme of ['dark', 'light', 'client', 'corrected']) {
   for (const s of stories) {
     const errors: string[] = [];
     const onErr = (e: Error) => errors.push(e.message);
@@ -34,6 +34,6 @@ for (const theme of ['dark', 'light', 'client']) {
     if (errors.length) { failed++; console.log(`FAIL ${theme} ${s.id}: ${errors[0]}`); }
   }
 }
-console.log(`${stories.length} stories x 3 themes, ${failed} failed`);
+console.log(`${stories.length} stories x 4 themes, ${failed} failed`);
 await browser.close(); server.close();
 process.exit(failed ? 1 : 0);

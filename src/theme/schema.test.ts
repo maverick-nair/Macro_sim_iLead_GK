@@ -57,7 +57,7 @@ describe('theme config schema', () => {
   });
 
   it('holds theme text to the copy rules: no dashes as punctuation, no emoji', () => {
-    expect(parseTheme({ version: 1, name: 'Acme — Global' }).theme?.name).toBeUndefined();
+    expect(parseTheme({ version: 1, name: 'Acme \u2014 Global' }).theme?.name).toBeUndefined();
     expect(parseTheme({ version: 1, name: 'Acme - Global' }).theme?.name).toBeUndefined();
     expect(parseTheme({ version: 1, logo: { text: 'Acme \u{1F680}' } }).theme?.logo).toBeUndefined();
     expect(parseTheme({ version: 1, name: 'Coca-Cola Europacific' }).theme?.name).toBe('Coca-Cola Europacific');

@@ -417,6 +417,14 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **The author chat.** GenieKreator starts with a short chat of 5 to 10 questions (fewer when uploads or answers already cover them). It recommends the lens with the module's rules (client framework first, then the challenge, then role level), and drafts the storyline: company and product, sponsor, intro screens, team, lens styles and fit, scoring dimensions. The author confirms, then edits in the workspace. A working prototype lives in this repo at `/author` (lazy, not in the participant bundle); the real drafting runs on the server (`POST /author/draft`), and the prototype's mock drafts from the lens library without a model.
 - **Guardrails** from the module apply: KNOLSKAPE lens titles only, original sources only in "Based on" (author facing), no certification claims, "skills" never "competency", no em dashes.
 
+**D71. Theme loader (M7).** Decided 2026-10-06; awaiting approval with M7.
+- **Config.** A GenieKreator theme (`src/theme/schema.ts`, README "Themes"): version, name, mode (dark, light, system), accent, second accent, soft accent, brand gradient, four surfaces, logo (image or text), font from an allowlist, radius scale. Status colours stay iLead's: they carry meaning.
+- **Runtime, not build.** Semantic tokens marked `themable` read `--il-theme-<token>` first; the loader writes those on `:root`, from `getTheme` (proposed `GET /theme`, 404 is none) or an inline theme in the launch payload. Only a small bootstrap is in the first load (197.3 KB of 200 KB, was 196.3 KB); the loader, schema and contrast table are a lazy chunk (8.5 KB). `tokens/themes` is gone.
+- **Contrast.** The build's maths moved to `src/theme/color.ts` and `src/theme/paint.ts`, which both the build and the loader use (culori stays only to test them). It now gamut maps OKLCH by chroma, as CSS does: build ratios moved by up to 0.07, all still pass. The loader corrects every pair the build checks, by lightness only, smallest change first, and warns in development.
+- **Fallback.** Not an object or not version 1: default theme. Any other bad field: that field's default. A colour no lightness can fix: that token's default.
+- **Halden** is a sample config (`src/theme/samples/halden.json`) through the same path, output identical to the old build time theme, so its baselines hold. **D17 fixed:** its prototype nav reads Objective, History and More (b15 still within 0.05%).
+- **Brand mark.** The client's logo shows before the iLead wordmark in the HUD, onboarding, the small screen notice and the report header. The client onboarding baselines were refreshed for it (reviewed). Style setting, week end, the end screen and the loading screen keep the wordmark alone for now.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
