@@ -12,7 +12,7 @@ if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
 const config: StorylineConfig = parsed.config;
 
 const needed = (e: ReturnType<typeof createEngine>) => neededStyles(e);
-const wrong = (s: Style): Style => ({ D: 'E', G: 'P', P: 'G', E: 'D' } as const)[s];
+const wrong = (s: Style): Style => ({ D: 'E', G: 'P', P: 'G', E: 'D' } as Record<string, Style>)[s];
 const reasoned = (changes: Change[]) => changes.every(c => c.reason.label && c.reason.cause && c.reason.rule);
 
 describe('engine', () => {

@@ -1,7 +1,4 @@
 {
-  "style.letter": "{style, select, D {D} G {G} P {P} E {E} other {}}",
-  "style.name": "{style, select, D {Directing} G {Guiding} P {Partnering} E {Entrusting} other {}}",
-  "style.description": "{style, select, D {You set the task, explain how, and check in closely.} G {You explain the why and coach while they practise.} P {You decide together and share ownership of the work.} E {You hand over the goal and step back.} other {}}",
   "style.group.aria": "Leadership style for {name}",
   "style.option.aria": "{style}. {description}",
   "style.option.for": "{style} for {name}"

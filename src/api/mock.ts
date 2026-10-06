@@ -33,7 +33,23 @@ function sampleCohort(participant: string) {
   return PEERS.map(name => ({ name, score: Math.round(300 + next() * 600), conversions: Math.round(3 + next() * 6), capability: Math.round(30 + next() * 65) }));
 }
 
-export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; participant?: string; name?: string | null } = {}): IleadApi {
+/**
+ * The mock's client theme: `client: 'halden'` serves the Halden sample (src/theme/samples), and
+ * `themeUrl` (a path on this site) serves any theme JSON, standing in for `GET /theme`. Both load on
+ * demand, outside the first load.
+ */
+export interface MockThemeOptions { client?: string | null; themeUrl?: string | null }
+
+async function mockTheme({ client, themeUrl }: MockThemeOptions): Promise<unknown> {
+  if (themeUrl && /^\/(?!\/)/.test(themeUrl)) {
+    const res = await fetch(themeUrl, { headers: { Accept: 'application/json' } });
+    return res.status === 404 ? null : res.ok ? await res.json() : Promise.reject(new Error(`GET ${themeUrl} failed with ${res.status}`));
+  }
+  if (client === 'halden') return (await import('../theme/samples/halden.json')).default;
+  return null;
+}
+
+export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; participant?: string; name?: string | null } & MockThemeOptions = {}): IleadApi {
   const participant = opts.participant ?? 'local';
   const scenario = opts.scenario ?? DEFAULT_SCENARIO;
   const latency = opts.latencyMs ?? 250;
@@ -63,6 +79,7 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
       const top = all.slice(0, size);
       const me = all.find(e => e.you)!;
       return wait({ entries: top.some(e => e.you) ? top : [...top, me], total: all.length });
-    }
+    },
+    getTheme: () => mockTheme(opts)
   };
 }

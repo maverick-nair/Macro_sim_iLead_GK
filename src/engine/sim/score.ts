@@ -113,8 +113,9 @@ function rule(sim: Sim, r: string, moment: BadgeMoment): string | null {
     }
     case 'flex_master': {
       if (moment !== 'periodEnd') return null;
-      const counts = { D: 0, G: 0, P: 0, E: 0 };
-      for (const d of sim.decisions.run) if (d.mismatch === 0) counts[d.chosen]++;
+      // Every style of the lens (D70), each at the right moment at least twice.
+      const counts: Record<string, number> = Object.fromEntries(sim.config.lens.styles.map(s => [s.key, 0]));
+      for (const d of sim.decisions.run) if (d.mismatch === 0 && d.chosen in counts) counts[d.chosen]++;
       return Object.values(counts).every(n => n >= 2) ? 'You used every style at the right moment at least twice.' : null;
     }
     case 'concern_uncovered': {
@@ -138,6 +139,8 @@ function rule(sim: Sim, r: string, moment: BadgeMoment): string | null {
     case 'change_champion': {
       if (moment !== 'interaction') return null;
       // Strong overall band in a conversation that rates Communicating change (the report's linkage matrix, 5.2).
+      // Report only skills (a secondary lens, D70) never feed badges.
+      if (sim.config.report.skills.some(s => s.key === 'communicating_change' && s.reportOnly)) return null;
       const rates = (rec: Sim['liveRecords'][number]) => (sim.config.report.linkage[rec.actionKey] ?? []).includes('communicating_change');
       const n = sim.liveRecords.filter(rec => rec.band === 'strong' && rates(rec)).length;
       return n >= 2 ? 'You explained a change really well, twice.' : null;

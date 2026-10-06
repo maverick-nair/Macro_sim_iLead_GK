@@ -3,7 +3,8 @@
  * config through the API layer (see `src/api`). Field names match the design
  * prototype's `ilead-data.js` so screens port one to one.
  */
-export type StyleKey = 'D' | 'G' | 'P' | 'E';
+/** A leadership style key of the storyline's lens (D70), for example "D". */
+export type StyleKey = string;
 export type MoodKey = 'happy' | 'neutral' | 'thinking' | 'concerned' | 'frustrated';
 export type MetricKey = 'skill' | 'morale' | 'result' | 'trust';
 export type ActionKind = 'live' | 'static' | 'hybrid';

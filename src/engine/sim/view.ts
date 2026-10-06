@@ -1,5 +1,6 @@
 import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, speakerFor, turnLimit } from './live';
+import { lensView } from '../lens';
 import { buildReport } from '../report/build';
 import { finalScore } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
@@ -112,6 +113,8 @@ export function buildView(sim: Sim) {
     phase: sim.phase,
     /** Read only storyline identity, for onboarding. */
     storyline: { name: c.name, organisation: c.organisation ?? null },
+    /** The lens's styles and needs; never the fit table or the source (D70). */
+    lens: lensView(c.lens),
     clock: {
       period: sim.period, periods: c.time.period.count, periodUnit: c.time.period.unit,
       subPeriod: Math.min(sim.sub + 1, c.time.subPeriod.perPeriod), subPeriodUnit: c.time.subPeriod.unit,

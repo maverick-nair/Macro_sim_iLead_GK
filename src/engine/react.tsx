@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useState, type ReactNode } from 'react';
+import { LensProvider } from '../components/style/lens';
 import { createDefaultClient, type EngineClient } from './client';
 import type { EngineView, Intent, IntentResult } from './contract';
 
@@ -17,9 +18,15 @@ export function EngineProvider({ client, children }: { client?: EngineClient; ch
   }));
   return (
     <QueryClientProvider client={state.queries}>
-      <ClientContext.Provider value={state.client}>{children}</ClientContext.Provider>
+      <ClientContext.Provider value={state.client}><ViewLens>{children}</ViewLens></ClientContext.Provider>
     </QueryClientProvider>
   );
+}
+
+/** Every engine screen renders style names from the storyline's lens (D70), from the view. */
+function ViewLens({ children }: { children: ReactNode }) {
+  const lens = useEngineView().data?.lens;
+  return <LensProvider lens={lens}>{children}</LensProvider>;
 }
 
 export function useEngineClient(): EngineClient {

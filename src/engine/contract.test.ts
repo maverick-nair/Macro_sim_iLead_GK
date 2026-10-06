@@ -34,7 +34,10 @@ describe('engine contract', () => {
 
   it('validates intents', () => {
     expect(Intent.safeParse({ type: 'confirmStyles', styles: { kent: 'G' } }).success).toBe(true);
-    expect(Intent.safeParse({ type: 'confirmStyles', styles: { kent: 'X' } }).success).toBe(false);
+    // Style keys come from the lens (D70): the contract checks their shape, the engine checks the lens.
+    expect(Intent.safeParse({ type: 'confirmStyles', styles: { kent: 'coach' } }).success).toBe(true);
+    expect(Intent.safeParse({ type: 'confirmStyles', styles: { kent: 'not a key' } }).success).toBe(false);
+    expect(Intent.safeParse({ type: 'confirmStyles', styles: { kent: '' } }).success).toBe(false);
     expect(Intent.safeParse({ type: 'submitInteraction', interactionId: 'i1', text: '' }).success).toBe(false);
   });
 

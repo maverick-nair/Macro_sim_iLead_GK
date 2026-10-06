@@ -1,6 +1,7 @@
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
-import { applyEffect, applyTrust, clamp, neededStyle, styleDifference, type Mismatch, type Style, type Triple } from './rules';
+import { fitOf, needOf, type NeedKey } from '../lens';
+import { applyEffect, applyTrust, clamp, type Mismatch, type Style, type Triple } from './rules';
 import { runEvents, scheduleEvents } from './events';
 import { checkBadges } from './score';
 import type { Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
@@ -15,7 +16,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
   const high = config.thresholds.high;
   const members: MemberSim[] = config.members.map(p => ({
     id: p.id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? config.trustRules.start, trustCap: config.trustRules.capPerSubPeriod, trustMovedThisSub: 0,
-    style: null, lastStyle: null, lastReaction: null, neededAtStart: neededStyle(p.start, high),
+    style: null, lastStyle: null, lastReaction: null, neededAtStart: needOf(p.start, high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: 1,
     revealed: false, concernShared: false, lastChange: 0, recognizedAt: null, reassignedInPeriod: null,
     trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale
@@ -24,7 +25,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     config, seed, period: 1, sub: 0, spent: 0, bonusPeriod: null, absSub: 0, phase: 'style', members, departed: [],
     candidates: config.candidates.map(c => c.id), availableAt: {},
     funnel: { conversions: 0, value: 0, periodValue: 0, stageOut: config.stages.map(() => 0), stageOutPeriod: config.stages.map(() => 0) },
-    decisions: { period: [], run: [] }, styleUses: { D: 0, G: 0, P: 0, E: 0 },
+    decisions: { period: [], run: [] }, styleUses: Object.fromEntries(config.lens.styles.map(s => [s.key, 0])),
     periods: [], streak: 0, streakBonus: 0, badges: [],
     sponsor: { value: config.gamification.sponsor.start, causes: [] }, pendingReward: null, promises: [], inbox: [], cards: [],
     runStart: { morale: 0, trust: 0 }, liveRecords: [], styleNotes: [], attention: {}, reflection: null, fairRecognitions: 0, hireBudget: false, freeTeamActivity: false, checkInPeriod: null,
@@ -53,7 +54,10 @@ export const person = (sim: Sim, id: string) => sim.config.members.find(p => p.i
 export const firstName = (sim: Sim, id: string) => person(sim, id).name.split(' ')[0];
 export const pronoun = (sim: Sim, id: string) => person(sim, id).pronoun;
 export const stageName = (sim: Sim, key: string) => sim.config.stages.find(s => s.key === key)?.name ?? key;
-export const needed = (sim: Sim, m: MemberSim) => neededStyle(m, sim.config.thresholds.high);
+/** The member's need now: their skill and morale quadrant (SIMULATION 2). */
+export const needed = (sim: Sim, m: MemberSim): NeedKey => needOf(m, sim.config.thresholds.high);
+/** The lens's style difference for a need (SIMULATION 2, the fit table). */
+export const fit = (sim: Sim, style: Style, need: NeedKey): Mismatch => fitOf(sim.config.lens, style, need);
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 /** Team averages count the people who are available (Configuration Spec dials); everyone, if nobody is. */
 export const teamAverage = (sim: Sim, k: MetricKey) => {
@@ -64,7 +68,8 @@ export const teamAverage = (sim: Sim, k: MetricKey) => {
 /** Options for mismatchType from the storyline's trust rules (D30, D49). */
 export const misread = (sim: Sim, m: MemberSim) => ({ trust: m.trust, lowTrust: sim.config.trustRules.lowTrust.below, lowTrustChance: sim.config.trustRules.lowTrust.chance });
 
-export const STYLE_NAMES: Record<Style, string> = { D: 'Directing', G: 'Guiding', P: 'Partnering', E: 'Entrusting' };
+/** A style's name in the storyline's lens (D70). */
+export const styleName = (sim: Sim, key: Style) => sim.config.lens.styles.find(s => s.key === key)?.name ?? key;
 const METRIC_NAMES: Record<MetricKey, string> = { skill: 'skill', morale: 'morale', result: 'result', trust: 'trust' };
 
 /** Fills a storyline template: {name}, {stage}. */
@@ -121,10 +126,10 @@ export function log(sim: Sim, entry: Omit<LogEntry, 'id' | 'period' | 'sub'>) {
 
 export function record(sim: Sim, m: MemberSim, chosen: Style, source: string): Mismatch {
   const n = needed(sim, m);
-  const d = { memberId: m.id, chosen, needed: n, mismatch: styleDifference(chosen, n), source, period: sim.period };
+  const d = { memberId: m.id, chosen, need: n, mismatch: fit(sim, chosen, n), source, period: sim.period };
   sim.decisions.period.push(d);
   sim.decisions.run.push(d);
-  sim.styleUses[chosen]++;
+  sim.styleUses[chosen] = (sim.styleUses[chosen] ?? 0) + 1;
   return d.mismatch;
 }
 

@@ -73,8 +73,6 @@ interface Flow { key: string; choice: string | null; picks: string[]; nudgeOk: b
 export type FinishLive = (intent: Extract<Intent, { type: 'endInteraction' | 'submitInteraction' | 'chooseCandidate' }>, people: LivePerson[]) => Promise<boolean>;
 
 export interface EngineBoardProps {
-  /** Client theme: the HUD shows the client's logo. */
-  client?: boolean;
   /** Consent to audio capture, from onboarding or Settings. */
   voiceConsent?: boolean;
   /** Preferred input for live interactions. */
@@ -539,7 +537,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const lastPeriod = v.periods[v.periods.length - 1];
   const streak = streakText(t, { count: v.streak, next: lastPeriod ? lastPeriod.streak.next : undefined, periodUnit, rule: v.gamification.streak });
   const hud: HudProps = {
-    clientLogo: app.client, nav: [], onNav: () => undefined,
+    nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
     sessionClock: app.showClock === false ? null : <SessionClockText />, alwaysPause: true, onPause: app.onPause,
     // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6).

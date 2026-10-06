@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 import { StyleControl } from '../style/StyleControl';
+import { styleOf, useLens } from '../style/lens';
 import { LastPeriodTag } from './LastPeriodTag';
 import { mark, rich } from './rich';
 import { portraitBackdrop, statsHidden, styleChanged, type PeriodUnit, type StyleSettingMember } from './types';
@@ -36,14 +37,16 @@ export function StatsLine({ member, short = false }: { member: StyleSettingMembe
 /** The note under the control: the chosen style and what it means, or, while away, when it applies. */
 export function useStyleNote(member: StyleSettingMember, periodUnit: PeriodUnit): { lead: string | null; text: string } {
   const { t } = useI18n();
+  const lens = useLens();
   const away = t('stylesetting.away.note', { pronoun: member.pronoun ?? 'they', reason: member.awayReason ?? 'training' });
   if (member.style === null) return { lead: null, text: member.away ? away : t('stylesetting.unset', { unit: periodUnit }) };
-  return { lead: t('stylesetting.choice', { style: t('style.name', { style: member.style }) }), text: member.away ? away : t('style.description', { style: member.style }) };
+  const s = styleOf(lens, member.style);
+  return { lead: t('stylesetting.choice', { style: s.name }), text: member.away ? away : s.description };
 }
 
 /**
  * One member on the style setting card view: portrait with name, stats (or the hidden stats line),
- * last period's tag, the D, G, P, E control, what the chosen style means, and an optional reason.
+ * last period's tag, the style control (one letter per lens style), what the chosen style means, and an optional reason.
  * The border lights up when the style differs from last period's.
  */
 export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, tooltip, onTooltipChange, rationaleAddon }: StyleSettingCardProps) {

@@ -1,5 +1,10 @@
 import { css } from '../lib/css';
+import { resolveTheme } from '../theme/loader';
+import halden from '../theme/samples/halden.json';
 import { F, FrameCanvas, type FrameGroup } from './Frames';
+
+/** The Halden sample theme, through the theme loader like any client theme (D72). */
+const HALDEN = resolveTheme(halden);
 
 /** Every screen of iLead, each frame the live app opened at that point. Port of `iLead Screens.dc.html`. */
 const GROUPS: Array<[string, string, ReturnType<typeof F>[]]> = [
@@ -26,7 +31,7 @@ const GROUPS: Array<[string, string, ReturnType<typeof F>[]]> = [
     F('b12', 'Event card, Diagnostic', { screen: 'board', eventType: 'diagnostic' }),
     F('b13', 'Incoming sponsor call', { screen: 'board', uiState: 'call' }),
     F('b14', 'Light theme', { screen: 'board', uiState: 'select', theme: 'light' }),
-    F('b15', 'Halden Group client theme at 1280. Brand color maps to accent tokens only', { screen: 'board', clientTheme: true, w: '1280px' })]],
+    F('b15', 'Halden Group client theme at 1280. Brand color maps to accent tokens only', { screen: 'board', clientTheme: HALDEN, w: '1280px' })]],
   ['s', 'Screen 5 · Weekly style setting', [
     F('s1', 'Card view with definitions on top, last week tags, optional reasons. Tooltip on hover', { screen: 'style' }),
     F('s2', 'List view, faster for keyboard and screen readers', { screen: 'style', step: 'list' }),

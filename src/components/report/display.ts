@@ -21,9 +21,10 @@ export function chartMax(values: number[]): number {
 }
 
 /** A cell of the used vs needed grid: its count, its share of the largest cell, and whether it is a match (the diagonal). */
-export function gridCell(grid: number[][], row: number, col: number, max: number) {
+export function gridCell(grid: number[][], row: number, col: number, max: number, fit?: number[][]) {
   const count = grid[row]?.[col] ?? 0;
-  return { count, share: max > 0 ? Math.min(1, count / max) : 0, matched: row === col };
+  // A cell matches when the lens says the style fits the need; without a table, the diagonal.
+  return { count, share: max > 0 ? Math.min(1, count / max) : 0, matched: fit ? fit[row]?.[col] === 0 : row === col };
 }
 
 /**

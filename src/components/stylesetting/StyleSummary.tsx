@@ -1,6 +1,7 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
+import { useStyleName } from '../style/lens';
 import { StyleAvatar } from './StyleSettingList';
 import { shortName, styleChanged, type PeriodUnit, type StyleSettingMember } from './types';
 
@@ -45,6 +46,7 @@ function inertOutside(keep: HTMLElement): () => void {
  */
 export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, confirmDisabled, focusOnOpen = true }: StyleSummaryProps) {
   const { t } = useI18n();
+  const styleName = useStyleName();
   const dialog = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const el = dialog.current;
@@ -96,7 +98,7 @@ export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, c
             <div key={m.id} role="row" className="flex items-center gap-2.5 border-b border-line-default py-1.5">
               <StyleAvatar img={m.img} away={m.away} size="sm" />
               <b role="rowheader" className="flex-1 text-14">{m.name}</b>
-              <span role="cell" className={`text-13 ${m.style === null ? 'text-fg-secondary' : ''}`}>{m.style === null ? t('stylesetting.summary.unset') : t('style.name', { style: m.style })}</span>
+              <span role="cell" className={`text-13 ${m.style === null ? 'text-fg-secondary' : ''}`}>{m.style === null ? t('stylesetting.summary.unset') : styleName(m.style)}</span>
               {styleChanged(m)
                 ? <span role="cell" className="text-12 font-700 text-accent-secondary">{t('stylesetting.summary.changed')}</span>
                 : <span role="cell" className="sr-only">{m.style !== null && m.lastStyle !== null ? t('stylesetting.summary.same', { unit: periodUnit }) : null}</span>}

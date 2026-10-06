@@ -1,8 +1,11 @@
 {
   "team.title": "Your team",
   "team.hint": "{kind, select, selected {{name} selected} picking {Click people to add them to the action} other {Click anyone to select them}}",
-  "team.legend.button": "What do D, G, P and E mean?",
+  "team.legend.button": "What do {letters} mean?",
+  "team.legend.listSeparator": ", ",
+  "team.legend.listAnd": " and ",
   "team.legend.title": "Leadership styles",
+  "team.legend.introLens": "Each {unit, select, year {year} month {month} week {week} day {day} other {period}} you choose how you lead each person, with one of {count, plural, one {# style} other {# styles}}.",
   "team.legend.intro": "Each {unit, select, year {year} month {month} week {week} day {day} other {period}} you choose how you lead each person. The four styles go from more support to more freedom.",
   "team.legend.support": "More support",
   "team.legend.freedom": "More freedom",

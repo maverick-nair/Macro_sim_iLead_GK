@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
+import { styleOf, useLens } from '../style/lens';
 import { FOCUS, type LiveBrief, type LiveFormat } from './types';
 
 export interface LiveBriefCardProps {
@@ -40,6 +41,7 @@ const value = 'text-13 text-pretty';
  */
 export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onToggle, layout = 'desk', bare = false, periodUnit = 'week' }: LiveBriefCardProps) {
   const { t } = useI18n();
+  const lens = useLens();
   const id = useId();
   if (layout === 'tablet') {
     const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
@@ -110,7 +112,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
         </Row>
       )}
       {brief.declaredStyle !== undefined && (
-        <Row label={t('liveshell.brief.style', { pronoun })}><span className={value}>{t('liveshell.brief.styleValue', { style: brief.declaredStyle ?? 'none' })}</span></Row>
+        <Row label={t('liveshell.brief.style', { pronoun })}><span className={value}>{brief.declaredStyle ? t('liveshell.brief.styleValue', { name: styleOf(lens, brief.declaredStyle).name, short: styleOf(lens, brief.declaredStyle).short }) : t('liveshell.brief.styleNone')}</span></Row>
       )}
       {brief.tone && <Row label={t('liveshell.brief.tone')}><span className={value}>{brief.tone}</span></Row>}
       {tip !== null && (

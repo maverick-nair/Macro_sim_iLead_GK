@@ -40,7 +40,10 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
           : t('report.skills.ariaNone', { skill: k.name });
         return (
           <div key={k.key} className="grid items-center gap-3.5 border-t border-line-default py-2.5 grid-cols-(--il-report-skills-columns)">
-            <b className="text-14">{k.name}</b>
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <b className="text-14">{k.name}</b>
+              {k.reportOnly && <span className="rounded-pill bg-surface-raised px-2 py-0.5 text-12 font-700 text-fg-secondary">{t('report.skills.reportOnly')}</span>}
+            </span>
             <div className="flex items-center gap-2 text-large:flex-wrap">
               <div role="img" aria-label={aria} className="flex gap-0.75">
                 {levelSegments(k.level?.index ?? null, levels.length).map((on, i) => (

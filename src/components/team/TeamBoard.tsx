@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n';
 import type { PeriodUnit } from '../action/days';
 import { Heading, type HeadingLevel } from '../Heading';
 import { MemberCard, type MemberCardProps } from '../member/MemberCard';
-import { STYLE_KEYS } from '../style/StyleControl';
+import { useLens } from '../style/lens';
 
 /** The line beside the heading: nobody selected, one person selected, or picking people for an action. */
 export type TeamBoardHint = { kind: 'idle' } | { kind: 'selected'; name: string } | { kind: 'picking' };
@@ -31,12 +31,6 @@ export interface TeamBoardProps {
   columns: StageColumn[];
   /** Level of the "Your team" heading, so the page sets the outline. Defaults to 2. */
   headingLevel?: HeadingLevel;
-  /**
-   * `tablet`: the portrait tablet board (D72): the stage columns with the larger tappable cards. The
-   * heading and the hint are read by screen readers only, and the style legend is left out (the cards
-   * name the style in full). Defaults to the desktop board.
-   */
-  layout?: 'desk' | 'tablet';
 }
 
 /** Tailwind needs whole class names in the source; storylines have 3 to 6 stages. */
@@ -48,20 +42,22 @@ const HelpIcon = () => (
   </svg>
 );
 
-/** Explains the four leadership style letters on the cards, from more support to more freedom. */
+/** Explains the lens's style letters on the cards, from more support to more freedom. */
 function StyleLegend({ id, periodUnit }: { id: string; periodUnit: PeriodUnit }) {
   const { t } = useI18n();
+  const lens = useLens();
   return (
     <div id={id} role="dialog" aria-label={t('team.legend.title')}
       className={`absolute top-full right-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-18 border border-line-strong bg-surface-material p-4`}>
-      <span className="text-13 text-fg-secondary">{t('team.legend.intro', { unit: periodUnit })}</span>
-      {STYLE_KEYS.map(k => (
-        <div key={k} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">
-          <span className="flex size-8 items-center justify-center rounded-round bg-brand font-700 text-brand-deep-space">{t('style.letter', { style: k })}</span>
-          <span className="flex flex-col"><b>{t('style.name', { style: k })}</b><span className="text-13 text-fg-secondary">{t('style.description', { style: k })}</span></span>
+      <span className="text-13 text-fg-secondary">{lens.id === 'readiness_based' ? t('team.legend.intro', { unit: periodUnit }) : t('team.legend.introLens', { unit: periodUnit, count: lens.styles.length })}</span>
+      {lens.styles.map(s => (
+        <div key={s.key} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">
+          <span className={`flex size-8 items-center justify-center rounded-round bg-brand font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
+          <span className="flex flex-col"><b>{s.name}</b><span className="text-13 text-fg-secondary">{s.description}</span></span>
         </div>
       ))}
-      <div className="flex justify-between border-t border-line-default pt-1 text-12 text-fg-secondary"><span>{t('team.legend.support')}</span><span>{t('team.legend.freedom')}</span></div>
+      {/* Readiness Based styles run from more support to more freedom; other lenses have no such order. */}
+      {lens.id === 'readiness_based' && <div className="flex justify-between border-t border-line-default pt-1 text-12 text-fg-secondary"><span>{t('team.legend.support')}</span><span>{t('team.legend.freedom')}</span></div>}
     </div>
   );
 }
@@ -86,27 +82,14 @@ function StageHeader({ name, count, ideal, bottleneck, periodUnit }: Omit<StageC
  * "Your team": the heading with what a click does now, the style legend, and one column of member
  * cards per funnel stage. The grid has as many equal columns as the storyline has stages.
  */
-export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2, layout = 'desk' }: TeamBoardProps) {
+export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2 }: TeamBoardProps) {
   const { t } = useI18n();
+  const lens = useLens();
   const legendId = useId();
+  // "D, G, P and E": the lens's letters.
+  const ls = lens.styles.map(s => s.letter);
+  const letters = ls.length < 2 ? ls.join('') : ls.slice(0, -1).join(t('team.legend.listSeparator')) + t('team.legend.listAnd') + ls[ls.length - 1];
   const hintText = t('team.hint', { kind: hint.kind, name: hint.kind === 'selected' ? hint.name : '' });
-
-  if (layout === 'tablet') {
-    return (
-      <section aria-label={t('tablet.team.aria')} className="flex min-w-0 flex-col px-6 pt-4.5">
-        <Heading level={headingLevel} className="sr-only">{t('team.title')}</Heading>
-        <span aria-live="polite" className="sr-only">{hint.kind === 'picking' ? t('tablet.pick.hint') : hintText}</span>
-        <div className={`grid gap-2.5 ${GRID_COLS[columns.length] ?? 'grid-cols-6'}`}>
-          {columns.map(({ key, cards, ...col }) => (
-            <div key={key} className="flex min-w-0 flex-col gap-2.5">
-              <StageHeader {...col} periodUnit={periodUnit} />
-              {cards.map(({ id, ...card }) => <MemberCard key={id} {...card} layout="tablet" />)}
-            </div>
-          ))}
-        </div>
-      </section>
-    );
-  }
 
   return (
     <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-3 px-5 pt-1 pb-6">
@@ -118,7 +101,7 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
         <div className="relative">
           <button type="button" onClick={onToggleLegend} aria-expanded={legendOpen} aria-controls={legendOpen ? legendId : undefined}
             className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
-            <HelpIcon />{t('team.legend.button')}
+            <HelpIcon />{t('team.legend.button', { letters })}
           </button>
           {legendOpen && <StyleLegend id={legendId} periodUnit={periodUnit} />}
         </div>

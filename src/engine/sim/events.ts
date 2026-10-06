@@ -1,8 +1,8 @@
 import type { GeneralEvent } from '../config';
 import type { z } from 'zod';
 import { createRng, type Rng } from './rng';
-import { mismatchType, styleDifference, type Mismatch } from './rules';
-import { addMessage, effectChanges, firstName, gendered, log, member, misread, nextId, sponsorChange } from './sim';
+import { mismatchType, type Mismatch } from './rules';
+import { addMessage, effectChanges, firstName, fit, gendered, log, member, misread, nextId, sponsorChange } from './sim';
 import type { Change, EventCard, MemberSim, NewsItem, Reason, Sim } from './types';
 
 /**
@@ -83,7 +83,7 @@ export function fireEvent(sim: Sim, rng: Rng, ev: EventConfig) {
   const body = gendered(ev.body, sim, focus);
   const changes: Change[] = [];
   for (const m of members) {
-    const mt = m.style ? mismatchType(styleDifference(m.style, m.neededAtStart), rng, misread(sim, m)) : 1;
+    const mt = m.style ? mismatchType(fit(sim, m.style, m.neededAtStart), rng, misread(sim, m)) : 1;
     const reason: Reason = {
       label: ev.title,
       cause: body,

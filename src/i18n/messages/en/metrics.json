@@ -19,7 +19,5 @@
   "metrics.sponsor.lines": "The lines",
   "metrics.sponsor.unlock": "Rise to {at} and {name} offers you a reward.",
   "metrics.sponsor.checkIn": "Drop below {below} and the CEO asks for a check in. It takes a {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} of your time.",
-  "metrics.sponsor.none": "Nothing has moved it yet.",
-  "metrics.streak.title": "Streak",
-  "metrics.streak.value": "{n, plural, =0 {None yet} one {1 {unit, select, year {year} month {month} day {day} other {week}}} other {# {unit, select, year {years} month {months} day {days} other {weeks}}}}"
+  "metrics.sponsor.none": "Nothing has moved it yet."
 }

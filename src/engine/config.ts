@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
+import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
+import { DEFAULT_LENS } from './lensLibrary';
 import { DEFAULT_DEVELOPMENT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE, DEFAULT_SKILLS } from './report/defaults';
 
 /**
@@ -198,7 +200,13 @@ export const Gamification = z.object({
  */
 export const REPORT_SECTIONS = ['summary', 'style', 'intent', 'skills', 'moments', 'people', 'business', 'analytics', 'plan', 'methodology'] as const;
 export const Report = z.object({
-  skills: z.array(z.object({ key: Key, name: Copy, anchors: z.array(Copy).min(3).max(7) })).min(2).default(() => DEFAULT_SKILLS.map(s => ({ ...s, anchors: [...s.anchors] }))),
+  /**
+   * The primary lens's scoring dimensions are the skills (D70). `reportOnly` marks a secondary lens's
+   * dimensions: scored from conversations and shown in the report, never in the Leadership Score,
+   * badges or the summary.
+   */
+  skills: z.array(z.object({ key: Key, name: Copy, anchors: z.array(Copy).min(3).max(7), reportOnly: z.boolean().default(false) })).min(2)
+    .default(() => DEFAULT_SKILLS.map(s => ({ ...s, anchors: [...s.anchors], reportOnly: false }))),
   linkage: z.record(Key, z.array(Key).min(1).max(4)).default(DEFAULT_LINKAGE),
   scale: z.array(z.object({ name: Copy, min: Score })).min(3).max(7).default(DEFAULT_SCALE),
   minObservations: z.number().int().min(1).max(5).default(2),
@@ -209,7 +217,8 @@ export const Report = z.object({
   narratives: z.object({
     overall: z.array(Copy).min(1),
     capability: z.object({ low: Copy, mid: Copy, high: Copy }),
-    dominant: z.object({ D: Copy, G: Copy, P: Copy, E: Copy })
+    /** By dominant style, keyed by the lens's style keys. A style without a line adds none; lines for styles the lens does not have are never used. */
+    dominant: z.record(z.string(), Copy)
   }).default(DEFAULT_NARRATIVES),
   development: z.record(Key, z.object({ practice: Copy, onTheJob: Copy })).default(DEFAULT_DEVELOPMENT),
   recognitionPhrases: z.array(z.string().min(2)).default(DEFAULT_RECOGNITION),
@@ -223,7 +232,48 @@ export const Report = z.object({
   if (r.scale[0].min !== 0 || r.scale.some((l, i) => i > 0 && l.min <= r.scale[i - 1].min)) ctx.addIssue({ code: 'custom', path: ['scale'], message: 'Levels start at 0 and rise' });
 });
 
-export const STYLES = ['D', 'G', 'P', 'E'] as const;
+/** A lens style key: a short id such as "D" or "coach". */
+export const StyleKey = z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,15}$/, 'Use a short id: letters, digits and underscores');
+
+const LensNeed = z.object({ label: Copy, short: Copy });
+const FitValue = z.union([z.literal(0), z.literal(1), z.literal(2)]);
+const FitRow = z.record(z.string(), FitValue);
+
+/**
+ * The leadership lens (D70, docs/SIMULATION.md 2 and 4.4): its styles, the names of the four needs
+ * (skill and morale quadrants), and the fit table, each style's difference for each need. Defaults to
+ * Readiness Based Leadership, whose table is the quadrant rule, so storylines without a lens play as before.
+ */
+export const Lens = z.object({
+  id: z.enum(LENS_IDS),
+  title: Copy,
+  /** Author facing. */
+  description: z.string().min(1),
+  /** Author only: the original source. Never rendered to participants. */
+  basedOn: z.string().optional(),
+  styles: z.array(z.object({
+    key: StyleKey,
+    letter: z.string().regex(/^\S{1,2}$/, 'One or two characters'),
+    name: Copy,
+    short: Copy,
+    description: Copy
+  })).min(MIN_STYLES).max(MAX_STYLES),
+  needs: z.object({ lowSkill_lowMorale: LensNeed, lowSkill_highMorale: LensNeed, highSkill_lowMorale: LensNeed, highSkill_highMorale: LensNeed }),
+  fit: z.object({ lowSkill_lowMorale: FitRow, lowSkill_highMorale: FitRow, highSkill_lowMorale: FitRow, highSkill_highMorale: FitRow }),
+  /** Adds report only skills (D70); never game mechanics. */
+  secondary: z.object({ id: z.enum(LENS_IDS), title: Copy }).optional()
+}).superRefine((l, ctx) => {
+  const keys = l.styles.map(s => s.key);
+  if (new Set(keys).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style keys must be unique' });
+  if (new Set(l.styles.map(s => s.letter.toUpperCase())).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style letters must be unique' });
+  for (const need of NEEDS) {
+    const row = l.fit[need];
+    for (const k of keys) if (row[k] === undefined) ctx.addIssue({ code: 'custom', path: ['fit', need, k], message: `Give ${k} a fit for this need (0, 1 or 2)` });
+    for (const k of Object.keys(row)) if (!keys.includes(k)) ctx.addIssue({ code: 'custom', path: ['fit', need, k], message: `No style called ${k}` });
+    if (!keys.some(k => row[k] === 0)) ctx.addIssue({ code: 'custom', path: ['fit', need], message: 'At least one style must fit this need (0)' });
+  }
+  if (l.secondary && l.secondary.id === l.id) ctx.addIssue({ code: 'custom', path: ['secondary', 'id'], message: 'The secondary lens must differ from the primary' });
+});
 
 /** Skill, morale and result change. */
 const Effect = z.tuple([z.number().int(), z.number().int(), z.number().int()]);
@@ -237,8 +287,8 @@ export const LIVE_FORMATS = ['meeting', 'email', 'roleplay', 'chat', 'plan', 'in
 export const ActionOption = z.object({
   key: Key,
   label: Copy,
-  /** The leadership style this option expresses, for style based rules. */
-  style: z.enum(STYLES).optional(),
+  /** The leadership style this option expresses, for style based rules: a key of the lens's styles. */
+  style: StyleKey.optional(),
   effects: EffectTable,
   /** Sub-periods the member is away (training). */
   away: z.number().int().min(0).default(0),
@@ -363,6 +413,8 @@ export const StorylineConfig = z.object({
   name: z.string(),
   /** The organisation the participant joins (Configuration Spec, Organisation name), as the sponsor and consent screens name it. */
   organisation: z.string().min(1).optional(),
+  /** The leadership lens: styles, needs and fit (D70). Readiness Based Leadership when left out. */
+  lens: Lens.default(() => structuredClone(DEFAULT_LENS)),
   money: Money,
   time: Time,
   stages: z.array(Stage).min(MIN_STAGES).max(MAX_STAGES),
@@ -447,6 +499,11 @@ export const StorylineConfig = z.object({
     if (!['team', 'member', 'sponsor'].includes(t) && !t.startsWith('stage:') && !memberIds.has(t)) ctx.addIssue({ code: 'custom', path: ['events', i, 'target'], message: `No team member called ${t}` });
     if (c.time.subPeriod && e.subPeriod > c.time.subPeriod.perPeriod) ctx.addIssue({ code: 'custom', path: ['events', i, 'subPeriod'], message: 'Sub-period out of range' });
   });
+  // Style keys come from the lens (D70).
+  const styleKeys = new Set(c.lens.styles.map(s => s.key));
+  c.actions.forEach((a, i) => a.options.forEach((o, j) => {
+    if (o.style !== undefined && !styleKeys.has(o.style)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'style'], message: `No style called ${o.style} in the lens` });
+  }));
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))
     ctx.addIssue({ code: 'custom', path: ['thresholds'], message: 'Thresholds must rise: low < amber < high' });
 });

@@ -1,0 +1,16 @@
+{
+  "$description": "Brightwater Energy, a deliberately bad sample palette for tests and review (D72): a pale yellow accent, a sky blue second accent that fails on white and a navy one that fails on dark, a cream soft accent, a grey raised surface and a pale brand gradient. The loader corrects every pair to WCAG AA by lightness. A text logo, the System font and half the corner radius.",
+  "version": 1,
+  "id": "brightwater",
+  "name": "Brightwater Energy",
+  "colors": {
+    "accent": "#FFD23F",
+    "accentSecondary": { "light": "#7FDBFF", "dark": "#0B3D91" },
+    "accentSoft": { "light": "#FFF4CC", "dark": "oklch(0.85 0.1 90 / 0.3)" },
+    "brand": { "from": "#FFE066", "to": "#3DDC97" },
+    "surface": { "raised": { "light": "#E2E2E2", "dark": "oklch(0.42 0.02 250)" } }
+  },
+  "logo": { "text": "Brightwater" },
+  "font": "System",
+  "radiusScale": 0.5
+}

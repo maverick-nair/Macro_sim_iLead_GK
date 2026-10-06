@@ -3,7 +3,8 @@ import { useI18n } from '../../i18n';
 import { ChartBlock } from './ChartBlock';
 import { FitGridChart, StyleSharesChart } from './charts';
 import { fitClass } from './display';
-import { STYLE_KEYS, type FitRow, type PeriodUnit, type StyleExtras } from './types';
+import { styleOf, useLens } from '../style/lens';
+import type { FitRow, PeriodUnit, StyleExtras } from './types';
 import './messages';
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
@@ -25,6 +26,8 @@ export interface StyleFitSectionProps {
  */
 export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleFitSectionProps) {
   const { t, number } = useI18n();
+  const lens = useLens();
+  const styleName = (k: string) => styleOf(lens, k).name;
   const id = useId();
   const title = t('report.fit.title', { unit });
   const columns = `var(--il-report-fit-name) repeat(${periods.length},minmax(0,1fr))`;
@@ -66,12 +69,12 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
               </span>
               {r.cells.map((c, i) => {
                 const label = c
-                  ? t('report.fit.cell', { name: r.fullName, unit, n: periods[i], style: t('style.name', { style: c.style }), fit: c.fit })
+                  ? t('report.fit.cell', { name: r.fullName, unit, n: periods[i], style: styleName(c.style), fit: c.fit })
                   : t('report.fit.cellNone', { name: r.fullName, unit, n: periods[i] });
                 return (
                   <span key={i} role="cell" title={label} aria-label={label}
                     className={`flex min-h-7 items-center justify-center rounded-6 text-12 font-700 ${fitClass(c)}`}>
-                    {c?.style}
+                    {c ? styleOf(lens, c.style).letter : null}
                   </span>
                 );
               })}
@@ -80,35 +83,38 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
         </div>
       </div>
       <span className="text-13 text-fg-secondary">{summary}</span>
-      {extras && (
-        <>
+      {extras && (() => {
+        const name = (k: string) => extras.styles.find(s => s.key === k)?.name ?? k;
+        const share = (k: string) => extras.shares[k] ?? 0;
+        const matched = extras.grid.reduce((a, row, r) => a + row.reduce((b, n, c) => b + (extras.fit[r]?.[c] === 0 ? n : 0), 0), 0);
+        return <>
           <p className="m-0 text-14">{t('report.style.capability', { pct: number(extras.capability) })}</p>
           <div className="grid gap-5 grid-cols-2">
             <ChartBlock
               title={t('report.style.sharesTitle')}
-              chart={<StyleSharesChart shares={extras.shares} total={extras.total} dominant={extras.dominant}
+              chart={<StyleSharesChart styles={extras.styles} shares={extras.shares} total={extras.total} dominant={extras.dominant}
                 label={t('report.style.sharesAria', {
                   total: extras.total,
-                  list: STYLE_KEYS.map(k => t('report.style.shareItem', { style: t('style.name', { style: k }), count: extras.shares[k] })).join(t('report.listSeparator')),
-                  dominant: extras.dominant.map(k => t('style.name', { style: k })).join(t('report.listAnd'))
+                  list: extras.styles.map(s => t('report.style.shareItem', { style: s.name, count: share(s.key) })).join(t('report.listSeparator')),
+                  dominant: extras.dominant.map(name).join(t('report.listAnd'))
                 })} />}
               table={{
                 columns: [t('report.style.column', { column: 'style' }), t('report.style.column', { column: 'choices' }), t('report.style.column', { column: 'share' })],
-                rows: STYLE_KEYS.map(k => ({ key: k, header: t('style.name', { style: k }), cells: [number(extras.shares[k]), t('report.percent', { pct: extras.total ? Math.round((extras.shares[k] / extras.total) * 100) : 0 })] }))
+                rows: extras.styles.map(s => ({ key: s.key, header: s.name, cells: [number(share(s.key)), t('report.percent', { pct: extras.total ? Math.round((share(s.key) / extras.total) * 100) : 0 })] }))
               }}
             />
             <ChartBlock
               title={t('report.style.gridTitle')}
-              chart={<FitGridChart grid={extras.grid} label={t('report.style.gridAria', { matched: STYLE_KEYS.reduce((a, _, i) => a + (extras.grid[i]?.[i] ?? 0), 0), total: extras.grid.flat().reduce((a, b) => a + b, 0) })} />}
+              chart={<FitGridChart grid={extras.grid} fit={extras.fit} styles={extras.styles} needs={extras.needs} label={t('report.style.gridAria', { matched, total: extras.grid.flat().reduce((a, b) => a + b, 0) })} />}
               table={{
-                columns: [t('report.style.gridCorner'), ...STYLE_KEYS.map(k => t('report.style.used', { style: t('style.name', { style: k }) }))],
-                rows: STYLE_KEYS.map((k, r) => ({ key: k, header: t('report.style.needed', { style: t('style.name', { style: k }) }), cells: STYLE_KEYS.map((_, c) => number(extras.grid[r]?.[c] ?? 0)) }))
+                columns: [t('report.style.gridCorner'), ...extras.styles.map(s => t('report.style.used', { style: s.name }))],
+                rows: extras.needs.map((n, r) => ({ key: n.key, header: t('report.style.needed', { need: n.label, short: n.short }), cells: extras.styles.map((_, c) => number(extras.grid[r]?.[c] ?? 0)) }))
               }}
             />
           </div>
           {extras.narrative.map(line => <p key={line} className="m-0 text-14 text-pretty">{line}</p>)}
-        </>
-      )}
+        </>;
+      })()}
     </section>
   );
 }

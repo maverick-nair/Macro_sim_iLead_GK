@@ -80,6 +80,8 @@ export function lazyClient(load: () => Promise<EngineClient>): EngineClient {
 export function createDefaultClient(sessionId = 'local'): EngineClient {
   const url = import.meta.env.VITE_ILEAD_ENGINE_URL as string | undefined;
   // `?period=N` opens the mock at a later period, for demos and tests. The real engine ignores it.
-  const period = Number(new URLSearchParams(globalThis.location?.search ?? '').get('period')) || undefined;
-  return url ? createHttpClient(url, sessionId) : lazyClient(() => import('./mock').then(m => m.createMockClient({ startPeriod: period })));
+  // `?lens=six_styles` plays the mock with the Six Leadership Styles test lens (D70).
+  const q = new URLSearchParams(globalThis.location?.search ?? '');
+  const period = Number(q.get('period')) || undefined;
+  return url ? createHttpClient(url, sessionId) : lazyClient(() => import('./mock').then(m => m.createMockClient({ startPeriod: period, lens: q.get('lens') })));
 }

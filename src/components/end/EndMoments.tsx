@@ -1,5 +1,6 @@
 import { useId, useState } from 'react';
 import { useI18n } from '../../i18n';
+import { useStyleName } from '../style/lens';
 import type { EndMoment, PeriodUnit } from './types';
 import './messages';
 
@@ -18,6 +19,7 @@ export interface EndMomentsProps {
  */
 export function EndMoments({ moments, periods, periodUnit }: EndMomentsProps) {
   const { t } = useI18n();
+  const styleName = useStyleName();
   const [open, setOpen] = useState<string[]>([]);
   const base = useId();
   const toggle = (id: string) => setOpen(o => (o.includes(id) ? o.filter(x => x !== id) : [...o, id]));
@@ -48,7 +50,7 @@ export function EndMoments({ moments, periods, periodUnit }: EndMomentsProps) {
                   <div><dt className="text-12 font-700 text-fg-secondary">{t('end.moments.behaviour')}</dt><dd className="m-0">{m.behaviour}</dd></div>
                   {m.quote && <div><dt className="text-12 font-700 text-fg-secondary">{t('end.moments.quote')}</dt><dd className="m-0"><q>{m.quote}</q></dd></div>}
                   <div><dt className="text-12 font-700 text-fg-secondary">{t('end.moments.impact')}</dt><dd className="m-0">{m.impact}</dd></div>
-                  {m.intent && <div><dt className="text-12 font-700 text-fg-secondary">{t('end.moments.intent')}</dt><dd className="m-0">{t('style.name', { style: m.intent })}</dd></div>}
+                  {m.intent && <div><dt className="text-12 font-700 text-fg-secondary">{t('end.moments.intent')}</dt><dd className="m-0">{styleName(m.intent)}</dd></div>}
                 </dl>
               </li>
             );

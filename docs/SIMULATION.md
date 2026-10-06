@@ -84,21 +84,29 @@ Sales Elevator default: the 10 active actors and 10 candidates from the workbook
 
 **Scale.** Skill, morale, result and trust are integers clamped to 0 to 100.
 
-**A member's needed style** comes from their current skill and morale:
+**The leadership lens** (D70, *config* `lens`) brings the styles a participant leads with: 2 to 6, each with a key, a letter of 1 or 2 characters for the segmented control, a name, a one line short and a description. The participant UI reads every style name from the view's `lens`; nothing in the client names a style. The default is Readiness Based Leadership with Directing (D), Guiding (G), Partnering (P) and Entrusting (E), the Sales Elevator storyline. `basedOn` (the source) is author only and never sent to participants.
 
-| Skill | Morale | Needed style |
-|---|---|---|
-| Low | Low | Directing (D) |
-| Low | High | Guiding (G) |
-| High | Low | Partnering (P) |
-| High | High | Entrusting (E) |
+**A member's need** comes from their current skill and morale, High at or above `thresholds.high` (70). There are always four needs, one per quadrant; the lens names them:
+
+| Skill | Morale | Need key | Readiness Based name | Style that fits (difference 0) |
+|---|---|---|---|---|
+| Low | Low | `lowSkill_lowMorale` | Learning and unsure | Directing (D) |
+| Low | High | `lowSkill_highMorale` | Keen to learn | Guiding (G) |
+| High | Low | `highSkill_lowMorale` | Capable but cautious | Partnering (P) |
+| High | High | `highSkill_highMorale` | Ready to run with it | Entrusting (E) |
 
 The workbook's leadership style sheet lists Partnering as high and high, which is a typo; the Model doc is followed.
 
-**Style difference** between a chosen style and the needed style:
-- 0 when both the skill and the morale ranges match
-- 1 when one of them matches
-- 2 when neither matches
+**Style difference** between a chosen style and a need is one table lookup: the lens's **fit table** gives, for each need, each style's difference (0, 1 or 2). The schema checks that every need lists every style, names no other, and has at least one style at 0. Readiness Based Leadership's table is the quadrant rule: each style has a home quadrant (D low and low, G low skill and high morale, P high skill and low morale, E high and high), and its difference to a need is the number of ranges that do not match (0 when both the skill and the morale ranges match, 1 when one does, 2 when neither does):
+
+| Need | D | G | P | E |
+|---|---|---|---|---|
+| Low skill, low morale | 0 | 1 | 1 | 2 |
+| Low skill, high morale | 1 | 0 | 2 | 1 |
+| High skill, low morale | 1 | 2 | 0 | 1 |
+| High skill, high morale | 2 | 1 | 1 | 0 |
+
+So the default plays exactly as before the lens existed: same differences, same random draws in the same order, and seeded runs replay identically (`src/engine/sim/replay.test.ts`); calibration is unchanged. Another lens may give a need more than one fitting style (Six Leadership Styles, the test lens in `src/engine/storylines/sixStyles.ts`, fits both Harmoniser and Collaborator to high skill and low morale). The automated players pick the first style in lens order with difference 0.
 
 **Mismatch type** adds the Model doc's randomness to the style difference:
 - Difference 0 gives mismatch 0.
@@ -128,7 +136,7 @@ Trust is how much a member believes in you as their leader. It is the 2.0 metric
 | Event | Change | Why |
 |---|---|---|
 | Weekly style matches: mismatch 0 / 1 / 2 | +2 / 0 / −3 | Being led the way you need builds trust |
-| Style changed for a member whose needed style did not change | −2 | Feels erratic. Not applied in the first period. |
+| Style changed for a member whose need did not change, away from a style that fitted it | −2 | Feels erratic. Not applied in the first period. |
 | Live conversation band: Strong / Adequate / Weak / Harmful | +6 / +2 / −3 / −8 | Section 5 |
 | Promise kept by its due sub-period | +6 | Section 5.4 |
 | Promise broken (due date passes) | −8 | Section 5.4 |
@@ -216,10 +224,10 @@ Skill / morale / result change for mismatch 0, 1 and 2 [W]:
 
 | Action | Compared against |
 |---|---|
-| Meet the team, face to face, set goals, coach, feedback | The style used against each affected member's needed style. In 2.0 the style used comes from the live conversation (section 5), not from picking one of four options. |
-| Team lunch and team building | The style you set for each member this period against their needed style at the start of the period. |
+| Meet the team, face to face, set goals, coach, feedback | The fit table's difference for the style used and each affected member's need. In 2.0 the style used comes from the live conversation (section 5): the evaluator reads which of the lens's styles the participant's words show. An option's `style` tag is a lens style key. |
+| Team lunch and team building | The style you set for each member this period against their need at the start of the period (the fit table). |
 | Email | Each recipient's result now against 10 sub-periods ago. Congratulating someone whose result held or rose gives mismatch 0, otherwise 1. Warning someone whose result fell gives mismatch 0, otherwise 1. The evaluator classifies the email as congratulatory, warning or neutral; neutral uses the congratulatory row at half value. |
-| Training | The style set this period against the needed style, using the training table (section 2). The member is away for the training's length. |
+| Training | The style set this period against the need at the start of the period (the fit table), then the training table (section 2). The member is away for the training's length. |
 | Swap or reassign | No mismatch. The member takes their configured values for the new stage, ±6 at random [M]. Skipping the Assess prerequisite costs the moved members 3 morale [N]: the spec says the penalty still applies, and 1.0 gives none. |
 | Assess | No effect. Reveals the member's values for a chosen stage, ±6 [M]. Satisfies the swap prerequisite. |
 | Reward | The top performer (highest result among available members) gets mismatch 0. Rewarding anyone else gives that person mismatch 0, and the top performer gets mismatch 1, always negative [M]. |
@@ -228,7 +236,7 @@ Skill / morale / result change for mismatch 0, 1 and 2 [W]:
 
 ### 4.4 Weekly style setting [M]
 
-At the start of each period you set a style per member; the Model doc calls these the actions a leader takes at the start of the week. When you confirm, each member's mismatch (their set style against their needed style) applies this change once:
+At the start of each period you set a style per member, one of the lens's 2 to 6 styles; the Model doc calls these the actions a leader takes at the start of the week. When you confirm, each member's difference comes from the lens's fit table (their set style against their need, section 2), becomes a mismatch with the usual randomness, and applies this change once:
 
 | Mismatch | Skill / morale / result per period |
 |---|---|
@@ -238,6 +246,8 @@ At the start of each period you set a style per member; the Model doc calls thes
 
 The Model doc gives the rule but no values. The Configuration Spec sets the size [G]: "About +2 to +3, −1 to −2" for morale and result. These are *config* defaults.
 
+- The engine refuses a style key the lens does not have (`unknownStyle`).
+- **Erratic change** (3.1): changing someone's style when their need did not change, from a style that fitted it, costs trust.
 - After you confirm, the sponsor sends a team message with each person's reaction and a reason chip for every change [S]. The message words the share of good reactions as the Configuration Spec's four bands: fewer than half, half, most, the whole team [G].
 - **Weekly drift [G]:** at the end of a period, anyone nobody acted with loses 3 morale (*config*, `drift`). Team wide actions count for everyone; the weekly style does not.
 - **Team averages [G]** count the people who are available, not those away.
@@ -501,12 +511,13 @@ Away members show "In training" or "On leave".
 Report 2.0 (`docs/genie/scoring-and-report.md` sections 5 and 7). The engine builds it from the run (`src/engine/report/build.ts`) and sends it in the view once the run has ended. Every element traces to the run or to authored copy; no text is written by a model at runtime. All settings are *config* under `report`, with these defaults (`src/engine/report/defaults.ts`).
 
 ### 8.1 Skill observations
+- **Lens:** the primary lens's scoring dimensions are the skills (`report.skills`). A secondary lens (`lens.secondary`, D70) adds its dimensions as skills with `reportOnly: true`: scored from conversations like the others (linked in the linkage matrix), shown in the skills section with a "Report only" tag, and never in the Leadership Score, the badges, the executive summary (overall level, strengths, priorities) or the development plan.
 - **Skills framework:** Situational flexibility, Coaching for growth, Handling difficult conversations, Goal setting and accountability, Giving feedback, Recognition and fairness, Communicating change, Results ownership, each with one authored behavioural anchor per level.
 - **Linkage matrix:** which skills each live interaction rates (2 to 4), keyed by action: Meet face to face, Coach member, Give feedback, Send email, Meet the team, Set goals, the swap and exit talks, the sponsor briefing, the reward talk, the hire interview and replies to messages. Static actions never create observations.
 - **Observation:** the evaluator returns one band per linked skill, with the participant's words it rests on. A red flag makes every rated skill Harmful. The interaction's overall band (and so its consequences, D62) still comes from its authored rubric, so the game is unchanged.
 
 ### 8.2 Ratings
-- **Enough evidence:** 2 observations from 2 different interactions; otherwise "Not enough evidence".
+- **Enough evidence:** 2 observations from 2 different interactions (`minObservations`, default 2); otherwise "Not enough evidence". Report only skills always need at least 2 from 2, whatever `minObservations` says.
 - **Skill score:** the mean of band scores (Strong 100, Adequate 70, Weak 35, Harmful 0). Level by threshold: Novice 0, Developing 40, Proficient 60, Advanced 75, Role Model 90. Any Harmful observation caps the skill at Developing.
 - **Overall level:** from the mean of rated skills, shown only when at least half the skills are rated.
 - **Evidence quotes:** up to 2 per skill, verbatim from the participant's own turns, highest band first, then the most recent.
@@ -515,7 +526,7 @@ Report 2.0 (`docs/genie/scoring-and-report.md` sections 5 and 7). The engine bui
 | # | Section | From |
 |---|---|---|
 | 1 | Executive summary | Overall level and its authored narrative; 3 strengths (top rated skills); 3 priorities (lowest rated, not already strengths); one business sentence (share of target, deals, the most frequent bottleneck) |
-| 2 | Style flexibility and fit | Style shares, dominant style, contextual capability %, the 4 by 4 grid of style needed against style used, weekly fit per person per period, narratives by capability band and dominant style |
+| 2 | Style flexibility and fit | Style shares over the lens's styles, dominant style, contextual capability %, the grid of the four needs (rows) against the style used (columns, one per lens style) with the fitting cells outlined from the fit table (sent with the report only, once the run has ended), weekly fit per person per period, narratives by capability band and dominant style (keyed by lens style; a style without a line adds none) |
 | 3 | Intent vs action | Per person: dominant weekly style, dominant style shown in conversations, aligned or gap, a quote from the latest conversation that differed, the participant's own reason from style setting, trust lost to mixed signals |
 | 4 | Skills profile | Level, anchor, observation count, quotes, or "Not enough evidence" |
 | 5 | Key moments | 5 to 7: conversations with a Strong, Weak or Harmful band, escalations, promises kept or broken, unanswered messages; ranked by the size of the changes to people, then shown in order. Each in SBI form with the intent declared that week |
@@ -523,7 +534,7 @@ Report 2.0 (`docs/genie/scoring-and-report.md` sections 5 and 7). The engine bui
 | 7 | Business outcomes | Revenue against target pace per period, the funnel against the cumulative ideal, deals, the bottleneck in most periods and why (its lowest result owner's weakest number) |
 | 8 | Conversation analytics | Descriptive, never scored: participant words per NPC word in spoken and role play formats, open questions, recognition statements (authored phrase list) |
 | 9 | Development plan | The 3 lowest rated skills (then skills without enough evidence), each with an authored practice activity and on the job action, and a check in date |
-| 10 | Methodology | Authored copy, plus the facts: conversations, observations, review status |
+| 10 | Methodology | First the lens, in participant language: "This simulation looks at leadership through the {title} lens.", and with a secondary lens a line naming it and saying its skills are Report only. Then the authored copy, and the facts: conversations, observations, review status. The lens's source is never printed. |
 
 The end screen collects up to 3 reflection answers (authored questions, by voice or text) and a 1 to 5 experience rating (`submitReflection`). The plan quotes the first answer.
 
@@ -535,13 +546,13 @@ The funnel numbers are tuned per storyline by `npm run calibrate -- <storyline>`
 |---|---|---|
 | Passive | Keeps the starting styles, takes no actions | 40 to 65% |
 | Random | Random styles and affordable actions | 35 to 65%. Acting without reading people can do more harm than doing nothing, as in the Model doc. |
-| Good | Sets the needed style each period, picks actions that address low metrics, conversations at Adequate or better | 100 to 125%, reached in 80% or more of runs |
+| Good | Sets a style that fits each need each period (the lens's fit table), picks actions that address low metrics, conversations at Adequate or better | 100 to 125%, reached in 80% or more of runs |
 
 **What it adjusts, in order:**
 1. `performanceThreshold`, the Model doc's funnel buffer. It is bisected until passive play earns about half of what good play earns (medians), because the compounding across stages is what makes or breaks playability.
 2. `money.inputPerSubPeriod`, the leads entering the funnel. Value is linear in input, so it is scaled to put good play's median at about 110% of target.
 
-The authored `target` is the client's number and stays as it is. Starting member values are never changed: the script only reports the starting mix, which passes when all four needed styles are present and at least two members start under the low threshold in some metric, so there is someone to help.
+The authored `target` is the client's number and stays as it is. Starting member values are never changed: the script only reports the starting mix, which passes when all four needs are present (the report names each by the first style that fits it) and at least two members start under the low threshold in some metric, so there is someone to help.
 
 It then plays 200 runs per policy and checks every band. The output is a report (`calibration/<storyline>.md`) with the before and after values. The tuned values are written back to the storyline with `calibrated` set to whether every band and the member mix pass; when one fails, the script also exits with an error. `--check` only measures and reports. The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
 

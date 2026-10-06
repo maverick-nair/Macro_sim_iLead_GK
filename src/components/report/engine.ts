@@ -91,7 +91,8 @@ export function teamSeries(i18n: Fmt, money: MoneyFormat, r: ReportView): TeamSe
 export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o: ReportModelOptions): ReportModel {
   const { t, number, delta, locale } = i18n;
   const unit = r.periodUnit;
-  const styleName = (s: StyleKey) => t('style.name', { style: s });
+  // Style names come from the storyline's lens (D70).
+  const styleName = (s: StyleKey) => r.lens.styles.find(x => x.key === s)?.name ?? s;
   const skillName = (key: string) => r.skills.find(s => s.key === key)?.name ?? key;
   const periods = Array.from({ length: r.periods }, (_, i) => i + 1);
   const short = (n: number) => t('report.team.period', { unit, n });
@@ -119,7 +120,8 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
             })
           })),
           summary: t('report.fit.summary', { matched: r.style.matched, total: r.style.weeklyTotal }),
-          extras: { shares: r.style.shares as Record<StyleKey, number>, total: r.style.total, dominant: r.style.dominant, capability: r.style.capability, grid: r.style.grid, narrative: r.style.narrative }
+          extras: { shares: r.style.shares, total: r.style.total, dominant: r.style.dominant, capability: r.style.capability, grid: r.style.grid, fit: r.style.fit, narrative: r.style.narrative,
+            styles: r.lens.styles.map(s => ({ key: s.key, letter: s.letter, name: s.name })), needs: r.lens.needs }
         };
       case 'intent':
         return {
@@ -134,7 +136,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       case 'skills':
         return {
           key, levels: r.scale.map(s => s.name),
-          rows: r.skills.map(s => ({ key: s.key, name: s.name, level: s.level, quote: s.quotes[0] ?? null, more: { anchor: s.anchor, observations: s.observations, capped: s.capped, quotes: s.quotes.slice(1) } }))
+          rows: r.skills.map(s => ({ key: s.key, name: s.name, reportOnly: s.reportOnly, level: s.level, quote: s.quotes[0] ?? null, more: { anchor: s.anchor, observations: s.observations, capped: s.capped, quotes: s.quotes.slice(1) } }))
         };
       case 'moments':
         return {

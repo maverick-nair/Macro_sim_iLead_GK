@@ -6,7 +6,7 @@ import { scaleBand, scaleLinear } from '@visx/scale';
 import { Bar, Line, LinePath } from '@visx/shape';
 import { useI18n } from '../../i18n';
 import { chartMax, gridCell, round1 } from './display';
-import { STYLE_KEYS, type StyleKey } from './types';
+import type { StyleExtras, StyleKey } from './types';
 import './messages';
 
 /**
@@ -22,25 +22,27 @@ const MUTED = 'fill-fg-secondary text-12';
 const ROW_GAP = 0.3, CELL_GAP = 0.08, TICK_GAP = 0.2;
 const TICK = { className: 'fill-fg-secondary text-11', fontFamily: 'inherit', fontSize: undefined } as const;
 
-/** Style shares: one bar per style, with the count and share at its end. The dominant style is bold. */
-export function StyleSharesChart({ shares, total, dominant, label }: { shares: Record<StyleKey, number>; total: number; dominant: StyleKey[]; label: string }) {
+/** Style shares: one bar per lens style, with the count and share at its end. The dominant style is bold. */
+export function StyleSharesChart({ styles, shares, total, dominant, label }: { styles: StyleExtras['styles']; shares: Record<StyleKey, number>; total: number; dominant: StyleKey[]; label: string }) {
   const { t, number } = useI18n();
   const W = 520, ROW = 30, LEFT = 100, RIGHT = 96;
-  const H = ROW * STYLE_KEYS.length;
+  const H = ROW * styles.length;
+  const keys = styles.map(s => s.key);
+  const count = (k: StyleKey) => shares[k] ?? 0;
   const x = scaleLinear({ domain: [0, chartMax(Object.values(shares))], range: [0, W - LEFT - RIGHT] });
-  const y = scaleBand({ domain: [...STYLE_KEYS], range: [0, H], padding: ROW_GAP });
+  const y = scaleBand({ domain: keys, range: [0, H], padding: ROW_GAP });
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={SVG} role="img" aria-label={label}>
-      {STYLE_KEYS.map(k => {
-        const top = y(k) ?? 0, h = y.bandwidth(), w = x(shares[k]);
+      {styles.map(({ key: k, name }) => {
+        const top = y(k) ?? 0, h = y.bandwidth(), w = x(count(k));
         const strong = dominant.includes(k);
         return (
           <Group key={k} top={top}>
-            <text x={0} y={h / 2} dominantBaseline="central" className={`${LABEL} ${strong ? 'font-700' : ''}`}>{t('style.name', { style: k })}</text>
+            <text x={0} y={h / 2} dominantBaseline="central" className={`${LABEL} ${strong ? 'font-700' : ''}`}>{name}</text>
             <Bar x={LEFT} y={0} width={W - LEFT - RIGHT} height={h} rx={4} className="fill-report-chart-cell" />
             <Bar x={LEFT} y={0} width={w} height={h} rx={4} className="fill-report-chart-series" />
             <text x={LEFT + w + 8} y={h / 2} dominantBaseline="central" className={MUTED}>
-              {t('report.style.shareValue', { count: number(shares[k]), pct: total ? Math.round((shares[k] / total) * 100) : 0 })}
+              {t('report.style.shareValue', { count: number(count(k)), pct: total ? Math.round((count(k) / total) * 100) : 0 })}
             </text>
           </Group>
         );
@@ -49,24 +51,28 @@ export function StyleSharesChart({ shares, total, dominant, label }: { shares: R
   );
 }
 
-/** The 4 by 4 used vs needed grid: rows are the style people needed, columns the style you used. Matches sit on the outlined diagonal. */
-export function FitGridChart({ grid, label }: { grid: number[][]; label: string }) {
-  const { t, number } = useI18n();
-  const W = 520, LEFT = 100, TOP = 26, CELL_H = 36;
-  const H = TOP + CELL_H * 4;
-  const x = scaleBand({ domain: [...STYLE_KEYS], range: [LEFT, W], padding: CELL_GAP });
-  const y = scaleBand({ domain: [...STYLE_KEYS], range: [TOP, H], padding: CELL_GAP });
+/**
+ * The used vs needed grid: rows are the four needs (skill and morale), columns the lens's styles you
+ * used. The cells where the style fits the need are outlined. More than four styles show their letters
+ * above the columns; the table beside it names them in full.
+ */
+export function FitGridChart({ grid, fit, styles, needs, label }: { grid: number[][]; fit: number[][]; styles: StyleExtras['styles']; needs: StyleExtras['needs']; label: string }) {
+  const { number } = useI18n();
+  const W = 520, LEFT = 140, TOP = 26, CELL_H = 36;
+  const H = TOP + CELL_H * needs.length;
+  const x = scaleBand({ domain: styles.map(s => s.key), range: [LEFT, W], padding: CELL_GAP });
+  const y = scaleBand({ domain: needs.map(n => n.key), range: [TOP, H], padding: CELL_GAP });
   const max = chartMax(grid.flat());
   return (
     <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} className={SVG} role="img" aria-label={label}>
-      {STYLE_KEYS.map(k => (
-        <text key={`c${k}`} x={(x(k) ?? 0) + x.bandwidth() / 2} y={TOP / 2} textAnchor="middle" dominantBaseline="central" className={MUTED}>{t('style.name', { style: k })}</text>
+      {styles.map(s => (
+        <text key={`c${s.key}`} x={(x(s.key) ?? 0) + x.bandwidth() / 2} y={TOP / 2} textAnchor="middle" dominantBaseline="central" className={MUTED}>{styles.length > 4 ? s.letter : s.name}</text>
       ))}
-      {STYLE_KEYS.map((need, r) => (
+      {needs.map(({ key: need, label: needLabel }, r) => (
         <Group key={need}>
-          <text x={0} y={(y(need) ?? 0) + y.bandwidth() / 2} dominantBaseline="central" className={MUTED}>{t('style.name', { style: need })}</text>
-          {STYLE_KEYS.map((used, c) => {
-            const cell = gridCell(grid, r, c, max);
+          <text x={0} y={(y(need) ?? 0) + y.bandwidth() / 2} dominantBaseline="central" className={MUTED}>{needLabel}</text>
+          {styles.map(({ key: used }, c) => {
+            const cell = gridCell(grid, r, c, max, fit);
             const cx = x(used) ?? 0, cy = y(need) ?? 0, w = x.bandwidth(), h = y.bandwidth();
             return (
               <Group key={used}>

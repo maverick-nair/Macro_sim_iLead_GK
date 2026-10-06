@@ -33,8 +33,6 @@ export interface InboxDrawerProps {
   onClose: () => void;
   onOpen: (id: string) => void;
   onLater: (id: string) => void;
-  /** `tablet`: opens from the bottom dock, over the left of the board, above the dock (D72). Defaults to beside the rail. */
-  layout?: 'rail' | 'tablet';
 }
 
 /** Icon glyph, not copy: the button is named from the catalog. */
@@ -77,7 +75,7 @@ export function InboxDrawer(props: InboxDrawerProps) {
   return props.open ? <OpenDrawer {...props} /> : null;
 }
 
-function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLater, layout = 'rail' }: InboxDrawerProps) {
+function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLater }: InboxDrawerProps) {
   const { t } = useI18n();
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -99,7 +97,7 @@ function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLate
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the dialog
     <div ref={ref} role="dialog" aria-label={t('inbox.title')} tabIndex={-1} onKeyDown={onKeyDown}
-      className={`absolute ${layout === 'tablet' ? 'top-20 bottom-27 left-6' : 'top-0 bottom-6 left-(--il-inbox-drawer-offset)'} z-30 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden rounded-22 border border-line-strong bg-surface-material shadow-(--il-inbox-drawer-shadow) outline-0 backdrop-blur-20`}>
+      className="absolute top-0 bottom-6 left-(--il-inbox-drawer-offset) z-30 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden rounded-22 border border-line-strong bg-surface-material shadow-(--il-inbox-drawer-shadow) outline-0 backdrop-blur-20">
       <div className="flex items-center justify-between border-b border-line-default px-4.5 py-4">
         <h2 className="m-0 text-18 font-700">{t('inbox.title')}</h2>
         <button type="button" onClick={onClose} aria-label={t('inbox.close')}

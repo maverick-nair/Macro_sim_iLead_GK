@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { NeedKey } from '../lens';
 import { GeneralEvent, parseStoryline, type StorylineConfig } from '../config';
 import salesElevator from '../storylines/sales-elevator.json';
 import { blockedReason } from './actions';
@@ -20,7 +21,7 @@ const rng = () => createRng(1);
 const fresh = (cfg = config) => { const s = createSim(cfg, 1); s.phase = 'board'; return s; };
 const decide = (sim: Sim, n: number, ok: number, source = 'weeklyStyle') => {
   for (let i = 0; i < n; i++) {
-    const d = { memberId: sim.members[i % sim.members.length].id, chosen: 'D' as const, needed: (i < ok ? 'D' : 'E') as 'D' | 'E', mismatch: (i < ok ? 0 : 2) as 0 | 2, source };
+    const d = { memberId: sim.members[i % sim.members.length].id, chosen: 'D' as const, need: (i < ok ? 'lowSkill_lowMorale' : 'highSkill_highMorale') as NeedKey, mismatch: (i < ok ? 0 : 2) as 0 | 2, source };
     sim.decisions.period.push(d); sim.decisions.run.push(d);
   }
 };
@@ -202,8 +203,9 @@ describe('badges (each condition true and false)', () => {
   });
 
   it('Flex Master: every style right at least twice', () => {
+    const bestNeed = { D: 'lowSkill_lowMorale', G: 'lowSkill_highMorale', P: 'highSkill_lowMorale', E: 'highSkill_highMorale' } as const;
     const sim = fresh();
-    const add = (s: 'D' | 'G' | 'P' | 'E', n: number) => { for (let i = 0; i < n; i++) sim.decisions.run.push({ memberId: 'kent', chosen: s, needed: s, mismatch: 0, source: 'f2f' }); };
+    const add = (s: 'D' | 'G' | 'P' | 'E', n: number) => { for (let i = 0; i < n; i++) sim.decisions.run.push({ memberId: 'kent', chosen: s, need: bestNeed[s], mismatch: 0, source: 'f2f' }); };
     add('D', 2); add('G', 2); add('P', 2); add('E', 1);
     checkBadges(sim, 'periodEnd'); expect(earned(sim, 'flex_master')).toBe(false);
     add('E', 1); checkBadges(sim, 'periodEnd'); expect(earned(sim, 'flex_master')).toBe(true);

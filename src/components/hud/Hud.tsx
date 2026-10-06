@@ -1,13 +1,14 @@
 import { useId, useRef, useState, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
+import { ClientLogo } from '../../theme/brand';
 
 export type PeriodUnit = 'year' | 'month' | 'week' | 'day';
 export type SubPeriodUnit = 'quarter' | 'month' | 'week' | 'day' | 'hour';
 
 export interface HudNavItem {
   key: string;
-  /** Rendered only when present. The client theme passes none (DECISIONS D17). */
+  /** Rendered only when present; an item with no label keeps its slot but is not a button. */
   label?: string;
 }
 
@@ -33,8 +34,6 @@ export interface HudScore {
 }
 
 export interface HudProps {
-  /** Shows the client logo placeholder next to the iLead mark. */
-  clientLogo?: boolean;
   nav: HudNavItem[];
   onNav: (key: string) => void;
   clock: HudClock;
@@ -70,12 +69,6 @@ export interface HudProps {
   onEndPeriod: () => void;
   /** Secondary while an action drawer is open, so the drawer's own button leads. */
   endEmphasis: 'primary' | 'secondary';
-  /**
-   * `tablet`: the portrait tablet bar (D72): brand, where the run is with the time left in words, then
-   * the score, settings, Pause with the clock and End period, all 44px. The nav, capacity bolts,
-   * streak (a tile on the tablet board) and the Cmd K key are left out. Defaults to the desktop bar.
-   */
-  layout?: 'desk' | 'tablet';
 }
 
 /** Private use character that marks where a formatted value sits inside a message. */
@@ -166,82 +159,12 @@ export function Hud(p: HudProps) {
   const streak = p.streakLabel ?? t('hud.streak', { n: number(p.streak), unit: clock.periodUnit });
   const rich = p.breakdown !== undefined;
 
-  const tablet = p.layout === 'tablet';
-  const brand = (
-    <div className="flex items-center gap-2.5">
-      {p.clientLogo && <div className="flex min-h-7 items-center rounded-6 border border-dashed border-line-strong px-2.5 text-12 text-fg-secondary">{t('hud.clientLogo')}</div>}
-      <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
-    </div>
-  );
-  const pause = (p.sessionClock !== null || p.alwaysPause) && (
-    <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined}
-      className={`flex ${tablet ? 'min-h-11 rounded-12 px-3.5' : 'min-h-8 rounded-pill px-2.5'} cursor-pointer items-center gap-1.5 border border-line-default bg-surface-raised py-0 text-13 font-700 text-fg-primary ${focus}`}>
-      <Pause />{p.sessionClock ?? t('hud.pause.label')}
-    </button>
-  );
-  const scoreEl = (
-    /* Focus leaving the score (and the breakdown, which can hold controls) closes it; Escape inside it closes it and returns to the score. */
-    /* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a mouse hover opens the breakdown (not a touch, whose emulated hover would fight the tap); the button is the control */
-    <div ref={wrap} className="relative" onPointerEnter={e => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={e => { if (e.pointerType === 'mouse') setOpen(false); }}
-      onBlur={e => { if (!wrap.current?.contains(e.relatedTarget as Node | null)) setOpen(false); }}
-      onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); scoreButton.current?.focus(); } }}>
-      {/* A disclosure: Enter, Space (a click with no pointer) and a tap toggle the breakdown. A mouse click keeps it open, since hovering already opened it. */}
-      <button ref={scoreButton} type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
-        onPointerDown={e => { touch.current = e.pointerType !== 'mouse'; }}
-        onClick={e => setOpen(e.detail === 0 || touch.current ? !open : true)}
-        className={`flex ${tablet ? 'min-h-11 rounded-12 border border-solid border-line-strong px-3.5' : 'min-h-8 rounded-pill border-0 px-2.5'} cursor-pointer items-center gap-1.5 bg-transparent py-0 text-15 font-700 text-fg-primary ${focus}`}>
-        <Star />{number(score.total)}
-      </button>
-      {open && (
-        <div id={tipId} className={`absolute top-full right-0 z-40 mt-2 flex ${rich ? 'w-80 backdrop-blur-20' : 'w-65'} flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
-          {rich ? p.breakdown : <>
-          <b>{t('hud.score.title')}</b>
-          <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
-          {PILLARS.map(k => (
-            <div key={k} className="grid grid-cols-(--il-hud-score-columns) items-center gap-2 text-12">
-              <span>{t('hud.score.pillar', { pillar: k })}</span>
-              <div className="h-1.5 rounded-3 bg-track">
-                <div className="h-full rounded-3 bg-(image:--il-fill-brand)" style={{ width: `${Math.max(0, Math.min(100, score[k] / pillarScale * 100))}%` }} />
-              </div>
-              <b className="text-right">{number(score[k])}</b>
-            </div>
-          ))}
-          </>}
-        </div>
-      )}
-    </div>
-  );
-  const settings = (
-    <button type="button" onClick={p.onSettings} aria-label={t('hud.settings.aria')}
-      className={`flex ${tablet ? 'size-11 rounded-12 border border-solid border-line-default' : 'size-8 rounded-round border-0'} cursor-pointer items-center justify-center bg-transparent p-0 text-fg-secondary hover:bg-surface-raised ${focus}`}>
-      <Sliders />
-    </button>
-  );
-  /* The number is its own flex item, 8px from the words, as the design renders it. */
-  const end = (
-    <NoWrapButton variant={p.endEmphasis} size="md" onClick={p.onEndPeriod}>
-      {around(t('time.endPeriodNumber', { unit: clock.periodUnit, n: MARK }), v => <span>{v}</span>, number(clock.period))}
-    </NoWrapButton>
-  );
-
-  if (tablet) {
-    const tabletWhere = t('tablet.hud.clock', { period: MARK, subPeriod: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }), left: amount });
-    return (
-      <header className="flex min-h-18 min-w-0 items-center gap-3 border-b border-line-default px-6 py-3.5 whitespace-nowrap">
-        {brand}
-        <span className="ml-1.5 min-w-0 truncate text-14 text-fg-secondary">{around(tabletWhere, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
-        <div className="min-w-0 flex-1" />
-        {scoreEl}
-        {settings}
-        {pause}
-        {end}
-      </header>
-    );
-  }
-
   return (
     <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2">
-      {brand}
+      <div className="flex items-center gap-2.5">
+        <ClientLogo />
+        <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
+      </div>
       {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden">
         {p.nav.map(n => (n.label ? (
           <button key={n.key} type="button" onClick={() => p.onNav(n.key)}
@@ -249,7 +172,7 @@ export function Hud(p: HudProps) {
             {n.label}
           </button>
         ) : (
-          // No label (the client theme, D17): keep the slot the design draws, but not as a nameless button.
+          // No label: keep the slot, but not as a nameless button.
           <span key={n.key} aria-hidden="true" className="h-8 flex-none px-2" />
         )))}
       </nav>}
@@ -261,15 +184,55 @@ export function Hud(p: HudProps) {
         </div>
         <span className="text-13 text-fg-secondary">{around(t('time.left', { amount: MARK }), v => <b className="text-fg-primary">{v}</b>, amount)}</span>
       </div>
-      {pause}
-      {scoreEl}
+      {(p.sessionClock !== null || p.alwaysPause) && (
+        <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined}
+          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary ${focus}`}>
+          <Pause />{p.sessionClock ?? t('hud.pause.label')}
+        </button>
+      )}
+      {/* Focus leaving the score (and the breakdown, which can hold controls) closes it; Escape inside it closes it and returns to the score. */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a mouse hover opens the breakdown (not a touch, whose emulated hover would fight the tap); the button is the control */}
+      <div ref={wrap} className="relative" onPointerEnter={e => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={e => { if (e.pointerType === 'mouse') setOpen(false); }}
+        onBlur={e => { if (!wrap.current?.contains(e.relatedTarget as Node | null)) setOpen(false); }}
+        onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); scoreButton.current?.focus(); } }}>
+        {/* A disclosure: Enter, Space (a click with no pointer) and a tap toggle the breakdown. A mouse click keeps it open, since hovering already opened it. */}
+        <button ref={scoreButton} type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
+          onPointerDown={e => { touch.current = e.pointerType !== 'mouse'; }}
+          onClick={e => setOpen(e.detail === 0 || touch.current ? !open : true)}
+          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
+          <Star />{number(score.total)}
+        </button>
+        {open && (
+          <div id={tipId} className={`absolute top-full right-0 z-40 mt-2 flex ${rich ? 'w-80 backdrop-blur-20' : 'w-65'} flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
+            {rich ? p.breakdown : <>
+            <b>{t('hud.score.title')}</b>
+            <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
+            {PILLARS.map(k => (
+              <div key={k} className="grid grid-cols-(--il-hud-score-columns) items-center gap-2 text-12">
+                <span>{t('hud.score.pillar', { pillar: k })}</span>
+                <div className="h-1.5 rounded-3 bg-track">
+                  <div className="h-full rounded-3 bg-(image:--il-fill-brand)" style={{ width: `${Math.max(0, Math.min(100, score[k] / pillarScale * 100))}%` }} />
+                </div>
+                <b className="text-right">{number(score[k])}</b>
+              </div>
+            ))}
+            </>}
+          </div>
+        )}
+      </div>
       <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700"><Flame />{number(p.streak)}</span>
       <button type="button" onClick={p.onPalette} aria-label={t('hud.palette.aria')}
         className={`min-h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary ${focus}`}>
         {t('hud.palette.key')}
       </button>
-      {settings}
-      {end}
+      <button type="button" onClick={p.onSettings} aria-label={t('hud.settings.aria')}
+        className={`flex size-8 cursor-pointer items-center justify-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:bg-surface-raised ${focus}`}>
+        <Sliders />
+      </button>
+      {/* The number is its own flex item, 8px from the words, as the design renders it. */}
+      <NoWrapButton variant={p.endEmphasis} size="md" onClick={p.onEndPeriod}>
+        {around(t('time.endPeriodNumber', { unit: clock.periodUnit, n: MARK }), v => <span>{v}</span>, number(clock.period))}
+      </NoWrapButton>
     </header>
   );
 }
