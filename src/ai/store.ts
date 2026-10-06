@@ -101,6 +101,9 @@ export function createAiStreamStore(): AiStreamStore {
           if (my !== gen) break;
           const r = await it.next();
           if (my !== gen) break;
+          // A token already on its way when the hold began waits too: the hold is immediate.
+          while (held && my === gen) await new Promise<void>(resolve => waiting.push(resolve));
+          if (my !== gen) break;
           if (r.done) {
             // Ended without `done`: treat as a cut off reply.
             set({ streaming: false, error: { retryable: true }, shown: shownNow() });
