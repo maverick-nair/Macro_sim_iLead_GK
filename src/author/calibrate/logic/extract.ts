@@ -38,7 +38,7 @@ export function playthroughOf(run: SyntheticRun, index: number, config: Storylin
     weeks: run.weeks.map(w => ({
       period: w.period,
       styleFit: w.styleFit,
-      actions: w.actions.map(a => `${a.option ? `${a.name}, ${a.option}` : a.name}${a.names.length ? ` with ${a.names.map(n => n.split(' ')[0]).join(' and ')}` : ''}`),
+      actions: w.actions.map(a => `${a.option ? `${a.name} (${a.option})` : a.name}${a.names.length ? ` with ${a.names.map(n => n.split(' ')[0]).join(' and ')}` : ''}`),
       events: w.events.map(e => ({ title: e.title, expected: e.expected, handled: e.handled })),
       revenue: w.revenue,
       score: w.score
@@ -54,6 +54,7 @@ export function playthroughOf(run: SyntheticRun, index: number, config: Storylin
         period: c.period,
         title: c.names.length ? `${c.actionName} with ${c.names.map(n => n.split(' ')[0]).join(' and ')}` : c.actionName,
         format: c.format,
+        memberIds: c.memberIds,
         names: c.names,
         band: e?.band ?? null,
         intended: tagged ? styleName(c.intent) : null,

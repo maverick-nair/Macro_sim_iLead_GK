@@ -18,7 +18,7 @@ function run(persona: PersonaKey, score: number, o: Partial<RunResult> = {}): Ru
 }
 const facts: AggregateFacts = {
   storyline: { id: 's', name: 'Sales' }, configHash: 'abc', lens: { title: 'Readiness Based Leadership', styles: [{ key: 'D', name: 'Directing' }, { key: 'P', name: 'Partnering' }] },
-  scale: SCALE, scoreMax: 1000, tiers: TIERS, actions: ACTIONS, settings: { seed: 1, probes: true, personas: { beginner: 3, developing: 3, proficient: 3, expert: 3 } },
+  scale: SCALE, money: { currency: 'USD', locale: 'en-US' }, scoreMax: 1000, tiers: TIERS, actions: ACTIONS, settings: { seed: 1, probes: true, personas: { beginner: 3, developing: 3, proficient: 3, expert: 3 } },
   ranOn: 'browser', players: 'templates', createdAt: '2026-10-07T00:00:00.000Z', durationMs: 10
 };
 const good = () => [

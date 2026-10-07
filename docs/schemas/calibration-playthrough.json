@@ -137,6 +137,12 @@
           "format": {
             "type": "string"
           },
+          "memberIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "names": {
             "type": "array",
             "items": {
@@ -236,6 +242,7 @@
           "period",
           "title",
           "format",
+          "memberIds",
           "names",
           "band",
           "intended",

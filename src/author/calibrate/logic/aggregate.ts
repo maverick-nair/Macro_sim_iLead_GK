@@ -203,6 +203,7 @@ export interface AggregateFacts {
   configHash: string;
   lens: { title: string; styles: Array<{ key: string; name: string }> };
   scale: string[];
+  money: { currency: string; locale: string };
   scoreMax: number;
   tiers: Array<{ key: string; name: string; min: number }>;
   targetTier?: string;
@@ -221,7 +222,7 @@ export function aggregate(runs: RunResult[], probes: RunResult[], f: AggregateFa
   const concernsByPerson: Record<string, Record<string, number>> = {};
   for (const r of runs) for (const id of r.concerns) { const m = (concernsByPerson[r.persona] ??= {}); m[id] = (m[id] ?? 0) + 1; }
   return {
-    version: 1, storyline: f.storyline, configHash: f.configHash, lens: f.lens, scale: f.scale, scoreMax: f.scoreMax, tiers: f.tiers, targetTier: target,
+    version: 1, storyline: f.storyline, configHash: f.configHash, lens: f.lens, scale: f.scale, money: f.money, scoreMax: f.scoreMax, tiers: f.tiers, targetTier: target,
     personas,
     checks: checks({ personas, runs, probes, probesRan: f.settings.probes, target, scale: f.scale, scoreMax: f.scoreMax, actions: f.actions, styles: f.lens.styles }),
     runs, probes, concernsByPerson, actions: f.actions, settings: f.settings, ranOn: f.ranOn, players: f.players, createdAt: f.createdAt, durationMs: f.durationMs

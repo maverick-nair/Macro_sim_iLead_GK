@@ -110,6 +110,8 @@ export const CalibrationResults = z.object({
   configHash: z.string(),
   lens: z.object({ title: z.string(), styles: z.array(z.object({ key: z.string(), name: z.string() })) }),
   scale: z.array(z.string()),
+  /** How the storyline shows money, for revenue in the playthrough view. */
+  money: z.object({ currency: z.string(), locale: z.string() }),
   scoreMax: Num,
   tiers: z.array(z.object({ key: z.string(), name: z.string(), min: Num })),
   targetTier: z.object({ key: z.string(), name: z.string(), min: Num }),
@@ -152,6 +154,7 @@ export const Playthrough = z.object({
     period: Int,
     title: z.string(),
     format: z.string(),
+    memberIds: z.array(z.string()),
     names: z.array(z.string()),
     band: Band.nullable(),
     intended: z.string().nullable(),

@@ -492,7 +492,10 @@ class Player {
       return this.engine.view();
     }
     const a = this.config.actions.find(x => x.key === step.action)!;
-    this.week(period).actions.push({ key: a.key, name: a.name, option: a.options.length > 1 ? a.options.find(o => o.key === step.option)?.label ?? null : null, memberIds: step.memberIds, names: step.memberIds.map(id => this.nameOf(id)) });
+    // The option in a few words: its style's name when it has one, else its label when short.
+    const o = a.options.length > 1 ? a.options.find(x => x.key === step.option) : undefined;
+    const option = o ? (o.style ? this.config.lens.styles.find(s => s.key === o.style)?.name ?? null : o.label.length <= 32 ? o.label : null) : null;
+    this.week(period).actions.push({ key: a.key, name: a.name, option, memberIds: step.memberIds, names: step.memberIds.map(id => this.nameOf(id)) });
     if (r.interactionId) await this.converse(r.interactionId, { actionKey: a.key, actionName: a.name, memberIds: step.memberIds });
     if (step.eventKey) this.markHandled(step.eventKey, period);
     return this.engine.view();

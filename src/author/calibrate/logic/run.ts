@@ -92,6 +92,7 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
     configHash: configHash(draft),
     lens: { title: config.lens.title, styles: config.lens.styles.map(s => ({ key: s.key, name: s.name })) },
     scale: config.report.scale.map(l => l.name),
+    money: { currency: config.money.currency, locale: config.money.locale },
     scoreMax: config.gamification.scale,
     tiers: config.gamification.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
     targetTier: settings.targetTier,
