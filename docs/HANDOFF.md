@@ -15,13 +15,14 @@ Browser (this repo, Vite + React 19 + TypeScript strict)
   src/speech, src/ai                        Voice capture with server transcription; streamed AI text (SSE)
   src/theme                                 Runtime client theme loader (GenieKreator theme JSON)
   src/author                                /author: GenieKreator's author chat prototype (lazy)
+  src/author/calibrate                      GenieKreator's synthetic player calibration: CalibrateSlot (lazy, engine in a Web Worker)
   src/group                                 /group: the organization's group report (lazy)
 
 Server (built: server/, docs/SERVER.md, D81; the base paths of .env.server)
   Engine        /engine/sessions/{session}/view, /intents, /interactions/.../stream   (VITE_ILEAD_ENGINE_URL=/engine)
   App API       /api/profile, /theme, /history, /report.pdf, /report/email, /cohort/...  (VITE_ILEAD_API_URL=/api)
   Speech        /speech/transcriptions...                                             (VITE_ILEAD_SPEECH_URL=/speech)
-  GenieKreator  /genie/author/turn, /genie/author/draft                               (VITE_GENIE_URL=/genie)
+  GenieKreator  /genie/author/turn, /genie/author/draft, /genie/calibrations          (VITE_GENIE_URL=/genie)
   Sign in       /launch?token=<signed launch link>, /auth/me, /auth/logout
   Operations    /healthz, /readyz, /openapi.json
 ```
@@ -98,6 +99,8 @@ Base `VITE_GENIE_URL`. Schemas in `src/api/author.ts`; prompts the server must f
 
 The client checks every draft against the storyline schema and the copy guard (`src/author/copyGuard.ts`) and uses the templates when either fails. JSON Schemas: `docs/schemas/author-*.json`.
 
+**Test with synthetic players** (D110 to D116, `docs/CALIBRATION-SYNTHETIC.md`): `src/author/calibrate` exports `CalibrateSlot` (props: the draft `config`, an optional `apiBase`, `results`, `onResults`, `onAsk`) for the /author workspace's tab, and `calibrationPublishCheck(results, { draft })` for its publish checks. It runs on the server (`POST /genie/calibrations` and friends, an in process job) or, without one, in a Web Worker in the browser; `/author/calibrate` shows it on the bundled draft.
+
 The server implementation is `createAuthorDrafter(config)` in `ai/` (D82, `docs/AI.md`): the model reads answers, uploads and frameworks and writes the draft's copy; the question policy, the lens precedence and the template's mechanics stay rules; every draft passes the schema and the copy guard on the server too, or the templates draft is returned.
 
 ## 6. Configuration schemas
@@ -134,6 +137,7 @@ npm run parity              # every design frame against the Claude Design proto
 npm run e2e                 # Playwright on the mock engine, axe on every route (tests/e2e/a11y.spec.ts) and visual baselines
 npm run vitals              # Web Vitals budgets on a production build, throttled (section 9)
 npm run calibrate -- sales-elevator --check   # a storyline still plays well
+npm run synthetic -- --check                  # synthetic players at four levels on every bundled storyline (docs/CALIBRATION-SYNTHETIC.md)
 npm run benchmark -- --check                  # the cached group report benchmark matches the engine
 ```
 

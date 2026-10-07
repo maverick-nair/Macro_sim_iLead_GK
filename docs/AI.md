@@ -43,6 +43,7 @@ Browser ── intents, SSE ──> Server (server/) ── loads the factories 
 | `Evaluator` | `evaluate(input)`, `evaluateWithAudit(input)` | Exactly the engine's `Evaluation` (checked against `EvaluationSchema`, with a compile time check that it matches the engine type), plus an `EvaluationAudit`. `input` is the engine's `EvaluationInput` plus `locale`, `actionKey`, `actionName`, `goal`, `rubricLabels`, `skillDefs` (names and anchors), `transcript`, `counterpart`, `promiseActions`. |
 | `AuthorDrafter` | `turn(req)`, `draft(req)` | The shapes of `src/api/author.ts`: `AuthorTurnResponse`, `AuthorDraftResponse`. |
 | `Transcriber` | `open({ mimeType, mode, language, onResult, signal })` gives a session with `push(chunk, seq)`, `end()`, `abort()` | `{ kind: 'partial' | 'final', text }[]`, the contract of `docs/SPEECH.md`. |
+| `SyntheticPlayer` | `say(ctx)` | GenieKreator's synthetic players (D110, `docs/CALIBRATION-SYNTHETIC.md`): a persona's next line from its level, the lens, the person and the transcript (the engine's `SpeakerContext`). The engine's `templateSpeaker` is the mock and the fallback on any failure, refusal or unusable line. |
 
 Helpers for the server: `sceneFromStoryline(config)` (locale and workplace) and `historyFromTurns(turns, nameOf)`.
 
@@ -62,6 +63,7 @@ The engine awaits `npc.reply(ctx)` inside `sendTurn`. Two ways to serve `GET ...
 | `evaluator/<format>.md` | Evaluator | The default rubric of each format (roleplay, chat, email, meeting, sponsor, interview, plan) and what good looks like. |
 | `lens.md` | Author | The Leadership Lens guardrails (KNOLSKAPE titles only, no certification claims, "skills", no dashes, no emojis, no invented framework content). |
 | `author-turn.md`, `author-framework.md`, `author-draft.md` | Author | Reading answers and uploads; extracting a client framework; writing the storyline's copy. |
+| `synthetic-player.md` | Synthetic player | Playing one proficiency level faithfully in a calibration: what each level does, showing the intended style in plain words, the copy rules, never mentioning the test. |
 | `repair.md` | All structured calls | The repair instruction after an answer that fails validation. |
 
 **Versions.** Each file has a header (`id`, `version`). The version recorded is `<id>@<version>#<hash of the text>`, for example `evaluator@1#a1b2c3d4+evaluator.roleplay@1#e5f6a7b8`, so an edit without a version bump still shows. It is on every evaluation's audit record (`EvaluationAudit.promptVersion`, for the report's methodology and the assessor review) and every NPC reply's `meta.promptVersion`. Raise the version when you change a prompt, and rerun both quality gates.
@@ -121,17 +123,17 @@ The key goes in `Authorization: Bearer <key>` by default, or any header and sche
 
 ## 8. Configuration reference
 
-Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDrafter(config)`, `createTranscriber(config)`, exported from `ai/src/index.ts`. Defaults are `DEFAULTS` in `ai/src/config.ts`.
+Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDrafter(config)`, `createTranscriber(config)`, `createSyntheticPlayer(config)`, exported from `ai/src/index.ts`. Defaults are `DEFAULTS` in `ai/src/config.ts`.
 
 | Field | Env variable | Default | Notes |
 |---|---|---|---|
-| `provider` | `AI_PROVIDER`, or per role `AI_PROVIDER_NPC`, `AI_PROVIDER_EVALUATOR`, `AI_PROVIDER_AUTHOR` | `anthropic` when `ANTHROPIC_API_KEY` is set, else `mock` | `mock` or `anthropic`. |
+| `provider` | `AI_PROVIDER`, or per role `AI_PROVIDER_NPC`, `AI_PROVIDER_EVALUATOR`, `AI_PROVIDER_AUTHOR`, `AI_PROVIDER_SYNTHETIC` | `anthropic` when `ANTHROPIC_API_KEY` is set, else `mock` | `mock` or `anthropic`. |
 | `anthropic.apiKey` | `ANTHROPIC_API_KEY` | none | Left out, the SDK looks for its own default credentials. |
 | `anthropic.baseURL` | `ANTHROPIC_BASE_URL` | the public API | A gateway or proxy. |
 | `anthropic.refusalFallback` | `AI_REFUSAL_FALLBACK` | `true` | Server side refusal fallback: a request declined by a safety classifier is re-run on the recommended fallback model in the same call. Turn off where the platform does not offer it. |
 | `anthropic.promptCaching` | `AI_PROMPT_CACHE` | `true` | Cache breakpoint on the stable prefix. |
 | `anthropic.cacheTtl` | `AI_CACHE_TTL` | `5m` | `1h` pays off for a cohort playing one storyline over an hour. |
-| `model.model` | `AI_MODEL_NPC`, `AI_MODEL_EVALUATOR`, `AI_MODEL_AUTHOR` | see `DEFAULTS` | Model id per role. |
+| `model.model` | `AI_MODEL_NPC`, `AI_MODEL_EVALUATOR`, `AI_MODEL_AUTHOR`, `AI_MODEL_SYNTHETIC` | see `DEFAULTS` | Model id per role. The synthetic player takes the NPC role's settings unless its own are set (`AI_EFFORT_SYNTHETIC`, `AI_MAX_TOKENS_SYNTHETIC`, `AI_TIMEOUT_MS_SYNTHETIC` and so on). |
 | `model.effort` | `AI_EFFORT_NPC`, `AI_EFFORT_EVALUATOR`, `AI_EFFORT_AUTHOR` | `low`, `high`, `high` | `low`, `medium`, `high`, `xhigh`, `max`. |
 | `model.maxTokens` | `AI_MAX_TOKENS_<ROLE>` | 2048, 16000, 32000 | Includes thinking. |
 | `model.temperature` | `AI_TEMPERATURE_<ROLE>` | not sent | Current default models reject sampling parameters; set only for a model that takes them. |
@@ -164,7 +166,7 @@ Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDra
 
 ## 11. Tests
 
-`npm test` runs `ai/**/*.test.ts` with the rest (no network: a fake client and recorded answers). Covered: prompt files, versions and placeholders; the SDK request (cache breakpoints, effort, schema, refusal fallback, timeouts, retries) and streaming through a fake SDK client; structured output, repair and refusal; verbatim quotes; NPC guardrails, the sentence filter and the signal tag; NPC streaming, signals, fallbacks and cancellation; evaluator mapping, dropped quotes, red flags, repair, fallback, locale and the voice rule; the engine running a conversation on the AI NPC and evaluator; author reading, framework grounding, draft merge, copy guard, repair and fallback; the transcribers; the factories and the environment mapping; both quality gates on the mock; and that `src/` never imports `ai/`.
+`npm test` runs `ai/**/*.test.ts` with the rest (no network: a fake client and recorded answers). Covered: prompt files, versions and placeholders; the SDK request (cache breakpoints, effort, schema, refusal fallback, timeouts, retries) and streaming through a fake SDK client; structured output, repair and refusal; verbatim quotes; NPC guardrails, the sentence filter and the signal tag; NPC streaming, signals, fallbacks and cancellation; evaluator mapping, dropped quotes, red flags, repair, fallback, locale and the voice rule; the engine running a conversation on the AI NPC and evaluator; author reading, framework grounding, draft merge, copy guard, repair and fallback; the transcribers; the factories and the environment mapping; the synthetic player (its request, cleaning, fallbacks and a whole run through the engine); both quality gates on the mock; and that `src/` never imports `ai/`.
 
 ## 12. Not done
 
