@@ -170,7 +170,8 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
             <span className="text-13">{t('weekend.checkIn.body', { name: r.checkIn.sponsorName, line: r.checkIn.line, sub: subPeriodUnit, unit, n: period + 1 })}</span>
           </div>
         )}
-        <div className="flex justify-end">
+        {/* The report scrolls as a page on a short window; Continue stays at the bottom of the window (D101). */}
+        <div className="sticky bottom-4 z-10 flex justify-end">
           <NoWrapButton variant="primary" size="lg" onClick={onContinue}>{continueLabel}</NoWrapButton>
         </div>
       </div>

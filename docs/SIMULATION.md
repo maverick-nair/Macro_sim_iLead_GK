@@ -46,6 +46,7 @@ Sales Elevator default: 8 weeks of 5 days.
 | Field | Rule |
 |---|---|
 | `stages` | 3 to 6 stages, in funnel order. Each has a name, a conversion ratio (0 to 1) and an ideal headcount. |
+| `about`, `suits` | Optional: what the stage does and which skills suit it, shown in the stage's info popover and in Objectives (D97). |
 | First stage | Receives `inputPerSubPeriod`. |
 | Last stage | Its output counts as conversions. |
 
@@ -68,6 +69,7 @@ Sales Elevator default [M][W]:
 | Per stage values | Each member also has skill, morale and result for every other stage, used when they are swapped or assessed [M][W]. |
 | `candidates` | Hire pool, same shape. |
 | `hiddenConcern` | Optional per member: text that only surfaces in conversation (section 3.4). |
+| `attitude`, `awareness`, `responsibilities` | Optional profile rows (1.0's profile fields, D97); the profile shows the ones set. |
 
 Sales Elevator default: the 10 active actors and 10 candidates from the workbook, after calibration (section 9).
 
@@ -421,6 +423,9 @@ Conditions are checked each sub-period. Weeks are expressed as fractions of the 
 
 Every event and trigger pauses the clock while its card is open [S].
 
+### 6.5 Progress milestones (D93)
+After each funnel run the engine records a milestone, once each, when revenue first reaches each share of the run's target in `milestones.target` (default 25, 50, 75 and 100%) and when a stage's output so far first reaches each share in `milestones.stages` (default 50 and 100%) of its ideal output for the whole run (the sum of every period's ideal throughput). The view lists them (`milestones`: key, kind, stage, percent, period, sub-period). Nothing reads them back: no rule, draw or score changes, so replays and calibration are unchanged.
+
 ---
 
 ## 7. 2.0 gamification [G]
@@ -582,6 +587,18 @@ It then plays 200 runs per policy and checks every band. The output is a report 
 
 For the Sales Elevator default, calibration starts from the workbook's starting values; the prototype's on-screen numbers are only design fixtures for the `/screens` gallery.
 
-## 10. Engine copy (D83)
+## 10. Guidance outside the rules (D90 to D99)
+
+None of these change a rule, a draw or a score.
+
+- **Demo round** (D92): an unscored demo on the storyline with seed 7, on a separate engine that is never saved or logged. Instant decisions only (`confirmStyles`, `openProfile`, instant `planAction`, `clearOutcome`, `dismissCard`); anything else is refused with `notInDemo`. Config `demo: { enabled, with, action }` (defaults: on, the first member, the first instant member action). The Week 0 practice (D84) stays the place for a practice conversation.
+- **History** (D95): each log entry carries the key of the action that caused it (`action`), so the History panel can filter by action. The replay digest leaves the label out.
+- **Trends** (D96): the view sends each revealed person's result at the start of every period played and now (`trends`).
+- **Actions** (D97): the view sends each action's `cooldown` and `unlockPeriod`, from section 4.1.
+- **Worked examples** (D91): a lens's `examples`, or one per style built from its archetype.
+- **Tours and tips** (D94, D99): `tour: { enabled, steps }` rewords the guided tours; tips (Hire unlocked, no days left, a seat open) are read from the view by the client.
+- **Video** (D90): `video: { src, poster, captions, transcript }`.
+
+## 11. Engine copy (D83)
 
 Every sentence the engine writes is a message code with parameters (`src/engine/copy.ts`), worded on the client from the catalog in the participant's language (`src/i18n/messages/<locale>/engine.json`). Authored copy (events, triggers, emails, persona lines, report narratives) stays as authored, in the storyline's language (`locale`). The rules above quote the English wording.

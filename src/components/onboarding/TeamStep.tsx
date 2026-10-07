@@ -31,7 +31,7 @@ export function TeamStep({ members, read, open, readsNeeded, startLabel, onOpen,
   const op = members.find(m => m.id === open) ?? null;
   const readCount = members.filter(m => read.includes(m.id)).length;
   return (
-    <div className="grid flex-1 animate-(--il-onboarding-enter) grid-cols-(--il-onboarding-team-columns) gap-6">
+    <div className="grid flex-1 animate-(--il-onboarding-enter) grid-cols-(--il-onboarding-team-columns) gap-6 tablet:grid-cols-1">
       <div className="flex flex-col gap-4">
         <div className="flex items-end justify-between gap-4">
           <div className="flex flex-col gap-1">
@@ -51,7 +51,7 @@ export function TeamStep({ members, read, open, readsNeeded, startLabel, onOpen,
               <button key={m.id} type="button" onClick={() => onOpen(m.id)} aria-controls={profileId}
                 aria-label={t('onboarding.team.member.aria', { name: m.name, stage: m.stage, read: isRead ? 'yes' : 'no' })}
                 className={`flex cursor-pointer flex-col overflow-hidden rounded-20 border-2 border-solid bg-surface-card p-0 text-start text-fg-primary [transition:var(--il-onboarding-team-card-transition)] hover:[transform:var(--il-onboarding-team-card-lift)] ${FOCUS} ${open === m.id ? 'border-accent-secondary' : 'border-line-default'}`}>
-                <div className="relative h-37.5 w-full bg-(image:--il-fill-portrait-calm)">
+                <div className="relative h-37.5 w-full bg-(image:--il-fill-portrait-calm) short:h-30 tablet:h-28">
                   {m.img && <img src={m.img} alt="" className="size-full object-cover object-(--il-onboarding-team-portrait-position) mix-blend-multiply" />}
                   {isRead && <span className="absolute top-2 end-2 flex min-h-5.5 items-center rounded-pill bg-brand-mint-green px-2 text-12 font-700 text-brand-deep-space">{t('onboarding.team.readBadge')}</span>}
                 </div>
@@ -65,7 +65,7 @@ export function TeamStep({ members, read, open, readsNeeded, startLabel, onOpen,
           })}
         </div>
       </div>
-      <aside id={profileId} aria-label={t('onboarding.team.profile.aria')} className="flex flex-col overflow-hidden rounded-24 border border-line-strong bg-surface-material">
+      <aside id={profileId} aria-label={t('onboarding.team.profile.aria')} className="flex flex-col overflow-hidden rounded-24 border border-line-strong bg-surface-material tablet:min-h-60">
         {op && (
           <>
             <div className="flex items-center gap-4 px-5 pt-5.5 pb-1">

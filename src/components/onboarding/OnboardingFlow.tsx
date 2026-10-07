@@ -123,7 +123,7 @@ export function OnboardingFlow(p: OnboardingFlowProps) {
 
   const read = [...new Set([...opened, ...p.members.filter(m => m.read).map(m => m.id)])];
   return (
-    <div ref={root} className="flex flex-1 flex-col gap-5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
+    <div ref={root} className="flex flex-1 flex-col gap-5 px-8 pt-5 pb-8 short:gap-4 short:pt-3 short:pb-4" style={{ minHeight: p.minHeight }}>
       <OnboardingHeader step={index} total={ONBOARDING_STEPS.length} />
       {step === 'lang' && (
         <LanguageStep languages={p.languages} lang={lang} onLang={setLang} onBegin={next}

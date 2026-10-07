@@ -939,6 +939,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const partner = !demo && ui.practiceOffer && v.practice.available && v.practice.partner ? member(v.practice.partner) : undefined;
     body = (
       <>
+      {demo?.banner}
       {partner && (
         <PracticeOffer name={first(partner.name)} busy={busy}
           onStart={() => { void send({ type: 'startPractice' }); }}

@@ -53,8 +53,9 @@ export function GameMenu({ items, defaultOpen = false }: GameMenuProps) {
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions -- Escape and the arrows inside the open list; the button and items are the controls
     <div ref={wrap} className="relative" onKeyDown={onKeyDown} data-tour="menu">
       <button ref={button} type="button" aria-expanded={open} aria-controls={open ? id : undefined} onClick={() => setOpen(o => !o)}
-        className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-3 py-0 text-13 font-700 text-fg-primary hover:bg-surface-card tablet-portrait:min-h-11 tablet-portrait:rounded-12 ${focus}`}>
-        <MenuIcon />{t('hud.menu.button')}
+        className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-3 py-0 text-13 font-700 text-fg-primary hover:bg-surface-card tablet-portrait:min-h-11 tablet-portrait:rounded-12 narrow:min-w-11 narrow:justify-center narrow:px-0 ${focus}`}>
+        {/* Under 800 wide the HUD keeps the icon; the word stays for screen readers (D101). */}
+        <MenuIcon /><span className="narrow:sr-only">{t('hud.menu.button')}</span>
       </button>
       {open && (
         <ul id={id} aria-label={t('hud.menu.aria')} className="absolute top-full start-0 z-45 m-0 mt-2 flex w-max min-w-56 list-none flex-col gap-0.5 rounded-16 border border-line-strong bg-surface-solid p-1.5 whitespace-nowrap shadow-(--il-hud-score-shadow)">

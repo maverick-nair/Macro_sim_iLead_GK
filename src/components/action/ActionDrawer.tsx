@@ -1,4 +1,5 @@
 import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { ScrollArea } from '../shell/ScrollArea';
 import { Button, NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { Heading, type HeadingLevel } from '../Heading';
@@ -154,7 +155,10 @@ export function ActionDrawer(p: ActionDrawerProps) {
   const who = p.people.mode === 'pick' ? t('action.drawer.people', { count: p.picks.length, max: p.people.max })
     : p.people.mode === 'with' ? t('action.drawer.with') : t('action.drawer.who');
   return (
-    <div data-drawer="" className="flex flex-1 animate-(--il-action-drawer-enter) flex-col gap-3.5 overflow-auto px-4.5 py-4">
+    <div data-drawer="" className="flex min-h-0 flex-1 animate-(--il-action-drawer-enter) flex-col">
+      {/* The details scroll on a short window; the summary and Confirm stay in view below them (D101). */}
+      <ScrollArea label={p.name}>
+      <div className="flex flex-col gap-3.5 px-4.5 pt-4 pb-3 short:gap-2.5 short:pt-3">
       <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-1.5"><span className={`${pill} bg-accent-soft`}>{t('action.kind', { kind: p.kind })}</span><span className={`${pill} bg-surface-raised`}>{fmt(p.days)}</span></div>
@@ -169,8 +173,12 @@ export function ActionDrawer(p: ActionDrawerProps) {
         <PickedChips picks={p.picks} />
       </div>
       {p.nudge && <NudgeNote nudge={p.nudge} />}
-      <div aria-live="polite" className="mt-auto rounded-14 bg-surface-raised p-3 text-13 text-pretty">{p.summary}</div>
-      <div data-tour="drawer-confirm" className="w-full"><Button variant="primary" size="lg" disabled={!p.canConfirm} onClick={p.onConfirm}>{t('action.drawer.cta', { cta: p.cta })}</Button></div>
+      </div>
+      </ScrollArea>
+      <div className="flex flex-none flex-col gap-3.5 px-4.5 pb-4 short:gap-2.5 short:pb-3">
+        <div aria-live="polite" className="rounded-14 bg-surface-raised p-3 text-13 text-pretty short:p-2.5">{p.summary}</div>
+        <div data-tour="drawer-confirm" className="w-full"><Button variant="primary" size="lg" disabled={!p.canConfirm} onClick={p.onConfirm}>{t('action.drawer.cta', { cta: p.cta })}</Button></div>
+      </div>
     </div>
   );
 }

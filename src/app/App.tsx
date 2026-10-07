@@ -146,7 +146,7 @@ function applyMoves(stats: Stats, outcome: Outcome): Stats {
  * end, the end screen and the report are documents and may scroll the page.
  */
 const PLAY_FIT = 'flex min-h-dvh flex-col';
-const THEME_ROOT = 'il-theme relative flex flex-col overflow-hidden pt-(--il-app-safe-top) pr-(--il-app-safe-right) pb-(--il-app-safe-bottom) pl-(--il-app-safe-left) font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]';
+const THEME_ROOT = 'il-theme relative flex flex-col overflow-clip pt-(--il-app-safe-top) pr-(--il-app-safe-right) pb-(--il-app-safe-bottom) pl-(--il-app-safe-left) font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]';
 
 export function App(p: AppProps) {
   const api = useApi();

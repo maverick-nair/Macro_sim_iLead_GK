@@ -584,6 +584,76 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **D61 leftovers:** the mic test and the resume recap were built in D68; the rest of D61 was closed in D68 and D78.
 - **E2E port:** the gate asks for `E2E_PORT=5741`; the server's tests held that port during this work, so the runs here used 5747. The suite is the same on any port.
 
+## The original flow gaps and viewport fit (7 Oct)
+
+The product owner asked for every gap in `docs/ORIGINAL-FLOW-GAPS.md` except Help and Support, in the current visual language (D80: no restyle, existing tokens and components), and for the participant app and /author to fit the window at every laptop and tablet size. Each decision below can be revisited.
+
+**D89. The in play menu, Exit and full screen; Help, Support and Logout dropped.** Decided 2026-10-07 (lifts D38's hidden menu).
+- **Menu** (`src/components/hud/GameMenu.tsx`): a Menu button in the HUD opens a disclosure list (not an ARIA menu: plain buttons, Tab and Escape) with Objectives, Tutorial and video, History, Results and stages, Leaderboard (only when the cohort leaderboard is on, D69's setting), About these actions, Guided tour, Settings, Full screen and Exit (when the launch gives a return address). Each item opens a panel in one shell (`src/components/panels/PanelShell.tsx`, a Radix dialog with tabs where a panel has them); the session clock pauses while a panel is open. The panels load on demand (`PlayPanels.tsx`), so the first load does not grow.
+- **Full screen** asks the browser (`requestFullscreen`), the item reads "Leave full screen" while it is on, and a refusal shows a toast.
+- **Exit** asks first (the same dialog look as Pause), saves nothing new (every intent is already saved, D86) and goes to the launch's return address: the signed launch claim `exit` (an http or https URL), returned by `GET /api/profile` as `exit`, `?exit=` on the mock. Exit is in the menu only when the launch gives that address; without one there is nowhere to return to, and Pause already saves.
+- **Dropped by the product owner:** Help and Support (the form and the Help panel), and the Logout menu. The launch owns sign in; the session timed out dialog stays.
+
+**D90. Objectives, Tutorial and the video during play.** Decided 2026-10-07.
+- **Objectives** rereads the targets (the Your targets tab) and the sponsor's letter, with each stage's info (D97).
+- **Tutorial and video** has three tabs: Video (the storyline's welcome video, with captions), Transcript (the storyline's transcript paragraphs, also the accessible alternative to the video) and How to lead (the lens's styles with worked examples, D91), plus Replay the guided tour.
+- **Config:** `StorylineConfig.video` `{ src?, poster?, captions?, transcript: Copy[] }`, sent in the view as `storyline.video`. Onboarding's sponsor step plays the same video. Without a video the Video tab is left out and the Transcript tab holds the words. Sales Elevator sets none (D54); `?video=1` on the mock plays a 4 KB sample with captions (`public/assets/video/sample-welcome.*`) for stories and tests.
+
+**D91. Worked examples for the lens.** Decided 2026-10-07.
+- 1.0's transcript taught its model with examples. A lens may author `examples: [{ need, person, style, why }]` (validated: the style must be one of the lens's); without them the view builds one example per style from its archetype: the need it suits, a person described by that need and a sentence on why (engine copy `engine.example.*`, worded per locale). The default lens (Readiness Based) authors four (Tom, Asha, Ravi, Mei). The view sends `lens.examples`, not the fit table, so the scoring table stays on the server.
+
+**D92. The demo round, and how it relates to the Week 0 practice.** Decided 2026-10-07 (the product owner asked for both to be weighed).
+- **What it is.** After onboarding, "Try the demo first?" offers a guided, unscored demo of the board: set a style for one person (the others are set), confirm, select a person, take an action, read the impact, then "You are ready" and Play simulation. A coachmark leads each step with "Show me"; Exit demo asks first ("You cannot come back to the demo once you leave it") and is always in the banner. It takes about three minutes and can be played once.
+- **It never touches the real run.** The demo runs on its own engine: the mock makes a separate in memory engine; the server serves `GET /engine/sessions/{session}/demo/view`, `POST .../demo/intents` and `DELETE .../demo` on an in memory engine with a fixed seed (7), never written to the database or the event log. Only `confirmStyles`, `openProfile`, `planAction`, `clearOutcome` and `dismissCard` are allowed, and `planAction` only for instant actions (`src/engine/demo.ts`); anything else is refused with `notInDemo`.
+- **Relation to D84.** The demo teaches the board (styles, actions, impact) with instant decisions; the Week 0 practice teaches a conversation. They are complementary, so both are kept: the demo is offered first, after onboarding; the practice offer then sits on week 1's style setting as before. Live actions in the demo say "Conversations are practiced before week 1, not in the demo." 1.0's demo was a full scored week; ours is shorter and unscored because the real week 1 already starts gently.
+- **Config:** `demo: { enabled (default true), with (a member id, default the first member), action (an instant member action, default the first) }`, validated against the storyline; the view says `guide.demo`. `?start=demo` opens it directly.
+
+**D93. Progress milestones.** Decided 2026-10-07.
+- The engine records a milestone when revenue passes 25, 50, 75 and 100% of the run's target and when a stage's output so far reaches half and all of its ideal output for the whole run (1.0's module completion) (`milestones: { target, stages }` in config, those defaults). Each is sent once in the view (`milestones`), with the period it was reached in, and the board shows it as a notice under the KPI strip (no confetti, no big numbers: D80 and the spec's fixes table), with Leaderboard when the cohort board is on. Celebration settings and reduced motion apply.
+- Recording milestones does not change the simulation: replay hashes and calibration are unchanged.
+
+**D94. The guided tours.** Decided 2026-10-07.
+- Three tours in 1.0's tip order, worded for 2.0 and for the storyline's lens and clock words (`src/components/tour/steps.ts`): the board (Objectives and Tutorial in the menu, Tick tock, Time to act, Your session, Team areas, Know your team member, Notifications, Team performance, Module progress, Results and stages, Actions, Action duration, End of the week), a short one on style setting (the lens's styles, choose, reason, confirm) and one on the live screen (brief, speak or type, hints, end). A step whose element is not on screen is skipped.
+- **When.** Each tour starts by itself the first time its area shows (not over a dialog, not in the demo), once per participant; Skip tour ends it, "Do not show tips again" turns every tour and tip off, and Guided tour in the menu (or Replay in Tutorial) replays the board's tour at any time. Kept in local storage (`ilead.guide`), per participant.
+- **Access.** The tip is a non modal dialog that takes focus when it opens and on each step, is read by screen readers ("Board tour · 3 of 13"), keeps its buttons 44 pixels on touch, and Escape ends the tour. The target is ringed and the rest dimmed; the page behind is inert while the tip shows. Reduced motion skips the movement.
+- **Config:** `tour: { enabled (default true), steps: { "<area>.<step>": { title?, body? } } }` rewords any step. The session clock pauses during a tour.
+- The E2E suites start with tours off (`GUIDE_OFF` in `playwright.config.ts`); `tests/e2e/guide.spec.ts` starts with no storage, as a first run does.
+
+**D95. Team wide History.** Decided 2026-10-07.
+- The History panel lists the run week by week, newest first: each action, who it involved and each person's skill, morale and result change with its reasons (the outcome's See why lines). Filters by person and by action. Opened from the menu and from View history on the outcome panel (filtered to that outcome's people).
+- The engine's log entries carry the action key (`LogEntry.action`) so History can name and filter them. The replay test's digest strips that label before hashing, so the seeded hashes are unchanged; it is a label, not a rule.
+
+**D96. Result and stage overviews during play, and the result trend.** Decided 2026-10-07.
+- **Results and stages** (a button on the board's stage header row, and in the menu): a Results tab (each person's result week by week with the team average, from the people revealed) and a Stages tab (each stage this week and so far against its ideal). Every chart has a table version.
+- **Result trend** in the profile: a small line of the person's result by week (from the view's `trends`, only for people whose profile has been opened, D39), with Show as table.
+
+**D97. Stage info, the actions list and optional profile fields.** Decided 2026-10-07.
+- **Stage info:** stages may author `about` and `suits` (which skills suit the stage); each stage header has an info button with a popover, and Objectives lists them. Sales Elevator authors all five (in `scripts/storyline/import_ilead1.py` and the storyline file).
+- **About these actions:** an info button on the Actions panel (and the menu) opens every action with its description, cost, cooldown and the week it unlocks (the view now sends `cooldown` and `unlockPeriod`).
+- **Profile fields:** `attitude`, `awareness` and `responsibilities` are optional on a person's profile; the profile shows the rows that are set.
+
+**D98. Stepping through replies.** Decided 2026-10-07.
+- When an outcome has replies from more than one person, the outcome panel steps through them ("Reply 1 of 2", Previous and Next), each with that person's face and line; the changes stay listed below. One reply shows as before.
+
+**D99. Tips at key moments.** Decided 2026-10-07.
+- One time tips in the board's notice area, from the view: Hire unlocks (when Hire's unlock week arrives), no days left in the period (end the week), and a seat is open (a stage below its ideal after someone leaves, pointing at Hire, 1.0's vacant seat prompt). Each shows once per participant and is dismissed with Got it. "Do not show tips again" (D94) turns them off.
+
+**D100. The server honors the client's Idempotency-Key.** Decided 2026-10-07 (completes D86 on the server).
+- `POST /engine/sessions/{session}/intents` reads `Idempotency-Key` (1 to 200 characters, otherwise 400 `badIdempotencyKey`). The first time a key is seen the intent runs and its result is stored with the event (`intent_keys`, migration 2, keyed by run and key); the same key again returns the stored result without running the intent again. CORS allows the header. Deleting a run deletes its keys. Tests in `server/test/engine.test.ts`.
+
+**D101. Play screens fit the window.** Decided 2026-10-07 (the product owner's laptop is 1513 by 745 at DPR 2; style setting scrolled).
+- **Approach.** The play screens (style setting, the board, the live shell, event cards, the sponsor call, the week end) take the window's height (`h-dvh`, `overflow: hidden` on their main, only while they show) and never scroll the page. What can grow scrolls in its own region with a visible fade and keyboard access (`ScrollArea`: a focusable region only when it overflows): the team on the board (sideways too when narrow, each card at least 38 spacing units wide), the style cards, the actions panel, panels and the inbox. Primary actions sit outside those regions.
+- **Density steps** by height, not width: two Tailwind variants, `short` (900 pixels tall or less) and `shorter` (780 or less), tighten paddings, gaps, the KPI tiles, the HUD and the outcome band (which also caps its height), and use compact portraits (the face kept in frame with a new token). Nothing changes above 900 pixels tall, so the designed 1440 by 1000 board is as before.
+- **Documents** (the end screen, the report, the group report) scroll as pages: the report's toolbar sticks to the top, the end screen's report actions to the bottom, and the end screen keeps a readable width (a new `end.max-width` token; the reports already had one).
+- **200% text** keeps page scroll: at 200% the fit is released (`text-large`), so nothing is cut off.
+- **Checked by** `tests/e2e/viewport.spec.ts`: every state at every target size (laptops 1280 by 720 to 2560 by 1440, tablets 1024 by 768, 1180 by 820, 834 by 1194, 768 by 1024, 744 by 1133): no sideways scroll, no page scroll on play screens, the state's primary actions on screen, no clipped labels; with visual baselines at 1513 by 745 and 1366 by 768.
+
+**D102. /author fits the window.** Decided 2026-10-07.
+- The author page takes the window's height. Two panes from 1180 pixels wide (the chat with the steps after the questions, and the summary), each scrolling on its own; the composer is always at the bottom of the chat pane. Below 1180, one column with the summary as a collapsible section above the chat (its region capped at 40% of the height). The chat scrolls to the newest message, the lens step, the preview and the locked draft as each appears.
+
+**D103. Not built: the org chart.** Decided 2026-10-07.
+- 1.0's org chart note (You, a peer team lead and the COO) is a cast proposal for a new storyline, not a screen. Our board groups people by stage. Decide with the next storyline whether a "You" node or reporting lines belong on the board; it would be a design change for the canvas (D80).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

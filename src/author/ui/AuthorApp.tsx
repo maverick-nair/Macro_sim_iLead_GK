@@ -325,11 +325,11 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
             <details className={`${CARD} flex-none p-4`}>
               <summary className={`cursor-pointer text-16 font-700 ${FOCUS}`}>Your simulation so far</summary>
               {/* Open, it keeps a share of the height and scrolls, so the conversation and composer stay in view. */}
-              <div role="region" aria-label="Your simulation so far" tabIndex={0} className={`mt-4 max-h-[40dvh] overflow-y-auto ${FOCUS}`}>{summary}</div>
+              <div role="region" aria-label="Your simulation so far" tabIndex={0} className={`relative mt-4 max-h-[40dvh] overflow-y-auto ${FOCUS}`}>{summary}</div>
             </details>
           )}
           {/* The conversation and each step scroll here; the composer below stays put. */}
-          <div ref={scroller} role="region" aria-label="Conversation and steps" tabIndex={-1} className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain pe-1">
+          <div ref={scroller} role="region" aria-label="Conversation and steps" tabIndex={-1} className="relative flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain pe-1">
           <div role="log" aria-label="Conversation" aria-live="polite" tabIndex={0} className={`${CARD} flex flex-none flex-col gap-4 p-5 ${FOCUS}`}>
             <ChatBubble from="assistant">Let us draft your iLead simulation. I will ask a few short questions and skip anything your answers or uploads already cover. You can upload a brief or framework at any time.</ChatBubble>
             {log.map((e, i) => e.kind === 'note'
@@ -386,7 +386,7 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
           <aside aria-labelledby="author-summary" className={`${CARD} flex min-h-0 flex-col gap-4 p-5`}>
             <h2 id="author-summary" className="m-0 flex-none text-20 font-700">Your simulation so far</h2>
             {/* The summary scrolls in its own pane, focusable so the keyboard can scroll it (D102). */}
-            <div role="region" aria-labelledby="author-summary" tabIndex={0} className={`-m-1 min-h-0 flex-1 overflow-y-auto overscroll-contain p-1 ${FOCUS}`}>{summary}</div>
+            <div role="region" aria-labelledby="author-summary" tabIndex={0} className={`relative -m-1 min-h-0 flex-1 overflow-y-auto overscroll-contain p-1 ${FOCUS}`}>{summary}</div>
           </aside>
         )}
       </div>

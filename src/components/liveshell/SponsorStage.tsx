@@ -50,7 +50,7 @@ export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, on
   return (
     <div className="grid flex-1 content-start grid-cols-2 gap-5 stage-narrow:grid-cols-1">
       <div className="flex flex-col items-center gap-3.5">
-        <div className="relative flex aspect-square w-full max-w-105 items-center justify-center rounded-28 bg-(image:--il-liveshell-sponsor-fill)">
+        <div className="relative flex aspect-square w-full max-w-105 items-center short:max-w-80 shorter:max-w-70 justify-center rounded-28 bg-(image:--il-liveshell-sponsor-fill)">
           {sponsor.img
             ? <img src={sponsor.img} alt={sponsor.name} className="size-full rounded-28 object-cover object-top" />
             : <span aria-hidden="true" className="text-110 font-700 text-liveshell-on-signal opacity-85">{initialsOf(sponsor.name)}</span>}

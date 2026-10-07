@@ -55,7 +55,7 @@ Every path, its schema and its roles are in `/openapi.json` (OpenAPI 3.1, genera
 
 | App adapter | Base (`.env.server`) | Server routes |
 |---|---|---|
-| `createHttpClient` (src/engine/client.ts) | `VITE_ILEAD_ENGINE_URL=/engine` | `GET /engine/sessions/{session}/view`, `POST .../intents`, `GET .../interactions/{i}/turns/{t}/stream` (SSE) |
+| `createHttpClient` (src/engine/client.ts) | `VITE_ILEAD_ENGINE_URL=/engine` | `GET /engine/sessions/{session}/view`, `POST .../intents` (honors `Idempotency-Key`, D100), `GET .../interactions/{i}/turns/{t}/stream` (SSE); the demo round (D92): `GET .../demo/view`, `POST .../demo/intents`, `DELETE .../demo` |
 | `createHttpApi` (src/api/http.ts) | `VITE_ILEAD_API_URL=/api` | `/api/profile`, `/api/theme`, `/api/history`, `/api/cohort/leaderboard`, `/api/cohort/{id}/report`, `/api/cohort/report`, `/api/report.pdf`, `/api/report/email`, `/api/scenario`, `/api/session`, `/api/session/settings` |
 | `createHttpTranscriptionClient` (src/speech/transcription.ts) | `VITE_ILEAD_SPEECH_URL=/speech` | `POST /speech/transcriptions`, `POST .../{id}/chunks?seq=n`, `POST .../{id}/end`, `DELETE .../{id}` |
 | `ServerDrafter` (src/author/drafter.ts) | `VITE_GENIE_URL=/genie` | `POST /genie/author/turn`, `POST /genie/author/draft` |
@@ -79,6 +79,8 @@ Added by the server (not called by the app today):
 
 Notes on behaviour:
 - **Start and resume.** The first `GET .../view` starts the participant's run of the launch's storyline (or the cohort's, or `DEFAULT_STORYLINE`); later calls resume the latest attempt, in any browser, after any restart. The path's session id must be the signed in participant (403 otherwise).
+- **Idempotency** (D100). An intent sent with `Idempotency-Key` (1 to 200 characters, else 400 `badIdempotencyKey`) is applied once: its result is stored beside the event (`intent_keys`), and the same key again on that run answers the stored result without applying anything. The app's intent queue sends the same key on every retry (D86).
+- **Demo round** (D92). The demo routes run a separate engine on the run's storyline with seed 7, held in memory per participant (dropped on `DELETE .../demo`, on restart, or when the cache of engines is full). Nothing is written to the database or the event log; only instant decisions are allowed (409 `notInDemo` otherwise).
 - **Streaming.** `sendTurn` returns the NPC's turn (its words already decided by the `NpcModel`); the stream endpoint sends those words as `StreamChunk` SSE events at `STREAM_TOKENS_PER_SEC`, then `done`. A turn that is not in the open conversation is 404. This is option 1 of `docs/AI.md` section 2; see 15 for live model streaming.
 - **Leaderboard.** Ranks each cohort member's latest attempt from stored scores (score, then conversions, then capability). The caller's own numbers come from their run, not from what the browser sends. Refused (403) in an assessment.
 - **Group report.** `GET /api/cohort/{id}/report` builds `buildGroupReport` over each participant's latest attempt (unfinished runs count in the completion rate) with the stored benchmark of the storyline's lens. Development withholds aggregates under `report.group.minimumCohort`; assessment adds verdicts and names (D77).
@@ -103,6 +105,7 @@ Notes on behaviour:
 | `roles` | no | `participant` (default), `assessor`, `cohort_admin`, `author`. |
 | `attempt` | no | `new` starts a fresh attempt when the last one has been played; `resume` (default). |
 | `redirect` | no | A path on this site to land on (never another site). |
+| `exit` | no | An http or https URL Exit in the app's menu returns to (D89), served as `exit` by `GET /api/profile`. |
 
 Minting in another language is three lines with any JWT library (HS256, the claims above). `server/scripts/mint.ts` is the reference.
 
@@ -124,6 +127,7 @@ Minting in another language is three lines with any JWT library (HS256, the clai
 | `cohorts` | Name, storyline, purpose, theme. |
 | `runs` | One attempt: participant, cohort, storyline id and version, lens, purpose, the storyline input snapshot, seed, attempt, engine version, status, event count, score, conversions, capability, headline. |
 | `run_events` | The event log: `(run_id, seq)` unique, intent or review, payload, the model answers it used. |
+| `intent_keys` | Idempotency keys (migration 2, D100): `(run_id, key)` unique, the event's seq and the stored result. Deleted with the run. |
 | `run_summaries` | The latest `RunSummary` per run, by lens (group report, history, benchmark). |
 | `reviews` | Assessor reviews (also in the event log). |
 | `storylines` | Every version: draft or published, by whom. |
