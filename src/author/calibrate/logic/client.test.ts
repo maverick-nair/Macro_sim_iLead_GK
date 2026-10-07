@@ -66,4 +66,37 @@ describe('calibration runners', () => {
     await server.run(raw, settings);
     expect(server.lastRanOn()).toBe('server');
   });
+
+  it('stop the server job when a poll fails, and read an aborted fetch as a cancel', async () => {
+    const s = await fakeServer();
+    let polls = 0;
+    const failing = (async (url: string, init: RequestInit = {}) => {
+      if ((init.method ?? 'GET') === 'GET' && ++polls === 1) throw new TypeError('Failed to fetch');
+      return s.fetch(url, init);
+    }) as typeof globalThis.fetch;
+    await expect(createServerRunner('/genie', { fetch: failing, pollMs: 1 }).run(raw, settings)).rejects.toMatchObject({ code: 'pollFailed' });
+    await new Promise(r => setTimeout(r, 0));
+    expect(s.calls.map(c => c.method)).toEqual(['POST', 'DELETE']);
+    // A poll that rejects with AbortError is a cancel, whatever the signal says.
+    const aborting = (async (url: string, init: RequestInit = {}) => {
+      if ((init.method ?? 'GET') === 'GET') throw Object.assign(new Error('The operation was aborted.'), { name: 'AbortError' });
+      return s.fetch(url, init);
+    }) as typeof globalThis.fetch;
+    await expect(createServerRunner('/genie', { fetch: aborting, pollMs: 1 }).run(raw, settings)).rejects.toMatchObject({ code: 'cancelled' });
+  });
+
+  it('remove the abort listener once a poll wait resolves', async () => {
+    const s = await fakeServer();
+    const ctl = new AbortController();
+    let added = 0;
+    let removed = 0;
+    const signal = ctl.signal;
+    const add = signal.addEventListener.bind(signal);
+    const remove = signal.removeEventListener.bind(signal);
+    signal.addEventListener = ((...a: Parameters<typeof add>) => { added++; add(...a); }) as typeof add;
+    signal.removeEventListener = ((...a: Parameters<typeof remove>) => { removed++; remove(...a); }) as typeof remove;
+    await createServerRunner('/genie', { fetch: s.fetch, pollMs: 1 }).run(raw, settings, { signal });
+    expect(added).toBeGreaterThan(1);
+    expect(removed).toBe(added);
+  });
 });
