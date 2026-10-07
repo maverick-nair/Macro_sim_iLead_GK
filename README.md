@@ -18,11 +18,15 @@ npm run e2e              # Playwright flows on the mock engine, axe on every rou
 npm run vitals           # Web Vitals budgets on a throttled production build (scripts/vitals.ts, D78)
 npm run schemas          # regenerate the handoff JSON Schemas in docs/schemas from the Zod contracts
 npm run calibrate -- sales-elevator   # tune a storyline so it plays well (add --check to verify)
+npm run dev:full         # the app against the reference server (server/), with launch links printed
+npm run test:server      # the server's tests;  npm run e2e:server  Playwright against the real server
 ```
 
-CI (`.github/workflows/ci.yml`) runs on every push and pull request: token check, lint, build, Storybook smoke, the Playwright flows, parity and the Web Vitals budgets.
+CI (`.github/workflows/ci.yml`) runs on every push and pull request: token check, lint, build, the server's tests, Storybook smoke, the Playwright flows (the app's and the server's), parity and the Web Vitals budgets.
 
-For the server and GenieKreator teams: `docs/HANDOFF.md` (architecture, the engine contract, every proposed endpoint, the config and report schemas, how to run, test and release, budgets, known limits).
+The reference server is in `server/` (D81): the engine authoritative and persisted, every endpoint the app calls, signed launch links, report PDF and email, the AI from `ai/` (D82). Setup, configuration, deploy and operations: `docs/SERVER.md`. An engineer only configures it (`.env.example`, `Dockerfile`, `docker-compose.yml`).
+
+For the server and GenieKreator teams: `docs/HANDOFF.md` (architecture, the engine contract, every endpoint, the config and report schemas, how to run, test and release, budgets, known limits).
 
 Component rules: `docs/COMPONENTS.md`.
 
@@ -33,6 +37,7 @@ Plan and status: `docs/PLAN.md`. Simulation rules: `docs/SIMULATION.md`. Design 
 | `/`        | The playable app, full screen. Starts at onboarding, then the board runs on the engine. `?participant=<id>` names the participant (the launch link from the LMS or GenieKreator), so settings and the session are theirs; it defaults to `local`. `?start=board` skips onboarding, `?period=4` opens the mock engine at period 4 (the real engine ignores it), `?engine=off` shows the prototype's fixed board, `?theme=light` (or `dark`) the mode, over the client theme's preference, `?client=halden` the sample client theme and `?themeUrl=/path.json` any theme JSON, both served by the mock API (see Themes). Laptops, desktops and tablets only (D69): narrower than 744, or shorter than 500 on a touch screen, a notice asks to open the link on a bigger screen; the app stays mounted underneath. In development only, `?report=1` plays a whole mock run with the good player and opens its development report (`&policy=random` or `passive`, `&seed=N`, `&print=1`, `&client=halden`, `&themeUrl=`). |
 | `/screens` | Every screen, each frame the live app opened at that state. Port of `project/iLead Screens.dc.html`. Frame ids (`b4`, `l1`, ...) match the design and are linkable, for example `/screens#b4`. |
 | `/states`  | Edge states: loading, empty, offline, mic denied, slow AI. Port of `project/iLead States.dc.html`. |
+| `/report/print` | The participant's report alone in its print view (`?participant=<id>`), for the server's PDF renderer. Lazy. |
 
 ## Layout
 
@@ -69,7 +74,7 @@ Two clients talk to the server. Each has an in-browser mock, used when nothing i
 
 Voice and AI text on the engine board use `src/speech` and `src/ai` (`docs/SPEECH.md`). `VITE_ILEAD_SPEECH_URL` turns on real microphone capture with server transcription; without it a scripted mock voice stands in. The prototype's live screen (`src/screens/Live.tsx`, used by the galleries and `?engine=off`) still simulates voice, NPC speech and the waveform in `src/screens/live/useLiveSession.ts`.
 
-The variables are listed in `.env.example`; copy it to `.env.local` to set them.
+The variables are listed in `.env.example`; copy it to `.env.local` to set them. Against the reference server, `.env.server` sets them all to same origin paths (`npm run build:server-app`, `npm run dev:full`, `docs/SERVER.md`).
 
 ## Author chat prototype
 

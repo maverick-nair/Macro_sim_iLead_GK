@@ -1,0 +1,15 @@
+.git
+node_modules
+ai/node_modules
+dist
+dist-server
+data
+storybook-static
+test-results
+playwright-report
+.visual-cache
+.claude
+.env
+.env.local
+*.sqlite
+*.sqlite-*

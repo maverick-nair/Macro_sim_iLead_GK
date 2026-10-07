@@ -2,7 +2,7 @@ name: CI
 
 # Every push and pull request: tokens, lint, unit tests, types, build with the bundle budget,
 # Storybook smoke, end to end flows with axe, design parity against the Claude Design prototype, and the
-# Web Vitals budgets on a throttled production build.
+# Web Vitals budgets on a throttled production build; the reference server's tests and its end to end run.
 on:
   push:
   pull_request:
@@ -21,8 +21,10 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:server
       - run: npm run storybook:smoke
       - run: npx playwright test
+      - run: npm run e2e:server
       - run: npm run parity
       - run: npm run vitals -- --json vitals.json
       - if: failure()

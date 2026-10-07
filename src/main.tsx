@@ -23,6 +23,8 @@ const GroupPage = lazy(() => {
   const started = import('./group/launch').then(m => m.startGroup(m.groupLaunch()));
   return Promise.all([import('./group/GroupPage'), started]).then(([m, s]) => ({ default: () => <m.default started={s} /> }));
 });
+// The report alone in its print view, for the server's PDF renderer (server/src/report/pdf.ts). Lazy.
+const PrintReport = lazy(() => import('./app/PrintReport'));
 const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ default: m.StatesGallery })));
 // Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
 const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
@@ -95,7 +97,7 @@ document.documentElement.dir = dirOf(appLocale());
 void loadEngineCopy().catch(() => undefined);
 
 const path = location.pathname.replace(/\/+$/, '');
-const play = !['/screens', '/states', '/author', '/group'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
+const play = !['/screens', '/states', '/author', '/group', '/report/print'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
 const launched = play ? launch() : null;
 
 function Root() {
@@ -103,6 +105,7 @@ function Root() {
   if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
   if (path === '/author') return <Suspense><AuthorPage /></Suspense>;
   if (path === '/group') return <Suspense><GroupPage /></Suspense>;
+  if (path === '/report/print') return <Suspense><PrintReport /></Suspense>;
   if (ReportDev && new URLSearchParams(location.search).get('report') === '1') return <Suspense><ReportDev /></Suspense>;
   return launched && <Play launched={launched} />;
 }
