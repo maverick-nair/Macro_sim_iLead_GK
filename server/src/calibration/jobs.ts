@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { CalibrationError, parseDraft, runCalibration } from '../../../src/author/calibrate/logic/run';
 import { CalibrationSettings, type CalibrationJob, type CalibrationResults, type Playthrough, type PersonaKey } from '../../../src/author/calibrate/logic/schema';
+import { wordEnglish } from '../../../src/i18n/engineCopyEn';
 import { HttpError } from '../http/errors';
 import type { Logger } from '../log';
 import type { AiPorts } from '../ports';
@@ -132,7 +133,7 @@ export class CalibrationJobs {
     const started = Date.now();
     try {
       const out = await runCalibration(job.draft, job.settings, {
-        speaker: this.ai.synthetic, evaluator: this.ai.evaluator, npc: this.ai.npc, signal: job.controller.signal, ranOn: 'server',
+        speaker: this.ai.synthetic, evaluator: this.ai.evaluator, npc: this.ai.npc, signal: job.controller.signal, ranOn: 'server', word: wordEnglish,
         onProgress: (done, total) => { job.progress = { done, total }; },
         // Each playthrough gives the event loop back, so other requests are served while a calibration runs.
         yieldEvery: () => new Promise(r => setImmediate(r))

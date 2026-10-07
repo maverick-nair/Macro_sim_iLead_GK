@@ -15,6 +15,7 @@ import path from 'node:path';
 import { NAMES } from '../src/author/calibrate/logic/aggregate';
 import { CalibrationError, runCalibration } from '../src/author/calibrate/logic/run';
 import type { CalibrationResults } from '../src/author/calibrate/logic/schema';
+import { wordEnglish } from '../src/i18n/engineCopyEn';
 
 const root = path.resolve(import.meta.dirname, '..');
 const args = process.argv.slice(2);
@@ -64,7 +65,7 @@ async function main() {
     const draft = JSON.parse(fs.readFileSync(file, 'utf8'));
     const t = performance.now();
     try {
-      const { results } = await runCalibration(draft, { personas: { beginner: runs, developing: runs, proficient: runs, expert: runs }, seed, probes: !flag('--no-probes') }, { ranOn: 'cli', yieldEvery: async () => undefined });
+      const { results } = await runCalibration(draft, { personas: { beginner: runs, developing: runs, proficient: runs, expert: runs }, seed, probes: !flag('--no-probes') }, { ranOn: 'cli', word: wordEnglish, yieldEvery: async () => undefined });
       print(results, performance.now() - t);
       all.push(results);
       if (results.checks.some(c => c.status === 'fail')) failed = true;
