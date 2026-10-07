@@ -34,32 +34,39 @@ const FORMAT: Record<string, string> = {
 };
 const LEVEL = ['Beginner (low performer)', 'Developing (average performer)', 'Proficient (high performer)', 'Expert (exceptional performer)'];
 
-/** The request: rules (cached), then the persona and lens (stable for a run), then this turn. */
+/**
+ * The request: rules (cached), then the level and lens (stable for a run), then this turn. Everything an
+ * author or a player wrote (the persona description, the lens's and people's names, the transcript) goes
+ * through `quoteInput`; the persona description rides in the user message in its own tag, never in the
+ * system blocks, so it reads as a description of how to play and not as rules.
+ */
 export function buildSyntheticRequest(ctx: SpeakerContext, settings: ModelSettings): LlmRequest {
-  const lens = `# Leadership lens: ${ctx.lens.title}\n${ctx.lens.styles.map(s => `- ${s.name}: ${s.description}`).join('\n')}`;
-  const persona = `# Persona\nLevel: ${LEVEL[ctx.level]}\nHow you play: ${quoteInput(ctx.describe)}`;
+  const q = quoteInput;
+  const lens = `# Leadership lens: ${q(ctx.lens.title)}\n${ctx.lens.styles.map(s => `- ${q(s.name)}: ${q(s.description)}`).join('\n')}`;
+  const persona = `# Persona\nLevel: ${LEVEL[ctx.level]}`;
   const p = ctx.person;
   const intent = ctx.intent ? ctx.lens.styles.find(s => s.key === ctx.intent) : null;
   const lines = [
     `Format: ${FORMAT[ctx.format] ?? ctx.format}`,
-    `Action: ${ctx.action.name}`,
-    p ? `Person: ${p.name}${p.mood ? `, mood ${p.mood}` : ''}${p.trust !== null ? `, trust in you ${p.trust} of 100` : ''}` : ctx.format === 'meeting' ? `Team present: ${ctx.team.join(', ')}` : 'Person: your sponsor',
+    `Action: ${q(ctx.action.name)}`,
+    p ? `Person: ${q(p.name)}${p.mood ? `, mood ${q(p.mood)}` : ''}${p.trust !== null ? `, trust in you ${p.trust} of 100` : ''}` : ctx.format === 'meeting' ? `Team present: ${ctx.team.map(q).join(', ')}` : 'Person: your sponsor',
     p && p.skill !== null ? `Their skill ${p.skill}, morale ${p.morale}, result ${p.result} (of 100)` : '',
-    p?.needLabel ? `What you read as their need: ${p.needLabel}` : '',
-    p?.concern ? `What they have shared about what is bothering them: ${quoteInput(p.concern)}` : '',
-    intent ? `Style you mean to show: ${intent.name} (${intent.short})` : '',
+    p?.needLabel ? `What you read as their need: ${q(p.needLabel)}` : '',
+    p?.concern ? `What they have shared about what is bothering them: ${q(p.concern)}` : '',
+    intent ? `Style you mean to show: ${q(intent.name)} (${q(intent.short)})` : '',
     ctx.format === 'email' ? `What the email does: ${ctx.emailIntent === 'warn' ? 'raise a concern about their results' : 'recognize their results'}` : '',
-    ctx.format === 'sponsor' && ctx.business ? `Where the business stands: ${Math.round(ctx.business.share * 100)}% of the target with ${Math.round(ctx.business.runShare * 100)}% of the run gone; ${ctx.business.behind} stages behind their ideal${ctx.business.risk ? `; the biggest risk is the ${ctx.business.risk} stage` : ''}` : '',
+    ctx.format === 'sponsor' && ctx.business ? `Where the business stands: ${Math.round(ctx.business.share * 100)}% of the target with ${Math.round(ctx.business.runShare * 100)}% of the run gone; ${ctx.business.behind} stages behind their ideal${ctx.business.risk ? `; the biggest risk is the ${q(ctx.business.risk)} stage` : ''}` : '',
     ctx.promise ? 'Make one small, concrete promise to follow up by a named day.' : '',
     ctx.slip ? 'You slip this time: you blame the person.' : '',
     `This is your line ${ctx.turn + 1} of about ${ctx.turns}.${ctx.turn + 1 >= ctx.turns ? ' Close the conversation.' : ''}`
   ].filter(Boolean).join('\n');
-  const said = ctx.transcript.map(t => `${t.by === 'player' ? 'You' : t.name}: ${quoteInput(t.text)}`).join('\n');
+  const said = ctx.transcript.map(t => `${t.by === 'player' ? 'You' : q(t.name)}: ${q(t.text)}`).join('\n');
+  const howYouPlay = ctx.describe.trim() ? `<how_you_play>\n${q(ctx.describe.trim())}\n</how_you_play>\n` : '';
   return {
     label: 'synthetic player',
     settings,
     system: [{ text: syntheticPlayerPrompt().text }, { text: `${persona}\n\n${lens}`, cache: true }],
-    messages: [{ role: 'user', content: `<turn>\n${lines}\n</turn>\n<conversation>\n${said || '(nothing yet)'}\n</conversation>\nWrite your next line.` }]
+    messages: [{ role: 'user', content: `${howYouPlay}<turn>\n${lines}\n</turn>\n<conversation>\n${said || '(nothing yet)'}\n</conversation>\nWrite your next line.` }]
   };
 }
 
