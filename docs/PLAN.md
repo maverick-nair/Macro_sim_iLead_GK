@@ -64,7 +64,7 @@
 - The catalog lint (DECISIONS D9) runs in Vitest, and `npm run build` runs it too.
 
 **Performance:**
-- The board route's initial JS stays under 200 KB gzipped. The mock engine, the live screen, the galleries and every ported screen past onboarding load on demand.
+- The board route's initial JS stays under 250 KB gzipped (200 KB until D79). The mock engine, the live screen, the galleries and every ported screen past onboarding load on demand.
 - `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4, 196.3 KB at D69, 197.3 KB at D72 (the theme bootstrap; the theme loader is a lazy chunk) and is 199.7 KB now (D78: the launch prefetch).
 
 ## Status
@@ -83,7 +83,7 @@
 | Tablet portrait (834) | Done, approved (D73) |
 | Author chat prototype | Done, approved (D74) |
 | Report 3.0 and group report | Done, approved (D75 to D77) |
-| M8 | Done, awaiting approval (D78) |
+| M8 | Done, approved (D78) |
 
 ## Milestones
 

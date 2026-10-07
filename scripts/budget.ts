@@ -3,10 +3,10 @@ import path from 'node:path';
 import zlib from 'node:zlib';
 
 /**
- * Performance budget (brief): the main board's initial JS must stay under 200KB gzipped. Initial JS
- * is the entry script plus the chunks it imports statically (modulepreload links), not lazy chunks.
+ * Performance budget (brief): the main board's initial JS must stay under 250KB gzipped (200KB until
+ * D79, 2026-10-07). Initial JS is the entry script plus the chunks it imports statically (modulepreload links), not lazy chunks.
  */
-const BUDGET_KB = 200;
+const BUDGET_KB = 250;
 const dist = path.resolve('dist');
 const html = fs.readFileSync(path.join(dist, 'index.html'), 'utf8');
 const files = [...html.matchAll(/(?:src|href)="\/(assets\/[^"]+\.js)"/g)].map(m => m[1]);

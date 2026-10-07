@@ -512,6 +512,8 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Flaky tests.** The board's inbox test clears the outcome and event cards (which take focus as they come) before opening the inbox; the pause tests read the held clock and the held line after a tick or word already on its way.
 - **Handoff.** `docs/HANDOFF.md` for the server and GenieKreator teams, and `docs/schemas/*.json`, JSON Schemas generated from the Zod contracts (`npm run schemas`; a unit test fails when they drift).
 
+**D79. Bundle budget raised to 250 KB.** Decided 2026-10-07 (product owner), with M8 approved. The participant's initial JS budget (`scripts/budget.ts`) goes from 200 KB to 250 KB gzipped, to leave room for the interface work that follows. It was 199.7 KB at M8. The Web Vitals budgets (D78) are unchanged, so new first load code still has to keep LCP and TBT within them.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

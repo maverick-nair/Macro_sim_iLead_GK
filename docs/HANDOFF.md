@@ -28,7 +28,7 @@ Server (to build; proposed paths)
 
 **Every payload is parsed at the boundary** with the Zod schemas, for the real server and the mock alike. Parsing also applies the copy rules (`src/i18n/copy.ts`: no dashes as punctuation, no emoji, "skills" not "competency") to engine and AI text. A payload that does not parse is an `EngineError` with code `badPayload`.
 
-**Bundle.** The participant's first load is held under 200 KB of gzipped JS (`scripts/budget.ts`, run by `npm run build`). The mock engine, the live screen, the reports, the group report, the author chat, the theme loader and the galleries are lazy chunks.
+**Bundle.** The participant's first load is held under 250 KB of gzipped JS (D79) (`scripts/budget.ts`, run by `npm run build`). The mock engine, the live screen, the reports, the group report, the author chat, the theme loader and the galleries are lazy chunks.
 
 **Devices.** Laptops, desktops and tablets (D69): 1440 is the design, 1024 to 1279 folds the Actions panel, 744 to 1023 in portrait uses the tablet layouts (D73). Narrower than 744 shows a notice. Chrome, Edge 123+, Firefox 120+, Safari 17.5+ (native `light-dark()`, D21).
 
@@ -112,7 +112,7 @@ npm run dev                 # http://localhost:5173, the mock engine and mock AP
 npm test                    # Vitest: engine, contracts, report, theme, components (unit)
 npm run typecheck           # tsc -b
 npm run lint                # ESLint, 0 warnings
-npm run build               # token check, unit tests, typecheck, production build, bundle budget (200 KB initial JS)
+npm run build               # token check, unit tests, typecheck, production build, bundle budget (250 KB initial JS)
 npm run storybook:smoke     # every story in four themes, fails on render or console errors
 npm run parity              # every design frame against the Claude Design prototype (60 frames)
 npm run e2e                 # Playwright on the mock engine, axe on every route (tests/e2e/a11y.spec.ts) and visual baselines
@@ -131,7 +131,7 @@ Environment (`.env.example`; unset means the in-browser mock): `VITE_ILEAD_ENGIN
 
 | Budget | Value | Enforced by |
 |---|---|---|
-| Initial JS (gzipped) | 200 KB | `npm run build` (`scripts/budget.ts`) |
+| Initial JS (gzipped) | 250 KB | `npm run build` (`scripts/budget.ts`) |
 | LCP | 2.5 s (board and group report 3 s) | `npm run vitals` |
 | CLS | 0.1 | `npm run vitals` |
 | TBT (stands in for INP) | 300 ms (board and group report 600 ms) | `npm run vitals` |
