@@ -133,12 +133,12 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
 
   return (
     <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-3 px-5 pt-1 pb-6 short:gap-2 short:pb-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-3 text-large:flex-wrap">
         <div className="flex items-baseline gap-3">
           <Heading level={headingLevel} className="m-0 text-20 font-700 tracking-(--il-team-title-tracking) short:text-17">{t('team.title')}</Heading>
           <span aria-live="polite" className="text-13 text-fg-secondary">{hintText}</span>
         </div>
-        <div className="relative flex items-center gap-2">
+        <div className="relative flex items-center gap-2 text-large:flex-wrap">
           {onOverview && (
             <button type="button" onClick={onOverview} data-tour="overview"
               className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">

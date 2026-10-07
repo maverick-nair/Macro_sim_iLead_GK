@@ -20,8 +20,6 @@
 @custom-variant tablet-portrait (&:where([data-tablet], [data-tablet] *));
 /* 1280 and wider: the design's full width layouts (a lens's style definitions in one row). */
 @custom-variant wide (@media (min-width: 1280px));
-/* Under 800 wide (upright small tablets, 744 and 768): the HUD drops words it can show as icons (D101). */
-@custom-variant narrow (@media (max-width: 799.98px));
 /* Density steps for short windows (D101): laptops 900 tall and under (1440x800, 1366x768, 1513x745,
    1280x720) take the compact sizes, so play screens fit without page scroll. At 200% text the page may scroll. */
 @custom-variant short (@media (max-height: 900px));

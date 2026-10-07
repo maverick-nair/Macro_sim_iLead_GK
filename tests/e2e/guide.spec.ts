@@ -32,6 +32,9 @@ async function setStyles(page: Page) {
 }
 async function dismissCards(page: Page) {
   const gotIt = page.getByRole('button', { name: 'Got it' });
+  // Cards wait behind the outcome: once it has gone, give the next card a moment to show.
+  await expect(page.getByText('How it landed')).toHaveCount(0);
+  await gotIt.first().waitFor({ timeout: 1500 }).catch(() => undefined);
   while (await gotIt.count()) {
     const title = await page.getByRole('dialog').getByRole('heading').first().textContent();
     await gotIt.click();

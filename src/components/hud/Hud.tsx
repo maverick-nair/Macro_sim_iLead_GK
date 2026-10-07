@@ -165,7 +165,7 @@ export function Hud(p: HudProps) {
   const rich = p.breakdown !== undefined;
 
   return (
-    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap short:py-2 text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2 tablet-portrait:min-h-18 tablet-portrait:flex-nowrap tablet-portrait:gap-3 tablet-portrait:border-b tablet-portrait:border-line-default">
+    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap short:py-2 text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2 tablet-portrait:min-h-18 tablet-portrait:flex-wrap tablet-portrait:gap-2.5 tablet-portrait:gap-y-2 tablet-portrait:border-b tablet-portrait:border-line-default">
       <div className="flex items-center gap-2.5 tablet-portrait:-order-3">
         <ClientLogo />
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
