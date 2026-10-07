@@ -17,12 +17,16 @@ Browser (this repo, Vite + React 19 + TypeScript strict)
   src/author                                /author: GenieKreator's author chat prototype (lazy)
   src/group                                 /group: the organization's group report (lazy)
 
-Server (to build; proposed paths)
-  Engine        /sessions/{session}/view, /intents, /interactions/.../stream   (VITE_ILEAD_ENGINE_URL)
-  App API       /profile, /theme, /history, /report.pdf, /report/email, /cohort/...  (VITE_ILEAD_API_URL)
-  Speech        /transcriptions...                                             (VITE_ILEAD_SPEECH_URL)
-  GenieKreator  /author/turn, /author/draft                                    (VITE_GENIE_URL)
+Server (built: server/, docs/SERVER.md, D81; the base paths of .env.server)
+  Engine        /engine/sessions/{session}/view, /intents, /interactions/.../stream   (VITE_ILEAD_ENGINE_URL=/engine)
+  App API       /api/profile, /theme, /history, /report.pdf, /report/email, /cohort/...  (VITE_ILEAD_API_URL=/api)
+  Speech        /speech/transcriptions...                                             (VITE_ILEAD_SPEECH_URL=/speech)
+  GenieKreator  /genie/author/turn, /genie/author/draft                               (VITE_GENIE_URL=/genie)
+  Sign in       /launch?token=<signed launch link>, /auth/me, /auth/logout
+  Operations    /healthz, /readyz, /openapi.json
 ```
+
+**The server is built** (D81, `docs/SERVER.md`): `server/` runs this engine authoritatively, persists every run as a seed and an event log (SQLite by default, Postgres with `DATABASE_URL`), serves every endpoint below, signs participants in from a launch link the LMS or GenieKreator signs, renders report PDFs with headless Chromium, emails them over SMTP and loads the AI from `ai/` (D82). What an engineer configures is in section 11.
 
 **Rule 1: the engine is authoritative.** The UI renders engine state and sends intents (set styles, plan an action, take a turn, end the week). Every number, reason, outcome, badge, star and report value comes from the engine. The simulation itself is plain TypeScript in `src/engine/sim` (no DOM), so the server can run the same code: the mock engine in the browser is that code against a storyline fixture. What differs on the server is the AI: the evaluator (`src/engine/sim/evaluator.ts`, an `Evaluator`) and the NPC's words (`src/engine/sim/live.ts`, an `NpcModel`) are model calls there; the mock uses transparent keyword rules and persona lines.
 
@@ -125,7 +129,17 @@ npm run calibrate -- sales-elevator --check   # a storyline still plays well
 npm run benchmark -- --check                  # the cached group report benchmark matches the engine
 ```
 
-Environment (`.env.example`; unset means the in-browser mock): `VITE_ILEAD_ENGINE_URL`, `VITE_ILEAD_API_URL`, `VITE_ILEAD_SPEECH_URL`, `VITE_GENIE_URL`.
+Environment (`.env.example`; unset means the in-browser mock): `VITE_ILEAD_ENGINE_URL`, `VITE_ILEAD_API_URL`, `VITE_ILEAD_SPEECH_URL`, `VITE_GENIE_URL`. Against the server: `.env.server` (relative paths), used by `npm run build:server-app` and `npm run dev:full`.
+
+The server (`docs/SERVER.md`):
+
+```bash
+npm run dev:full            # app (Vite --mode server) + server, prints launch links
+npm run test:server         # server unit and integration tests
+npm run e2e:server          # Playwright against the real server serving the built app
+npm run server:mint -- --sub p-1 --name "Ana Ruiz" --cohort spring   # a launch link for testing
+docker compose up --build   # the production image
+```
 
 **Release.** CI (`.github/workflows/ci.yml`) runs every check above on each push and pull request. A release is `npm run build`: static files in `dist/` (an `index.html` and hashed assets), served from any static host or CDN with gzip or brotli, long cache headers on `/assets/*` and no cache on `index.html`. Every route (`/`, `/group`, `/author`) is the same `index.html` (SPA fallback). `/author` and `/group` are not for participants; put them behind GenieKreator's and the organization's sign in. The app is meant to move into the GenieKreator monorepo as `apps/participant` with the engine as a shared package (D48).
 
@@ -160,7 +174,7 @@ The board and group report budgets sit above the usual 2.5 s and 200 ms: compili
 
 ## 10. Known limits and open items
 
-- **The server is not built.** Every endpoint above is a proposal, kept in one file per client (`src/api/http.ts`, `src/engine/client.ts`, `src/speech/transcription.ts`, `src/author/drafter.ts`) so the paths are easy to align.
+- **The server is built** (D81, `docs/SERVER.md`); its own limits are in `docs/SERVER.md` section 15 (live model streaming needs a contract change, replay across engine changes, LTI and SSO are a seam, no assessor screen yet). The paths stay in one file per client (`src/api/http.ts`, `src/engine/client.ts`, `src/speech/transcription.ts`, `src/author/drafter.ts`).
 - **AI on the server:** built in `ai/` (D82, `docs/AI.md`): `createNpcModel`, `createEvaluator`, `createAuthorDrafter`, `createTranscriber`, with versioned prompts, guardrails, verbatim quote checks, repair and mock fallbacks, and two gates (`npm run ai:calibrate`, `npm run ai:persona-check`) that pass on the mock. To configure: `ANTHROPIC_API_KEY`, `SPEECH_URL`, `SPEECH_KEY`. Not yet done: running both gates against the real model (no key in this repo), the live stream wiring in the server, a websocket speech adapter. The evaluator scores the words only, never the voice (SPEECH.md).
 - **Engine text is English** (D60): headlines, reasons, events and NPC lines come from the engine as strings. A second language needs either server side localization or codes the client words.
 - **Contract field names keep British spelling** where they already shipped (`organisation`, `behaviours`, a moment's `behaviour`); the copy shown is US English (D78). Renaming them is a breaking change to agree with the server team.
@@ -168,3 +182,14 @@ The board and group report budgets sit above the usual 2.5 s and 200 ms: compili
 - **Performance next steps:** split the board's and the group report's first render (each one long task on a slow CPU), and trim the first load's scripts (React DOM, TanStack Query and the Radix dialog are most of it), to bring the board and group report to LCP 2.5 s and TBT 200 ms. The 200 KB initial JS budget has 0.3 KB left.
 - **Not built:** interview and written plan formats have no design (built in the shared shell, D52, awaiting design review); phones (D69); offline play.
 - **The design prototype** (`?engine=off`, `/screens`, `/states`) stays for parity only; it is not a product surface.
+
+## 11. What the engineer configures (server)
+
+Everything is environment (`.env.example` lists every variable; `docs/SERVER.md` section 8):
+
+1. `NODE_ENV=production`, `PUBLIC_URL` (the participants' address) and `LAUNCH_SECRET` (32+ random characters, shared with the LMS / GenieKreator, which sign launch links with it: claims in `docs/SERVER.md` section 4).
+2. Storage: `DATABASE_URL` for Postgres (several instances), or a persistent volume for SQLite at `SQLITE_PATH`. Backups: section 11 there.
+3. AI: `ANTHROPIC_API_KEY` (and optionally the tuning variables of `docs/AI.md` section 8). Voice: `SPEECH_URL`, `SPEECH_KEY`. Unset, the mocks run.
+4. Email: `SMTP_URL` (or `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`) and `EMAIL_FROM`.
+5. `ADMIN_TOKEN` for operators; `RETENTION_DAYS` for the retention policy; `TRUST_PROXY=true` behind a load balancer; `FRAME_ANCESTORS` and `COOKIE_SAMESITE=None` when an LMS embeds the app in a frame; `CORS_ORIGINS` when the app is on another origin.
+6. Deploy the `Dockerfile` (server, app and Chromium in one image) or `docker-compose.yml`; probes on `/healthz` and `/readyz`; publish storylines with `POST /api/admin/storylines`.
