@@ -39,7 +39,7 @@ export const MetricKey = z.enum(['skill', 'morale', 'result', 'trust']);
 export const StyleKey = z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,15}$/);
 export const NeedKey = z.enum(['lowSkill_lowMorale', 'lowSkill_highMorale', 'highSkill_lowMorale', 'highSkill_highMorale']);
 /**
- * The leadership lens as the participant sees it (D70): 2 to 6 styles and the names of the four needs,
+ * The leadership lens as the participant sees it (D70, D104): 4 or 5 styles and the names of the four needs,
  * in the grid's order. The UI never hard codes style names. The fit table and the source stay on the server.
  */
 export const LensView = z.object({

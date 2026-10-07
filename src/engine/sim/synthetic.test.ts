@@ -14,14 +14,8 @@ const parse = (input: unknown): StorylineConfig => {
   return p.config;
 };
 const RBL = parse(raw);
-/** Six Leadership Styles without Pace Setter: a lens of five styles, as the merged lens will have (D112). */
-function fiveStyles(): StorylineConfig {
-  const six = withSixStyles(raw as unknown as StorylineInput) as StorylineInput & { lens: { styles: Array<{ key: string }>; fit: Record<string, Record<string, number>> } };
-  six.lens.styles = six.lens.styles.filter(s => s.key !== 'pace');
-  for (const row of Object.values(six.lens.fit)) delete row.pace;
-  return parse({ ...six, id: 'sales-elevator-five' });
-}
-const FIVE = fiveStyles();
+/** Six Leadership Styles: a lens of five styles, Pacesetting and Commanding merged into Drive (D104). */
+const FIVE = parse({ ...withSixStyles(raw as unknown as StorylineInput), id: 'sales-elevator-five' });
 
 const mean = (xs: number[]) => xs.reduce((a, b) => a + b, 0) / xs.length;
 async function many(config: StorylineConfig, persona: PersonaKey, n: number): Promise<SyntheticRun[]> {
@@ -127,7 +121,6 @@ describe('synthetic players', () => {
 
 describe('synthetic speech', () => {
   const lensOf = (c: StorylineConfig) => ({ title: c.lens.title, styles: c.lens.styles.map(s => ({ key: s.key, name: s.name, short: s.short, description: s.description })) });
-  const SIX = parse(withSixStyles(raw as unknown as StorylineInput));
   const ctx = (c: StorylineConfig, level: Level, intent: string | null, format = 'roleplay', extra: Partial<SpeakerContext> = {}): SpeakerContext => ({
     persona: 'expert', level, describe: '', lens: lensOf(c), intent, format, action: { key: 'f2f', name: 'Meet face to face' },
     person: { id: 'kent', name: 'Kent Brown', first: 'Kent', mood: 'concerned', trust: 50, skill: 30, morale: 30, result: 40, needLabel: 'Learning and unsure', concern: null },
@@ -136,7 +129,7 @@ describe('synthetic speech', () => {
   });
   const read = (c: StorylineConfig, text: string, format = 'roleplay') => heuristicEvaluator.evaluate({ format, text, styles: lensOf(c).styles }) as Evaluation;
 
-  it.each([['four', RBL], ['five', FIVE], ['six', SIX]] as const)('says every style of a %s style lens so the evaluator reads it', (_, c) => {
+  it.each([['four', RBL], ['five', FIVE]] as const)('says every style of a %s style lens so the evaluator reads it', (_, c) => {
     for (const s of c.lens.styles) for (const level of [1, 2, 3] as Level[]) {
       expect(read(c, script(ctx(c, level, s.key)).join('\n')).styleUsed, `${s.key} at level ${level}`).toBe(s.key);
     }

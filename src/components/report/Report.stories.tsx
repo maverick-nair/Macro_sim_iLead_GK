@@ -221,7 +221,7 @@ export const [Skills3, Skills3Assessment] = both('skills');
 export const [Objectives, ObjectivesAssessment] = both('objectives');
 export const [Adaptability, AdaptabilityAssessment] = both('adaptability');
 export const [Styles, StylesAssessment] = both('styles');
-/** Six styles (D70): proportion and accuracy for six, the needs by six styles. */
+/** The Six Leadership Styles lens, which plays five styles (D70, D104): proportion and accuracy for five, the needs by five styles. */
 export const [StylesSixStyles, StylesSixStylesAssessment] = both('styles', { lens: 'six_styles' });
 export const [Consistency, ConsistencyAssessment] = both('consistency');
 export const [Actions, ActionsAssessment] = both('actions');
@@ -242,7 +242,7 @@ export const FromRunPrint: StoryObj = { render: () => <FromRun policy="good" see
 /** Tablet size, 834 wide (D69): the web view, its columns narrower. */
 export const FromRunTablet: StoryObj = { render: () => <div style={{ width: 834 }}><FromRun policy="random" seed={5} /></div> };
 export const FromRunLight: StoryObj = { globals: { theme: 'light' }, render: () => <FromRun policy="good" seed={3} /> };
-/** The Six Leadership Styles lens (D70): six styles in the shares and the grid, the needs as rows, two Report only skills, the lens in the methodology. */
+/** The Six Leadership Styles lens (D70, D104): five styles in the shares and the grid, the needs as rows, two Report only skills, the lens in the methodology. */
 export const FromRunSixStyles: StoryObj = { render: () => <FromRun policy="good" seed={3} lens="six_styles" /> };
 /** An assessment report: verdicts first, neutral findings, development needs (D75). */
 export const FromRunAssessment: StoryObj = { render: () => <FromRun policy="random" seed={5} purpose="assessment" /> };

@@ -2,7 +2,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 import { DEFAULT_LENS_VIEW, type LensStyle, type LensView } from '../../engine/lens';
 
 /**
- * The storyline's leadership lens for the UI (D70): its 2 to 6 styles (key, letter, name, short line,
+ * The storyline's leadership lens for the UI (D70, D104): its 4 or 5 styles (key, letter, name, short line,
  * description) and the names of the four needs. Engine screens provide the view's `lens`; design
  * fixtures and stories fall back to Readiness Based Leadership. No component hard codes style names.
  */
