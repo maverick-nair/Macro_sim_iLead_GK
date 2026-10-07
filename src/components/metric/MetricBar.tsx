@@ -34,7 +34,7 @@ export function MetricBar({ metric, value }: MetricBarProps) {
     <div role="img" aria-label={t('metric.bar.aria', { metric: t('metric.nameLower', { metric }), value, low: String(low) })} className="grid grid-cols-(--il-metric-bar-columns) items-center gap-1.5 text-12">
       <span className="text-fg-secondary">{t('metric.name', { metric })}</span>
       <MetricTrack value={value} low={low} />
-      <b className={`text-right font-700 ${low ? 'text-status-attention' : ''}`}>{number(value)}</b>
+      <b className={`text-end font-700 ${low ? 'text-status-attention' : ''}`}>{number(value)}</b>
     </div>
   );
 }

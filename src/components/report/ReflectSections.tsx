@@ -36,7 +36,7 @@ export function TakeawaysSection({ lines }: { lines: string[] }) {
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
       <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.takeaways.title')}</h2>
       <p className="m-0 text-14">{t('report.takeaways.intro', { purpose })}</p>
-      <ul className="m-0 flex list-disc flex-col gap-1.5 pl-5 text-14">
+      <ul className="m-0 flex list-disc flex-col gap-1.5 ps-5 text-14">
         {lines.map(l => <li key={l} className="text-pretty">{l}</li>)}
       </ul>
     </section>

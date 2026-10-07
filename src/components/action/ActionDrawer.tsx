@@ -56,7 +56,7 @@ export function OptionCards({ options, value, onChange, label, size = 'md' }: Op
         return (
           <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
             aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-16 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-14 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
+            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-16 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-14 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
             <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
               <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
             </span>
@@ -120,7 +120,7 @@ export function PickedChips({ picks }: { picks: PickedPerson[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {picks.map(pk => (
-        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
+        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pe-2.5 ps-0.75 text-13 font-600 whitespace-nowrap">
           <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
         </span>
       ))}

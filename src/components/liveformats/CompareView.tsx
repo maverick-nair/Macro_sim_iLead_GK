@@ -63,7 +63,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
     else onPassBoth();
   };
 
-  const cell = 'border-t border-line-default px-3.5 py-3 text-left align-top text-13';
+  const cell = 'border-t border-line-default px-3.5 py-3 text-start align-top text-13';
   const rowHead = (rid: string, label: string) => <th id={rid} scope="row" className={`${cell} w-(--il-liveformats-compare-label-width) font-400 text-fg-secondary`}>{label}</th>;
   const row = (key: string, label: string, render: (c: Candidate, i: number) => ReactNode) => {
     const rid = `${uid}-r-${key}`;
@@ -106,7 +106,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
             <tr>
               <th scope="col" className="w-(--il-liveformats-compare-label-width)"><span className="sr-only">{t('liveformats.compare.field')}</span></th>
               {candidates.map((c, i) => (
-                <th key={c.id} id={col(i)} scope="col" className="px-3.5 py-3 text-left align-bottom">
+                <th key={c.id} id={col(i)} scope="col" className="px-3.5 py-3 text-start align-bottom">
                   <span className="block font-700 text-17">{c.name}</span>
                   <span className="block text-12 font-400 text-fg-secondary">{c.title}</span>
                 </th>

@@ -23,14 +23,14 @@ export function CohortPanel({ scope, size, top, outside, you }: CohortPanelProps
   const row = (r: CohortRow, key: string) => (
     <tr key={key} aria-current={r.you || undefined}
       className={`border-t border-line-default ${r.you ? 'bg-accent-soft font-700 text-fg-primary' : ''}`}>
-      <td className={`${CELL} text-right`}>{number(r.rank)}</td>
-      <th scope="row" className={`${CELL} text-left ${r.you ? 'font-700' : 'font-400'}`}>
+      <td className={`${CELL} text-end`}>{number(r.rank)}</td>
+      <th scope="row" className={`${CELL} text-start ${r.you ? 'font-700' : 'font-400'}`}>
         <span className="flex flex-wrap items-center gap-2">
           {r.name !== null && <span>{r.name}</span>}
           {r.you && <span className="rounded-pill border border-accent-secondary px-2 text-12 text-fg-primary">{t('end.cohort.you')}</span>}
         </span>
       </th>
-      <td className={`${CELL} text-right`}>{number(r.score)}</td>
+      <td className={`${CELL} text-end`}>{number(r.score)}</td>
       <td className={CELL}>{r.tier}</td>
     </tr>
   );
@@ -44,10 +44,10 @@ export function CohortPanel({ scope, size, top, outside, you }: CohortPanelProps
         <caption className="sr-only">{t('end.cohort.caption', { scope, size, outside: String(!!outside) })}</caption>
         <thead>
           <tr className="text-12 text-fg-secondary">
-            <th scope="col" className={`${CELL} text-right font-600`}>{t('end.cohort.col.rank')}</th>
-            <th scope="col" className={`${CELL} text-left font-600`}>{t('end.cohort.col.name')}</th>
-            <th scope="col" className={`${CELL} text-right font-600`}>{t('end.cohort.col.score')}</th>
-            <th scope="col" className={`${CELL} text-left font-600`}>{t('end.cohort.col.tier')}</th>
+            <th scope="col" className={`${CELL} text-end font-600`}>{t('end.cohort.col.rank')}</th>
+            <th scope="col" className={`${CELL} text-start font-600`}>{t('end.cohort.col.name')}</th>
+            <th scope="col" className={`${CELL} text-end font-600`}>{t('end.cohort.col.score')}</th>
+            <th scope="col" className={`${CELL} text-start font-600`}>{t('end.cohort.col.tier')}</th>
           </tr>
         </thead>
         <tbody>{top.map((r, i) => row(r, String(i)))}</tbody>

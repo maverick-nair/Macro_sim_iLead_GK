@@ -50,7 +50,7 @@ export interface EngineLiveProps {
   /** Ends the interaction with an evaluation: the board owns the reacting beat. Resolves false if the engine refused. */
   onFinish: FinishLive;
   /** Called once the interaction is left without an evaluation (nothing was said). */
-  onDone: () => void;
+  onDone: (tip?: string) => void;
   onError: (code: string) => void;
   /** The portrait tablet's live screen (D73): one column, the 1:1 brief beside the portrait, 56px composer. */
   layout?: 'desk' | 'tablet';
@@ -199,6 +199,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   const finish = async (kind: 'end' | 'submit' | 'abandon', text?: string) => {
     if (ai.streaming) interrupt();
     if (kind === 'abandon') { if (await send({ type: 'abandonInteraction', interactionId: lv.id })) onDone(); return; }
+    // The Week 0 practice (D84) is never evaluated: it closes with a tip, without the team reacting.
+    if (lv.practice) { const r = await send({ type: 'endInteraction', interactionId: lv.id }); if (r) onDone(r.hint); return; }
     if (inFlight.current) return;
     await onFinish(kind === 'submit' && text
       ? { type: 'submitInteraction', interactionId: lv.id, text, usedVoice: mode === 'voice' }

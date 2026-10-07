@@ -27,7 +27,7 @@ export function ShareGridChart({ rows, columns, label }: { rows: Array<{ key: st
       {columns.map(c => <span key={c} className="self-end pb-1 text-center text-fg-secondary text-balance">{c}</span>)}
       {rows.map(r => (
         <div key={r.key} className="contents">
-          <span className="self-center pr-2 text-13 text-pretty">{r.label}</span>
+          <span className="self-center pe-2 text-13 text-pretty">{r.label}</span>
           {r.cells.map((v, i) => (
             <span key={columns[i]} className="flex min-h-9 flex-col items-center justify-center gap-1 rounded-6 bg-report-chart-cell px-1.5 py-1">
               <span className={v ? 'font-700' : 'text-fg-secondary'}>{`${Math.round(v)}%`}</span>

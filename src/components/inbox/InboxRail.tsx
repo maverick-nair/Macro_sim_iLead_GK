@@ -35,12 +35,12 @@ const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
 export function InboxRail({ unread, items, onToggle, onOpen }: InboxRailProps) {
   const { t, number } = useI18n();
   return (
-    <aside aria-label={t('inbox.title')} className="flex flex-col items-center gap-2.5 pt-1 pr-0 pb-6 pl-4">
+    <aside aria-label={t('inbox.title')} className="flex flex-col items-center gap-2.5 pt-1 pe-0 pb-6 ps-4">
       <button type="button" onClick={onToggle} aria-label={t('inbox.open', { count: unread })}
         className={`relative flex size-11 cursor-pointer items-center justify-center rounded-14 border border-solid border-line-default bg-surface-card p-0 text-fg-primary ${focus}`}>
         <InboxIcon />
         {unread > 0 && (
-          <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-10 bg-brand px-1.25 text-12 font-700 text-brand-deep-space">{number(unread)}</span>
+          <span aria-hidden="true" className="absolute -top-1.5 -end-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-10 bg-brand px-1.25 text-12 font-700 text-brand-deep-space">{number(unread)}</span>
         )}
       </button>
       {items.map(it => (

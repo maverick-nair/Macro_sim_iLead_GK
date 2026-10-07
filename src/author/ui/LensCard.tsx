@@ -34,7 +34,7 @@ export function LensCard({ lens, n, checked, recommended, name, disabled, onSele
           <span className="text-13"><b>Best for:</b> {lens.bestFor}</span>
         </span>
       </label>
-      <div className="pl-7">
+      <div className="ps-7">
         <button type="button" className={BUTTON.link} aria-expanded={open} aria-controls={detail} onClick={() => setOpen(o => !o)}>
           {open ? 'Less detail' : 'More detail'}<span className="sr-only"> about {lens.title}</span>
         </button>

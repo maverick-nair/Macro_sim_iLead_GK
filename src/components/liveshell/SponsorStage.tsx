@@ -54,7 +54,7 @@ export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, on
           {sponsor.img
             ? <img src={sponsor.img} alt={sponsor.name} className="size-full rounded-28 object-cover object-top" />
             : <span aria-hidden="true" className="text-110 font-700 text-liveshell-on-signal opacity-85">{initialsOf(sponsor.name)}</span>}
-          <span className="absolute top-3.5 left-4 text-12 font-700 text-liveshell-on-signal">{t('liveshell.sponsor.avatar')}</span>
+          <span className="absolute top-3.5 start-4 text-12 font-700 text-liveshell-on-signal">{t('liveshell.sponsor.avatar')}</span>
           {speaking && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-liveshell-roleplay-speaking-ring) rounded-32 border-2 border-solid border-liveshell-sponsor-ring" />}
         </div>
         {caption && <LiveCaption variant="panel" centered name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} />}
@@ -81,7 +81,7 @@ export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, on
                 <div className="h-full rounded-4 bg-(image:--il-fill-meter)" style={{ width: pct(st.count, funnel.scale) }} />
                 <div className="absolute -top-0.75 -bottom-0.75 w-0.5 bg-fg-primary" style={{ left: pct(st.ideal, funnel.scale) }} />
               </div>
-              <b className="text-right">{t('liveshell.sponsor.funnel.value', { count: number(st.count), ideal: number(st.ideal) })}</b>
+              <b className="text-end">{t('liveshell.sponsor.funnel.value', { count: number(st.count), ideal: number(st.ideal) })}</b>
             </div>
           ))}
           <span className="text-12 text-fg-secondary">{t('liveshell.sponsor.funnel.foot', { revenue: money.format(kpi.revenue), target: money.format(kpi.target) })}</span>

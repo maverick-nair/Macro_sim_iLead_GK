@@ -1,5 +1,5 @@
 import { blockedReason, freeActivity } from './actions';
-import { ONE_SHOT, speakerFor, turnLimit } from './live';
+import { ONE_SHOT, PRACTICE, practiceAvailable, practicePartner, speakerFor, turnLimit } from './live';
 import { purposeOf } from '../config';
 import { lensView } from '../lens';
 import { buildReport } from '../report/build';
@@ -68,14 +68,16 @@ function liveView(sim: Sim) {
     /** Team meeting: attendees with a hand up, first to speak first. */
     raisedHands: it.format === 'meeting' ? it.hands ?? [] : [],
     brief: {
-      goal: a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
+      goal: it.actionKey === PRACTICE ? c.practice.goal ?? msg('engine.practice.goal', { name: person(sim, it.memberIds[0]).name.split(' ')[0] }) : a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
       known: [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
       mood: main ? moodOf(main, sim) : null,
       promises: sim.promises.filter(x => x.state === 'open' && it.memberIds.includes(x.memberId)).map(x => x.text),
       declaredStyle: main?.style ?? null
     },
     turns: it.turns.map(t => ({ id: t.id, by: t.by, text: t.text, voice: !!t.voice, interrupted: !!t.interrupted, aiGenerated: t.by !== 'you' })),
-    turnLimit: turnLimit(sim, it), turnsLeft: Math.max(0, turnLimit(sim, it) - yours), minutes: a?.live.minutes ?? 3,
+    turnLimit: turnLimit(sim, it), turnsLeft: Math.max(0, turnLimit(sim, it) - yours), minutes: it.actionKey === PRACTICE ? c.practice.minutes : a?.live.minutes ?? 3,
+    /** The Week 0 practice (D84): not scored, ends without the team reacting. */
+    practice: it.actionKey === PRACTICE,
     closed: it.closed,
     hint: { mode: mode === 'afterWeak' ? 'onRequest' : mode, text: it.hint },
     candidates: it.candidates?.map(cid => {
@@ -178,6 +180,8 @@ export function buildView(sim: Sim) {
     perks: { bonusDay: sim.bonusPeriod !== null && sim.bonusPeriod >= sim.period, hireBudget: sim.hireBudget, teamActivity: sim.freeTeamActivity, checkIn: sim.checkInPeriod === sim.period },
     history: sim.log,
     live: liveView(sim),
+    /** The Week 0 practice on offer, and who it is with (D16, D84). */
+    practice: { available: practiceAvailable(sim), partner: practicePartner(sim) },
     liveCap: { cap: sim.config.time.liveCap, used: sim.liveTaken[sim.period] ?? 0 },
     report: sim.phase === 'ended' ? buildReport(sim) : null
   };

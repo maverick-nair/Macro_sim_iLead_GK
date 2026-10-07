@@ -123,14 +123,14 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
       <span className="text-12 text-fg-secondary">{target.label ?? t('metrics.target.label')}</span>
       <div className="flex items-baseline gap-1.5 text-large:flex-wrap"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
       <div className="relative h-1.5 rounded-3 bg-track">
-        <div className="absolute top-0 bottom-0 left-0 rounded-3 bg-meter" style={{ width: pct(target.target ? target.value / target.target : 0) }} />
+        <div className="absolute top-0 bottom-0 start-0 rounded-3 bg-meter" style={{ width: pct(target.target ? target.value / target.target : 0) }} />
         <div title={paceTitle} className="absolute -top-0.75 -bottom-0.75 w-0.5 bg-fg-primary" style={{ left: pct(target.pace) }} />
       </div>
     </div>
   );
   const sponsorTile = (cls: string) => (
     <button type="button" onClick={sponsor.onToggle} aria-expanded={sponsor.open} aria-controls={sponsor.open ? popId : undefined}
-      className={`${tile} ${cls} cursor-pointer text-left text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
+      className={`${tile} ${cls} cursor-pointer text-start text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
       <span className="text-12 text-fg-secondary">{t('metrics.sponsor.title')}</span>
       <b className="text-16">{meter ? t('metrics.sponsor.levelValue', { level: sponsor.level, value: number(meter.value) }) : t('metrics.sponsor.level', { level: sponsor.level })}</b>
       <div className="flex w-full gap-0.75">
@@ -165,7 +165,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
       {targetTile}
       <div className="relative">
         {sponsorTile('size-full')}
-        {sponsor.open && causes('absolute top-full right-0 z-40 mt-2 w-70')}
+        {sponsor.open && causes('absolute top-full end-0 z-40 mt-2 w-70')}
       </div>
     </section>
   );

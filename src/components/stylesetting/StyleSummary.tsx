@@ -3,6 +3,7 @@ import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { useStyleName } from '../style/lens';
 import { StyleAvatar } from './StyleSettingList';
+import { inertOutside } from '../../lib/inertOutside';
 import { shortName, styleChanged, type PeriodUnit, type StyleSettingMember } from './types';
 
 export interface StyleSummaryProps {
@@ -22,22 +23,6 @@ export interface StyleSummaryProps {
 
 const TABBABLE = 'button:not([disabled]), [href], input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-/**
- * Makes everything outside `keep` inert (no focus, no pointer, hidden from assistive tech), the way
- * a modal dialog's background should be. Returns the undo.
- */
-function inertOutside(keep: HTMLElement): () => void {
-  const changed: HTMLElement[] = [];
-  for (let el: HTMLElement | null = keep; el && el !== document.body; el = el.parentElement) {
-    for (const sib of Array.from(el.parentElement?.children ?? [])) {
-      // Live regions stay out of it, so a message about the dialog (a failed confirm) is still announced.
-      if (sib === el || !(sib instanceof HTMLElement) || sib.inert || sib.tagName === 'SCRIPT' || sib.matches('[aria-live], [role="status"], [role="alert"]')) continue;
-      sib.inert = true;
-      changed.push(sib);
-    }
-  }
-  return () => changed.forEach(el => { el.inert = false; });
-}
 
 /**
  * Summary and confirm: a table of every choice (two members per line, with "Changed" where the style

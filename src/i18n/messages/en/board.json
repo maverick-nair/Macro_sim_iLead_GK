@@ -48,5 +48,11 @@
   "board.teamScroll": "Your team, scrolls sideways",
   "board.snoozed": "Back in your inbox next {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}}",
   "board.report.emailSent": "Report sent to your work email.",
-  "board.report.emailFailed": "The email did not go through. Try again."
+  "board.report.emailFailed": "The email did not go through. Try again.",
+  "board.practice.title": "Practice before week 1",
+  "board.practice.body": "A short conversation with {name} to try speaking or typing in a live conversation. It is not scored and changes nothing on your team.",
+  "board.practice.start": "Practice with {name}",
+  "board.practice.skip": "Skip practice",
+  "board.practice.done": "Practice done. A tip for the real thing: {tip}",
+  "board.practice.skipped": "Practice skipped. Set your styles for week 1."
 }

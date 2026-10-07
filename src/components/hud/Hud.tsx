@@ -18,6 +18,8 @@ export interface HudClock {
   periodUnit: PeriodUnit;
   /** Current sub period within the period, 1 based ("Day 3"). */
   subPeriod: number;
+  /** Periods in the run: screen readers hear "Week 2 of 8, Day 3" (D12, D84). */
+  periods?: number;
   subPeriodUnit: SubPeriodUnit;
   /** Capacity per period, in sub periods: one bolt each. */
   capacity: number;
@@ -177,7 +179,11 @@ export function Hud(p: HudProps) {
         )))}
       </nav>}
       <div className="min-w-0 flex-1 tablet-portrait:-order-1" />
-      <span className="flex-none text-13 text-fg-secondary tablet-portrait:-order-2 tablet-portrait:text-14">{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
+      {/* D12, D84: the design's "Week 2 · Day 3" on screen; the spec's "Week 2 of 8" for screen readers, until the canvas (D80) settles the label. */}
+      <span className="flex-none text-13 text-fg-secondary tablet-portrait:-order-2 tablet-portrait:text-14">
+        <span aria-hidden={clock.periods ? true : undefined}>{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
+        {clock.periods ? <span className="sr-only">{t('hud.clock.aria', { period: t('time.periodOf', { unit: clock.periodUnit, n: clock.period, total: clock.periods }), subPeriod: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }) })}</span> : null}
+      </span>
       <div role="group" aria-label={capAria} className="flex items-center gap-2 tablet-portrait:-order-2">
         <div className={`flex gap-0.25 tablet-portrait:hidden ${pulse ? 'animate-(--il-hud-capacity-pulse)' : ''}`}>
           {slots.map((v, i) => <Bolt key={i} left={v} />)}
@@ -203,7 +209,7 @@ export function Hud(p: HudProps) {
           <Star />{number(score.total)}
         </button>
         {open && (
-          <div id={tipId} className={`absolute top-full right-0 z-40 mt-2 flex ${rich ? 'w-80 backdrop-blur-20' : 'w-65'} flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
+          <div id={tipId} className={`absolute top-full end-0 z-40 mt-2 flex ${rich ? 'w-80 backdrop-blur-20' : 'w-65'} flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
             {rich ? p.breakdown : <>
             <b>{t('hud.score.title')}</b>
             <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
@@ -213,7 +219,7 @@ export function Hud(p: HudProps) {
                 <div className="h-1.5 rounded-3 bg-track">
                   <div className="h-full rounded-3 bg-(image:--il-fill-brand)" style={{ width: `${Math.max(0, Math.min(100, score[k] / pillarScale * 100))}%` }} />
                 </div>
-                <b className="text-right">{number(score[k])}</b>
+                <b className="text-end">{number(score[k])}</b>
               </div>
             ))}
             </>}

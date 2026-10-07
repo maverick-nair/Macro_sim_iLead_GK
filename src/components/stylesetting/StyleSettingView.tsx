@@ -167,7 +167,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
         <span className="contents tablet-portrait:hidden"><NoWrapButton variant="primary" size="md" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton></span>
       </header>
       {/* A portrait tablet confirms from a bar at the bottom, in reach of a thumb (D73). */}
-      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-20 border border-line-default bg-surface-material py-2.5 pr-2.5 pl-5 backdrop-blur-20">
+      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-20 border border-line-default bg-surface-material py-2.5 pe-2.5 ps-5 backdrop-blur-20">
         <span className="flex-1 text-14 text-fg-secondary">{t('stylesetting.bar')}</span>
         <NoWrapButton variant="primary" size="lg" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton>
       </div>

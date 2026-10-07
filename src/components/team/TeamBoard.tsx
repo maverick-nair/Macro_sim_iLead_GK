@@ -48,7 +48,7 @@ function StyleLegend({ id, periodUnit }: { id: string; periodUnit: PeriodUnit })
   const lens = useLens();
   return (
     <div id={id} role="dialog" aria-label={t('team.legend.title')}
-      className={`absolute top-full right-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-18 border border-line-strong bg-surface-material p-4`}>
+      className={`absolute top-full end-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-18 border border-line-strong bg-surface-material p-4`}>
       <span className="text-13 text-fg-secondary">{lens.id === 'readiness_based' ? t('team.legend.intro', { unit: periodUnit }) : t('team.legend.introLens', { unit: periodUnit, count: lens.styles.length })}</span>
       {lens.styles.map(s => (
         <div key={s.key} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">

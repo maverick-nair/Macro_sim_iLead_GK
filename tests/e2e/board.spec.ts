@@ -227,8 +227,13 @@ test('palette: Ctrl K on the plain board only', async ({ page }) => {
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.keyboard.press('Control+k');
   await expect(page.getByRole('dialog')).toHaveCount(1);
+  // The board behind is inert while the palette is open (D23, D84), and comes back after.
+  const behind = page.getByRole('button', { name: 'Settings' });
+  expect(await behind.evaluate(b => !!b.closest('[inert]'))).toBe(true);
+  expect(await axe(page)).toEqual([]);
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(await page.locator('[inert]').count()).toBe(0);
 });
 
 test('the end of the run: the last week end, the end screen, then the board read only and back', async ({ page }) => {

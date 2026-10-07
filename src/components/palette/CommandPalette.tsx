@@ -1,5 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { useRef, type KeyboardEvent } from 'react';
+import { useLayoutEffect, useRef, type KeyboardEvent } from 'react';
+import { inertOutside } from '../../lib/inertOutside';
 import { useI18n } from '../../i18n';
 
 /** Backdrop behind a result's icon: a portrait backdrop by mood, or the brand fill for actions. */
@@ -40,11 +41,15 @@ const TONE: Record<PaletteTone, string> = {
  * Radix runs non modal on purpose. Its modal mode sets pointer-events none on the body, which
  * re-rasterizes the board behind the scrim (gradient pills shift by up to 28/255). The scrim already
  * blocks pointer input and a click on it closes the palette, so the visible behavior is the same.
+ * The page behind is `inert` while it is open (D23, D84): no focus, no clicks, hidden from screen
+ * readers, as a modal's background should be, without the pixel change.
  */
 export function CommandPalette({ open, onClose, query, onQueryChange, results }: CommandPaletteProps) {
   const { t } = useI18n();
   const opener = useRef<HTMLElement | null>(null);
   const searching = query.trim() !== '';
+  const scrim = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => (open && scrim.current ? inertOutside(scrim.current) : undefined), [open]);
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && results[0]) { e.preventDefault(); results[0].onRun(); }
   };
@@ -52,7 +57,7 @@ export function CommandPalette({ open, onClose, query, onQueryChange, results }:
     <Dialog.Root modal={false} open={open} onOpenChange={o => { if (!o) onClose(); }}>
       {/* Dialog.Overlay only renders in modal mode, so the scrim is a plain element. */}
       {open && (
-        <div className="absolute inset-0 z-49 flex items-start justify-center bg-surface-scrim pt-(--il-palette-offset)">
+        <div ref={scrim} className="absolute inset-0 z-49 flex items-start justify-center bg-surface-scrim pt-(--il-palette-offset)">
           <Dialog.Content
             // There is no Dialog.Trigger (the HUD button and Cmd K both open it), so remember the opener.
             onOpenAutoFocus={() => { opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; }}
@@ -67,7 +72,7 @@ export function CommandPalette({ open, onClose, query, onQueryChange, results }:
             <div className="flex max-h-(--il-palette-results-max-height) flex-col gap-0.5 overflow-auto p-2">
               {results.map((r, i) => (
                 <button key={r.id} type="button" onClick={r.onRun}
-                  className={`flex cursor-pointer items-center gap-3 rounded-12 border-0 px-3 py-2 text-left text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-accent-secondary ${i === 0 && searching ? 'bg-surface-raised' : 'bg-transparent'}`}>
+                  className={`flex cursor-pointer items-center gap-3 rounded-12 border-0 px-3 py-2 text-start text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-accent-secondary ${i === 0 && searching ? 'bg-surface-raised' : 'bg-transparent'}`}>
                   <span className={`size-7.5 flex-none overflow-hidden rounded-round ${TONE[r.tone]}`}>
                     {r.img && <img src={r.img} alt="" className="size-full object-cover object-top mix-blend-multiply" />}
                   </span>

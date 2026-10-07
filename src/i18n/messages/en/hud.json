@@ -5,6 +5,7 @@
   "hud.nav.aria": "Game menu",
   "hud.nav.item": "{key, select, objective {Objective} funnel {Funnel} history {History} badges {Badges} more {More} other {}}",
   "hud.clock": "{period} · {subPeriod}",
+  "hud.clock.aria": "{period}, {subPeriod}",
   "hud.pause.aria": "Pause the simulation",
   "hud.pause.label": "Pause",
   "hud.score.aria": "Leadership score {total}. Show breakdown",

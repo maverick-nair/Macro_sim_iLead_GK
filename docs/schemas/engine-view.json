@@ -3353,6 +3353,10 @@
                   "type": "null"
                 }
               ]
+            },
+            "practice": {
+              "default": false,
+              "type": "boolean"
             }
           },
           "required": [
@@ -3380,6 +3384,33 @@
         {
           "type": "null"
         }
+      ]
+    },
+    "practice": {
+      "default": {
+        "available": false,
+        "partner": null
+      },
+      "type": "object",
+      "properties": {
+        "available": {
+          "type": "boolean"
+        },
+        "partner": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "available",
+        "partner"
       ]
     },
     "liveCap": {

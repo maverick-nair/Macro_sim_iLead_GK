@@ -66,7 +66,7 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
         data-card={card.card}
         className="flex max-h-full w-full max-w-(--il-board-panel-max-width) animate-(--il-event-card-enter) flex-col overflow-auto rounded-26 border border-line-strong bg-surface-solid shadow-(--il-event-card-shadow) outline-0">
         <div className={`relative flex h-(--il-event-card-art-height) flex-none items-end gap-2 px-5 py-4 ${EVENT_ART[card.card]}`}>
-          {img && <img src={img} alt="" className="absolute right-5 bottom-0 size-(--il-event-card-portrait) rounded-t-round object-cover object-top mix-blend-multiply" />}
+          {img && <img src={img} alt="" className="absolute end-5 bottom-0 size-(--il-event-card-portrait) rounded-t-round object-cover object-top mix-blend-multiply" />}
           <span className={chip}>{t('board.card.label', { card: card.card })}</span>
           {card.label && <span className={chip}>{card.label}</span>}
         </div>

@@ -105,7 +105,7 @@ function PrintPages({ blocks, footer, label }: { blocks: ReportBlock[]; footer: 
           {pageFooter(1, 1)}
         </article>
         {/* An empty page: its flexible middle is the height a page has for blocks. */}
-        <div aria-hidden="true" className={`${PRINT_PAGE} invisible absolute top-0 left-0 h-(--il-report-print-page-height)`}>
+        <div aria-hidden="true" className={`${PRINT_PAGE} invisible absolute top-0 start-0 h-(--il-report-print-page-height)`}>
           <div ref={probe} className="flex-1"></div>
           {pageFooter(1, 1)}
         </div>

@@ -56,7 +56,7 @@ export function ScoreBreakdown(p: ScoreBreakdownProps) {
             <div className="h-1.5 rounded-3 bg-track">
               <div className="h-full rounded-3 bg-(image:--il-fill-brand)" style={{ width: `${Math.max(0, Math.min(100, x.value))}%` }} />
             </div>
-            <b className="text-right">{number(x.value)}</b>
+            <b className="text-end">{number(x.value)}</b>
           </div>
           <span className="text-12 text-fg-secondary">{t('score.feeds', { pillar: x.key })}</span>
           {x.key === 'leadership' && <span className="text-12 text-fg-secondary">{t('score.leadership.parts', { capability: number(p.capability), live: p.live === null ? 'none' : number(p.live) })}</span>}

@@ -77,7 +77,7 @@ export function LanguageStep({ title, languages, lang, onLang, onBegin }: Langua
               return (
                 <button key={l.id} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1} lang={l.id}
                   onClick={() => onLang(j)} onKeyDown={e => onRovingKey(e, j, languages.length, onLang)}
-                  className={`flex cursor-pointer flex-col gap-0.5 rounded-16 border-(length:--il-onboarding-choice-border) border-solid p-3.5 text-left text-fg-primary ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'}`}>
+                  className={`flex cursor-pointer flex-col gap-0.5 rounded-16 border-(length:--il-onboarding-choice-border) border-solid p-3.5 text-start text-fg-primary ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'}`}>
                   <b>{l.name}</b>
                   <span className="text-12 text-fg-secondary">{l.note}</span>
                 </button>
@@ -116,9 +116,9 @@ export function SponsorStep({ sponsor, tab, onTab, wait, onPlay, onNext }: Spons
         {sponsor.img
           ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-top" />
           : <span aria-hidden="true" className="text-120 font-700 text-brand-deep-space opacity-85">{sponsor.initials}</span>}
-        {video?.label && <span className="absolute top-4 left-4 text-12 font-700 text-brand-deep-space">{video.label}</span>}
+        {video?.label && <span className="absolute top-4 start-4 text-12 font-700 text-brand-deep-space">{video.label}</span>}
         {video && (
-          <div className="absolute right-4 bottom-4 left-4 flex items-center gap-3 rounded-16 bg-onboarding-caption-bar px-3.5 py-3 text-(color:--il-color-white)">
+          <div className="absolute end-4 bottom-4 start-4 flex items-center gap-3 rounded-16 bg-onboarding-caption-bar px-3.5 py-3 text-(color:--il-color-white)">
             <button type="button" onClick={onPlay} aria-label={t('onboarding.sponsor.play')}
               className={`size-10 flex-none cursor-pointer rounded-round border-0 bg-(color:--il-color-white) text-brand-deep-space ${FOCUS}`}>{PLAY_GLYPH}</button>
             <span className="text-13">{open}<span>{video.caption}</span>{close}</span>
@@ -229,7 +229,7 @@ export function VoiceStep({ check, listening, wave, words, heard, sampleName, on
         <span className={EYEBROW}>{t('onboarding.voice.eyebrow')}</span>
         <h1 tabIndex={-1} className={`${HEADING} text-36 tracking-(--il-onboarding-title-tracking)`}>{t('onboarding.voice.title', { state: check })}</h1>
         {denied && (
-          <div role="alert" className="flex w-full flex-col gap-1.5 rounded-18 border border-status-attention bg-status-attention-soft p-4 text-left">
+          <div role="alert" className="flex w-full flex-col gap-1.5 rounded-18 border border-status-attention bg-status-attention-soft p-4 text-start">
             <b>{t(check === 'unavailable' ? 'onboarding.voice.unavailable.title' : 'onboarding.voice.denied.title')}</b>
             <span className="text-13">{t(check === 'unavailable' ? 'onboarding.voice.unavailable.body' : 'onboarding.voice.denied.body')}</span>
             {onText && <div className="pt-1.5"><NoWrapButton variant="primary" size="md" onClick={onText}>{t('onboarding.voice.useText')}</NoWrapButton></div>}

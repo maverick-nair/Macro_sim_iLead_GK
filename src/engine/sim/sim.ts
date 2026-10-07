@@ -33,7 +33,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     events: { schedule: {}, fired: [], pending: [] }, pulseAtStart: 0,
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
     periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start,
-    actionRecords: [], periodStartResults: []
+    actionRecords: [], periodStartResults: [], practice: config.practice.enabled ? 'offered' : 'skipped'
   };
   sim.events.schedule = scheduleEvents(sim);
   markPeriodStart(sim);

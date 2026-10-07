@@ -112,7 +112,7 @@ export function UnlockStep({ sponsorFirstName, period, periodUnit, rewards, chos
           return (
             <button key={r.key} type="button" role="radio" aria-checked={on} tabIndex={on || (chosen === null && i === 0) ? 0 : -1}
               onClick={() => onChoose(i)} onKeyDown={e => onRovingKey(e, i, rewards.length, onChoose)}
-              className={`flex cursor-pointer flex-col gap-2.5 rounded-24 border-2 border-solid p-5 text-left text-fg-primary [transition:var(--il-weekend-reward-transition)] ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft [transform:var(--il-weekend-reward-lift)]' : 'border-line-default bg-surface-card'}`}>
+              className={`flex cursor-pointer flex-col gap-2.5 rounded-24 border-2 border-solid p-5 text-start text-fg-primary [transition:var(--il-weekend-reward-transition)] ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft [transform:var(--il-weekend-reward-lift)]' : 'border-line-default bg-surface-card'}`}>
               <span aria-hidden="true" className={`h-22.5 rounded-16 ${REWARD_ART[i % REWARD_ART.length]}`}></span>
               <b className="text-17">{r.name}</b>
               <span className="text-13 text-fg-secondary">{r.description}</span>
@@ -151,7 +151,7 @@ export function NewsStep({ period, periodUnit, news, index, total, impact, artLa
       <h1 tabIndex={-1} className={`${HEADING} ${EYEBROW}`}>{t('weekend.news.eyebrow', { unit: periodUnit, n: period, index: index + 1, total })}</h1>
       <article aria-labelledby={`${id}title`} className="w-180 max-w-full overflow-hidden rounded-28 border border-line-strong bg-surface-material">
         <div className={`relative h-55 ${newsArt(news.card)}`}>
-          {artLabel && <span className="absolute top-3.5 left-4.5 text-12 font-700 text-brand-deep-space">{artLabel}</span>}
+          {artLabel && <span className="absolute top-3.5 start-4.5 text-12 font-700 text-brand-deep-space">{artLabel}</span>}
         </div>
         <div className="flex flex-col gap-2.5 px-6 py-5.5">
           <h2 id={`${id}title`} className="m-0 text-26 font-700 tracking-(--il-weekend-title-tracking)">{news.title}</h2>

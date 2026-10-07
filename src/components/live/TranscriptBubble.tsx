@@ -60,7 +60,7 @@ export function TranscriptBubble({ speaker, text, name = '', streaming = false, 
   const npc = speaker === 'npc';
   return (
     <div aria-busy={streaming || undefined} className={`flex max-w-(--il-live-bubble-max-width) flex-col gap-1 ${npc ? 'self-start' : 'self-end'}`}>
-      <div className={`px-3.5 py-2.5 text-14 text-pretty ${npc ? 'rounded-18 rounded-bl-6 bg-surface-raised text-fg-primary' : 'rounded-18 rounded-br-6 bg-(image:--il-fill-brand) text-brand-deep-space'}`}>{voiceNote && <VoiceNoteBar npc={npc} {...voiceNote} />}{text}</div>
+      <div className={`px-3.5 py-2.5 text-14 text-pretty ${npc ? 'rounded-18 rounded-es-6 bg-surface-raised text-fg-primary' : 'rounded-18 rounded-ee-6 bg-(image:--il-fill-brand) text-brand-deep-space'}`}>{voiceNote && <VoiceNoteBar npc={npc} {...voiceNote} />}{text}</div>
       <span className={`flex items-center gap-1.5 text-12 text-fg-secondary ${npc ? 'justify-start' : 'justify-end'}`}>
         <span>{npc ? name : t('live.turn.you')}</span>
         {npc && (

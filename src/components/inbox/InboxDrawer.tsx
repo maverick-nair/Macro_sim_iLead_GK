@@ -97,7 +97,7 @@ function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLate
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the dialog
     <div ref={ref} role="dialog" aria-label={t('inbox.title')} tabIndex={-1} onKeyDown={onKeyDown}
-      className="absolute top-0 bottom-6 left-(--il-inbox-drawer-offset) z-30 tablet-portrait:top-20 tablet-portrait:bottom-27 tablet-portrait:left-6 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden rounded-22 border border-line-strong bg-surface-material shadow-(--il-inbox-drawer-shadow) outline-0 backdrop-blur-20">
+      className="absolute top-0 bottom-6 start-(--il-inbox-drawer-offset) z-30 tablet-portrait:top-20 tablet-portrait:bottom-27 tablet-portrait:start-6 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden rounded-22 border border-line-strong bg-surface-material shadow-(--il-inbox-drawer-shadow) outline-0 backdrop-blur-20">
       <div className="flex items-center justify-between border-b border-line-default px-4.5 py-4">
         <h2 className="m-0 text-18 font-700">{t('inbox.title')}</h2>
         <button type="button" onClick={onClose} aria-label={t('inbox.close')}

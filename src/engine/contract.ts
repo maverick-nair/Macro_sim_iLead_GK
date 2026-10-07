@@ -150,7 +150,9 @@ export const LiveView = z.object({
   hint: z.object({ mode: z.enum(['off', 'onRequest']), text: Text.nullable() }),
   candidates: z.array(Who.extend({ title: Text, cv: z.object({ previous: Text, experience: Text, skills: Text, remarks: Text }) })).nullable(),
   candidate: z.number().int().min(0).nullable(),
-  replyTo: Id.nullable()
+  replyTo: Id.nullable(),
+  /** The Week 0 practice (D84): not scored; ending it gives a tip, not an outcome. */
+  practice: z.boolean().default(false)
 });
 
 export const ActionView = z.object({
@@ -260,6 +262,8 @@ export const EngineView = z.object({
   perks: z.object({ bonusDay: z.boolean(), hireBudget: z.boolean(), teamActivity: z.boolean(), checkIn: z.boolean() }),
   history: z.array(LogEntry),
   live: LiveView.nullable(),
+  /** The Week 0 practice conversation (D16, D84): on offer before week 1 begins, with this team member. */
+  practice: z.object({ available: z.boolean(), partner: Id.nullable() }).default({ available: false, partner: null }),
   liveCap: z.object({ cap: z.number().int(), used: z.number().int() }),
   /**
    * The report, once the run has ended. Its schema is `ReportView` in `./reportContract`, which the end
@@ -289,7 +293,10 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('chooseReward'), reward: Id }),
   /** End screen: reflection answers (text or transcribed voice, up to 3) and the 1 to 5 experience rating. */
   z.object({ type: z.literal('submitReflection'), answers: z.array(z.string().max(2000)).max(3), rating: z.number().int().min(1).max(5).nullable() }),
-  z.object({ type: z.literal('startNextPeriod') })
+  z.object({ type: z.literal('startNextPeriod') }),
+  /** The Week 0 practice (D84): open it, or skip it. `endInteraction` and `abandonInteraction` close it. */
+  z.object({ type: z.literal('startPractice') }),
+  z.object({ type: z.literal('skipPractice') })
 ]);
 
 export const IntentResult = z.object({

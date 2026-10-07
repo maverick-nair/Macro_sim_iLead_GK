@@ -36,7 +36,7 @@ export function TrustRing({ value, placement = 'corner' }: TrustRingProps) {
   const label = t('member.trust', { value });
   const dash = `${(value / 100 * RING_C).toFixed(1)} ${RING_C.toFixed(1)}`;
   return (
-    <div role="img" title={label} aria-label={label} className={`size-(--il-member-ring-size) ${placement === 'inline' ? 'relative ml-auto flex-none' : 'absolute right-1.5 bottom-1.5'}`}>
+    <div role="img" title={label} aria-label={label} className={`size-(--il-member-ring-size) ${placement === 'inline' ? 'relative ms-auto flex-none' : 'absolute end-1.5 bottom-1.5'}`}>
       <svg className="block size-full" viewBox="0 0 38 38" aria-hidden="true">
         <circle cx="19" cy="19" r={RING_R} className="fill-member-ring-fill stroke-member-ring-track" strokeWidth="3" />
         <circle cx="19" cy="19" r={RING_R} fill="none" className={value < LOW_BELOW ? 'stroke-member-ring-low' : 'stroke-member-ring-ok'} strokeWidth="3" strokeLinecap="round" strokeDasharray={dash} transform="rotate(-90 19 19)" />
@@ -135,8 +135,8 @@ export function MemberCard(props: MemberCardProps) {
       <div className={`relative h-29.5 overflow-hidden rounded-t-16 ${backdrop(mood, away)}`}>
         <img src={img} alt="" className={`absolute inset-0 size-full object-cover object-(--il-member-portrait-position) mix-blend-multiply ${away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-member-portrait-overlay)" />
-        {selected && <span aria-hidden="true" className="absolute top-2 left-2 flex size-6 items-center justify-center rounded-round bg-(image:--il-fill-brand) text-brand-deep-space"><Check /></span>}
-        <div className="absolute top-2 right-2 flex gap-1">
+        {selected && <span aria-hidden="true" className="absolute top-2 start-2 flex size-6 items-center justify-center rounded-round bg-(image:--il-fill-brand) text-brand-deep-space"><Check /></span>}
+        <div className="absolute top-2 end-2 flex gap-1">
           {unread && <span title={t('member.unread')} className={signal}><Chat /></span>}
           {promise && <span title={promise} className={signal}><Clock /></span>}
         </div>
@@ -145,7 +145,7 @@ export function MemberCard(props: MemberCardProps) {
           When both do not fit on one row (narrow cards, such as a 1024 wide board) the ring moves up
           above the pill instead of covering it, and a pill wider than the card truncates.
         */}
-        <div className="absolute right-1.5 bottom-1.5 left-2 flex flex-wrap-reverse items-start gap-1">
+        <div className="absolute end-1.5 bottom-1.5 start-2 flex flex-wrap-reverse items-start gap-1">
           <span title={pill} className="mb-0.5 flex min-h-5.5 min-w-0 items-center gap-1.25 rounded-pill bg-member-pill px-2 text-12 font-700 text-member-on-portrait">
             <span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />
             <span className="truncate text-large:whitespace-normal text-large:break-words">{pill}</span>
@@ -167,7 +167,7 @@ export function MemberCard(props: MemberCardProps) {
             type="button"
             onClick={profile}
             aria-label={t('member.profile.open', { name })}
-            className="ml-auto flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
+            className="ms-auto flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
           >
             <External />
           </button>

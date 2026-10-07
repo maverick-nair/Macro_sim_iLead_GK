@@ -50,10 +50,10 @@ export function TabletMemberCard(props: MemberCardProps) {
   const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
   return (
     <button type="button" data-member-card="" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
-      className={`relative flex min-h-42 w-full flex-col items-start gap-2.5 rounded-18 border border-solid px-3 py-3.5 text-left text-fg-primary ${focus} ${selected ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
+      className={`relative flex min-h-42 w-full flex-col items-start gap-2.5 rounded-18 border border-solid px-3 py-3.5 text-start text-fg-primary ${focus} ${selected ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
       <img src={img} alt="" className={`size-13 flex-none rounded-round bg-brand-pale-lavender object-cover object-top ring-2 ${MOOD_RING[mood]} ${away ? 'grayscale' : ''}`} />
       {(unread || promise) && (
-        <span className="absolute top-2.5 right-2.5 flex gap-1">
+        <span className="absolute top-2.5 end-2.5 flex gap-1">
           {unread && <span title={t('member.unread')} className="flex size-6 items-center justify-center rounded-round bg-member-signal text-member-signal-fg"><Chat /></span>}
           {promise && <span title={promise} className="flex size-6 items-center justify-center rounded-round bg-member-signal text-member-signal-fg"><Clock /></span>}
         </span>
@@ -209,7 +209,7 @@ export function ActionSheet(p: ActionSheetProps) {
             if (active && active !== document.body) { e.preventDefault(); return; }
             if (back.current?.isConnected) { e.preventDefault(); back.current.focus({ preventScroll: true }); }
           }}
-          className="flex h-full w-110 max-w-full animate-(--il-tablet-sheet-enter) flex-col gap-4 overflow-auto border-y-0 border-r-0 border-l border-solid border-line-strong bg-surface-solid px-6 pt-5.5 pb-6 text-fg-primary shadow-(--il-tablet-sheet-shadow) outline-0">
+          className="flex h-full w-110 max-w-full animate-(--il-tablet-sheet-enter) flex-col gap-4 overflow-auto border-y-0 border-e-0 border-l border-solid border-line-strong bg-surface-solid px-6 pt-5.5 pb-6 text-fg-primary shadow-(--il-tablet-sheet-shadow) outline-0">
           <div className="flex items-center gap-3.5">
             {person && <img src={person.img} alt="" className={`size-15 flex-none rounded-round bg-brand-pale-lavender object-cover object-top ring-2 ${MOOD_RING[person.mood]} ${person.away ? 'grayscale' : ''}`} />}
             <div className="flex min-w-0 flex-1 flex-col">
@@ -320,7 +320,7 @@ export function PickBar({ action, limit, picks, onDone, onCancel }: PickBarProps
   useEffect(() => { ref.current?.focus({ preventScroll: true }); }, []);
   return (
     <section ref={ref} tabIndex={-1} aria-label={t('tablet.pick.aria', { action })}
-      className="mx-6 mt-4 mb-6 flex items-center gap-3 rounded-20 border border-solid border-accent-secondary bg-surface-material py-2.5 pr-2.5 pl-5 shadow-(--il-tablet-dock-shadow) outline-0 backdrop-blur-20">
+      className="mx-6 mt-4 mb-6 flex items-center gap-3 rounded-20 border border-solid border-accent-secondary bg-surface-material py-2.5 pe-2.5 ps-5 shadow-(--il-tablet-dock-shadow) outline-0 backdrop-blur-20">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <b className="text-15">{t('tablet.pick.bar', { action, limit })}</b>
         <span aria-live="polite" className="text-13 text-fg-secondary">

@@ -90,7 +90,7 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
   if (layout === 'compact') {
     return (
       <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip}
-        className={`grid grid-cols-(--il-action-tile-compact-columns) items-center gap-2 rounded-14 border border-line-default bg-surface-raised p-3 text-left ${tone} ${focus}`}>
+        className={`grid grid-cols-(--il-action-tile-compact-columns) items-center gap-2 rounded-14 border border-line-default bg-surface-raised p-3 text-start ${tone} ${focus}`}>
         {text}
       </button>
     );
@@ -101,7 +101,7 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
     : kind === 'static' ? 'bg-(image:--il-action-icon-instant) text-brand-deep-space' : 'bg-(image:--il-action-icon-live) text-brand-deep-space';
   return (
     <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip}
-      className={`grid grid-cols-(--il-action-tile-columns) items-center gap-2.5 rounded-14 border border-line-default bg-surface-raised px-2.5 py-2.25 text-left ${tone} ${disabled ? '' : 'hover:border-line-strong'} ${focus}`}>
+      className={`grid grid-cols-(--il-action-tile-columns) items-center gap-2.5 rounded-14 border border-line-default bg-surface-raised px-2.5 py-2.25 text-start ${tone} ${disabled ? '' : 'hover:border-line-strong'} ${focus}`}>
       <span className={`flex size-7.5 items-center justify-center rounded-10 ${iconFill}`}>{icon}</span>
       {text}
     </button>

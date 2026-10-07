@@ -109,14 +109,14 @@ export function ConsistencySection({ data }: { data: ConsistencyData }) {
               <thead>
                 <tr>
                   {(['person', 'needed', 'intended', 'used'] as const).map(c => (
-                    <th key={c} scope="col" className="border-b border-line-default px-2 py-1 text-left font-700 text-fg-secondary">{t('report.consistency.column', { column: c })}</th>
+                    <th key={c} scope="col" className="border-b border-line-default px-2 py-1 text-start font-700 text-fg-secondary">{t('report.consistency.column', { column: c })}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {data.members.map(m => (
                   <tr key={m.id}>
-                    <th scope="row" className="border-b border-line-default px-2 py-1 text-left font-600">{m.name}</th>
+                    <th scope="row" className="border-b border-line-default px-2 py-1 text-start font-600">{m.name}</th>
                     <td className="border-b border-line-default px-2 py-1">{m.needed ?? none}</td>
                     <td className="border-b border-line-default px-2 py-1">{m.intended ?? none}</td>
                     <td className="border-b border-line-default px-2 py-1">{m.used ?? none}</td>

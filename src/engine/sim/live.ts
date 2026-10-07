@@ -125,7 +125,7 @@ function speakerCtx(sim: Sim, id: string): NpcContext['speaker'] {
 }
 
 const actionName = (sim: Sim, it: Interaction) => sim.config.actions.find(a => a.key === it.actionKey)?.name ?? (it.actionKey === 'sponsor' ? 'Sponsor briefing' : 'Reply');
-export const turnLimit = (sim: Sim, it: Interaction) => sim.config.actions.find(a => a.key === it.actionKey)?.live.turnLimit ?? 12;
+export const turnLimit = (sim: Sim, it: Interaction) => (it.actionKey === PRACTICE ? sim.config.practice.turnLimit : sim.config.actions.find(a => a.key === it.actionKey)?.live.turnLimit ?? 12);
 const yourTurns = (it: Interaction) => it.turns.filter(t => t.by === 'you').length;
 
 async function npcSays(sim: Sim, npc: NpcModel, it: Interaction, said: string | null): Promise<Turn> {
@@ -232,3 +232,34 @@ export async function nextCandidate(sim: Sim, npc: NpcModel, id: string) {
 export const participantText = (it: Interaction) => it.turns.filter(t => t.by === 'you').map(t => String(t.text)).join('\n');
 /** The NPC's last words, for the outcome panel. */
 export const lastNpcWords = (it: Interaction) => [...it.turns].reverse().find(t => t.by !== 'you')?.text ?? '';
+
+// ---------------------------------------------------------------- the Week 0 practice (D16, D84)
+
+/** The practice conversation's action key: not an action, never scored, never logged. */
+export const PRACTICE = 'practice';
+/** Who the participant practises with: the authored member, else the first member. */
+export const practicePartner = (sim: Sim) => sim.config.practice.with && member(sim, sim.config.practice.with) ? sim.config.practice.with : sim.members[0]?.id ?? null;
+/** Offered before week 1 begins: in style setting of the first period, before anything has happened. */
+export const practiceAvailable = (sim: Sim) => sim.practice === 'offered' && sim.phase === 'style' && sim.period === 1 && sim.log.length === 0 && !!practicePartner(sim) && !Object.keys(sim.interactions).length;
+
+/** Opens the practice: a short conversation in the live shell that changes nothing. */
+export async function startPractice(sim: Sim, npc: NpcModel): Promise<string> {
+  if (!practiceAvailable(sim)) throw new IntentError('The practice is not on offer', 'noPractice');
+  const id = nextId(sim, 'i');
+  sim.interactions[id] = blank({ actionKey: PRACTICE, optionKey: null, memberIds: [practicePartner(sim)!], format: sim.config.practice.format, startedAt: sim.absSub });
+  await npcSays(sim, npc, sim.interactions[id], null);
+  return id;
+}
+
+/** Skips the practice, or ends it: nothing is evaluated, recorded or scored. Ending gives one coaching tip. */
+export function endPractice(sim: Sim, id: string | null): Copy | undefined {
+  if (id === null) {
+    if (sim.practice === 'offered') sim.practice = 'skipped';
+    return undefined;
+  }
+  const it = get(sim, id);
+  if (it.actionKey !== PRACTICE) throw new IntentError('Not the practice', 'notPractice');
+  delete sim.interactions[id];
+  sim.practice = 'done';
+  return it.turns.some(t => t.by === 'you') ? msg('engine.hint', { format: it.format }) : undefined;
+}

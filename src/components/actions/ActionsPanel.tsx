@@ -78,7 +78,7 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
   if (collapse?.collapsed) {
     // The rail: one button that brings the card back, with how many actions are open and the time left.
     return (
-      <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pr-6 pb-6 pl-0">
+      <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0">
         <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
           <button type="button" aria-expanded={false} onClick={collapse.onToggle}
             aria-label={t('actions.rail.aria', { n: collapse.open, left: t('time.left', { amount: fmt(capacityLeft) }) })}
@@ -92,17 +92,17 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
     );
   }
   return (
-    <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pr-6 pb-6 pl-0">
+    <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0">
       <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
         <SubPeriodUnitContext.Provider value={subPeriodUnit}>
           {drawer ? drawer : (
             <div className="flex flex-1 flex-col gap-3.5 px-4.5 py-4">
               <div className="flex items-baseline justify-between">
                 <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>
-                <span className={`text-12 text-fg-secondary ${collapse ? 'ml-auto' : ''}`}>{t('time.left', { amount: fmt(capacityLeft) })}</span>
+                <span className={`text-12 text-fg-secondary ${collapse ? 'ms-auto' : ''}`}>{t('time.left', { amount: fmt(capacityLeft) })}</span>
                 {collapse && (
                   <button type="button" aria-expanded={true} onClick={collapse.onToggle} aria-label={t('actions.collapse')} title={t('actions.collapse')}
-                    className={`ml-2 self-center ${toggleClass}`}>
+                    className={`ms-2 self-center ${toggleClass}`}>
                     <Chevron to="right" />
                   </button>
                 )}

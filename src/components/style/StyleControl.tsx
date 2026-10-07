@@ -20,7 +20,7 @@ export interface StyleTooltipProps {
 /** Full name and meaning of a style, shown above a segment on hover or focus. */
 export function StyleTooltip({ style, align, size = 'sm' }: StyleTooltipProps) {
   const s = styleOf(useLens(), style);
-  const place = align === 'start' ? 'left-0' : 'left-full -translate-x-full';
+  const place = align === 'start' ? 'start-0' : 'left-full -translate-x-full';
   return (
     <div role="tooltip" className={`absolute bottom-full z-45 mb-2.5 flex flex-col gap-0.5 rounded-12 bg-(--il-style-tooltip-bg) px-3 py-2.5 text-(color:--il-style-tooltip-fg) pointer-events-none ${place} ${SIZES[size].tip}`}>
       <b className="text-13">{s.name}</b>

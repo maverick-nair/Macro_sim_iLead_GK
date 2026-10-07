@@ -36,7 +36,7 @@ const MicIcon = () => (
 
 function Chip({ person }: { person: LivePerson }) {
   return (
-    <span className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pr-2.5 pl-0.75 text-13 font-600 whitespace-nowrap">
+    <span className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pe-2.5 ps-0.75 text-13 font-600 whitespace-nowrap">
       <span className="flex size-6 items-center justify-center overflow-hidden rounded-round bg-liveshell-chip-avatar text-12 font-700 text-liveshell-on-signal">
         {person.img ? <img src={person.img} alt="" className="size-full object-cover object-top mix-blend-multiply" /> : <span aria-hidden="true">{initialsOf(person.name)}</span>}
       </span>
@@ -81,7 +81,7 @@ export function EmailStage(p: EmailStageProps) {
         <textarea value={p.body} onChange={e => p.onBody(e.target.value)} aria-label={t('liveshell.email.bodyAria')}
           className="min-h-65 flex-1 resize-none border-0 bg-transparent p-4 text-15 leading-(--il-liveshell-email-leading) text-fg-primary outline-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary" />
         {p.dictating && (
-          <div role="status" className="absolute right-4 bottom-3 left-4 flex items-center gap-2.5 rounded-14 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
+          <div role="status" className="absolute end-4 bottom-3 start-4 flex items-center gap-2.5 rounded-14 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
             <Waveform levels={p.levels} size="sm" />
             {t('liveshell.email.dictating', { field: p.dictating })}
           </div>

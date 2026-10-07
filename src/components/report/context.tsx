@@ -62,19 +62,19 @@ export interface DataTableProps {
 export function DataTable({ caption, columns, rows, hidden, captionHidden }: DataTableProps) {
   const table = (
     <table className="w-full border-collapse text-13">
-      <caption className={hidden || captionHidden ? 'sr-only' : 'pb-1.5 text-left text-12 text-fg-secondary'}>{caption}</caption>
+      <caption className={hidden || captionHidden ? 'sr-only' : 'pb-1.5 text-start text-12 text-fg-secondary'}>{caption}</caption>
       <thead>
         <tr>
           {columns.map((c, i) => (
-            <th key={i} scope="col" className={`border-b border-line-default px-2 py-1 font-700 text-fg-secondary ${i ? 'text-right' : 'text-left'}`}>{c}</th>
+            <th key={i} scope="col" className={`border-b border-line-default px-2 py-1 font-700 text-fg-secondary ${i ? 'text-end' : 'text-start'}`}>{c}</th>
           ))}
         </tr>
       </thead>
       <tbody>
         {rows.map(r => (
           <tr key={r.key}>
-            <th scope="row" className="border-b border-line-default px-2 py-1 text-left font-600">{r.header}</th>
-            {r.cells.map((c, i) => <td key={i} className="border-b border-line-default px-2 py-1 text-right">{c}</td>)}
+            <th scope="row" className="border-b border-line-default px-2 py-1 text-start font-600">{r.header}</th>
+            {r.cells.map((c, i) => <td key={i} className="border-b border-line-default px-2 py-1 text-end">{c}</td>)}
           </tr>
         ))}
       </tbody>

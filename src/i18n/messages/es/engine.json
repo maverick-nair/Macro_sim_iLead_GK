@@ -174,5 +174,6 @@
   "engine.report.lensSecondary": "Tu informe también mira {title}. Esas habilidades se marcan como Solo informe: nunca cambian tu puntuación.",
   "engine.report.bar": "un nivel general de {overall}, sin ninguna habilidad por debajo de {floor}",
   "engine.group.points": "{n, plural, one {# punto} other {# puntos}}",
-  "engine.group.participant": "Participante {n}"
+  "engine.group.participant": "Participante {n}",
+  "engine.practice.goal": "Practica antes de la semana 1: habla con {name} como lo harías en una reunión 1:1 real. Aquí no se puntúa nada."
 }

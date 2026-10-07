@@ -17,7 +17,7 @@ export function ChatBubble({ from, children, onEdit, question, editing }: ChatBu
   return (
     <div className={`flex flex-col gap-1 ${mine ? 'items-end' : 'items-start'}`}>
       <span className="sr-only">{mine ? 'You said:' : 'GenieKreator:'}</span>
-      <div className={`max-w-[85%] rounded-18 px-4 py-2.5 text-15 leading-relaxed whitespace-pre-wrap text-pretty ${mine ? 'rounded-br-4 bg-accent-default text-fg-on-accent' : 'rounded-bl-4 border border-solid border-line-default bg-surface-raised text-fg-primary'} ${editing ? 'outline-2 outline-offset-2 outline-accent-secondary outline-dashed' : ''}`}>
+      <div className={`max-w-[85%] rounded-18 px-4 py-2.5 text-15 leading-relaxed whitespace-pre-wrap text-pretty ${mine ? 'rounded-ee-4 bg-accent-default text-fg-on-accent' : 'rounded-es-4 border border-solid border-line-default bg-surface-raised text-fg-primary'} ${editing ? 'outline-2 outline-offset-2 outline-accent-secondary outline-dashed' : ''}`}>
         {children}
       </div>
       {mine && onEdit && (

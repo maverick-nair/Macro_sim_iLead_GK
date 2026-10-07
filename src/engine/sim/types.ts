@@ -373,6 +373,8 @@ export interface Sim {
   intentGaps: Record<string, number[]>;
   /** Every action taken, with what it did to each person (the report's actions and distribution). */
   actionRecords: ActionRecord[];
+  /** The Week 0 practice conversation (D84): offered until it is done or skipped. */
+  practice: 'offered' | 'done' | 'skipped';
   /** Each member's result at the start of each period, for time spent with top and bottom performers. */
   periodStartResults: Array<Record<string, number>>;
 }

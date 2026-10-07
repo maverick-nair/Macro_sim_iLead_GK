@@ -43,6 +43,7 @@ const CommandPalette = lazy(() => import('../palette/CommandPalette').then(m => 
 const TabletBoardView = lazy(() => import('./TabletBoard'));
 import type { SheetTab } from './TabletBoard';
 import { EventCard } from './EventCard';
+import { PracticeOffer } from './PracticeOffer';
 import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
 import { initials, streakText } from '../gamification/display';
@@ -543,7 +544,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const streak = streakText(t, { count: v.streak, next: lastPeriod ? lastPeriod.streak.next : undefined, periodUnit, rule: v.gamification.streak });
   const hud: HudProps = {
     nav: [], onNav: () => undefined,
-    clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
+    clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, periods: v.clock.periods, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
     sessionClock: app.showClock === false ? null : <SessionClockText />, alwaysPause: true, onPause: app.onPause,
     // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6).
     score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership },
@@ -747,7 +748,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <div className={reacting ? 'hidden' : 'flex flex-1 flex-col'}>
             <Suspense fallback={<div role="status" className="flex flex-1 items-center justify-center text-14 text-fg-secondary">{t('board.loading')}</div>}>
               <EngineLive key={v.live.id} view={v} live={v.live} voiceConsent={!!app.voiceConsent} input={app.input ?? 'ptt'} captions={app.captions !== false}
-                suspended={!!reacting} held={!!app.paused} layout={tablet ? 'tablet' : 'desk'} onPause={app.onPause} onFinish={finishLive} onDone={() => undefined} onError={code => say(t('board.error', { code }))} />
+                suspended={!!reacting} held={!!app.paused} layout={tablet ? 'tablet' : 'desk'} onPause={app.onPause} onFinish={finishLive}
+                onDone={tip => { if (tip) say(t('board.practice.done', { tip })); }} onError={code => say(t('board.error', { code }))} />
             </Suspense>
           </div>
         )}
@@ -771,8 +773,16 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       </Suspense>
     );
   } else if (styling) {
-    // Weekly style setting opens before any action (spec), as its own screen.
+    // Weekly style setting opens before any action (spec), as its own screen. Before week 1, the
+    // practice conversation is offered above it (D16, D84).
+    const partner = ui.practiceOffer && v.practice.available && v.practice.partner ? member(v.practice.partner) : undefined;
     body = (
+      <>
+      {partner && (
+        <PracticeOffer name={first(partner.name)} busy={busy}
+          onStart={() => { void send({ type: 'startPractice' }); }}
+          onSkip={async () => { focusHint.current = () => h1Ref.current; if (await send({ type: 'skipPractice' })) say(t('board.practice.skipped')); }} />
+      )}
       <StyleSettingView
         embedded
         periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
@@ -791,6 +801,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         onBack={() => setStyleView(x => ({ ...x, summary: false }))}
         confirmDisabled={busy || chosen < v.members.length}
       />
+      </>
     );
   } else {
     const top = (

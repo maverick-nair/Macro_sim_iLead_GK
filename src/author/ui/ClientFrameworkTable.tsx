@@ -24,7 +24,7 @@ export function ClientFrameworkTable({ dimensions, onChange, onConfirm, confirme
   return (
     <div className="flex flex-col gap-3">
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-14">
+        <table className="w-full border-collapse text-start text-14">
           <caption className="sr-only">Client framework dimensions</caption>
           <thead>
             <tr className="text-13 text-fg-secondary">

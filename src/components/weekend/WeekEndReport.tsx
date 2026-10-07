@@ -82,7 +82,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
                   <div className={`h-full rounded-6 ${isBottleneck ? 'bg-status-attention' : 'bg-(image:--il-fill-meter)'}`} style={{ width: `${barPercent(value, scale)}%` }}></div>
                   <div className="absolute -top-1 -bottom-1 w-(--il-weekend-funnel-tick) bg-fg-primary" style={{ left: `${barPercent(ideal, scale)}%` }}></div>
                 </div>
-                <b aria-hidden="true" className="text-right">{t('weekend.funnel.value', { value: v, ideal: i })}</b>
+                <b aria-hidden="true" className="text-end">{t('weekend.funnel.value', { value: v, ideal: i })}</b>
               </div>
             );
           })}
@@ -98,18 +98,18 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
           <div role="table" aria-labelledby={`${id}team`} className="flex flex-col gap-2.5">
             <div role="row" className="grid grid-cols-(--il-weekend-kpi-columns) gap-2 text-12 font-700 text-fg-secondary">
               <span role="columnheader"><span className="sr-only">{t('weekend.team.column', { column: 'metric' })}</span></span>
-              <span role="columnheader" className="text-right">{t('weekend.team.column', { column: 'start' })}</span>
-              <span role="columnheader" className="text-right">{t('weekend.team.column', { column: 'change' })}</span>
-              <span role="columnheader" className="text-right">{t('weekend.team.column', { column: 'end' })}</span>
+              <span role="columnheader" className="text-end">{t('weekend.team.column', { column: 'start' })}</span>
+              <span role="columnheader" className="text-end">{t('weekend.team.column', { column: 'change' })}</span>
+              <span role="columnheader" className="text-end">{t('weekend.team.column', { column: 'end' })}</span>
             </div>
             {r.kpis.map(k => {
               const d = k.end - k.start;
               return (
                 <div key={k.metric} role="row" className="grid grid-cols-(--il-weekend-kpi-columns) gap-2 border-t border-line-default py-2 text-14">
                   <span role="rowheader">{t('weekend.team.metric', { metric: k.metric })}</span>
-                  <span role="cell" className="text-right">{number(k.start)}</span>
-                  <b role="cell" className={`text-right ${d > 0 ? 'text-status-gain' : 'text-fg-secondary'}`}>{delta(d)}</b>
-                  <b role="cell" className="text-right">{number(k.end)}</b>
+                  <span role="cell" className="text-end">{number(k.start)}</span>
+                  <b role="cell" className={`text-end ${d > 0 ? 'text-status-gain' : 'text-fg-secondary'}`}>{delta(d)}</b>
+                  <b role="cell" className="text-end">{number(k.end)}</b>
                 </div>
               );
             })}

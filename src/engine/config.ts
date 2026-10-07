@@ -560,6 +560,18 @@ export const StorylineConfig = z.object({
     /** Largest net trust move per sub-period. */
     capPerSubPeriod: z.number().int().min(1).default(12)
   }).default({ start: 50, erraticStyleChange: -2, intentGap: -4, multiplier: { min: 0.8, max: 1.2 }, lowTrust: { below: 30, chance: 0.75 }, capPerSubPeriod: 12 }),
+  /**
+   * The Week 0 practice conversation (spec, onboarding step 7; D16, D84): offered before week 1, never
+   * scored, skippable. `with` is the team member to practise with (the first member when left out).
+   */
+  practice: z.object({
+    enabled: z.boolean().default(true),
+    with: z.string().optional(),
+    format: z.enum(['roleplay', 'chat']).default('roleplay'),
+    goal: Copy.optional(),
+    turnLimit: z.number().int().min(1).max(12).default(4),
+    minutes: z.number().min(1).max(10).default(3)
+  }).default({ enabled: true, format: 'roleplay', turnLimit: 4, minutes: 3 }),
   /** Role coverage (Teardown hidden rule 6, Configuration Spec eligibility): at most this many people per stage. */
   maxPerStage: z.number().int().min(1).default(2),
   /** Weekly drift (Configuration Spec, Targets and KPIs): what someone loses in a period nobody acted with them. */
@@ -609,6 +621,7 @@ export const StorylineConfig = z.object({
   c.actions.forEach((a, i) => a.options.forEach((o, j) => {
     if (o.style !== undefined && !styleKeys.has(o.style)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'style'], message: `No style called ${o.style} in the lens` });
   }));
+  if (c.practice.with && !memberIds.has(c.practice.with)) ctx.addIssue({ code: 'custom', path: ['practice', 'with'], message: `No team member called ${c.practice.with}` });
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))
     ctx.addIssue({ code: 'custom', path: ['thresholds'], message: 'Thresholds must rise: low < amber < high' });
 });

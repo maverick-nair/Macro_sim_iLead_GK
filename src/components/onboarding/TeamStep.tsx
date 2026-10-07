@@ -50,10 +50,10 @@ export function TeamStep({ members, read, open, readsNeeded, startLabel, onOpen,
             return (
               <button key={m.id} type="button" onClick={() => onOpen(m.id)} aria-controls={profileId}
                 aria-label={t('onboarding.team.member.aria', { name: m.name, stage: m.stage, read: isRead ? 'yes' : 'no' })}
-                className={`flex cursor-pointer flex-col overflow-hidden rounded-20 border-2 border-solid bg-surface-card p-0 text-left text-fg-primary [transition:var(--il-onboarding-team-card-transition)] hover:[transform:var(--il-onboarding-team-card-lift)] ${FOCUS} ${open === m.id ? 'border-accent-secondary' : 'border-line-default'}`}>
+                className={`flex cursor-pointer flex-col overflow-hidden rounded-20 border-2 border-solid bg-surface-card p-0 text-start text-fg-primary [transition:var(--il-onboarding-team-card-transition)] hover:[transform:var(--il-onboarding-team-card-lift)] ${FOCUS} ${open === m.id ? 'border-accent-secondary' : 'border-line-default'}`}>
                 <div className="relative h-37.5 w-full bg-(image:--il-fill-portrait-calm)">
                   {m.img && <img src={m.img} alt="" className="size-full object-cover object-(--il-onboarding-team-portrait-position) mix-blend-multiply" />}
-                  {isRead && <span className="absolute top-2 right-2 flex min-h-5.5 items-center rounded-pill bg-brand-mint-green px-2 text-12 font-700 text-brand-deep-space">{t('onboarding.team.readBadge')}</span>}
+                  {isRead && <span className="absolute top-2 end-2 flex min-h-5.5 items-center rounded-pill bg-brand-mint-green px-2 text-12 font-700 text-brand-deep-space">{t('onboarding.team.readBadge')}</span>}
                 </div>
                 <div className="flex flex-col px-3 py-2.5">
                   <b className="text-14">{m.name}</b>

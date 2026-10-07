@@ -33,7 +33,9 @@ export type Intent =
   | { type: 'endPeriod' }
   | { type: 'chooseReward'; reward: string }
   | { type: 'submitReflection'; answers: string[]; rating: number | null }
-  | { type: 'startNextPeriod' };
+  | { type: 'startNextPeriod' }
+  | { type: 'startPractice' }
+  | { type: 'skipPractice' };
 
 export interface Result {
   view: EngineView;
@@ -135,11 +137,24 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         return finish(intent.interactionId);
       }
       case 'endInteraction':
+        // The Week 0 practice ends with a tip, never an evaluation (D84).
+        if (sim.interactions[intent.interactionId]?.actionKey === live.PRACTICE) {
+          const hint = live.endPractice(sim, intent.interactionId);
+          return { view: buildView(sim), changes: [], ...(hint ? { hint } : {}) };
+        }
         return finish(intent.interactionId);
+      case 'startPractice': {
+        const id = await live.startPractice(sim, npc);
+        return { view: buildView(sim), changes: [], interactionId: id };
+      }
+      case 'skipPractice':
+        live.endPractice(sim, null);
+        return { view: buildView(sim), changes: [] };
       case 'abandonInteraction': {
         // Leaving without a word: the time is spent, nothing else moves.
         const it = sim.interactions[intent.interactionId];
         if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
+        if (it.actionKey === live.PRACTICE) { live.endPractice(sim, intent.interactionId); return { view: buildView(sim), changes: [] }; }
         delete sim.interactions[intent.interactionId];
         log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [] });
         return { view: buildView(sim), changes: [] };

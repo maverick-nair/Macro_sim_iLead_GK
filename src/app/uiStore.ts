@@ -16,18 +16,22 @@ export interface UiState {
   interactionId: string | null;
   whyOpen: string | null;
   showNumbers: boolean;
+  /** Offer the Week 0 practice above week 1's style setting (D84): after onboarding, or `?practice=1`. */
+  practiceOffer: boolean;
   toggleMember(id: string, multi?: boolean): void;
   chooseAction(key: string | null, option?: string | null): void;
   openPanel(panel: Panel, ref?: string | null): void;
   setInteraction(id: string | null): void;
   setWhy(id: string | null): void;
   setShowNumbers(v: boolean): void;
+  setPracticeOffer(v: boolean): void;
   reset(): void;
 }
 
 const initial = {
   selectedIds: [] as string[], actionKey: null, optionKey: null, panel: 'none' as Panel,
-  profileId: null, messageId: null, interactionId: null, whyOpen: null, showNumbers: false
+  profileId: null, messageId: null, interactionId: null, whyOpen: null, showNumbers: false,
+  practiceOffer: new URLSearchParams(globalThis.location?.search ?? '').get('practice') === '1'
 };
 
 export const useUi = create<UiState>(set => ({
@@ -40,5 +44,6 @@ export const useUi = create<UiState>(set => ({
   setInteraction: id => set({ interactionId: id }),
   setWhy: id => set({ whyOpen: id }),
   setShowNumbers: v => set({ showNumbers: v }),
+  setPracticeOffer: v => set({ practiceOffer: v }),
   reset: () => set(initial)
 }));

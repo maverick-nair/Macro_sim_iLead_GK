@@ -5,6 +5,7 @@ import { moneyFormatter } from '../engine/money';
 import { useEngineView, useIntent } from '../engine/react';
 import { useI18n, type I18n } from '../i18n';
 import type { AppActions } from './types';
+import { useUi } from './uiStore';
 
 /** Initials for the sponsor's placeholder when the storyline has no portrait: first and last name. */
 export function initials(name: string): string {
@@ -60,6 +61,7 @@ export function EngineOnboarding({ act, minHeight }: { act: AppActions; minHeigh
   const { t } = i18n;
   const { data: view } = useEngineView();
   const { mutate } = useIntent();
+  const offerPractice = useUi(s => s.setPracticeOffer);
   if (!view) return null;
   const { sponsor, storyline, clock } = view;
   return (
@@ -79,7 +81,8 @@ export function EngineOnboarding({ act, minHeight }: { act: AppActions; minHeigh
       onConsent={voice => act.settings(voice ? { voiceConsent: true } : { voiceConsent: false, input: 'text' })}
       onOpenProfile={id => { if (!view.members.find(m => m.id === id)?.statsRevealed) mutate({ type: 'openProfile', memberId: id }); }}
       onSay={act.say}
-      onFinish={() => act.go('style')}
+      // The Week 0 practice is offered next, above week 1's style setting (D16, D84).
+      onFinish={() => { offerPractice(true); act.go('style'); }}
       liveVoice
     />
   );

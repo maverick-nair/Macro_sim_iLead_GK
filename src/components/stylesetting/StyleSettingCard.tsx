@@ -66,7 +66,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
       <div className={`relative h-30 overflow-hidden rounded-t-18 ${portraitBackdrop(m.away)}`}>
         <img src={m.img} alt="" className={`size-full object-cover object-(--il-stylesetting-portrait-position) mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-stylesetting-portrait-overlay)" />
-        <div className="absolute bottom-2 left-3 flex flex-col text-member-on-portrait">
+        <div className="absolute bottom-2 start-3 flex flex-col text-member-on-portrait">
           <b className="text-15">{m.name}</b>
           <span className="text-12">{m.title}</span>
         </div>

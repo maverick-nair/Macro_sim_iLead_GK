@@ -35,7 +35,7 @@ export function EndMoments({ moments, periods, periodUnit }: EndMomentsProps) {
             return (
               <li key={m.id} className={`flex flex-col rounded-18 border bg-surface-card ${m.kind === 'revisit' ? 'border-status-attention' : 'border-line-default'}`}>
                 <button type="button" aria-expanded={expanded} aria-controls={panel} onClick={() => toggle(m.id)}
-                  className={`grid w-full cursor-pointer grid-cols-(--il-end-moment-columns) items-center gap-3.5 rounded-18 border-0 bg-transparent px-3.5 py-3 text-left text-fg-primary ${FOCUS}`}>
+                  className={`grid w-full cursor-pointer grid-cols-(--il-end-moment-columns) items-center gap-3.5 rounded-18 border-0 bg-transparent px-3.5 py-3 text-start text-fg-primary ${FOCUS}`}>
                   <span className="size-13 overflow-hidden rounded-round bg-(image:--il-fill-portrait-calm)">
                     <img src={m.img} alt="" className="size-full object-cover object-top mix-blend-multiply" />
                   </span>
