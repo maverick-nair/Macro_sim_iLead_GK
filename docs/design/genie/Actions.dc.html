@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Actions library</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.nav a{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;border-radius:10px;color:#3E4763;text-decoration:none;font-size:14px;font-weight:600}
+.nav a.on{background:#EEF2FD;color:#1F4FD1}
+.nav i{font-style:normal;width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.i-you{background:#EAEDF5;color:#3E4763}.i-ai{background:#DDF1F3;color:#0B6670}.i-need{background:#FCEBC8;color:#7A5300}.i-ok{background:#E2F3E8;color:#1E6B3E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:3px 7px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}.m-lib{background:#EEF2FD;color:#1F4FD1}.m-cus{background:#F3E8FB;color:#6B2C91}
+.btn{height:36px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.grp{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6B7390;padding:10px 8px 4px}
+.act{display:grid;grid-template-columns:30px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px;border-radius:10px;text-decoration:none;color:#141A2E}
+.act.on{background:#EEF2FD;box-shadow:inset 0 0 0 1.5px #1F4FD1}
+.act small{display:block;font-size:12px;color:#6B7390}
+.ty{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.t-live{background:#DDF1F3;color:#0B6670}.t-static{background:#EAEDF5;color:#3E4763}.t-hyb{background:#FCEBC8;color:#7A5300}
+.off{opacity:.5}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lab{font-size:12.5px;font-weight:700;color:#3E4763;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lab em{font-style:normal;font-weight:600;color:#6B7390}
+.v{border-radius:10px;border:1px solid #D9DEEA;background:#FFFFFF;padding:9px 12px;font-size:14px;line-height:1.45}
+.v.ai{background:#EEF8F9;border-color:#CDE9EC}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:#F0F2F8;gap:4px}
+.seg button{height:36px;padding:0 12px;border-radius:9px;border:0;background:transparent;font:600 13px Manrope,sans-serif;color:#3E4763}
+.seg button[aria-pressed="true"]{background:#FFFFFF;color:#141A2E;box-shadow:0 1px 3px rgba(20,26,46,.15)}
+.chip{height:30px;padding:0 10px;border-radius:999px;background:#EEF8F9;border:1px solid #CDE9EC;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center}
+.act{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:8px;align-items:center;padding:5px 8px;border-radius:9px;text-decoration:none;color:#141A2E}
+.act b{font-size:13px}
+.act small{display:block;font-size:11.5px;color:#6B7390}
+.act .ty{width:26px;height:26px;border-radius:7px;font-size:12px}
+.rt{display:flex;gap:6px;align-items:center}
+.dgpe{font-size:10.5px;font-weight:800;letter-spacing:.06em;color:#3E4763;background:#F0F2F8;border-radius:6px;padding:3px 5px}
+.grp{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6B7390;padding:8px 8px 2px}
+.core{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#3E4763;background:#F0F2F8;border-radius:999px;padding:3px 8px}
+.sw{width:34px;height:20px;border-radius:999px;background:#C9CFDD;position:relative;display:inline-block;flex:none}
+.sw i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#FFFFFF}
+.sw.on{background:#1F4FD1}.sw.on i{left:16px}
+.it{display:grid;grid-template-columns:110px repeat(3,minmax(0,1fr));font-size:12.5px;border:1px solid #E3E7F0;border-radius:12px;overflow:hidden}
+.it span{padding:7px 9px;border-bottom:1px solid #EEF0F6}
+.it .h{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6B7390;background:#F6F7FB}
+.it .s{font-weight:700}
+.up{color:#1E6B3E;font-weight:700}.dn{color:#B42318;font-weight:700}.md{color:#7A5300;font-weight:700}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <span style="font-size: 15px; font-weight: 700">Leading the Negotiation Team</span>
+    <span style="flex: 1"></span>
+    <button type="button" class="btn" style="height: 40px">Play a week</button>
+    <button type="button" style="height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Review and publish</button>
+  </header>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 248px minmax(0, 1fr)">
+    <nav class="nav" aria-label="Sections" style="background: #FFFFFF; border-right: 1px solid #E3E7F0; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px">
+      <a href="Overview.dc.html"><i class="i-ok">✓</i>Overview</a>
+      <a href="Brief.dc.html"><i class="i-you">1</i>Brief</a>
+      <a href="Story.dc.html"><i class="i-ok">✓</i>Story and world</a>
+      <a href="Process.dc.html"><i class="i-ai">3</i>Work process</a>
+      <a href="Team.dc.html"><i class="i-ai">4</i>Team</a>
+      <a href="Lens.dc.html"><i class="i-ai">5</i>Leadership lens</a>
+      <a href="Actions.dc.html" class="on" aria-current="page"><i class="i-ai">6</i>Actions and conversations</a>
+      <a href="Events.dc.html"><i class="i-ai">7</i>Events</a>
+      <a href="Scoring.dc.html"><i class="i-need">!</i>Scoring and report</a>
+      <a href="Brand.dc.html"><i class="i-ok">✓</i>Brand and theme</a>
+      <a href="Calibrate.dc.html"><i class="i-need">!</i>Test with synthetic players</a>
+    </nav>
+    <main style="padding: 22px 28px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow: hidden">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 26px">Actions and conversations</h1><span style="font-size: 14px; color: #4B5470">What participants can do each week. 5 core actions are always included; turn the optional ones on or off. 14 in use.</span></div>
+        <a href="ActionAdd.dc.html" style="height: 40px; padding: 0 16px; border-radius: 10px; background: #1F4FD1; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; text-decoration: none">Add an action</a>
+      </div>
+      <div style="display: flex; gap: 14px; align-items: center; font-size: 12.5px; color: #4B5470">
+        <span style="display: inline-flex; gap: 6px; align-items: center"><span class="ty t-live" style="width: 22px; height: 22px">◐</span>Live AI conversation</span>
+        <span style="display: inline-flex; gap: 6px; align-items: center"><span class="ty t-static" style="width: 22px; height: 22px">■</span>Static decision</span>
+        <span style="display: inline-flex; gap: 6px; align-items: center"><span class="ty t-hyb" style="width: 22px; height: 22px">◧</span>Decision, then a conversation</span>
+        <span style="flex: 1"></span>
+        <span class="core" title="Core action, always included"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Core</span><span style="font-size:12px">always included</span><span class="sw on" role="switch" aria-checked="true" aria-label="Example in this simulation"><i></i></span><span style="font-size:12px">optional, your choice</span>
+      </div>
+      <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 16px">
+        <div style="background: #FFFFFF; border: 1px solid #E3E7F0; border-radius: 16px; padding: 8px 10px; display: flex; flex-direction: column; overflow: hidden">
+          <span class="grp">For the team</span>
+          <a href="#" class="act"><span class="ty t-live">◐</span><span><b>Meet the team</b><small>Team meeting · 1 day</small></span><span class="rt"><span class="core" title="Core action, always included"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Core</span></span></a>
+          <a href="#" class="act"><span class="ty t-static">■</span><span><b>Energize the team</b><small>3 options · 1 day</small></span><span class="rt"><span class="sw on" role="switch" aria-checked="true" aria-label="Energize the team in this simulation"><i></i></span></span></a>
+          <a href="#" class="act"><span class="ty t-live">◐</span><span><b>Hire member</b><small>Interview · 2 days · week 3</small></span><span class="rt"><span class="sw on" role="switch" aria-checked="true" aria-label="Hire member in this simulation"><i></i></span></span></a>
+          <span class="grp">For one person</span>
+          <a href="Actions.dc.html" class="act on" aria-current="true"><span class="ty t-live">◐</span><span><b>Meet face to face</b><small>1:1 · 1 day</small></span><span class="rt"><span class="core" title="Core action, always included"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Core</span></span></a>
+          <a href="#" class="act"><span class="ty t-live">◐</span><span><b>Coach member</b><small>1:1 · 1 day</small></span><span class="rt"><span class="core" title="Core action, always included"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Core</span></span></a>
+          <a href="#" class="act"><span class="ty t-live">◐</span><span><b>Give feedback</b><small>Chat · 1 day</small></span><span class="rt"><span class="core" title="Core action, always included"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Core</span></span></a>
+          <a href="#" class="act"><span class="ty t-live">◐</span><span><b>Set goals</b><small>Written plan · 1 day</small></span><span class="rt"><span class="core" title="Core action, always included"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Core</span></span></a>
+          <a href="#" class="act"><span class="ty t-live">◐</span><span><b>Send email</b><small>Written · 1 day</small></span><span class="rt"><span class="sw on" role="switch" aria-checked="true" aria-label="Send email in this simulation"><i></i></span></span></a>
+          <a href="ActionStatic.dc.html" class="act"><span class="ty t-static">■</span><span><b>Send for training</b><small>3 courses · 1 day</small></span><span class="rt"><span class="sw on" role="switch" aria-checked="true" aria-label="Send for training in this simulation"><i></i></span></span></a>
+          <a href="#" class="act"><span class="ty t-static">■</span><span><b>Assess member</b><small>Instant · 1 day</small></span><span class="rt"><span class="sw on" role="switch" aria-checked="true" aria-label="Assess member in this simulation"><i></i></span></span></a>
+          <a href="#" class="act"><span class="ty t-hyb">◧</span><span><b>Reward member</b><small>Decide, then talk · 1 day</small></span><span class="rt"><span class="sw on" role="switch" aria-checked="true" aria-label="Reward member in this simulation"><i></i></span></span></a>
+          <a href="#" class="act"><span class="ty t-hyb">◧</span><span><b>Swap roles</b><small>Pick 2, then talk · 1 day</small></span><span class="rt"><span class="sw on" role="switch" aria-checked="true" aria-label="Swap roles in this simulation"><i></i></span></span></a>
+          <a href="#" class="act"><span class="ty t-hyb">◧</span><span><b>Let go</b><small>Decide, then talk · 1 day</small></span><span class="rt"><span class="sw" role="switch" aria-checked="false" aria-label="Let go in this simulation"><i></i></span></span></a>
+          <span class="grp">Added for this story</span>
+          <a href="#" class="act"><span class="ty t-live">◐</span><span><b>Pricing town hall</b><small>Team meeting · week 4</small></span><span class="rt"><span class="mark m-cus">Yours</span><span class="sw on" role="switch" aria-checked="true" aria-label="Pricing town hall in this simulation"><i></i></span></span></a>
+          <a href="#" class="act"><span class="ty t-hyb">◧</span><span><b>Discount approval</b><small>Decide, then talk · half a day</small></span><span class="rt"><span class="mark m-ai">Generated</span><span class="sw on" role="switch" aria-checked="true" aria-label="Discount approval in this simulation"><i></i></span></span></a>
+        </div>
+        <section aria-label="Meet face to face" style="background: #FFFFFF; border: 1px solid #E3E7F0; border-radius: 16px; padding: 18px 22px; display: flex; flex-direction: column; gap: 14px; overflow: hidden">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><b style="font-size: 20px">Meet face to face</b><span style="font-size: 13px; color: #4B5470">From the action library · goal and scoring written for this story by Kora</span></div>
+            <span class="core" title="Core action · always included action, always included"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Core action · always included</span>
+            <button type="button" class="btn">Reset to library</button>
+          </div>
+          <div class="fld"><span class="lab">How it plays <em>Required</em></span>
+            <div class="seg" role="group" aria-label="How it plays"><button type="button" aria-pressed="false">Static decision</button><button type="button" aria-pressed="true">Live AI conversation</button><button type="button" aria-pressed="false">Decision, then a conversation</button></div>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+            <div class="fld"><span class="lab">For</span><div class="v">One person</div></div>
+            <div class="fld"><span class="lab">Costs</span><div class="v">1 day</div></div>
+            <div class="fld"><span class="lab">Again after</span><div class="v">2 days</div></div>
+            <div class="fld"><span class="lab">Available from</span><div class="v">Week 1</div></div>
+          </div>
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px">
+            <div class="fld"><span class="lab">Format</span><div class="v">1:1 by voice or text · 5 minutes · up to 12 turns</div></div>
+            <div class="fld"><span class="lab">Who starts</span><div class="v">The team member</div></div>
+          </div>
+          <div class="fld"><span class="lab">Impact by style <span class="mark m-ai">From your lens · Readiness Based</span></span>
+            <div class="it" role="table" aria-label="Impact by style">
+              <span class="h">Style used</span><span class="h">Fits the need</span><span class="h">One step off</span><span class="h">Wrong style</span>
+              <span class="s">Instruct</span><span class="up">Skill +4, result +3</span><span class="md">Morale −1</span><span class="dn">Morale −3, trust −2</span>
+              <span class="s">Guide</span><span class="up">Skill +3, morale +3</span><span class="md">Result −1</span><span class="dn">Morale −2</span>
+              <span class="s">Partner</span><span class="up">Morale +4, trust +2</span><span class="md">Result −1</span><span class="dn">Result −3</span>
+              <span class="s" style="border-bottom:0">Empower</span><span class="up" style="border-bottom:0">Result +4, morale +2</span><span class="md" style="border-bottom:0">Skill −1</span><span class="dn" style="border-bottom:0">Result −4, trust −2</span>
+            </div>
+            <span style="font-size: 12.5px; color: #4B5470">Style names come from the Leadership lens tab. Change the lens or rename a style and Kora updates this table; edit any cell to override.</span></div>
+          <div class="fld"><span class="lab">Goal the participant sees <span class="mark m-ai">Generated</span></span><div class="v ai">Understand what is behind this person's results this week, and agree one next step together.</div></div>
+          <div class="fld"><span class="lab">Scored on <span class="mark m-ai">From your lens</span></span><div style="display: flex; flex-wrap: wrap; gap: 6px"><span class="chip">Diagnosing readiness</span><span class="chip">Style fit</span><button type="button" class="btn" style="height: 30px">Add a dimension</button></div></div>
+                    <details style="border-top: 1px solid #EEF0F6; padding-top: 12px">
+            <summary style="font-size: 14px; font-weight: 700; cursor: pointer">Advanced: what each result changes (Strong, Adequate, Weak, Harmful), hints, opening lines</summary>
+          </details>
+        </section>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

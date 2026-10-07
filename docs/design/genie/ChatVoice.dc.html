@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Voice answer: Co-creator chat</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.bub{max-width:520px;padding:12px 16px;border-radius:16px;font-size:15px;line-height:1.5}
+.gk{background:#FFFFFF;border:1px solid #E3E7F0;align-self:flex-start}
+.me{background:#1F4FD1;color:#FFFFFF;align-self:flex-end}
+.chip{height:40px;padding:0 14px;border-radius:999px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 14px Manrope,sans-serif}
+.row{display:grid;grid-template-columns:132px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid #EEF0F6}
+.row:last-child{border-bottom:0}
+.k{color:#6B7390;font-weight:600}
+.ai{background:#EEF8F9;border:1px solid #CDE9EC;border-radius:8px;padding:6px 8px;color:#141A2E}
+.you{background:#FFFFFF;border:1px solid #E3E7F0;border-radius:8px;padding:6px 8px}
+.need{background:#FFF8EB;border:1px solid #F1D9A8;border-radius:8px;padding:6px 8px;color:#7A5300}
+.wait{background:repeating-linear-gradient(90deg,#EEF0F6 0 40%,#F6F7FB 40% 100%);border-radius:8px;height:28px}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:3px 7px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}.m-need{background:#FCEBC8;color:#7A5300}
+.sec{border:1px solid #E3E7F0;border-radius:14px;background:#FFFFFF;padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.sh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sh b{font-size:14px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 28px; display: flex; align-items: center; gap: 16px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800; letter-spacing: -0.01em">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="font-size: 14px; color: #6B7390">New iLead business simulation</span>
+    <span style="flex: 1"></span>
+    <span style="font-size: 13px; color: #6B7390">Draft saved</span>
+    <a href="#" style="font-size: 14px; font-weight: 700">Skip to the workspace</a>
+  </header>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 520px">
+    <main style="display: flex; flex-direction: column; min-height: 0; padding: 24px 48px 24px 56px">
+      <div style="display: flex; align-items: center; gap: 12px; padding-bottom: 14px">
+        <span style="font-size: 13px; font-weight: 700; color: #0D7F8B">Question 4 of about 8</span>
+        <div role="progressbar" aria-label="Setup progress" aria-valuenow="4" aria-valuemin="0" aria-valuemax="8" style="flex: 1; height: 6px; border-radius: 3px; background: #E3E7F0"><div style="width: 45%; height: 100%; border-radius: 3px; background: #0D7F8B"></div></div>
+      </div>
+      <div role="log" aria-label="Conversation with GenieKreator" style="flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; overflow: hidden">
+        <div class="bub gk">Who will play this simulation?</div>
+        <div class="bub me">First time sales managers, about two years into the role.</div>
+        <div class="bub gk">Which industry should it feel like?</div>
+        <div class="bub me">Commercial elevators. B2B, long sales cycles.</div>
+        <div class="bub gk">What business challenge keeps their leaders up at night?</div>
+        <div class="bub me">Deals stall at negotiation and new reps burn out in the first quarter.</div>
+        <div style="align-self: flex-start; max-width: 560px; padding: 14px 16px; border-radius: 16px; background: #EEF8F9; border: 1px solid #CDE9EC; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #0B6670">Here is what I took from that</span>
+          <span style="font-size: 14px; line-height: 1.5">A five stage sales funnel with <b>Negotiation</b> as the pressure point, two new joiners who arrive in week 2, and events about burnout and pricing pressure. I have started the team and the company.</span>
+          <span style="display: flex; gap: 14px; font-size: 13px; font-weight: 700"><a href="#">See it in the draft</a><a href="#">Change this</a></span>
+        </div>
+        <div class="bub gk">How many people does a manager like this lead? I will build that many characters, each with a role in the funnel.</div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 10px; padding-top: 14px">
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <button type="button" class="chip">6 people</button>
+          <button type="button" class="chip">8 people</button>
+          <button type="button" class="chip" style="border-color: #0D7F8B; background: #EEF8F9">10 people · suggested</button>
+          <button type="button" class="chip">12 people</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 16px; background: #FFFFFF; border: 1.5px solid #B42318">
+          <div style="display: flex; align-items: center; gap: 12px">
+            <span style="width: 12px; height: 12px; border-radius: 50%; background: #B42318" aria-hidden="true"></span>
+            <b style="font-size: 14px; color: #B42318" role="status">Recording · 0:09</b>
+            <div aria-hidden="true" style="flex: 1; height: 36px; display: flex; align-items: center; gap: 3px"><span style="width: 4px; border-radius: 2px; background: #B42318; height: 8px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 14px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 22px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 30px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 18px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 26px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 34px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 20px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 12px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 24px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 32px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 16px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 10px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 22px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 28px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 14px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 8px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 18px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 26px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 12px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 20px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 30px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 16px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 10px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 6px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 12px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 18px"></span><span style="width: 4px; border-radius: 2px; background: #B42318; height: 8px"></span></div>
+            <span style="font-size: 12px; color: #6B7390">Up to 2 minutes</span>
+          </div>
+          <div style="padding: 8px 10px; border-radius: 10px; background: #F6F7FB; font-size: 15px; line-height: 1.5; color: #6B7390">
+            <span style="font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; display: block; margin-bottom: 2px">Live transcript</span>
+            Ten. Eight account managers, a pre sales engineer and<span style="display: inline-block; width: 2px; height: 16px; background: #1F4FD1; vertical-align: middle; margin-left: 2px"></span>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center">
+            <span style="font-size: 12.5px; color: #6B7390">Nothing is sent until you review the transcript and press Send.</span>
+            <span style="flex: 1"></span>
+            <a href="ChatStart.dc.html" style="height: 44px; padding: 0 16px; border-radius: 12px; border: 1px solid #D9DEEA; background: #FFFFFF; color: #141A2E; font: 600 15px Manrope, sans-serif; display: inline-flex; align-items: center; text-decoration: none">Cancel</a>
+            <a href="ChatStart.dc.html" style="height: 44px; padding: 0 18px; border-radius: 12px; background: #B42318; color: #FFFFFF; font: 700 15px Manrope, sans-serif; display: inline-flex; align-items: center; gap: 8px; text-decoration: none"><span style="width: 12px; height: 12px; border-radius: 2px; background: #FFFFFF" aria-hidden="true"></span>Stop and review</a>
+          </div>
+        </div>
+        <span style="font-size: 12px; color: #6B7390">Speak naturally; I keep your words and drop the ums. You can switch to typing at any time.</span>
+      </div>
+    </main>
+    <aside aria-label="Your simulation so far" style="border-left: 1px solid #E3E7F0; background: #FBFCFE; padding: 24px; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: hidden">
+      <div style="display: flex; justify-content: space-between; align-items: baseline"><b style="font-size: 17px">Your simulation so far</b><span style="font-size: 12px; color: #6B7390">Updates as you answer</span></div>
+      <div style="display: flex; gap: 8px; font-size: 12px; font-weight: 700">
+        <span class="mark m-you">3 from you</span><span class="mark m-ai">14 generated</span><span class="mark m-need">1 needs you</span>
+      </div>
+      <div class="sec">
+        <div class="sh"><b>Brief</b><span class="mark m-ai">Done</span></div>
+        <div class="row"><span class="k">Participants</span><span class="you">First time sales managers</span><span class="mark m-you">You</span></div>
+        <div class="row"><span class="k">Industry</span><span class="you">Commercial elevators, B2B</span><span class="mark m-you">You</span></div>
+        <div class="row"><span class="k">Challenge</span><span class="you">Stalled negotiations, early burnout</span><span class="mark m-you">You</span></div>
+      </div>
+      <div class="sec">
+        <div class="sh"><b>Story and world</b><span class="mark m-ai">Generated</span></div>
+        <div class="row"><span class="k">Company</span><span class="ai">Ascent Lifts, a regional elevator maker</span><span class="mark m-ai">AI</span></div>
+        <div class="row"><span class="k">Sponsor</span><span class="ai">Priya Nair, Regional Sales Director</span><span class="mark m-ai">AI</span></div>
+        <div class="row"><span class="k">Deal value</span><span class="need">Add your average deal value</span><span class="mark m-need">Needs you</span></div>
+      </div>
+      <div class="sec">
+        <div class="sh"><b>Work process</b><span class="mark m-ai">Generated</span></div>
+        <div style="display: flex; gap: 6px; padding-top: 6px">
+          <span class="ai" style="font-size: 12px">Leads</span><span class="ai" style="font-size: 12px">Qualify</span><span class="ai" style="font-size: 12px">Proposal</span><span class="ai" style="font-size: 12px; border-color: #E7B65A; background: #FFF8EB">Negotiation</span><span class="ai" style="font-size: 12px">Close</span>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="sh"><b>Team</b><span style="font-size: 12px; font-weight: 700; color: #0D7F8B">Building after this answer</span></div>
+        <div class="wait"></div>
+      </div>
+      <div class="sec" style="opacity: .7">
+        <div class="sh"><b>Leadership lens</b><span style="font-size: 12px; color: #6B7390">Next</span></div>
+      </div>
+      <div class="sec" style="opacity: .7">
+        <div class="sh"><b>Scoring and report</b><span style="font-size: 12px; color: #6B7390">Later</span></div>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

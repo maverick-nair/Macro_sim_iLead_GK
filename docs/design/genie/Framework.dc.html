@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Use your own skills framework</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:4px 8px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-need{background:#FCEBC8;color:#7A5300}.m-you{background:#EAEDF5;color:#3E4763}
+.btn{height:38px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.step{display:flex;gap:10px;align-items:center;font-size:13px;font-weight:700;color:#6B7390}
+.step i{font-style:normal;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;background:#EAEDF5;color:#3E4763}
+.step.done i{background:#E2F3E8;color:#1E6B3E}
+.step.now{color:#141A2E}.step.now i{background:#1F4FD1;color:#FFFFFF}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6B7390;text-align:left;padding:8px 10px;border-bottom:1px solid #E3E7F0}
+td{padding:10px;border-bottom:1px solid #EEF0F6;vertical-align:top;line-height:1.45}
+td.ai{background:#F4FBFC}
+td.need{background:#FFF8EB;color:#7A5300}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; position: relative; overflow: hidden">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <span style="font-size: 15px; font-weight: 700">Leading the Negotiation Team</span>
+    <span style="flex: 1"></span>
+    <span style="font-size: 13px; color: #6B7390">Scoring and report</span>
+  </header>
+  <div aria-hidden="true" style="flex: 1; display: grid; grid-template-columns: 248px minmax(0, 1fr); opacity: .45">
+    <div style="background: #FFFFFF; border-right: 1px solid #E3E7F0"></div>
+    <div style="padding: 24px 28px; display: flex; flex-direction: column; gap: 14px"><div style="height: 30px; width: 280px; border-radius: 8px; background: #E3E7F0"></div><div style="height: 150px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E3E7F0"></div><div style="height: 220px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E3E7F0"></div></div>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 64px 0 0 0; background: rgba(20,26,46,.28)"></div>
+  <section role="dialog" aria-label="Use your own skills framework" style="position: absolute; top: 64px; right: 0; bottom: 0; width: 820px; box-sizing: border-box; background: #FFFFFF; border-left: 1px solid #E3E7F0; box-shadow: -24px 0 60px rgba(20,26,46,.18); padding: 24px 28px; display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; align-items: flex-start; gap: 12px">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px"><h2 style="margin: 0; font-size: 22px">Use your own skills framework</h2><span style="font-size: 14px; color: #4B5470">Your skills replace the lens skills in scoring and the report. The lens still drives the team and style fit.</span></div>
+      <button type="button" class="btn" aria-label="Close" style="width: 38px; padding: 0; justify-content: center">✕</button>
+    </div>
+    <div style="display: flex; gap: 20px">
+      <span class="step done"><i>✓</i>Upload</span>
+      <span class="step now"><i>2</i>Check what Kora found</span>
+      <span class="step"><i>3</i>Confirm</span>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; background: #F6F7FB">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3E4763" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>
+      <span style="flex: 1; font-size: 14px"><b>Ascent Leadership Framework.pdf</b> · 14 pages · uploaded by you</span>
+      <button type="button" class="btn">Replace</button>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+      <span style="font-size: 14px"><b>Kora found 5 skills, 17 behaviors and 4 levels.</b> <span style="color: #4B5470">Edit any cell. Nothing here is invented: every row cites its page.</span></span>
+      <span style="display: flex; gap: 6px"><span class="mark m-ai">4 found</span><span class="mark m-need">1 needs you</span></span>
+    </div>
+    <div style="border: 1px solid #E3E7F0; border-radius: 14px; overflow: hidden">
+      <table>
+        <thead><tr><th scope="col">Skill</th><th scope="col">Observable behaviors</th><th scope="col">Levels</th><th scope="col">Source</th></tr></thead>
+        <tbody>
+          <tr><td class="ai"><b>Builds trust</b></td><td class="ai">Keeps promises; shares context openly; admits mistakes</td><td class="ai">4</td><td>p. 4</td></tr>
+          <tr><td class="ai"><b>Coaches for growth</b></td><td class="ai">Asks before telling; agrees next steps; follows up</td><td class="ai">4</td><td>p. 6</td></tr>
+          <tr><td class="ai"><b>Adapts leadership style</b></td><td class="ai">Reads readiness; varies direction and support; checks the fit</td><td class="ai">4</td><td>p. 8</td></tr>
+          <tr><td class="ai"><b>Drives results</b></td><td class="ai">Sets clear targets; reviews progress weekly; removes blockers</td><td class="ai">4</td><td>p. 10</td></tr>
+          <tr><td class="need"><b>Leads change</b></td><td class="need">The document lists this skill but gives no behaviors. Add 2 or 3, or leave it out.</td><td class="need">?</td><td>p. 12</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding: 12px 14px; border-radius: 12px; border: 1.5px dashed #0D7F8B; display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 13px; font-weight: 700; color: #0B6670">When you confirm</span>
+      <span style="font-size: 13px; line-height: 1.5; color: #3E4763">Each skill is mapped to the conversations that observe it, at least twice each. The report and development plan use your framework's words. The "check sample answers" step comes back so scoring still matches your judgment.</span>
+    </div>
+    <span style="flex: 1"></span>
+    <div style="display: flex; gap: 10px; align-items: center">
+      <button type="button" style="height: 48px; padding: 0 20px; border-radius: 12px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 15px Manrope, sans-serif">Confirm 4 skills</button>
+      <button type="button" class="btn" style="height: 48px">Ask Kora about this framework</button>
+      <span style="flex: 1"></span>
+      <a href="Scoring.dc.html" style="font-size: 14px; font-weight: 700">Keep the lens skills</a>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

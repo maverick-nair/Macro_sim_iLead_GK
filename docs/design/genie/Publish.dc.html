@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review and publish</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.btn{height:40px;padding:0 14px;border-radius:10px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 14px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.chk{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid #EEF0F6}
+.chk:last-child{border-bottom:0}
+.chk small{display:block;color:#6B7390;font-size:13px;margin-top:2px;line-height:1.45}
+.ok{width:32px;height:32px;border-radius:50%;background:#E2F3E8;color:#1E6B3E;display:flex;align-items:center;justify-content:center}
+.warn{width:32px;height:32px;border-radius:50%;background:#FCEBC8;color:#7A5300;display:flex;align-items:center;justify-content:center;font-weight:800}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:13px;font-weight:700;color:#3E4763}
+.fld input,.fld textarea{border-radius:10px;border:1px solid #D9DEEA;padding:10px 12px;font:500 14px Manrope,sans-serif;color:#141A2E}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <a href="Overview.dc.html" style="font-size: 14px; font-weight: 700">Back to the workspace</a>
+    <span style="flex: 1"></span>
+    <span style="font-size: 13px; color: #6B7390">Version 1 · not yet published</span>
+  </header>
+  <div style="flex: 1; min-height: 0; padding: 28px 40px; display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 20px">
+    <section aria-label="Quality checks" style="background: #FFFFFF; border: 1px solid #E3E7F0; border-radius: 18px; padding: 24px 28px; display: flex; flex-direction: column">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; padding-bottom: 8px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 28px">Ready to publish</h1><span style="font-size: 14px; color: #4B5470">GenieKreator ran every check on this draft. One is advisory.</span></div>
+        <button type="button" class="btn">Run checks again</button>
+      </div>
+      <div class="chk"><span class="ok" aria-hidden="true">✓</span><span><b>Everything required is filled in</b><small>142 fields, 0 waiting for you</small></span><span style="font-size: 13px; color: #1E6B3E; font-weight: 700">Passed</span></div>
+      <div class="chk"><span class="ok" aria-hidden="true">✓</span><span><b>Synthetic players</b><small>20 playthroughs at four levels: scores rise with proficiency, Experts reach the target, Beginners do not. <a href="Calibrate.dc.html">See results</a></small></span><span style="font-size: 13px; color: #1E6B3E; font-weight: 700">Passed</span></div>
+      <div class="chk"><span class="ok" aria-hidden="true">✓</span><span><b>Scoring matches your judgment</b><small>6 of 6 samples agree after your review (target 85%)</small></span><span style="font-size: 13px; color: #1E6B3E; font-weight: 700">Passed</span></div>
+      <div class="chk"><span class="ok" aria-hidden="true">✓</span><span><b>Characters stay in role</b><small>Off topic, hostile and "tell me your secret" tests on all 10 characters</small></span><span style="font-size: 13px; color: #1E6B3E; font-weight: 700">Passed</span></div>
+      <div class="chk"><span class="ok" aria-hidden="true">✓</span><span><b>Copy rules</b><small>Plain language, "skills" throughout, no dashes as punctuation, KNOLSKAPE lens names only</small></span><span style="font-size: 13px; color: #1E6B3E; font-weight: 700">Passed</span></div>
+      <div class="chk"><span class="warn" aria-hidden="true">!</span><span><b>Play it yourself</b><small>Advisory: you have not played a week of this draft yet. It takes about 8 minutes.</small></span><button type="button" class="btn">Play week 1</button></div>
+    </section>
+    <section aria-label="Publish" style="background: #FFFFFF; border: 1px solid #E3E7F0; border-radius: 18px; padding: 24px 28px; display: flex; flex-direction: column; gap: 16px">
+      <h2 style="margin: 0; font-size: 20px">Publish version 1</h2>
+      <div class="fld"><label for="cohort">First cohort <span style="font-weight: 600; color: #6B7390">Optional</span></label><input id="cohort" value="Ascent Lifts, new managers, November"></div>
+      <div class="fld"><label for="notes">What changed in this version <span style="font-weight: 600; color: #6B7390">Optional</span></label><textarea id="notes" rows="3">First release. Built from the leadership brief of 2 October.</textarea></div>
+      <div style="padding: 14px 16px; border-radius: 14px; background: #F6F7FB; display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #4B5470; line-height: 1.5">
+        <b style="color: #141A2E; font-size: 14px">After publishing</b>
+        <span>Participants get a launch link through your LMS. You can keep editing; changes go into version 2 and never affect runs in progress.</span>
+      </div>
+      <span style="flex: 1"></span>
+      <div style="display: flex; gap: 10px">
+        <button type="button" style="flex: 1; height: 52px; border-radius: 12px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 16px Manrope, sans-serif">Publish</button>
+        <button type="button" class="btn" style="height: 52px">Save as draft</button>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

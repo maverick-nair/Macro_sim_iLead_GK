@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Test with synthetic players</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.nav a{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;border-radius:10px;color:#3E4763;text-decoration:none;font-size:14px;font-weight:600}
+.nav a.on{background:#EEF2FD;color:#1F4FD1}
+.nav i{font-style:normal;width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.i-you{background:#EAEDF5;color:#3E4763}.i-ai{background:#DDF1F3;color:#0B6670}.i-need{background:#FCEBC8;color:#7A5300}.i-ok{background:#E2F3E8;color:#1E6B3E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}.m-need{background:#FCEBC8;color:#7A5300}.m-ok{background:#E2F3E8;color:#1E6B3E}
+.btn{height:36px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.card{background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ch b{font-size:15px}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lab{font-size:12.5px;font-weight:700;color:#3E4763;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lab em{font-style:normal;font-weight:600;color:#6B7390}
+.in{height:40px;box-sizing:border-box;border-radius:10px;border:1px solid #D9DEEA;padding:0 12px;font:500 14px Manrope,sans-serif;color:#141A2E;background:#FFFFFF;width:100%}
+.in.ai{background:#EEF8F9;border-color:#CDE9EC}
+.in.need{background:#FFF8EB;border-color:#E7B65A}
+textarea.in{height:auto;padding:9px 12px;line-height:1.5;resize:vertical}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:#F0F2F8;gap:4px;flex-wrap:wrap}
+.seg button{height:34px;padding:0 12px;border-radius:9px;border:0;background:transparent;font:600 13px Manrope,sans-serif;color:#3E4763}
+.seg button[aria-pressed="true"]{background:#FFFFFF;color:#141A2E;box-shadow:0 1px 3px rgba(20,26,46,.15)}
+.tg{height:32px;padding:0 12px;border-radius:999px;border:1px solid #D9DEEA;background:#FFFFFF;font:600 13px Manrope,sans-serif;color:#3E4763}
+.tg[aria-pressed="true"]{border-color:#1F4FD1;background:#EEF2FD;color:#1F4FD1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+details summary{font-size:14px;font-weight:700;cursor:pointer}
+.sw{width:34px;height:20px;border-radius:999px;background:#C9CFDD;position:relative;display:inline-block;flex:none}.sw i{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#FFFFFF}.sw.on{background:#1F4FD1}.sw.on i{left:16px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <span style="font-size: 15px; font-weight: 700">Leading the Negotiation Team</span>
+    <span class="mark m-need">Draft · 2 need you</span>
+    <span style="flex: 1"></span>
+    <button type="button" class="btn" style="height: 40px">Play a week</button>
+    <a href="Publish.dc.html" style="height: 40px; padding: 0 16px; border-radius: 10px; background: #1F4FD1; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; text-decoration: none">Review and publish</a>
+  </header>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 248px minmax(0, 1fr) 320px">
+    <nav class="nav" aria-label="Sections" style="background: #FFFFFF; border-right: 1px solid #E3E7F0; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px">
+      <a href="Overview.dc.html"><i class="i-ok">✓</i>Overview</a>
+      <a href="Brief.dc.html"><i class="i-you">1</i>Brief</a>
+      <a href="Story.dc.html"><i class="i-need">!</i>Story and world</a>
+      <a href="Process.dc.html"><i class="i-ai">3</i>Work process</a>
+      <a href="Team.dc.html"><i class="i-ai">4</i>Team</a>
+      <a href="Lens.dc.html"><i class="i-you">5</i>Leadership lens</a>
+      <a href="Actions.dc.html"><i class="i-ai">6</i>Actions and conversations</a>
+      <a href="Events.dc.html"><i class="i-ai">7</i>Events</a>
+      <a href="Scoring.dc.html"><i class="i-need">!</i>Scoring and report</a>
+      <a href="Brand.dc.html"><i class="i-ok">✓</i>Brand and theme</a>
+      <a href="Calibrate.dc.html" class="on" aria-current="page"><i class="i-need">!</i>Test with synthetic players</a>
+    </nav>
+    <main style="padding: 22px 28px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow: hidden">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 26px">Test with synthetic players</h1><span style="font-size: 14px; color: #4B5470">Synthetic players at four levels play the whole simulation, conversations included, so you can check it rewards good leadership before real people play.</span></div>
+        <div style="display: flex; gap: 8px"></div>
+      </div>
+      <div class="g4">
+          <div class="card" style="gap: 8px; border-top: 4px solid #E26A5A">
+            <div class="ch"><b>Beginner</b><span class="sw on" role="switch" aria-checked="true" aria-label="Include Beginner"><i></i></span></div>
+            <span style="font-size: 12px; font-weight: 700; color: #6B7390">Low performer</span>
+            <textarea class="in ai" rows="3" aria-label="How Beginner plays">Uses one style for everyone, rarely asks questions, gives short closed replies, forgets promises.</textarea>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><label for="r-Beginner">Playthroughs</label><input id="r-Beginner" class="in" value="5" style="width: 60px; height: 34px"></div>
+          </div>
+          <div class="card" style="gap: 8px; border-top: 4px solid #E7A23B">
+            <div class="ch"><b>Developing</b><span class="sw on" role="switch" aria-checked="true" aria-label="Include Developing"><i></i></span></div>
+            <span style="font-size: 12px; font-weight: 700; color: #6B7390">Average performer</span>
+            <textarea class="in ai" rows="3" aria-label="How Developing plays">Picks the right style about half the time, generic replies, follows up sometimes.</textarea>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><label for="r-Developing">Playthroughs</label><input id="r-Developing" class="in" value="5" style="width: 60px; height: 34px"></div>
+          </div>
+          <div class="card" style="gap: 8px; border-top: 4px solid #5B8DEF">
+            <div class="ch"><b>Proficient</b><span class="sw on" role="switch" aria-checked="true" aria-label="Include Proficient"><i></i></span></div>
+            <span style="font-size: 12px; font-weight: 700; color: #6B7390">High performer</span>
+            <textarea class="in ai" rows="3" aria-label="How Proficient plays">Reads most needs, asks open questions, keeps promises, adjusts style most weeks.</textarea>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><label for="r-Proficient">Playthroughs</label><input id="r-Proficient" class="in" value="5" style="width: 60px; height: 34px"></div>
+          </div>
+          <div class="card" style="gap: 8px; border-top: 4px solid #3BAA6A">
+            <div class="ch"><b>Expert</b><span class="sw on" role="switch" aria-checked="true" aria-label="Include Expert"><i></i></span></div>
+            <span style="font-size: 12px; font-weight: 700; color: #6B7390">Exceptional performer</span>
+            <textarea class="in ai" rows="3" aria-label="How Expert plays">Adapts every week, uncovers hidden concerns, balances people and pipeline.</textarea>
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px"><label for="r-Expert">Playthroughs</label><input id="r-Expert" class="in" value="5" style="width: 60px; height: 34px"></div>
+          </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <button type="button" style="height: 42px; padding: 0 18px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Run 20 playthroughs</button>
+        <span style="font-size: 13px; color: #4B5470">About 6 minutes · conversations included · last run 12 minutes ago on this draft</span>
+        <span style="flex: 1"></span>
+        <button type="button" class="btn">Add a custom player</button>
+      </div>
+      <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 14px">
+        <div class="card">
+          <div class="ch"><b>Results · 20 playthroughs</b><span class="mark m-ok">Scores rise with proficiency</span></div>
+          <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 90px 90px 110px; gap: 10px; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #6B7390"><span>Player</span><span>Leadership Score, range and average</span><span>Average</span><span>Revenue</span><span>Skills rated</span></div>
+          <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 90px 90px 110px; gap: 10px; align-items: center; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #EEF0F6">
+            <b>Beginner</b>
+            <div style="position: relative; height: 18px; border-radius: 9px; background: #F0F2F8"><span style="position: absolute; left: 12.0%; width: 17.0%; top: 4px; height: 10px; border-radius: 5px; background: #E26A5A; opacity: .35"></span><span style="position: absolute; left: calc(21.0% - 2px); top: 0; width: 4px; height: 18px; border-radius: 2px; background: #E26A5A"></span></div>
+            <span style="font-variant-numeric: tabular-nums"><b>210</b> · Bronze</span>
+            <span style="font-variant-numeric: tabular-nums">54% target</span>
+            <span>Novice</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 90px 90px 110px; gap: 10px; align-items: center; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #EEF0F6">
+            <b>Developing</b>
+            <div style="position: relative; height: 18px; border-radius: 9px; background: #F0F2F8"><span style="position: absolute; left: 33.0%; width: 19.0%; top: 4px; height: 10px; border-radius: 5px; background: #E7A23B; opacity: .35"></span><span style="position: absolute; left: calc(42.0% - 2px); top: 0; width: 4px; height: 18px; border-radius: 2px; background: #E7A23B"></span></div>
+            <span style="font-variant-numeric: tabular-nums"><b>420</b> · Bronze</span>
+            <span style="font-variant-numeric: tabular-nums">78% target</span>
+            <span>Developing</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 90px 90px 110px; gap: 10px; align-items: center; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #EEF0F6">
+            <b>Proficient</b>
+            <div style="position: relative; height: 18px; border-radius: 9px; background: #F0F2F8"><span style="position: absolute; left: 48.0%; width: 22.0%; top: 4px; height: 10px; border-radius: 5px; background: #5B8DEF; opacity: .35"></span><span style="position: absolute; left: calc(61.0% - 2px); top: 0; width: 4px; height: 18px; border-radius: 2px; background: #5B8DEF"></span></div>
+            <span style="font-variant-numeric: tabular-nums"><b>610</b> · Silver</span>
+            <span style="font-variant-numeric: tabular-nums">96% target</span>
+            <span>Proficient</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 110px minmax(0, 1fr) 90px 90px 110px; gap: 10px; align-items: center; font-size: 13px; padding: 6px 0; border-bottom: 1px solid #EEF0F6">
+            <b>Expert</b>
+            <div style="position: relative; height: 18px; border-radius: 9px; background: #F0F2F8"><span style="position: absolute; left: 78.0%; width: 15.0%; top: 4px; height: 10px; border-radius: 5px; background: #3BAA6A; opacity: .35"></span><span style="position: absolute; left: calc(86.0% - 2px); top: 0; width: 4px; height: 18px; border-radius: 2px; background: #3BAA6A"></span></div>
+            <span style="font-variant-numeric: tabular-nums"><b>860</b> · Platinum</span>
+            <span style="font-variant-numeric: tabular-nums">118% target</span>
+            <span>Advanced</span>
+          </div>
+          <a href="CalibrateRun.dc.html" style="font-size: 13px; font-weight: 700">Watch a playthrough</a>
+        </div>
+        <div class="card">
+          <div class="ch"><b>Checks</b><span style="font-size: 12px; color: #4B5470">4 passed · 2 to look at</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #EEF0F6; font-size: 13.5px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #E2F3E8; color: #1E6B3E; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">✓</span><span style="flex: 1">Expert players reach the target in 5 of 5 runs</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #EEF0F6; font-size: 13.5px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #E2F3E8; color: #1E6B3E; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">✓</span><span style="flex: 1">Beginner players never reach the target</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #EEF0F6; font-size: 13.5px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #E2F3E8; color: #1E6B3E; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">✓</span><span style="flex: 1">Skill ratings match each level in 92% of runs</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #EEF0F6; font-size: 13.5px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #FCEBC8; color: #7A5300; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">!</span><span style="flex: 1">Developing and Proficient score within 40 points in weeks 1 to 3</span><button type="button" class="btn" style="height: 30px">Ask Kora</button></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #EEF0F6; font-size: 13.5px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #FCEBC8; color: #7A5300; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">!</span><span style="flex: 1">Nobody used "Assess member": it may be hard to find</span><button type="button" class="btn" style="height: 30px">Ask Kora</button></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid #EEF0F6; font-size: 13.5px"><span style="width: 24px; height: 24px; border-radius: 50%; background: #E2F3E8; color: #1E6B3E; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none">✓</span><span style="flex: 1">No single strategy wins without good leadership</span></div>
+        </div>
+      </div>
+    </main>
+    <aside aria-label="Ask Kora" style="border-left: 1px solid #E3E7F0; background: #FFFFFF; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0">
+      <b style="font-size: 16px">Ask Kora</b>
+      <div style="padding: 12px; border-radius: 14px; border: 1.5px dashed #0D7F8B; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 13px; font-weight: 700; color: #0B6670">Suggestion</span>
+        <span style="font-size: 13px; line-height: 1.5">Developing and Proficient look alike early on. Make week 1 needs harder to read, so careful diagnosis pays off sooner?</span>
+        <div style="display: flex; gap: 8px"><button type="button" style="height: 34px; padding: 0 12px; border-radius: 9px; border: 0; background: #0D7F8B; color: #FFFFFF; font: 700 13px Manrope, sans-serif">Try it and rerun</button><button type="button" class="btn" style="height: 34px">Not now</button></div>
+      </div>
+      <span style="flex: 1"></span>
+      <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; border: 1px solid #D9DEEA">
+        <label for="ask" style="font-size: 12px; font-weight: 700; color: #3E4763">Your instruction for this tab</label>
+        <textarea id="ask" rows="2" placeholder="Describe a change in plain words" style="border: 0; resize: none; outline: none; font: 500 14px/1.5 Manrope, sans-serif; color: #141A2E"></textarea>
+        <button type="button" style="align-self: flex-end; height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Ask</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
