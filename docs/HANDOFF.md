@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78), kept current since (D79 to D88). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D111). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
@@ -14,7 +14,7 @@ Browser (this repo, Vite + React 19 + TypeScript strict)
   src/api                                   IleadApi: the app shell's other calls (HTTP adapter or mock)
   src/speech, src/ai                        Voice capture with server transcription; streamed AI text (SSE)
   src/theme                                 Runtime client theme loader (GenieKreator theme JSON)
-  src/author                                /author: GenieKreator's author chat prototype (lazy)
+  src/author                                /author: GenieKreator's authoring tool, chat, workspace and library (lazy, D105)
   src/group                                 /group: the organization's group report (lazy)
 
 Server (built: server/, docs/SERVER.md, D81; the base paths of .env.server)
@@ -87,7 +87,17 @@ Base `VITE_ILEAD_SPEECH_URL`. Chunked uploads, one request at a time, transcript
 
 On the server, `createTranscriber(config)` from `ai/` (D82, `docs/AI.md` 7) forwards the chunks to a speech to text service configured by `SPEECH_URL` and `SPEECH_KEY` (vendor neutral, the same chunked contract; a mock without them). NPC replies stream from `createNpcModel(config)`; `docs/AI.md` 2 shows how to wire them to the stream endpoint.
 
-## 5. The author chat (GenieKreator)
+## 5. GenieKreator's authoring tool (/author)
+
+Built to the approved canvas in `docs/design/genie` (D105 to D111): the co-creator chat (typed or voice answers, a live "Your simulation so far", the lens recommendation), First draft ready, the workspace with twelve tabs and Ask Kora, and the library admin page. Routes `/author`, `/author/workspace/<tab>`, `/author/library`; all lazy, light only, laptops and tablets to 834 wide.
+
+- **The draft** is one Zod model (`src/author/model/draft.ts`) kept in local storage (`ilead.author.workspace`) and parsed back on load. `seedDraft` fills it offline from the chat; `toStoryline` turns it into the engine's StorylineConfig (checked with the schema and the copy guard). Provenance marks: AI, You, Edited, Needs you (computed), Suggestion (Kora's dashed ideas).
+- **Voice answers** use the participant app's speech client (MediaRecorder and the chunked transcription endpoints served with `createTranscriber` from `ai/`), at `VITE_GENIE_SPEECH_URL` or else `VITE_ILEAD_SPEECH_URL`; without either, an offline mock voice (`src/author/voice.ts`).
+- **Ask Kora** runs on rules offline (`src/author/model/kora.ts`); a server would answer the same proposals with the model.
+- **Test with synthetic players** renders `CalibrateSlot` from `src/author/calibrate/index.ts` when it exists (props in `src/author/ui/workspace/tabs/Calibrate.tsx`), else a coming soon panel.
+- **Not yet in the engine config** (kept in the draft for the server's AI character): voice sliders, motivation, reactions per style, topics, age, custom fields, an event's lead flow. Publishing offline records the version and offers the configuration to download; a server publishes it.
+
+### The drafting endpoints
 
 Base `VITE_GENIE_URL`. Schemas in `src/api/author.ts`; prompts the server must follow in `docs/genie/prompts/author-chat.md` and `leadership-lens.md`. A 404 or 501 falls back to the templates turn by turn.
 
@@ -134,6 +144,7 @@ npm run parity              # every design frame against the Claude Design proto
 npm run e2e                 # Playwright on the mock engine, axe on every route (tests/e2e/a11y.spec.ts) and visual baselines
 npm run vitals              # Web Vitals budgets on a production build, throttled (section 9)
 npm run calibrate -- sales-elevator --check   # a storyline still plays well
+npm run calibrate -- sales-elevator --check --lens six_styles   # the same on the five style test lens (D104)
 npm run benchmark -- --check                  # the cached group report benchmark matches the engine
 ```
 
@@ -149,7 +160,7 @@ npm run server:mint -- --sub p-1 --name "Ana Ruiz" --cohort spring   # a launch 
 docker compose up --build   # the production image
 ```
 
-**Release.** CI (`.github/workflows/ci.yml`) runs every check above on each push and pull request. A release is `npm run build`: static files in `dist/` (an `index.html` and hashed assets), served from any static host or CDN with gzip or brotli, long cache headers on `/assets/*` and no cache on `index.html`. Every route (`/`, `/group`, `/author`) is the same `index.html` (SPA fallback). `/author` and `/group` are not for participants; put them behind GenieKreator's and the organization's sign in. The app is meant to move into the GenieKreator monorepo as `apps/participant` with the engine as a shared package (D48).
+**Release.** CI (`.github/workflows/ci.yml`) runs every check above on each push and pull request. A release is `npm run build`: static files in `dist/` (an `index.html` and hashed assets), served from any static host or CDN with gzip or brotli, long cache headers on `/assets/*` and no cache on `index.html`. Every route (`/`, `/group`, `/author` and its `/author/...` paths) is the same `index.html` (SPA fallback). `/author` and `/group` are not for participants; put them behind GenieKreator's and the organization's sign in. The app is meant to move into the GenieKreator monorepo as `apps/participant` with the engine as a shared package (D48).
 
 **Visual baselines** live in `tests/e2e/visual.spec.ts-snapshots`. Refresh only after reviewing the diff: `npx playwright test visual --update-snapshots`. Parity baselines are rendered from the prototype on each run (`.visual-cache/`).
 
@@ -157,7 +168,7 @@ docker compose up --build   # the production image
 
 | Budget | Value | Enforced by |
 |---|---|---|
-| Initial JS (gzipped) | 250 KB | `npm run build` (`scripts/budget.ts`) |
+| Initial JS (gzipped) | 250 KB (214.6 KB with the new /author, D105) | `npm run build` (`scripts/budget.ts`) |
 | LCP | 2.5 s (board and group report 3 s) | `npm run vitals` |
 | CLS | 0.1 | `npm run vitals` |
 | TBT (stands in for INP) | 300 ms (board 400 ms, D87) | `npm run vitals` |
@@ -191,6 +202,8 @@ The board and group report keep LCP 3 s: at this network the first load's bytes 
 - **Original flow gaps** (D89 to D103): built except Help and Support and Logout (dropped by the product owner) and the org chart (decide with the next storyline). The panels, tours and demo load on demand. Every play screen fits the window at the laptop and tablet sizes in D101 (`tests/e2e/viewport.spec.ts`).
 - **Not built:** a design for the interview, the written plan and the Week 0 practice (functional in the shared shell, D52, D84, D85, awaiting the canvas, D80); phones (D69); playing offline (the client holds actions while offline and sends them on reconnect, D86, but the mock engine is the only offline engine).
 - **The design prototype** (`?engine=off`, `/screens`, `/states`) stays for parity only; it is not a product surface.
+- **Lens styles** (D104): every lens has 4 or 5 styles; Six Leadership Styles plays five (Drive merges Pacesetting and Commanding) and keeps its library title, which the product owner may rename. Authors rename styles per lens; report lines name a style with `{style}`.
+- **/author** (D105 to D111): offline it drafts with rules and templates; the model drafter, Kora on the model, PDF reading, the persona check on publish and publishing itself are the server's. Fields the engine config does not carry yet are listed in section 5. The calibration tab's feature lands separately (`src/author/calibrate`).
 
 ## 11. What the engineer configures (server)
 
