@@ -5,6 +5,7 @@ import { IntentError } from '../../../src/engine/sim/engine';
 import { ReplayError } from '../engine/recorder';
 import { RunError } from '../engine/runs';
 import { StorylineError } from '../engine/storylines';
+import { PdfError } from '../report/pdf';
 import type { AppEnv } from './types';
 
 /**
@@ -27,6 +28,10 @@ export function toResponse(err: unknown, c: Context<AppEnv>) {
   if (err instanceof RunError) return c.json({ message: err.message, code: err.code }, err.status as ContentfulStatusCode);
   if (err instanceof StorylineError) return c.json({ message: err.message, code: err.code }, err.code === 'unknownStoryline' ? 404 : 400);
   if (err instanceof ZodError) return c.json({ message: 'The request is not valid', code: 'badRequest', issues: err.issues.map(i => ({ path: i.path.join('.'), message: i.message })) }, 400);
+  if (err instanceof PdfError) {
+    log?.error('pdf failed', { err });
+    return c.json({ message: 'The PDF could not be made. Try again, or print the report from your browser.', code: 'pdfFailed' }, 502);
+  }
   if (err instanceof ReplayError) {
     log?.error('replay failed', { err });
     return c.json({ message: 'This run could not be restored. Support has the details.', code: 'replayFailed' }, 500);

@@ -46,7 +46,8 @@ export function chromiumRenderer(opts: { executablePath?: string; timeoutMs: num
       const b = await getBrowser();
       const context = await b.newContext({ viewport: { width: 1240, height: 1754 }, colorScheme: 'light', locale: 'en-US' });
       try {
-        await context.addCookies([{ name: cookie.name, value: cookie.value, url, httpOnly: true, sameSite: 'Lax' }]);
+        // The origin, not the page's URL: a cookie set for a URL takes its path, and the API lives elsewhere on the site.
+        await context.addCookies([{ name: cookie.name, value: cookie.value, url: new URL(url).origin, httpOnly: true, sameSite: 'Lax' }]);
         const page = await context.newPage();
         page.setDefaultTimeout(opts.timeoutMs);
         await page.emulateMedia({ media: 'print' });
