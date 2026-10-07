@@ -111,6 +111,12 @@ export function dimensionsOf(id: LeadershipLensModule['primary']['id'], client: 
   });
 }
 
+/** The low capability narrative, which names every style: rebuilt when the author renames them (D104). */
+export function capabilityLow(names: string[]): string {
+  const or = names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}` : names[0];
+  return `Most of your style choices did not match what people needed. Start each week by asking what each person needs most: ${or}.`;
+}
+
 function draftReport(module: LeadershipLensModule, lens: Lens) {
   const sel = selectionOf(module);
   const primary = dimensionsOf(sel.primary, sel.clientDimensions);
@@ -125,8 +131,6 @@ function draftReport(module: LeadershipLensModule, lens: Lens) {
     if (secondary.length && conversations.has(k)) list.push(secondary[i % secondary.length].key);
     linkage[k] = [...new Set(list)];
   });
-  const names = lens.styles.map(s => s.name);
-  const or = names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}` : names[0];
   return {
     skills: [...primary.map(d => skill(d, false)), ...secondary.map(d => skill(d, true))],
     linkage,
@@ -134,7 +138,7 @@ function draftReport(module: LeadershipLensModule, lens: Lens) {
     narratives: {
       overall: DEFAULT_NARRATIVES.overall,
       capability: {
-        low: `Most of your style choices did not match what people needed. Start each week by asking what each person needs most: ${or}.`,
+        low: capabilityLow(lens.styles.map(s => s.name)),
         mid: DEFAULT_NARRATIVES.capability.mid,
         high: DEFAULT_NARRATIVES.capability.high
       },
