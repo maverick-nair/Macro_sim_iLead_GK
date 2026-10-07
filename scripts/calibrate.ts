@@ -3,6 +3,8 @@
  *
  *   npm run calibrate -- sales-elevator          tune, write the storyline and calibration/<id>.md
  *   npm run calibrate -- sales-elevator --check  only measure and report
+ *   npm run calibrate -- sales-elevator --check --lens six_styles   measure it played with the Six
+ *                                                    Leadership Styles test lens (D104); check only
  *
  * The authored target stays as it is (it is the client's number). Calibration tunes:
  *   1. performanceThreshold, the Model doc's funnel buffer, until passive play earns about half of
@@ -15,12 +17,17 @@ import path from 'node:path';
 import { parseStoryline, type StorylineConfig } from '../src/engine/config';
 import { play, type Policy } from '../src/engine/sim/policies';
 import { bestStyle, needOf } from '../src/engine/lens';
+import { withSixStyles } from '../src/engine/storylines/sixStyles';
 
 const root = path.resolve(import.meta.dirname, '..');
 const id = process.argv[2] ?? 'sales-elevator';
 const checkOnly = process.argv.includes('--check');
 const file = path.join(root, 'src/engine/storylines', `${id}.json`);
-const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+const lensArg = process.argv.includes('--lens') ? process.argv[process.argv.indexOf('--lens') + 1] : undefined;
+if (lensArg && lensArg !== 'six_styles') throw new Error(`Unknown --lens ${lensArg}: only six_styles has a test lens`);
+if (lensArg && !checkOnly) throw new Error('--lens only measures: add --check');
+const authored = JSON.parse(fs.readFileSync(file, 'utf8'));
+const raw = lensArg ? withSixStyles(authored) as typeof authored : authored;
 
 const BANDS: Record<Policy, [number, number]> = { passive: [0.4, 0.65], random: [0.35, 0.65], good: [1.0, 1.25] };
 const GOOD_AIM = 1.1;
