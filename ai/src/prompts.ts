@@ -58,7 +58,7 @@ export const quoteInput = (s: string) => s.replace(/</g, 'â€¹').replace(/>/g, 'â
 /** Language name for a locale, in English, for prompts ("es-MX" gives "Spanish (Mexico)"). */
 export function languageName(locale: string): string {
   try {
-    return new Intl.DisplayNames(['en'], { type: 'language' }).of(locale) ?? locale;
+    return new Intl.DisplayNames(['en'], { type: 'language', languageDisplay: 'standard' }).of(locale) ?? locale;
   } catch {
     return locale;
   }

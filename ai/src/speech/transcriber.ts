@@ -81,11 +81,11 @@ export function createHttpTranscriber(s: HttpSpeechSettings, logger: AiLogger = 
       const live = () => { if (closed) throw new TranscriberError('the transcription has ended', 'closed'); };
       const session: TranscriberSession = {
         id,
-        push(chunk, seq) {
+        async push(chunk, seq) {
           live();
           return seqs.run(seq, async () => results(await call(`/transcriptions/${encodeURIComponent(id)}/chunks?seq=${seq}`, { method: 'POST', headers: { 'Content-Type': o.mimeType }, body: chunk as Uint8Array<ArrayBuffer> }, o.signal), o), []);
         },
-        end() {
+        async end() {
           live();
           closed = true;
           return seqs.after(async () => results(await call(`/transcriptions/${encodeURIComponent(id)}/end`, { method: 'POST' }, o.signal), o));
@@ -134,8 +134,8 @@ export function createMockTranscriber(script: string | string[] = 'Hello, I want
       const live = () => { if (closed) throw new TranscriberError('the transcription has ended', 'closed'); };
       return {
         id: randomUUID(),
-        push(_chunk, seq) { live(); return seqs.run(seq, async () => reveal(wordsPerChunk), []); },
-        end() { live(); closed = true; return seqs.after(async () => reveal(Infinity)); },
+        async push(_chunk, seq) { live(); return seqs.run(seq, async () => reveal(wordsPerChunk), []); },
+        async end() { live(); closed = true; return seqs.after(async () => reveal(Infinity)); },
         async abort() { closed = true; }
       };
     }

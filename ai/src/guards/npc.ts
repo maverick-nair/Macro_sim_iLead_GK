@@ -38,12 +38,28 @@ export interface GuardContext {
   shareBlocked: boolean;
 }
 
+const words = (s: string) => s.toLowerCase().normalize('NFKC').match(/[\p{L}\p{N}']+/gu) ?? [];
+const grams = (w: string[], n: number) => new Set(w.slice(0, Math.max(0, w.length - n + 1)).map((_, i) => w.slice(i, i + n).join(' ')));
+
+/**
+ * Whether `text` repeats a run of `n` words from the author's description that the person's own line
+ * does not also contain: the description read out, rather than the concern said in their own words.
+ */
+export function quotesDescription(text: string, description: string, ownLine = '', n = 5): boolean {
+  const own = grams(words(ownLine), n);
+  const said = grams(words(text), n);
+  for (const g of grams(words(description), n)) if (said.has(g) && !own.has(g)) return true;
+  return false;
+}
+
 /** Guardrails a piece of reply text breaks. */
 export function checkReply(text: string, g: GuardContext): NpcGuard[] {
   const out: NpcGuard[] = [];
   if (OUT_OF_ROLE.test(text)) out.push('outOfRole');
   if (SCORING.test(text)) out.push('scoring');
-  if ((g.hiddenConcern && overlap(text, g.hiddenConcern) >= 0.7) || (g.shareBlocked && g.concernLine && overlap(text, g.concernLine) >= 0.6)) out.push('leak');
+  const readOut = !!g.hiddenConcern && quotesDescription(text, g.hiddenConcern, g.concernLine);
+  const sharedTooSoon = g.shareBlocked && ((!!g.concernLine && overlap(text, g.concernLine) >= 0.6) || (!!g.hiddenConcern && overlap(text, g.hiddenConcern) >= 0.7));
+  if (readOut || sharedTooSoon) out.push('leak');
   return out;
 }
 
