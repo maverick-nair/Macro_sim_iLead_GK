@@ -104,12 +104,24 @@ describe('the publish check', () => {
   it('reads not run, passed, advisory, failed and out of date', async () => {
     expect(calibrationPublishCheck(null)).toMatchObject({ status: 'notRun', blocking: false, action: 'Run the test' });
     const r = await base();
-    const pass = { ...r, checks: r.checks.map(c => ({ ...c, status: 'pass' as const })) };
-    expect(calibrationPublishCheck(pass)).toEqual({ key: 'syntheticPlayers', title: 'Synthetic players', status: 'passed', blocking: false, summary: '2 playthroughs at two levels: scores rise with proficiency, Experts reach the target, Beginners do not.', details: [], action: 'See results' });
+    const [beginner, expert] = r.personas;
+    const pass = {
+      ...r, checks: r.checks.map(c => ({ ...c, status: 'pass' as const })), settings: { ...r.settings, probes: true },
+      personas: [beginner, { ...beginner, persona: 'developing' as const }, { ...expert, persona: 'proficient' as const }, expert]
+    };
+    expect(calibrationPublishCheck(pass)).toEqual({ key: 'syntheticPlayers', title: 'Synthetic players', status: 'passed', blocking: false, summary: '4 playthroughs at four levels: scores rise with proficiency, Experts reach the target, Beginners do not.', details: [], action: 'See results' });
+    // A run that left levels out, or had the probes off, is not a full test: advisory, whatever its checks say.
+    const partial = { ...pass, personas: r.personas, settings: r.settings };
+    expect(calibrationPublishCheck(partial)).toMatchObject({
+      status: 'advisory', blocking: false, action: 'Run the test again',
+      summary: '2 playthroughs at two levels: scores rise with proficiency, Experts reach the target, Beginners do not. Not a full test: run all four levels with the probes on before you publish.',
+      details: ['Developing and Proficient players did not play', 'The strategy probes were off, so a single winning strategy was not checked']
+    });
+    expect(calibrationPublishCheck({ ...pass, settings: r.settings }).details).toEqual(['The strategy probes were off, so a single winning strategy was not checked']);
     const warn = { ...pass, checks: [...pass.checks, { key: 'unused' as const, status: 'warn' as const, title: 'Nobody used "Let go"', detail: null, fix: null }] };
     expect(calibrationPublishCheck(warn)).toMatchObject({ status: 'advisory', blocking: false, details: ['Nobody used "Let go"'] });
     const fail = { ...pass, checks: [{ key: 'ordered' as const, status: 'fail' as const, title: 'Scores do not rise', detail: null, fix: null }] };
-    expect(calibrationPublishCheck(fail)).toMatchObject({ status: 'failed', blocking: true, summary: '2 playthroughs at two levels. One check failed.' });
+    expect(calibrationPublishCheck(fail)).toMatchObject({ status: 'failed', blocking: true, summary: '4 playthroughs at four levels. One check failed.' });
     expect(calibrationPublishCheck(pass, { draft: { ...raw, name: 'Changed' } })).toMatchObject({ status: 'outOfDate', action: 'Run the test again' });
     expect(calibrationPublishCheck(pass, { draft: raw }).status).toBe('passed');
   });
