@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BRIGHTWATER, withClientTheme } from '../../stories/clientTheme';
 import { Hud, type HudProps } from './Hud';
+import { GameMenu, type GameMenuItem } from './GameMenu';
 
 const meta: Meta<typeof Hud> = { title: 'Components/HUD', component: Hud };
 export default meta;
@@ -70,3 +71,11 @@ export const ClientTextLogo: Story = {
 
 /** Large numbers through the number formatter. */
 export const LargeValues: Story = { ...sized(1440, 280), args: { ...base, clock: clock({ period: 10, subPeriod: 5 }), score: { ...base.score, total: 12480, business: 980, people: 1000, leadership: 40 }, streak: 12, scoreOpen: true } };
+
+const MENU: GameMenuItem[] = (['objectives', 'tutorial', 'history', 'overview', 'leaderboard', 'actions', 'tour', 'settings', 'fullscreen', 'exit'] as const).map(key => ({ key, onSelect: noop }));
+/** The engine board's HUD with the game menu (D89) in place of the hidden nav (D38). */
+export const WithMenu: Story = { ...sized(1440, 520), args: { ...base, nav: [], menu: <GameMenu items={MENU} /> } };
+/** The game menu open: Objectives, Tutorial and video, History, Results and stages, Leaderboard, About these actions, Guided tour, Settings, Full screen, Exit. */
+export const MenuOpen: Story = { ...sized(1440, 520), args: { ...base, nav: [], menu: <GameMenu items={MENU} defaultOpen /> } };
+/** At 1280 the menu fits beside the clock and score. */
+export const MenuAt1280: Story = { ...sized(1280, 120), args: { ...base, nav: [], menu: <GameMenu items={MENU.filter(m => m.key !== 'leaderboard')} /> } };

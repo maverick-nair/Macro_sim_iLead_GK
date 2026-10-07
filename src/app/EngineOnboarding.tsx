@@ -73,7 +73,8 @@ export function EngineOnboarding({ act, minHeight }: { act: AppActions; minHeigh
       sponsor={{
         name: sponsor.name, initials: initials(sponsor.name), img: sponsor.img,
         role: t('onboarding.sponsor.role', { title: sponsor.title, organisation: storyline.organisation ?? 'none' }),
-        letter: storyline.intro ?? engineLetter(i18n, view), video: null
+        // The welcome video's first transcript line is its caption (D90); the video replays from Tutorial and video during play.
+        letter: storyline.intro ?? engineLetter(i18n, view), video: storyline.video?.transcript[0] ? { caption: storyline.video.transcript[0] } : null
       }}
       organisation={storyline.organisation}
       sampleName={view.members[0]?.name.split(' ')[0] ?? ''}

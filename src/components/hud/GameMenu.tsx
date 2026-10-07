@@ -10,6 +10,8 @@ export interface GameMenuItem {
 
 export interface GameMenuProps {
   items: GameMenuItem[];
+  /** Starts open (stories). */
+  defaultOpen?: boolean;
 }
 
 const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
@@ -23,9 +25,9 @@ const MenuIcon = () => (
  * Exit. A disclosure: the button opens a list of buttons below it; Escape or a click elsewhere closes it
  * and focus goes back to the button. Choosing an item closes it too.
  */
-export function GameMenu({ items }: GameMenuProps) {
+export function GameMenu({ items, defaultOpen = false }: GameMenuProps) {
   const { t } = useI18n();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen);
   const id = useId();
   const wrap = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);

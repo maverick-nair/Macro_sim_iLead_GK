@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState, type ReactNode } from 'react';
 import { LoadingScreen } from '../shell/LoadingScreen';
-import { PauseDialog, ResumeDialog, SessionExpiredDialog } from './SessionDialogs';
+import { ExitDialog, PauseDialog, ResumeDialog, SessionExpiredDialog } from './SessionDialogs';
 import { ResumeRecap, type ResumeRecapProps } from './ResumeRecap';
 import { SettingsDialog, type SettingsValues } from './SettingsDialog';
 
@@ -70,3 +70,6 @@ export const ResumeOnEngineQuiet: Story = { render: () => <ResumeRecap {...RECAP
 export const SessionExpired: Story = { render: () => <SessionExpiredDialog onSignIn={noop} /> };
 /** Frame z1. */
 export const Loading: Story = { render: () => <LoadingScreen /> };
+
+/** Exit from the game menu (D89), when the launch gave a return address: the run is saved; Stay or Exit. */
+export const Exit: Story = { render: () => <ExitDialog onStay={noop} onExit={noop} /> };

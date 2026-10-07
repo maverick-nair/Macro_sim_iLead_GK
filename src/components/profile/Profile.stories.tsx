@@ -118,3 +118,18 @@ export const Interactive: Story = {
     );
   }
 };
+
+/** The result trend (D96): the result at the start, at the end of each week, and now, with Show as table. */
+export const ResultTrend: Story = {
+  ...board,
+  args: { ...kent, trend: [{ label: 'Start', value: 52 }, { label: 'End of Week 1', value: 47 }, { label: 'End of Week 2', value: 41 }, { label: 'Now', value: 55 }] }
+};
+
+/** A hire who joined in week 3: no result before then. The optional authored rows (D97) show when the storyline has them. */
+export const TrendFromHireAndAuthoredRows: Story = {
+  ...board,
+  args: {
+    ...kent, trend: [{ label: 'Start', value: null }, { label: 'End of Week 1', value: null }, { label: 'End of Week 2', value: 60 }, { label: 'Now', value: 64 }],
+    facts: [...kent.facts, { key: 'attitude', value: 'Positive, a little impatient' }, { key: 'awareness', value: 'Knows the product well' }, { key: 'responsibilities', value: 'Owns the northern territory' }]
+  }
+};

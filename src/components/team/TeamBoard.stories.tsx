@@ -104,3 +104,8 @@ export const EmptyColumn: StoryObj = {
 export const LongStageName: StoryObj = {
   render: () => <Frame columns={FIVE.map(c => (c.key === 'demo' ? { ...c, name: 'Technical solution demonstration' } : c))} />
 };
+
+/** Stage info (D97): each header's info button opens what the stage does and which skills suit it; Results and stages opens the overviews (D96). */
+export const StageInfo: StoryObj = {
+  render: () => <Frame onOverview={() => undefined} columns={FIVE.map((c, i) => ({ ...c, about: 'Finds new prospects and makes first contact, so the funnel always has buyers to talk to.', suits: i % 2 ? 'Prospecting and resilience after a no.' : null }))} />
+};

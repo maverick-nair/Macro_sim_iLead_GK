@@ -9,8 +9,11 @@ export type Notice =
   | { key: string; kind: 'milestone'; milestone: EngineView['milestones'][number] }
   | { key: string; kind: 'tip'; tip: 'hireUnlocked' | 'noDays' | 'seatOpen'; stage?: string };
 
+type MilestoneView = Pick<EngineView, 'milestones'>;
+type Shown = { has(key: string): boolean };
+
 /** Milestones reached that have not been shown yet, oldest first. */
-export function newMilestones(view: Pick<EngineView, 'milestones'>, shown: ReadonlySet<string>): Notice[] {
+export function newMilestones(view: MilestoneView, shown: Shown): Notice[] {
   return view.milestones.filter(m => !shown.has(`milestone:${m.key}`)).map(m => ({ key: `milestone:${m.key}`, kind: 'milestone', milestone: m }));
 }
 

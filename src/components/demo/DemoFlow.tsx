@@ -19,6 +19,8 @@ export interface DemoFlowProps {
   /** An app dialog (pause, settings) is open over the demo. */
   paused?: boolean;
   minHeight?: string;
+  /** Where it starts (stories): the offer, the demo board, or "You are ready". */
+  initialStage?: 'offer' | 'run' | 'done';
 }
 
 const EYEBROW = 'text-12 font-700 tracking-(--il-onboarding-eyebrow-tracking) text-accent-secondary uppercase';
@@ -31,9 +33,9 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
  * decision: a style, selecting a person, an instant action and its impact. Exit demo asks first (the
  * demo cannot be played again). It ends with "You are ready" and Play simulation.
  */
-export default function DemoFlow({ onDone, onPause, onSettings, paused, minHeight }: DemoFlowProps) {
+export default function DemoFlow({ onDone, onPause, onSettings, paused, minHeight, initialStage = 'offer' }: DemoFlowProps) {
   const { t } = useI18n();
-  const [stage, setStage] = useState<'offer' | 'run' | 'done'>('offer');
+  const [stage, setStage] = useState<'offer' | 'run' | 'done'>(initialStage);
   const [client] = useState(() => createDemoClient(rememberedRun() ?? 'local'));
   const heading = useRef<HTMLHeadingElement>(null);
   // Each stage starts at its heading, so keyboard and screen reader users begin at the top.

@@ -65,3 +65,15 @@ export const BandNoBystander: StoryObj = { render: () => <div style={{ width: 13
 
 /** Tablet size, 834 wide (D69): the band inside the board's 24px margins. */
 export const BandTablet: StoryObj = { render: () => <div style={{ width: 786 }}><OutcomePanel {...BASE} whyOpen /></div> };
+
+/** Several people replied (D98): step through each reply with its own changes; a face jumps to that person. */
+function Replies() {
+  const [step, setStep] = useState(0);
+  const replies = AFFECTED.map(p => ({ person: p, text: REACTIONS[p.id], changes: BASE.changes.filter(c => c.name === p.shortName) }));
+  return (
+    <div style={{ width: 1392 }}>
+      <OutcomePanel {...BASE} replies={replies} step={step} onStep={setStep} revealed={replies[step].person.id} onReveal={id => setStep(Math.max(0, replies.findIndex(r => r.person.id === id)))} />
+    </div>
+  );
+}
+export const BandReplies: StoryObj = { render: () => <Replies /> };

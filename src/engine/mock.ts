@@ -31,6 +31,16 @@ export function draftStoryline(storage: Array<Pick<Storage, 'getItem'> | undefin
   return null;
 }
 
+/** A sample welcome video with captions and a transcript, served from public/assets/video (D90). */
+export const SAMPLE_VIDEO = {
+  src: '/assets/video/sample-welcome.webm', captions: '/assets/video/sample-welcome.vtt',
+  transcript: [
+    'Welcome to Innov8 Elevators. I am glad you are here.',
+    'For the next eight weeks you lead a sales team of ten. Each week you choose how to lead each person, then act: talk with them, coach, train, move or hire.',
+    'Read your people well. Someone new and unsure needs clear steps; someone skilled and confident needs room to run. Get that right and the deals follow.'
+  ]
+};
+
 export function defaultStoryline(lens?: string | null): StorylineConfig {
   if (new URLSearchParams(globalThis.location?.search ?? '').get('storyline') === 'draft') {
     const draft = draftStoryline();
@@ -39,8 +49,11 @@ export function defaultStoryline(lens?: string | null): StorylineConfig {
   // `?lens=six_styles` plays Sales Elevator with the Six Leadership Styles test lens (D70), for demos and tests.
   const base = lens === 'six_styles' ? withSixStyles(salesElevator as unknown as StorylineInput) : salesElevator as unknown as StorylineInput;
   // `?purpose=assessment` plays it as an assessment, so the report carries verdicts (D75).
-  const purpose = new URLSearchParams(globalThis.location?.search ?? '').get('purpose');
-  const r = parseStoryline(purpose === 'assessment' || purpose === 'development' ? { ...base, purpose } : base);
+  const q = new URLSearchParams(globalThis.location?.search ?? '');
+  const purpose = q.get('purpose');
+  // `?video=1` adds the sample welcome video and its transcript (D90), for demos and tests: no storyline ships one yet.
+  const video = q.get('video') === '1' ? { video: SAMPLE_VIDEO } : {};
+  const r = parseStoryline({ ...base, ...video, ...(purpose === 'assessment' || purpose === 'development' ? { purpose } : {}) });
   if (!r.ok) throw new Error(r.issues.join('\n'));
   return r.config;
 }

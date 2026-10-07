@@ -119,6 +119,8 @@ export interface EngineBoardProps {
    * notices or End week, and the session clock held.
    */
   demo?: DemoMode;
+  /** Starts with this guided tour open (stories and tests); otherwise each tour starts itself the first time (D94). */
+  startTour?: TourArea;
 }
 
 export interface DemoMode {
@@ -204,7 +206,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   /** The in play panel that is open (D89), if any. */
   const [panel, setPanel] = useState<PlayPanel | null>(null);
   /** The guided tour that is running (D94), if any. */
-  const [tour, setTour] = useState<TourArea | null>(null);
+  const [tour, setTour] = useState<TourArea | null>(app.startTour ?? null);
   /** Notices on screen this load, and the ones dismissed. Milestones reached before the board opened are not news (a resumed run). */
   const [shown, setShown] = useState<Set<string>>(() => new Set());
   const [dismissed, setDismissed] = useState<Set<string>>(() => new Set(v.milestones.map(m => `milestone:${m.key}`)));
