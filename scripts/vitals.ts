@@ -35,17 +35,18 @@ import { neededStyles, play } from '../src/engine/sim/policies';
 
 type Metric = 'lcp' | 'cls' | 'tbt' | 'inp' | 'kb';
 /**
- * Budgets per page (D78). LCP, TBT and INP in ms, transfer in KB. The participant's first load holds the
- * usual targets (LCP 2.5 s, CLS 0.1); its TBT allows 300 ms because compiling the first load's scripts
- * alone is a 200 to 250 ms task at this CPU. The board's largest paint is a portrait that needs the view
- * first, and the board and the group report render in one long task each: they hold 3 s and 600 ms
- * until those renders are split (HANDOFF "Known limits"). Medians of 3 runs, with room for CI noise.
+ * Budgets per page (D78, tightened in D87). LCP, TBT and INP in ms, transfer in KB. The participant's
+ * first load holds the usual targets (LCP 2.5 s, CLS 0.1, TBT 300 ms). The board's and the group report's
+ * first renders are split (D87), so the group report holds TBT 300 ms and the board 400 ms (measured
+ * 230 to 310 ms: the view's parse and the first commit are still one task each). Their largest paint
+ * stays at 3 s: at this network the first load's bytes alone take about 2 s, and the board's largest
+ * paint is a portrait that follows them. Medians of 3 runs, with room for CI noise.
  */
 export const BUDGETS: Record<string, Partial<Record<Metric, number>>> = {
   'first load': { lcp: 2500, cls: 0.1, tbt: 300, kb: 450 },
-  board: { lcp: 3000, cls: 0.1, tbt: 600, inp: 200, kb: 450 },
+  board: { lcp: 3000, cls: 0.1, tbt: 400, inp: 200, kb: 450 },
   report: { lcp: 2500, cls: 0.1, tbt: 300, kb: 100 },
-  'group report': { lcp: 3000, cls: 0.1, tbt: 600, kb: 450 }
+  'group report': { lcp: 3000, cls: 0.1, tbt: 300, kb: 450 }
 };
 
 const NETWORK = { offline: false, latency: 150, downloadThroughput: (1.6 * 1024 * 1024) / 8 * 0.9, uploadThroughput: (750 * 1024) / 8 * 0.9 };
@@ -219,6 +220,7 @@ async function measure(base: string, name: string, run: number): Promise<Vitals>
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
   await page.addInitScript({ content: OBSERVE });
+  if (VERBOSE) page.on('console', m => console.log(`    page: ${m.text()}`));
   const net = await throttle(page);
   try {
     if (name === 'first load') {
@@ -296,7 +298,8 @@ async function main() {
   const results: Record<string, Vitals & { runs: Vitals[] }> = {};
   let over = 0;
   const fmt = (m: Metric, x: number | null) => (x === null ? '–' : m === 'cls' ? x.toFixed(3) : m === 'kb' ? `${Math.round(x)} KB` : `${Math.round(x)} ms`);
-  for (const name of Object.keys(BUDGETS)) {
+  // `--page board` measures one page (while working on it); the gate measures them all.
+  for (const name of Object.keys(BUDGETS).filter(n => !arg('--page') || n === arg('--page'))) {
     const runs: Vitals[] = [];
     for (let i = 0; i < RUNS; i++) runs.push(await measure(base, name, i));
     const med: Vitals = {

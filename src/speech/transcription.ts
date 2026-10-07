@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import type { SpeechError, SpeechMode } from './types';
 
 /**
@@ -57,9 +56,19 @@ export interface TranscriptionClient {
  * and must not run emotion inference on the audio.
  * ---------------------------------------------------------------------------------------------- */
 
-const Result = z.object({ kind: z.enum(['partial', 'final']), text: z.string() });
-const Results = z.object({ results: z.array(Result) });
-const Created = z.object({ id: z.string().min(1) });
+/*
+ * The two response shapes, checked by hand: the onboarding mic test is in the first load, and Zod is
+ * not (D87).
+ */
+type Result = { kind: 'partial' | 'final'; text: string };
+const isResults = (b: unknown): b is { results: Result[] } =>
+  typeof b === 'object' && b !== null && Array.isArray((b as { results?: unknown }).results)
+  && (b as { results: unknown[] }).results.every(r => typeof r === 'object' && r !== null && ((r as Result).kind === 'partial' || (r as Result).kind === 'final') && typeof (r as Result).text === 'string');
+const createdId = (b: unknown): string => {
+  const id = typeof b === 'object' && b !== null ? (b as { id?: unknown }).id : undefined;
+  if (typeof id !== 'string' || !id) throw new Error('malformed transcription response');
+  return id;
+};
 
 export interface HttpTranscriptionOptions {
   fetch?: typeof fetch;
@@ -84,10 +93,9 @@ export function createHttpTranscriptionClient(baseUrl: string, options: HttpTran
         o.onError({ code: 'network', recoverable: true, message });
       };
       const deliver = (body: unknown) => {
-        const parsed = Results.safeParse(body);
-        if (!parsed.success) return fail('malformed transcription response');
+        if (!isResults(body)) return fail('malformed transcription response');
         if (closed) return;
-        for (const r of parsed.data.results) (r.kind === 'final' ? o.onFinal : o.onPartial)(r.text);
+        for (const r of body.results) (r.kind === 'final' ? o.onFinal : o.onPartial)(r.text);
       };
       const call = async (path: string, init: RequestInit) => {
         const res = await doFetch(`${base}${path}`, { ...init, headers: { ...headers, ...(init.headers as Record<string, string>) }, signal: abort.signal });
@@ -98,7 +106,7 @@ export function createHttpTranscriptionClient(baseUrl: string, options: HttpTran
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mimeType: o.mimeType, mode: o.mode, language: o.language })
-      }).then(b => Created.parse(b).id);
+      }).then(createdId);
       // Every request after creation runs in order on this chain, so chunks arrive by seq.
       let chain: Promise<unknown> = id.catch(e => fail(String(e)));
       const enqueue = (step: (id: string) => Promise<void>) => {

@@ -1,6 +1,11 @@
-import { readSse } from '../ai/sse';
 import { loadEngineCopy } from '../i18n/locales';
-import { EngineView, Intent, IntentResult, type StreamChunk } from './contract';
+import type { EngineView, Intent, IntentResult, StreamChunk } from './contract';
+
+/**
+ * The contract (Zod and every schema) loads beside the first request, not in the first load (D87): the
+ * view cannot be parsed before it arrives anyway.
+ */
+const contract = () => import('./contract');
 
 /**
  * The one way the UI talks to the engine. Two adapters: the in-browser mock, which runs the same
@@ -15,6 +20,17 @@ export interface EngineClient {
    * signal to stop it; then send `interruptTurn` with how much was shown.
    */
   streamTurn(interactionId: string, turn: { id: string; text: string }, signal: AbortSignal): AsyncIterable<StreamChunk>;
+}
+
+/**
+ * The first view requested by index.html's inline script before the app's code arrived (D87), once,
+ * for this session only.
+ */
+function takeEarlyView(sessionId: string): Promise<unknown> | null {
+  const g = globalThis as { __ileadEarlyView?: { session: string; view: Promise<unknown> } | null };
+  const e = g.__ileadEarlyView;
+  g.__ileadEarlyView = null;
+  return e && e.session === sessionId ? e.view : null;
 }
 
 /** An intent the engine refused. `code` is stable; the UI maps it to a catalog message. */
@@ -45,16 +61,20 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
     return body;
   }
   /** With a request id, a retried intent the server already applied is answered, not applied again (D86). */
-  async function sendWithId(intent: Intent, requestId?: string) {
+  async function sendWithId(intent: Intent, requestId?: string): Promise<IntentResult> {
     const headers: Record<string, string> = requestId ? { 'idempotency-key': requestId } : {};
-    const [body] = await Promise.all([call('/intents', { method: 'POST', body: JSON.stringify(parse(Intent, intent)), headers }), loadEngineCopy()]);
-    return parse(IntentResult, body);
+    const c = await contract();
+    const [body] = await Promise.all([call('/intents', { method: 'POST', body: JSON.stringify(parse(c.Intent, intent)), headers }), loadEngineCopy()]);
+    return parse(c.IntentResult, body);
   }
   return {
     // The engine's copy is worded as a payload is parsed: its catalog loads beside the first request (D83).
     async view() {
-      const [body] = await Promise.all([call('/view'), loadEngineCopy()]);
-      return parse(EngineView, body);
+      // The first view may already be on its way from the page's head (D87); a failed one is asked again.
+      const early = takeEarlyView(sessionId);
+      const body = early ? early.catch(() => call('/view')) : call('/view');
+      const [b, c] = await Promise.all([body, contract(), loadEngineCopy()]);
+      return parse(c.EngineView, b);
     },
     send: intent => sendWithId(intent),
     sendWithId,
@@ -67,6 +87,7 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
         yield { type: 'error', retryable: true };
         return;
       }
+      const { readSse } = await import('../ai/sse');
       yield* readSse(res, signal);
     }
   };

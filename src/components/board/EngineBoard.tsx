@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, startTransition, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Block, EngineView, Intent, MemberView, MetricChange, StyleKey } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
 import { useEngineView, useIntent } from '../../engine/react';
@@ -44,6 +44,7 @@ const TabletBoardView = lazy(() => import('./TabletBoard'));
 import type { SheetTab } from './TabletBoard';
 import { EventCard } from './EventCard';
 import { PracticeOffer } from './PracticeOffer';
+import { Deferred } from '../../lib/useAfterPaint';
 import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
 import { initials, streakText } from '../gamification/display';
@@ -106,7 +107,13 @@ const loadCode = (e: unknown) => (e instanceof EngineError ? (e.code === 'badPay
 export function EngineBoard(props: EngineBoardProps) {
   const q = useEngineView();
   const { t } = useI18n();
-  if (!q.data) {
+  /*
+   * The board's first render runs in a transition (D87): React builds it in slices that yield to the
+   * browser, so arriving on the board is not one long task. Later views render as usual.
+   */
+  const [shown, setShown] = useState(false);
+  useEffect(() => { if (q.data && !shown) startTransition(() => setShown(true)); }, [q.data, shown]);
+  if (!q.data || !shown) {
     return (
       <main className="flex flex-1 flex-col items-center justify-center gap-3 p-6">
         <h1 className="sr-only">{t('board.h1', { view: 'loading' })}</h1>
@@ -853,7 +860,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
                 <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
               </TeamScroll>
-              <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><ActionsPanel
+              {/*
+                * The board's first render is split (D87): the HUD, the KPIs and the team (where the largest
+                * paint is) come first; the actions panel and the inbox follow once that has painted, built
+                * in their own render inside a transition, so the board is not one long task.
+                */}
+              <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <ActionsPanel
                 capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
                 notes={actionNotes}
                 team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
@@ -864,8 +876,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                   open: openActions,
                   onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
                 } : undefined}
-              /></div>
-              <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} /></div>
+              />}</Deferred></div>
+              <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} />}</Deferred></div>
               {profile && <ProfilePanel {...profile} />}
               {inboxDrawer}
             </div>

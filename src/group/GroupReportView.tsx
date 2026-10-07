@@ -11,6 +11,7 @@ import {
   ActionsSection, AdaptabilitySection, AttentionSection, BusinessSection, CompletionSection, ConsistencySection, DistributionSection,
   FunnelSection, GroupCover, SkillsSection, StylesSection, TakeawaysSection, VerdictsSection, WithheldNotice
 } from './sections';
+import { useProgressive } from '../lib/useAfterPaint';
 import './messages';
 
 export interface GroupReportViewProps {
@@ -71,6 +72,10 @@ export function GroupReportView({ report, print: printProp = false }: GroupRepor
     return () => cancelAnimationFrame(id);
   }, [printing, print]);
   const go = (next: boolean) => { moved.current = true; setPrint(next); };
+  // The first render is split (D87): the cover and the first sections at once, the rest once that has
+  // painted, in a transition that yields. Print lays out every page at once.
+  const sectionCount = report.sections.length + 1 + (report.withheld ? 1 : 0);
+  const shown = useProgressive(sectionCount, 3, print || printProp);
 
   const blocks: ReportBlock[] = [{ key: 'cover', card: true, node: <GroupCover report={report} /> }];
   for (const key of report.sections) {
@@ -83,7 +88,7 @@ export function GroupReportView({ report, print: printProp = false }: GroupRepor
     <ReportProvider value={{ print, tables: 'toggle', purpose: report.cohort.purpose }}>
       <ReportDocument
         landmark
-        blocks={blocks}
+        blocks={blocks.slice(0, shown)}
         pageLabel={n => t('group.page', { n })}
         footer={{ brand: t('group.footer') }}
         toolbar={(

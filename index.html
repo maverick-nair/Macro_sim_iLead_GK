@@ -7,6 +7,30 @@
     <!-- The headings' weight loads with the scripts, not after the first render: the first screen's largest
          paint is a heading (D78). The other weights swap in when they land. -->
     <link rel="preload" href="/fonts/Manrope-Bold.woff2" as="font" type="font/woff2" crossorigin />
+    <!-- D87: the participant's first view (6 KB) leaves now, before the app's code has downloaded, so it is
+         in when the code is (portraits wait for the code: on a slow network they would only slow it). The engine client
+         takes this answer for its first view (src/engine/client.ts, takeEarlyView). Only with a server
+         engine, only on the participant's route, and never while actions wait to be sent (D86). -->
+    <script>
+      (function () {
+        var url = '%VITE_ILEAD_ENGINE_URL%';
+        if (!url || url.charAt(0) === '%' || /^\/(screens|states|author|group)\/?$/.test(location.pathname)) return;
+        try {
+          var q = new URLSearchParams(location.search);
+          if (q.get('engine') === 'off') return;
+          var p = q.get('participant');
+          if (!p) { var run = JSON.parse(localStorage.getItem('ilead.run') || 'null'); p = (run && run.participant) || 'local'; }
+          if (localStorage.getItem('ilead.pending.' + p)) return;
+          var base = url.replace(/\/$/, '') + '/sessions/' + encodeURIComponent(p);
+          var view = fetch(base + '/view', { credentials: 'include', headers: { 'content-type': 'application/json' } }).then(function (r) {
+            if (!r.ok) throw new Error('view ' + r.status);
+            return r.json();
+          });
+          view.catch(function () {});
+          window.__ileadEarlyView = { session: p, view: view };
+        } catch (e) { /* storage blocked or no fetch: the app asks for the view itself */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

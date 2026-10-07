@@ -74,6 +74,18 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
   );
 }
 
+// The first view asked for by index.html (D87) names the team: their portraits (the board's largest
+// paint) leave now, as the app's code starts, not once the view has been parsed and rendered.
+(globalThis as { __ileadEarlyView?: { view: Promise<{ members?: Array<{ img?: string | null }>; sponsor?: { img?: string | null } }> } | null })
+  .__ileadEarlyView?.view.then(v => {
+    for (const src of new Set([...(v.members ?? []).map(m => m.img), v.sponsor?.img])) {
+      if (!src) continue;
+      const img = new Image();
+      img.fetchPriority = 'high';
+      img.src = src;
+    }
+  }, () => undefined);
+
 // The participant's language from the launch (`?locale=es`, D83): numbers, dates and money follow it, and
 // the page's lang and dir. `en-XA` and `ar-XB` are pseudo locales for testing overflow and right to left.
 setAppLocale(new URLSearchParams(location.search).get('locale'));
