@@ -34,8 +34,11 @@ export interface IleadApi {
    * (the app then opens the print view and the browser saves the PDF).
    */
   reportPdf(): Promise<Blob | null>;
-  /** Who launched the run (LMS or GenieKreator launch), for the report header; null fields when unknown. */
-  getProfile(): Promise<{ name: string | null; cohort: string | null }>;
+  /**
+   * Who launched the run (LMS or GenieKreator launch), for the report header; null fields when unknown.
+   * `exit` is where Exit in the game menu returns to (D89), when the launch gives one.
+   */
+  getProfile(): Promise<{ name: string | null; cohort: string | null; exit?: string | null }>;
   /**
    * The cohort leaderboard (scoring-and-report.md 6): ranked by Leadership Score, ties by conversions,
    * then contextual capability %. `you` is this participant's own result, sent so the server can place it.

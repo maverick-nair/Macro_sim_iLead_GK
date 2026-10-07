@@ -35,5 +35,9 @@
   "app.loading": "Setting up your office",
   "app.saveFailed": "We could not save that. We will retry when you are back online.",
   "app.offline": "You are offline. {count, plural, =0 {You can keep reading; anything you do waits here} one {# action is saved here and goes out} other {# actions are saved here and go out}} when you reconnect.",
-  "app.reconnecting": "Reconnecting. {count, plural, =0 {Hold on a moment} one {# action is waiting to go out} other {# actions are waiting to go out}}."
+  "app.reconnecting": "Reconnecting. {count, plural, =0 {Hold on a moment} one {# action is waiting to go out} other {# actions are waiting to go out}}.",
+  "settings.exit.title": "Exit the simulation?",
+  "settings.exit.body": "Your progress is saved on every step. Open the simulation again from your learning platform to carry on where you left off.",
+  "settings.exit.stay": "Stay",
+  "settings.exit.leave": "Exit"
 }

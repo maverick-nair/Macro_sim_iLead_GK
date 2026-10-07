@@ -104,7 +104,7 @@ function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine:
   const defsId = useId();
   const grid = introGrid(lens.styles.length);
   return (
-    <div id={defsId} className={`grid ${grid.className} gap-3`}>
+    <div id={defsId} data-tour="style-definitions" className={`grid ${grid.className} gap-3`}>
       <div className={`flex items-center gap-3 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 ${grid.prompt}`}>
         <span aria-hidden="true" className="flex size-11 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">{initials(sponsorName)}</span>
         <span className="text-14 text-pretty">
@@ -164,7 +164,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
           {t('stylesetting.progress', { set: number(set), total: number(members.length) })}
         </span>
         <LayoutToggle value={layout} onChange={p.onViewChange} />
-        <span className="contents tablet-portrait:hidden"><NoWrapButton variant="primary" size="md" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton></span>
+        <span data-tour="style-confirm" className="inline-flex flex-none tablet-portrait:hidden"><NoWrapButton variant="primary" size="md" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton></span>
       </header>
       {/* A portrait tablet confirms from a bar at the bottom, in reach of a thumb (D73). */}
       <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-20 border border-line-default bg-surface-material py-2.5 pe-2.5 ps-5 backdrop-blur-20">

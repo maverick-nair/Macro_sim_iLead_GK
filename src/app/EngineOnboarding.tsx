@@ -81,8 +81,8 @@ export function EngineOnboarding({ act, minHeight }: { act: AppActions; minHeigh
       onConsent={voice => act.settings(voice ? { voiceConsent: true } : { voiceConsent: false, input: 'text' })}
       onOpenProfile={id => { if (!view.members.find(m => m.id === id)?.statsRevealed) mutate({ type: 'openProfile', memberId: id }); }}
       onSay={act.say}
-      // The Week 0 practice is offered next, above week 1's style setting (D16, D84).
-      onFinish={() => { offerPractice(true); act.go('style'); }}
+      // The demo round is offered next when the storyline has it (D92); then the Week 0 practice, above week 1's style setting (D16, D84).
+      onFinish={() => { if (view.guide.demo.enabled) act.go('demo'); else { offerPractice(true); act.go('style'); } }}
       liveVoice
     />
   );

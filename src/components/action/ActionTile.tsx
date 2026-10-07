@@ -30,6 +30,8 @@ export interface ActionTileProps {
   onPick: () => void;
   /** `panel`: the Actions panel, with the live, instant or lock icon. `compact`: the profile's "Take an action" column. */
   layout?: 'panel' | 'compact';
+  /** The engine's action key, on the tile as `data-action` for the demo's tips (D92). */
+  actionKey?: string;
 }
 
 const MicIcon = () => (
@@ -63,7 +65,7 @@ export function actionSub(t: ReturnType<typeof useI18n>['t'], fmt: (n: number) =
   return t('action.sub', { kind });
 }
 
-export function ActionTile({ name, kind, days, duration, block, perk, onPick, layout = 'panel' }: ActionTileProps) {
+export function ActionTile({ name, kind, days, duration, block, perk, onPick, layout = 'panel', actionKey }: ActionTileProps) {
   const { t } = useI18n();
   const fmt = useDays();
   const reasonId = useId();
@@ -83,7 +85,7 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
         <b className="text-13">{name}</b>
         <span id={reasonId} className={`text-12 ${perk && !block ? 'font-700 text-status-gain' : 'text-fg-secondary'}`}>{sub}</span>
       </span>
-      <span className="text-12 font-700 text-fg-secondary">{fmt(days)}</span>
+      <span data-tour="action-cost" className="text-12 font-700 text-fg-secondary">{fmt(days)}</span>
     </>
   );
 
@@ -100,7 +102,7 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
   const iconFill = disabled ? 'bg-track text-fg-secondary'
     : kind === 'static' ? 'bg-(image:--il-action-icon-instant) text-brand-deep-space' : 'bg-(image:--il-action-icon-live) text-brand-deep-space';
   return (
-    <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip}
+    <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip} data-action={actionKey}
       className={`grid grid-cols-(--il-action-tile-columns) items-center gap-2.5 rounded-14 border border-line-default bg-surface-raised px-2.5 py-2.25 text-start ${tone} ${disabled ? '' : 'hover:border-line-strong'} ${focus}`}>
       <span className={`flex size-7.5 items-center justify-center rounded-10 ${iconFill}`}>{icon}</span>
       {text}

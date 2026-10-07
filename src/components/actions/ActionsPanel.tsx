@@ -33,6 +33,8 @@ export interface ActionsPanelProps {
    * sponsor (`gain`), a CEO check in that took one (`neutral`). The design frames pass none.
    */
   notes?: Array<{ text: string; tone: 'gain' | 'neutral' }>;
+  /** Opens the list of every action (D97): an info button beside the heading. */
+  onAbout?: () => void;
   /**
    * Makes the card collapsible (the board at 1024 wide, D58): a toggle in its header, and when
    * `collapsed` a slim rail with the number of actions open now, which expands on demand. Leave it
@@ -62,6 +64,11 @@ const Chevron = ({ to }: { to: 'left' | 'right' }) => (
     <path d={to === 'left' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'} />
   </svg>
 );
+const InfoIcon = () => (
+  <svg className="size-3.75" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" />
+  </svg>
+);
 const toggleClass = 'flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
@@ -71,7 +78,7 @@ const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-f
  * and a key to the icons. While an action is being planned the card shows that flow instead.
  * Every cost inside, including the drawer's, reads in the storyline's sub-period unit.
  */
-export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2, notes, collapse }: ActionsPanelProps) {
+export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit = 'week', outOfCapacity, team, member, drawer, headingLevel = 2, notes, collapse, onAbout }: ActionsPanelProps) {
   const { t, number } = useI18n();
   const fmt = useDays(subPeriodUnit);
 
@@ -92,13 +99,21 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
     );
   }
   return (
-    <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0">
+    <aside aria-label={t('actions.title')} data-tour="actions" className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0">
       <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
         <SubPeriodUnitContext.Provider value={subPeriodUnit}>
           {drawer ? drawer : (
             <div className="flex flex-1 flex-col gap-3.5 px-4.5 py-4">
               <div className="flex items-baseline justify-between">
-                <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>
+                <span className="flex items-center gap-1.5">
+                  <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>
+                  {onAbout && (
+                    <button type="button" onClick={onAbout} aria-label={t('actions.about')} title={t('actions.about')}
+                      className="flex size-6 cursor-pointer items-center justify-center self-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+                      <InfoIcon />
+                    </button>
+                  )}
+                </span>
                 <span className={`text-12 text-fg-secondary ${collapse ? 'ms-auto' : ''}`}>{t('time.left', { amount: fmt(capacityLeft) })}</span>
                 {collapse && (
                   <button type="button" aria-expanded={true} onClick={collapse.onToggle} aria-label={t('actions.collapse')} title={t('actions.collapse')}

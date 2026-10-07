@@ -23,6 +23,13 @@ export type OutcomeChange = Pick<ReasonChipProps, 'name' | 'metric' | 'delta'>;
 /** One reason behind changes in the outcome. */
 export type OutcomeWhy = Omit<ReasonDetailProps, 'layout'>;
 
+/** One person's reply to an action, and their own changes (D98). */
+export interface OutcomeReply {
+  person: OutcomePerson;
+  text: string;
+  changes: OutcomeChange[];
+}
+
 export interface OutcomePanelProps {
   person: OutcomePerson;
   /** What the outcome came from, after the eyebrow: "1:1 with Kent". */
@@ -52,12 +59,26 @@ export interface OutcomePanelProps {
   /** Opens the full entry in History. Leave it out when there is nowhere to open it. */
   onOpenHistory?: () => void;
   /**
+   * When several people respond to one action (D98): each person's own reply and what changed for them,
+   * stepped through with Previous and Next ("Reply 2 of 4"). Choosing a face jumps to that person's reply.
+   * Left out (or with one reply) the panel shows the single reply, as designed.
+   */
+  replies?: OutcomeReply[];
+  /** The reply on show, an index into `replies`. */
+  step?: number;
+  onStep?: (index: number) => void;
+  /**
    * Level of the headline heading, so the page sets the outline. Defaults to 3; on the board, where
    * the band sits directly under the page heading, pass 2.
    */
   headingLevel?: HeadingLevel;
 }
 
+const Arrow = ({ to }: { to: 'prev' | 'next' }) => (
+  <svg className="size-3.5 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d={to === 'prev' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6'} />
+  </svg>
+);
 const PlayIcon = () => <svg className="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>;
 /** Icon glyphs, not copy: the buttons are named from the catalog. */
 const CLOSE_GLYPH = '✕';
@@ -76,9 +97,12 @@ export function OutcomePanel(p: OutcomePanelProps) {
   const whyLabel = t('outcome.why', { open: String(p.whyOpen) });
   const whys = Array.isArray(p.why) ? p.why : [p.why];
   const details = (layout?: 'stack') => whys.map((w, i) => <ReasonDetail key={i} {...w} layout={layout} />);
+  const replies = p.replies && p.replies.length > 1 ? p.replies : null;
+  const step = replies ? Math.max(0, Math.min(replies.length - 1, p.step ?? 0)) : 0;
+  const current = replies?.[step];
 
   return (
-    <section aria-label={t('outcome.region')} className="mx-6 mt-0 mb-3.5 grid animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 rounded-22 border border-line-strong bg-surface-material px-5 py-4 shadow-(--il-outcome-band-shadow)">
+    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-6 mt-0 mb-3.5 grid animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 rounded-22 border border-line-strong bg-surface-material px-5 py-4 shadow-(--il-outcome-band-shadow)">
       <div className="size-21 overflow-hidden rounded-round bg-portrait-calm shadow-(--il-outcome-portrait-ring)">
         <img src={p.person.img} alt={p.person.name} className="size-full object-cover object-top mix-blend-multiply" />
       </div>
@@ -105,7 +129,25 @@ export function OutcomePanel(p: OutcomePanelProps) {
             </button>
           ))}
         </div>
-        {p.reaction && <span aria-live="polite" className="rounded-12 bg-surface-raised px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
+        {current && replies ? (
+          <div role="group" aria-label={t('outcome.replies.aria', { n: step + 1, total: replies.length, name: current.person.name })} data-tour="replies"
+            className="flex flex-col gap-2 rounded-14 bg-surface-raised px-3 py-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span aria-hidden="true" className="text-12 font-700 text-fg-secondary">{t('outcome.replies.count', { n: step + 1, total: replies.length })}</span>
+              <span className="flex gap-1">
+                <button type="button" onClick={() => p.onStep?.(step - 1)} disabled={step === 0} aria-label={t('outcome.replies.prev')}
+                  className={`flex size-7 cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-card p-0 text-fg-primary disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}><Arrow to="prev" /></button>
+                <button type="button" onClick={() => p.onStep?.(step + 1)} disabled={step === replies.length - 1} aria-label={t('outcome.replies.next')}
+                  className={`flex size-7 cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-card p-0 text-fg-primary disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}><Arrow to="next" /></button>
+              </span>
+            </div>
+            {/* The reply is announced as it changes, so stepping reads each person in turn. */}
+            <div aria-live="polite" className="flex flex-col gap-1.5">
+              <span className="text-13"><b>{t('outcome.reaction', { name: current.person.shortName })}</b> {current.text}</span>
+              {current.changes.length > 0 && <div className="flex flex-wrap gap-1.5">{current.changes.map((c, i) => <ReasonChip key={i} {...c} showNumbers={p.showNumbers} onToggle={p.onToggleNumbers} />)}</div>}
+            </div>
+          </div>
+        ) : p.reaction && <span aria-live="polite" className="rounded-12 bg-surface-raised px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
         <div className="flex flex-wrap gap-1.5">{chips}</div>
         <span className="text-13 text-fg-secondary">{p.ripple}</span>
         {changed.map((c, i) => <span key={i} className="text-13">{c}</span>)}

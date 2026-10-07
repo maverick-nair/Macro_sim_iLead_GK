@@ -49,6 +49,19 @@ import { SponsorCall } from './SponsorCall';
 import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
 import { initials, streakText } from '../gamification/display';
 import { teamChips, type Chip } from './chips';
+import { GameMenu, type GameMenuItem } from '../hud/GameMenu';
+import { BoardNotices } from './BoardNotices';
+import { dueTips, newMilestones, type Notice } from './notices';
+import { guideOff, guideSeen, markGuideSeen, turnGuideOff } from '../tour/guideStore';
+import type { TourArea } from '../tour/steps';
+import type { TourEnd } from '../tour/Tour';
+import { resultColumns } from '../panels/overview';
+import type { PlayPanel } from '../panels/PlayPanels';
+import type { OutcomeReply } from '../outcome/OutcomePanel';
+import { actionSub } from '../action/ActionTile';
+// The in play panels (D89) and the guided tour (D94) load when first opened, with their copy.
+const PlayPanels = lazy(() => import('../panels/PlayPanels'));
+const Tour = lazy(() => import('../tour/Tour'));
 
 /**
  * The main board, rendered only from the engine view (brief, rule 1). Every button sends an intent;
@@ -98,6 +111,21 @@ export interface EngineBoardProps {
    * board. Stories and tests can fix it.
    */
   layout?: 'desk' | 'tablet';
+  /** Exit to the learning platform (D89): the menu offers Exit only when the launch gave a return address. */
+  onExit?: () => void;
+  /**
+   * The demo round (D92): the board runs on the demo's own engine, with styles set for everyone but the
+   * person the demo is about, conversations unavailable (they are the Week 0 practice's), no menu, tour,
+   * notices or End week, and the session clock held.
+   */
+  demo?: DemoMode;
+}
+
+export interface DemoMode {
+  /** Styles set for everyone but the person the demo is about. */
+  prefill: Record<string, StyleKey>;
+  /** The demo's banner over the board, with Exit demo. */
+  banner: ReactNode;
 }
 
 
@@ -171,7 +199,24 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const unit = v.clock.subPeriodUnit, periodUnit = v.clock.periodUnit;
   const amount = useDays(unit);
   const [flow, setFlow] = useState<Flow | null>(null);
-  const [draft, setDraft] = useState<Record<string, StyleKey>>({});
+  const [draft, setDraft] = useState<Record<string, StyleKey>>(() => app.demo?.prefill ?? {});
+  const demo = app.demo;
+  /** The in play panel that is open (D89), if any. */
+  const [panel, setPanel] = useState<PlayPanel | null>(null);
+  /** The guided tour that is running (D94), if any. */
+  const [tour, setTour] = useState<TourArea | null>(null);
+  /** Notices on screen this load, and the ones dismissed. Milestones reached before the board opened are not news (a resumed run). */
+  const [shown, setShown] = useState<Set<string>>(() => new Set());
+  const [dismissed, setDismissed] = useState<Set<string>>(() => new Set(v.milestones.map(m => `milestone:${m.key}`)));
+  /** Names of everyone seen on the team this load, so History still names someone who has since left. */
+  const [names] = useState(() => new Map<string, string>());
+  for (const m of v.members) names.set(m.id, m.name);
+  const [fullscreen, setFullscreen] = useState(() => typeof document !== 'undefined' && !!document.fullscreenElement);
+  useEffect(() => {
+    const on = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', on);
+    return () => document.removeEventListener('fullscreenchange', on);
+  }, []);
   const [notes, setNotes] = useState<Record<string, string>>({});
   const [styleView, setStyleView] = useState<{ layout: StyleSettingLayout; summary: boolean }>({ layout: 'cards', summary: false });
   const [toast, setToast] = useState<string | null>(null);
@@ -334,8 +379,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const a = action(key)!;
     const b = ended ? { reason: 'locked' as const, text: t('board.ended.locked') }
       : styling ? { reason: 'locked' as const, text: t('board.error', { code: 'wrongPhase' }) }
+      // In the demo, conversations are left to the Week 0 practice (D92).
+      : demo && a.kind !== 'static' ? { reason: 'locked' as const, text: t('board.demo.live') }
       : block(memberId ? a.blockedFor[memberId] ?? null : a.blocked);
-    return { name: a.name, kind: a.kind, days: hireFree(a) ? 0 : a.cost, block: b, perk: b ? undefined : perkLine(a), onPick: () => { if (!b) pick(key, memberId); } };
+    return { name: a.name, kind: a.kind, days: hireFree(a) ? 0 : a.cost, block: b, perk: b ? undefined : perkLine(a), actionKey: a.key, onPick: () => { if (!b) pick(key, memberId); } };
   };
 
   const f = flow, fa = f ? action(f.key) : undefined;
@@ -400,7 +447,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   const styleOf = (m: MemberView) => (styling ? draft[m.id] ?? null : m.style);
   const columns: StageColumn[] = v.funnel.map(st => ({
-    key: st.key, name: st.name, count: st.members, ideal: st.ideal, bottleneck: st.bottleneck,
+    key: st.key, name: st.name, count: st.members, ideal: st.ideal, bottleneck: st.bottleneck, about: st.about, suits: st.suits,
     cards: v.members.filter(m => m.stage === st.key).map(m => ({
       id: m.id, name: m.name, title: m.title, img: img(m), mood: m.mood, away: m.away > 0,
       // The engine sends no stats until the profile is opened; the card shows its hidden state then.
@@ -448,8 +495,16 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       }),
       promises: v.promises.filter(x => x.memberId === pm.id).map(x => ({ text: x.text, status: x.state })),
       actions: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, pm.id)),
+      // The result trend (D96): the result at the start, at the end of each period, and now.
+      trend: v.trends[pm.id] ? resultColumns(v.clock, v.phase).map((c, i) => ({
+        label: c.kind === 'start' ? t('profile.trend.start') : c.kind === 'now' ? t('profile.trend.now') : t('profile.trend.end', { period: t('time.period', { unit: periodUnit, n: c.period }) }),
+        value: v.trends[pm.id][i] ?? null
+      })) : undefined,
       onClose: () => ui.openPanel('none')
     };
+    if (pm.profile.attitude) profile.facts.push({ key: 'attitude', value: fact(pm.profile.attitude) });
+    if (pm.profile.awareness) profile.facts.push({ key: 'awareness', value: fact(pm.profile.awareness) });
+    if (pm.profile.responsibilities) profile.facts.push({ key: 'responsibilities', value: fact(pm.profile.responsibilities) });
   }
 
   const chosen = v.members.filter(m => draft[m.id]).length;
@@ -549,7 +604,27 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const periods = v.clock.periods;
   const lastPeriod = v.periods[v.periods.length - 1];
   const streak = streakText(t, { count: v.streak, next: lastPeriod ? lastPeriod.streak.next : undefined, periodUnit, rule: v.gamification.streak });
+  // ---- the game menu (D89) ----
+  const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled;
+  const openPanel = (p: PlayPanel) => { ui.openPanel('none'); setScoreOpen(false); setPanel(p); };
+  const menuItems: GameMenuItem[] = [
+    { key: 'objectives', onSelect: () => openPanel({ kind: 'objectives' }) },
+    { key: 'tutorial', onSelect: () => openPanel({ kind: 'tutorial' }) },
+    { key: 'history', onSelect: () => openPanel({ kind: 'history' }) },
+    { key: 'overview', onSelect: () => openPanel({ kind: 'overview' }) },
+    ...(v.gamification.leaderboard.enabled ? [{ key: 'leaderboard' as const, onSelect: () => openPanel({ kind: 'leaderboard' }) }] : []),
+    { key: 'actions', onSelect: () => openPanel({ kind: 'actions' }) },
+    { key: 'tour', onSelect: () => { ui.openPanel('none'); setTour('board'); } },
+    { key: 'settings', onSelect: app.onSettings },
+    ...(canFullscreen ? [{
+      key: fullscreen ? 'exitFullscreen' as const : 'fullscreen' as const,
+      onSelect: () => { void (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => say(t('board.fullscreen.failed'))); }
+    }] : []),
+    ...(app.onExit ? [{ key: 'exit' as const, onSelect: app.onExit }] : [])
+  ];
+
   const hud: HudProps = {
+    menu: demo ? undefined : <GameMenu items={menuItems} />,
     nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, periods: v.clock.periods, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
     sessionClock: app.showClock === false ? null : <SessionClockText />, alwaysPause: true, onPause: app.onPause,
@@ -568,7 +643,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     ),
     scoreOpen, onScoreOpenChange: setScoreOpen,
     streak: v.streak, streakLabel: streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
-    onEndPeriod: () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
+    onEndPeriod: demo ? undefined : () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
   const strip: MetricsStripProps = {
@@ -595,6 +670,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const shown = oc.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence' && !!member(c.subject));
     const affected = oc.affected.map(person).filter((p): p is OutcomePerson => !!p);
     const reactor = revealed ? person(revealed) : null;
+    // Each person's own reply and changes (D98): the speaker first, then everyone else who reacted.
+    const own = (id: string) => {
+      const sums = new Map<MetricKey, number>();
+      for (const c of shown) if (c.subject === id) sums.set(c.metric, (sums.get(c.metric) ?? 0) + c.delta);
+      return [...sums].filter(([, d]) => d !== 0).map(([metric, delta]) => ({ name: first(member(id)?.name ?? ''), metric, delta }));
+    };
+    const replies: OutcomeReply[] = [
+      ...(oc.reply && member(who.id) ? [{ person: who, text: oc.reply, changes: own(who.id) }] : []),
+      ...affected.filter(a => a.id !== who.id && oc.reactions[a.id]).map(a => ({ person: a, text: oc.reactions[a.id], changes: own(a.id) }))
+    ];
+    const step = Math.max(0, replies.findIndex(r => r.person.id === revealed));
     return (
       <div ref={outcomeRef} className="contents">
         <OutcomePanel
@@ -608,7 +694,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           showNumbers={ui.showNumbers} onToggleNumbers={() => ui.setShowNumbers(!ui.showNumbers)}
           ripple={oc.ripple ?? ''} changed={oc.changed}
           onDismiss={() => { void send({ type: 'clearOutcome' }); }}
-          onOpenHistory={member(oc.from.id) ? () => openProfile(oc.from.id) : undefined}
+          // View history (D95): the team's history, on this person's story when the reply is someone's.
+          onOpenHistory={demo ? undefined : () => openPanel({ kind: 'history', filter: member(oc.from.id) ? { person: oc.from.id } : {} })}
+          replies={replies} step={step} onStep={i => { const r = replies[i]; if (r) setReveal({ outcome: oc.id, id: r.person.id }); }}
         />
       </div>
     );
@@ -639,8 +727,48 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // Then the end screen (or the report opened from it) takes the whole page; the board stays reachable, read only.
   const endScreen = !card && !weekEnd && ended && lastWeekSeen && endView !== 'board';
   const plainBoard = !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
-  // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13).
-  useSessionTicker(!app.paused && !ended && plainBoard);
+  // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13),
+  // nor while a panel or the tour is open, nor in the demo (D89, D92, D94).
+  useSessionTicker(!app.paused && !ended && plainBoard && !panel && !tour && !demo);
+
+  // ---- the guided tours (D94): each starts on its own the first time its screen shows, unless switched off ----
+  const tourArea: TourArea | null = demo || card || endScreen || weekEnd || reacting ? null : v.live ? (v.live.practice ? null : 'live') : styling ? 'style' : plainBoard ? 'board' : null;
+  useEffect(() => {
+    if (!tourArea || tour || panel || app.paused || !v.guide.tour.enabled || guideOff() || guideSeen(`tour:${tourArea}`)) return;
+    // A moment after the screen settles, so its targets are on screen.
+    const id = setTimeout(() => setTour(cur => cur ?? tourArea), 600);
+    return () => clearTimeout(id);
+  }, [tourArea, tour, panel, app.paused, v.guide.tour.enabled]);
+  const endTour = (how: TourEnd) => {
+    if (tour) markGuideSeen(`tour:${tour}`);
+    if (how === 'never') turnGuideOff();
+    setTour(null);
+    focusHint.current = () => h1Ref.current;
+  };
+
+  // ---- notices (D93, D99): milestones as the engine reaches them, and tips at key moments, once each ----
+  const notices: Notice[] = demo || !plainBoard ? [] : [
+    ...newMilestones(v, dismissed),
+    ...(guideOff() ? [] : dueTips(v).filter(n => !dismissed.has(n.key) && (shown.has(n.key) || !guideSeen(n.key))))
+  ];
+  const freshKeys = notices.filter(n => !shown.has(n.key)).map(n => n.key).join('|');
+  useEffect(() => {
+    if (!freshKeys) return;
+    const fresh = freshKeys.split('|');
+    // A tip is remembered as seen once it is on screen, so a reload does not repeat it (D99).
+    for (const k of fresh) if (k.startsWith('tip:')) markGuideSeen(k);
+    // A notice on screen stays until it is dismissed, even after its tip is marked seen (D78 keeps this pattern).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShown(s => new Set([...s, ...fresh]));
+  }, [freshKeys]);
+  const nameOf = (id: string) => names.get(id) ?? null;
+  /** Whether each action can be taken now, in words, for the list of every action (D97). */
+  const availability: Record<string, string> = Object.fromEntries(v.actions.map(a => {
+    if (a.scope === 'team') { const b = tile(a.key, null).block; return [a.key, b ? actionSub(t, amount, { kind: a.kind, block: b }) : t('board.available.now')]; }
+    const open = v.members.filter(m => !a.blockedFor[m.id]).length;
+    const firstBlock = v.members.map(m => a.blockedFor[m.id]).find(Boolean) ?? null;
+    return [a.key, ended || styling ? actionSub(t, amount, { kind: a.kind, block: tile(a.key, null).block }) : open ? t('board.available.people', { n: open }) : blockLine(firstBlock)];
+  }));
   // The Actions panel folds only on a narrow board, and opens while someone is selected or an action is being planned.
   const foldable = narrow && !!app.onActionsCollapsed;
   const peek = !!selected && selected !== foldedFor;
@@ -738,7 +866,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     h?.focus({ preventScroll: true });
   }, [oc, reacting, v.live, styling, flow, card, endScreen, tablet, tabletReady]);
 
-  useEffect(() => { paletteOk.current = plainBoard; }, [plainBoard]);
+  useEffect(() => { paletteOk.current = plainBoard && !demo; }, [plainBoard, demo]);
 
   // ---- what the screen shows ----
   const h1 = v.live
@@ -782,7 +910,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   } else if (styling) {
     // Weekly style setting opens before any action (spec), as its own screen. Before week 1, the
     // practice conversation is offered above it (D16, D84).
-    const partner = ui.practiceOffer && v.practice.available && v.practice.partner ? member(v.practice.partner) : undefined;
+    const partner = !demo && ui.practiceOffer && v.practice.available && v.practice.partner ? member(v.practice.partner) : undefined;
     body = (
       <>
       {partner && (
@@ -813,9 +941,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   } else {
     const top = (
       <>
+        {demo?.banner}
         <Hud {...hud} />
         {call}
         <MetricsStrip {...strip} />
+        <BoardNotices notices={notices} view={v} onDismiss={key => setDismissed(d => new Set([...d, key]))}
+          onLeaderboard={() => openPanel({ kind: 'leaderboard' })} />
         {ended && lastWeekSeen && endView === 'board' && (
           <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
             <span className="flex-1">{t('board.ended.readOnly')}</span>
@@ -858,7 +989,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
             <div className={`relative grid min-h-0 flex-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
               {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
-                <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
+                <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns}
+                  onOverview={demo ? undefined : () => openPanel({ kind: 'overview' })} />
               </TeamScroll>
               {/*
                 * The board's first render is split (D87): the HUD, the KPIs and the team (where the largest
@@ -871,6 +1003,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                 team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
                 member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
                 drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
+                onAbout={demo ? undefined : () => openPanel({ kind: 'actions' })}
                 collapse={foldable ? {
                   collapsed: folded,
                   open: openActions,
@@ -889,6 +1022,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
             returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-expanded]')} />}
           {pal && plainBoard && <CommandPalette open onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />}
+          {panel && <PlayPanels panel={panel} view={v} nameOf={nameOf} availability={availability} onClose={() => setPanel(null)}
+            onTour={() => { setPanel(null); setTour('board'); }}
+            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header [data-tour="menu"] button') ?? h1Ref.current} />}
         </Suspense>
       </>
     );
@@ -900,6 +1036,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       {/* The week end, the end screen and the report bring their own headings. */}
       {!weekEnd && !endScreen && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
       {body}
+      {tour && <Suspense fallback={null}><Tour key={tour} area={tour} view={v} onEnd={endTour} /></Suspense>}
       <div role="status" className="sr-only">{announce}</div>
       <Toast message={toast} />
     </main>

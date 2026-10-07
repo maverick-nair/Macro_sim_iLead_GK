@@ -57,12 +57,12 @@ export function registerApi(ctx: ServerContext) {
   const currentRun = (p: Principal | null) => runs.current(ownerOf(p!));
 
   routes.add({ method: 'get', path: '/api/profile', tag: 'app', auth: participant, summary: 'Who launched the run, for the report header',
-    responses: { 200: { description: 'Profile', schema: z.object({ name: z.string().nullable(), cohort: z.string().nullable() }) } }
+    responses: { 200: { description: 'Profile', schema: z.object({ name: z.string().nullable(), cohort: z.string().nullable(), exit: z.string().nullable().describe('Where Exit in the game menu returns to, from the launch (D89)') }) } }
   }, async (c, { principal }) => {
     const me = await repo.getParticipant(principal!.id);
     const cohortId = principal!.cohort ?? me?.cohortId ?? null;
     const cohort = cohortId ? await repo.getCohort(cohortId) : null;
-    return c.json({ name: principal!.name ?? me?.name ?? null, cohort: cohort?.name ?? cohortId });
+    return c.json({ name: principal!.name ?? me?.name ?? null, cohort: cohort?.name ?? cohortId, exit: principal!.exit });
   });
 
   routes.add({ method: 'get', path: '/api/theme', tag: 'app', auth: [], summary: 'The client theme JSON (theme-config.json), or 404: the iLead theme',

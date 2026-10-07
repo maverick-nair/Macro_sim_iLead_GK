@@ -15,5 +15,8 @@
   "hud.streak": "{n} {unit, select, year {year} month {month} week {week} day {day} other {period}} streak",
   "hud.palette.key": "⌘K",
   "hud.palette.aria": "Search members and actions",
-  "hud.settings.aria": "Settings"
+  "hud.settings.aria": "Settings",
+  "hud.menu.button": "Menu",
+  "hud.menu.aria": "Game menu",
+  "hud.menu.item": "{key, select, objectives {Objectives} tutorial {Tutorial and video} history {History} overview {Results and stages} leaderboard {Leaderboard} actions {About these actions} tour {Guided tour} settings {Settings} fullscreen {Full screen} exitFullscreen {Leave full screen} exit {Exit} other {}}"
 }

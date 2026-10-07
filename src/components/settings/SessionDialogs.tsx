@@ -29,6 +29,29 @@ export function PauseDialog({ onResume, frozen, returnFocus }: PauseDialogProps)
   );
 }
 
+export interface ExitDialogProps extends Common {
+  onStay: () => void;
+  onExit: () => void;
+}
+
+/**
+ * Exit (D89): the run is saved on every step, so leaving loses nothing. Stay, Escape or a click on the scrim
+ * carries on; Exit goes back to the learning platform's address from the launch.
+ */
+export function ExitDialog({ onStay, onExit, frozen, returnFocus }: ExitDialogProps) {
+  const { t } = useI18n();
+  return (
+    <AppDialog onDismiss={onStay} frozen={frozen} returnFocus={returnFocus} described className="flex w-110 flex-col gap-4 p-7">
+      <DialogTitle className="m-0 text-24 font-700">{t('settings.exit.title')}</DialogTitle>
+      <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('settings.exit.body')}</DialogDescription>
+      <div className="flex flex-wrap justify-end gap-2.5">
+        <NoWrapButton variant="secondary" size="md" onClick={onStay}>{t('settings.exit.stay')}</NoWrapButton>
+        <NoWrapButton variant="primary" size="md" onClick={onExit}>{t('settings.exit.leave')}</NoWrapButton>
+      </div>
+    </AppDialog>
+  );
+}
+
 export interface RecapItem {
   img: string;
   /** What happened, from the engine: "1:1 with Beth went well". */

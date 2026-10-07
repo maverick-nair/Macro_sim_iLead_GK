@@ -455,6 +455,14 @@
   --il-palette-width: 560px;
   --il-palette-max-width: calc(100% - 32px);
   --il-palette-results-max-height: 340px;
+  --il-panel-width: min(640px, 100%);
+  --il-panel-wide-width: min(880px, 100%);
+  --il-panel-funnel-columns: minmax(96px, 160px) minmax(0, 1fr) auto;
+  --il-panel-trend-height: 72px;
+  --il-panel-tour-width: min(340px, calc(100vw - 32px));
+  --il-panel-tour-dim: 0 0 0 9999px var(--il-color-surface-scrim);
+  --il-panel-tour-ring: 0 0 0 3px var(--il-color-accent-secondary);
+  --il-panel-notice-width: min(420px, calc(100vw - 32px));
   --il-profile-panel-columns: minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr);
   --il-profile-panel-shadow: 0 24px 64px var(--il-color-elevation-panel);
   --il-profile-panel-enter: ilIn var(--il-duration-base) ease;

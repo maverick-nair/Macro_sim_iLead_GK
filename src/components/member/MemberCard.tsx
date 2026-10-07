@@ -99,6 +99,8 @@ export interface MemberCardProps {
   styleDisabledReason?: string;
   /** A letter was picked while the style is disabled (to say why, for example in a toast). */
   onStyleDisabledPick?: () => void;
+  /** The member's id, on the card as `data-member-id` for the guided tour and the demo (D92, D94). */
+  memberId?: string;
 }
 
 /**
@@ -106,7 +108,7 @@ export interface MemberCardProps {
  * three metric bars and the style control. The whole card is one button that selects the member.
  */
 export function MemberCard(props: MemberCardProps) {
-  const { name, title, img, mood, away = false, skill, morale, result, trust, style, statsHidden = false, tags = [], unread = false, promise, selected = false, unavailableReason, onSelect, onOpenProfile, onStyleChange, styleTooltip, onStyleTooltipChange, styleDisabled = false, styleDisabledReason, onStyleDisabledPick } = props;
+  const { name, title, img, mood, away = false, skill, morale, result, trust, style, statsHidden = false, tags = [], unread = false, promise, selected = false, unavailableReason, onSelect, onOpenProfile, onStyleChange, styleTooltip, onStyleTooltipChange, styleDisabled = false, styleDisabledReason, onStyleDisabledPick, memberId } = props;
   const { t } = useI18n();
   const [ownTip, setOwnTip] = useState<StyleKey | null>(null);
   const tip = styleTooltip === undefined ? ownTip : styleTooltip;
@@ -129,6 +131,8 @@ export function MemberCard(props: MemberCardProps) {
     <div
       onClick={onSelect}
       title={unavailable ? unavailableReason : undefined}
+      data-tour="member"
+      data-member-id={memberId}
       className={`relative flex flex-col rounded-18 border-2 bg-surface-card backdrop-blur-12 outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-2 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
     >
       <button type="button" aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} onClick={e => { e.stopPropagation(); onSelect(); }} className="il-select sr-only" />

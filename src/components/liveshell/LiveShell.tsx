@@ -158,15 +158,17 @@ export function LiveShell(p: LiveShellProps) {
         </button>
         <span className="text-12 text-fg-secondary tablet-portrait:hidden">{t('liveshell.clock.paused')}</span>
         {p.hint && (
-          <button type="button" onClick={p.hint.onRequest} disabled={!p.hint.available}
+          <button type="button" onClick={p.hint.onRequest} disabled={!p.hint.available} data-tour="live-hint"
             className={`h-8.5 cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 tablet-portrait:h-11 tablet-portrait:rounded-12 tablet-portrait:px-4 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
             {t('liveshell.hint.button', { used: p.hint.text !== null })}
           </button>
         )}
         <ModeSwitch mode={p.mode} onChange={p.onModeChange} />
-        <NoWrapButton variant={p.endKind === 'finish' ? 'primary' : 'secondary'} size="md" onClick={p.onEnd}>
-          {t('liveshell.end', { kind: p.endKind })}
-        </NoWrapButton>
+        <span data-tour="live-end" className="inline-flex flex-none">
+          <NoWrapButton variant={p.endKind === 'finish' ? 'primary' : 'secondary'} size="md" onClick={p.onEnd}>
+            {t('liveshell.end', { kind: p.endKind })}
+          </NoWrapButton>
+        </span>
       </header>
 
       {p.offline && (
@@ -176,10 +178,10 @@ export function LiveShell(p: LiveShellProps) {
       )}
 
       <div className={tablet ? 'flex min-h-0 flex-1 flex-col gap-4 px-6 pt-5 pb-7' : `grid min-h-0 flex-1 ${p.briefOpen ? 'grid-cols-(--il-liveshell-body-columns-brief)' : 'grid-cols-(--il-liveshell-body-columns-collapsed)'} gap-5 px-6 pt-5 pb-6`}>
-        {!(tablet && p.briefInStage) && <LiveBriefCard format={p.format} brief={p.brief} pronoun={p.pronoun} tip={p.hint?.text ?? null} open={p.briefOpen} onToggle={p.onBriefToggle} layout={p.layout} />}
+        {!(tablet && p.briefInStage) && <div data-tour="live-brief" className="flex min-h-0 flex-col"><LiveBriefCard format={p.format} brief={p.brief} pronoun={p.pronoun} tip={p.hint?.text ?? null} open={p.briefOpen} onToggle={p.onBriefToggle} layout={p.layout} /></div>}
         <section aria-label={t('liveshell.stage.aria')} className={`@container flex min-h-0 min-w-0 flex-col gap-3.5 ${tablet ? 'flex-1' : ''}`}>
           {p.children}
-          {p.input && <LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} layout={p.layout} />}
+          {p.input && <div data-tour="live-input" className="flex flex-none flex-col"><LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} layout={p.layout} /></div>}
         </section>
       </div>
     </div>

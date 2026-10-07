@@ -1,0 +1,36 @@
+{
+  "panel": {
+    "width": {
+      "value": "min(640px, 100%)",
+      "$description": "In play panels (Objectives, Tutorial and video, History, the leaderboard, every action), a sheet at the side of the board (D89)"
+    },
+    "wide-width": {
+      "value": "min(880px, 100%)",
+      "$description": "The result and stage overviews, which hold week by week tables (D96)"
+    },
+    "funnel-columns": {
+      "value": "minmax(96px, 160px) minmax(0, 1fr) auto",
+      "$description": "The stage overview's bars: stage name, bar, output of ideal (D96)"
+    },
+    "trend-height": {
+      "value": "72px",
+      "$description": "The result trend line in a profile (D96)"
+    },
+    "tour-width": {
+      "value": "min(340px, calc(100vw - 32px))",
+      "$description": "A guided tour tip (D94)"
+    },
+    "tour-dim": {
+      "value": "0 0 0 9999px var(--il-color-surface-scrim)",
+      "$description": "Dims everything around the element a tour tip points at (D94)"
+    },
+    "tour-ring": {
+      "value": "0 0 0 3px var(--il-color-accent-secondary)",
+      "$description": "The ring around the element a tour tip points at (D94)"
+    },
+    "notice-width": {
+      "value": "min(420px, calc(100vw - 32px))",
+      "$description": "A milestone or tip notice over the board (D93, D99)"
+    }
+  }
+}

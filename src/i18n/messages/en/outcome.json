@@ -12,5 +12,9 @@
   "outcome.history": "Open in History",
   "outcome.back": "Back to my team",
   "outcome.toast.replay": "Playing {name}’s reply with captions.",
-  "outcome.toast.history": "History opens filtered to {name}."
+  "outcome.toast.history": "History opens filtered to {name}.",
+  "outcome.replies.count": "Reply {n} of {total}",
+  "outcome.replies.aria": "Reply {n} of {total}, from {name}",
+  "outcome.replies.prev": "Previous reply",
+  "outcome.replies.next": "Next reply"
 }

@@ -44,7 +44,7 @@ export function createHttpApi(baseUrl: string, opts: { getToken?: () => string |
       if (!res.ok) throw new ApiError(`GET /report.pdf failed with ${res.status}`, res.status);
       return await res.blob();
     },
-    getProfile: () => request<{ name: string | null; cohort: string | null }>('GET', '/profile'),
+    getProfile: () => request<{ name: string | null; cohort: string | null; exit?: string | null }>('GET', '/profile'),
     getLeaderboard: input => request<Leaderboard>('POST', '/cohort/leaderboard', input),
     getTheme: async () => {
       try {

@@ -119,7 +119,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
     </div>
   );
   const targetTile = (
-    <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} className={`${tile} tablet-portrait:col-span-2`}>
+    <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} data-tour="target" className={`${tile} tablet-portrait:col-span-2`}>
       <span className="text-12 text-fg-secondary">{target.label ?? t('metrics.target.label')}</span>
       <div className="flex items-baseline gap-1.5 text-large:flex-wrap"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
       <div className="relative h-1.5 rounded-3 bg-track">
@@ -159,7 +159,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   );
 
   return (
-    <section aria-label={t('metrics.strip.aria')} className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
+    <section aria-label={t('metrics.strip.aria')} data-tour="kpis" className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
       {pulseTile}
       {targetTile}

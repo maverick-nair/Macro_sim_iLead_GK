@@ -39,7 +39,8 @@ function launch() {
   // `name` stands in for the launch's display name with the mock API (the server reads it from the launch).
   const name = q.get('name');
   // `?history=1`: the mock serves one earlier attempt, for the report's progress section (D75).
-  const api = createDefaultApi(participant, name, { client: q.get('client'), themeUrl: q.get('themeUrl'), history: q.get('history') === '1' });
+  // `exit`: where the game menu's Exit returns to, with the mock API (the server reads it from the launch, D89).
+  const api = createDefaultApi(participant, name, { client: q.get('client'), themeUrl: q.get('themeUrl'), history: q.get('history') === '1', exit: q.get('exit') });
   // Intents wait while offline and go out in order on reconnect (D86). The queue is kept on this device
   // only for a server run: the mock engine lives in the page, so a reload starts it afresh.
   const remote = !!import.meta.env.VITE_ILEAD_ENGINE_URL;
@@ -69,7 +70,7 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
     <ApiContext.Provider value={api}>
       <EngineProvider client={engine}>
         <SmallScreenGate theme={theme} clientTheme={applied}>
-          {covered => <App screen={q.get('start') === 'board' ? 'board' : undefined} engine={q.get('engine') !== 'off'} theme={theme} clientTheme={applied} held={covered} minHeight="100vh" />}
+          {covered => <App screen={q.get('start') === 'board' ? 'board' : q.get('start') === 'demo' ? 'demo' : undefined} engine={q.get('engine') !== 'off'} theme={theme} clientTheme={applied} held={covered} minHeight="100vh" />}
         </SmallScreenGate>
       </EngineProvider>
     </ApiContext.Provider>

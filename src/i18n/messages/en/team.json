@@ -10,5 +10,8 @@
   "team.legend.support": "More support",
   "team.legend.freedom": "More freedom",
   "team.stage.ideal": "Ideal {ideal}",
-  "team.stage.bottleneck": "Bottleneck this {unit, select, year {year} month {month} week {week} day {day} other {period}}"
+  "team.stage.bottleneck": "Bottleneck this {unit, select, year {year} month {month} week {week} day {day} other {period}}",
+  "team.stage.info": "About {stage}",
+  "team.stage.suits": "Suits:",
+  "team.overview": "Results and stages"
 }

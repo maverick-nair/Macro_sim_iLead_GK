@@ -2,7 +2,7 @@
   "profile.aria": "Profile for {name}",
   "profile.close": "Close profile",
   "profile.shared": "Shared:",
-  "profile.fact.label": "{key, select, style {Style this {unit, select, year {year} month {month} week {week} day {day} other {period}}} previous {Previous company} tenure {Tenure} experience {Experience} skills {Skills} remarks {Remarks} careerGoal {Career goal} relationships {Relationships} other {}}",
+  "profile.fact.label": "{key, select, style {Style this {unit, select, year {year} month {month} week {week} day {day} other {period}}} previous {Previous company} tenure {Tenure} experience {Experience} skills {Skills} remarks {Remarks} careerGoal {Career goal} relationships {Relationships} attitude {Attitude} awareness {Awareness} responsibilities {Responsibilities} other {}}",
   "profile.fact.empty": "{key, select, style {Not chosen yet} careerGoal {Not shared yet. It may come up in conversation.} relationships {None noted yet} other {Not known yet}}",
   "profile.interactions.title": "Your interactions",
   "profile.interactions.empty": "Nothing yet. Your actions, events and conversations with {name} will show here.",
@@ -12,5 +12,13 @@
   "profile.timeline.reaction": "Reaction: {reaction}",
   "profile.timeline.reactionChanges": "Reaction: {reaction}. {changes}",
   "profile.promise.label": "{status, select, open {Open promise:} kept {Promise kept:} broken {Promise broken:} other {}}",
-  "profile.actions.title": "Take an action"
+  "profile.actions.title": "Take an action",
+  "profile.trend.title": "Result trend",
+  "profile.trend.aria": "Result from {from} to {to}, {n, plural, one {# point} other {# points}}",
+  "profile.trend.none": "No result yet",
+  "profile.trend.table": "{on, select, true {Show as chart} other {Show as table}}",
+  "profile.trend.absent": "Not on the team",
+  "profile.trend.start": "Start",
+  "profile.trend.now": "Now",
+  "profile.trend.end": "End of {period}"
 }

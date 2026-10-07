@@ -37,6 +37,11 @@ export const LaunchClaims = z.object({
   attempt: z.enum(['resume', 'new']).default('resume'),
   /** Where to land after the launch: a path on this site only. */
   redirect: z.string().max(500).regex(/^\/(?!\/)[^\s\\]*$/, 'a path on this site').optional(),
+  /**
+   * Where Exit in the game menu returns to (D89): the learning platform's page, an absolute http or https
+   * address. Signed with the rest of the link, so it is the platform's own choice, never the participant's.
+   */
+  exit: z.string().max(1000).url().regex(/^https?:\/\//, 'an http or https address').optional(),
   exp: z.number(),
   iat: z.number().optional(),
   nbf: z.number().optional(),
@@ -59,6 +64,8 @@ export interface Principal {
   purpose: 'development' | 'assessment' | null;
   theme: string | null;
   locale: string | null;
+  /** Where Exit returns to, from the launch (D89). */
+  exit: string | null;
   roles: Role[];
   via: 'cookie' | 'bearer' | 'admin';
   sessionId: string | null;
@@ -67,12 +74,12 @@ export interface Principal {
 export function principalOf(c: LaunchClaims, via: Principal['via'], sessionId: string | null): Principal {
   return {
     id: c.sub, name: c.name ?? null, email: c.email ?? null, cohort: c.cohort ?? null, cohorts: c.cohorts ?? [], storyline: c.storyline ?? null,
-    purpose: c.purpose ?? null, theme: c.theme ?? null, locale: c.locale ?? null, roles: c.roles, via, sessionId
+    purpose: c.purpose ?? null, theme: c.theme ?? null, locale: c.locale ?? null, exit: c.exit ?? null, roles: c.roles, via, sessionId
   };
 }
 
 /** The operator, from `Authorization: Bearer <ADMIN_TOKEN>`: every role, every cohort. */
-export const ADMIN: Principal = { id: 'admin', name: 'Administrator', email: null, cohort: null, cohorts: ['*'], storyline: null, purpose: null, theme: null, locale: null, roles: [...ROLES], via: 'admin', sessionId: null };
+export const ADMIN: Principal = { id: 'admin', name: 'Administrator', email: null, cohort: null, cohorts: ['*'], storyline: null, purpose: null, theme: null, locale: null, exit: null, roles: [...ROLES], via: 'admin', sessionId: null };
 
 export const hasRole = (p: Principal | null, ...roles: Role[]) => !!p && roles.some(r => p.roles.includes(r));
 

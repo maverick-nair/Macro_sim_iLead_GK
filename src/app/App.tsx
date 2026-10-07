@@ -7,7 +7,7 @@ import { RESUME_FIXTURE } from '../data/fixtures';
 import { EngineBoard } from '../components/board/EngineBoard';
 import { ReactingScreen } from '../components/liveshell/ReactingScreen';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
-import { PauseDialog, ResumeDialog, SessionExpiredDialog } from '../components/settings/SessionDialogs';
+import { ExitDialog, PauseDialog, ResumeDialog, SessionExpiredDialog } from '../components/settings/SessionDialogs';
 import { LoadingScreen } from '../components/shell/LoadingScreen';
 import { ConnectionBanner, type ConnectionSource } from '../components/shell/ConnectionBanner';
 import { Onboarding } from '../screens/Onboarding';
@@ -17,6 +17,7 @@ import { EngineOnboarding } from './EngineOnboarding';
 import { useEngineView, useOptionalEngineClient } from '../engine/react';
 import { runInProgress, showsRecap } from './resume';
 import { useSessionClock } from './sessionClock';
+import { useUi } from './uiStore';
 /** The welcome back recap on the engine loads only when a run is resumed. */
 const EngineResume = lazy(() => import('./EngineResume'));
 /** Screens past onboarding load on demand, so the board's first load stays inside its budget. */
@@ -26,6 +27,8 @@ const Live = lazy(() => import('../screens/Live').then(m => ({ default: m.Live }
 const Report = lazy(() => import('../screens/Report').then(m => ({ default: m.Report })));
 const StyleSetting = lazy(() => import('../screens/StyleSetting').then(m => ({ default: m.StyleSetting })));
 const WeekEnd = lazy(() => import('../screens/WeekEnd').then(m => ({ default: m.WeekEnd })));
+/** The demo round after onboarding (D92), on its own engine; it loads only when offered. */
+const DemoFlow = lazy(() => import('../components/demo/DemoFlow'));
 
 import type { AppActions, AppModel, Overlay, PlannedAction, Screen, Settings } from './types';
 
@@ -149,6 +152,14 @@ export function App(p: AppProps) {
   const { t } = useI18n();
   const frozen = !!p.frozen;
   const engine = !!p.engine;
+  /** Where Exit returns to, when the launch gave one (D89): the game menu offers Exit only then. */
+  const [exitUrl, setExitUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!engine || frozen) return;
+    let live = true;
+    api.getProfile().then(pr => { if (live && pr.exit && /^https?:\/\//.test(pr.exit)) setExitUrl(pr.exit); }, () => undefined);
+    return () => { live = false; };
+  }, [api, engine, frozen]);
   const set = useCallback((u: Partial<State> | ((st: State) => Partial<State> | null)) => {
     setS(st => {
       const patch = typeof u === 'function' ? u(st) : u;
@@ -306,11 +317,18 @@ export function App(p: AppProps) {
               {scr === 'onboarding' && p.uiState !== 'loading' && (engine
                 ? <div>{p.screen ? <EngineOnboarding act={act} minHeight={minH} /> : <EngineStart act={act} minHeight={minH} onResume={resume} />}</div>
                 : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
+              {engine && scr === 'demo' && (
+                <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
+                  <DemoFlow minHeight={minH} paused={!!s.overlay || held} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
+                    onDone={() => { useUi.getState().setPracticeOffer(true); act.go('style'); }} />
+                </div>
+              )}
               {engine && (scr === 'style' || scr === 'board') && (
                 <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
                   <EngineBoard voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
                     paused={!!s.overlay || held} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
-                    actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })} />
+                    actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })}
+                    onExit={exitUrl ? () => act.overlay('exit') : undefined} />
                 </div>
               )}
               {!engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
@@ -332,6 +350,7 @@ export function App(p: AppProps) {
           <SettingsDialog values={s.settings} onChange={act.settings} onClose={closeOverlay} voiceConsent={engine} frozen={frozen} returnFocus={returnFocus} />
         )}
         {s.overlay === 'paused' && <PauseDialog onResume={closeOverlay} frozen={frozen} returnFocus={returnFocus} />}
+        {s.overlay === 'exit' && exitUrl && <ExitDialog onStay={closeOverlay} onExit={() => location.assign(exitUrl)} frozen={frozen} returnFocus={returnFocus} />}
         {/* On the engine the recap is built from the engine view; the gallery frame (x3) keeps the design fixture. */}
         {s.overlay === 'resume' && engine && (
           <EngineResumeHost onBack={closeOverlay} />

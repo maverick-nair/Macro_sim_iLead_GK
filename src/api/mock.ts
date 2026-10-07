@@ -50,7 +50,7 @@ async function mockTheme({ client, themeUrl }: MockThemeOptions): Promise<unknow
   return null;
 }
 
-export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; participant?: string; name?: string | null } & MockThemeOptions = {}): IleadApi {
+export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; participant?: string; name?: string | null; exit?: string | null } & MockThemeOptions = {}): IleadApi {
   const participant = opts.participant ?? 'local';
   const scenario = opts.scenario ?? DEFAULT_SCENARIO;
   const latency = opts.latencyMs ?? 250;
@@ -72,7 +72,8 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
     emailReport: () => wait(undefined),
     // No PDF service in the mock: the app opens the print view and the browser saves the PDF.
     reportPdf: () => wait(null, 0),
-    getProfile: () => wait({ name: opts.name ?? null, cohort: null }, 0),
+    // `?exit=` stands in for the launch's return address (D89): http and https only.
+    getProfile: () => wait({ name: opts.name ?? null, cohort: null, exit: opts.exit && /^https?:\/\//.test(opts.exit) ? opts.exit : null }, 0),
     getLeaderboard: ({ size, anonymous, you }) => {
       const all = [...sampleCohort(participant).map(p => ({ ...p, you: false })), { ...you, name: opts.name ?? null, you: true }]
         .sort((a, b) => b.score - a.score || b.conversions - a.conversions || b.capability - a.capability)

@@ -36,6 +36,8 @@ export interface HudScore {
 }
 
 export interface HudProps {
+  /** The game menu (D89): Objectives, Tutorial and video, History and the rest. Left out on the design frames. */
+  menu?: ReactNode;
   nav: HudNavItem[];
   onNav: (key: string) => void;
   clock: HudClock;
@@ -68,7 +70,8 @@ export interface HudProps {
   streakLabel?: string;
   onPalette: () => void;
   onSettings: () => void;
-  onEndPeriod: () => void;
+  /** Left out where the period cannot be ended from the HUD (the demo, D92). */
+  onEndPeriod?: () => void;
   /** Secondary while an action drawer is open, so the drawer's own button leads. */
   endEmphasis: 'primary' | 'secondary';
 }
@@ -167,6 +170,7 @@ export function Hud(p: HudProps) {
         <ClientLogo />
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
       </div>
+      {p.menu && <div className="flex-none tablet-portrait:-order-3">{p.menu}</div>}
       {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden tablet-portrait:hidden">
         {p.nav.map(n => (n.label ? (
           <button key={n.key} type="button" onClick={() => p.onNav(n.key)}
@@ -180,18 +184,18 @@ export function Hud(p: HudProps) {
       </nav>}
       <div className="min-w-0 flex-1 tablet-portrait:-order-1" />
       {/* D12, D84: the design's "Week 2 · Day 3" on screen; the spec's "Week 2 of 8" for screen readers, until the canvas (D80) settles the label. */}
-      <span className="flex-none text-13 text-fg-secondary tablet-portrait:-order-2 tablet-portrait:text-14">
+      <span data-tour="clock" className="flex-none text-13 text-fg-secondary tablet-portrait:-order-2 tablet-portrait:text-14">
         <span aria-hidden={clock.periods ? true : undefined}>{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
         {clock.periods ? <span className="sr-only">{t('hud.clock.aria', { period: t('time.periodOf', { unit: clock.periodUnit, n: clock.period, total: clock.periods }), subPeriod: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }) })}</span> : null}
       </span>
-      <div role="group" aria-label={capAria} className="flex items-center gap-2 tablet-portrait:-order-2">
+      <div role="group" aria-label={capAria} data-tour="days" className="flex items-center gap-2 tablet-portrait:-order-2">
         <div className={`flex gap-0.25 tablet-portrait:hidden ${pulse ? 'animate-(--il-hud-capacity-pulse)' : ''}`}>
           {slots.map((v, i) => <Bolt key={i} left={v} />)}
         </div>
         <span className="text-13 text-fg-secondary">{around(t('time.left', { amount: MARK }), v => <b className="text-fg-primary">{v}</b>, amount)}</span>
       </div>
       {(p.sessionClock !== null || p.alwaysPause) && (
-        <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined}
+        <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined} data-tour="session"
           className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:px-3.5 ${focus}`}>
           <Pause />{p.sessionClock ?? t('hud.pause.label')}
         </button>
@@ -236,9 +240,13 @@ export function Hud(p: HudProps) {
         <Sliders />
       </button>
       {/* The number is its own flex item, 8px from the words, as the design renders it. */}
-      <NoWrapButton variant={p.endEmphasis} size="md" onClick={p.onEndPeriod}>
-        {around(t('time.endPeriodNumber', { unit: clock.periodUnit, n: MARK }), v => <span>{v}</span>, number(clock.period))}
-      </NoWrapButton>
+      {p.onEndPeriod && (
+        <span data-tour="end" className="inline-flex flex-none">
+          <NoWrapButton variant={p.endEmphasis} size="md" onClick={p.onEndPeriod}>
+            {around(t('time.endPeriodNumber', { unit: clock.periodUnit, n: MARK }), v => <span>{v}</span>, number(clock.period))}
+          </NoWrapButton>
+        </span>
+      )}
     </header>
   );
 }

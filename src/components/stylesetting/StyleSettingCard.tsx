@@ -61,7 +61,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
   const close = (refocus: boolean) => { reopen.current = refocus; setEditing(false); };
 
   return (
-    <div role="group" aria-label={t('stylesetting.member.aria', { name: m.name, title: m.title, mood: t('member.mood', { mood: m.mood }) })}
+    <div role="group" aria-label={t('stylesetting.member.aria', { name: m.name, title: m.title, mood: t('member.mood', { mood: m.mood }) })} data-member-id={m.id}
       className={`flex flex-col rounded-20 border-2 bg-surface-card backdrop-blur-12 ${styleChanged(m) ? 'border-accent-secondary' : 'border-line-default'}`}>
       <div className={`relative h-30 overflow-hidden rounded-t-18 ${portraitBackdrop(m.away)}`}>
         <img src={m.img} alt="" className={`size-full object-cover object-(--il-stylesetting-portrait-position) mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
@@ -74,7 +74,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
       <div className="flex flex-col gap-2.5 px-3 pt-2.5 pb-3">
         <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>
         <LastPeriodTag periodUnit={periodUnit} style={m.lastStyle} reaction={m.lastReaction} />
-        <StyleControl size="md" value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} />
+        <div data-tour="style-control"><StyleControl size="md" value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} /></div>
         <span className="min-h-8.5 text-12 text-pretty text-fg-secondary">
           {note.lead !== null && <><b className="text-fg-primary">{note.lead}</b> </>}{note.text}
         </span>
@@ -91,7 +91,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
             className="h-8.5 rounded-10 text-13 border border-solid border-line-control bg-surface-raised px-2.5 py-0 text-fg-primary"
           />
         ) : (
-          <button ref={opener} type="button" onClick={() => setEditing(true)}
+          <button ref={opener} type="button" onClick={() => setEditing(true)} data-tour="style-reason"
             aria-label={m.rationale ? t('stylesetting.rationale.editAria', { name: m.name, text: m.rationale }) : t('stylesetting.rationale.addAria', { name: m.name })}
             className={`cursor-pointer text-12 self-start border-0 bg-transparent p-0 font-700 text-accent-secondary ${focus}`}>
             {m.rationale ? t('stylesetting.rationale.note', { text: m.rationale.slice(0, NOTE_PREVIEW) }) : t('stylesetting.rationale.add')}

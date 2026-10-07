@@ -54,5 +54,16 @@
   "board.practice.start": "Practice with {name}",
   "board.practice.skip": "Skip practice",
   "board.practice.done": "Practice done. A tip for the real thing: {tip}",
-  "board.practice.skipped": "Practice skipped. Set your styles for week 1."
+  "board.practice.skipped": "Practice skipped. Set your styles for week 1.",
+  "board.milestone.title": "Milestone reached.",
+  "board.milestone.body": "{kind, select, target {Your team has earned {pct}% of the revenue target.} other {{stage} has passed on {pct}% of its ideal output for the run.}}",
+  "board.tip.title": "Tip.",
+  "board.tip.body": "{tip, select, hireUnlocked {Hire member is now open. When a stage has a free seat, interview two candidates and choose one.} noDays {No {sub, select, quarter {quarters} month {months} week {weeks} day {days} hour {hours} other {steps}} left. End the {unit, select, year {year} month {month} week {week} day {day} other {period}} to see your report and the news.} other {A seat is open in {stage}. {hire, select, open {Hire member to fill it.} other {Hire member opens in {period}.}}}}",
+  "board.notice.leaderboard": "Leaderboard",
+  "board.notice.keepGoing": "Keep going",
+  "board.notice.hideTip": "Hide tip",
+  "board.demo.live": "Not in the demo: practice conversations before week 1",
+  "board.fullscreen.failed": "Full screen is not available in this window.",
+  "board.available.now": "Available now",
+  "board.available.people": "{n, plural, one {Open for # person} other {Open for # people}}"
 }

@@ -6,9 +6,10 @@ import { ActionTile, type ActionTileProps } from '../action/ActionTile';
 import { SubPeriodUnitContext, type PeriodUnit, type SubPeriodUnit } from '../action/days';
 import { LOW_BELOW } from '../metric/MetricBar';
 import { useStyleName } from '../style/lens';
+import { TrendChart, type TrendPoint } from './TrendChart';
 
 /** Fact rows under the stats, in the order given. The style row always comes first, from `style`. */
-export type ProfileFactKey = 'previous' | 'tenure' | 'experience' | 'skills' | 'remarks' | 'careerGoal' | 'relationships';
+export type ProfileFactKey = 'previous' | 'tenure' | 'experience' | 'skills' | 'remarks' | 'careerGoal' | 'relationships' | 'attitude' | 'awareness' | 'responsibilities';
 
 export interface ProfileFact {
   key: ProfileFactKey;
@@ -75,6 +76,8 @@ export interface ProfilePanelProps {
   promises: ProfilePromise[];
   /** Every individual action for this person, as the Actions panel would show them. */
   actions: Array<Omit<ActionTileProps, 'layout'>>;
+  /** Their result at every period start and now (D96). Left out on the design frames. */
+  trend?: TrendPoint[];
   onClose: () => void;
 }
 
@@ -171,6 +174,7 @@ export function ProfileSummary(props: ProfilePanelProps & { compact?: boolean })
           </div>
         ))}
       </div>
+      {props.trend && props.trend.length > 0 && <TrendChart title={t('profile.trend.title')} points={props.trend} />}
       {shared && <div className="rounded-12 bg-accent-soft px-3 py-2.5 text-13"><b>{t('profile.shared')}</b> {shared}</div>}
       {factRow(t('profile.fact.label', { key: 'style', unit: periodUnit }), style ? styleName(style) : t('profile.fact.empty', { key: 'style' }))}
       {facts.map(f => factRow(t('profile.fact.label', { key: f.key, unit: periodUnit }), f.value ?? t('profile.fact.empty', { key: f.key })))}

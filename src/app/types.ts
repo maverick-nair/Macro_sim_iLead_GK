@@ -1,8 +1,8 @@
 import type { LiveVariant, Member, MetricKey, StyleKey } from '../data/types';
 
 /** Top level screens of the participant app. */
-export type Screen = 'onboarding' | 'style' | 'board' | 'live' | 'reacting' | 'weekend' | 'end' | 'report';
-export type Overlay = 'settings' | 'paused' | 'resume' | 'expired';
+export type Screen = 'onboarding' | 'demo' | 'style' | 'board' | 'live' | 'reacting' | 'weekend' | 'end' | 'report';
+export type Overlay = 'settings' | 'paused' | 'resume' | 'expired' | 'exit';
 export type InputMode = 'text' | 'ptt' | 'open';
 
 export interface Settings {
