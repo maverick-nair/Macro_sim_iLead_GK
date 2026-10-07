@@ -14,7 +14,10 @@ describe('the app API', () => {
   it('serves the profile, scenario, settings and theme', async () => {
     s = await testServer();
     const cookie = await s.launch({ sub: 'p-1', name: 'Jordan Lee', cohort: 'c-1', theme: 'halden' });
-    expect(await s.json('/api/profile', { cookie })).toEqual({ name: 'Jordan Lee', cohort: 'c-1' });
+    expect(await s.json('/api/profile', { cookie })).toEqual({ name: 'Jordan Lee', cohort: 'c-1', exit: null });
+    // A launch with a return address: Exit in the app's menu goes back to it (D89).
+    const back = await s.launch({ sub: 'p-exit', name: 'Sam Roy', cohort: 'c-1', exit: 'https://lms.example.com/course/7' });
+    expect(await s.json('/api/profile', { cookie: back })).toMatchObject({ exit: 'https://lms.example.com/course/7' });
     expect(await s.json<{ members: unknown[] }>('/api/scenario', { cookie })).toHaveProperty('members');
     expect((await s.req('/api/session', { cookie })).status).toBe(404);
     const settings = { text: 125, captions: true, reduced: false, input: 'text', clock: true, voiceConsent: false };
@@ -32,7 +35,7 @@ describe('the app API', () => {
     await s.json('/api/admin/cohorts/c-2', { method: 'PUT', cookie: admin, json: { name: 'Cohort two', themeId: 'halden' } });
     const other = await s.launch({ sub: 'p-2', cohort: 'c-2' });
     expect(await s.json('/api/theme', { cookie: other })).toEqual(stored);
-    expect(await s.json('/api/profile', { cookie: other })).toEqual({ name: null, cohort: 'Cohort two' });
+    expect(await s.json('/api/profile', { cookie: other })).toEqual({ name: null, cohort: 'Cohort two', exit: null });
     // The prototype board's writes are not served.
     expect((await s.req('/api/weeks/1/end', { method: 'POST', cookie })).status).toBe(501);
   });

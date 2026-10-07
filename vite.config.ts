@@ -49,7 +49,11 @@ export default defineConfig(({ mode }) => ({
     // Browsers with native light-dark(). A lower target makes the CSS minifier rewrite light-dark()
     // into variables that only resolve when color-scheme is set in a stylesheet, and the app sets it
     // at runtime, so every semantic color would break in production.
-    cssTarget: ['chrome123', 'edge123', 'firefox120', 'safari17.5']
+    cssTarget: ['chrome123', 'edge123', 'firefox120', 'safari17.5'],
+    // Everything the first load imports statically goes in one chunk. Without this, modules the first
+    // load shares with the lazy panels, tour and demo (D89 to D94) were split into many small chunks:
+    // more requests and less compression on the first load (D101's budget note).
+    rolldownOptions: { output: { codeSplitting: { groups: [{ name: 'app', tags: ['$initial'] }] } } }
   },
   server: {
     port: 5173, host: true,

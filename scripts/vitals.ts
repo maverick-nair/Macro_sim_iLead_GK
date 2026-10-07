@@ -220,6 +220,8 @@ async function measure(base: string, name: string, run: number): Promise<Vitals>
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await context.newPage();
   await page.addInitScript({ content: OBSERVE });
+  // Measured as a returning participant: no guided tour or tips over the board (D94), as in the E2E flows.
+  await page.addInitScript({ content: `try { localStorage.setItem('ilead.guide', '{"never":true}'); } catch {}` });
   if (VERBOSE) page.on('console', m => console.log(`    page: ${m.text()}`));
   const net = await throttle(page);
   try {
