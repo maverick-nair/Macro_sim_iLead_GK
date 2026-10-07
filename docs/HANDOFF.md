@@ -165,16 +165,16 @@ docker compose up --build   # the production image
 
 `npm run vitals` measures a production build served by `vite preview` (gzipped, as a CDN would), in Chromium with the CPU 4x slower and a Fast 3G like network (150 ms latency per request, 1.44 Mbps down and 675 Kbps up: Lighthouse's 1.6 Mbps and 750 Kbps at the 90% DevTools applies), 3 runs per page, the median against the budget. The build talks to a stub of the server over the HTTP adapters, running the same engine code in Node, so the numbers are the app's, not the mock engine's.
 
-Measured on 6 Oct 2026 (medians of 3; D78 has the numbers before the M8 fixes):
+Measured on 7 Oct 2026 (medians of 3; D78 and D87 have the numbers before):
 
 | Page | LCP | CLS | TBT | INP | Transfer |
 |---|---|---|---|---|---|
-| First load (onboarding) | 2416 ms / 2500 | 0.002 / 0.1 | 219 ms / 300 | | 353 KB / 450 |
-| Board | 2856 ms / 3000 | 0 / 0.1 | 504 ms / 600 | 144 ms / 200 | 384 KB / 450 |
-| Report, opened from the end screen (click to title painted) | 1181 ms / 2500 | 0 / 0.1 | 217 ms / 300 | | 46 KB / 100 |
-| Group report | 2684 ms / 3000 | 0.007 / 0.1 | 523 ms / 600 | | 386 KB / 450 |
+| First load (onboarding) | 2364 ms / 2500 | 0.002 / 0.1 | 185 ms / 300 | | 364 KB / 450 |
+| Board | 2804 ms / 3000 | 0 / 0.1 | 309 ms / 400 | 144 ms / 200 | 396 KB / 450 |
+| Report, opened from the end screen (click to title painted) | 1133 ms / 2500 | 0 / 0.1 | 188 ms / 300 | | 46 KB / 100 |
+| Group report | 2728 ms / 3000 | 0.007 / 0.1 | 252 ms / 300 | | 398 KB / 450 |
 
-The board and group report budgets sit above the usual 2.5 s and 200 ms: compiling the first load's scripts is a 200 to 250 ms task at this CPU, the board's largest paint is a portrait that needs the view first, and both pages render in one long task.
+The board and group report keep LCP 3 s: at this network the first load's bytes take about 2 s, and the board's largest paint is a portrait after them. Their first renders are split (D87), so TBT is held at 400 ms on the board and 300 ms on the group report.
 
 ## 10. Known limits and open items
 
