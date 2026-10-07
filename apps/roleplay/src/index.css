@@ -1,0 +1,722 @@
+/* Self hosted variable fonts (no third party font host, works inside locked down networks).
+   AI RolePlay: Bricolage Grotesque for display, DM Sans for body.
+   Conversation AI: Newsreader for display, Instrument Sans for body. */
+@import "@fontsource-variable/bricolage-grotesque/opsz.css";
+@import "@fontsource-variable/dm-sans";
+@import "@fontsource-variable/newsreader/opsz.css";
+@import "@fontsource-variable/instrument-sans";
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* WCAG 2.2, 2.4.7 Focus Visible & 2.4.13 Focus Appearance: a strong, consistent
+   focus indicator on every interactive element, with an offset so it is never obscured. */
+:where(a, button, textarea, input, select, [tabindex]):focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* 2.3.3 / 2.2.2: respect users who reduce motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Theme tokens: dark is the default. `.light` on <html> flips them. */
+:root {
+  /* Design language: AI RolePlay is round, warm and playful; Conversation AI overrides these below. */
+  --font-body: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
+  --radius: 14px;
+  --ink: 255 255 255; /* foreground channels, used as rgb(var(--ink) / a) */
+  --bg: #0e0d0c; /* warm near-black ground */
+  --surface: #161412; /* panels / cards */
+  --surface-2: #1d1a17; /* nested cells */
+  --surface-3: #110f0e; /* video frames */
+  --brand: #ff8a4c; /* accent text: 7.9:1 on surface */
+  --accent: #c2410c; /* solid fills behind white text: 5.2:1 */
+  --accent-hover: #9a3412;
+  --accent-2: #b8320f; /* gradient partner, also passes with white text */
+  --accent-rgb: 234 88 12;
+  --tile: #ff7a2e;
+  --tile-opacity: 0.16;
+  --danger: #fb7185;
+  --ok: #34d399;
+  /* Ember glow: orange and red pools bleeding into warm black. */
+  --bg-gradient:
+    radial-gradient(1000px 640px at 50% -12%, rgba(255, 106, 26, 0.26), transparent 62%),
+    radial-gradient(760px 560px at 104% 4%, rgba(220, 38, 38, 0.16), transparent 58%),
+    radial-gradient(900px 700px at -6% 110%, rgba(251, 146, 60, 0.08), transparent 60%);
+}
+
+:root.light {
+  --ink: 24 20 17;
+  --bg: #f4f2ef;
+  --surface: rgba(255, 255, 255, 0.95);
+  --surface-2: rgba(250, 247, 244, 0.97);
+  --surface-3: rgba(252, 249, 246, 0.92);
+  --brand: #b8320f; /* accent text: 5.4:1 on ground */
+  --accent: #c2410c;
+  --accent-hover: #9a3412;
+  --accent-2: #b8320f;
+  --accent-rgb: 234 88 12;
+  --tile: #ffffff;
+  --tile-opacity: 0.55;
+  --danger: #be123c;
+  --ok: #047857;
+  /* Warm daylight: soft apricot and peach washes, kept pale so ink stays legible. */
+  --bg-gradient:
+    radial-gradient(1000px 680px at 50% -14%, rgba(255, 159, 94, 0.34), transparent 60%),
+    radial-gradient(820px 600px at 108% 2%, rgba(255, 196, 150, 0.3), transparent 56%),
+    radial-gradient(900px 760px at -8% 112%, rgba(254, 215, 170, 0.28), transparent 58%),
+    linear-gradient(170deg, #fbf4ee 0%, #f6f1ec 50%, #f4f2ef 100%);
+}
+
+/* Conversation AI (the assessment product) keeps every token name and takes a cooler accent, so the
+   two products read as siblings and are never mistaken for each other. Contrast checked for AA. */
+:root[data-product="conversation-ai"] {
+  --font-display: "Newsreader Variable", "Newsreader", Georgia, serif;
+  --font-body: "Instrument Sans Variable", "Instrument Sans", system-ui, sans-serif;
+  --radius: 0px;
+  --ink: 232 236 246;
+  --bg: #0b1020; /* slate navy paper, not the ember black */
+  --surface: #121a30;
+  --surface-2: #182240;
+  --surface-3: #0e1529;
+  --tile-opacity: 0;
+  --brand: #8ab4ff; /* accent text on the navy ground: 8.6:1 */
+  --accent: #1d4ed8; /* solid fills behind white text: 6.3:1 */
+  --accent-hover: #1e40af;
+  --accent-2: #1e3a8a;
+  --accent-rgb: 59 130 246;
+  --tile: #3b82f6;
+  /* A single quiet band at the top; the rest is flat paper. */
+  --bg-gradient: linear-gradient(180deg, rgba(59, 130, 246, 0.14) 0%, transparent 320px);
+}
+:root.light[data-product="conversation-ai"] {
+  --ink: 15 23 42;
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --brand: #1d4ed8; /* accent text on the light ground: 6.1:1 */
+  --accent: #1d4ed8;
+  --accent-hover: #1e40af;
+  --accent-2: #1e3a8a;
+  --accent-rgb: 59 130 246;
+  --tile: #ffffff;
+  --surface-2: #f3f6fb;
+  --surface-3: #f8fafd;
+  --bg-gradient: linear-gradient(180deg, rgba(147, 197, 253, 0.28) 0%, transparent 320px);
+}
+
+body {
+  background-color: var(--bg);
+  background-image: var(--bg-gradient);
+  background-repeat: no-repeat;
+  color: rgb(var(--ink));
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+
+@theme inline {
+  --color-background: var(--bg);
+  --color-foreground: rgb(var(--ink));
+  --color-ink: rgb(var(--ink));
+  --color-surface: var(--surface);
+  --color-brand: var(--brand);
+  --color-danger: var(--danger);
+  --color-ok: var(--ok);
+  --color-card: var(--surface);
+  --color-card-border: rgb(var(--ink) / 0.08);
+  --color-primary: var(--accent);
+  --color-accent: var(--accent-2);
+  --color-emerald: #10b981;
+  --color-amber: #f59e0b;
+  --color-rose: #f43f5e;
+  --font-display: "Bricolage Grotesque Variable", "Bricolage Grotesque", system-ui, sans-serif;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--ink) / 0.2) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--ink) / 0.2);
+  border-radius: 99px;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  70% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.18);
+    opacity: 0;
+  }
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    scaley: 0.5;
+  }
+  50% {
+    scaley: 1;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes confetti-burst {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0.4);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Micro-interactions: springy press + hover lift for tactile, sticky controls. */
+.tool-btn {
+  transition:
+    transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+@media (hover: hover) {
+  .tool-btn:hover {
+    transform: translateY(-1px) scale(1.06);
+  }
+}
+.tool-btn:active {
+  transform: scale(0.92);
+}
+.tool-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.badge-pop {
+  animation: badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes tip-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 4px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Row entrance for leaderboard reshuffles, a subtle stickiness cue. */
+@keyframes row-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.glass {
+  background: var(--surface);
+  border: 1px solid rgb(var(--ink) / 0.08);
+}
+
+.glass-strong {
+  background: var(--surface);
+  border: 1px solid rgb(var(--ink) / 0.12);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, var(--brand) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-emerald {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glow-violet {
+  box-shadow:
+    0 0 40px rgb(var(--accent-rgb) / 0.35),
+    0 0 80px rgb(var(--accent-rgb) / 0.15);
+}
+
+.glow-emerald {
+  box-shadow:
+    0 0 40px rgba(16, 185, 129, 0.3),
+    0 0 80px rgba(16, 185, 129, 0.1);
+}
+
+/* Soft mosaic of boxes behind hero and report content, after the orange reference.
+   Colour comes from --tile; the SVG only supplies each box's alpha. */
+.box-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+.box-pattern::before,
+.box-pattern::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+.box-pattern::before {
+  background: var(--tile);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='576'%3E%3Crect x='2' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='74' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='146' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='434' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='578' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='74' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='146' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='290' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='434' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='650' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='74' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='218' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='362' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='434' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='506' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='578' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='2' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='74' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='218' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='290' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='578' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='650' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='2' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='74' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='146' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='218' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='290' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='362' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='434' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='506' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='578' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='2' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='74' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='146' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='218' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='290' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='506' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='578' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='650' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='2' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='74' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='146' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='362' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='434' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='506' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='578' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='650' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='146' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='218' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='434' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='506' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='578' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='650' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='720' height='576'%3E%3Crect x='2' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='74' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='146' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='434' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='578' y='2' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='74' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='146' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='290' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='434' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='650' y='74' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='74' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='218' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='362' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='434' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='506' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='578' y='146' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='2' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='74' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='218' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='290' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='578' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='650' y='218' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='2' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='74' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='146' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='218' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='290' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='362' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='434' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='506' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='578' y='290' width='68' height='68' rx='3' fill='black' fill-opacity='0.25'/%3E%3Crect x='2' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='74' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='146' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='218' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='290' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='506' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='578' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='650' y='362' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='2' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.15'/%3E%3Crect x='74' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='146' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3Crect x='362' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='434' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='506' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.5'/%3E%3Crect x='578' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='650' y='434' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='146' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='218' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='434' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='506' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.9'/%3E%3Crect x='578' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.35'/%3E%3Crect x='650' y='506' width='68' height='68' rx='3' fill='black' fill-opacity='0.7'/%3E%3C/svg%3E");
+  -webkit-mask-size: 720px 576px;
+  mask-size: 720px 576px;
+  filter: blur(3px);
+  opacity: var(--tile-opacity);
+}
+/* Faint grid lines tie the boxes together; the fade keeps body copy on a quiet ground. */
+.box-pattern::after {
+  background-image:
+    linear-gradient(rgb(var(--ink) / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--ink) / 0.05) 1px, transparent 1px);
+  background-size: 72px 72px;
+}
+.box-pattern {
+  -webkit-mask-image: radial-gradient(120% 75% at 50% 0%, #000 30%, transparent 85%);
+  mask-image: radial-gradient(120% 75% at 50% 0%, #000 30%, transparent 85%);
+}
+
+/* ---------- Live box field (landing) ---------- */
+.box-field {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  --mx: -999px;
+  --my: -999px;
+  --spot: 0;
+  -webkit-mask-image: radial-gradient(120% 75% at 50% 0%, #000 30%, transparent 85%);
+  mask-image: radial-gradient(120% 75% at 50% 0%, #000 30%, transparent 85%);
+}
+.box-cell {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  margin: 2px;
+  border-radius: 3px;
+  background: var(--tile);
+  opacity: 0;
+  animation-name: box-wave;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+.box-cell--live {
+  animation-name: box-breathe, box-wave;
+}
+@keyframes box-breathe {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  45%,
+  60% {
+    opacity: calc(var(--tile-opacity) * 2.2);
+    transform: scale(1);
+  }
+}
+@keyframes box-wave {
+  0%,
+  82%,
+  100% {
+    box-shadow: none;
+  }
+  90% {
+    opacity: calc(var(--tile-opacity) * 1.4);
+    box-shadow: inset 0 0 0 1px rgb(var(--accent-rgb) / 0.35);
+  }
+}
+.box-spot {
+  position: absolute;
+  inset: 0;
+  opacity: var(--spot);
+  transition: opacity 0.4s ease;
+  background: radial-gradient(
+    220px circle at var(--mx) var(--my),
+    rgb(var(--accent-rgb) / 0.22),
+    transparent 70%
+  );
+  -webkit-mask-image:
+    repeating-linear-gradient(90deg, transparent 0 2px, #000 2px 70px, transparent 70px 72px),
+    repeating-linear-gradient(0deg, transparent 0 2px, #000 2px 70px, transparent 70px 72px);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    repeating-linear-gradient(90deg, transparent 0 2px, #000 2px 70px, transparent 70px 72px),
+    repeating-linear-gradient(0deg, transparent 0 2px, #000 2px 70px, transparent 70px 72px);
+  mask-composite: intersect;
+}
+@media (prefers-reduced-motion: reduce) {
+  .box-cell {
+    animation: none;
+  }
+  .box-spot {
+    display: none;
+  }
+}
+
+/* ---------- Gamification motion ---------- */
+@keyframes confetti-fly {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), calc(var(--dy) + 520px)) rotate(var(--rot));
+    opacity: 0;
+  }
+}
+.confetti-piece {
+  animation-name: confetti-fly;
+  animation-timing-function: cubic-bezier(0.15, 0.6, 0.35, 1);
+  animation-fill-mode: both;
+}
+@keyframes xp-float {
+  0% {
+    transform: translateY(0) scale(0.7);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(8px) scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(34px) scale(1);
+    opacity: 0;
+  }
+}
+.xp-float {
+  animation: xp-float 1.3s ease-out forwards;
+  white-space: nowrap;
+}
+@keyframes unlock-pop {
+  0% {
+    transform: translateY(-16px) scale(0.85);
+    opacity: 0;
+  }
+  12% {
+    transform: translateY(0) scale(1.04);
+    opacity: 1;
+  }
+  20% {
+    transform: scale(1);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+.unlock-pop {
+  animation: unlock-pop 2.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes shine {
+  from {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  to {
+    transform: translateX(220%) skewX(-20deg);
+  }
+}
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  animation: shine 2.8s ease-in-out infinite;
+}
+
+/* Devices: safe areas for notched phones, and 44px targets wherever the pointer is a finger. */
+.safe-area {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="radio"],
+  summary {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  summary {
+    display: flex;
+    align-items: center;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    width: 20px;
+    height: 20px;
+  }
+  textarea,
+  input[type="text"],
+  input[type="email"] {
+    font-size: max(16px, 1em); /* stops iOS zooming into the field on focus */
+  }
+}
+
+/* The bundled portrait is drawn for the dark theme; the light theme lifts it. */
+.portrait-img {
+  filter: grayscale(0.2) contrast(1.05);
+}
+:root.light .portrait-img {
+  filter: grayscale(0.25) contrast(0.95) brightness(1.3);
+}
+/* ---------- Product design languages ---------- */
+/* AI RolePlay: rounded, soft, playful. Cards and controls take the product radius; docked call
+   panels stay square because they meet the screen edge. */
+[data-product="roleplay"]
+  :is(
+    button:not(.rounded-full),
+    [role="radio"],
+    [role="tab"],
+    textarea,
+    .rounded-2xl,
+    .rounded-xl,
+    .rounded-lg,
+    .glass,
+    .tool-btn
+  ) {
+  border-radius: var(--radius);
+}
+[data-product="roleplay"] .box-pattern::before {
+  filter: blur(6px);
+}
+
+/* Conversation AI: an assessment paper. Serif headings, sharp edges, ruled ground, no motion flourishes. */
+[data-product="conversation-ai"]
+  :is(.rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded, .glass, .glass-strong) {
+  border-radius: var(--radius);
+}
+[data-product="conversation-ai"] .glass,
+[data-product="conversation-ai"] .glass-strong {
+  border-color: rgb(var(--ink) / 0.16);
+}
+[data-product="conversation-ai"] .box-pattern::before {
+  display: none;
+}
+[data-product="conversation-ai"] .box-pattern::after {
+  background-image: linear-gradient(rgb(var(--ink) / 0.07) 1px, transparent 1px);
+  background-size: 100% 32px;
+}
+[data-product="conversation-ai"] .box-pattern {
+  -webkit-mask-image: linear-gradient(#000 0%, #000 60%, transparent 100%);
+  mask-image: linear-gradient(#000 0%, #000 60%, transparent 100%);
+}
+[data-product="conversation-ai"] .tool-btn:hover,
+[data-product="conversation-ai"] .tool-btn:active {
+  transform: none;
+}
+[data-product="conversation-ai"] .font-display {
+  letter-spacing: -0.01em;
+}
+/* The serif is for headings of 20px and above. Small labels, buttons and tabs use the body sans. */
+[data-product="conversation-ai"]
+  :is(.text-xs, .text-sm, .text-base, .text-lg, button, [role="tab"]).font-display,
+[data-product="conversation-ai"] :is(button, [role="tab"]) .font-display {
+  font-family: var(--font-body);
+  letter-spacing: 0;
+}
+
+/* Live caption under the persona: a short fade so a new line reads as new without moving the layout. */
+@keyframes caption-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.caption-in {
+  animation: caption-in 0.25s ease-out;
+}
+
+/* Call screen. The ring shows who holds the floor; the state pill says it in words, so motion is
+   never the only signal. */
+.kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.4rem;
+  padding: 0 0.3rem;
+  margin-left: 0.25rem;
+  border: 1px solid rgb(var(--ink) / 0.3);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  font: 600 12px/1.4 var(--font-body, inherit);
+  color: rgb(var(--ink) / 0.85);
+}
+.speak-ring {
+  box-shadow: 0 0 0 3px var(--brand);
+  animation: speak-pulse 1.6s ease-in-out infinite;
+}
+@keyframes speak-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px var(--brand);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px var(--brand),
+      0 0 0 12px color-mix(in srgb, var(--brand) 18%, transparent);
+  }
+}
+.thinking-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    color-mix(in srgb, var(--brand) 22%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  animation: shimmer 1.4s linear infinite;
+  pointer-events: none;
+}
+@keyframes shimmer {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -120% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .speak-ring,
+  .thinking-shimmer::after {
+    animation: none;
+  }
+}
+/* Shortcut keys mean nothing on a touch screen. */
+@media (max-width: 639px), (pointer: coarse) {
+  .kbd {
+    display: none;
+  }
+}
+
+/* The practice brief: a drawer from the right edge, full height on every screen. */
+.brief-drawer {
+  height: 100dvh;
+  max-height: 100dvh;
+}
+.brief-drawer::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+.brief-drawer[open] {
+  animation: drawer-in 0.22s ease-out;
+}
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}

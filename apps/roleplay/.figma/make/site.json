@@ -1,0 +1,10 @@
+{
+  "description": "Enables users to engage in AI-driven roleplay scenarios with an intuitive, accessible interface that enhances learning and decision-making experiences.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

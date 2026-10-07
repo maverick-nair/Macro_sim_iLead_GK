@@ -1,0 +1,18 @@
+{
+  "fonts": [
+    { "family": "Inter", "style": "Semi Bold", "fontId": "Inter_1", "source": "GOOGLE" },
+    { "family": "SF Pro", "style": "Bold", "fontId": "SF-Pro_1", "source": "GOOGLE" },
+    { "family": "SF Pro", "style": "Semibold", "fontId": "SF-Pro_1", "source": "GOOGLE" },
+    { "family": "Inter", "style": "Regular", "fontId": "Inter_1", "source": "GOOGLE" },
+    { "family": "SF Pro", "style": "Regular", "fontId": "SF-Pro_1", "source": "GOOGLE" },
+    { "family": "SF Pro", "style": "Medium", "fontId": "SF-Pro_1", "source": "GOOGLE" },
+    { "family": "Sacramento", "style": "Regular", "fontId": "Sacramento-Regular_1", "source": "GOOGLE" },
+    {
+      "family": "Arial",
+      "style": "Regular",
+      "fontId": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "source": "LOCAL"
+    },
+    { "family": "Inter", "style": "Medium", "fontId": "Inter_1", "source": "GOOGLE" }
+  ]
+}
