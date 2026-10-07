@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Event cards and the sponsor call</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+.chip{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:700}
+</style>
+</helmet>
+<div style="width: 1440px; height: 980px; box-sizing: border-box; padding: 40px 48px; background: #0A0A1A; color: #F1F4FF; font-family: Manrope, sans-serif; display: flex; flex-direction: column; gap: 32px">
+  <div role="alertdialog" aria-label="Paula Jacob is calling" style="display: flex; align-items: center; gap: 18px; padding: 16px 20px; border-radius: 22px; background: linear-gradient(90deg, rgba(255,122,107,0.10), rgba(18,18,42,0.95) 45%); border: 1px solid rgba(255,122,107,0.35); box-shadow: 0 20px 60px rgba(0,0,0,0.35)">
+    <span style="position: relative; width: 56px; height: 56px; border-radius: 50%; background: #2F9BFF; color: #04101F; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; box-shadow: 0 0 0 6px rgba(47,155,255,0.18), 0 0 0 12px rgba(47,155,255,0.08)">PJ</span>
+    <div style="display: flex; flex-direction: column; gap: 2px; flex: 1">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #FFA79C">Incoming call · Crisis</span>
+      <b style="font-size: 18px">Paula Jacob is calling about the recession</b>
+      <span style="font-size: 13px; color: #A6AECB">Regional Sales Director. Salaries are being cut and she wants your plan for the team.</span>
+    </div>
+    <button type="button" style="height: 46px; padding: 0 18px; border-radius: 14px; border: 1px solid rgba(222,233,255,0.18); background: transparent; color: #F1F4FF; font: 600 14px Manrope, sans-serif">Call back within 2 days</button>
+    <button type="button" style="height: 46px; padding: 0 22px; border-radius: 14px; border: 0; background: #2EE6A8; color: #04130D; font: 700 14px Manrope, sans-serif; display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.6 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.6 3.6a1 1 0 0 1-.25 1z"/></svg>Take the call</button>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px">
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="6">
+      <article role="dialog" aria-label="{{c.type}} event: {{c.title}}" style="border-radius: 24px; background: #12122A; border: 1px solid rgba(222,233,255,0.08); overflow: hidden; display: flex; flex-direction: column">
+        <div style="height: 112px; padding: 18px 20px; box-sizing: border-box; background: {{c.band}}; display: flex; justify-content: space-between; align-items: flex-start; position: relative">
+          <span class="chip" style="background: rgba(10,10,26,0.55); color: {{c.tagC}}; backdrop-filter: blur(6px)">{{c.type}}</span>
+          <sc-if value="{{c.hasImg}}" hint-placeholder-val="{{false}}"><img src="{{c.img}}" alt="" style="width: 76px; height: 76px; border-radius: 50%; object-fit: cover; object-position: top; background: #DCE6F7; border: 3px solid #12122A; position: absolute; right: 20px; bottom: -30px"></sc-if>
+          <sc-if value="{{c.noImg}}" hint-placeholder-val="{{true}}"><span aria-hidden="true" style="width: 44px; height: 44px; border-radius: 14px; background: rgba(10,10,26,0.45); color: {{c.tagC}}; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800">{{c.glyph}}</span></sc-if>
+        </div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 12px; flex: 1">
+          <h2 style="margin: 0; font-size: 19px; font-weight: 700; letter-spacing: -0.01em; padding-right: 70px">{{c.title}}</h2>
+          <p style="margin: 0; font-size: 14px; line-height: 1.55; color: #C3C9DE">{{c.body}}</p>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <sc-for list="{{c.chips}}" as="ch" hint-placeholder-count="2"><span class="chip" style="background: {{ch.bg}}; color: {{ch.c}}">{{ch.t}}</span></sc-for>
+          </div>
+          <sc-if value="{{c.hasNote}}" hint-placeholder-val="{{false}}"><span style="font-size: 13px; color: #FFD08A; font-weight: 600">{{c.note}}</span></sc-if>
+          <span style="flex: 1"></span>
+          <div style="display: flex; justify-content: space-between; align-items: center">
+            <button type="button" style="border: 0; background: transparent; padding: 0; color: #7CC0FF; font: 600 13px Manrope, sans-serif">See why</button>
+            <button type="button" style="height: 42px; padding: 0 20px; border-radius: 12px; border: 0; background: {{c.cta}}; color: #04101F; font: 700 14px Manrope, sans-serif">{{c.action}}</button>
+          </div>
+        </div>
+      </article>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const down = (t) => ({ t, bg: 'rgba(255,122,107,0.12)', c: '#FFA79C' });
+    const up = (t) => ({ t, bg: 'rgba(46,230,168,0.12)', c: '#6FF2C4' });
+    const card = (type, title, body, band, tagC, glyph, chips, extra = {}) => ({ type, title, body, band, tagC, glyph, chips, cta: '#2F9BFF', action: 'Got it', hasImg: !!extra.img, noImg: !extra.img, img: extra.img, hasNote: !!extra.note, note: extra.note, ...extra });
+    return {
+      cards: [
+        card('Impact', 'New CRM system', 'Leads must now go in electronically. Some of the team are not tech savvy and do not like the change.', 'linear-gradient(135deg, #17325E, #12122A)', '#9CCBFF', '◆', [down('Team morale −4'), down('Team result −7')]),
+        card('Signal', 'Rumors of being acquired', 'Customers ask whether Levo will be abandoned. Lowe has been fielding the questions alone.', 'linear-gradient(135deg, #123B4A, #12122A)', '#8DE7F2', '◎', [down('Lowe morale −5')], { img: '/_blob/a19adc6ec80ed6aea62b27c45c3c6a0e' }),
+        card('Capacity', 'Ruth is on leave', 'Ruth is away for the rest of the week. Someone needs to cover her closing calls.', 'linear-gradient(135deg, #2A2A4A, #12122A)', '#C9CFE4', '◐', [{ t: 'Away 3 days', bg: 'rgba(166,174,203,0.14)', c: '#C9CFE4' }], { img: '/_blob/e19bda513a19220c24c159505e25ee17', note: 'No impact on result' }),
+        card('Diagnostic', 'Peter’s numbers slipped', 'Peter has missed his numbers two weeks running. Something has changed at home.', 'linear-gradient(135deg, #3A2E12, #12122A)', '#FFD08A', '⌖', [down('Peter result −10'), down('Peter morale −6')], { img: '/_blob/a0910603ea748084eb5db8a73e9b503d', note: 'Talk with Peter within 2 days, or Paula hears of it.', action: 'Plan a 1:1', cta: '#43D6E8' }),
+        card('Opportunity', 'A big client referral', 'A happy customer refers a hospital group planning twelve new elevators. The proposal team gets a warm lead.', 'linear-gradient(135deg, #0F4A3A, #12122A)', '#6FF2C4', '✦', [up('Proposal morale +3'), up('Proposal result +4')]),
+        card('Crisis', 'Tragic accident', 'Passengers were hurt in a Levo elevator in New York. The brand is in the news and closing gets harder.', 'linear-gradient(135deg, #4A1F1B, #12122A)', '#FFA79C', '!', [down('Team morale −8'), down('Team result −7')], { note: 'Meet the team this week: how you speak to them now matters.' })
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

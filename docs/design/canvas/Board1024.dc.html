@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Board at 1024</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+.tile{padding:12px 14px;border-radius:14px;background:#12122A;border:1px solid rgba(222,233,255,0.08);display:flex;flex-direction:column;gap:6px;min-width:0}
+.ib{width:40px;height:40px;border-radius:12px;border:1px solid rgba(222,233,255,0.12);background:rgba(222,233,255,0.03);color:#D6DBEE;display:flex;align-items:center;justify-content:center;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1024px; height: 900px; box-sizing: border-box; background: #0A0A1A; color: #F1F4FF; font-family: Manrope, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 20px; display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(222,233,255,0.06)">
+    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.03em">i<span style="color: #43D6E8">Lead</span></span>
+    <span style="flex: 1"></span>
+    <span style="font-size: 14px"><b>Week 3</b> <span style="color: #8C94B4">· Day 2 · 3 days left</span></span>
+    <button type="button" aria-label="Leadership Score 433" style="height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid rgba(222,233,255,0.12); background: transparent; color: #F1F4FF; font: 700 14px Manrope, sans-serif">★ 433</button>
+    <button type="button" class="ib" aria-label="Pause"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    <button type="button" style="height: 40px; padding: 0 16px; border-radius: 12px; border: 0; background: #2F9BFF; color: #04101F; font: 700 14px Manrope, sans-serif">End week 3</button>
+  </header>
+  <section aria-label="How the team is doing" style="padding: 14px 20px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+    <sc-for list="{{kpis}}" as="k" hint-placeholder-count="8">
+      <div class="tile"><span style="font-size: 12px; color: #A6AECB">{{k.n}}</span><div style="display: flex; align-items: baseline; gap: 6px"><b style="font-size: 20px; font-variant-numeric: tabular-nums">{{k.v}}</b><span style="font-size: 12px; font-weight: 700; color: {{k.c}}">{{k.d}}</span></div></div>
+    </sc-for>
+  </section>
+  <div style="flex: 1; min-height: 0; padding: 14px 20px 20px; display: grid; grid-template-columns: minmax(0, 1fr) 64px; gap: 14px">
+    <main style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; min-width: 0">
+      <sc-for list="{{stages}}" as="s" hint-placeholder-count="5">
+        <section aria-label="{{s.n}}" style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+          <div style="padding: 8px 10px; border-radius: 10px; border: 1px solid {{s.border}}; background: {{s.bg}}; display: flex; flex-direction: column"><b style="font-size: 13px">{{s.n}}</b><span style="font-size: 11px; color: {{s.c}}">{{s.note}}</span></div>
+          <sc-for list="{{s.people}}" as="m" hint-placeholder-count="2">
+            <button type="button" style="padding: 12px; border-radius: 16px; background: #12122A; border: 1px solid rgba(222,233,255,0.08); color: #F1F4FF; font-family: Manrope, sans-serif; text-align: left; display: flex; flex-direction: column; gap: 10px">
+              <img src="{{m.img}}" alt="" style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; object-position: top; background: #DCE6F7; box-shadow: 0 0 0 2px {{m.ring}}">
+              <span style="display: flex; flex-direction: column"><b style="font-size: 14px; line-height: 1.25">{{m.n}}</b><span style="font-size: 11px; color: #8C94B4">{{m.r}}</span></span>
+              <span style="font-size: 12px; font-weight: 700; color: {{m.ring}}">{{m.mood}}</span>
+            </button>
+          </sc-for>
+        </section>
+      </sc-for>
+    </main>
+    <aside aria-label="Actions, collapsed" style="border-radius: 18px; background: #12122A; border: 1px solid rgba(222,233,255,0.08); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px 0">
+      <button type="button" class="ib" aria-label="Expand the actions panel, 8 actions" aria-expanded="false"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
+      <span style="writing-mode: vertical-rl; transform: rotate(180deg); font-size: 13px; font-weight: 700; color: #D6DBEE; letter-spacing: 0.04em">Actions · 8</span>
+      <span style="flex: 1"></span>
+      <span title="Live conversations used" style="font-size: 11px; color: #8C94B4; text-align: center">1 of 2<br>live</span>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1024,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const img = { kent: '/_blob/591e30ff8363f46b3929b9e1cc60c1d3', beth: '/_blob/03a9b43b1a4724fec350a8fb8b50f901', justin: '/_blob/df764ce0defd433843ec0193ca55914d', derick: '/_blob/9f5a55035d40bd976f042e174ffc9d22', green: '/_blob/4a96b92108fe93197fa623e861a79e03', lowe: '/_blob/a19adc6ec80ed6aea62b27c45c3c6a0e', jack: '/_blob/4b523a9a5d6fdf04e3244986868c6ec0', peter: '/_blob/a0910603ea748084eb5db8a73e9b503d', ruth: '/_blob/e19bda513a19220c24c159505e25ee17', mandy: '/_blob/35f2ae3bcc7eb301d495cb45854c903f' };
+    const c = { Frustrated: '#FF7A6B', Concerned: '#F5B547', Steady: '#A6AECB', Upbeat: '#2EE6A8' };
+    const p = (id, n, r, mood) => ({ img: img[id], n, r, mood, ring: c[mood] });
+    const s = (n, note, people, b) => ({ n, note, people, border: b ? 'rgba(245,181,71,0.35)' : 'rgba(222,233,255,0.08)', bg: b ? 'rgba(245,181,71,0.08)' : 'transparent', c: b ? '#FFD08A' : '#8C94B4' });
+    return {
+      kpis: [
+        { n: 'Team skill', v: '57', d: '▲', c: '#6FF2C4' }, { n: 'Team morale', v: '53', d: '▼', c: '#FFA79C' },
+        { n: 'Team result', v: '60', d: '▲', c: '#6FF2C4' }, { n: 'Team trust', v: '56', d: 'steady', c: '#A6AECB' },
+        { n: 'Team Pulse', v: '55', d: '▲ 2', c: '#6FF2C4' }, { n: 'Target', v: '$70,400', d: 'of $240,000', c: '#8C94B4' },
+        { n: 'Paula', v: 'Confident', d: '72', c: '#A6AECB' }, { n: 'Streak', v: '2 weeks', d: '1 to a bonus', c: '#FFD08A' }
+      ],
+      stages: [
+        s('Leads', '54 of 62', [p('kent', 'Kent Goldberg', 'Senior SDR', 'Frustrated'), p('beth', 'Beth Killiney', 'SDR', 'Upbeat')]),
+        s('Qualify', '20 of 26', [p('justin', 'Justin Keel', 'Qualifier', 'Concerned'), p('derick', 'Derick Kaynes', 'Qualifier', 'Steady')]),
+        s('Proposal', '5 of 6.4', [p('green', 'Green Bell', 'Proposals', 'Steady'), p('lowe', 'Lowe Rex', 'Proposals', 'Concerned')]),
+        s('Negotiation', '1.8 of 2.7', [p('jack', 'Jack Holt', 'Negotiator', 'Upbeat'), p('peter', 'Peter Higgins', 'Negotiator', 'Concerned')]),
+        s('Conversion', 'Bottleneck', [p('ruth', 'Ruth Ether', 'Closer', 'Steady'), p('mandy', 'Mandy Lobert', 'Closer', 'Upbeat')], true)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

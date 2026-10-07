@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Development report, print</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&amp;display=swap">
+<style>
+body{margin:0;background:#D9D6CC}
+.page{width:816px;height:1056px;box-sizing:border-box;padding:56px 60px 40px;background:#FFFFFF;color:#16152B;font-family:Manrope,sans-serif;display:flex;flex-direction:column;gap:20px}
+.h2{margin:0;font-family:Newsreader,serif;font-weight:500;font-size:22px}
+.num{font-size:9pt;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#0E8C99}
+.foot{margin-top:auto;display:flex;justify-content:space-between;font-size:9pt;color:#5A5B70;border-top:1px solid #E6E3DA;padding-top:10px}
+th{font-size:9pt;font-weight:600;color:#5A5B70;text-align:left;padding:4px 6px}
+td{font-size:10pt;padding:5px 6px;border-top:1px solid #ECE9E0}
+</style>
+</helmet>
+<div style="width: 816px; height: 2192px; display: flex; flex-direction: column; gap: 80px; background: #D9D6CC">
+  <article aria-label="Development report, page 1" class="page">
+    <header style="display: flex; justify-content: space-between; align-items: flex-start">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <span style="font-size: 13px; font-weight: 800">i<span style="color: #0E8C99">Lead</span> <span style="font-size: 9pt; letter-spacing: .12em; text-transform: uppercase; color: #5A5B70; margin-left: 6px">Development report</span></span>
+        <h1 style="margin: 0; font-family: Newsreader, serif; font-weight: 500; font-size: 40px; line-height: 1">Jordan Lee</h1>
+        <span style="font-size: 10pt; color: #5A5B70">Sales Elevator · Northwind Sales Leaders · October 2026</span>
+      </div>
+      <div style="display: flex; gap: 8px; font-size: 10pt">
+        <div style="padding: 8px 12px; border: 1px solid #16152B; border-radius: 8px; display: flex; flex-direction: column"><span style="color: #5A5B70">Tier</span><b style="font-size: 16pt">Gold</b></div>
+        <div style="padding: 8px 12px; border: 1px solid #16152B; border-radius: 8px; display: flex; flex-direction: column"><span style="color: #5A5B70">Score</span><b style="font-size: 16pt">742</b></div>
+        <div style="padding: 8px 12px; background: #16152B; color: #FFFFFF; border-radius: 8px; display: flex; flex-direction: column"><span style="color: #C9CBD8">Level</span><b style="font-size: 16pt">Advanced</b></div>
+      </div>
+    </header>
+    <p style="margin: 0; font-family: Newsreader, serif; font-size: 14pt; line-height: 1.5">You lead people well and adapt to what they need. Your next step is to make it look effortless under pressure: earlier, and more consistently, in the weeks when the numbers are behind.</p>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; font-size: 10pt; line-height: 1.5">
+      <div style="padding: 10px 12px; border: 1px solid #E6E3DA; border-radius: 8px"><b class="num" style="color: #16152B">Strengths</b><br>Difficult conversations<br>Results ownership<br>Situational flexibility</div>
+      <div style="padding: 10px 12px; border: 1px solid #E6E3DA; border-radius: 8px"><b class="num" style="color: #16152B">Priorities</b><br>Goal setting<br>Coaching for growth<br>Giving feedback</div>
+      <div style="padding: 10px 12px; border: 1px solid #E6E3DA; border-radius: 8px"><b class="num" style="color: #16152B">Business</b><br>94% of $240,000 with 27 deals. Conversion was the bottleneck in 5 of 8 weeks.</div>
+    </div>
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <span class="num">Your team over eight weeks</span>
+      <table style="border-collapse: collapse; width: 100%">
+        <caption style="position: absolute; left: -9999px">Team measures by week</caption>
+        <thead><tr><th scope="col">Measure</th><sc-for list="{{weeks}}" as="w" hint-placeholder-count="8"><th scope="col" style="text-align: right">{{w}}</th></sc-for></tr></thead>
+        <tbody><sc-for list="{{team}}" as="r" hint-placeholder-count="5"><tr><th scope="row" style="font-size: 10pt; color: #16152B; font-weight: 600; border-top: 1px solid #ECE9E0">{{r.n}}</th><sc-for list="{{r.v}}" as="v" hint-placeholder-count="8"><td style="text-align: right; font-variant-numeric: tabular-nums">{{v}}</td></sc-for></tr></sc-for></tbody>
+      </table>
+    </section>
+    <section style="display: flex; flex-direction: column; gap: 4px">
+      <h2 class="h2">Your leadership skills</h2>
+      <sc-for list="{{skills}}" as="s" hint-placeholder-count="8">
+        <div style="display: grid; grid-template-columns: 190px 140px minmax(0, 1fr); gap: 12px; padding: 7px 0; border-top: 1px solid #ECE9E0; font-size: 10pt; align-items: center">
+          <b>{{s.n}}</b>
+          <span style="display: flex; gap: 3px; align-items: center"><sc-for list="{{s.seg}}" as="g" hint-placeholder-count="5"><span style="width: 18px; height: 7px; border-radius: 2px; background: {{g.bg}}; border: 1px solid #16152B; box-sizing: border-box"></span></sc-for><span style="margin-left: 6px; font-weight: 700">{{s.l}}</span></span>
+          <span style="font-family: Newsreader, serif; font-size: 11pt; color: #24233A">{{s.q}}</span>
+        </div>
+      </sc-for>
+    </section>
+    <footer class="foot"><span>iLead by Genie · Powered by KNOLSKAPE</span><span>Page 1 of 2</span></footer>
+  </article>
+  <article aria-label="Development report, page 2" class="page">
+    <section style="display: flex; flex-direction: column; gap: 8px">
+      <h2 class="h2">Style fit, week by week</h2>
+      <span style="font-size: 9pt; color: #5A5B70">Filled: matched. Outlined: one step off. Striped: missed. You matched 61 of 80 weekly choices (capability 76%).</span>
+      <table style="border-collapse: separate; border-spacing: 3px; width: 100%">
+        <thead><tr><th scope="col">Person</th><sc-for list="{{weeks}}" as="w" hint-placeholder-count="8"><th scope="col" style="text-align: center">{{w}}</th></sc-for></tr></thead>
+        <tbody><sc-for list="{{heat}}" as="h" hint-placeholder-count="10"><tr><th scope="row" style="font-size: 10pt; color: #16152B; font-weight: 600">{{h.n}}</th><sc-for list="{{h.cells}}" as="c" hint-placeholder-count="8"><td style="height: 20px; padding: 0; border: 0; border-radius: 4px; text-align: center; font-size: 9pt; font-weight: 700; background: {{c.bg}}; box-shadow: {{c.ring}}; color: {{c.c}}">{{c.k}}</td></sc-for></tr></sc-for></tbody>
+      </table>
+    </section>
+    <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; font-size: 10pt; line-height: 1.5">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h2 class="h2">Key moments</h2>
+        <sc-for list="{{moments}}" as="m" hint-placeholder-count="4"><div style="padding: 8px 0; border-top: 1px solid #ECE9E0"><b>{{m.t}}</b> <span style="color: #5A5B70">{{m.tag}}</span><br>{{m.d}}</div></sc-for>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <h2 class="h2">Your plan for the next two weeks</h2>
+        <sc-for list="{{plan}}" as="p" hint-placeholder-count="3"><div style="padding: 8px 0; border-top: 1px solid #ECE9E0"><b>{{p.i}}. {{p.n}}</b><br>Practise: {{p.p}}<br>On the job: {{p.j}}</div></sc-for>
+        <span style="color: #5A5B70">Check in on 19 October 2026.</span>
+      </div>
+    </section>
+    <section style="display: flex; flex-direction: column; gap: 6px; font-size: 9.5pt; line-height: 1.55; color: #24233A; padding: 14px 16px; background: #F4F2EC; border-radius: 8px">
+      <b class="num" style="color: #16152B">How this report was made</b>
+      <span>Every line traces to your run. An AI model judged each skill against an authored rubric; it never wrote this report. A level needs two observations from two conversations. Your game score never changes a skill rating. 31 conversations, 84 observations; 3 conversations reviewed by an assessor.</span>
+    </section>
+    <footer class="foot"><span>Shared with you and your program manager</span><span>Page 2 of 2</span></footer>
+  </article>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":816,"height":2192}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const names = ['Kent Goldberg', 'Beth Killiney', 'Justin Keel', 'Derick Kaynes', 'Green Bell', 'Lowe Rex', 'Jack Holt', 'Peter Higgins', 'Ruth Ether', 'Mandy Lobert'];
+    const heat = names.map((n, mi) => ({ n, cells: [0, 1, 2, 3, 4, 5, 6, 7].map(w => {
+      const r = (mi * 7 + w * 13) % 10;
+      const f = (mi === 0 || mi === 5) && w < 2 ? 2 : w < 2 ? (r < 5 ? 1 : 0) : (r < 1 ? 2 : r < 3 ? 1 : 0);
+      return { k: 'DGPE'[(mi + Math.floor(w / 3)) % 4], bg: f === 0 ? '#16152B' : f === 1 ? '#FFFFFF' : 'repeating-linear-gradient(45deg, #16152B 0 1px, #FFFFFF 1px 4px)', ring: f === 1 ? 'inset 0 0 0 1.5px #16152B' : 'none', c: f === 0 ? '#FFFFFF' : '#16152B' };
+    }) }));
+    const sk = (n, li, q) => ({ n, l: li === null ? 'Not enough evidence' : ['Novice', 'Developing', 'Proficient', 'Advanced', 'Role Model'][li], q: q ? `"${q}"` : '', seg: [0, 1, 2, 3, 4].map(i => ({ bg: li !== null && i <= li ? '#16152B' : '#FFFFFF' })) });
+    return {
+      weeks: ['W1', 'W2', 'W3', 'W4', 'W5', 'W6', 'W7', 'W8'],
+      team: [
+        { n: 'Revenue, $k', v: [18, 41, 70, 101, 134, 166, 198, 226] }, { n: 'Team skill', v: [57, 57, 60, 63, 65, 68, 70, 71] },
+        { n: 'Team morale', v: [57, 58, 61, 60, 64, 66, 67, 68] }, { n: 'Team result', v: [59, 60, 63, 66, 69, 71, 73, 74] }, { n: 'Team trust', v: [56, 57, 60, 62, 65, 67, 69, 70] }
+      ],
+      heat,
+      skills: [
+        sk('Difficult conversations', 4, 'What would make the split feel fair to you?'), sk('Results ownership', 3, 'We are behind on two stages and I own that.'),
+        sk('Situational flexibility', 3, 'For now I will walk you through each call.'), sk('Communicating change', 2, 'Here is why, and what it means for each of you.'),
+        sk('Recognition and fairness', 2, 'Thank you for the twelve leads this week.'), sk('Giving feedback', 1, 'Please do better this week.'),
+        sk('Coaching for growth', 2, ''), sk('Goal setting', null, '')
+      ],
+      moments: [
+        { t: 'Kent opened up', tag: 'Best, week 2', d: 'You asked before you fixed. Kent morale +8, trust +6.' },
+        { t: 'Feedback to Lowe in public', tag: 'Revisit, week 2', d: 'Raised in the team meeting. Lowe trust −5.' },
+        { t: 'The briefing with Paula', tag: 'Best, week 4', d: 'You owned the gap. Paula confidence +20.' },
+        { t: 'Peter closed a big deal', tag: 'Best, week 5', d: 'Directing, then Guiding. Peter result +16.' }
+      ],
+      plan: [
+        { i: 1, n: 'Goal setting', p: 'Rewrite three goals with a number and a date.', j: 'Agree one measurable goal with each person.' },
+        { i: 2, n: 'Giving feedback', p: 'Write specific feedback with an example.', j: 'One piece a day, in private, within a day.' },
+        { i: 3, n: 'Coaching for growth', p: 'Ask three questions before any fix.', j: 'One open question in every 1:1.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

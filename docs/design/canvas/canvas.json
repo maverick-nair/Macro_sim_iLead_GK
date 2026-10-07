@@ -1,0 +1,205 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-05T09:00:00Z"
+  },
+  "title": "iLead 2.0 Product Design",
+  "launch": {
+    "view": "canvas",
+    "page": "system"
+  },
+  "pages": [
+    {
+      "id": "system",
+      "name": "Design language"
+    },
+    {
+      "id": "desktop",
+      "name": "Desktop play"
+    },
+    {
+      "id": "report",
+      "name": "Development report"
+    },
+    {
+      "id": "tablet",
+      "name": "Tablet"
+    }
+  ],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1240,
+      "title": "Foundations: Night Studio and Paper",
+      "page": "system"
+    },
+    "Board.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 1000,
+      "title": "Board, 1440",
+      "page": "desktop"
+    },
+    "Board1024.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 1024,
+      "h": 900,
+      "title": "Board, 1024, actions collapsed",
+      "page": "desktop"
+    },
+    "Live.dc.html": {
+      "x": 0,
+      "y": 1120,
+      "w": 1440,
+      "h": 900,
+      "title": "Live 1:1 by voice",
+      "page": "desktop"
+    },
+    "Events.dc.html": {
+      "x": 1520,
+      "y": 1120,
+      "w": 1440,
+      "h": 980,
+      "title": "Event cards and the sponsor call",
+      "page": "desktop"
+    },
+    "Score.dc.html": {
+      "x": 0,
+      "y": 2220,
+      "w": 1440,
+      "h": 940,
+      "title": "Score, badges and cohort",
+      "page": "desktop"
+    },
+    "WeekEnd.dc.html": {
+      "x": 1520,
+      "y": 2220,
+      "w": 1440,
+      "h": 1000,
+      "title": "Week end report",
+      "page": "desktop"
+    },
+    "End.dc.html": {
+      "x": 0,
+      "y": 3340,
+      "w": 1440,
+      "h": 1380,
+      "title": "End of the simulation",
+      "page": "desktop"
+    },
+    "Report.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 5200,
+      "title": "Development report, web",
+      "page": "report"
+    },
+    "ReportPrint.dc.html": {
+      "x": 1360,
+      "y": 0,
+      "w": 816,
+      "h": 2192,
+      "title": "Development report, print (letter)",
+      "page": "report",
+      "paper": "letter"
+    },
+    "TabletBoard.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet portrait 834: board",
+      "page": "tablet"
+    },
+    "TabletDrawer.dc.html": {
+      "x": 914,
+      "y": 0,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet portrait: actions drawer",
+      "page": "tablet"
+    },
+    "TabletStyles.dc.html": {
+      "x": 1828,
+      "y": 0,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet portrait: style setting",
+      "page": "tablet"
+    },
+    "TabletLive.dc.html": {
+      "x": 2742,
+      "y": 0,
+      "w": 834,
+      "h": 1194,
+      "title": "Tablet portrait: 1:1 by voice",
+      "page": "tablet"
+    },
+    "SmallScreen.dc.html": {
+      "x": 3656,
+      "y": 0,
+      "w": 390,
+      "h": 844,
+      "title": "Phones: bigger screen notice",
+      "page": "tablet"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Board.dc.html",
+    "Board1024.dc.html",
+    "Live.dc.html",
+    "Events.dc.html",
+    "Score.dc.html",
+    "WeekEnd.dc.html",
+    "End.dc.html",
+    "Report.dc.html",
+    "ReportPrint.dc.html",
+    "TabletBoard.dc.html",
+    "TabletDrawer.dc.html",
+    "TabletStyles.dc.html",
+    "TabletLive.dc.html",
+    "SmallScreen.dc.html"
+  ],
+  "notes": {
+    "t_system": {
+      "x": 0,
+      "y": -300,
+      "text": "iLead 2.0: design language",
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "system"
+    },
+    "t_desktop": {
+      "x": 0,
+      "y": -300,
+      "text": "Laptop and desktop: board, live, events, scoring, week end, end (1024 also serves tablets in landscape)",
+      "kind": "title1",
+      "maxW": 2960,
+      "page": "desktop"
+    },
+    "t_report": {
+      "x": 0,
+      "y": -300,
+      "text": "Development report: web and print",
+      "kind": "title1",
+      "maxW": 2176,
+      "page": "report"
+    },
+    "t_tablet": {
+      "x": 0,
+      "y": -300,
+      "text": "Tablet: portrait 834 and landscape at 1024. Phones see a notice.",
+      "kind": "title1",
+      "maxW": 4046,
+      "page": "tablet"
+    }
+  },
+  "designSystems": []
+}

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tablet actions drawer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+.tile{padding:12px 14px;border-radius:14px;background:#12122A;border:1px solid rgba(222,233,255,0.08);display:flex;flex-direction:column;gap:6px;min-width:0}
+.ib{width:44px;height:44px;border-radius:12px;border:1px solid rgba(222,233,255,0.12);background:rgba(222,233,255,0.03);color:#D6DBEE;display:flex;align-items:center;justify-content:center}
+
+</style>
+</helmet>
+<div style="width: 834px; height: 1194px; box-sizing: border-box; background: #0A0A1A; color: #F1F4FF; font-family: Manrope, sans-serif; position: relative; overflow: hidden">
+  <div aria-hidden="true" style="position: absolute; inset: 0; display: flex; flex-direction: column; opacity: 0.45">
+  <header style="height: 72px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(222,233,255,0.06)">
+    <span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">i<span style="color: #43D6E8">Lead</span></span>
+    <span style="font-size: 14px; margin-left: 6px"><b>Week 3</b> <span style="color: #8C94B4">· Day 2 · 3 days left</span></span>
+    <span style="flex: 1"></span>
+    <button type="button" aria-label="Leadership Score 433" style="height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(222,233,255,0.12); background: transparent; color: #F1F4FF; font: 700 15px Manrope, sans-serif">★ 433</button>
+    <button type="button" class="ib" aria-label="Pause, 18:42 played"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg></button>
+    <button type="button" style="height: 44px; padding: 0 18px; border-radius: 12px; border: 0; background: #2F9BFF; color: #04101F; font: 700 15px Manrope, sans-serif">End week 3</button>
+  </header>
+  <section aria-label="How the team is doing" style="padding: 16px 24px 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+    <sc-for list="{{kpis}}" as="k" hint-placeholder-count="8">
+      <div class="tile"><span style="font-size: 12px; color: #A6AECB">{{k.n}}</span><div style="display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap"><b style="font-size: 21px; font-variant-numeric: tabular-nums">{{k.v}}</b><span style="font-size: 12px; font-weight: 700; color: {{k.c}}">{{k.d}}</span></div></div>
+    </sc-for>
+  </section>
+  <main aria-label="Your team by stage" style="flex: 1; min-height: 0; padding: 18px 24px 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; align-content: start">
+    <sc-for list="{{stages}}" as="s" hint-placeholder-count="5">
+      <section aria-label="{{s.n}}" style="display: flex; flex-direction: column; gap: 10px; min-width: 0">
+        <div style="padding: 10px 12px; border-radius: 12px; border: 1px solid {{s.border}}; background: {{s.bg}}; display: flex; flex-direction: column"><b style="font-size: 14px">{{s.n}}</b><span style="font-size: 12px; color: {{s.c}}">{{s.note}}</span></div>
+        <sc-for list="{{s.people}}" as="m" hint-placeholder-count="2">
+          <button type="button" aria-pressed="{{m.sel}}" style="min-height: 168px; padding: 14px 12px; border-radius: 18px; background: {{m.bg}}; border: 1px solid {{m.border}}; color: #F1F4FF; font-family: Manrope, sans-serif; text-align: left; display: flex; flex-direction: column; gap: 10px">
+            <img src="{{m.img}}" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: top; background: #DCE6F7; box-shadow: 0 0 0 2px {{m.ring}}">
+            <span style="display: flex; flex-direction: column; gap: 2px"><b style="font-size: 15px; line-height: 1.25">{{m.n}}</b><span style="font-size: 12px; color: #8C94B4">{{m.r}}</span></span>
+            <span style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap"><span style="font-size: 12px; font-weight: 700; color: {{m.ring}}">{{m.mood}}</span><span style="height: 22px; padding: 0 8px; border-radius: 999px; background: rgba(222,233,255,0.07); font-size: 11px; font-weight: 700; display: flex; align-items: center; color: #C3C9DE">{{m.style}}</span></span>
+          </button>
+        </sc-for>
+      </section>
+    </sc-for>
+  </main>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(5,5,14,0.45)"></div>
+  <section role="dialog" aria-label="Actions for Kent Goldberg" style="position: absolute; top: 0; right: 0; bottom: 0; width: 440px; box-sizing: border-box; padding: 22px 24px 24px; background: #12122A; border-left: 1px solid rgba(222,233,255,0.12); box-shadow: -30px 0 80px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; gap: 14px; align-items: center">
+      <img src="/_blob/591e30ff8363f46b3929b9e1cc60c1d3" alt="" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; object-position: top; background: #DCE6F7; box-shadow: 0 0 0 2px #FF7A6B">
+      <div style="display: flex; flex-direction: column; flex: 1"><b style="font-size: 19px">Kent Goldberg</b><span style="font-size: 13px; color: #A6AECB">Leads · Frustrated · trust 41</span></div>
+      <button type="button" class="ib" aria-label="Close">✕</button>
+    </div>
+    <div style="display: flex; gap: 8px"><button type="button" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 0; background: rgba(47,155,255,0.18); color: #F1F4FF; font: 700 13px Manrope, sans-serif">For Kent</button><button type="button" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(222,233,255,0.12); background: transparent; color: #C3C9DE; font: 600 13px Manrope, sans-serif">For the team</button><button type="button" style="height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(222,233,255,0.12); background: transparent; color: #C3C9DE; font: 600 13px Manrope, sans-serif">Profile</button></div>
+    <div style="padding: 12px 14px; border-radius: 14px; background: rgba(245,181,71,0.08); border: 1px solid rgba(245,181,71,0.25); font-size: 13px; line-height: 1.5; color: #FFE1AE">Kent's message is due today. He asked about the territory split.</div>
+    <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px">
+      <legend style="font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #8C94B4; margin-bottom: 8px">Choose an action</legend>
+      <sc-for list="{{actions}}" as="a" hint-placeholder-count="5">
+        <label style="min-height: 64px; display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 14px; border-radius: 16px; border: 1px solid {{a.border}}; background: {{a.bg}}">
+          <input type="radio" name="act" checked="{{a.on}}" style="width: 20px; height: 20px; accent-color: #2F9BFF; margin: 0">
+          <span style="display: flex; flex-direction: column"><b style="font-size: 15px">{{a.n}}</b><span style="font-size: 12px; color: #8C94B4">{{a.d}}</span></span>
+          <span style="font-size: 13px; color: #A6AECB">{{a.c}}</span>
+        </label>
+      </sc-for>
+    </fieldset>
+    <span style="flex: 1"></span>
+    <span style="font-size: 12px; color: #8C94B4; text-align: center">Live conversation · 1 of 2 this week · 3 days left</span>
+    <button type="button" style="height: 56px; border-radius: 16px; border: 0; background: #2F9BFF; color: #04101F; font: 700 16px Manrope, sans-serif">Confirm and start · 1 day</button>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":834,"height":1194}}'>
+class Component extends DCLogic {
+  renderVals() {
+const img = { kent: '/_blob/591e30ff8363f46b3929b9e1cc60c1d3', beth: '/_blob/03a9b43b1a4724fec350a8fb8b50f901', justin: '/_blob/df764ce0defd433843ec0193ca55914d', derick: '/_blob/9f5a55035d40bd976f042e174ffc9d22', green: '/_blob/4a96b92108fe93197fa623e861a79e03', lowe: '/_blob/a19adc6ec80ed6aea62b27c45c3c6a0e', jack: '/_blob/4b523a9a5d6fdf04e3244986868c6ec0', peter: '/_blob/a0910603ea748084eb5db8a73e9b503d', ruth: '/_blob/e19bda513a19220c24c159505e25ee17', mandy: '/_blob/35f2ae3bcc7eb301d495cb45854c903f' };
+    const c = { Frustrated: '#FF7A6B', Concerned: '#F5B547', Steady: '#A6AECB', Upbeat: '#2EE6A8' };
+    const sel = 'kent';
+    const p = (id, n, r, mood, style) => ({ img: img[id], n, r, mood, style, ring: c[mood], sel: sel === id ? 'true' : 'false', bg: sel === id ? 'rgba(47,155,255,0.12)' : '#12122A', border: sel === id ? '#2F9BFF' : 'rgba(222,233,255,0.08)' });
+    const s = (n, note, people, b) => ({ n, note, people, border: b ? 'rgba(245,181,71,0.35)' : 'rgba(222,233,255,0.08)', bg: b ? 'rgba(245,181,71,0.08)' : 'transparent', c: b ? '#FFD08A' : '#8C94B4' });
+    const a = (n, d, c, on) => ({ n, d, c, on, bg: on ? 'rgba(47,155,255,0.12)' : 'transparent', border: on ? '#2F9BFF' : 'rgba(222,233,255,0.1)' });
+    return {
+      actions: [a('Meet face to face', 'Live, voice or text', '1 day', true), a('Coach member', 'Live, work through the job', '1 day', false), a('Give feedback', 'Live chat', '1 day', false), a('Send to training', 'Instant, away 3 days', '1 day', false), a('Assess role fit', 'Instant', '½ day', false)],
+      kpis: [
+        { n: 'Team skill', v: '57', d: '▲ 2', c: '#6FF2C4' }, { n: 'Team morale', v: '53', d: '▼ 1', c: '#FFA79C' },
+        { n: 'Team result', v: '60', d: '▲ 3', c: '#6FF2C4' }, { n: 'Team trust', v: '56', d: 'steady', c: '#A6AECB' },
+        { n: 'Team Pulse', v: '55', d: '▲ 2', c: '#6FF2C4' }, { n: '8 week target', v: '$70,400', d: 'of $240,000', c: '#8C94B4' },
+        { n: 'Paula, your sponsor', v: 'Confident', d: '72', c: '#A6AECB' }, { n: 'Streak', v: '2 weeks', d: '1 to a bonus', c: '#FFD08A' }
+      ],
+      stages: [
+        s('Leads', '54 of 62', [p('kent', 'Kent Goldberg', 'Senior SDR', 'Frustrated', 'Guiding'), p('beth', 'Beth Killiney', 'SDR', 'Upbeat', 'Entrusting')]),
+        s('Qualify', '20 of 26', [p('justin', 'Justin Keel', 'Qualifier', 'Concerned', 'Directing'), p('derick', 'Derick Kaynes', 'Qualifier', 'Steady', 'Guiding')]),
+        s('Proposal', '5 of 6.4', [p('green', 'Green Bell', 'Proposals', 'Steady', 'Partnering'), p('lowe', 'Lowe Rex', 'Proposals', 'Concerned', 'Guiding')]),
+        s('Negotiation', '1.8 of 2.7', [p('jack', 'Jack Holt', 'Negotiator', 'Upbeat', 'Partnering'), p('peter', 'Peter Higgins', 'Negotiator', 'Concerned', 'Directing')]),
+        s('Conversion', 'Bottleneck', [p('ruth', 'Ruth Ether', 'Closer', 'Steady', 'Guiding'), p('mandy', 'Mandy Lobert', 'Closer', 'Upbeat', 'Entrusting')], true)
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

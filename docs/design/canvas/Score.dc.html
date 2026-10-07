@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Score, badges and cohort</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8C94B4}
+.panel{border-radius:24px;background:#12122A;border:1px solid rgba(222,233,255,0.1);box-shadow:0 30px 80px rgba(0,0,0,0.35)}
+th{font-size:12px;font-weight:600;color:#8C94B4;text-align:left;padding:8px 10px}
+td{padding:10px;font-size:14px;border-top:1px solid rgba(222,233,255,0.06)}
+</style>
+</helmet>
+<div style="width: 1440px; height: 940px; box-sizing: border-box; padding: 40px 48px; background: #0A0A1A; color: #F1F4FF; font-family: Manrope, sans-serif; display: grid; grid-template-columns: 400px minmax(0, 1fr) 420px; gap: 28px; align-items: start">
+  <section aria-label="Leadership Score breakdown" class="panel" style="padding: 24px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 17px">Leadership Score</h2><span style="font-size: 13px; color: #8C94B4"><b style="font-size: 28px; color: #F1F4FF; font-variant-numeric: tabular-nums">433</b> of 1,000</span></div>
+    <p style="margin: 0; font-size: 13px; line-height: 1.55; color: #A6AECB">Built from three parts. Every point is earned; nothing is taken away for being slow.</p>
+    <sc-for list="{{pillars}}" as="p" hint-placeholder-count="3">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="display: flex; justify-content: space-between; font-size: 14px"><span><b>{{p.n}}</b> <span style="color: #8C94B4">{{p.w}}</span></span><b style="font-variant-numeric: tabular-nums">{{p.v}}</b></div>
+        <div style="height: 6px; border-radius: 3px; background: rgba(222,233,255,0.08)"><div style="width: {{p.pct}}; height: 100%; border-radius: 3px; background: #2F9BFF"></div></div>
+        <span style="font-size: 12px; color: #8C94B4">{{p.d}}</span>
+      </div>
+    </sc-for>
+    <div style="padding-top: 14px; border-top: 1px solid rgba(222,233,255,0.08); display: flex; justify-content: space-between; font-size: 14px"><span><b>Streak bonus</b><br><span style="font-size: 12px; color: #8C94B4">2 weeks in a row. 1 more for +25.</span></span><b>+0 of +100</b></div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span class="lbl">Tiers</span>
+      <sc-for list="{{tiers}}" as="t" hint-placeholder-count="4">
+        <div style="display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 10px; background: {{t.bg}}; font-size: 13px"><span style="font-weight: {{t.fw}}">{{t.n}}</span><span style="color: #A6AECB">{{t.note}}</span></div>
+      </sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-size: 13px; color: #A6AECB">Rank <b style="color: #F1F4FF">6 of 15</b> in your cohort</span>
+      <button type="button" style="height: 38px; padding: 0 14px; border-radius: 12px; border: 1px solid rgba(222,233,255,0.16); background: transparent; color: #F1F4FF; font: 700 13px Manrope, sans-serif">Badges, 3 of 10</button>
+    </div>
+  </section>
+
+  <section role="dialog" aria-label="Badges" class="panel" style="padding: 28px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h2 style="margin: 0; font-size: 22px">Badges</h2><span style="font-size: 13px; color: #A6AECB">3 of 10 earned. Each one marks a habit good leaders share.</span></div>
+      <button type="button" aria-label="Close" style="width: 40px; height: 40px; border-radius: 12px; border: 1px solid rgba(222,233,255,0.12); background: transparent; color: #D6DBEE; font-size: 16px">✕</button>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+      <sc-for list="{{badges}}" as="b" hint-placeholder-count="10">
+        <div style="display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 14px; align-items: center; padding: 14px; border-radius: 18px; background: {{b.bg}}; border: 1px solid {{b.border}}; opacity: {{b.op}}">
+          <span style="width: 52px; height: 52px; border-radius: 50%; background: {{b.medal}}; color: {{b.ink}}; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800">{{b.g}}</span>
+          <span style="display: flex; flex-direction: column; gap: 3px; min-width: 0"><b style="font-size: 15px">{{b.n}}</b><span style="font-size: 12px; line-height: 1.45; color: #A6AECB">{{b.d}}</span><span style="font-size: 11px; font-weight: 700; color: {{b.wc}}">{{b.w}}</span></span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section aria-label="Your cohort" class="panel" style="padding: 24px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 4px"><h2 style="margin: 0; font-size: 17px">Your cohort</h2><span style="font-size: 12px; color: #8C94B4">Northwind Sales Leaders · ranked by Leadership Score</span></div>
+    <table style="border-collapse: collapse; width: 100%">
+      <caption style="position: absolute; left: -9999px">Cohort ranking</caption>
+      <thead><tr><th scope="col">Rank</th><th scope="col">Leader</th><th scope="col" style="text-align: right">Score</th><th scope="col">Tier</th></tr></thead>
+      <tbody>
+        <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+          <tr style="background: {{r.bg}}">
+            <td style="font-variant-numeric: tabular-nums; color: #A6AECB; width: 44px">{{r.rank}}</td>
+            <td style="font-weight: {{r.fw}}">{{r.n}}</td>
+            <td style="text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{r.s}}</td>
+            <td style="color: #A6AECB">{{r.t}}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <span style="font-size: 12px; color: #8C94B4">Ties go to more deals closed, then to style fit. The leaderboard is off when the simulation is used for selection.</span>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":940}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const earned = (g, n, d, w) => ({ g, n, d, w, wc: '#6FF2C4', bg: 'rgba(47,155,255,0.07)', border: 'rgba(47,155,255,0.25)', op: '1', medal: 'linear-gradient(140deg, #43D6E8, #2F9BFF)', ink: '#04101F' });
+    const locked = (g, n, d) => ({ g, n, d, w: 'Not yet', wc: '#8C94B4', bg: 'transparent', border: 'rgba(222,233,255,0.08)', op: '0.72', medal: 'rgba(222,233,255,0.08)', ink: '#A6AECB' });
+    return {
+      pillars: [
+        { n: 'Business', w: '30%', v: 29, pct: '29%', d: 'Revenue against the target' },
+        { n: 'People', w: '30%', v: 52, pct: '52%', d: 'Change in team morale and trust since the start' },
+        { n: 'Leadership', w: '40%', v: 61, pct: '61%', d: 'Half style fit across the run, half how live conversations landed' }
+      ],
+      tiers: [
+        { n: 'Platinum', note: 'from 850', bg: 'transparent', fw: 500 },
+        { n: 'Gold', note: 'from 700', bg: 'transparent', fw: 500 },
+        { n: 'Silver', note: 'from 500', bg: 'transparent', fw: 500 },
+        { n: 'Bronze', note: 'You are here · from 0', bg: 'rgba(47,155,255,0.12)', fw: 800 }
+      ],
+      badges: [
+        earned('◉', 'First Close', 'Your team closed its first deal.', 'Earned in week 1'),
+        earned('◎', 'Read the Room', '9 of 10 people got the style they needed.', 'Earned in week 2'),
+        earned('✓', 'Promise Keeper', 'Make three promises and break none.', 'Earned in week 3'),
+        locked('▦', 'Flex Master', 'Use every style correctly at least twice.'),
+        locked('❝', 'Concern Uncovered', 'Help five people open up about what is bothering them.'),
+        locked('⚖', 'Fair Hand', 'Recognize people three times without anyone feeling passed over.'),
+        locked('↗', 'Turnaround', 'Bring someone from morale below 30 to above 60.'),
+        locked('✺', 'Change Champion', 'Explain a change really well twice.'),
+        locked('⚓', 'Steady Hand', 'Finish the run without a conversation going badly.'),
+        locked('◈', 'Target Crusher', 'Reach the revenue target.')
+      ],
+      rows: [
+        { rank: 1, n: 'Grace Mensah', s: 884, t: 'Platinum' }, { rank: 2, n: 'Hiro Tanaka', s: 812, t: 'Gold' },
+        { rank: 3, n: 'Aisha Rahman', s: 776, t: 'Gold' }, { rank: 4, n: 'Luca Romano', s: 702, t: 'Gold' },
+        { rank: 5, n: 'Kavya Iyer', s: 655, t: 'Silver' }, { rank: 6, n: 'You', s: 433, t: 'Bronze', me: true },
+        { rank: 7, n: 'Ben Okafor', s: 418, t: 'Bronze' }, { rank: 8, n: 'Isla Murray', s: 377, t: 'Bronze' }
+      ].map(r => ({ ...r, bg: r.me ? 'rgba(47,155,255,0.12)' : 'transparent', fw: r.me ? 800 : 500, n: r.me ? 'You, Jordan Lee' : r.n }))
+    };
+  }
+}
+</script>
+</body>
+</html>

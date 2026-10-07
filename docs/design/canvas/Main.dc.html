@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>iLead design language</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+a{color:#7CC0FF}a:hover{color:#B5DBFF}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8C94B4}
+.sw{display:flex;flex-direction:column;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:600}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1240px; box-sizing: border-box; padding: 72px 80px; background: #0A0A1A; color: #F1F4FF; font-family: Manrope, sans-serif; display: flex; flex-direction: column; gap: 48px">
+  <header style="display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 64px; align-items: end">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <span class="lbl" style="color: #43D6E8">iLead 2.0 · Leadership simulation</span>
+      <h1 style="margin: 0; font-size: 64px; line-height: 1.02; font-weight: 700; letter-spacing: -0.035em">Night Studio for play.<br>Paper for what you take away.</h1>
+      <p style="margin: 0; font-size: 18px; line-height: 1.6; color: #A6AECB; max-width: 620px">A calm, focused room to practise leading people, and a report that reads like a document your manager keeps. Colour carries meaning, never decoration: blue is your next move, mint is a gain, coral is a cost.</p>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+      <sc-for list="{{principles}}" as="p" hint-placeholder-count="3">
+        <div style="padding: 20px; border-radius: 18px; background: #12122A; border: 1px solid rgba(222,233,255,0.08); display: flex; flex-direction: column; gap: 8px">
+          <b style="font-size: 15px">{{p.t}}</b>
+          <span style="font-size: 13px; line-height: 1.55; color: #A6AECB">{{p.d}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </header>
+
+  <section style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <span class="lbl">Night Studio colour, play screens</span>
+      <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{night}}" as="c" hint-placeholder-count="10">
+          <div class="sw">
+            <div style="height: 72px; border-radius: 14px; background: {{c.hex}}; border: 1px solid rgba(222,233,255,0.12)"></div>
+            <b style="font-size: 13px">{{c.n}}</b>
+            <span style="font-size: 12px; color: #8C94B4">{{c.hex}} · {{c.role}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <span class="lbl">Paper colour, the report</span>
+      <div style="padding: 24px; border-radius: 18px; background: #FBFAF7; color: #16152B; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+        <sc-for list="{{paper}}" as="c" hint-placeholder-count="6">
+          <div class="sw">
+            <div style="height: 56px; border-radius: 12px; background: {{c.hex}}; border: 1px solid #E6E3DA"></div>
+            <b style="font-size: 13px">{{c.n}}</b>
+            <span style="font-size: 12px; color: #5A5B70">{{c.hex}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span class="lbl">Type: Manrope for the product, Newsreader for the report's voice</span>
+      <div style="padding: 28px; border-radius: 20px; background: #12122A; border: 1px solid rgba(222,233,255,0.08); display: flex; flex-direction: column; gap: 14px">
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 120px; font-size: 12px; color: #8C94B4">Display 48/700</span><span style="font-size: 48px; font-weight: 700; letter-spacing: -0.03em; line-height: 1">Kent is back.</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 120px; font-size: 12px; color: #8C94B4">Title 24/700</span><span style="font-size: 24px; font-weight: 700; letter-spacing: -0.015em">Meet face to face with Kent</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 120px; font-size: 12px; color: #8C94B4">Body 15/500</span><span style="font-size: 15px; font-weight: 500; color: #D6DBEE">Listen first, then agree one next step he owns.</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 120px; font-size: 12px; color: #8C94B4">Data 28/700 tabular</span><span style="font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums">$226,400 · 892</span></div>
+        <div style="display: flex; align-items: baseline; gap: 20px"><span style="width: 120px; font-size: 12px; color: #8C94B4">Report 40 serif</span><span style="font-family: Newsreader, serif; font-size: 40px; font-weight: 500; letter-spacing: -0.01em">Your leadership, in evidence.</span></div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <span class="lbl">Core controls</span>
+      <div style="padding: 28px; border-radius: 20px; background: #12122A; border: 1px solid rgba(222,233,255,0.08); display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap">
+          <button type="button" style="height: 48px; padding: 0 24px; border-radius: 14px; border: 0; background: #2F9BFF; color: #04101F; font: 700 15px Manrope, sans-serif; cursor: pointer">Confirm and start</button>
+          <button type="button" style="height: 48px; padding: 0 22px; border-radius: 14px; border: 1px solid rgba(222,233,255,0.18); background: rgba(222,233,255,0.04); color: #F1F4FF; font: 600 15px Manrope, sans-serif; cursor: pointer">See why</button>
+          <button type="button" style="height: 48px; padding: 0 14px; border-radius: 14px; border: 0; background: transparent; color: #7CC0FF; font: 600 15px Manrope, sans-serif; cursor: pointer">Look at the board</button>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
+          <span class="chip" style="background: rgba(46,230,168,0.12); color: #6FF2C4">▲ Kent morale +8</span>
+          <span class="chip" style="background: rgba(46,230,168,0.12); color: #6FF2C4">▲ Kent trust +6</span>
+          <span class="chip" style="background: rgba(255,122,107,0.12); color: #FFA79C">▼ Beth morale −3</span>
+          <span class="chip" style="background: rgba(245,181,71,0.12); color: #FFD08A">Bottleneck: Conversion</span>
+        </div>
+        <div style="display: flex; gap: 24px; align-items: center">
+          <div role="radiogroup" aria-label="Leadership style for Kent Goldberg" style="display: grid; grid-template-columns: repeat(4, 48px); gap: 4px; padding: 4px; border-radius: 14px; background: rgba(222,233,255,0.05); border: 1px solid rgba(222,233,255,0.1)">
+            <button type="button" role="radio" aria-checked="false" aria-label="Directing" style="height: 40px; border: 0; border-radius: 10px; background: transparent; color: #A6AECB; font: 700 14px Manrope, sans-serif">D</button>
+            <button type="button" role="radio" aria-checked="true" aria-label="Guiding" style="height: 40px; border: 0; border-radius: 10px; background: #2F9BFF; color: #04101F; font: 800 14px Manrope, sans-serif">G</button>
+            <button type="button" role="radio" aria-checked="false" aria-label="Partnering" style="height: 40px; border: 0; border-radius: 10px; background: transparent; color: #A6AECB; font: 700 14px Manrope, sans-serif">P</button>
+            <button type="button" role="radio" aria-checked="false" aria-label="Entrusting" style="height: 40px; border: 0; border-radius: 10px; background: transparent; color: #A6AECB; font: 700 14px Manrope, sans-serif">E</button>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; flex: 1">
+            <div style="display: flex; justify-content: space-between; font-size: 13px"><span style="color: #A6AECB">Team trust</span><b style="font-variant-numeric: tabular-nums">57</b></div>
+            <div style="height: 6px; border-radius: 3px; background: rgba(222,233,255,0.08)"><div style="width: 57%; height: 100%; border-radius: 3px; background: #43D6E8"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <sc-for list="{{rules}}" as="r" hint-placeholder-count="4">
+      <div style="padding: 20px; border-radius: 18px; border: 1px solid rgba(222,233,255,0.08); display: flex; flex-direction: column; gap: 6px">
+        <span class="lbl" style="color: #43D6E8">{{r.k}}</span>
+        <span style="font-size: 14px; line-height: 1.55; color: #D6DBEE">{{r.v}}</span>
+      </div>
+    </sc-for>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      principles: [
+        { t: 'Calm room', d: 'A dark, quiet ground so faces and choices carry the screen.' },
+        { t: 'Every number has a why', d: 'Each change shows its reason and the words it rests on.' },
+        { t: 'Earned, not taken', d: 'Celebration is subtle. Nothing is lost for being slow.' }
+      ],
+      night: [
+        { n: 'Deep Space', hex: '#0A0A1A', role: 'ground' },
+        { n: 'Panel', hex: '#12122A', role: 'surfaces' },
+        { n: 'Raised', hex: '#1A1A36', role: 'controls' },
+        { n: 'Ink', hex: '#F1F4FF', role: 'text' },
+        { n: 'Mist', hex: '#A6AECB', role: 'secondary text' },
+        { n: 'Electric Blue', hex: '#2F9BFF', role: 'your next move' },
+        { n: 'Cyber Cyan', hex: '#43D6E8', role: 'data, focus' },
+        { n: 'Mint', hex: '#2EE6A8', role: 'gains' },
+        { n: 'Amber', hex: '#F5B547', role: 'attention' },
+        { n: 'Coral', hex: '#FF7A6B', role: 'costs' }
+      ],
+      paper: [
+        { n: 'Paper', hex: '#FBFAF7' }, { n: 'Ink', hex: '#16152B' }, { n: 'Graphite', hex: '#5A5B70' },
+        { n: 'Rule', hex: '#E6E3DA' }, { n: 'Report Blue', hex: '#1D6FD6' }, { n: 'Teal', hex: '#0E8C99' }
+      ],
+      rules: [
+        { k: 'Contrast', v: 'Text 4.5:1 on its surface, controls 3:1. Checked in dark, light and every client theme.' },
+        { k: 'Motion', v: '220 ms ease out. Celebration is none, subtle or full; reduced motion always wins.' },
+        { k: 'Targets', v: '44 px on tablets and touch screens, 32 px minimum with a mouse. Focus is a 2 px cyan ring.' },
+        { k: 'Words', v: 'Skills, never competency. No dashes in copy. Numbers use the minus sign.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

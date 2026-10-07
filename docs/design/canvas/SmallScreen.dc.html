@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Small screen notice</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+.tile{padding:12px 14px;border-radius:14px;background:#12122A;border:1px solid rgba(222,233,255,0.08);display:flex;flex-direction:column;gap:6px;min-width:0}
+.ib{width:44px;height:44px;border-radius:12px;border:1px solid rgba(222,233,255,0.12);background:rgba(222,233,255,0.03);color:#D6DBEE;display:flex;align-items:center;justify-content:center}
+
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 24px 24px 32px; background: radial-gradient(420px 360px at 50% 30%, #191A40 0%, #0A0A1A 70%); color: #F1F4FF; font-family: Manrope, sans-serif; display: flex; flex-direction: column; gap: 18px">
+  <span style="font-size: 21px; font-weight: 800; letter-spacing: -0.03em">i<span style="color: #43D6E8">Lead</span></span>
+  <span style="flex: 1"></span>
+  <svg width="96" height="72" viewBox="0 0 96 72" fill="none" aria-hidden="true"><rect x="10" y="4" width="76" height="50" rx="6" stroke="#43D6E8" stroke-width="3"/><path d="M2 62h92" stroke="#43D6E8" stroke-width="3" stroke-linecap="round"/><rect x="2" y="30" width="20" height="38" rx="4" fill="#0A0A1A" stroke="#5A6080" stroke-width="3"/></svg>
+  <h1 style="margin: 0; font-size: 30px; line-height: 1.12; letter-spacing: -0.03em">iLead works best on a bigger screen</h1>
+  <p style="margin: 0; font-size: 16px; line-height: 1.55; color: #A6AECB">Open this link on a laptop, desktop or tablet to play. Your progress is saved, so you can pick up where you left off.</p>
+  <span style="flex: 1"></span>
+  <button type="button" style="height: 56px; border-radius: 16px; border: 0; background: #2F9BFF; color: #04101F; font: 800 16px Manrope, sans-serif">Copy link</button>
+  <span role="status" style="font-size: 13px; color: #8C94B4; text-align: center">Tablets work in portrait and landscape.</span>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

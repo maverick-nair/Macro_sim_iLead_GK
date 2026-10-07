@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Simulation complete</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Newsreader:opsz,wght@6..72,500&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+a{color:#7CC0FF}a:hover{color:#B5DBFF}
+.card{border-radius:22px;background:#12122A;border:1px solid rgba(222,233,255,0.08)}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#43D6E8}
+th{font-size:12px;font-weight:600;color:#8C94B4;text-align:left;padding:6px 8px}
+td{padding:9px 8px;font-size:14px;border-top:1px solid rgba(222,233,255,0.06)}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1380px; box-sizing: border-box; padding: 28px 48px 48px; background: radial-gradient(900px 420px at 30% 0%, #17183E 0%, #0A0A1A 65%); color: #F1F4FF; font-family: Manrope, sans-serif; display: flex; flex-direction: column; gap: 28px">
+  <header style="display: flex; align-items: center; gap: 16px">
+    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.03em">i<span style="color: #43D6E8">Lead</span></span>
+    <span style="font-size: 14px; color: #A6AECB">Simulation complete</span>
+    <span style="flex: 1"></span>
+    <a href="#board" style="font-size: 14px; font-weight: 600">Look at the board</a>
+  </header>
+  <section style="display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 32px; align-items: end">
+    <div style="display: flex; flex-direction: column; gap: 12px">
+      <span class="lbl">Eight weeks, ten people, one team</span>
+      <h1 style="margin: 0; font-size: 64px; line-height: 1; font-weight: 700; letter-spacing: -0.035em">You finished at <span style="color: #F5C76A">Gold</span>.</h1>
+      <p style="margin: 0; font-size: 18px; color: #A6AECB; max-width: 640px; line-height: 1.55">Take a moment before the report. What you notice now is what you will use on Monday.</p>
+    </div>
+    <div class="card" style="padding: 18px 24px; display: flex; gap: 20px; align-items: center">
+      <div role="img" aria-label="Gold: third of four tiers" style="display: flex; gap: 6px; align-items: flex-end">
+        <span style="width: 14px; height: 20px; border-radius: 4px; background: #9C7A54"></span><span style="width: 14px; height: 30px; border-radius: 4px; background: #B7C0D6"></span><span style="width: 14px; height: 40px; border-radius: 4px; background: #F5C76A"></span><span style="width: 14px; height: 50px; border-radius: 4px; background: rgba(222,233,255,0.1)"></span>
+      </div>
+      <div style="display: flex; flex-direction: column"><span style="font-size: 13px; color: #A6AECB">Leadership Score</span><b style="font-size: 38px; letter-spacing: -0.02em; font-variant-numeric: tabular-nums">742 <span style="font-size: 15px; color: #8C94B4; font-weight: 600">of 1,000</span></b></div>
+    </div>
+  </section>
+  <section aria-label="Results" style="display: grid; grid-template-columns: minmax(0, 1.7fr) repeat(5, minmax(0, 1fr)); gap: 12px">
+    <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 10px">
+      <span style="font-size: 13px; color: #A6AECB">Target achieved</span>
+      <b style="font-size: 26px; font-variant-numeric: tabular-nums">$226,400 <span style="font-size: 14px; color: #8C94B4; font-weight: 600">of $240,000</span></b>
+      <div style="height: 8px; border-radius: 4px; background: rgba(222,233,255,0.08)"><div style="width: 94%; height: 100%; border-radius: 4px; background: #2F9BFF"></div></div>
+    </div>
+    <sc-for list="{{results}}" as="r" hint-placeholder-count="5">
+      <div class="card" style="padding: 18px; display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; color: #A6AECB">{{r.n}}</span><b style="font-size: 26px; font-variant-numeric: tabular-nums">{{r.v}}</b><span style="font-size: 12px; font-weight: 700; color: #6FF2C4">{{r.d}}</span></div>
+    </sc-for>
+  </section>
+  <section style="display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 24px; flex: 1; min-height: 0">
+    <div style="display: flex; flex-direction: column; gap: 14px">
+      <h2 style="margin: 0; font-size: 20px">Moments from your eight weeks</h2>
+      <div class="card" style="padding: 16px 18px; display: flex; flex-direction: column; gap: 14px; border-color: rgba(46,230,168,0.3)">
+        <button type="button" aria-expanded="true" style="display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 14px; align-items: center; border: 0; background: transparent; color: #F1F4FF; font-family: Manrope, sans-serif; text-align: left; padding: 0">
+          <img src="/_blob/591e30ff8363f46b3929b9e1cc60c1d3" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: top; background: #DCE6F7">
+          <span style="display: flex; flex-direction: column"><b style="font-size: 15px">Kent opened up about the territory split</b><span style="font-size: 12px; color: #8C94B4">Week 2 · Best moment</span></span>
+          <span style="height: 26px; padding: 0 10px; border-radius: 999px; background: rgba(46,230,168,0.14); color: #6FF2C4; font-size: 12px; font-weight: 700; display: flex; align-items: center">Best</span>
+        </button>
+        <dl style="margin: 0 0 0 66px; display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 8px 14px; font-size: 14px; line-height: 1.5">
+          <dt style="color: #8C94B4">Situation</dt><dd style="margin: 0">Kent had gone quiet and was complaining to others.</dd>
+          <dt style="color: #8C94B4">What you did</dt><dd style="margin: 0">Asked what was behind it before offering a fix: <i style="color: #C3C9DE">"What would make this feel fair to you?"</i></dd>
+          <dt style="color: #8C94B4">Impact</dt><dd style="margin: 0; color: #6FF2C4">Kent morale +8, trust +6.</dd>
+        </dl>
+      </div>
+      <sc-for list="{{moments}}" as="m" hint-placeholder-count="3">
+        <button type="button" aria-expanded="false" class="card" style="display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 18px; color: #F1F4FF; font-family: Manrope, sans-serif; text-align: left; border-color: {{m.border}}">
+          <img src="{{m.img}}" alt="" style="width: 52px; height: 52px; border-radius: 50%; object-fit: cover; object-position: top; background: #DCE6F7">
+          <span style="display: flex; flex-direction: column"><b style="font-size: 15px">{{m.t}}</b><span style="font-size: 12px; color: #8C94B4">{{m.w}}</span></span>
+          <span style="height: 26px; padding: 0 10px; border-radius: 999px; background: {{m.tagBg}}; color: {{m.tagC}}; font-size: 12px; font-weight: 700; display: flex; align-items: center">{{m.tag}}</span>
+        </button>
+      </sc-for>
+      <h2 style="margin: 10px 0 0; font-size: 16px">Badges, 6 of 10</h2>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap">
+        <sc-for list="{{badges}}" as="b" hint-placeholder-count="10"><span style="height: 36px; padding: 0 14px 0 6px; border-radius: 999px; border: 1px solid {{b.border}}; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: {{b.c}}"><span style="width: 24px; height: 24px; border-radius: 50%; background: {{b.medal}}"></span>{{b.n}}</span></sc-for>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px">
+      <section class="card" aria-label="Reflect" style="padding: 24px; display: flex; flex-direction: column; gap: 16px; background: #14143A; border-color: rgba(222,233,255,0.12)">
+        <div style="display: flex; flex-direction: column; gap: 4px"><h2 style="margin: 0; font-family: Newsreader, serif; font-weight: 500; font-size: 28px">Reflect, two questions</h2><span style="font-size: 13px; color: #A6AECB">Optional. By voice or text. Your answers shape your development plan.</span></div>
+        <sc-for list="{{questions}}" as="q" hint-placeholder-count="2">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <label for="{{q.id}}" style="font-size: 14px; font-weight: 700">{{q.q}}</label>
+            <div style="display: flex; gap: 10px; align-items: flex-start">
+              <textarea id="{{q.id}}" rows="3" placeholder="A sentence or two is plenty" style="flex: 1; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(222,233,255,0.22); background: rgba(10,10,26,0.6); color: #F1F4FF; font: 500 14px/1.5 Manrope, sans-serif; resize: none">{{q.a}}</textarea>
+              <button type="button" aria-label="Answer by voice" style="width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(67,214,232,0.16); color: #43D6E8; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+            </div>
+          </div>
+        </sc-for>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding-top: 14px; border-top: 1px solid rgba(222,233,255,0.08)">
+          <b style="font-size: 14px">How was the experience?</b>
+          <div role="radiogroup" aria-label="Rating, 1 to 5" style="display: flex; gap: 8px">
+            <sc-for list="{{rating}}" as="r" hint-placeholder-count="5"><button type="button" role="radio" aria-checked="{{r.on}}" aria-label="{{r.n}} of 5" style="width: 44px; height: 44px; border-radius: 50%; border: 1px solid {{r.border}}; background: {{r.bg}}; color: {{r.c}}; font: 700 15px Manrope, sans-serif">{{r.n}}</button></sc-for>
+            <span role="status" style="margin-left: auto; align-self: center; font-size: 13px; color: #6FF2C4; font-weight: 600">Saved</span>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap">
+          <button type="button" style="height: 50px; padding: 0 24px; border-radius: 14px; border: 0; background: #2F9BFF; color: #04101F; font: 700 15px Manrope, sans-serif">View my report</button>
+          <button type="button" style="height: 50px; padding: 0 20px; border-radius: 14px; border: 1px solid rgba(222,233,255,0.18); background: transparent; color: #F1F4FF; font: 600 15px Manrope, sans-serif">Download PDF</button>
+          <button type="button" style="height: 50px; padding: 0 14px; border-radius: 14px; border: 0; background: transparent; color: #7CC0FF; font: 600 15px Manrope, sans-serif">Email to me</button>
+        </div>
+      </section>
+      <section class="card" aria-label="Your cohort" style="padding: 20px 22px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline"><h2 style="margin: 0; font-size: 16px">Your cohort</h2><span style="font-size: 12px; color: #8C94B4">Rank 4 of 15</span></div>
+        <table style="border-collapse: collapse; width: 100%">
+          <thead><tr><th scope="col">Rank</th><th scope="col">Leader</th><th scope="col" style="text-align: right">Score</th></tr></thead>
+          <tbody><sc-for list="{{cohort}}" as="r" hint-placeholder-count="5"><tr style="background: {{r.bg}}"><td style="color: #A6AECB; width: 50px">{{r.rank}}</td><td style="font-weight: {{r.fw}}">{{r.n}}</td><td style="text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">{{r.s}}</td></tr></sc-for></tbody>
+        </table>
+      </section>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1380}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const best = { tag: 'Best', tagBg: 'rgba(46,230,168,0.14)', tagC: '#6FF2C4', border: 'rgba(222,233,255,0.08)' };
+    const rev = { tag: 'Revisit', tagBg: 'rgba(245,181,71,0.14)', tagC: '#FFD08A', border: 'rgba(245,181,71,0.3)' };
+    const on = { border: 'rgba(47,155,255,0.35)', c: '#EAF4FF', medal: 'linear-gradient(140deg, #43D6E8, #2F9BFF)' };
+    const off = { border: 'rgba(222,233,255,0.08)', c: '#8C94B4', medal: 'rgba(222,233,255,0.08)' };
+    return {
+      results: [{ n: 'Deals closed', v: '27', d: '+2 on ideal pace' }, { n: 'Team skill', v: '71', d: '+14' }, { n: 'Team morale', v: '68', d: '+11' }, { n: 'Team result', v: '74', d: '+15' }, { n: 'Team trust', v: '70', d: '+14' }],
+      moments: [
+        { img: '/_blob/a0910603ea748084eb5db8a73e9b503d', t: 'Peter closed his first big deal', w: 'Week 5 · Best moment', ...best },
+        { img: '/_blob/4b523a9a5d6fdf04e3244986868c6ec0', t: 'Jack held price on Ashcroft', w: 'Week 3 · Best moment', ...best },
+        { img: '/_blob/a19adc6ec80ed6aea62b27c45c3c6a0e', t: 'Feedback to Lowe landed in front of the team', w: 'Week 2 · Worth revisiting', ...rev }
+      ],
+      badges: [
+        { n: 'First Close', ...on }, { n: 'Read the Room', ...on }, { n: 'Promise Keeper', ...on }, { n: 'Flex Master', ...on }, { n: 'Turnaround', ...on }, { n: 'Concern Uncovered', ...on },
+        { n: 'Fair Hand', ...off }, { n: 'Change Champion', ...off }, { n: 'Steady Hand', ...off }, { n: 'Target Crusher', ...off }
+      ],
+      questions: [
+        { id: 'q1', q: 'What did you learn about adapting your style to each person?', a: 'Kent taught me that the loudest problem is not always the real one. Asking first changed everything.' },
+        { id: 'q2', q: 'What will you do differently with your real team next week?', a: '' }
+      ],
+      rating: [1, 2, 3, 4, 5].map(n => ({ n, on: n === 4 ? 'true' : 'false', bg: n === 4 ? '#2F9BFF' : 'transparent', c: n === 4 ? '#04101F' : '#F1F4FF', border: n === 4 ? '#2F9BFF' : 'rgba(222,233,255,0.22)' })),
+      cohort: [
+        { rank: 1, n: 'Grace Mensah', s: 884 }, { rank: 2, n: 'Hiro Tanaka', s: 812 }, { rank: 3, n: 'Aisha Rahman', s: 776 },
+        { rank: 4, n: 'You, Jordan Lee', s: 742, me: true }, { rank: 5, n: 'Luca Romano', s: 702 }
+      ].map(r => ({ ...r, bg: r.me ? 'rgba(47,155,255,0.12)' : 'transparent', fw: r.me ? 800 : 500 }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Week end report</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#0A0A1A}
+.card{border-radius:22px;background:#12122A;border:1px solid rgba(222,233,255,0.08);padding:22px;display:flex;flex-direction:column;gap:14px}
+.lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#8C94B4}
+th{font-size:12px;font-weight:600;color:#8C94B4;text-align:right;padding:6px 0}
+td{font-size:15px;padding:10px 0;border-top:1px solid rgba(222,233,255,0.06);text-align:right;font-variant-numeric:tabular-nums}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1000px; box-sizing: border-box; padding: 28px 40px 36px; background: #0A0A1A; color: #F1F4FF; font-family: Manrope, sans-serif; display: flex; flex-direction: column; gap: 22px">
+  <header style="display: flex; align-items: center; gap: 18px">
+    <span style="font-size: 20px; font-weight: 800; letter-spacing: -0.03em">i<span style="color: #43D6E8">Lead</span></span>
+    <span style="font-size: 14px; color: #A6AECB">Week 2 of 8 · Week end</span>
+    <span style="flex: 1"></span>
+    <ol aria-label="Week end steps" style="list-style: none; margin: 0; padding: 0; display: flex; gap: 8px; font-size: 13px">
+      <sc-for list="{{steps}}" as="s" hint-placeholder-count="5"><li aria-current="{{s.cur}}" style="height: 30px; padding: 0 12px; border-radius: 999px; display: flex; align-items: center; background: {{s.bg}}; color: {{s.c}}; font-weight: 600">{{s.n}}</li></sc-for>
+    </ol>
+  </header>
+  <div style="display: flex; align-items: baseline; gap: 16px">
+    <h1 style="margin: 0; font-size: 34px; letter-spacing: -0.02em">Kent is back in the game.</h1>
+    <span style="font-size: 15px; color: #A6AECB">You gave 9 of 10 people the style they needed. Revenue is behind pace, so next week is about Conversion.</span>
+  </div>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 20px">
+    <div style="display: flex; flex-direction: column; gap: 20px">
+      <section class="card" aria-label="Funnel this week">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <h2 style="margin: 0; font-size: 18px">Funnel this week</h2>
+          <div role="radiogroup" aria-label="Compare with" style="display: flex; padding: 3px; border-radius: 10px; background: rgba(222,233,255,0.05)">
+            <button type="button" role="radio" aria-checked="true" style="height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: rgba(47,155,255,0.2); color: #EAF4FF; font: 700 12px Manrope, sans-serif">This week</button>
+            <button type="button" role="radio" aria-checked="false" style="height: 30px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: #A6AECB; font: 600 12px Manrope, sans-serif">So far</button>
+          </div>
+        </div>
+        <sc-for list="{{funnel}}" as="f" hint-placeholder-count="5">
+          <div style="display: grid; grid-template-columns: 120px minmax(0, 1fr) 96px; gap: 14px; align-items: center; font-size: 14px">
+            <span style="color: {{f.nc}}; font-weight: {{f.fw}}">{{f.n}}</span>
+            <div style="position: relative; height: 12px; border-radius: 6px; background: rgba(222,233,255,0.07)"><div style="width: {{f.w}}; height: 100%; border-radius: 6px; background: {{f.bar}}"></div><span style="position: absolute; left: {{f.ideal}}; top: -4px; width: 2px; height: 20px; border-radius: 1px; background: #F1F4FF"></span></div>
+            <b style="text-align: right; font-variant-numeric: tabular-nums">{{f.v}}</b>
+          </div>
+        </sc-for>
+        <span style="font-size: 13px; color: #FFD08A; font-weight: 600">Conversion closed the least against ideal: your bottleneck going into week 3. Bar is this week, the line is ideal.</span>
+      </section>
+      <section class="card" aria-label="Team over the week">
+        <h2 style="margin: 0; font-size: 18px">Team over the week</h2>
+        <table style="border-collapse: collapse; width: 100%">
+          <thead><tr><th scope="col" style="text-align: left">Measure</th><th scope="col">Start</th><th scope="col">Change</th><th scope="col">End</th></tr></thead>
+          <tbody><sc-for list="{{kpis}}" as="k" hint-placeholder-count="4"><tr><th scope="row" style="text-align: left; font-size: 15px; color: #E3E7F5; font-weight: 500; border-top: 1px solid rgba(222,233,255,0.06); padding: 10px 0">{{k.n}}</th><td>{{k.a}}</td><td style="color: {{k.c}}; font-weight: 700">{{k.d}}</td><td style="font-weight: 700">{{k.b}}</td></tr></sc-for></tbody>
+        </table>
+      </section>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 20px">
+      <section class="card" aria-label="Stars earned">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <h2 style="margin: 0; font-size: 18px">Week score <span style="font-variant-numeric: tabular-nums">83</span></h2>
+          <div role="img" aria-label="2 of 3 stars" style="display: flex; gap: 8px">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="#43D6E8" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="#43D6E8" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#5A6080" stroke-width="1.5" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>
+          </div>
+        </div>
+        <sc-for list="{{parts}}" as="p" hint-placeholder-count="3">
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) 56px; gap: 10px; align-items: center">
+            <div style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 14px"><b>{{p.n}}</b> <span style="color: #8C94B4">{{p.w}}</span></span><div style="height: 6px; border-radius: 3px; background: rgba(222,233,255,0.08)"><div style="width: {{p.pct}}; height: 100%; border-radius: 3px; background: #43D6E8"></div></div><span style="font-size: 12px; color: #8C94B4">{{p.d}}</span></div>
+            <b style="text-align: right; font-size: 18px; font-variant-numeric: tabular-nums">{{p.v}}</b>
+          </div>
+        </sc-for>
+        <span style="font-size: 12px; color: #8C94B4">One star at 50, two at 70, three at 85.</span>
+      </section>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+        <section class="card" aria-label="Streak" style="gap: 8px"><span class="lbl">Streak</span><b style="font-size: 26px">2 weeks</b><span style="font-size: 13px; line-height: 1.5; color: #A6AECB">At 2 stars or more. One more week for a +25 bonus.</span></section>
+        <section class="card" aria-label="Paula's confidence" style="gap: 8px"><span class="lbl">Paula's confidence</span><b style="font-size: 22px">Steady to Confident</b><span style="font-size: 13px; color: #6FF2C4; font-weight: 700">▲ One step up, 64 to 72</span></section>
+      </div>
+      <section class="card" aria-label="Team Pulse" style="gap: 10px">
+        <div style="display: flex; justify-content: space-between"><span class="lbl">Team Pulse</span><b style="font-size: 15px">58 <span style="color: #6FF2C4">▲ 4</span></b></div>
+        <div role="img" aria-label="6 upbeat, 3 steady, 1 struggling" style="display: flex; gap: 2px; height: 10px"><span style="flex: 6; border-radius: 3px; background: #2EE6A8"></span><span style="flex: 3; border-radius: 3px; background: #A6AECB"></span><span style="flex: 1; border-radius: 3px; background: #F5B547"></span></div>
+        <span style="font-size: 13px; color: #C3C9DE">6 upbeat · 3 steady · 1 struggling</span>
+      </section>
+      <div style="display: flex; justify-content: flex-end"><button type="button" style="height: 52px; padding: 0 30px; border-radius: 16px; border: 0; background: #2F9BFF; color: #04101F; font: 700 16px Manrope, sans-serif">Continue</button></div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const step = (n, state) => ({ n, cur: state === 'cur' ? 'step' : 'false', bg: state === 'cur' ? 'rgba(47,155,255,0.18)' : 'transparent', c: state === 'done' ? '#8C94B4' : state === 'cur' ? '#EAF4FF' : '#5A6080' });
+    const f = (n, w, ideal, v, b) => ({ n, w, ideal, v, bar: b ? '#F5B547' : '#2F9BFF', nc: b ? '#FFD08A' : '#E3E7F5', fw: b ? 700 : 500 });
+    return {
+      steps: [step('Banner', 'done'), step('Report', 'cur'), step('Badges'), step('Reward'), step('News')],
+      funnel: [f('Leads', '87%', '96%', '54 of 62'), f('Qualify', '68%', '88%', '20 of 26'), f('Proposal', '58%', '74%', '5 of 6.4'), f('Negotiation', '44%', '66%', '1.8 of 2.7'), f('Conversion', '24%', '62%', '0.7 of 1.1', true)],
+      kpis: [
+        { n: 'Team skill', a: 56, d: '+1', b: 57, c: '#6FF2C4' }, { n: 'Team morale', a: 54, d: '+4', b: 58, c: '#6FF2C4' },
+        { n: 'Team result', a: 58, d: '+2', b: 60, c: '#6FF2C4' }, { n: 'Team trust', a: 53, d: '+4', b: 57, c: '#6FF2C4' }
+      ],
+      parts: [
+        { n: 'Style fit', w: 'half', v: '90', pct: '90%', d: '9 of 10 people got the style they needed' },
+        { n: 'Live conversations', w: 'three tenths', v: '85', pct: '85%', d: '2 conversations; one went really well' },
+        { n: 'Deals against ideal', w: 'one fifth', v: '64', pct: '64%', d: '0.7 of an ideal 1.1' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -514,6 +514,11 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 
 **D79. Bundle budget raised to 250 KB.** Decided 2026-10-07 (product owner), with M8 approved. The participant's initial JS budget (`scripts/budget.ts`) goes from 200 KB to 250 KB gzipped, to leave room for the interface work that follows. It was 199.7 KB at M8. The Web Vitals budgets (D78) are unchanged, so new first load code still has to keep LCP and TBT within them.
 
+**D80. UI improvements: the design canvas becomes the visual source.** Decided 2026-10-07 (product owner chose to apply the canvas, all areas).
+- The approved canvas (`docs/design/canvas/`) replaces the original handoff design as the visual source for every screen: Night Studio (dark) for play, Paper (editorial light) for the reports, the canvas palette, Manrope with Newsreader, and the canvas layouts.
+- Order: foundations first (tokens, type, Paper theme, shared components), then four areas in parallel (board and actions; conversations; onboarding, style setting and week end; end screen and reports, individual and group).
+- The parity check against the original 60 frames is retired as screens move to the canvas; Playwright baselines, reviewed image by image, take over. Behaviour, copy rules, accessibility, the client theme loader (D72), the lens (D71) and the budgets (D78, D79) still hold.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
