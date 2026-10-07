@@ -4,6 +4,7 @@ import { heuristicEvaluator, type EvaluationInput, type Evaluator as EngineEvalu
 import { personaNpc, type NpcContext, type NpcModel as EngineNpcModel, type NpcReply } from '../../src/engine/sim/live';
 import type { Band, Evaluation } from '../../src/engine/sim/types';
 import type { StorylineConfig } from '../../src/engine/config';
+import type { SyntheticSpeaker } from '../../src/engine/sim/syntheticSpeech';
 
 /**
  * The server's AI and speech ports (docs/SERVER.md "AI and speech"). The engine already defines the two
@@ -75,6 +76,7 @@ export interface AiRoleConfigs {
   evaluator: { provider: 'mock' | 'anthropic'; logger: AiLogger; onAudit(audit: Record<string, unknown>): void; [k: string]: unknown };
   author: { provider: 'mock' | 'anthropic'; logger: AiLogger; [k: string]: unknown };
   transcriber: { provider: 'mock' | 'http'; logger: AiLogger; http?: { url: string; key?: string }; [k: string]: unknown };
+  synthetic: { provider: 'mock' | 'anthropic'; logger: AiLogger; [k: string]: unknown };
 }
 
 /** The `ai/` module's exports (ai/src/index.ts). Factories may be async. */
@@ -83,6 +85,8 @@ export interface AiModule {
   createEvaluator(config: AiRoleConfigs['evaluator']): Evaluator | Promise<Evaluator>;
   createAuthorDrafter(config: AiRoleConfigs['author']): AuthorDrafter | Promise<AuthorDrafter>;
   createTranscriber?(config: AiRoleConfigs['transcriber']): unknown;
+  /** GenieKreator's synthetic players with AI (D110): a persona's lines in a calibration. Optional: without it the templates speak. */
+  createSyntheticPlayer?(config: AiRoleConfigs['synthetic']): SyntheticSpeaker | Promise<SyntheticSpeaker>;
   configFromEnv?(env: Record<string, string | undefined>): Partial<Record<keyof AiRoleConfigs, Record<string, unknown>>>;
   sceneFromStoryline?(storyline: StorylineConfig): Record<string, unknown>;
 }
@@ -95,6 +99,8 @@ export interface AiPorts {
   author: AuthorDrafter;
   /** Null: speech is off (`SPEECH_PROVIDER=off`), and the transcription routes answer 501. */
   transcriber: Transcriber | null;
+  /** Synthetic players' words in a calibration (D110). Unset: the engine's offline templates. */
+  synthetic?: SyntheticSpeaker;
   /** The storyline's scene for NPC calls (the ai/ module's `sceneFromStoryline`: locale, organisation, sponsor). */
   scene?(storyline: StorylineConfig): Record<string, unknown>;
 }

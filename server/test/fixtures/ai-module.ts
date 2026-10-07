@@ -23,3 +23,7 @@ export async function createAuthorDrafter() {
 export function createTranscriber() {
   return { transcribe: async ({ audio }: { audio: Uint8Array }) => ({ text: `heard ${audio.byteLength} bytes` }) };
 }
+export function createSyntheticPlayer(config: AiRoleConfigs['synthetic']) {
+  seen.push(config);
+  return { say: () => 'Fixture player line.' };
+}
