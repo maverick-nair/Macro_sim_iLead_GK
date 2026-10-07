@@ -1,6 +1,8 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
-import type { Mark } from '../model/draft';
+import { SHORT_MAX, TEXT_MAX, type Mark } from '../model/draft';
+
+export { SHORT_MAX, TEXT_MAX };
 import { useAuthor } from '../model/store';
 
 /**
@@ -88,11 +90,12 @@ export function toneOf(mark: Mark | undefined, need = false): string {
 }
 
 const FIELD = `w-full min-w-0 rounded-10 border border-solid px-3 text-14 font-400 text-author-ink placeholder:text-author-muted ${FOCUS}`;
-export function TextInput({ tone = '', className = '', ...p }: InputHTMLAttributes<HTMLInputElement> & { tone?: string }) {
-  return <input {...p} className={`${FIELD} min-h-10.5 ${tone || 'border-author-line-control bg-author-surface'} ${className}`} />;
+/** A one line input. It takes a short field's limit unless told otherwise; a text field passes TEXT_MAX. */
+export function TextInput({ tone = '', className = '', maxLength = SHORT_MAX, ...p }: InputHTMLAttributes<HTMLInputElement> & { tone?: string }) {
+  return <input {...p} maxLength={maxLength} className={`${FIELD} min-h-10.5 ${tone || 'border-author-line-control bg-author-surface'} ${className}`} />;
 }
-export function TextArea({ tone = '', className = '', ...p }: TextareaHTMLAttributes<HTMLTextAreaElement> & { tone?: string }) {
-  return <textarea {...p} className={`${FIELD} resize-y py-2.5 leading-[1.5] ${tone || 'border-author-line-control bg-author-surface'} ${className}`} />;
+export function TextArea({ tone = '', className = '', maxLength = TEXT_MAX, ...p }: TextareaHTMLAttributes<HTMLTextAreaElement> & { tone?: string }) {
+  return <textarea {...p} maxLength={maxLength} className={`${FIELD} resize-y py-2.5 leading-[1.5] ${tone || 'border-author-line-control bg-author-surface'} ${className}`} />;
 }
 export function Select({ tone = '', className = '', ...p }: SelectHTMLAttributes<HTMLSelectElement> & { tone?: string }) {
   return <select {...p} className={`${FIELD} min-h-10.5 cursor-pointer ${tone || 'border-author-line-control bg-author-surface'} ${className}`} />;

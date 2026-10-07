@@ -1,6 +1,6 @@
 import { REGIONS } from '../../../context';
 import { useAuthor } from '../../../model/store';
-import { BUTTON, CARD, CardHead, Chip, Field, MarkOf, Segmented, Select, TextArea, TextInput, toneOf } from '../../kit';
+import { BUTTON, CARD, CardHead, Chip, Field, MarkOf, Segmented, Select, TEXT_MAX, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate } from './regenerate';
 
@@ -19,7 +19,7 @@ export default function Brief() {
       <div className="grid grid-cols-2 gap-4 max-[1180px]:grid-cols-1">
         <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="who">
           <CardHead id="who" title="Who and why"><MarkOf path="brief.participants" /></CardHead>
-          <Field label="Participants" required mark="brief.participants">{id => <TextInput id={id} tone={toneOf(d.marks['brief.participants'])} value={b.participants} onChange={e => set('participants', e.target.value)} />}</Field>
+          <Field label="Participants" required mark="brief.participants">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={toneOf(d.marks['brief.participants'])} value={b.participants} onChange={e => set('participants', e.target.value)} />}</Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Industry" required>{id => <TextInput id={id} tone={toneOf(d.marks['brief.industry'])} value={b.industry} onChange={e => set('industry', e.target.value)} />}</Field>
             <Field label="Client" optional>{id => <TextInput id={id} tone={toneOf(d.marks['brief.client'])} value={b.client} placeholder="Fictional company" onChange={e => set('client', e.target.value)} />}</Field>
@@ -79,7 +79,7 @@ export default function Brief() {
             <summary className="cursor-pointer text-15 font-800">Advanced: time per week, target skills, save and resume</summary>
             <div className="mt-3 grid grid-cols-2 gap-3">
               <Field label="Minutes per week">{id => <TextInput id={id} type="number" min={3} max={30} value={b.minutesPerWeek} onChange={e => set('minutesPerWeek', Math.max(3, Math.min(30, Number(e.target.value) || 3)))} />}</Field>
-              <Field label="Target skills" optional>{id => <TextInput id={id} value={b.targetSkills} placeholder="For example negotiation, coaching" onChange={e => set('targetSkills', e.target.value)} />}</Field>
+              <Field label="Target skills" optional>{id => <TextInput id={id} maxLength={TEXT_MAX} value={b.targetSkills} placeholder="For example negotiation, coaching" onChange={e => set('targetSkills', e.target.value)} />}</Field>
               <label className="col-span-2 flex items-center gap-2 text-14"><input type="checkbox" checked={b.saveAndResume} onChange={e => set('saveAndResume', e.target.checked)} /> Participants can save and resume</label>
             </div>
           </details>

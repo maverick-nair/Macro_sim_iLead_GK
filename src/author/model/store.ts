@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react';
 import { createStore, useStore, type StoreApi } from 'zustand';
-import { AuthorDraft, WORKSPACE_KEY, type Mark } from './draft';
+import { AuthorDraft, WORKSPACE_BACKUP_KEY, WORKSPACE_KEY, type Mark } from './draft';
+import { clampDraft, repairDraft } from './repair';
 import { emptyChat, seedDraft } from './seed';
 
 /**
@@ -8,7 +9,9 @@ import { emptyChat, seedDraft } from './seed';
  * clones the draft, applies the change and marks the paths it touched: the author's edit turns `ai`
  * into `edited` and leaves `you` as it is; Kora's change (`by: 'ai'`) marks `ai`. Storage can be
  * missing, full or blocked (private windows, a policy): reading and writing never throw, the draft
- * keeps working in memory and the header says it could not save.
+ * keeps working in memory and the header says it could not save. A stored draft that no longer parses
+ * is kept as it was under WORKSPACE_BACKUP_KEY and repaired field by field (D120); every edit clamps
+ * the draft to the schema's limits so what is saved always reads back.
  */
 
 export interface AuthorState {
@@ -28,14 +31,33 @@ export function freshDraft(): AuthorDraft {
 }
 
 export function loadDraft(storage: Storage | null): AuthorDraft | null {
+  let raw: string | null | undefined;
   try {
-    const raw = storage?.getItem(WORKSPACE_KEY);
-    if (!raw) return null;
-    const r = AuthorDraft.safeParse(JSON.parse(raw));
-    return r.success ? r.data : null;
+    raw = storage?.getItem(WORKSPACE_KEY);
   } catch {
     return null;
   }
+  if (!raw) return null;
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    backUp(storage, raw);
+    return null;
+  }
+  const r = AuthorDraft.safeParse(value);
+  if (r.success) return r.data;
+  backUp(storage, raw);
+  try {
+    return repairDraft(value, freshDraft);
+  } catch {
+    return null;
+  }
+}
+
+/** Keeps the value that did not parse, so nothing the author wrote is lost to a repair. */
+function backUp(storage: Storage | null, raw: string): void {
+  try { storage?.setItem(WORKSPACE_BACKUP_KEY, raw); } catch { /* storage full or blocked: the repair still runs */ }
 }
 
 function save(storage: Storage | null, d: AuthorDraft): boolean {
@@ -67,10 +89,11 @@ export function createAuthorStore(initial?: AuthorDraft, storage: Storage | null
     edit(change, mark, by = 'you') {
       const next = structuredClone(get().draft);
       change(next);
+      clampDraft(next);
       for (const p of mark === undefined ? [] : Array.isArray(mark) ? mark : [mark]) next.marks[p] = nextMark(next.marks[p], by);
       set({ draft: next });
     },
-    replace(d) { set({ draft: d }); },
+    replace(d) { set({ draft: clampDraft(structuredClone(d)) }); },
     reset() { set({ draft: freshDraft() }); }
   }));
   // Saves after a short pause, so typing does not write on every key.

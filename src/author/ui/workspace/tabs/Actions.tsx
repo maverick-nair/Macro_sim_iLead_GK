@@ -4,7 +4,7 @@ import type { ActionDraft, Plays } from '../../../model/draft';
 import { ENGINE_TEMPLATES, PLAYS_LABEL } from '../../../model/library';
 import { effectText, seedDraft } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
-import { Badge, BUTTON, CARD, Field, Icon, Segmented, Select, TextArea, TextInput, Toggle, toneOf } from '../../kit';
+import { Badge, BUTTON, CARD, Field, Icon, Segmented, Select, SHORT_MAX, TEXT_MAX, TextArea, TextInput, Toggle, toneOf } from '../../kit';
 import { ActionAdd } from '../ActionAdd';
 import { TabBody, TabHead } from '../Workspace';
 
@@ -92,7 +92,7 @@ export default function Actions() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Name">{id => <TextInput id={id} value={a.name} onChange={e => set({ name: e.target.value })} />}</Field>
-              <Field label="What the participant reads">{id => <TextInput id={id} tone={toneOf(d.marks[path(a.key)])} value={a.description} onChange={e => set({ description: e.target.value })} />}</Field>
+              <Field label="What the participant reads">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={toneOf(d.marks[path(a.key)])} value={a.description} onChange={e => set({ description: e.target.value })} />}</Field>
             </div>
             <Field label="How it plays" required hint={a.canPlay.length === 1 ? 'This action’s rule plays one way only.' : undefined}>{() => (
               <Segmented label="How it plays" value={a.plays} onChange={v => set({ plays: v })} options={(['static', 'live', 'hybrid'] as const).map(p => ({ value: p, label: PLAYS_LABEL[p], disabled: !a.canPlay.includes(p) }))} />
@@ -119,7 +119,7 @@ export default function Actions() {
                         {d.lens.styles.map(s => {
                           const row = a.impact[s.key] ?? a.impact[d.lens.styles[0].key] ?? { fit: effectText([1, 3, 3]), close: effectText([0, -1, -1]), wrong: effectText([0, -3, -3]) };
                           const cell = (k: 'fit' | 'close' | 'wrong', cls: string) => (
-                            <td className="px-1 py-1"><input aria-label={`${s.name}, ${k === 'fit' ? 'fits the need' : k === 'close' ? 'one step off' : 'wrong style'}`} value={row[k]} onChange={e => set({ impact: { ...a.impact, [s.key]: { ...row, [k]: e.target.value } } })}
+                            <td className="px-1 py-1"><input maxLength={SHORT_MAX} aria-label={`${s.name}, ${k === 'fit' ? 'fits the need' : k === 'close' ? 'one step off' : 'wrong style'}`} value={row[k]} onChange={e => set({ impact: { ...a.impact, [s.key]: { ...row, [k]: e.target.value } } })}
                               className={`w-full rounded-8 border border-transparent bg-transparent px-2 py-1 text-14 font-700 hover:border-author-line-control focus-visible:outline-2 focus-visible:outline-author-primary ${cls}`} /></td>
                           );
                           return <tr key={s.key} className="border-t border-solid border-author-rule"><th scope="row" className="px-3 py-1.5 text-start font-800">{s.name || 'New style'}</th>{cell('fit', 'text-author-gain')}{cell('close', 'text-author-need')}{cell('wrong', 'text-author-decline')}</tr>;
@@ -133,7 +133,7 @@ export default function Actions() {
               </>
             ) : (
               <>
-                <Field label="How the result is decided">{id => <TextInput id={id} value={a.decides} onChange={e => set({ decides: e.target.value })} />}</Field>
+                <Field label="How the result is decided">{id => <TextInput id={id} maxLength={TEXT_MAX} value={a.decides} onChange={e => set({ decides: e.target.value })} />}</Field>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between"><span className="text-13 font-700 text-author-label">Options the participant chooses from</span><Badge kind="ai">Generated</Badge></div>
                   <div className="overflow-x-auto rounded-12 border border-solid border-author-line">
@@ -146,11 +146,11 @@ export default function Actions() {
                           const inp = 'w-full rounded-8 border border-transparent bg-transparent px-2 py-1 text-14 hover:border-author-line-control focus-visible:outline-2 focus-visible:outline-author-primary';
                           return (
                             <tr key={o.key} className="border-t border-solid border-author-rule">
-                              <td className="px-1 py-1"><input aria-label={`Option ${i + 1}`} className={inp} value={o.label} onChange={e => upd({ label: e.target.value })} /></td>
+                              <td className="px-1 py-1"><input maxLength={SHORT_MAX} aria-label={`Option ${i + 1}`} className={inp} value={o.label} onChange={e => upd({ label: e.target.value })} /></td>
                               <td className="px-1 py-1"><select aria-label={`Style of option ${i + 1}`} className={inp} value={o.style ?? ''} onChange={e => upd({ style: e.target.value || null })}><option value="">None</option>{d.lens.styles.map(s => <option key={s.key} value={s.key}>{s.name || 'New style'}</option>)}</select></td>
                               <td className="px-1 py-1"><select aria-label={`Days away for option ${i + 1}`} className={inp} value={o.away} onChange={e => upd({ away: Number(e.target.value) })}>{[0, 1, 2, 3, 5].map(n => <option key={n} value={n}>{n ? `${n} day${n === 1 ? '' : 's'}` : 'None'}</option>)}</select></td>
-                              <td className="px-1 py-1"><input aria-label={`Option ${i + 1}, if it fits`} className={`${inp} font-700 text-author-gain`} value={o.fits} onChange={e => upd({ fits: e.target.value })} /></td>
-                              <td className="px-1 py-1"><input aria-label={`Option ${i + 1}, if it does not`} className={`${inp} font-700 text-author-decline`} value={o.misses} onChange={e => upd({ misses: e.target.value })} /></td>
+                              <td className="px-1 py-1"><input maxLength={SHORT_MAX} aria-label={`Option ${i + 1}, if it fits`} className={`${inp} font-700 text-author-gain`} value={o.fits} onChange={e => upd({ fits: e.target.value })} /></td>
+                              <td className="px-1 py-1"><input maxLength={SHORT_MAX} aria-label={`Option ${i + 1}, if it does not`} className={`${inp} font-700 text-author-decline`} value={o.misses} onChange={e => upd({ misses: e.target.value })} /></td>
                               <td className="px-1 py-1">{a.options.length > 1 && <button type="button" className={`${BUTTON.secondary} size-8 px-0`} aria-label={`Remove option ${i + 1}`} onClick={() => set({ options: a.options.filter((_, k) => k !== i) })}>{Icon.close(12)}</button>}</td>
                             </tr>
                           );

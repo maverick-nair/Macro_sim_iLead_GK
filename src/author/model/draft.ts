@@ -4,8 +4,8 @@ import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
 
 /**
  * The author's draft (D105): one typed model for the whole of /author, the co-creator chat and every
- * workspace tab. It is persisted to local storage and parsed back with this schema, so a stale or
- * hand edited value starts a fresh draft instead of breaking the page. `toStoryline` turns it into
+ * workspace tab. It is persisted to local storage and parsed back with this schema; a value that no longer
+ * parses is kept under a backup key and repaired field by field (`repair.ts`) instead of dropped. `toStoryline` turns it into
  * the engine's StorylineConfig; `seedDraft` fills it from the chat without a model.
  *
  * Provenance (who wrote what, docs/design/genie/Main.dc.html): every author facing field has a path,
@@ -20,8 +20,11 @@ export type Mark = (typeof MARKS)[number];
 export const TABS = ['overview', 'brief', 'story', 'process', 'team', 'lens', 'actions', 'events', 'scoring', 'brand', 'calibrate', 'publish'] as const;
 export type Tab = (typeof TABS)[number];
 
-const Text = z.string().max(4000);
-const Short = z.string().max(400);
+/** The longest a short field (a name, a label, a line) and a text field may be; the inputs use the same limits. */
+export const SHORT_MAX = 400;
+export const TEXT_MAX = 4000;
+const Text = z.string().max(TEXT_MAX);
+const Short = z.string().max(SHORT_MAX);
 const Pct = z.number().int().min(0).max(100);
 
 /** The chat's transcript: a question with the author's answer, or a note from Kora. */
@@ -239,3 +242,5 @@ export type AuthorDraft = z.infer<typeof AuthorDraft>;
 export const DRAFT_KEY = 'ilead.author.draft';
 /** Where the author's draft model is kept between visits. */
 export const WORKSPACE_KEY = 'ilead.author.workspace';
+/** Where a stored draft that did not parse is kept, as it was, before it is repaired. */
+export const WORKSPACE_BACKUP_KEY = 'ilead.author.workspace.backup';

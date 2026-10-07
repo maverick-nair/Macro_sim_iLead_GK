@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { bestStyle, needOf } from '../../../engine/lens';
 import { GENDERS, type AuthorDraft, type Character } from '../../model/draft';
 import { PORTRAITS, pronounsOf, VOICE_LIBRARY } from '../../model/seed';
-import { Avatar, Badge, BUTTON, Chip, Field, Icon, Modal, Segmented, Select, SubTabs, TextArea, TextInput, toneOf } from '../kit';
+import { Avatar, Badge, BUTTON, Chip, Field, Icon, Modal, Segmented, Select, SubTabs, TEXT_MAX, TextArea, TextInput, toneOf } from '../kit';
 
 type EditTab = 'identity' | 'voice' | 'personality' | 'stats';
 const GENDER_LABEL: Record<Character['gender'], string> = { woman: 'Woman', man: 'Man', nonbinary: 'Non binary', unstated: 'Not stated' };
@@ -149,7 +149,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between"><span className="text-13 font-700 text-author-label">How {p} reacts to each style</span><span className="text-12 text-author-muted">Your lens styles</span></div>
                 {draft.lens.styles.map(s => (
-                  <Field key={s.key} label={s.name}>{id => <TextInput id={id} tone={mark('personality')} value={c.reactions[s.key] ?? ''} onChange={e => set('reactions', { ...c.reactions, [s.key]: e.target.value })} />}</Field>
+                  <Field key={s.key} label={s.name}>{id => <TextInput id={id} maxLength={TEXT_MAX} tone={mark('personality')} value={c.reactions[s.key] ?? ''} onChange={e => set('reactions', { ...c.reactions, [s.key]: e.target.value })} />}</Field>
                 ))}
               </div>
               <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
@@ -163,7 +163,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
                 ))}
                 <button type="button" className={`${BUTTON.secondary} self-start`} onClick={() => set('relationships', [...c.relationships, { with: draft.team.find(o => o.id !== c.id)?.id ?? '', kind: 'Works closely with' }])}>Add a relationship</button>
               </fieldset>
-              <Field label="Topics they will not discuss" optional>{id => <TextInput id={id} value={c.noTopics} onChange={e => set('noTopics', e.target.value)} />}</Field>
+              <Field label="Topics they will not discuss" optional>{id => <TextInput id={id} maxLength={TEXT_MAX} value={c.noTopics} onChange={e => set('noTopics', e.target.value)} />}</Field>
             </div>
           </div>
         )}
@@ -197,7 +197,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
               {c.custom.map((f, i) => (
                 <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-end gap-2">
                   <Field label="Custom field">{id => <TextInput id={id} value={f.label} onChange={e => set('custom', c.custom.map((x, k) => (k === i ? { ...x, label: e.target.value } : x)))} />}</Field>
-                  <Field label="Value">{id => <TextInput id={id} value={f.value} onChange={e => set('custom', c.custom.map((x, k) => (k === i ? { ...x, value: e.target.value } : x)))} />}</Field>
+                  <Field label="Value">{id => <TextInput id={id} maxLength={TEXT_MAX} value={f.value} onChange={e => set('custom', c.custom.map((x, k) => (k === i ? { ...x, value: e.target.value } : x)))} />}</Field>
                   <button type="button" className={`${BUTTON.secondary} size-10 px-0`} aria-label={`Remove ${f.label}`} onClick={() => set('custom', c.custom.filter((_, k) => k !== i))}>{Icon.close(14)}</button>
                 </div>
               ))}

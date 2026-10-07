@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuthor } from '../../../model/store';
-import { Avatar, BUTTON, CARD, CardHead, EYEBROW, Field, MarkOf, Segmented, SubTabs, TextArea, TextInput, toneOf } from '../../kit';
+import { Avatar, BUTTON, CARD, CardHead, EYEBROW, Field, MarkOf, Segmented, SubTabs, TEXT_MAX, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate } from './regenerate';
 
@@ -61,7 +61,7 @@ export default function Story() {
                     onChange={e => { const v = Number(e.target.value.replace(/[^\d.]/g, '')); edit(x => { x.story.product.dealValue = v > 0 ? v : null; }, 'story.product.dealValue'); }} />
                 )}</Field>
               </div>
-              <Field label="In one line">{id => <TextInput id={id} tone={tone('story.product.oneLine')} value={p.oneLine} onChange={e => edit(x => { x.story.product.oneLine = e.target.value; }, 'story.product.oneLine')} />}</Field>
+              <Field label="In one line">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={tone('story.product.oneLine')} value={p.oneLine} onChange={e => edit(x => { x.story.product.oneLine = e.target.value; }, 'story.product.oneLine')} />}</Field>
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between gap-2"><span className="text-13 font-700 text-author-label">Selling points</span><span className="text-12 font-600 text-author-muted">Shown as hotspots on the product</span></div>
                 {p.points.map((pt, i) => (
@@ -85,7 +85,7 @@ export default function Story() {
             {d.story.market.rivals.map((r, i) => (
               <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-end gap-3 max-[900px]:grid-cols-1">
                 <Field label={`Rival ${i + 1}`}>{id => <TextInput id={id} tone={tone('story.market.rivals')} value={r.name} onChange={e => edit(x => { x.story.market.rivals[i].name = e.target.value; }, 'story.market.rivals')} />}</Field>
-                <Field label="How they compete">{id => <TextInput id={id} tone={tone('story.market.rivals')} value={r.angle} onChange={e => edit(x => { x.story.market.rivals[i].angle = e.target.value; }, 'story.market.rivals')} />}</Field>
+                <Field label="How they compete">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={tone('story.market.rivals')} value={r.angle} onChange={e => edit(x => { x.story.market.rivals[i].angle = e.target.value; }, 'story.market.rivals')} />}</Field>
                 <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { x.story.market.rivals.splice(i, 1); }, 'story.market.rivals')}>Remove<span className="sr-only"> rival {i + 1}</span></button>
               </div>
             ))}

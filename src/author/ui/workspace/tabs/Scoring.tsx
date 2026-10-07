@@ -3,7 +3,7 @@ import { extractFramework } from '../../../extract';
 import { LENS_BY_ID } from '../../../lenses';
 import { BANDS, type AuthorDraft, type Band } from '../../../model/draft';
 import { useAuthor } from '../../../model/store';
-import { Badge, BUTTON, CARD, CardHead, Icon, MarkOf, Modal, Segmented, Select, TextInput } from '../../kit';
+import { Badge, BUTTON, CARD, CardHead, Icon, MarkOf, Modal, Segmented, Select, SHORT_MAX, TEXT_MAX, TextInput } from '../../kit';
 import { navigate } from '../../route';
 import { TabBody, TabHead } from '../Workspace';
 
@@ -73,8 +73,8 @@ function FrameworkSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (
                     const inp = 'w-full rounded-8 border border-transparent bg-transparent px-2 py-1 text-14 hover:border-author-line-control focus-visible:outline-2 focus-visible:outline-author-primary';
                     return (
                       <tr key={i} className={`border-t border-solid border-author-rule ${need ? 'bg-author-need-field' : 'bg-author-ai-field'}`}>
-                        <td className="px-1 py-1"><input aria-label={`Skill ${i + 1}`} className={`${inp} font-800`} value={r.skill} onChange={e => setRow(i, { skill: e.target.value })} /></td>
-                        <td className="px-1 py-1"><input aria-label={`Behaviors for ${r.skill}`} className={inp} placeholder="The document lists this skill but gives no behaviors. Add 2 or 3, or leave it out." value={r.behaviors} onChange={e => setRow(i, { behaviors: e.target.value, include: !!e.target.value.trim() })} /></td>
+                        <td className="px-1 py-1"><input maxLength={SHORT_MAX} aria-label={`Skill ${i + 1}`} className={`${inp} font-800`} value={r.skill} onChange={e => setRow(i, { skill: e.target.value })} /></td>
+                        <td className="px-1 py-1"><input maxLength={TEXT_MAX} aria-label={`Behaviors for ${r.skill}`} className={inp} placeholder="The document lists this skill but gives no behaviors. Add 2 or 3, or leave it out." value={r.behaviors} onChange={e => setRow(i, { behaviors: e.target.value, include: !!e.target.value.trim() })} /></td>
                         <td className="px-1 py-1"><input aria-label={`Levels for ${r.skill}`} className={inp} value={r.levels ?? ''} placeholder="?" onChange={e => setRow(i, { levels: Number(e.target.value) || null })} /></td>
                         <td className="px-2 py-1 text-13">{r.page ? `p. ${r.page}` : 'You'}</td>
                         <td className="px-2 py-1"><input type="checkbox" aria-label={`Use ${r.skill}`} checked={r.include} onChange={e => setRow(i, { include: e.target.checked })} /></td>

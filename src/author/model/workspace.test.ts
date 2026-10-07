@@ -8,7 +8,7 @@ import { readability } from '../ui/workspace/tabs/Brand';
 import { checksOf } from '../ui/workspace/tabs/Publish';
 import { MOCK_ANSWERS } from '../voice';
 import { applyAnswer } from '../questions';
-import { WORKSPACE_KEY, type AuthorDraft } from './draft';
+import { AuthorDraft, WORKSPACE_BACKUP_KEY, WORKSPACE_KEY } from './draft';
 import { toStoryline } from './export';
 import { applySuggestion, propose } from './kora';
 import { needsOf, tabStatus } from './needs';
@@ -60,6 +60,29 @@ describe('the author store (D105)', () => {
     await vi.advanceTimersByTimeAsync(400);
     expect(blocked.getState().saveFailed).toBe(true);
     vi.useRealTimers();
+  });
+
+  it('repairs a stored draft over a limit instead of starting fresh, and keeps the original (D120)', () => {
+    const st = memoryStorage();
+    const d = draft();
+    d.story.company.about = 'Kept about.';
+    const raw = JSON.stringify({ ...d, title: 'x'.repeat(401), process: { ...d.process, weeks: 'many' } });
+    st.setItem(WORKSPACE_KEY, raw);
+    const back = loadDraft(st)!;
+    expect(back).not.toBeNull();
+    expect(back.title).toBe('x'.repeat(400));
+    expect(back.story.company.about).toBe('Kept about.');
+    expect(back.team.map(c => c.id)).toEqual(d.team.map(c => c.id));
+    expect(AuthorDraft.safeParse(back).success).toBe(true);
+    expect(st.getItem(WORKSPACE_BACKUP_KEY)).toBe(raw);
+  });
+
+  it('clamps an edit to the schema\'s limits, so the saved draft reads back', () => {
+    const s = createAuthorStore(draft(), null);
+    s.getState().edit(d => { d.title = 'x'.repeat(401); d.story.company.about = 'y'.repeat(5000); });
+    expect(s.getState().draft.title).toHaveLength(400);
+    expect(s.getState().draft.story.company.about).toHaveLength(4000);
+    expect(AuthorDraft.safeParse(s.getState().draft).success).toBe(true);
   });
 });
 
