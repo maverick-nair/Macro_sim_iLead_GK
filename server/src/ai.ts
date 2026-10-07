@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Config } from './config';
 import type { Logger } from './log';
-import { mockPorts, type AiFactoryConfig, type AiModule, type AiPorts, type AuthorDrafter, type Evaluator, type NpcModel, type Transcriber } from './ports';
+import { mockPorts, type AiModule, type AiPorts, type AiRoleConfigs, type AuthorDrafter, type Evaluator, type NpcModel, type Transcriber, type TranscriptionSession } from './ports';
 
 /** The repository root (server/src/ai.ts is two folders down). */
 export const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -25,50 +25,87 @@ function check<T>(what: string, value: unknown, methods: string[]): T {
 }
 
 /**
- * The AI ports for the configured provider. `mock` (the default): the engine's own stand ins, no network.
- * `anthropic`: the `ai/` module's factories, loaded dynamically; a missing module, a missing factory or a
- * missing API key stops the server at startup with a clear error rather than failing a participant later.
+ * The `ai/` module's transcriber (`open` gives a session with `push`, `end`, `abort`) behind the server's
+ * port (`chunk`, `end`, `cancel`). A batch transcriber (`transcribe`) is adapted in routes/speech.ts.
  */
-export async function loadAi(config: Config, log: Logger, importer: (spec: string) => Promise<unknown> = spec => import(spec)): Promise<AiPorts> {
+export function adaptTranscriber(t: unknown): Transcriber {
+  const x = t as { open?: (o: unknown) => Promise<{ push(a: Uint8Array, seq: number): Promise<unknown>; end(): Promise<unknown>; abort(): Promise<void> }>; transcribe?: unknown };
+  if (isFn(x.transcribe)) return t as Transcriber;
+  if (!isFn(x.open)) throw new AiConfigError('ai/: createTranscriber returned an object with neither open() nor transcribe()');
+  return {
+    async open(options) {
+      const s = await x.open!(options);
+      if (isFn((s as { chunk?: unknown }).chunk)) return s as unknown as TranscriptionSession;
+      return {
+        chunk: (audio, seq) => s.push(audio, seq) as Promise<never>,
+        end: () => s.end() as Promise<never>,
+        cancel: () => s.abort()
+      };
+    }
+  };
+}
+
+/** The role configs: the module's own `configFromEnv(env)` when it has one (docs/AI.md section 8), else the provider alone. */
+function roleConfigs(mod: Partial<AiModule>, config: Config, env: Record<string, string | undefined>, log: Logger): AiRoleConfigs {
+  const logger = log.child({ component: 'ai' });
+  const provider = config.AI_PROVIDER;
+  const base = isFn(mod.configFromEnv) ? mod.configFromEnv({ ...env, AI_PROVIDER: provider }) : null;
+  const audit = (a: { provider?: string; model?: string | null; fallback?: boolean; repaired?: boolean; latencyMs?: number; promptVersion?: string; error?: string }) =>
+    // Never the participant's words: only how the evaluation went.
+    logger.info('evaluation', { provider: a.provider, model: a.model, promptVersion: a.promptVersion, fallback: a.fallback, repaired: a.repaired, latencyMs: a.latencyMs, error: a.error });
+  return {
+    npc: { provider, ...base?.npc, logger },
+    evaluator: { provider, ...base?.evaluator, logger, onAudit: audit },
+    author: { provider, ...base?.author, logger },
+    transcriber: { provider: 'mock', ...(config.SPEECH_URL ? { http: { url: config.SPEECH_URL, key: env.SPEECH_KEY || undefined } } : {}), ...base?.transcriber, logger }
+  };
+}
+
+/**
+ * The AI ports for the configured provider. `mock` (the default without ANTHROPIC_API_KEY): the engine's
+ * own stand ins, no network, and the module is not needed. `anthropic`: the `ai/` module's factories,
+ * loaded dynamically with the environment mapped by its `configFromEnv`. A missing module or factory
+ * stops the server at startup with a clear error rather than failing a participant later. Speech over
+ * HTTP (`SPEECH_PROVIDER=http`, or `SPEECH_URL` set) also comes from the module, whatever the AI provider.
+ */
+export async function loadAi(config: Config, log: Logger, importer: (spec: string) => Promise<unknown> = spec => import(spec), env: Record<string, string | undefined> = process.env): Promise<AiPorts> {
   const mock = mockPorts();
-  const speechOff = config.SPEECH_PROVIDER === 'off';
-  if (config.AI_PROVIDER === 'mock') {
-    log.info('ai: mock provider (engine stand ins, scripted transcription)');
-    return { ...mock, transcriber: speechOff ? null : mock.transcriber };
+  const speech = config.SPEECH_PROVIDER ?? (config.SPEECH_URL ? 'http' : 'mock');
+  const needModule = config.AI_PROVIDER === 'anthropic' || speech === 'http';
+  if (!needModule) {
+    log.info('ai: mock provider (engine stand ins, scripted transcription)', { speech });
+    return { ...mock, transcriber: speech === 'off' ? null : mock.transcriber };
   }
   const found = aiCandidates(config).find(p => fs.existsSync(p));
+  const why = config.AI_PROVIDER === 'anthropic' ? `AI_PROVIDER=${config.AI_PROVIDER}` : 'SPEECH_PROVIDER=http';
   if (!found) {
-    throw new AiConfigError(`AI_PROVIDER=${config.AI_PROVIDER} but the ai module was not found. Looked for: ${aiCandidates(config).map(p => path.relative(REPO_ROOT, p)).join(', ')}. Set AI_PROVIDER=mock, or AI_MODULE to the module's entry file.`);
+    throw new AiConfigError(`${why} but the ai module was not found. Looked for: ${aiCandidates(config).map(p => path.relative(REPO_ROOT, p)).join(', ')}. Set AI_PROVIDER=mock and SPEECH_PROVIDER=mock, or AI_MODULE to the module's entry file.`);
   }
-  if (!config.ANTHROPIC_API_KEY) throw new AiConfigError(`AI_PROVIDER=${config.AI_PROVIDER} needs ANTHROPIC_API_KEY.`);
   let mod: Partial<AiModule>;
   try {
     mod = (await importer(pathToFileURL(found).href)) as Partial<AiModule>;
   } catch (e) {
     throw new AiConfigError(`Could not load the ai module at ${found}: ${(e as Error).message}`);
   }
-  for (const f of ['createNpcModel', 'createEvaluator', 'createAuthorDrafter'] as const) {
-    if (!isFn(mod[f])) throw new AiConfigError(`The ai module at ${found} does not export ${f}(config).`);
+  const roles = roleConfigs(mod, config, env, log);
+  let { npc, evaluator, author } = mock as { npc: NpcModel; evaluator: Evaluator; author: AuthorDrafter };
+  if (config.AI_PROVIDER === 'anthropic') {
+    for (const f of ['createNpcModel', 'createEvaluator', 'createAuthorDrafter'] as const) {
+      if (!isFn(mod[f])) throw new AiConfigError(`The ai module at ${found} does not export ${f}(config).`);
+    }
+    if (!config.ANTHROPIC_API_KEY) log.warn('ai: ANTHROPIC_API_KEY is not set; the SDK will look for its default credentials');
+    npc = check<NpcModel>('createNpcModel', await mod.createNpcModel!(roles.npc), ['reply']);
+    evaluator = check<Evaluator>('createEvaluator', await mod.createEvaluator!(roles.evaluator), ['evaluate']);
+    author = check<AuthorDrafter>('createAuthorDrafter', await mod.createAuthorDrafter!(roles.author), ['turn', 'draft']);
   }
-  const factoryConfig: AiFactoryConfig = {
-    provider: config.AI_PROVIDER,
-    apiKey: config.ANTHROPIC_API_KEY,
-    models: { default: config.AI_MODEL, npc: config.AI_NPC_MODEL, evaluator: config.AI_EVALUATOR_MODEL, author: config.AI_AUTHOR_MODEL },
-    timeoutMs: config.AI_TIMEOUT_MS,
-    logger: log.child({ component: 'ai' }),
-    env: { ...process.env }
-  };
-  const npc = check<NpcModel>('createNpcModel', await mod.createNpcModel!(factoryConfig), ['reply']);
-  const evaluator = check<Evaluator>('createEvaluator', await mod.createEvaluator!(factoryConfig), ['evaluate']);
-  const author = check<AuthorDrafter>('createAuthorDrafter', await mod.createAuthorDrafter!(factoryConfig), ['turn', 'draft']);
-  let transcriber: Transcriber | null = mock.transcriber;
-  if (speechOff) transcriber = null;
-  else if (config.SPEECH_PROVIDER === 'ai') {
-    if (!isFn(mod.createTranscriber)) throw new AiConfigError(`SPEECH_PROVIDER=ai but the ai module at ${found} does not export createTranscriber(config).`);
-    const t = await mod.createTranscriber(factoryConfig);
-    if (t && !isFn((t as { open?: unknown }).open) && !isFn((t as { transcribe?: unknown }).transcribe)) throw new AiConfigError('ai/: createTranscriber returned an object with neither open() nor transcribe()');
-    transcriber = t;
+  let transcriber: Transcriber | null = speech === 'off' ? null : mock.transcriber;
+  if (speech === 'http') {
+    if (!isFn(mod.createTranscriber)) throw new AiConfigError(`SPEECH_PROVIDER=http but the ai module at ${found} does not export createTranscriber(config).`);
+    if (!config.SPEECH_URL) throw new AiConfigError('SPEECH_PROVIDER=http needs SPEECH_URL.');
+    const t = await mod.createTranscriber({ ...roles.transcriber, provider: 'http' } as AiRoleConfigs['transcriber']);
+    transcriber = t ? adaptTranscriber(t) : null;
   }
-  log.info('ai: provider loaded', { provider: config.AI_PROVIDER, module: path.relative(REPO_ROOT, found), speech: speechOff ? 'off' : config.SPEECH_PROVIDER });
-  return { provider: config.AI_PROVIDER, npc, evaluator, author, transcriber };
+  log.info('ai: provider loaded', { provider: config.AI_PROVIDER, module: path.relative(REPO_ROOT, found), speech });
+  const scene = config.AI_PROVIDER === 'anthropic' && isFn(mod.sceneFromStoryline) ? (st: Parameters<NonNullable<AiModule['sceneFromStoryline']>>[0]) => mod.sceneFromStoryline!(st) : undefined;
+  return { provider: config.AI_PROVIDER, npc, evaluator, author, transcriber, scene };
 }

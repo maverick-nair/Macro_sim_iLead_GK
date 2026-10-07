@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint';
 
 /** Lint for the app: TypeScript, the rules of hooks, and JSX accessibility. `npm run lint`. */
 export default tseslint.config(
-  { ignores: ['dist', 'storybook-static', 'test-results', 'playwright-report', '.claude', 'project', 'chats', 'docs', 'calibration', '.visual-cache', 'node_modules', 'src/styles/*.generated.*'] },
+  { ignores: ['dist', 'dist-server', 'data', 'storybook-static', 'test-results', 'playwright-report', '.claude', 'project', 'chats', 'docs', 'calibration', '.visual-cache', 'node_modules', 'src/styles/*.generated.*'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

@@ -59,17 +59,15 @@ export const ConfigSchema = z.object({
   STREAM_TOKENS_PER_SEC: int(40),
   DEFAULT_STORYLINE: z.string().default('sales_elevator'),
 
-  // AI
-  AI_PROVIDER: z.enum(['mock', 'anthropic']).default('mock'),
-  /** The `ai/` module to load for a real provider. Default: the repository's `ai/` folder. */
+  // AI (the ai/ module reads its own tuning variables through configFromEnv: docs/AI.md section 8)
+  /** Default: `anthropic` when ANTHROPIC_API_KEY is set, else `mock`. */
+  AI_PROVIDER: z.enum(['mock', 'anthropic']).optional(),
+  /** The `ai/` module to load. Default: the repository's `ai/` folder. */
   AI_MODULE: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
-  AI_MODEL: z.string().optional(),
-  AI_NPC_MODEL: z.string().optional(),
-  AI_EVALUATOR_MODEL: z.string().optional(),
-  AI_AUTHOR_MODEL: z.string().optional(),
-  AI_TIMEOUT_MS: int(30000),
-  SPEECH_PROVIDER: z.enum(['mock', 'ai', 'off']).default('mock'),
+  /** `mock` (scripted), `http` (the ai/ module's HTTP transcriber, to SPEECH_URL) or `off`. Default: `http` when SPEECH_URL is set, else `mock`. */
+  SPEECH_PROVIDER: z.enum(['mock', 'http', 'off']).optional(),
+  SPEECH_URL: z.string().url().optional(),
 
   // PDF
   PDF_ENABLED: bool(true),
@@ -94,7 +92,7 @@ export const ConfigSchema = z.object({
   ADMIN_TOKEN: z.string().min(32, 'ADMIN_TOKEN must be at least 32 characters').optional()
 });
 
-export type Config = Omit<z.output<typeof ConfigSchema>, 'COOKIE_SECURE'> & { COOKIE_SECURE: boolean; appUrl: string; dev: boolean };
+export type Config = Omit<z.output<typeof ConfigSchema>, 'COOKIE_SECURE' | 'AI_PROVIDER'> & { COOKIE_SECURE: boolean; AI_PROVIDER: 'mock' | 'anthropic'; appUrl: string; dev: boolean };
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
   // An empty variable (`SMTP_URL=` in an env file) means unset.
@@ -106,7 +104,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const c = r.data;
   const dev = c.NODE_ENV !== 'production';
   if (!c.LAUNCH_SECRET && !dev) throw new Error('Invalid server configuration:\n  LAUNCH_SECRET: required in production (32 characters or more)');
-  return { ...c, COOKIE_SECURE: c.COOKIE_SECURE ?? !dev, appUrl: (c.APP_URL ?? c.PUBLIC_URL).replace(/\/$/, ''), dev };
+  return { ...c, COOKIE_SECURE: c.COOKIE_SECURE ?? !dev, AI_PROVIDER: c.AI_PROVIDER ?? (c.ANTHROPIC_API_KEY ? 'anthropic' : 'mock'), appUrl: (c.APP_URL ?? c.PUBLIC_URL).replace(/\/$/, ''), dev };
 }
 
 /** A development only secret, so `npm run server:dev` works with no setup. Never used in production. */

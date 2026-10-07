@@ -10,7 +10,7 @@ const Results = z.object({ results: z.array(z.object({ kind: z.enum(['partial', 
 interface Open { owner: string; session: TranscriptionSession; next: number; touched: number }
 
 /** A batch transcriber behind the streaming contract: chunks are buffered, transcribed on `end`, then dropped. */
-function sessionOf(t: Transcriber, opts: { mimeType: string; mode: string; language?: string }): Promise<TranscriptionSession> | TranscriptionSession {
+function sessionOf(t: Transcriber, opts: { mimeType: string; mode: 'pushToTalk' | 'openMic'; language?: string }): Promise<TranscriptionSession> | TranscriptionSession {
   if ('open' in t) return t.open(opts);
   const parts: Uint8Array[] = [];
   return {
@@ -51,7 +51,7 @@ export function registerSpeech(ctx: ServerContext) {
   const off = () => new HttpError(501, 'speechOff', 'Speech is not set up here.');
 
   routes.add({ method: 'post', path: '/speech/transcriptions', tag: 'speech', auth: ['participant'], limit: 'ai',
-    body: z.object({ mimeType: z.string().min(3).max(100).regex(/^audio\/[\w.+-]+(;\s*codecs=[\w.,"' -]+)?$/), mode: z.string().min(1).max(20), language: z.string().max(35).optional() }),
+    body: z.object({ mimeType: z.string().min(3).max(100).regex(/^audio\/[\w.+-]+(;\s*codecs=[\w.,"' -]+)?$/), mode: z.enum(['pushToTalk', 'openMic']), language: z.string().max(35).optional() }),
     summary: 'Start a transcription', responses: { 201: { description: '{ id }', schema: z.object({ id: z.string() }) }, 501: Err }
   }, async (c, { body, principal }) => {
     if (!ctx.ai.transcriber) throw off();

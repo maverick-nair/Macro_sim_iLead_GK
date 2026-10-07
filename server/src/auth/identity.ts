@@ -1,9 +1,8 @@
 import type { Hono } from 'hono';
 import type { AppEnv } from '../http/types';
-import type { LaunchClaims } from './principal';
 
 /**
- * Where identities come from. Today: the signed launch link (`LaunchLinkProvider` in session.ts).
+ * Where identities come from. Today: the signed launch link (routes/launch.ts).
  * LTI 1.3 and SSO plug in here later (docs/SERVER.md "LTI 1.3 and SSO"): a provider mounts the routes
  * its protocol needs and turns a verified assertion into the same `LaunchClaims`, so sessions, roles and
  * everything after the launch stay as they are.
@@ -22,6 +21,6 @@ import type { LaunchClaims } from './principal';
 export interface IdentityProvider {
   /** For logs: `launch-link`, `lti13`, `oidc`. */
   readonly id: string;
-  /** Adds the provider's routes. Each ends by calling `openSession(c, claims)` (session.ts). */
+  /** Adds the provider's routes. Each ends by calling `sessions.open(c, claims)` (auth/session.ts) and redirecting with `landing(claims)` (routes/launch.ts). */
   mount(app: Hono<AppEnv>): void;
 }

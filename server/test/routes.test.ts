@@ -84,8 +84,8 @@ describe('speech', () => {
     s = await testServer();
     const cookie = await s.launch({ sub: 'p-1' });
     const other = await s.launch({ sub: 'p-2' });
-    expect((await s.req('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'text/html', mode: 'ptt' } })).status).toBe(400);
-    const created = await s.req('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'audio/webm;codecs=opus', mode: 'ptt', language: 'en-US' } });
+    expect((await s.req('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'text/html', mode: 'pushToTalk' } })).status).toBe(400);
+    const created = await s.req('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'audio/webm;codecs=opus', mode: 'pushToTalk', language: 'en-US' } });
     expect(created.status).toBe(201);
     const { id } = await created.json() as { id: string };
     const chunk = (seq: number, who = cookie) => s.req(`/speech/transcriptions/${id}/chunks?seq=${seq}`, { method: 'POST', cookie: who, body: new Uint8Array(100), headers: { 'content-type': 'audio/webm' } });
@@ -97,14 +97,14 @@ describe('speech', () => {
     const end = await s.json<{ results: Array<{ kind: string; text: string }> }>(`/speech/transcriptions/${id}/end`, { method: 'POST', cookie });
     expect(end.results).toEqual([{ kind: 'final', text: expect.stringMatching(/^Thanks for making time\. .* by Friday\.$/) }]);
     expect((await chunk(2)).status).toBe(404);
-    const second = await s.json<{ id: string }>('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'audio/webm', mode: 'open' } });
+    const second = await s.json<{ id: string }>('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'audio/webm', mode: 'openMic' } });
     expect((await s.req(`/speech/transcriptions/${second.id}`, { method: 'DELETE', cookie })).status).toBe(204);
   });
 
   it('answers 501 when speech is off', async () => {
     s = await testServer({ ai: { ...(await import('../src/ports')).mockPorts(), transcriber: null } });
     const cookie = await s.launch({ sub: 'p-1' });
-    expect((await s.req('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'audio/webm', mode: 'ptt' } })).status).toBe(501);
+    expect((await s.req('/speech/transcriptions', { method: 'POST', cookie, json: { mimeType: 'audio/webm', mode: 'pushToTalk' } })).status).toBe(501);
   });
 });
 

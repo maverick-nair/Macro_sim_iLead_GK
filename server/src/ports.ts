@@ -3,6 +3,7 @@ import type { AuthorDraftRequest, AuthorDraftResponse, AuthorTurnRequest, Author
 import { heuristicEvaluator, type EvaluationInput, type Evaluator as EngineEvaluator } from '../../src/engine/sim/evaluator';
 import { personaNpc, type NpcContext, type NpcModel as EngineNpcModel, type NpcReply } from '../../src/engine/sim/live';
 import type { Band, Evaluation } from '../../src/engine/sim/types';
+import type { StorylineConfig } from '../../src/engine/config';
 
 /**
  * The server's AI and speech ports (docs/SERVER.md "AI and speech"). The engine already defines the two
@@ -37,8 +38,8 @@ export interface TranscriptResult { kind: 'partial' | 'final'; text: string }
 export interface TranscriptionOptions {
   /** Container and codec, as MediaRecorder reports it, for example `audio/webm;codecs=opus`. */
   mimeType: string;
-  /** The speech mode the app records in (push to talk or open mic). */
-  mode: string;
+  /** The speech mode the app records in. */
+  mode: 'pushToTalk' | 'openMic';
   /** BCP 47 language, when known. */
   language?: string;
 }
@@ -61,25 +62,29 @@ export type Transcriber =
   | { open(options: TranscriptionOptions): TranscriptionSession | Promise<TranscriptionSession> }
   | { transcribe(input: { audio: Uint8Array; mimeType: string; language?: string }): Promise<{ text: string } | string> };
 
-/** What `createNpcModel(config)` and the other `ai/` factories receive. */
-export interface AiFactoryConfig {
-  provider: 'anthropic';
-  apiKey?: string;
-  /** Model ids, when configured (`AI_MODEL` for all, or one per role). Unset: the module's own defaults. */
-  models: { default?: string; npc?: string; evaluator?: string; author?: string };
-  timeoutMs: number;
-  /** A structured logger (JSON lines). Never log participant text. */
-  logger: { info(msg: string, f?: Record<string, unknown>): void; warn(msg: string, f?: Record<string, unknown>): void; error(msg: string, f?: Record<string, unknown>): void };
-  /** The raw environment, for module specific settings. */
-  env: Record<string, string | undefined>;
+/** The server's logger as the `ai/` module takes it. */
+export interface AiLogger { info(msg: string, f?: Record<string, unknown>): void; warn(msg: string, f?: Record<string, unknown>): void; error(msg: string, f?: Record<string, unknown>): void }
+
+/**
+ * What each `ai/` factory receives: the role's config from the module's own `configFromEnv(process.env)`
+ * (ai/src/env.ts; every variable is in docs/AI.md section 8), with `provider` from AI_PROVIDER and the
+ * server's JSON logger. The evaluator also gets `onAudit`, which logs how each evaluation went.
+ */
+export interface AiRoleConfigs {
+  npc: { provider: 'mock' | 'anthropic'; logger: AiLogger; [k: string]: unknown };
+  evaluator: { provider: 'mock' | 'anthropic'; logger: AiLogger; onAudit(audit: Record<string, unknown>): void; [k: string]: unknown };
+  author: { provider: 'mock' | 'anthropic'; logger: AiLogger; [k: string]: unknown };
+  transcriber: { provider: 'mock' | 'http'; logger: AiLogger; http?: { url: string; key?: string }; [k: string]: unknown };
 }
 
-/** The `ai/` module's exports (ai/src/types.ts on the other side). Factories may be async. */
+/** The `ai/` module's exports (ai/src/index.ts). Factories may be async. */
 export interface AiModule {
-  createNpcModel(config: AiFactoryConfig): NpcModel | Promise<NpcModel>;
-  createEvaluator(config: AiFactoryConfig): Evaluator | Promise<Evaluator>;
-  createAuthorDrafter(config: AiFactoryConfig): AuthorDrafter | Promise<AuthorDrafter>;
-  createTranscriber?(config: AiFactoryConfig): Transcriber | null | Promise<Transcriber | null>;
+  createNpcModel(config: AiRoleConfigs['npc']): NpcModel | Promise<NpcModel>;
+  createEvaluator(config: AiRoleConfigs['evaluator']): Evaluator | Promise<Evaluator>;
+  createAuthorDrafter(config: AiRoleConfigs['author']): AuthorDrafter | Promise<AuthorDrafter>;
+  createTranscriber?(config: AiRoleConfigs['transcriber']): unknown;
+  configFromEnv?(env: Record<string, string | undefined>): Partial<Record<keyof AiRoleConfigs, Record<string, unknown>>>;
+  sceneFromStoryline?(storyline: StorylineConfig): Record<string, unknown>;
 }
 
 /** The ports the server runs with. */
@@ -90,6 +95,8 @@ export interface AiPorts {
   author: AuthorDrafter;
   /** Null: speech is off (`SPEECH_PROVIDER=off`), and the transcription routes answer 501. */
   transcriber: Transcriber | null;
+  /** The storyline's scene for NPC calls (the ai/ module's `sceneFromStoryline`: locale, organisation, sponsor). */
+  scene?(storyline: StorylineConfig): Record<string, unknown>;
 }
 
 /** The scripted stand in: each chunk reveals the next words of a fixed line, as the app's mock does. */

@@ -1,13 +1,16 @@
 /**
- * A stand in for the top level `ai/` module in tests: the four factories with the shapes server/src/ports.ts
- * documents. The transcriber is the batch kind (`transcribe`), to prove the server adapts it.
+ * A stand in for an `ai/` module in tests, with the factory shapes server/src/ports.ts documents. The
+ * transcriber is the batch kind (`transcribe`), to prove the server adapts it.
  */
 import { heuristicEvaluator } from '../../../src/engine/sim/evaluator';
-import type { AiFactoryConfig } from '../../src/ports';
+import type { AiRoleConfigs } from '../../src/ports';
 
-export const seen: AiFactoryConfig[] = [];
+export const seen: unknown[] = [];
 
-export function createNpcModel(config: AiFactoryConfig) {
+export function configFromEnv(env: Record<string, string | undefined>) {
+  return { npc: { model: { model: env.AI_MODEL_NPC } } };
+}
+export function createNpcModel(config: AiRoleConfigs['npc']) {
   seen.push(config);
   return { reply: async () => ({ text: 'Fixture model line.' }) };
 }

@@ -6,7 +6,7 @@ import type { ReportViewInput } from '../../../src/engine/reportContract';
 import { createEngine, IntentError, type Engine, type Intent, type Result } from '../../../src/engine/sim/engine';
 import type { Band } from '../../../src/engine/sim/types';
 import type { Logger } from '../log';
-import type { AiPorts } from '../ports';
+import type { AiPorts, NpcModel } from '../ports';
 import { ConflictError } from '../store/db';
 import type { Repository } from '../store';
 import type { RunRow } from '../store/repo';
@@ -105,7 +105,21 @@ export class RunService {
   private build(run: RunRow): Live {
     const recorder = new Recorder();
     const config = configOf(run.config);
-    const engine = createEngine(config, { seed: run.seed, evaluator: recorder.evaluator(this.ai.evaluator), npc: recorder.npc(this.ai.npc) });
+    const scene = this.ai.scene?.(config) ?? {};
+    const base = this.ai.npc;
+    let engine: Engine | null = null;
+    // The NPC model gets the engine's context plus the scene: the storyline and the conversation so far
+    // (docs/AI.md "NpcScene"). The engine's stand in ignores the extra fields.
+    const npc: NpcModel = {
+      reply: ctx => {
+        const live = engine?.view().live;
+        const names = new Map([...(live?.people ?? []), ...(live ? [live.speaker] : [])].map(p => [p.id, p.name]));
+        let history = (live?.turns ?? []).map(t => ({ by: t.by, ...(t.by === 'you' ? {} : { name: names.get(t.by) ?? t.by }), text: t.text, ...(t.interrupted ? { interrupted: true } : {}) }));
+        if (ctx.said !== null && history.at(-1)?.by === 'you') history = history.slice(0, -1);
+        return base.reply({ ...ctx, ...scene, history } as typeof ctx);
+      }
+    };
+    engine = createEngine(config, { seed: run.seed, evaluator: recorder.evaluator(this.ai.evaluator), npc: recorder.npc(npc) });
     return { run, engine, recorder, config };
   }
 
