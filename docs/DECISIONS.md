@@ -751,6 +751,10 @@ Details: `docs/CALIBRATION-SYNTHETIC.md`.
 - **Accessibility.** Recording an answer moves focus to Stop and review; Cancel returns it to the microphone, and stopping moves it to the answer box.
 - Comments and the lens prompt that still said "2 to 6 styles" say 4 or 5 (D104).
 
+**D121. The authoring tool's utilities load with /author, not with the participant's first paint.** Decided 2026-10-07.
+- Tailwind scanned src/author into the participant's render blocking stylesheet, which grew by 2.6 KB gzipped and pushed first load LCP to the edge of its budget. `global.css` now skips src/author (`@source not`), and `src/author/author.css`, imported by the /author page and the calibration screen, carries their utilities in the lazy chunk.
+- The custom variants (`short`, `tablet` and the rest) moved to `src/styles/variants.css`, shared by both sheets. Storybook loads both.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

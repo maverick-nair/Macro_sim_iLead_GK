@@ -1,3 +1,4 @@
+import '../author.css';
 import { useEffect, useMemo, type ReactNode } from 'react';
 import type { StoreApi } from 'zustand';
 import { SmallScreenGate } from '../../app/SmallScreenGate';
