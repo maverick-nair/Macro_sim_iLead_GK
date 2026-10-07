@@ -1,6 +1,5 @@
 import type { StorylineConfig } from '../config';
 import { bestStyle, fitOf, needOf, type NeedKey } from '../lens';
-import { wordEnglish } from '../../i18n/engineCopyEn';
 import type { Copy } from '../copy';
 import { createEngine, IntentError, type Engine, type Intent, type Result } from './engine';
 import { heuristicEvaluator, type Evaluator } from './evaluator';
@@ -74,6 +73,12 @@ export interface PlayOptions {
   describe?: string;
   probe?: Probe;
   signal?: AbortSignal;
+  /**
+   * Words engine copy (message codes) as English text for the transcript and the AI player: pass
+   * `wordEnglish` (src/i18n/engineCopyEn) or the app's `wordCopy`. Left out, a message shows as its code.
+   * Injected so the engine stays free of the copy catalog and the app's first load is not split for it.
+   */
+  word?: (c: Copy) => string;
 }
 
 /** One conversation as it happened, with the evaluator's reading. */
@@ -120,7 +125,6 @@ type Member = EngineView['members'][number];
 type ActionView = EngineView['actions'][number];
 interface Step { action: string; option?: string; memberIds: string[]; stage?: string; why: 'event' | 'promise' | 'develop' | 'extra' | 'waste' | 'probe'; eventKey?: string }
 
-const english = (c: Copy | null | undefined) => (c === null || c === undefined ? '' : typeof c === 'string' ? c : wordEnglish(c));
 
 /** Plays one run as a persona (or a probe) and records it week by week. */
 export async function playSynthetic(config: StorylineConfig, persona: PersonaKey, seed: number, opts: PlayOptions = {}): Promise<SyntheticRun> {
@@ -165,6 +169,12 @@ class Player {
     this.lens = { title: config.lens.title, styles: config.lens.styles.map(s => ({ key: s.key, name: s.name, short: s.short, description: s.description })) };
     this.speaker = opts.speaker ?? templateSpeaker;
     this.defaultStyle = probe?.kind === 'style' ? probe.style : this.rng.pick(this.keys);
+  }
+
+  private english(c: Copy | null | undefined): string {
+    if (c === null || c === undefined) return '';
+    if (typeof c === 'string') return c;
+    return this.opts.word ? this.opts.word(c) : 'code' in c ? c.code : c.template;
   }
 
   private async send(intent: Intent): Promise<Result> {
@@ -263,13 +273,13 @@ class Player {
       if (!expected && meet && ev?.target === 'team' && (card.card === 'crisis' || card.card === 'impact') && this.level >= 2 && probe?.kind !== 'action' && this.rng.chance(this.t.events * 0.6)) {
         this.pending.push({ eventKey: ev.key, memberId: null, actions: [meet.key], period: v.clock.period, messageId: null });
       }
-      this.week(v.clock.period).events.push({ key: card.key, title: english(card.title), expected, handled: false });
+      this.week(v.clock.period).events.push({ key: card.key, title: this.english(card.title), expected, handled: false });
       v = (await this.send({ type: 'dismissCard', cardId: card.id })).view;
     }
     for (const m of v.inbox) {
       if (m.from === 'news' || m.kind === 'news' || m.state !== 'open') continue;
       // An event delivered as a chat or an email has no card: its message is the event.
-      const title = english(m.title);
+      const title = this.english(m.title);
       const ev = this.config.events.find(e => e.response && e.title === title && (e.delivery === 'chat' || e.delivery === 'email'));
       if (ev && !this.seen.has(`event:${m.id}`)) {
         this.seen.add(`event:${m.id}`);
@@ -545,7 +555,7 @@ class Player {
         action: { key: info.actionKey, name: info.actionName },
         person: m ? { id: m.id, name: m.name, first: m.name.split(' ')[0], mood: m.mood, trust: m.trust, skill: m.skill, morale: m.morale, result: m.result, needLabel: n ? this.config.lens.needs[n].label : null, concern: m.shared } : null,
         team: now.members.filter(x => x.away === 0).map(x => x.name.split(' ')[0]),
-        transcript: (now.live?.turns ?? []).map(t => ({ by: t.by === 'you' ? 'player' as const : 'other' as const, name: t.by === 'you' ? 'You' : this.nameOf(t.by), text: english(t.text) })),
+        transcript: (now.live?.turns ?? []).map(t => ({ by: t.by === 'you' ? 'player' as const : 'other' as const, name: t.by === 'you' ? 'You' : this.nameOf(t.by), text: this.english(t.text) })),
         turn, turns, promise, emailIntent, variant, slip,
         business: { share: now.money.value / total, runShare: now.clock.runShare, behind: ideal, risk: now.funnel.find(st => st.bottleneck)?.name ?? null }
       };
@@ -557,7 +567,7 @@ class Player {
     let turnsSeen: SyntheticConversation['turns'] = [];
     const capture = () => {
       const l = this.engine.view().live;
-      if (l && l.id === id) turnsSeen = l.turns.map(t => ({ by: t.by === 'you' ? 'player' as const : 'other' as const, name: t.by === 'you' ? 'You' : this.nameOf(t.by), text: english(t.text) }));
+      if (l && l.id === id) turnsSeen = l.turns.map(t => ({ by: t.by === 'you' ? 'player' as const : 'other' as const, name: t.by === 'you' ? 'You' : this.nameOf(t.by), text: this.english(t.text) }));
     };
     try {
       if (format === 'email') {

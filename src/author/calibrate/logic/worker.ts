@@ -1,3 +1,4 @@
+import { wordEnglish } from '../../../i18n/engineCopyEn';
 import { CalibrationError, runCalibration } from './run';
 import type { CalibrationSettingsInput } from './schema';
 
@@ -12,6 +13,7 @@ scope.onmessage = async (e: MessageEvent<{ draft: unknown; settings: Calibration
   try {
     const out = await runCalibration(e.data.draft, e.data.settings, {
       ranOn: 'browser',
+      word: wordEnglish,
       onProgress: (done, total) => scope.postMessage({ type: 'progress', done, total }),
       yieldEvery: async () => undefined
     });

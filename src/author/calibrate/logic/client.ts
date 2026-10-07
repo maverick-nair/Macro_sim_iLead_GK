@@ -22,50 +22,40 @@ export class CalibrateClientError extends Error {
   constructor(message: string, readonly code: string, readonly issues: string[] = []) { super(message); this.name = 'CalibrateClientError'; }
 }
 
-const cancelled = () => new CalibrateClientError('The test was cancelled.', 'cancelled');
+export const cancelled = () => new CalibrateClientError('The test was cancelled.', 'cancelled');
 
-/** In the page, a playthrough at a time with the thread given back in between. */
-export function createChunkedRunner(): CalibrationRunner {
-  return {
-    async run(draft, settings, opts = {}) {
-      const { runCalibration, CalibrationError } = await import('./run');
-      try {
-        const out = await runCalibration(draft, settings, { ranOn: 'browser', onProgress: opts.onProgress, signal: opts.signal });
-        return { results: out.results, playthrough: async (p, i) => find(out.playthroughs, p, i) };
-      } catch (e) {
-        if (e instanceof CalibrationError) throw e.code === 'cancelled' ? cancelled() : new CalibrateClientError(e.message, e.code, e.issues);
-        throw e;
-      }
-    }
-  };
-}
-
-function find(list: Playthrough[], persona: PersonaKey, index: number) {
+export function find(list: Playthrough[], persona: PersonaKey, index: number) {
   const p = list.find(x => x.persona === persona && x.index === index);
   if (!p) throw new CalibrateClientError('No such playthrough.', 'notFound');
   return p;
 }
 
-/** In a Web Worker; the chunked runner when the browser cannot start one. */
-export function createWorkerRunner(make: () => Worker = () => new Worker(new URL('./worker.ts', import.meta.url), { type: 'module', name: 'calibration' })): CalibrationRunner {
+const noWorker: CalibrationRunner = { run: async () => { throw new CalibrateClientError('This browser cannot run the test in the background. Use a current version of Chrome, Edge, Firefox or Safari.', 'noWorker'); } };
+
+/**
+ * In a Web Worker. `fallback` runs when the browser cannot start one: `createChunkedRunner` (./chunked) in
+ * tests, Node and Storybook. The screen passes none: importing the engine into the page's graph would split
+ * modules out of the participant's first load (D116), and every supported browser has module workers.
+ */
+export function createWorkerRunner(make: () => Worker = () => new Worker(new URL('./worker.ts', import.meta.url), { type: 'module', name: 'calibration' }), fallback: CalibrationRunner = noWorker): CalibrationRunner {
   return {
     run(draft, settings, opts = {}) {
       let worker: Worker;
       try {
         worker = make();
       } catch {
-        return createChunkedRunner().run(draft, settings, opts);
+        return fallback.run(draft, settings, opts);
       }
       return new Promise<CalibrationRun>((resolve, reject) => {
         const stop = () => { worker.terminate(); reject(cancelled()); };
         if (opts.signal?.aborted) return stop();
         opts.signal?.addEventListener('abort', stop, { once: true });
         worker.onerror = e => {
-          // A worker that cannot load (an old browser, a strict policy): run in the page instead.
+          // A worker that cannot load (an old browser, a strict policy): the fallback.
           e.preventDefault();
           worker.terminate();
           opts.signal?.removeEventListener('abort', stop);
-          createChunkedRunner().run(draft, settings, opts).then(resolve, reject);
+          fallback.run(draft, settings, opts).then(resolve, reject);
         };
         worker.onmessage = (e: MessageEvent) => {
           const m = e.data as { type: 'progress'; done: number; total: number } | { type: 'done'; results: CalibrationResults; playthroughs: Playthrough[] } | { type: 'error'; code: string; message: string; issues: string[] };

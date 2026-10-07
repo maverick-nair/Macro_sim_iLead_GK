@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import raw from '../../../engine/storylines/sales-elevator.json';
-import { createChunkedRunner, createRunner, createServerRunner, createWorkerRunner, type CalibrationRunner } from './client';
+import { createChunkedRunner } from './chunked';
+import { createRunner, createServerRunner, createWorkerRunner, type CalibrationRunner } from './client';
 import { runCalibration } from './run';
 
 const settings = { personas: { beginner: 1, expert: 1 }, probes: false, seed: 2 };
@@ -23,11 +24,15 @@ async function fakeServer() {
 describe('calibration runners', () => {
   it('run in the page when there is no Worker, a playthrough at a time', async () => {
     const progress: number[] = [];
-    const run = await createWorkerRunner().run(raw, settings, { onProgress: d => progress.push(d) });
+    const run = await createWorkerRunner(undefined, createChunkedRunner()).run(raw, settings, { onProgress: d => progress.push(d) });
     expect(run.results.ranOn).toBe('browser');
     expect(progress).toEqual([0, 1, 2]);
     expect((await run.playthrough('expert', 0)).persona).toBe('expert');
     await expect(run.playthrough('expert', 4)).rejects.toMatchObject({ code: 'notFound' });
+  });
+
+  it('say so when there is no Worker and no fallback', async () => {
+    await expect(createWorkerRunner().run(raw, settings)).rejects.toMatchObject({ code: 'noWorker' });
   });
 
   it('report a draft that does not play with its issues, and a cancel', async () => {

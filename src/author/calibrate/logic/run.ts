@@ -1,4 +1,5 @@
 import { parseStoryline, type StorylineConfig } from '../../../engine/config';
+import type { Copy } from '../../../engine/copy';
 import type { Evaluator } from '../../../engine/sim/evaluator';
 import type { NpcModel } from '../../../engine/sim/live';
 import { playSynthetic, type Probe } from '../../../engine/sim/synthetic';
@@ -28,6 +29,8 @@ export interface RunDeps {
   ranOn: CalibrationResults['ranOn'];
   /** Which players spoke; left out, AI when a speaker is given, else the offline templates. */
   players?: CalibrationResults['players'];
+  /** Words engine copy as English for transcripts (`wordEnglish`, or the app's `wordCopy`); see `PlayOptions.word`. */
+  word?: (c: Copy) => string;
   /** Gives the thread back between playthroughs (the page stays responsive). */
   yieldEvery?: () => Promise<void>;
 }
@@ -64,7 +67,7 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
   const { runs: todo, probes: probing } = plan(config, settings);
   const total = todo.length + probing.length;
   const tick = deps.yieldEvery ?? nextTick;
-  const opts = { speaker: deps.speaker, evaluator: deps.evaluator, npc: deps.npc, signal: deps.signal };
+  const opts = { speaker: deps.speaker, evaluator: deps.evaluator, npc: deps.npc, signal: deps.signal, word: deps.word };
   const runs: RunResult[] = [];
   const probes: RunResult[] = [];
   const playthroughs: Playthrough[] = [];
@@ -82,7 +85,7 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
   for (const p of probing) {
     check();
     // Probes play on the offline templates and evaluator: they test the mechanics, not the words, and cost no model calls.
-    const run = await playSynthetic(config, p.persona, p.seed, { probe: p.probe, signal: deps.signal });
+    const run = await playSynthetic(config, p.persona, p.seed, { probe: p.probe, signal: deps.signal, word: deps.word });
     probes.push(runResultOf(run, p.index, config));
     deps.onProgress?.(++done, total);
     await tick();

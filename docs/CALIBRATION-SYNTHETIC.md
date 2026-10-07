@@ -11,7 +11,7 @@ This is a different tool from `npm run calibrate` (`scripts/calibrate.ts`, SIMUL
 | The four personas, as engine policies | `src/engine/sim/synthetic.ts` (`playSynthetic`, `PERSONA_TRAITS`, `PERSONA_COPY`) |
 | What they say offline, and the speaker interface | `src/engine/sim/syntheticSpeech.ts` (`templateSpeaker`, `SyntheticSpeaker`, `SpeakerContext`) |
 | What they say with AI | `ai/src/synthetic/player.ts`, `createSyntheticPlayer(config)` from `ai/`; prompt `ai/prompts/synthetic-player.md` |
-| Run, aggregate, check, explain | `src/author/calibrate/logic/` (`run.ts`, `aggregate.ts`, `extract.ts`, `explain.ts`, `schema.ts`, `publish.ts`, `client.ts`, `worker.ts`) |
+| Run, aggregate, check, explain | `src/author/calibrate/logic/` (`run.ts`, `aggregate.ts`, `extract.ts`, `explain.ts`, `schema.ts`, `publish.ts`, `client.ts`, `worker.ts`, `chunked.ts`) |
 | The screens | `src/author/calibrate/ui/` (`CalibrateView`, `Setup`, `Results`, `PlaythroughView`, stories) |
 | Public entry | `src/author/calibrate/index.ts`: `CalibrateSlot`, `calibrationPublishCheck` |
 | Server jobs | `server/src/calibration/jobs.ts`, `server/src/routes/calibrate.ts` |
@@ -77,7 +77,7 @@ Each playthrough is kept week by week (styles that fit, actions with their style
 
 ## 6. Where it runs
 
-- **In the browser** (no `apiBase`, or a server without the endpoint): a Web Worker (`logic/worker.ts`) plays every playthrough off the page's thread; where a worker cannot start, the page plays one playthrough at a time and gives the thread back in between. About 3 to 5 seconds for 20 playthroughs and the probes on a laptop. Offline: the templates and the keyword evaluator.
+- **In the browser** (no `apiBase`, or a server without the endpoint): a Web Worker (`logic/worker.ts`) plays every playthrough off the page's thread. The chunked runner (`logic/chunked.ts`, one playthrough at a time with the thread given back in between) is the fallback in tests, Node and Storybook; the screen does not import it, because pulling the engine into the page's module graph splits shared modules out of the participant's first load (every supported browser has module workers; without one the screen says so). About 3 to 5 seconds for 20 playthroughs and the probes on a laptop. Offline: the templates and the keyword evaluator.
 - **On the server** (`apiBase`, for example `/genie`): a job.
 
 | Method and path | Body | Answer |
@@ -111,7 +111,7 @@ const line = calibrationPublishCheck(kept, { draft });
 //   blocking, summary, details, action: 'See results' | 'Run the test' | 'Run the test again' }
 ```
 
-`CalibrateSlot` is light: the screen is a lazy chunk loaded on first render, and the engine loads only with a run, in the worker. Nothing in the participant app imports it (initial JS 214.9 KB of 250). `calibrationPublishCheck` imports no engine and no schema library. Until /author mounts the slot, `/author/calibrate` shows it on the bundled Sales Elevator draft (`?theme=light`, `?api=/genie`).
+`CalibrateSlot` is light: the screen is a lazy chunk loaded on first render, and the engine loads only with a run, in the worker. Nothing in the participant app imports it: the only addition to the first load is the `/author/calibrate` route (initial JS 214.4 KB of 250, 214.3 before; vitals within budget). `calibrationPublishCheck` imports no engine and no schema library. Until /author mounts the slot, `/author/calibrate` shows it on the bundled Sales Elevator draft (`?theme=light`, `?api=/genie`).
 
 ## 8. Results on Sales Elevator
 
