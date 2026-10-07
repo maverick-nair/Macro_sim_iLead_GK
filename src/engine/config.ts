@@ -295,7 +295,7 @@ export const Report = z.object({
   narratives: z.object({
     overall: z.array(Copy).min(1),
     capability: z.object({ low: Copy, mid: Copy, high: Copy }),
-    /** By dominant style, keyed by the lens's style keys. A style without a line adds none; lines for styles the lens does not have are never used. */
+    /** By dominant style, keyed by the lens's style keys. A style without a line adds none; lines for styles the lens does not have are never used. `{style}` is the style's name (D104). */
     dominant: z.record(z.string(), Copy)
   }).default(DEFAULT_NARRATIVES),
   development: z.record(Key, z.object({ practice: Copy, onTheJob: Copy })).default(DEFAULT_DEVELOPMENT),
@@ -338,6 +338,9 @@ export const Report = z.object({
   if (overall >= r.scale.length || floor > overall) ctx.addIssue({ code: 'custom', path: ['assessment', 'bar'], message: `The bar is a level from 0 to ${r.scale.length - 1}, with the floor at or below it` });
 });
 
+/** The lens's style count rule (D104), worded for the author. */
+const STYLE_COUNT = `A lens has ${MIN_STYLES} or ${MAX_STYLES} styles`;
+
 /** A lens style key: a short id such as "D" or "coach". */
 export const StyleKey = z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,15}$/, 'Use a short id: letters, digits and underscores');
 
@@ -363,7 +366,7 @@ export const Lens = z.object({
     name: Copy,
     short: Copy,
     description: Copy
-  })).min(MIN_STYLES).max(MAX_STYLES),
+  })).min(MIN_STYLES, STYLE_COUNT).max(MAX_STYLES, STYLE_COUNT),
   needs: z.object({ lowSkill_lowMorale: LensNeed, lowSkill_highMorale: LensNeed, highSkill_lowMorale: LensNeed, highSkill_highMorale: LensNeed }),
   fit: z.object({ lowSkill_lowMorale: FitRow, lowSkill_highMorale: FitRow, highSkill_lowMorale: FitRow, highSkill_highMorale: FitRow }),
   /** Adds report only skills (D70); never game mechanics. */

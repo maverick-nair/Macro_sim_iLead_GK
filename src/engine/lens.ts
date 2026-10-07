@@ -15,8 +15,9 @@ export type LensId = (typeof LENS_IDS)[number];
 export const NEEDS = ['lowSkill_lowMorale', 'lowSkill_highMorale', 'highSkill_lowMorale', 'highSkill_highMorale'] as const;
 export type NeedKey = (typeof NEEDS)[number];
 
-export const MIN_STYLES = 2;
-export const MAX_STYLES = 6;
+/** Every lens has 4 or 5 styles (D104): enough range to read people, few enough to choose between in a week. */
+export const MIN_STYLES = 4;
+export const MAX_STYLES = 5;
 
 export type Fit = 0 | 1 | 2;
 

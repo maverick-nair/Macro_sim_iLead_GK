@@ -94,10 +94,10 @@ export const DEFAULT_NARRATIVES = {
     high: 'You matched what people needed most of the time, and corrected course when you did not.'
   },
   dominant: {
-    D: 'You lean on Directing. It helps people who are new or stuck, and holds back people who are ready for more.',
-    G: 'You lean on Guiding. Explaining the why builds commitment; watch for people who need you to step back.',
-    P: 'You lean on Partnering. People feel heard; make sure decisions still get made and owned.',
-    E: 'You lean on Entrusting. Capable people thrive; people who are still learning can feel left alone.'
+    D: 'You lean on {style}. It helps people who are new or stuck, and holds back people who are ready for more.',
+    G: 'You lean on {style}. Explaining the why builds commitment; watch for people who need you to step back.',
+    P: 'You lean on {style}. People feel heard; make sure decisions still get made and owned.',
+    E: 'You lean on {style}. Capable people thrive; people who are still learning can feel left alone.'
   }
 };
 

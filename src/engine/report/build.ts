@@ -179,7 +179,9 @@ export function buildReport(sim: Sim) {
   const revenue = sim.periods.map(p => ({ period: p.period, value: p.cumulativeValue, pace: (c.money.target * p.period) / c.time.period.count }));
 
   const dom1 = dom.length === 1 ? dom[0] : null;
-  const domLine = purpose === 'development' && dom1 ? r.narratives.dominant[dom1] : undefined;
+  // `{style}` in a dominant line is the style's current name, so an author's rename reaches the report (D104).
+  const domName = c.lens.styles.find(st => st.key === dom1)?.name ?? '';
+  const domLine = purpose === 'development' && dom1 ? r.narratives.dominant[dom1]?.replaceAll('{style}', domName) : undefined;
   // Methodology names the lens in participant language; the source ("based on") is author only (D70).
   const lensLines: Copy[] = [msg('engine.report.lens', { title: c.lens.title }),
     ...(c.lens.secondary ? [msg('engine.report.lensSecondary', { title: c.lens.secondary.title })] : [])];

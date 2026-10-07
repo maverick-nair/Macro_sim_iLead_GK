@@ -83,8 +83,8 @@
           "type": "string"
         },
         "styles": {
-          "minItems": 2,
-          "maxItems": 6,
+          "minItems": 4,
+          "maxItems": 5,
           "type": "array",
           "items": {
             "type": "object",
