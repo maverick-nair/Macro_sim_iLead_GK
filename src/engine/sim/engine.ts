@@ -5,7 +5,7 @@ import { chooseReward, endPeriod, startNextPeriod } from './period';
 import { createRng } from './rng';
 import type { Style } from './rules';
 import { createSim, log, member } from './sim';
-import type { Band, Change, Outcome, PeriodSummary, Turn } from './types';
+import type { Band, Change, LiveRecord, Outcome, PeriodSummary, Turn } from './types';
 import * as live from './live';
 import { buildView, type EngineView } from './view';
 import { summarizeRun, type RunSummary } from '../report/summary';
@@ -61,6 +61,11 @@ export interface Engine {
    * stores per attempt and the group report aggregates. Server tooling, not a participant intent.
    */
   summary(): RunSummary;
+  /**
+   * The run's live conversation records (scoring-and-report.md 4.5), for assessor tooling: the ids
+   * `review` takes, the band the AI gave, the participant's words. Server tooling, never sent to the participant.
+   */
+  records(): LiveRecord[];
 }
 
 export { IntentError };
@@ -170,6 +175,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
   return {
     view: () => buildView(sim),
     summary: () => summarizeRun(sim),
+    records: () => structuredClone(sim.liveRecords),
     review({ recordId, band, skills }) {
       const rec = sim.liveRecords.find(r => r.id === recordId);
       if (!rec) throw new IntentError('No such interaction', 'unknownInteraction');
