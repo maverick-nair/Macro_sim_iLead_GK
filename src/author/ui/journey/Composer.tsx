@@ -11,7 +11,8 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2,
  * The answer box (docs/design/genie/ChatStart and ChatVoice, D106): type, or record. Recording shows the
  * live transcript under a waveform with Cancel and Stop and review; when it stops, the words land in
  * the answer box, marked as transcribed, to edit before Send. Nothing is sent until the author presses
- * Send. Upload sits beside the microphone.
+ * Send. Upload sits beside the microphone. Focus follows the recording: to Stop and review once it
+ * listens, back to the microphone after Cancel, and to the answer box after it stops.
  */
 export function Composer({ question, placeholder, multiline, busy, error, onSend, onUpload, hint }: {
   question: QuestionId | null; placeholder: string; multiline?: boolean; busy: boolean; error: string | null;
@@ -22,6 +23,10 @@ export function Composer({ question, placeholder, multiline, busy, error, onSend
   const [elapsed, setElapsed] = useState(0);
   const started = useRef(0);
   const box = useRef<HTMLTextAreaElement>(null);
+  const mic = useRef<HTMLButtonElement>(null);
+  const stopButton = useRef<HTMLButtonElement>(null);
+  /** Where focus goes when the recording view closes. */
+  const after = useRef<'mic' | 'box' | null>(null);
   const provider = useMemo(() => createAuthorSpeech(question), [question]);
   const speech = useSpeech(provider, {
     // The author's click on the microphone is their consent: nothing records before it.
@@ -39,10 +44,31 @@ export function Composer({ question, placeholder, multiline, busy, error, onSend
     const t = setInterval(() => {
       const s = Math.floor((Date.now() - started.current) / 1000);
       setElapsed(s);
-      if (s >= MAX_SECONDS) void speech.stop();
+      if (s >= MAX_SECONDS) { after.current = 'box'; void speech.stop(); }
     }, 250);
     return () => clearInterval(t);
   }, [speech, speech.status]);
+
+  useEffect(() => {
+    if (speech.status === 'listening') stopButton.current?.focus();
+  }, [speech.status]);
+
+  useEffect(() => {
+    if (recording || !after.current) return;
+    const to = after.current;
+    after.current = null;
+    (to === 'mic' ? mic.current : box.current)?.focus();
+  }, [recording]);
+
+  function stop() {
+    after.current = 'box';
+    void speech.stop();
+  }
+
+  function cancel() {
+    after.current = 'mic';
+    speech.cancel();
+  }
 
   async function record() {
     started.current = Date.now();
@@ -79,8 +105,8 @@ export function Composer({ question, placeholder, multiline, busy, error, onSend
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-13 text-author-muted">Nothing is sent until you review the transcript and press Send.</span>
           <span className="flex-1" />
-          <button type="button" className={BUTTON.secondary} onClick={() => speech.cancel()}>Cancel</button>
-          <button type="button" className={BUTTON.danger} disabled={speech.status !== 'listening'} onClick={() => void speech.stop()}>{Icon.stop(14)} Stop and review</button>
+          <button type="button" className={BUTTON.secondary} onClick={cancel}>Cancel</button>
+          <button type="button" ref={stopButton} className={BUTTON.danger} disabled={speech.status !== 'listening'} onClick={stop}>{Icon.stop(14)} Stop and review</button>
         </div>
       </div>
     );
@@ -103,7 +129,7 @@ export function Composer({ question, placeholder, multiline, busy, error, onSend
             onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !multiline) { e.preventDefault(); void submit(); } }}
             aria-invalid={!!error} aria-describedby={error ? 'author-error' : undefined}
             className={`min-h-12 flex-1 resize-none rounded-8 border-0 bg-transparent px-1 py-1.5 text-15 leading-[1.5] text-author-ink placeholder:text-author-muted ${FOCUS}`} />
-          <button type="button" className={`${BUTTON.secondary} size-11 px-0`} aria-label="Record your answer" disabled={busy || !question} onClick={() => void record()}>{Icon.mic(18)}</button>
+          <button type="button" ref={mic} className={`${BUTTON.secondary} size-11 px-0`} aria-label="Record your answer" disabled={busy || !question} onClick={() => void record()}>{Icon.mic(18)}</button>
           {onUpload && (
             <label className={`${BUTTON.secondary} size-11 px-0 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary`}>
               <span className="sr-only">Upload a brief, a job description or a framework</span>{Icon.clip(18)}

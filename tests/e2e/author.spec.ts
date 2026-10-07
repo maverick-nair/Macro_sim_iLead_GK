@@ -52,12 +52,20 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await expect(progress(page)).toHaveText('Question 5 of about 10');
 
   // Voice: record, the live transcript, stop, then the words in the answer box to edit before Send.
-  await page.getByRole('button', { name: 'Record your answer' }).click();
+  // Focus follows: Stop and review while recording, the microphone after Cancel, the answer box after stop.
+  const micButton = page.getByRole('button', { name: 'Record your answer' });
   const rec = page.getByRole('group', { name: 'Recording your answer' });
+  await micButton.click();
+  await expect(rec.getByRole('button', { name: 'Stop and review' })).toBeFocused();
+  await rec.getByRole('button', { name: 'Cancel' }).click();
+  await expect(micButton).toBeFocused();
+  await micButton.click();
   await expect(rec.getByText(/^Recording/)).toBeVisible();
+  await expect(rec.getByRole('button', { name: 'Stop and review' })).toBeFocused();
   await expect(rec.getByText(/Ten\. Eight/)).toBeVisible({ timeout: 10_000 });
   await rec.getByRole('button', { name: 'Stop and review' }).click();
   await expect(page.getByText(/Transcribed from your recording/)).toBeVisible();
+  await expect(answerBox(page)).toBeFocused();
   await expect(answerBox(page)).toHaveValue(/Eight account managers/);
   await answerBox(page).fill(`${await answerBox(page).inputValue()} Two of them joined last month.`);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
