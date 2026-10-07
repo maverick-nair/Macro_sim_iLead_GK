@@ -35,6 +35,11 @@ export interface RunDeps {
   yieldEvery?: () => Promise<void>;
 }
 
+/** True for an abort: the signal fired, or a player, model call or fetch threw AbortError. */
+export function isAbort(err: unknown, signal?: AbortSignal): boolean {
+  return !!signal?.aborted || (typeof err === 'object' && err !== null && (err as { name?: unknown }).name === 'AbortError');
+}
+
 export interface CalibrationOutput { results: CalibrationResults; playthroughs: Playthrough[] }
 
 
@@ -74,9 +79,18 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
   let done = 0;
   deps.onProgress?.(0, total);
   const check = () => { if (deps.signal?.aborted) throw new CalibrationError('Cancelled', 'cancelled'); };
+  // A cancel mid playthrough throws from inside the player (AbortError); it is a cancel, not a failure.
+  const guarded = async <T>(f: () => Promise<T>): Promise<T> => {
+    try {
+      return await f();
+    } catch (err) {
+      if (!(err instanceof CalibrationError) && isAbort(err, deps.signal)) throw new CalibrationError('Cancelled', 'cancelled');
+      throw err;
+    }
+  };
   for (const r of todo) {
     check();
-    const run = await playSynthetic(config, r.persona, r.seed, { ...opts, describe: settings.describe?.[r.persona] || undefined });
+    const run = await guarded(() => playSynthetic(config, r.persona, r.seed, { ...opts, describe: settings.describe?.[r.persona] || undefined }));
     runs.push(runResultOf(run, r.index, config));
     playthroughs.push(playthroughOf(run, r.index, config));
     deps.onProgress?.(++done, total);
@@ -85,7 +99,7 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
   for (const p of probing) {
     check();
     // Probes play on the offline templates and evaluator: they test the mechanics, not the words, and cost no model calls.
-    const run = await playSynthetic(config, p.persona, p.seed, { probe: p.probe, signal: deps.signal, word: deps.word });
+    const run = await guarded(() => playSynthetic(config, p.persona, p.seed, { probe: p.probe, signal: deps.signal, word: deps.word }));
     probes.push(runResultOf(run, p.index, config));
     deps.onProgress?.(++done, total);
     await tick();

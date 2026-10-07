@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import raw from '../../../engine/storylines/sales-elevator.json';
+import type { Copy } from '../../../engine/copy';
 import type { Evaluation } from '../../../engine/sim/types';
 import { copyViolations } from '../../../i18n/copy';
 import { explain } from './explain';
@@ -70,6 +71,15 @@ describe('a calibration run', () => {
     const ctl = new AbortController();
     const p = runCalibration(raw, { personas: { expert: 3 } }, { ranOn: 'browser', signal: ctl.signal, onProgress: d => { if (d === 1) ctl.abort(); } });
     await expect(p).rejects.toMatchObject({ code: 'cancelled' });
+  });
+
+  it('reports a cancel mid playthrough as cancelled, not failed', async () => {
+    const ctl = new AbortController();
+    let calls = 0;
+    const word = (c: Copy) => { if (++calls === 1) ctl.abort(); return typeof c === 'string' ? c : 'code' in c ? c.code : c.template; };
+    const p = runCalibration(raw, { personas: { expert: 1 }, probes: false }, { ranOn: 'browser', signal: ctl.signal, word });
+    await expect(p).rejects.toMatchObject({ name: 'CalibrationError', code: 'cancelled' });
+    expect(calls).toBeGreaterThanOrEqual(1);
   });
 
   it('plans seeds per persona, so every persona meets the same team', () => {

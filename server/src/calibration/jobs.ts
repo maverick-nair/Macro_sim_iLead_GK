@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from 'node:crypto';
-import { CalibrationError, parseDraft, runCalibration } from '../../../src/author/calibrate/logic/run';
+import { CalibrationError, isAbort, parseDraft, runCalibration } from '../../../src/author/calibrate/logic/run';
 import { CalibrationSettings, type CalibrationJob, type CalibrationResults, type Playthrough, type PersonaKey } from '../../../src/author/calibrate/logic/schema';
 import { wordEnglish } from '../../../src/i18n/engineCopyEn';
 import { HttpError } from '../http/errors';
@@ -143,7 +143,7 @@ export class CalibrationJobs {
       this.finish(job, 'done');
       this.log.info('calibration done', { job: job.id, runs: out.results.runs.length, probes: out.results.probes.length, ms: Date.now() - started, failed: out.results.checks.filter(c => c.status === 'fail').map(c => c.key) });
     } catch (e) {
-      if (e instanceof CalibrationError && e.code === 'cancelled') { this.finish(job, 'cancelled'); return; }
+      if ((e instanceof CalibrationError && e.code === 'cancelled') || isAbort(e, job.controller.signal)) { this.finish(job, 'cancelled'); return; }
       job.error = { code: e instanceof CalibrationError ? e.code : 'failed', message: e instanceof CalibrationError ? e.message : 'The calibration failed. Try again.' };
       this.finish(job, 'failed');
       this.log.error('calibration failed', { job: job.id, err: e });
