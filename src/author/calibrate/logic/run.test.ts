@@ -6,8 +6,8 @@ import { copyViolations } from '../../../i18n/copy';
 import { explain } from './explain';
 import { configHash } from './hash';
 import { calibrationPublishCheck } from './publish';
-import { CalibrationError, plan, parseDraft, runCalibration } from './run';
-import { CalibrationResults, CalibrationSettings, Playthrough } from './schema';
+import { CalibrationError, checkedPlan, plan, parseDraft, runCalibration } from './run';
+import { CalibrationResults, CalibrationSettings, MAX_PLAYTHROUGHS, MAX_PROBE_ACTIONS, Playthrough } from './schema';
 
 const ev = (o: Partial<Omit<Evaluation, 'flags'>> & { flags?: Partial<Evaluation['flags']> } = {}): Evaluation => ({
   styleUsed: 'G', confidence: 1, band: 'adequate', evidence: [], dimensions: [{ key: 'listening', band: 'strong', evidence: [] }, { key: 'clarity', band: 'adequate', evidence: [] }], redFlags: [],
@@ -80,6 +80,15 @@ describe('a calibration run', () => {
     const p = runCalibration(raw, { personas: { expert: 1 }, probes: false }, { ranOn: 'browser', signal: ctl.signal, word });
     await expect(p).rejects.toMatchObject({ name: 'CalibrationError', code: 'cancelled' });
     expect(calls).toBeGreaterThanOrEqual(1);
+  });
+
+  it('probes at most MAX_PROBE_ACTIONS actions, so the run stays under MAX_PLAYTHROUGHS', () => {
+    const extra = Array.from({ length: 60 }, (_, i) => ({ ...raw.actions[0], key: `extra_${i}` }));
+    const config = parseDraft({ ...raw, actions: [...raw.actions, ...extra] });
+    const s = CalibrationSettings.parse({ personas: { beginner: 25, developing: 25, proficient: 25, expert: 25 } });
+    const { runs, probes } = checkedPlan(config, s);
+    expect(probes.filter(p => p.probe.kind === 'action')).toHaveLength(2 * MAX_PROBE_ACTIONS);
+    expect(runs.length + probes.length).toBeLessThanOrEqual(MAX_PLAYTHROUGHS);
   });
 
   it('plans seeds per persona, so every persona meets the same team', () => {

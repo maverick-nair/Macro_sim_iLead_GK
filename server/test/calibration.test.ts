@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it } from 'vitest';
 import salesElevator from '../../src/engine/storylines/sales-elevator.json';
 import { CalibrationJob, Playthrough } from '../../src/author/calibrate/logic/schema';
 import { templateSpeaker, type SpeakerContext } from '../../src/engine/sim/syntheticSpeech';
+import { CalibrationJobs } from '../src/calibration/jobs';
+import { createLogger } from '../src/log';
 import { mockPorts } from '../src/ports';
 import { testServer, type TestServer } from './helpers';
 
@@ -117,5 +119,45 @@ describe('synthetic player calibrations', () => {
     expect(doc.paths['/genie/calibrations/{id}'].delete).toBeDefined();
     expect(doc.paths['/genie/calibrations/{id}/playthroughs/{persona}/{index}'].get).toBeDefined();
     expect(Object.keys(doc.components.schemas)).toEqual(expect.arrayContaining(['CalibrationRequest', 'CalibrationJob', 'Playthrough']));
+  });
+});
+
+describe('calibration limits (D120)', () => {
+  const owned: CalibrationJobs[] = [];
+  afterEach(() => { for (const j of owned.splice(0)) j.close(); });
+  const jobsWith = (o: Partial<ConstructorParameters<typeof CalibrationJobs>[2]> = {}) => {
+    const j = new CalibrationJobs(mockPorts(), createLogger('silent'), { concurrency: 1, queue: 10, ...o });
+    owned.push(j);
+    return j;
+  };
+  const settle = async (jobs: CalibrationJobs, owner: string, id: string) => {
+    for (let i = 0; i < 1500; i++) {
+      const j = jobs.get(owner, id);
+      if (j.status !== 'queued' && j.status !== 'running') return j;
+      await new Promise(r => setTimeout(r, 10));
+    }
+    throw new Error('still running');
+  };
+
+  it('cap each author at CALIBRATION_PER_OWNER queued or running', async () => {
+    const jobs = jobsWith({ perOwner: 2 });
+    const a = jobs.start('au', { ...small, personas: { expert: 3 } }).job;
+    jobs.start('au', { ...small, personas: { expert: 3 }, seed: 9 });
+    expect(() => jobs.start('au', { ...small, seed: 10 })).toThrow(expect.objectContaining({ status: 429, code: 'tooManyCalibrations' }));
+    // Another author is not held back.
+    expect(jobs.start('au-2', small).created).toBe(true);
+    jobs.cancel('au', a.id);
+    await settle(jobs, 'au', a.id);
+    expect(jobs.start('au', { ...small, seed: 10 }).created).toBe(true);
+  });
+
+  it('stop a job at its time limit as failed, and prune finished jobs on a timer', async () => {
+    const jobs = jobsWith({ timeLimitMs: 30, keepMs: 0, pruneEveryMs: 20 });
+    const { job } = jobs.start('au', { ...small, personas: { expert: 25 } });
+    const done = await settle(jobs, 'au', job.id);
+    expect(done.status).toBe('failed');
+    expect(done.error).toMatchObject({ code: 'timeLimit' });
+    await new Promise(r => setTimeout(r, 80));
+    expect(() => jobs.get('au', job.id)).toThrow(expect.objectContaining({ status: 404 }));
   });
 });

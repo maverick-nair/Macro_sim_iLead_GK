@@ -10,18 +10,21 @@ const Id = z.string().regex(/^[0-9a-f-]{36}$/);
 /**
  * GenieKreator's "Test with synthetic players" (D117, docs/CALIBRATION-SYNTHETIC.md): start a calibration
  * of a draft storyline, poll it, read one playthrough, or cancel it. Behind the author role; the start is
- * rate limited with the AI calls. Jobs run in process (`CALIBRATION_CONCURRENCY`, `CALIBRATION_QUEUE`).
+ * rate limited with the AI calls. Jobs run in process (`CALIBRATION_CONCURRENCY`, `CALIBRATION_QUEUE`,
+ * `CALIBRATION_PER_OWNER`, `CALIBRATION_TIME_LIMIT_MS`).
  */
 export function registerCalibrate(ctx: ServerContext): CalibrationJobs {
   const { routes } = ctx;
-  const jobs = new CalibrationJobs(ctx.ai, ctx.log.child({ component: 'calibration' }), { concurrency: ctx.config.CALIBRATION_CONCURRENCY, queue: ctx.config.CALIBRATION_QUEUE });
+  const jobs = new CalibrationJobs(ctx.ai, ctx.log.child({ component: 'calibration' }), {
+    concurrency: ctx.config.CALIBRATION_CONCURRENCY, queue: ctx.config.CALIBRATION_QUEUE, perOwner: ctx.config.CALIBRATION_PER_OWNER, timeLimitMs: ctx.config.CALIBRATION_TIME_LIMIT_MS
+  });
   const Job = named(CalibrationJob, 'CalibrationJob');
 
   routes.add({
     method: 'post', path: '/genie/calibrations', tag: 'author', auth: ['author'], limit: 'ai', body: named(CalibrationRequest, 'CalibrationRequest'),
     summary: 'Start a synthetic player calibration of a draft storyline',
     description: 'Plays the draft with synthetic players at four levels (playthroughs per persona, from `seed`) and, unless `probes` is false, one style and one action probes; then checks that scores rise with proficiency, Experts reach the target tier and Beginners do not, skill ratings match the level, and no single strategy wins. Answers 202 with the job; poll `GET /genie/calibrations/{id}`. With an `Idempotency-Key` header (1 to 200 characters) the same caller and key answer the job already started (200); the same key with another body is 422.',
-    responses: { 202: { description: 'Started', schema: Job }, 200: { description: 'Already started with this Idempotency-Key', schema: Job }, 400: Err, 422: Err, 429: Err, 503: Err }
+    responses: { 202: { description: 'Started', schema: Job }, 200: { description: 'Already started with this Idempotency-Key', schema: Job }, 400: Err, 422: Err, 429: { description: 'Rate limited, or this author already has `CALIBRATION_PER_OWNER` calibrations queued or running (`tooManyCalibrations`)' }, 503: Err }
   }, async (c, { body, principal }) => {
     const key = c.req.header('idempotency-key')?.trim();
     if (key !== undefined && (key.length < 1 || key.length > 200)) return c.json({ message: 'Idempotency-Key must be 1 to 200 characters.', code: 'badIdempotencyKey' }, 400);

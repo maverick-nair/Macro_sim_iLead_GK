@@ -7,7 +7,7 @@ import type { SyntheticSpeaker } from '../../../engine/sim/syntheticSpeech';
 import { aggregate } from './aggregate';
 import { configHash } from './hash';
 import { playthroughOf, runResultOf } from './extract';
-import { CalibrationSettings, PERSONA_KEYS, type CalibrationResults, type CalibrationSettingsInput, type PersonaKey, type Playthrough, type RunResult } from './schema';
+import { CalibrationSettings, MAX_PLAYTHROUGHS, MAX_PROBE_ACTIONS, PERSONA_KEYS, type CalibrationResults, type CalibrationSettingsInput, type PersonaKey, type Playthrough, type RunResult } from './schema';
 
 /**
  * Runs a calibration (D113): every persona's playthroughs, then the probes, then the aggregation. The same
@@ -49,16 +49,27 @@ export function parseDraft(draft: unknown): StorylineConfig {
   return p.config;
 }
 
-/** The playthroughs a calibration will play, in order: each persona's, then the probes. */
+/**
+ * The playthroughs a calibration will play, in order: each persona's, then the probes. Action probes
+ * cover the first MAX_PROBE_ACTIONS actions, so a storyline with many actions cannot make a run unbounded.
+ */
 export function plan(config: StorylineConfig, s: CalibrationSettings) {
   const runs: Array<{ persona: PersonaKey; index: number; seed: number }> = [];
   for (const persona of PERSONA_KEYS) for (let i = 0; i < (s.personas[persona] ?? 0); i++) runs.push({ persona, index: i, seed: s.seed + i });
   const probes: Array<{ persona: PersonaKey; index: number; seed: number; probe: Probe }> = [];
   if (s.probes) {
-    const all: Probe[] = [...config.lens.styles.map(x => ({ kind: 'style' as const, style: x.key })), ...config.actions.map(a => ({ kind: 'action' as const, action: a.key }))];
+    const all: Probe[] = [...config.lens.styles.map(x => ({ kind: 'style' as const, style: x.key })), ...config.actions.slice(0, MAX_PROBE_ACTIONS).map(a => ({ kind: 'action' as const, action: a.key }))];
     for (const probe of all) for (let i = 0; i < 2; i++) probes.push({ persona: probe.kind === 'style' ? 'proficient' : 'developing', index: i, seed: s.seed + 500 + i, probe });
   }
   return { runs, probes };
+}
+
+/** The plan, refused when it is over MAX_PLAYTHROUGHS playthroughs in all. */
+export function checkedPlan(config: StorylineConfig, s: CalibrationSettings): ReturnType<typeof plan> {
+  const p = plan(config, s);
+  const total = p.runs.length + p.probes.length;
+  if (total > MAX_PLAYTHROUGHS) throw new CalibrationError('These settings cannot run.', 'badSettings', [`${total} playthroughs with the probes; at most ${MAX_PLAYTHROUGHS} in one run. Play fewer, or turn the probes off.`]);
+  return p;
 }
 
 const nextTick = () => new Promise<void>(r => setTimeout(r, 0));
@@ -69,7 +80,7 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
   if (!parsed.success) throw new CalibrationError('These settings cannot run.', 'badSettings', parsed.error.issues.map(i => i.message));
   const settings = parsed.data;
   const config = parseDraft(draft);
-  const { runs: todo, probes: probing } = plan(config, settings);
+  const { runs: todo, probes: probing } = checkedPlan(config, settings);
   const total = todo.length + probing.length;
   const tick = deps.yieldEvery ?? nextTick;
   const opts = { speaker: deps.speaker, evaluator: deps.evaluator, npc: deps.npc, signal: deps.signal, word: deps.word };

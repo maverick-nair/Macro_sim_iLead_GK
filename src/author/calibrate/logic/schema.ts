@@ -12,6 +12,10 @@ export type PersonaKey = z.infer<typeof PersonaKey>;
 /** At most this many playthroughs per persona, and in one calibration. */
 export const MAX_RUNS_PER_PERSONA = 25;
 export const MAX_RUNS = 100;
+/** Action probes play the first this many actions (two playthroughs each); a storyline's actions are not capped. */
+export const MAX_PROBE_ACTIONS = 40;
+/** At most this many playthroughs in one calibration, persona runs and probes together. */
+export const MAX_PLAYTHROUGHS = 200;
 
 const Runs = z.number().int().min(0).max(MAX_RUNS_PER_PERSONA);
 

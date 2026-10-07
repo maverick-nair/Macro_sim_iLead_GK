@@ -82,7 +82,7 @@ Each playthrough is kept week by week (styles that fit, actions with their style
 
 | Method and path | Body | Answer |
 |---|---|---|
-| `POST /genie/calibrations` | `CalibrationRequest`: `{ storyline, personas: { beginner, developing, proficient, expert }, seed, probes, targetTier?, describe? }` (`docs/schemas/calibration-request.json`); `Idempotency-Key` header, 1 to 200 characters | 202 `CalibrationJob` and `Location`; the same caller and key answer the same job (200); the key with another body is 422 `idempotencyMismatch`; a draft that does not play is 400 `badStoryline` with `issues`; a full queue is 503 `busy` |
+| `POST /genie/calibrations` | `CalibrationRequest`: `{ storyline, personas: { beginner, developing, proficient, expert }, seed, probes, targetTier?, describe? }` (`docs/schemas/calibration-request.json`); `Idempotency-Key` header, 1 to 200 characters | 202 `CalibrationJob` and `Location`; the same caller and key answer the same job (200); the key with another body is 422 `idempotencyMismatch`; a draft that does not play is 400 `badStoryline` with `issues`; a full queue is 503 `busy`; an author with `CALIBRATION_PER_OWNER` jobs queued or running is 429 `tooManyCalibrations` (D120) |
 | `GET /genie/calibrations/{id}` | | `CalibrationJob`: `status` queued, running, done, failed or cancelled; `progress`; `results` when done (`docs/schemas/calibration-job.json`) |
 | `GET /genie/calibrations/{id}/playthroughs/{persona}/{index}` | | `Playthrough` (`docs/schemas/calibration-playthrough.json`); 409 `notReady` before it is done |
 | `DELETE /genie/calibrations/{id}` | | 204: cancelled |
