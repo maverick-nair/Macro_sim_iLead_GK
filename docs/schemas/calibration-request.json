@@ -1,0 +1,83 @@
+{
+  "title": "calibration-request",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "personas": {
+      "default": {
+        "beginner": 5,
+        "developing": 5,
+        "proficient": 5,
+        "expert": 5
+      },
+      "type": "object",
+      "properties": {
+        "beginner": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        },
+        "developing": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        },
+        "proficient": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        },
+        "expert": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        }
+      }
+    },
+    "seed": {
+      "default": 1,
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2147483647
+    },
+    "probes": {
+      "default": true,
+      "type": "boolean"
+    },
+    "targetTier": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "describe": {
+      "type": "object",
+      "properties": {
+        "beginner": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "developing": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "proficient": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "expert": {
+          "type": "string",
+          "maxLength": 600
+        }
+      }
+    },
+    "storyline": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    }
+  },
+  "required": [
+    "storyline"
+  ]
+}

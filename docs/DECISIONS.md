@@ -704,6 +704,44 @@ The product owner asked for every gap in `docs/ORIGINAL-FLOW-GAPS.md` except Hel
 - The Test with synthetic players tab renders `CalibrateSlot` from `src/author/calibrate/index.ts` when that module exists (found with Vite's glob, loaded lazily), otherwise a coming soon panel. Its props: `{ draft, exported: { storyline, issues, copy }, onResult({ passed, summary }) }`; the result is stored on the draft and shown in Review and publish. The calibration feature is built separately and wired at merge.
 - Review and publish runs every check on the draft as it is: blocking (everything required filled, the simulation plays, scoring matches the author's judgment, copy rules) and advisory (synthetic players, characters stay in role, which the server runs on publish, and play it yourself). Publish needs the blocking checks; offline it records the version and offers the configuration to download.
 
+## Synthetic players for GenieKreator (7 Oct)
+
+Details: `docs/CALIBRATION-SYNTHETIC.md`.
+
+**D112. Synthetic players are engine policies at four levels, and speak through one interface.** Decided 2026-10-07.
+- Beginner (low performer), Developing (average), Proficient (high) and Expert (exceptional) are policies in `src/engine/sim/synthetic.ts` over the participant's view and intents, never hidden state, like the calibration policies (SIMULATION 9). Each is a set of traits (diagnose, one default style, adapt, answer events, focus, fit the action to the need, keep promises, use spare days well or waste them, lines per conversation, polish, slip), drawn from a seeded stream: playthroughs differ between seeds and replay exactly for one.
+- Styles, needs and actions are read from the storyline: the action for a need is the member conversation whose authored effects do most for it in the chosen style. Tested on four styles and on five (Six Leadership Styles without Pace Setter); nothing depends on the six style lens being merged.
+- The words come from a `SyntheticSpeaker`: offline the deterministic templates (one script per level, format and style intent), with AI the `ai/` module's `createSyntheticPlayer`, which falls back to the templates. The words are scored by the run's own evaluator, so the scoring pipeline is under test, not only the mechanics. Offline, the plain parts of a line are picked so they carry no other style's cues, so the style meant is the style read.
+- Every profile is opened at style setting, as a participant reading the cards would; the level decides what the player does with it. Opening a profile changes only what the view shows.
+
+**D113. What a calibration measures, and its checks.** Decided 2026-10-07.
+- Per persona: score range and average, tier, how many reach the target tier, revenue against target, the overall skill level and whether it fits the persona, conversation bands, concerns surfaced. Playthrough i of every persona plays seed + i, so the levels meet the same team and events.
+- The target tier is the author's, else the second from the top (Gold), as `npm run calibrate` reads the top two. Expected skill levels are each persona's place on the rating scale, a level either side where it falls between two; a playthrough with too little evidence counts as the lowest level.
+- Fail: scores do not rise with proficiency; Experts reach the target tier in under 80% of runs; Beginners in over 10%; skill ratings fit the level in under 50%; a single strategy reaches the target tier. Warn: ratings fit in under 75%; conversation ratings do not rise; neighbours within 5% of the scale; a strategy matches Proficient play; an action nobody used; Experts answered under 80% of the events that call for an answer. Each warning and failure has a suggested fix. The CLI and CI fail on failures only.
+
+**D114. Dominant strategies are found with probes.** Decided 2026-10-07.
+- Two seeds each of one style for everyone with otherwise Proficient play, and one action every day with random styles. A probe that averages the target tier is a strategy that wins without good leadership. Probes play on the offline templates and evaluator even on a server with AI: they test mechanics, cost no model calls, and the threshold is absolute.
+
+**D115. A plain "why" for every rating.** Decided 2026-10-07.
+- Built from the evaluation and what the player meant (`explain.ts`): what was done, what was missing (no open question, no next step, a concern left hidden), the rubric bands, and whether the style the words showed fit the person's need, or differed from the style meant. The view adds how often Experts surfaced the same person's concern, and opens the Expert's run on the same seed to compare.
+
+**D116. The publish check reads the results, and only a failure blocks.** Decided 2026-10-07.
+- `calibrationPublishCheck(results, { draft })`: passed, advisory (warnings only), failed (blocking), not run, or out of date (the draft's hash changed since the run). It imports no engine and no schema library, so the publish screen stays light. Whether not run or out of date block publishing is the /author workspace's call.
+
+**D117. Calibrations on the server are in process jobs.** Decided 2026-10-07.
+- `POST /genie/calibrations` (author role, AI rate limit, `Idempotency-Key` answered with the same job, a different body with the same key 422) starts a job; `GET` polls it; a playthrough is read on its own; `DELETE` cancels. `CALIBRATION_CONCURRENCY` (2) run at a time, `CALIBRATION_QUEUE` (20) wait, more is 503 `busy`; each playthrough yields the event loop. They play with the server's NPC model and evaluator and, with AI, the synthetic players. Jobs are in memory (an hour, the newest 50): a calibration is a check to run again, not a record to keep; a store can come later with several instances.
+- `npm run synthetic -- --check` plays the bundled storylines offline (about 4 seconds) and runs in CI after the build, beside `npm run calibrate -- sales-elevator --check`.
+
+**D118. `CalibrateSlot` is a lazy slot for /author; offline it runs in a Web Worker.** Decided 2026-10-07.
+- `src/author/calibrate/index.ts` exports `CalibrateSlot` (props: `config`, `apiBase`, `results`, `onResults`, `onAsk`, `defaultRuns`, `headingLevel`, `runner`) and `calibrationPublishCheck`. The screen is a lazy chunk; the engine loads only with a run. With `apiBase` it runs on the server, falling back to the browser when the server does not offer calibrations (404, 501, no network). In the browser, a Web Worker. The page fallback (a playthrough at a time, `logic/chunked.ts`) is for tests, Node and Storybook only: importing the engine into the screen's module graph made the bundler split shared modules (the engine copy, a runtime chunk) out of the first load and pushed first load LCP over 2.5 s. For the same reason the engine takes its English wording of engine copy as an option (`word`), and `/author/calibrate` imports its draft statically.
+- It uses the app's tokens, so the host's theme applies; persona colours (from the design) mark cards and bars only, never text. The rebuilt /author mounts it in its "Test with synthetic players" tab; until then `/author/calibrate` shows it on the bundled draft for review and the E2E test (with axe, dark and light). Not built: "Add a custom player"; Ask Kora is the host's (`onAsk`).
+
+**D119. /author mounts the synthetic players, and their verdict joins Review and publish.** Decided 2026-10-07.
+- The "Test with synthetic players" tab renders `CalibrateSlot` on the storyline the draft exports, on the server when `VITE_GENIE_URL` is set and in a Web Worker otherwise. The tab shows its own title, so the slot's heading is off (`heading={false}`).
+- The draft keeps only the verdict: passed or not, advisory, the summary and a hash of the storyline it ran on. The full results stay in memory for the browser session.
+- On Review and publish the line is advisory when the test has not run, when it ran on an earlier version of the draft, or when it found things to look at; a failed check blocks publishing, as D118 says.
+- `/author/calibrate` stays as a standalone review page for the same screen.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

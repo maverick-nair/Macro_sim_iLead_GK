@@ -231,7 +231,7 @@ export const AuthorDraft = z.object({
   marks: z.record(z.string(), z.enum(MARKS)),
   suggestions: z.array(z.object({ id: z.string(), tab: z.enum(TABS), text: Text, action: Short, done: z.boolean() })),
   /** Calibration results the Test tab reports, when it has run. */
-  calibration: z.object({ ranAt: z.number(), passed: z.boolean(), summary: Short }).nullable()
+  calibration: z.object({ ranAt: z.number(), passed: z.boolean(), summary: Short, configHash: z.string().optional(), advisory: z.boolean().optional() }).nullable()
 });
 export type AuthorDraft = z.infer<typeof AuthorDraft>;
 

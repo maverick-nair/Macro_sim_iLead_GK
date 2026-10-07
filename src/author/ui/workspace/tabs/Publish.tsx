@@ -6,6 +6,7 @@ import { useAuthor } from '../../../model/store';
 import { BUTTON, CARD, Field, Icon, TextArea, TextInput } from '../../kit';
 import { download, playDraft } from '../../play';
 import { navigate } from '../../route';
+import { configHash } from '../../../calibrate/logic/hash';
 import { TabBody, TabHead } from '../Workspace';
 
 export interface Check { id: string; title: string; detail: ReactNode; state: 'passed' | 'failed' | 'advisory'; blocking: boolean; go?: Tab }
@@ -23,10 +24,18 @@ export function checksOf(d: AuthorDraft): Check[] {
     { id: 'engine', title: 'The simulation plays', detail: out.issues.length ? `${out.issues.length} issue${out.issues.length === 1 ? '' : 's'}: ${out.issues.slice(0, 2).join('; ')}` : 'The engine accepts every setting: team, stages, actions, events and the lens.', state: out.issues.length ? 'failed' : 'passed', blocking: true },
     { id: 'scoring', title: 'Scoring matches your judgment', detail: answered.length < d.scoring.samples.length ? `${answered.length} of ${d.scoring.samples.length} samples checked` : `${agreed} of ${d.scoring.samples.length} samples agree after your review (target 85%)`, state: answered.length < d.scoring.samples.length || share < 0.85 ? 'failed' : 'passed', blocking: true, go: 'scoring' },
     { id: 'copy', title: 'Copy rules', detail: out.copy.length ? `${out.copy.length} to fix, for example "${out.copy[0].text.slice(0, 60)}" (${out.copy[0].rule.replace('_', ' ')})` : 'Plain language, "skills" throughout, no dashes as punctuation, KNOLSKAPE lens names only.', state: out.copy.length ? 'failed' : 'passed', blocking: true },
-    { id: 'synthetic', title: 'Synthetic players', detail: d.calibration ? d.calibration.summary : 'Advisory: not run on this draft yet.', state: d.calibration ? (d.calibration.passed ? 'passed' : 'failed') : 'advisory', blocking: false, go: 'calibrate' },
+    synthetic(d.calibration, configHash(out.storyline)),
     { id: 'role', title: 'Characters stay in role', detail: `Advisory: off topic, hostile and "tell me your secret" tests run on all ${d.team.length} characters on the server when you publish.`, state: 'advisory', blocking: false },
     { id: 'play', title: 'Play it yourself', detail: d.publish.played ? 'You played a week of this draft.' : 'Advisory: you have not played a week of this draft yet. It takes about 8 minutes.', state: d.publish.played ? 'passed' : 'advisory', blocking: false }
   ];
+}
+
+/** The synthetic players line: the Test tab's result, or advisory when it has not run or the draft changed since (D119). */
+function synthetic(c: AuthorDraft['calibration'], hash: string) {
+  const base = { id: 'synthetic', title: 'Synthetic players', blocking: false, go: 'calibrate' as Tab };
+  if (!c) return { ...base, detail: 'Advisory: not run on this draft yet.', state: 'advisory' as const };
+  if (c.configHash && c.configHash !== hash) return { ...base, detail: `Advisory: ${c.summary} The draft changed since, so run the test again.`, state: 'advisory' as const };
+  return { ...base, blocking: !c.passed, detail: c.summary, state: !c.passed ? 'failed' as const : c.advisory ? 'advisory' as const : 'passed' as const };
 }
 
 /**

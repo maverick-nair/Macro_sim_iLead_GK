@@ -1,0 +1,269 @@
+{
+  "title": "calibration-playthrough",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "persona": {
+      "type": "string",
+      "enum": [
+        "beginner",
+        "developing",
+        "proficient",
+        "expert"
+      ]
+    },
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991
+    },
+    "score": {
+      "type": "number"
+    },
+    "tier": {
+      "type": "string"
+    },
+    "share": {
+      "type": "number"
+    },
+    "adaptability": {
+      "type": "number"
+    },
+    "weeks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "styleFit": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "correct": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "correct",
+                  "total"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "expected": {
+                  "type": "boolean"
+                },
+                "handled": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "title",
+                "expected",
+                "handled"
+              ]
+            }
+          },
+          "revenue": {
+            "type": "number"
+          },
+          "score": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "period",
+          "styleFit",
+          "actions",
+          "events",
+          "revenue",
+          "score"
+        ]
+      }
+    },
+    "conversations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "title": {
+            "type": "string"
+          },
+          "format": {
+            "type": "string"
+          },
+          "memberIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "band": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "strong",
+                  "adequate",
+                  "weak",
+                  "harmful"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "intended": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shown": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fit": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "turns": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "type": "string",
+                  "enum": [
+                    "player",
+                    "other"
+                  ]
+                },
+                "name": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "by",
+                "name",
+                "text"
+              ]
+            }
+          },
+          "dimensions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string"
+                },
+                "band": {
+                  "type": "string",
+                  "enum": [
+                    "strong",
+                    "adequate",
+                    "weak",
+                    "harmful"
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "band"
+              ]
+            }
+          },
+          "why": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "period",
+          "title",
+          "format",
+          "memberIds",
+          "names",
+          "band",
+          "intended",
+          "shown",
+          "fit",
+          "turns",
+          "dimensions",
+          "why"
+        ]
+      }
+    }
+  },
+  "required": [
+    "persona",
+    "index",
+    "seed",
+    "score",
+    "tier",
+    "share",
+    "adaptability",
+    "weeks",
+    "conversations"
+  ]
+}

@@ -1,54 +1,38 @@
-import { lazy, Suspense, useMemo, type ComponentType } from 'react';
-import type { AuthorDraft } from '../../../model/draft';
-import { toStoryline, type Exported } from '../../../model/export';
+import { useMemo, useState } from 'react';
+import { CalibrateSlot, calibrationPublishCheck, type CalibrationResults } from '../../../calibrate';
+import { configHash } from '../../../calibrate/logic/hash';
+import { toStoryline } from '../../../model/export';
 import { useAuthor } from '../../../model/store';
-import { Badge, CARD } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 
-/**
- * What the Test with synthetic players tab hands the calibration feature (src/author/calibrate, built
- * separately and wired at merge): the draft, the storyline it exports (with any schema issues), and a
- * way to record the result on the draft so Review and publish can show it.
- */
-export interface CalibrateSlotProps {
-  draft: AuthorDraft;
-  exported: Exported;
-  onResult: (r: { passed: boolean; summary: string }) => void;
-}
-
-// The slot is optional: Vite's glob finds src/author/calibrate/index.ts when it exists, and nothing when it does not.
-const found = import.meta.glob<{ CalibrateSlot?: ComponentType<CalibrateSlotProps> }>('../../../calibrate/index.ts');
-const loader = Object.values(found)[0];
-export const CalibrateSlot = loader
-  ? lazy(async () => {
-    const m = await loader();
-    return { default: m.CalibrateSlot ?? (ComingSoon as ComponentType<CalibrateSlotProps>) };
-  })
-  : null;
-
-function ComingSoon() {
-  return (
-    <section aria-labelledby="soon" className={`${CARD} flex max-w-180 flex-col gap-3 p-6`}>
-      <div className="flex items-center gap-2"><h2 id="soon" className="m-0 text-18 font-800">Coming soon</h2><Badge kind="muted">Not run yet</Badge></div>
-      <p className="m-0 text-15 text-author-body">Synthetic players at four levels, Beginner, Developing, Proficient and Expert, will play the whole simulation, conversations included, so you can check it rewards good leadership before real people play.</p>
-      <p className="m-0 text-14 text-author-body">Until then, play a week yourself, and the checks in Review and publish still run on every draft.</p>
-    </section>
-  );
-}
+/** The last results, kept for this browser session so leaving the tab and coming back keeps them (the draft stores only the summary). */
+let kept: CalibrationResults | null = null;
 
 /**
- * Workspace: Test with synthetic players (docs/design/genie/Calibrate, CalibrateRun). The tab renders the
- * `CalibrateSlot` from src/author/calibrate when that module exists, otherwise a coming soon panel (D111).
+ * Workspace: Test with synthetic players (docs/design/genie/Calibrate, CalibrateRun; D112 to D119). Mounts
+ * the calibration's `CalibrateSlot` on the storyline the draft exports, on the server when `VITE_GENIE_URL`
+ * is set and in a Web Worker otherwise, and records the publish check's verdict on the draft.
  */
 export default function Calibrate() {
   const draft = useAuthor(s => s.draft);
   const edit = useAuthor(s => s.edit);
-  const exported = useMemo(() => toStoryline(draft), [draft]);
+  const storyline = useMemo(() => toStoryline(draft).storyline, [draft]);
+  const [results, setResults] = useState<CalibrationResults | null>(kept);
+  const apiBase = (import.meta.env.VITE_GENIE_URL as string | undefined) ?? null;
   return (
     <TabBody label="Test with synthetic players" head={<TabHead title="Test with synthetic players">Synthetic players at four levels play the whole simulation, conversations included, so you can check it rewards good leadership before real people play.</TabHead>}>
-      {CalibrateSlot
-        ? <Suspense fallback={<p className="m-0 text-14 text-author-muted">Loading.</p>}><CalibrateSlot draft={draft} exported={exported} onResult={r => edit(d => { d.calibration = { ranAt: Date.now(), ...r }; })} /></Suspense>
-        : <ComingSoon />}
+      <CalibrateSlot
+        config={storyline}
+        apiBase={apiBase}
+        results={results}
+        heading={false}
+        onResults={r => {
+          kept = r;
+          setResults(r);
+          const check = calibrationPublishCheck(r, { draft: storyline });
+          edit(d => { d.calibration = { ranAt: Date.now(), passed: !check.blocking, summary: check.summary, advisory: check.status === 'advisory', configHash: configHash(storyline) }; });
+        }}
+      />
     </TabBody>
   );
 }
