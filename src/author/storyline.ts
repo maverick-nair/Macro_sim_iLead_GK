@@ -141,7 +141,7 @@ function draftReport(module: LeadershipLensModule, lens: Lens) {
       dominant: Object.fromEntries(lens.styles.map(s => {
         const need = NEEDS.find(n => lens.fit[n][s.key] === 0);
         const who = need ? lower(lens.needs[need].label) : 'ready for it';
-        return [s.key, `You lean on ${s.name}. It helps people who are ${who}, and holds back people who need something else.`];
+        return [s.key, `You lean on {style}. It helps people who are ${who}, and holds back people who need something else.`];
       }))
     },
     development: Object.fromEntries([...primary, ...secondary].map(d => [d.key, { practice: d.practice, onTheJob: d.onTheJob }])),

@@ -164,11 +164,11 @@ test('report 3.0 in assessment: the verdict first, skill verdicts, development n
   expect(await axe(page)).toEqual([]);
 });
 
-test('report 3.0 with six styles at 834 and in the light theme passes axe', async ({ page }) => {
+test('report 3.0 with Six Leadership Styles at 834 and in the light theme passes axe', async ({ page }) => {
   await page.setViewportSize({ width: 834, height: 1194 });
   await open(page, '&lens=six_styles&theme=light');
   await expect(page.getByRole('heading', { level: 2, name: 'Leadership styles summary' })).toBeVisible();
-  await expect(page.getByRole('heading', { level: 3, name: 'Pace Setter' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'Drive', exact: true })).toBeVisible();
   // Nothing scrolls sideways at tablet width.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(await axe(page)).toEqual([]);

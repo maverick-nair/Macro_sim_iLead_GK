@@ -195,14 +195,14 @@ describe('purpose (D75)', () => {
   });
 });
 
-describe('a lens with six styles', () => {
-  it('summarizes six styles over the four needs, and the report passes its schema', async () => {
+describe('a lens with five styles (Six Leadership Styles, D104)', () => {
+  it('summarizes five styles over the four needs, and the report passes its schema', async () => {
     const six = parse(withSixStyles(salesElevator as unknown as StorylineInput));
     const r = (await play(six, 'good', 3)).view.report!;
-    expect(r.run.lens.styles).toHaveLength(6);
+    expect(r.run.lens.styles).toHaveLength(5);
     expect(r.run.styles.perStyle.map(s => s.key)).toEqual(six.lens.styles.map(s => s.key));
-    expect(r.run.styles.grid.every(row => row.length === 6)).toBe(true);
-    expect(r.styleSummary.perStyle).toHaveLength(6);
+    expect(r.run.styles.grid.every(row => row.length === 5)).toBe(true);
+    expect(r.styleSummary.perStyle).toHaveLength(5);
     // Report only skills keep their scores but get no verdict and stay out of the plan.
     expect(r.run.skills.filter(s => s.reportOnly)).toHaveLength(2);
     expect(ReportView.safeParse(r).success).toBe(true);
