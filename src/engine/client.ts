@@ -30,7 +30,7 @@ export function parse<T>(schema: { safeParse(v: unknown): { success: true; data:
   return r.data;
 }
 
-export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: typeof fetch = fetch): EngineClient {
+export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: typeof fetch = fetch): EngineClient & { sendWithId(intent: Intent, requestId?: string): Promise<IntentResult> } {
   const root = `${baseUrl.replace(/\/$/, '')}/sessions/${encodeURIComponent(sessionId)}`;
   async function call(path: string, init?: RequestInit) {
     let res: Response;
@@ -44,16 +44,20 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
     if (!res.ok) throw new EngineError(body?.message ?? res.statusText, body?.code ?? `http${res.status}`, res.status >= 500);
     return body;
   }
+  /** With a request id, a retried intent the server already applied is answered, not applied again (D86). */
+  async function sendWithId(intent: Intent, requestId?: string) {
+    const headers: Record<string, string> = requestId ? { 'idempotency-key': requestId } : {};
+    const [body] = await Promise.all([call('/intents', { method: 'POST', body: JSON.stringify(parse(Intent, intent)), headers }), loadEngineCopy()]);
+    return parse(IntentResult, body);
+  }
   return {
     // The engine's copy is worded as a payload is parsed: its catalog loads beside the first request (D83).
     async view() {
       const [body] = await Promise.all([call('/view'), loadEngineCopy()]);
       return parse(EngineView, body);
     },
-    async send(intent) {
-      const [body] = await Promise.all([call('/intents', { method: 'POST', body: JSON.stringify(parse(Intent, intent)) }), loadEngineCopy()]);
-      return parse(IntentResult, body);
-    },
+    send: intent => sendWithId(intent),
+    sendWithId,
     async *streamTurn(interactionId, turn, signal) {
       let res: Response;
       try {

@@ -9,11 +9,12 @@ import { ReactingScreen } from '../components/liveshell/ReactingScreen';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { PauseDialog, ResumeDialog, SessionExpiredDialog } from '../components/settings/SessionDialogs';
 import { LoadingScreen } from '../components/shell/LoadingScreen';
+import { ConnectionBanner, type ConnectionSource } from '../components/shell/ConnectionBanner';
 import { Onboarding } from '../screens/Onboarding';
 import { BrandContext } from '../theme/brand';
 import type { AppliedTheme } from '../theme/types';
 import { EngineOnboarding } from './EngineOnboarding';
-import { useEngineView } from '../engine/react';
+import { useEngineView, useOptionalEngineClient } from '../engine/react';
 import { runInProgress, showsRecap } from './resume';
 import { useSessionClock } from './sessionClock';
 /** The welcome back recap on the engine loads only when a run is resumed. */
@@ -113,6 +114,13 @@ function EngineStart({ act, minHeight, onResume }: { act: AppActions; minHeight:
   return <EngineOnboarding act={act} minHeight={minHeight} />;
 }
 const TOAST_MS = 3400;
+
+/** The offline banner, when the engine client keeps a queue (D86). */
+function EngineConnection() {
+  const client = useOptionalEngineClient();
+  const source = client && 'state' in client && 'subscribe' in client ? (client as unknown as ConnectionSource) : null;
+  return <ConnectionBanner source={source} />;
+}
 
 function applyMoves(stats: Stats, outcome: Outcome): Stats {
   const next: Stats = structuredClone(stats);
@@ -334,6 +342,7 @@ export function App(p: AppProps) {
         )}
         {s.overlay === 'expired' && <SessionExpiredDialog onSignIn={() => set({ overlay: 'resume' })} frozen={frozen} returnFocus={returnFocus} />}
 
+        {engine && <EngineConnection />}
         <Toast message={s.toast} />
       </div>
     </div>

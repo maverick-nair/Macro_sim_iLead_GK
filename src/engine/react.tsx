@@ -22,7 +22,8 @@ export const VIEW_KEY = ['engine', 'view'] as const;
 export function EngineProvider({ client, children }: { client?: EngineClient; children: ReactNode }) {
   const [state] = useState(() => {
     const c = client ?? createDefaultClient();
-    const queries = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, refetchOnWindowFocus: false, retry: 1 }, mutations: { retry: false } } });
+    // The engine client owns being offline (D86): it queues intents and says so, so TanStack Query must not pause them itself.
+    const queries = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, refetchOnWindowFocus: false, retry: 1, networkMode: 'always' }, mutations: { retry: false, networkMode: 'always' } } });
     // Ask for the view now, before the rest of the first render, not once it has mounted (D78: the first
     // screen's largest paint waits for it). The query below picks up the same request.
     // The team's portraits are asked for as soon as the view names them, before the board renders.
@@ -41,6 +42,9 @@ function ViewLens({ children }: { children: ReactNode }) {
   const lens = useEngineView().data?.lens;
   return <LensProvider lens={lens}>{children}</LensProvider>;
 }
+
+/** The engine client, or null outside an EngineProvider (galleries, stories). */
+export const useOptionalEngineClient = () => useContext(ClientContext);
 
 export function useEngineClient(): EngineClient {
   const c = useContext(ClientContext);

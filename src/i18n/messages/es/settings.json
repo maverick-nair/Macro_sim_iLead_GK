@@ -23,5 +23,7 @@
   "settings.expired.body": "Estuviste fuera un rato, así que cerramos la sesión para proteger tu trabajo. Cada acción y borrador está guardado. Inicia sesión para seguir justo donde lo dejaste.",
   "settings.expired.signIn": "Iniciar sesión de nuevo",
   "app.loading": "Preparando tu oficina",
-  "app.saveFailed": "No pudimos guardar eso. Lo intentaremos de nuevo cuando vuelvas a tener conexión."
+  "app.saveFailed": "No pudimos guardar eso. Lo intentaremos de nuevo cuando vuelvas a tener conexión.",
+  "app.offline": "No tienes conexión. {count, plural, =0 {Puedes seguir leyendo; lo que hagas espera aquí} one {# acción está guardada aquí y se enviará} other {# acciones están guardadas aquí y se enviarán}} cuando vuelvas a conectarte.",
+  "app.reconnecting": "Reconectando. {count, plural, =0 {Un momento} one {# acción espera para enviarse} other {# acciones esperan para enviarse}}."
 }

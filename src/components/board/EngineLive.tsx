@@ -21,6 +21,7 @@ import { PlanForm, type PlanFields, type PlanTextField } from '../liveformats/Pl
 import type { StageNpc, StageTurn } from '../liveformats/shared';
 import type { FinishLive } from './EngineBoard';
 import { LiveBriefCard } from '../liveshell/LiveBriefCard';
+import { clearDraft, hasWords, loadDraft, saveDraft, useUnloadGuard } from './liveDraft';
 import './tabletMessages';
 
 /**
@@ -71,24 +72,33 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   const intent = useIntent();
   const ai = useAiStream();
   const [mode, setMode] = useState<LiveMode>(input === 'text' || !voiceConsent ? 'text' : 'voice');
-  const [draft, setDraft] = useState('');
+  /** Words written here and not sent come back after a reload (D86). */
+  const [saved] = useState(() => loadDraft(lv.id));
+  const [draft, setDraft] = useState(saved.draft ?? '');
   const [briefOpen, setBriefOpen] = useState(layout !== 'tablet');
   const [paused, setPaused] = useState(false);
   const startSeconds = Math.round(lv.minutes * 60);
   const [seconds, setSeconds] = useState(startSeconds);
-  const [email, setEmail] = useState({ subject: '', body: '' });
+  const [email, setEmail] = useState(saved.email ?? { subject: '', body: '' });
   const [dictating, setDictating] = useState<EmailField | null>(null);
-  const [notes, setNotes] = useState(['', '', '']);
+  const [notes, setNotes] = useState(saved.notes ?? ['', '', '']);
   const [notesSent, setNotesSent] = useState(false);
   const streamed = useRef(new Set<string>());
   /** The NPC turn being streamed now (the stream store only learns its id at the end). */
   const [streamingTurn, setStreamingTurn] = useState<string | null>(null);
   /** The stream running now is a Replay: display only, so cutting it off tells the engine nothing. */
   const replaying = useRef(false);
-  const [cvNotes, setCvNotes] = useState<Record<string, string>>({});
+  const [cvNotes, setCvNotes] = useState<Record<string, string>>(saved.cvNotes ?? {});
   const [comparing, setComparing] = useState(false);
   const [confirmPass, setConfirmPass] = useState(false);
-  const [plan, setPlan] = useState<PlanFields>({ goals: '', measures: '', owner: '', due: null, support: '' });
+  const [plan, setPlan] = useState<PlanFields>(saved.plan ?? { goals: '', measures: '', owner: '', due: null, support: '' });
+  const written = { draft, email, notes, plan, cvNotes };
+  useEffect(() => { saveDraft(lv.id, written); });
+  // Leaving the page asks first while there are words not sent, or a conversation under way.
+  const underWay = lv.turns.some(x => x.by === 'you') && !lv.closed;
+  useUnloadGuard(hasWords(written) || underWay);
+  // The conversation ended (or was left): its saved draft goes too.
+  useEffect(() => () => { if (!document.hidden) clearDraft(lv.id); }, [lv.id]);
   const [planField, setPlanField] = useState<PlanTextField | null>(null);
   const inFlight = useRef(false);
   const root = useRef<HTMLDivElement>(null);

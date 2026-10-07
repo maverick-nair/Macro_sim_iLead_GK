@@ -6,6 +6,7 @@ import { prefetch } from './app/prefetch';
 import { SmallScreenGate } from './app/SmallScreenGate';
 import { EngineProvider } from './engine/react';
 import { createDefaultClient } from './engine/client';
+import { rememberedRun, rememberRun, resilientClient } from './engine/resilient';
 import { useMediaQuery } from './lib/useMediaQuery';
 import { startTheme, useThemeState } from './theme/bootstrap';
 import { appLocale, dirOf, setAppLocale } from './i18n/core';
@@ -30,12 +31,17 @@ const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev')
 function launch() {
   const q = new URLSearchParams(location.search);
   // The launch link names the participant (LMS or GenieKreator); settings and the session are theirs.
-  const participant = q.get('participant') ?? 'local';
+  // Without one (a reload of a bookmark), the run this browser last played resumes (D86).
+  const participant = q.get('participant') ?? rememberedRun() ?? 'local';
+  rememberRun(participant);
   // `name` stands in for the launch's display name with the mock API (the server reads it from the launch).
   const name = q.get('name');
   // `?history=1`: the mock serves one earlier attempt, for the report's progress section (D75).
   const api = createDefaultApi(participant, name, { client: q.get('client'), themeUrl: q.get('themeUrl'), history: q.get('history') === '1' });
-  const engine = createDefaultClient(participant);
+  // Intents wait while offline and go out in order on reconnect (D86). The queue is kept on this device
+  // only for a server run: the mock engine lives in the page, so a reload starts it afresh.
+  const remote = !!import.meta.env.VITE_ILEAD_ENGINE_URL;
+  const engine = resilientClient(createDefaultClient(participant), { storage: remote ? undefined : null, key: `ilead.pending.${participant}` });
   // The first screen's reads leave now, while the app is still starting, not after its first render (D78).
   startTheme(() => api.getTheme());
   const onEngine = q.get('engine') !== 'off';
