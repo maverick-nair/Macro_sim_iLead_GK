@@ -168,6 +168,72 @@
       "properties": {
         "type": {
           "type": "string",
+          "const": "submitPlan"
+        },
+        "interactionId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "plan": {
+          "type": "object",
+          "properties": {
+            "goals": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "measures": {
+              "type": "string",
+              "maxLength": 2000
+            },
+            "owner": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "due": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "support": {
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "required": [
+            "goals",
+            "measures",
+            "owner",
+            "due",
+            "support"
+          ]
+        },
+        "usedVoice": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "type",
+        "interactionId",
+        "text",
+        "plan"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
           "const": "interruptTurn"
         },
         "interactionId": {

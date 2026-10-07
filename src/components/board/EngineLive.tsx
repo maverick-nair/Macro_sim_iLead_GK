@@ -415,11 +415,12 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
             period={v.clock.period} dueOptions={Array.from({ length: Math.max(1, v.clock.capacity - v.clock.subPeriod + 1) }, (_, i) => v.clock.subPeriod + i)}
             periodUnit={v.clock.periodUnit} subPeriodUnit={v.clock.subPeriodUnit}
             reviewer={npcOf(speaker)} submitted={planSent} checkIn={stageTurns(turns.slice(1))} onReplay={replay}
-            onSubmit={() => void say([
+            // Submitted once with its fields (D85): the engine evaluates the fields; the words are the transcript's.
+            onSubmit={() => void send({ type: 'submitPlan', interactionId: lv.id, usedVoice: mode === 'voice', plan: { goals: plan.goals, measures: plan.measures, owner: plan.owner, due: plan.due, support: plan.support }, text: [
               `${t('liveformats.plan.field', { field: 'goals' })}: ${plan.goals}`, `${t('liveformats.plan.field', { field: 'measures' })}: ${plan.measures}`, `${t('liveformats.plan.field', { field: 'owner' })}: ${plan.owner}`,
               plan.due ? `${t('liveformats.plan.due', { unit: v.clock.subPeriodUnit })}: ${t('time.subPeriod', { unit: v.clock.subPeriodUnit, n: plan.due })}` : '',
               plan.support ? `${t('liveformats.plan.field', { field: 'support' })}: ${plan.support}` : ''
-            ].filter(Boolean).join('\n'))}
+            ].filter(Boolean).join('\n') })}
           />
         );
       default:

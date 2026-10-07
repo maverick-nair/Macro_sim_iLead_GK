@@ -193,6 +193,11 @@ test('written plan: fill, submit, then the check in, then the outcome', async ({
   await page.getByRole('button', { name: 'Submit plan' }).click();
   await expect(page.getByText(/numbers make it clear/)).toBeVisible({ timeout: 10000 });
   await end(page);
+  // Evaluated on the fields like an email (D85); its due date is a promise to check in with Derick.
+  await dismissOutcome(page);
+  await dismissEvents(page);
+  await page.getByRole('button', { name: 'Open profile for Derick Kaynes' }).click();
+  await expect(page.getByText(/Qualify 12 leads from the Ashcroft list/).first()).toBeVisible();
 });
 
 test('letting someone go: the outcome shows them; hiring: End in the comparison asks first', async ({ page }) => {
@@ -212,6 +217,9 @@ test('letting someone go: the outcome shows them; hiring: End in the comparison 
   await page.getByRole('button', { name: /Hire member/ }).click();
   await page.getByRole('button', { name: /Confirm and start/ }).click();
   await expect(page.getByText('Interviews for a new hire').first()).toBeVisible();
+  // A structured interview (D85): the same questions for both candidates, in the brief.
+  await expect(page.getByText('Questions to ask').first()).toBeVisible();
+  await expect(page.getByText(/Tell me about a deal you lost/).first()).toBeVisible();
   for (let i = 0; i < 2; i++) {
     await quiet(page);
     await say(page, 'Tell me about a time you turned around a difficult client.');
@@ -229,4 +237,30 @@ test('letting someone go: the outcome shows them; hiring: End in the comparison 
   await page.getByRole('button', { name: 'Pass on both' }).click();
   await expect(page.getByText('The team is reacting')).toBeVisible();
   await expect(page.getByText('How it landed')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText('You passed on both candidates. The seat stays open.')).toBeVisible();
+});
+
+test('hiring: a structured interview lands the candidate you choose, and the outcome says they joined', async ({ page }) => {
+  await toBoard(page, '/?start=board&period=4');
+  await dismissOutcome(page);
+  await dismissEvents(page);
+  await start(page, 'Derick Kaynes', /^Let go/);
+  await quiet(page);
+  await say(page, 'Derick, I am sorry, this is a hard conversation. Thank you for your work here.');
+  await end(page);
+  await dismissOutcome(page);
+  await dismissEvents(page);
+  await page.getByRole('button', { name: /Hire member/ }).click();
+  await page.getByRole('button', { name: /Confirm and start/ }).click();
+  for (let i = 0; i < 2; i++) {
+    await quiet(page);
+    await say(page, 'Tell me about a time you lost a deal. Walk me through what happened next and why. What did you learn, and what was the result?');
+    await page.getByRole('button', { name: /^(End|End and see how it lands)$/ }).click();
+  }
+  const table = page.getByRole('table');
+  await expect(table).toBeVisible();
+  await table.getByRole('radio', { name: 'Hire' }).first().check({ force: true });
+  await page.getByRole('button', { name: /^Hire / }).click();
+  await expect(page.getByText('How it landed')).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/accepted the offer and joins/)).toBeVisible();
 });

@@ -3161,6 +3161,15 @@
                   "onRequest",
                   "afterWeak"
                 ]
+              },
+              "questions": {
+                "minItems": 1,
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
               }
             }
           },

@@ -69,7 +69,10 @@ function liveView(sim: Sim) {
     raisedHands: it.format === 'meeting' ? it.hands ?? [] : [],
     brief: {
       goal: it.actionKey === PRACTICE ? c.practice.goal ?? msg('engine.practice.goal', { name: person(sim, it.memberIds[0]).name.split(' ')[0] }) : a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
-      known: [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
+      // An interview's brief is its structured questions, the same for every candidate (D85).
+      known: it.format === 'interview'
+        ? a?.live.questions ?? [msg('engine.interview.q1'), msg('engine.interview.q2'), msg('engine.interview.q3')]
+        : [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
       mood: main ? moodOf(main, sim) : null,
       promises: sim.promises.filter(x => x.state === 'open' && it.memberIds.includes(x.memberId)).map(x => x.text),
       declaredStyle: main?.style ?? null

@@ -422,7 +422,9 @@ export const LiveSettings = z.object({
   turnLimit: z.number().int().min(1).max(30).default(12),
   minutes: z.number().min(1).max(15).default(5),
   opening: z.enum(['npc', 'participant']).default('npc'),
-  hints: z.enum(['off', 'onRequest', 'afterWeak']).default('onRequest')
+  hints: z.enum(['off', 'onRequest', 'afterWeak']).default('onRequest'),
+  /** Interview: the structured questions to ask every candidate (D85). Left out, three general ones. */
+  questions: z.array(Copy).min(1).max(6).optional()
 });
 
 export const Action = z.object({

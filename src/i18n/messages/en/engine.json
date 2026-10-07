@@ -175,5 +175,12 @@
   "engine.report.bar": "an overall level of {overall}, with no skill below {floor}",
   "engine.group.points": "{n, plural, one {# point} other {# points}}",
   "engine.group.participant": "Participant {n}",
-  "engine.practice.goal": "Practice before week 1: talk with {name} as you would in a real 1:1. Nothing here is scored."
+  "engine.practice.goal": "Practice before week 1: talk with {name} as you would in a real 1:1. Nothing here is scored.",
+  "engine.interview.q1": "Tell me about a deal you lost. What happened, and what did you do next?",
+  "engine.interview.q2": "Walk me through how you would qualify a new lead in your first week.",
+  "engine.interview.q3": "Give me an example of feedback you acted on. What changed?",
+  "engine.hire.passed": "You passed on both candidates. The seat stays open.",
+  "engine.hire.noRoom": "There is no room in {name}'s stage now, so no offer went out.",
+  "engine.hire.joined": "{name} accepted the offer and joins {stage}.",
+  "engine.hire.turnedDown": "{name} turned the offer down after the interview."
 }

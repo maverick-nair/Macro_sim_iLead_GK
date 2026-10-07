@@ -3,7 +3,7 @@ import type { StorylineConfig } from '../config';
 type Person = StorylineConfig['members'][number];
 import { IntentError } from './actions';
 import { firstName, member, nextId, person } from './sim';
-import type { Interaction, Mood, Sim, Turn } from './types';
+import type { Interaction, Mood, PlanFields, Sim, Turn } from './types';
 import { msg, type Copy } from '../copy';
 import { moodOf } from './view';
 
@@ -263,3 +263,25 @@ export function endPractice(sim: Sim, id: string | null): Copy | undefined {
   sim.practice = 'done';
   return it.turns.some(t => t.by === 'you') ? msg('engine.hint', { format: it.format }) : undefined;
 }
+
+// ---------------------------------------------------------------- written plan (D52, D85)
+
+/**
+ * Submits a written plan once: the fields are kept for the evaluation, which reads them like an email
+ * (the check in that follows is conversation only), and the participant's words go in as one turn.
+ * The NPC answers with the check in.
+ */
+export async function submitPlan(sim: Sim, npc: NpcModel, id: string, plan: PlanFields, text: string, voice = false): Promise<Turn> {
+  const it = get(sim, id);
+  if (it.format !== 'plan') throw new IntentError('Not a written plan', 'notPlan');
+  if (it.plan) throw new IntentError('The plan is already submitted', 'oneShot');
+  const per = sim.config.time.subPeriod.perPeriod;
+  if (!plan.goals.trim() || !plan.measures.trim() || !plan.owner.trim()) throw new IntentError('Goals, measures and owner are needed', 'planIncomplete');
+  if (plan.due !== null && (plan.due < 1 || plan.due > per)) throw new IntentError('Due within this period', 'planDue');
+  it.plan = { goals: plan.goals.trim(), measures: plan.measures.trim(), owner: plan.owner.trim(), due: plan.due, support: plan.support.trim() };
+  it.turns.push({ id: nextId(sim, 't'), by: 'you', text, voice });
+  return npcSays(sim, npc, it, text);
+}
+
+/** The plan's text for the evaluator: its fields only. */
+export const planText = (p: PlanFields) => [p.goals, p.measures, p.owner, p.support].filter(Boolean).join('\n');

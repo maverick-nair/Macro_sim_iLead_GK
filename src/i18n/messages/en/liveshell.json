@@ -18,7 +18,7 @@
   "liveshell.brief.goal": "Your goal",
   "liveshell.brief.agenda": "Agenda",
   "liveshell.brief.agendaItem": "{n}. {item}",
-  "liveshell.brief.known": "{format, select, meeting {Watch for} sponsor {{pronoun, select, he {He cares about} she {She cares about} other {They care about}}} email {Context} other {What you know}}",
+  "liveshell.brief.known": "{format, select, interview {Questions to ask} meeting {Watch for} sponsor {{pronoun, select, he {He cares about} she {She cares about} other {They care about}}} email {Context} other {What you know}}",
   "liveshell.brief.mood": "{format, select, meeting {Team mood} sponsor {Confidence} other {Current mood}}",
   "liveshell.brief.promises": "Open promises",
   "liveshell.brief.noPromises": "None yet",

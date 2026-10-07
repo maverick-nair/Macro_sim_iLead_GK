@@ -5,7 +5,7 @@ import { chooseReward, endPeriod, startNextPeriod } from './period';
 import { createRng } from './rng';
 import type { Style } from './rules';
 import { createSim, log, member } from './sim';
-import type { Band, Change, Outcome, PeriodSummary, Turn } from './types';
+import type { Band, Change, Outcome, PeriodSummary, PlanFields, Turn } from './types';
 import * as live from './live';
 import { buildView, type EngineView } from './view';
 import { summarizeRun, type RunSummary } from '../report/summary';
@@ -34,6 +34,7 @@ export type Intent =
   | { type: 'chooseReward'; reward: string }
   | { type: 'submitReflection'; answers: string[]; rating: number | null }
   | { type: 'startNextPeriod' }
+  | { type: 'submitPlan'; interactionId: string; plan: PlanFields; text: string; usedVoice?: boolean }
   | { type: 'startPractice' }
   | { type: 'skipPractice' };
 
@@ -80,9 +81,14 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
     const it = sim.interactions[id];
     if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
     if (extra) it.turns.push({ id: `t${++sim.seq}`, by: 'you', text: extra.text, voice: extra.usedVoice });
-    const text = live.participantText(it);
+    // A written plan is evaluated on its fields, like an email; the check in after it is conversation only (D85).
+    const text = it.plan ? live.planText(it.plan) : live.participantText(it);
     if (!text.trim()) throw new IntentError('Say something first', 'empty');
-    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey), skills: config.report.linkage[it.actionKey] ?? [], styles: config.lens.styles });
+    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey), skills: config.report.linkage[it.actionKey] ?? [], styles: config.lens.styles, ...(it.plan ? { plan: it.plan } : {}) });
+    // The plan's due date is a promise to check in on it with that person (SIMULATION 5.4).
+    if (it.plan?.due && !ev.flags.promise) {
+      ev.flags.promise = { text: it.plan.goals.length > 60 ? `${it.plan.goals.slice(0, 57).trimEnd()}...` : it.plan.goals, dueInSubPeriods: Math.max(1, it.plan.due - sim.sub), fulfilledBy: ['f2f', 'coach', 'feedback', 'goals'] };
+    }
     // The person opening up in the conversation is what surfaces the concern (Design doc, Evaluation pipeline).
     if (it.concernRevealed) ev.flags.concernSurfaced = true;
     const reply = npcReply ?? (live.lastNpcWords(it) || ((await evaluator.reply?.({ format: it.format, text, band: ev.band })) ?? ''));
@@ -117,6 +123,10 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         return finish(intent.interactionId, { text: intent.text, usedVoice: intent.usedVoice }, intent.npcReply);
       case 'sendTurn': {
         const turn = await live.sendTurn(sim, npc, intent.interactionId, intent.text, intent.usedVoice);
+        return { view: buildView(sim), changes: [], turn };
+      }
+      case 'submitPlan': {
+        const turn = await live.submitPlan(sim, npc, intent.interactionId, intent.plan, intent.text, intent.usedVoice);
         return { view: buildView(sim), changes: [], turn };
       }
       case 'interruptTurn':

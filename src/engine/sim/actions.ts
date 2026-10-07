@@ -379,6 +379,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   const useRecord = it.recordId ? sim.actionRecords.find(r => r.id === it.recordId) : undefined;
   const table = a?.live.consequences?.[ev.band];
   let sponsorLine: Copy | null = null;
+  let hireLine: Copy | null = null;
   if (it.actionKey === 'sponsor') {
     const briefingMsg = sim.inbox.find(x => x.id === it.replyTo);
     if (briefingMsg) briefingMsg.state = 'answered';
@@ -458,6 +459,11 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     if (cid && room && !accepts) {
       log(sim, { kind: 'interaction', title: msg('engine.hire.declined', { name: firstName(sim, cid) }), memberIds: [], changes: [] });
     }
+    // The outcome says what the decision came to (D85): a hire, an offer turned down, no room, or nobody chosen.
+    hireLine = !cid ? msg('engine.hire.passed')
+      : !room ? msg('engine.hire.noRoom', { name: firstName(sim, cid) })
+      : accepts && sim.candidates.includes(cid) ? msg('engine.hire.joined', { name: firstName(sim, cid), stage: stageName(sim, person(sim, cid).homeStage) })
+      : msg('engine.hire.turnedDown', { name: firstName(sim, cid) });
     if (cid && room && accepts && sim.candidates.includes(cid)) {
       const p = person(sim, cid);
       const hire = { ...createMemberFrom(sim, cid), stage: p.homeStage };
@@ -511,7 +517,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     })),
     changes,
     ripple: null,
-    changed: sponsorLine ? [sponsorLine] : []
+    changed: [sponsorLine, hireLine].filter(x => x !== null) as Copy[]
   };
   sim.outcome = outcome;
   log(sim, { kind: 'interaction', title: outcome.headline, memberIds: affected, changes, quote: ev.evidence[0] });

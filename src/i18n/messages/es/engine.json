@@ -175,5 +175,12 @@
   "engine.report.bar": "un nivel general de {overall}, sin ninguna habilidad por debajo de {floor}",
   "engine.group.points": "{n, plural, one {# punto} other {# puntos}}",
   "engine.group.participant": "Participante {n}",
-  "engine.practice.goal": "Practica antes de la semana 1: habla con {name} como lo harías en una reunión 1:1 real. Aquí no se puntúa nada."
+  "engine.practice.goal": "Practica antes de la semana 1: habla con {name} como lo harías en una reunión 1:1 real. Aquí no se puntúa nada.",
+  "engine.interview.q1": "Háblame de una venta que perdiste. ¿Qué pasó y qué hiciste después?",
+  "engine.interview.q2": "Explícame cómo cualificarías un cliente potencial nuevo en tu primera semana.",
+  "engine.interview.q3": "Dame un ejemplo de una opinión que te dieron y que aplicaste. ¿Qué cambió?",
+  "engine.hire.passed": "Descartaste a ambos candidatos. El puesto sigue libre.",
+  "engine.hire.noRoom": "Ya no hay sitio en la etapa de {name}, así que no se hizo ninguna oferta.",
+  "engine.hire.joined": "{name} aceptó la oferta y se incorpora a {stage}.",
+  "engine.hire.turnedDown": "{name} rechazó la oferta tras la entrevista."
 }

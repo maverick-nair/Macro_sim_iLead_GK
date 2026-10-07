@@ -1,4 +1,4 @@
-import type { Band, Evaluation } from './types';
+import type { Band, Evaluation, PlanFields } from './types';
 import type { Style } from './rules';
 
 /**
@@ -19,6 +19,8 @@ export interface EvaluationInput {
   skills?: string[];
   /** The lens's styles (D70): the style shown is one of these keys. Readiness Based Leadership when left out. */
   styles?: Array<{ key: string; name: string; short: string }>;
+  /** A written plan's fields (D85): its rubric reads the fields, not only the words. */
+  plan?: PlanFields;
 }
 
 export interface Evaluator {
@@ -133,6 +135,21 @@ const DIM_CUES: Record<string, RegExp[]> = {
   results_ownership: [/\b(?:i own|on me|my responsibility|i take (?:responsibility|ownership))\b/i, /\b(?:\d+|target|pipeline|revenue|behind|risk)\b/i, /\b(?:i|we)(?:'ll| will)\b/i]
 };
 
+/**
+ * A written plan's dimensions from its fields (D85), the way an assessor would read a plan:
+ * - specific: goals of six words or more are Strong, three or more Adequate, else Weak;
+ * - measurable: a number in the measures and a due date are Strong, either one Adequate, else Weak;
+ * - involvement: an owner and the support you will give are Strong, either one Adequate, else Weak.
+ */
+export function planBand(key: string, plan: PlanFields): { band: Band; evidence: string[] } | null {
+  const words = (t: string) => t.trim().split(/\s+/).filter(Boolean).length;
+  const level = (n: number): Band => (n >= 2 ? 'strong' : n === 1 ? 'adequate' : 'weak');
+  if (key === 'specific') return { band: words(plan.goals) >= 6 ? 'strong' : words(plan.goals) >= 3 ? 'adequate' : 'weak', evidence: plan.goals.trim() ? [plan.goals.trim()] : [] };
+  if (key === 'measurable') return { band: level(Number(/\d/.test(plan.measures)) + Number(plan.due !== null)), evidence: plan.measures.trim() ? [plan.measures.trim()] : [] };
+  if (key === 'involvement') return { band: level(Number(!!plan.owner.trim()) + Number(!!plan.support.trim())), evidence: plan.support.trim() ? [plan.support.trim()] : [] };
+  return null;
+}
+
 function dimensionBand(key: string, text: string): { band: Band; evidence: string[] } {
   const cues = DIM_CUES[key] ?? DIM_CUES.clarity;
   const hits = cues.filter(rx => rx.test(text)).length;
@@ -145,7 +162,7 @@ export const heuristicEvaluator: Evaluator = {
     const lines = REPLIES[band];
     return lines[text.length % lines.length];
   },
-  evaluate({ format, text, usedVoice, rubric, skills, styles }) {
+  evaluate({ format, text, usedVoice, rubric, skills, styles, plan }) {
     const cues = styleCues(styles);
     const scores = cues.map(([s, rxs]) => [s, rxs.filter(rx => rx.test(text)).length] as const);
     const total = scores.reduce((a, [, n]) => a + n, 0);
@@ -166,7 +183,7 @@ export const heuristicEvaluator: Evaluator = {
     }
     // A band per rubric dimension, then the overall band (scoring-and-report.md 4).
     const keys = rubric?.map(r => r.key) ?? DEFAULT_RUBRIC[format] ?? DEFAULT_RUBRIC.roleplay;
-    const dimensions = keys.map(key => ({ key, ...dimensionBand(key, text) }));
+    const dimensions = keys.map(key => ({ key, ...((plan && planBand(key, plan)) || dimensionBand(key, text)) }));
     const redFlags = RED_FLAGS.filter(([, rx]) => rx.test(text)).map(([k]) => k);
     const band = overallBand(dimensions, redFlags);
     const all = cues.flatMap(([, rxs]) => rxs);

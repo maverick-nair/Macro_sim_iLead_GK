@@ -281,6 +281,9 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('openConversation'), kind: z.enum(['reply', 'sponsor']), messageId: Id.optional() }),
   z.object({ type: z.literal('submitInteraction'), interactionId: Id, text: z.string().min(1), usedVoice: z.boolean().optional(), npcReply: z.string().optional() }),
   z.object({ type: z.literal('sendTurn'), interactionId: Id, text: z.string().min(1), usedVoice: z.boolean().optional() }),
+  /** A written plan, submitted once with its fields (D85); the NPC answers with a check in, `endInteraction` evaluates the fields. */
+  z.object({ type: z.literal('submitPlan'), interactionId: Id, text: z.string().min(1),
+    plan: z.object({ goals: z.string().max(2000), measures: z.string().max(2000), owner: z.string().max(200), due: z.number().int().min(1).nullable(), support: z.string().max(2000) }), usedVoice: z.boolean().optional() }),
   z.object({ type: z.literal('interruptTurn'), interactionId: Id, turnId: Id, shownChars: z.number().int().min(0) }),
   z.object({ type: z.literal('requestHint'), interactionId: Id }),
   z.object({ type: z.literal('nextCandidate'), interactionId: Id }),

@@ -82,6 +82,21 @@ export const Interview: StoryObj = {
   }
 };
 
+/** The written plan after Submit (D85): the plan read only beside the check in; End evaluates the fields. */
+export const WrittenPlanSubmitted: StoryObj = {
+  render: () => (
+    <Harness setup={async client => {
+      await plan('goals', 'guiding', ['derick'])(client);
+      const v = await client.view();
+      if (v.live) await client.send({ type: 'submitPlan', interactionId: v.live.id, text: 'Goals: Qualify 12 leads from the Ashcroft list\nMeasures: 12 qualified leads in the CRM\nOwner: Derick',
+        plan: { goals: 'Qualify 12 leads from the Ashcroft list', measures: '12 qualified leads in the CRM', owner: 'Derick', due: 5, support: 'I review the list with you on Thursday' } });
+    }} />
+  )
+};
+
+/** The Week 0 practice (D16, D84): before week 1's styles, not scored. */
+export const Practice: StoryObj = { render: () => <Harness setup={client => client.send({ type: 'startPractice' })} /> };
+
 /** The week 4 sponsor briefing, opened from the inbox. */
 export const SponsorBriefing: StoryObj = {
   render: () => (

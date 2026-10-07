@@ -138,7 +138,12 @@ export interface Interaction {
   hands?: string[];
   /** The action record this conversation adds its effects to (the report's action summary). */
   recordId?: string;
+  /** Written plan: the fields as submitted, evaluated on their own like an email (D52, D85). */
+  plan?: PlanFields;
 }
+
+/** A written plan's fields (spec, Written plan): goals, how they are measured, who owns them, the due sub-period, support. */
+export interface PlanFields { goals: string; measures: string; owner: string; due: number | null; support: string }
 
 export interface InboxMessage {
   id: string;
