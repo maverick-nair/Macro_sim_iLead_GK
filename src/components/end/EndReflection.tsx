@@ -10,7 +10,8 @@ const RATINGS = [1, 2, 3, 4, 5];
 
 export interface EndReflectionProps extends Reflection {
   /** The report buttons, under the reflection. */
-  actions: ReactNode;
+  /** Buttons under the questions. The end screen keeps its report actions in a bar of its own (D101). */
+  actions?: ReactNode;
 }
 
 /**
@@ -76,7 +77,7 @@ export function EndReflection({ questions, answers, rating, onAnswer, onRate, di
           <span role="status" className="text-13 text-fg-secondary">{t('end.save.state', { state: save.state })}</span>
         </div>
       )}
-      <div className="flex flex-wrap gap-2.5 pt-1.5">{actions}</div>
+      {actions && <div className="flex flex-wrap gap-2.5 pt-1.5">{actions}</div>}
     </div>
   );
 }

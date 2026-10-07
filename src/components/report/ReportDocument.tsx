@@ -46,7 +46,8 @@ export function ReportDocument({ blocks, toolbar, footer, landmark = false, page
     : `mx-auto flex w-full max-w-(--il-report-width) flex-1 flex-col items-stretch gap-5 bg-transparent px-8 pt-6 pb-10`;
   return (
     <Outer className={outer}>
-      {toolbar && <div className={`w-full print:hidden ${print ? 'scheme-dark' : ''}`}>{toolbar}</div>}
+      {/* The toolbar (Back, Email, Download) stays at the top of the window as the report scrolls (D101). */}
+      {toolbar && <div className={`sticky top-0 z-30 -mx-3 w-auto rounded-b-16 px-3 py-2.5 backdrop-blur-20 print:hidden ${print ? 'scheme-dark bg-(--il-report-print-desk)' : 'bg-surface-material'}`}>{toolbar}</div>}
       {print && <style>{REPORT_PAGE_RULE}</style>}
       {print ? <PrintPages blocks={blocks} footer={footer} label={label} /> : splitAt(blocks, b => !!b.card).map((group, i) => (
         <article key={group[0].key} aria-label={label(i + 1)} className={`${WEB_PAGE} rounded-28 p-8`}>

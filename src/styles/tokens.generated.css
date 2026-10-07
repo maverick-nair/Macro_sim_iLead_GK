@@ -323,6 +323,7 @@
   --il-celebration-burst-motion: ilBurst var(--il-duration-slow) var(--il-easing-brand) both;
   --il-end-glow-fill: radial-gradient(ellipse at center, var(--il-color-end-glow), transparent 65%);
   --il-end-logo-tracking: -0.03em;
+  --il-end-max-width: 1600px;
   --il-end-hero-columns: minmax(0,1fr) auto;
   --il-end-display-tracking: -0.03em;
   --il-end-tier-fill: var(--il-fill-spectrum);

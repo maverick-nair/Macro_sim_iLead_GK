@@ -295,6 +295,7 @@ export const tokens = {
     "celebration.burst.motion",
     "end.glow.fill",
     "end.logo.tracking",
+    "end.max-width",
     "end.hero.columns",
     "end.display.tracking",
     "end.tier.fill",

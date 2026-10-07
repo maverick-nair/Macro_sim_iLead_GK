@@ -58,7 +58,10 @@ export interface AuthorAppProps {
  */
 export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, drafters: given }: AuthorAppProps) {
   const drafters = useMemo(() => given ?? createDrafters(), [given]);
-  const wide = useMediaQuery('(min-width: 1280px)');
+  // Two panes from 1180 wide; below, one column with the summary as a panel that opens and closes (D102).
+  const wide = useMediaQuery('(min-width: 1180px)');
+  /** The conversation's own scroll area: it follows the newest message (D102). */
+  const scroller = useRef<HTMLDivElement>(null);
   const [brief, setBrief] = useState<Brief>(() => Brief.parse({}));
   const [asked, setAsked] = useState<QuestionId[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -105,6 +108,12 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
       setBusy(false);
     }
   }, [drafters]);
+
+  // The conversation scrolls inside its pane: keep the newest message in view as the chat moves on.
+  useEffect(() => {
+    const el = scroller.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [log.length, current, busy, error]);
 
   // The first question is asked on mount (from the server or the templates); D78 keeps this finding.
   // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -227,70 +236,9 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
   const askId = editing ?? q?.question.id;
   const style: CSSProperties = { colorScheme: theme, background: theme === 'dark' ? 'var(--il-backdrop-office)' : 'var(--il-backdrop-daylight)', ...clientTheme?.vars };
 
-  return (
-    <div className="il-theme min-h-screen font-sans text-14 leading-(--il-app-leading) text-fg-primary" style={style}>
-      <header className="flex flex-wrap items-center gap-4 border-b border-solid border-line-default px-6 py-4">
-        <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 text-transparent">GenieKreator</span>
-        <span className="text-14 text-fg-secondary">iLead Business Simulation, author chat</span>
-        <span className="flex-1" />
-        {templates && <Tag tone="muted">Draft made from templates</Tag>}
-      </header>
-      <div className={`mx-auto grid max-w-screen-2xl gap-6 p-6 ${wide ? 'grid-cols-[minmax(0,1fr)_minmax(0,26rem)]' : ''}`}>
-        {!wide && (
-          <details className={`${CARD} p-4`}>
-            <summary className={`cursor-pointer text-16 font-700 ${FOCUS}`}>Your simulation so far</summary>
-            <div className="pt-4">{summary}</div>
-          </details>
-        )}
-        <main className="flex min-w-0 flex-col gap-6">
-          <h1 className="m-0 text-28 font-700">What do you want to build?</h1>
-          <div role="log" aria-label="Conversation" aria-live="polite" tabIndex={0} className={`${CARD} flex flex-col gap-4 p-5 ${FOCUS}`}>
-            <ChatBubble from="assistant">Let us draft your iLead simulation. I will ask a few short questions and skip anything your answers or uploads already cover. You can upload a brief or framework at any time.</ChatBubble>
-            {log.map((e, i) => e.kind === 'note'
-              ? <ChatBubble key={i} from="assistant">{e.text}</ChatBubble>
-              : (
-                <div key={i} className="flex flex-col gap-3">
-                  <ChatBubble from="assistant">{e.prompt}</ChatBubble>
-                  <ChatBubble from="author" question={e.prompt} editing={editing === e.id} onEdit={() => { setEditing(e.id); setText(answers[e.id] ?? ''); setError(null); }}>{answers[e.id]}</ChatBubble>
-                </div>
-              ))}
-            {q && (
-              <ChatBubble from="assistant">
-                {q.question.prompt}
-                {q.question.confirm && `\nFrom what you shared: ${q.question.confirm}. Is that right?`}
-                {q.question.help && <span className="mt-1 block text-13 text-fg-secondary">{q.question.help}</span>}
-              </ChatBubble>
-            )}
-            {busy && <p className="m-0 text-13 text-fg-secondary">Thinking.</p>}
-          </div>
-
-          {askId && (
-            <form className={`${CARD} flex flex-col gap-3 p-5`} onSubmit={(e: FormEvent) => { e.preventDefault(); void answer(text); }}>
-              <div className="flex flex-wrap items-center gap-3">
-                {q && <span className="text-13 font-700 text-accent-secondary">Question {q.n} of about {q.about}</span>}
-                {editing && <span className="text-13 font-700 text-accent-secondary">Editing your answer to: {editingPrompt}</span>}
-                {editing && <button type="button" className={BUTTON.link} onClick={() => { setEditing(null); setText(''); setError(null); }}>Cancel edit</button>}
-              </div>
-              <ChipReplies chips={q?.question.chips ?? (editing ? questionFor(editing, brief).chips : [])} disabled={busy}
-                onPick={v => void answer(v)} />
-              <label className="flex flex-col gap-1.5">
-                <span className="text-13 font-600 text-fg-secondary">{editing ? 'Your new answer' : q?.question.confirm ? 'Your answer, or pick a suggestion' : 'Your answer'}</span>
-                {askId === 'framework'
-                  ? <textarea ref={input} rows={6} className={FIELD} value={text} placeholder="Paste the framework text" onChange={e => setText(e.target.value)} aria-invalid={!!error} aria-describedby={error ? 'author-error' : undefined} />
-                  : <input ref={input} className={FIELD} value={text} placeholder={q?.question.placeholder ?? ''} onChange={e => setText(e.target.value)} aria-invalid={!!error} aria-describedby={error ? 'author-error' : undefined} />}
-              </label>
-              {error && <p id="author-error" role="alert" className="m-0 text-14 font-600 text-status-decline">{error}</p>}
-              <div className="flex flex-wrap items-center gap-3">
-                <button type="submit" className={BUTTON.primary} disabled={busy}>Send</button>
-                <label className={`${BUTTON.secondary} focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-secondary`}>
-                  Upload a file
-                  <input type="file" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf" className="sr-only" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void upload(f); }} />
-                </label>
-                <span className="text-12 text-fg-secondary">.txt, .md or .pdf. The prototype reads text files only.</span>
-              </div>
-            </form>
-          )}
-
+  /** The lens step, the build preview and the locked draft: they scroll with the conversation (D102). */
+  const stepsAfterQuestions = (
+    <>
           {recommendation && (
             <Section id="lens-step" title="Choose your leadership lens" eyebrow="Leadership lens" headingRef={lensHeading}>
               <LensPicker primary={primary} secondary={secondary} recommendation={recommendation} disabled={!!draft}
@@ -358,11 +306,87 @@ export function AuthorApp({ theme = 'dark', clientTheme = null, client = null, d
               </details>
             </Section>
           )}
+    </>
+  );
+
+  return (
+    // The page fits the window (D102): the header stays, each pane scrolls on its own, and the composer is always in view.
+    <div className="il-theme flex h-dvh flex-col overflow-hidden font-sans text-14 leading-(--il-app-leading) text-fg-primary" style={style}>
+      <header className="flex flex-none flex-wrap items-center gap-4 border-b border-solid border-line-default px-6 py-4 max-[900px]:py-3">
+        <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 text-transparent">GenieKreator</span>
+        <span className="text-14 text-fg-secondary">iLead Business Simulation, author chat</span>
+        <span className="flex-1" />
+        {templates && <Tag tone="muted">Draft made from templates</Tag>}
+      </header>
+      <div className={`mx-auto grid min-h-0 w-full max-w-screen-2xl flex-1 grid-rows-[minmax(0,1fr)] gap-6 p-6 max-[900px]:gap-4 max-[900px]:p-4 ${wide ? 'grid-cols-[minmax(0,1fr)_minmax(0,26rem)]' : 'grid-cols-1'}`}>
+        <main className="flex min-h-0 min-w-0 flex-col gap-4">
+          <h1 className="m-0 flex-none text-28 font-700 max-[900px]:text-24">What do you want to build?</h1>
+          {!wide && (
+            <details className={`${CARD} flex-none p-4`}>
+              <summary className={`cursor-pointer text-16 font-700 ${FOCUS}`}>Your simulation so far</summary>
+              {/* Open, it keeps a share of the height and scrolls, so the conversation and composer stay in view. */}
+              <div role="region" aria-label="Your simulation so far" tabIndex={0} className={`mt-4 max-h-[40dvh] overflow-y-auto ${FOCUS}`}>{summary}</div>
+            </details>
+          )}
+          {/* The conversation and each step scroll here; the composer below stays put. */}
+          <div ref={scroller} role="region" aria-label="Conversation and steps" tabIndex={-1} className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain pe-1">
+          <div role="log" aria-label="Conversation" aria-live="polite" tabIndex={0} className={`${CARD} flex flex-none flex-col gap-4 p-5 ${FOCUS}`}>
+            <ChatBubble from="assistant">Let us draft your iLead simulation. I will ask a few short questions and skip anything your answers or uploads already cover. You can upload a brief or framework at any time.</ChatBubble>
+            {log.map((e, i) => e.kind === 'note'
+              ? <ChatBubble key={i} from="assistant">{e.text}</ChatBubble>
+              : (
+                <div key={i} className="flex flex-col gap-3">
+                  <ChatBubble from="assistant">{e.prompt}</ChatBubble>
+                  <ChatBubble from="author" question={e.prompt} editing={editing === e.id} onEdit={() => { setEditing(e.id); setText(answers[e.id] ?? ''); setError(null); }}>{answers[e.id]}</ChatBubble>
+                </div>
+              ))}
+            {q && (
+              <ChatBubble from="assistant">
+                {q.question.prompt}
+                {q.question.confirm && `\nFrom what you shared: ${q.question.confirm}. Is that right?`}
+                {q.question.help && <span className="mt-1 block text-13 text-fg-secondary">{q.question.help}</span>}
+              </ChatBubble>
+            )}
+            {busy && <p className="m-0 text-13 text-fg-secondary">Thinking.</p>}
+          </div>
+
+          {/* The steps after the questions, in the same scroll area. */}
+          {stepsAfterQuestions}
+          </div>
+
+          {askId && (
+            <form className={`${CARD} flex flex-none flex-col gap-3 p-5 max-[900px]:p-4`} onSubmit={(e: FormEvent) => { e.preventDefault(); void answer(text); }}>
+              <div className="flex flex-wrap items-center gap-3">
+                {q && <span className="text-13 font-700 text-accent-secondary">Question {q.n} of about {q.about}</span>}
+                {editing && <span className="text-13 font-700 text-accent-secondary">Editing your answer to: {editingPrompt}</span>}
+                {editing && <button type="button" className={BUTTON.link} onClick={() => { setEditing(null); setText(''); setError(null); }}>Cancel edit</button>}
+              </div>
+              <ChipReplies chips={q?.question.chips ?? (editing ? questionFor(editing, brief).chips : [])} disabled={busy}
+                onPick={v => void answer(v)} />
+              <label className="flex flex-col gap-1.5">
+                <span className="text-13 font-600 text-fg-secondary">{editing ? 'Your new answer' : q?.question.confirm ? 'Your answer, or pick a suggestion' : 'Your answer'}</span>
+                {askId === 'framework'
+                  ? <textarea ref={input} rows={4} className={FIELD} value={text} placeholder="Paste the framework text" onChange={e => setText(e.target.value)} aria-invalid={!!error} aria-describedby={error ? 'author-error' : undefined} />
+                  : <input ref={input} className={FIELD} value={text} placeholder={q?.question.placeholder ?? ''} onChange={e => setText(e.target.value)} aria-invalid={!!error} aria-describedby={error ? 'author-error' : undefined} />}
+              </label>
+              {error && <p id="author-error" role="alert" className="m-0 text-14 font-600 text-status-decline">{error}</p>}
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="submit" className={BUTTON.primary} disabled={busy}>Send</button>
+                <label className={`${BUTTON.secondary} focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-secondary`}>
+                  Upload a file
+                  <input type="file" accept=".txt,.md,.pdf,text/plain,text/markdown,application/pdf" className="sr-only" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) void upload(f); }} />
+                </label>
+                <span className="text-12 text-fg-secondary">.txt, .md or .pdf. The prototype reads text files only.</span>
+              </div>
+            </form>
+          )}
+
         </main>
         {wide && (
-          <aside aria-labelledby="author-summary" className={`${CARD} flex flex-col gap-4 self-start p-5`}>
-            <h2 id="author-summary" className="m-0 text-20 font-700">Your simulation so far</h2>
-            {summary}
+          <aside aria-labelledby="author-summary" className={`${CARD} flex min-h-0 flex-col gap-4 p-5`}>
+            <h2 id="author-summary" className="m-0 flex-none text-20 font-700">Your simulation so far</h2>
+            {/* The summary scrolls in its own pane, focusable so the keyboard can scroll it (D102). */}
+            <div role="region" aria-labelledby="author-summary" tabIndex={0} className={`-m-1 min-h-0 flex-1 overflow-y-auto overscroll-contain p-1 ${FOCUS}`}>{summary}</div>
           </aside>
         )}
       </div>

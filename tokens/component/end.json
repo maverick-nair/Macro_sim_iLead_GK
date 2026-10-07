@@ -6,6 +6,7 @@
     "logo": {
       "tracking": { "value": "-0.03em" }
     },
+    "max-width": { "value": "1600px", "$description": "The end screen keeps a readable width on very wide screens (2560, D101)" },
     "hero": {
       "columns": { "value": "minmax(0,1fr) auto", "$description": "Headline, then the tier and score card" }
     },

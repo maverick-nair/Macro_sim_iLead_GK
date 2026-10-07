@@ -41,7 +41,7 @@ export function EndScreen(p: EndScreenProps) {
   const tiles = [{ key: 'conversions', label: t('end.results.conversions'), value: number(r.conversions), note: r.conversionsNote, tone: r.conversionsTone }, ...kpis];
 
   return (
-    <div className="relative flex flex-1 flex-col gap-5.5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
+    <div className="relative mx-auto flex w-full max-w-(--il-end-max-width) flex-1 flex-col gap-5.5 px-8 pt-5 pb-0" style={{ minHeight: p.minHeight }}>
       <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/2 h-125 w-225 -translate-x-1/2 bg-(image:--il-end-glow-fill)"></div>
       <header className="relative flex items-center gap-4">
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-end-logo-tracking) text-transparent">{t('hud.logo')}</span>
@@ -109,18 +109,15 @@ export function EndScreen(p: EndScreenProps) {
             <BadgeShelf badges={p.badges} />
           </div>
         </div>
-        <EndReflection
-          {...p.reflection}
-          actions={(
-            <>
-              <NoWrapButton variant="primary" size="lg" onClick={p.onViewReport}>{t('end.report.view')}</NoWrapButton>
-              <NoWrapButton variant="secondary" size="lg" onClick={p.onDownload}>{t('end.report.pdf')}</NoWrapButton>
-              <NoWrapButton variant="ghost" size="lg" disabled={p.emailing} onClick={p.onEmail}>{t('end.report.email')}</NoWrapButton>
-            </>
-          )}
-        />
+        <EndReflection {...p.reflection} />
       </section>
       {p.cohort}
+      {/* The report's actions stay in reach at the bottom of the window however far the page scrolls (D101). */}
+      <div className="sticky bottom-0 z-30 -mx-8 mt-auto flex flex-wrap items-center gap-2.5 border-t border-line-default bg-surface-material px-8 py-3 backdrop-blur-20">
+        <NoWrapButton variant="primary" size="lg" onClick={p.onViewReport}>{t('end.report.view')}</NoWrapButton>
+        <NoWrapButton variant="secondary" size="lg" onClick={p.onDownload}>{t('end.report.pdf')}</NoWrapButton>
+        <NoWrapButton variant="ghost" size="lg" disabled={p.emailing} onClick={p.onEmail}>{t('end.report.email')}</NoWrapButton>
+      </div>
     </div>
   );
 }
