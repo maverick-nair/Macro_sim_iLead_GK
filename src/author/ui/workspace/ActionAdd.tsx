@@ -1,14 +1,38 @@
 import { useMemo, useState } from 'react';
-import type { ActionDraft, AuthorDraft, Plays } from '../../model/draft';
-import { ACTION_TEMPLATES, PLAYS_LABEL, type ActionTemplate } from '../../model/library';
+import { z } from 'zod';
+import { LENS_IDS } from '../../../engine/lens';
+import { PLAYS, SHORT_MAX, TEXT_MAX, type ActionDraft, type AuthorDraft, type Plays } from '../../model/draft';
+import { ACTION_TEMPLATES, ENGINE_TEMPLATES, PLAYS_LABEL, type ActionTemplate } from '../../model/library';
 import { freshKey, seedDraft } from '../../model/seed';
 import { useAuthor } from '../../model/store';
 import { Badge, BUTTON, Chip, Modal, Scroll, TextArea, TextInput } from '../kit';
 
 /** Templates the author saved from "Describe your own", kept in this browser. */
 export const MY_LIBRARY_KEY = 'ilead.author.library';
+const ENGINE_KEYS = ENGINE_TEMPLATES.map(t => t.key) as [string, ...string[]];
+/** A saved template as stored; it must play as one of the engine's actions. */
+const StoredTemplate = z.object({
+  key: z.string().regex(/^[a-z][a-z0-9_]*$/).max(200),
+  name: z.string().min(1).max(SHORT_MAX),
+  description: z.string().max(TEXT_MAX),
+  type: z.string().max(64),
+  plays: z.enum(PLAYS),
+  template: z.enum(ENGINE_KEYS),
+  group: z.enum(['team', 'person']),
+  inNew: z.enum(['core', 'on', 'off']),
+  version: z.number().int().min(0),
+  format: z.string().max(SHORT_MAX),
+  lenses: z.array(z.enum(LENS_IDS)).optional()
+});
+/** The saved templates in `raw`, keeping each one that parses and dropping the rest. */
+export function parseMyLibrary(raw: string | null): ActionTemplate[] {
+  let v: unknown;
+  try { v = JSON.parse(raw ?? '[]'); } catch { return []; }
+  if (!Array.isArray(v)) return [];
+  return v.flatMap(x => { const r = StoredTemplate.safeParse(x); return r.success ? [r.data] : []; });
+}
 export function readMyLibrary(): ActionTemplate[] {
-  try { const v = JSON.parse(localStorage.getItem(MY_LIBRARY_KEY) ?? '[]'); return Array.isArray(v) ? v as ActionTemplate[] : []; } catch { return []; }
+  try { return parseMyLibrary(localStorage.getItem(MY_LIBRARY_KEY)); } catch { return []; }
 }
 function saveMyLibrary(t: ActionTemplate) {
   try { localStorage.setItem(MY_LIBRARY_KEY, JSON.stringify([...readMyLibrary().filter(x => x.key !== t.key), t])); } catch { /* storage blocked */ }

@@ -3,7 +3,7 @@ import { Brief } from '../../api/author';
 import { parseRoute } from '../ui/route';
 import { changeLens } from '../ui/workspace/tabs/Lens';
 import { regenerate } from '../ui/workspace/tabs/regenerate';
-import { describeAction } from '../ui/workspace/ActionAdd';
+import { describeAction, parseMyLibrary } from '../ui/workspace/ActionAdd';
 import { readability } from '../ui/workspace/tabs/Brand';
 import { checksOf } from '../ui/workspace/tabs/Publish';
 import { MOCK_ANSWERS } from '../voice';
@@ -141,6 +141,15 @@ describe('the workspace\'s helpers', () => {
     expect(parseRoute('/author/workspace/team')).toEqual({ page: 'workspace', tab: 'team' });
     expect(parseRoute('/author/workspace/nope')).toEqual({ page: 'workspace', tab: 'overview' });
     expect(parseRoute('/author/library/')).toEqual({ page: 'library' });
+  });
+
+  it('reads the saved action library, dropping entries that do not parse', () => {
+    const good = { key: 'discount', name: 'Discount approval', description: 'Approve or refuse.', type: 'hybrid', plays: 'hybrid', template: 'reward', group: 'person', inNew: 'off', version: 1, format: 'Decide, then talk' };
+    const raw = JSON.stringify([good, { ...good, key: 'bad', template: 'nope' }, { ...good, key: 'Bad Key' }, 'x', null, { ...good, key: 'two', plays: 'sideways' }]);
+    expect(parseMyLibrary(raw)).toEqual([good]);
+    expect(parseMyLibrary('{"not":"a list"}')).toEqual([]);
+    expect(parseMyLibrary('not json')).toEqual([]);
+    expect(parseMyLibrary(null)).toEqual([]);
   });
 
   it('reads a described action as Kora would set it up', () => {
