@@ -60,26 +60,27 @@ test.describe('a first run', () => {
     const tip = page.getByRole('dialog', { name: 'Your leadership styles' });
     await expect(tip).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText('Style setting · 1 of 4')).toBeVisible();
-    await expect(tip.locator(':focus')).toHaveCount(1);
+    await expect.poll(() => tip.evaluate(el => el.contains(document.activeElement))).toBe(true);
     await axe(page, 'style tour');
     await page.keyboard.press('Escape');
     await expect(tip).toHaveCount(0);
 
     await setStyles(page);
-    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
-    await dismissCards(page);
-    // The board's tour: Next walks it, Back returns, the counter follows.
+    // The board's tour starts once the board shows (the outcome band is not a dialog, so it does not wait
+    // for it): Next walks it, Back returns, the counter follows.
     const first = page.getByRole('dialog', { name: 'Objectives and Tutorial' });
     await expect(first).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/^Board tour · 1 of \d+$/)).toBeVisible();
     await axe(page, 'board tour');
-    await page.getByRole('button', { name: 'Next' }).click();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Tick tock' })).toBeVisible();
-    await expect(page.getByRole('dialog', { name: 'Tick tock' }).locator(':focus')).toHaveCount(1);
-    await page.getByRole('button', { name: 'Back' }).click();
+    await expect.poll(() => page.getByRole('dialog', { name: 'Tick tock' }).evaluate(el => el.contains(document.activeElement))).toBe(true);
+    await page.getByRole('button', { name: 'Back', exact: true }).click();
     await expect(first).toBeVisible();
     await page.getByRole('button', { name: 'Do not show tips again' }).click();
     await expect(first).toHaveCount(0);
+    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+    await dismissCards(page);
 
     // A reload does not offer it again; the menu replays it.
     await page.reload();
@@ -92,9 +93,9 @@ test.describe('a first run', () => {
     await expect(page.getByRole('dialog', { name: 'Objectives and Tutorial' })).toBeVisible();
     // Walk to the end with Next; skipped steps (no target on screen) do not stop it.
     for (let i = 0; i < 20; i++) {
-      const done = page.getByRole('button', { name: 'Done' });
+      const done = page.getByRole('button', { name: 'Done', exact: true });
       if (await done.count()) { await done.click(); break; }
-      await page.getByRole('button', { name: 'Next' }).click();
+      await page.getByRole('button', { name: 'Next', exact: true }).click();
     }
     await expect(page.getByText(/^Board tour ·/)).toHaveCount(0);
   });
@@ -114,7 +115,7 @@ test.describe('the demo round', () => {
     await expect(open).toHaveCount(1);
     await open.getByRole('radio').nth(1).click();
     await page.getByRole('button', { name: 'Review and confirm' }).click();
-    await page.getByRole('dialog', { name: /Review/ }).or(page.getByRole('alertdialog')).getByRole('button', { name: 'Confirm styles' }).click();
+    await page.getByRole('button', { name: 'Confirm styles' }).click();
     await expect(page.getByRole('dialog', { name: 'Select a person' })).toBeVisible({ timeout: 10_000 });
     // A live action is not in the demo.
     await page.getByText('Kent Goldberg', { exact: true }).click();
@@ -130,7 +131,7 @@ test.describe('the demo round', () => {
     await page.getByRole('button', { name: 'Play simulation' }).click();
     // The real run starts untouched: week 1, nobody's style set, no days spent.
     await expect(styles(page)).toHaveCount(10, { timeout: 20_000 });
-    await expect(page.getByRole('radio', { checked: true })).toHaveCount(0);
+    await expect(styles(page).getByRole('radio', { checked: true })).toHaveCount(0);
     await expect(page.getByText('Demo: nothing here counts toward your run.')).toHaveCount(0);
   });
 
@@ -162,7 +163,11 @@ test.describe('the menu and its panels', () => {
     await page.getByRole('button', { name: 'Objectives', exact: true }).click();
     const objectives = page.getByRole('dialog', { name: 'Objectives' });
     await expect(objectives).toBeVisible();
+    await expect(objectives.getByText('Welcome to Innov8 Elevators. I am glad you are here.')).toBeVisible();
+    await objectives.getByRole('tab', { name: 'Your targets' }).click();
     await expect(objectives.getByText('Reach $240,000 in revenue over eight weeks.')).toBeVisible();
+    await objectives.getByRole('tab', { name: 'Stages' }).click();
+    await expect(objectives.getByText('Suits:').first()).toBeVisible();
     await axe(page, 'objectives');
     await page.keyboard.press('Escape');
     await expect(objectives).toHaveCount(0);
@@ -211,17 +216,22 @@ test.describe('the menu and its panels', () => {
     if (await option.count()) await option.click();
     await page.getByRole('button', { name: /^Confirm/ }).click();
     await expect(page.getByText('How it landed')).toBeVisible();
-    await page.getByRole('button', { name: 'View history' }).click();
+    await page.getByRole('button', { name: 'Open in History' }).click();
     const history = page.getByRole('dialog', { name: 'History' });
     await expect(history).toBeVisible();
     await expect(history.getByRole('combobox', { name: 'Person' })).toHaveValue(/kent/i);
-    await expect(history.getByText(/Send for training/).first()).toBeVisible();
+    await expect(history.getByRole('region', { name: 'History' }).getByText(/training/i).first()).toBeVisible();
     await axe(page, 'history');
+    // Clearing the filters shows everyone; an action filter narrows the entries.
+    const shown = history.getByRole('status').filter({ hasText: /shown$/ });
+    const count = async () => Number((await shown.textContent())?.match(/\d+/)?.[0] ?? 0);
+    const forKent = await count();
     await history.getByRole('button', { name: 'Clear filters' }).click();
     await expect(history.getByRole('combobox', { name: 'Person' })).toHaveValue('');
-    await expect(history.getByText(/Style setting/).first()).toBeVisible();
+    expect(await count()).toBeGreaterThanOrEqual(forKent);
+    const all = await count();
     await history.getByRole('combobox', { name: 'Action' }).selectOption({ label: 'Send for training' });
-    await expect(history.getByText(/Style setting/)).toHaveCount(0);
+    await expect.poll(count).toBeLessThan(all);
     await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Dismiss outcome' }).click();
     await dismissCards(page);

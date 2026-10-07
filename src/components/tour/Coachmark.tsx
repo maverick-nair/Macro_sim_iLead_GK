@@ -82,6 +82,13 @@ export function Coachmark({ target, title, body, counter, children, footer, onEs
     // eslint-disable-next-line react-hooks/set-state-in-effect
     measure();
     headingRef.current?.focus({ preventScroll: true });
+    // A screen that has just opened moves focus to its own heading after this; take it back once, unless
+    // the participant has already moved on to a control.
+    const again = setTimeout(() => {
+      const at = document.activeElement;
+      if (!tipRef.current?.contains(at) && (!at || at === document.body || /^H[1-6]$/.test(at.tagName))) headingRef.current?.focus({ preventScroll: true });
+    }, 350);
+    return () => clearTimeout(again);
   }, [stepKey, target, measure]);
 
   useEffect(() => {
