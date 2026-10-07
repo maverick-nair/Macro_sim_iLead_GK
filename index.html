@@ -13,8 +13,8 @@
          engine, only on the participant's route, and never while actions wait to be sent (D86). -->
     <script>
       (function () {
-        var url = '%VITE_ILEAD_ENGINE_URL%';
-        if (!url || url.charAt(0) === '%' || /^\/(screens|states|author|group)\/?$/.test(location.pathname)) return;
+        var url = '__ILEAD_ENGINE_URL__';
+        if (!url || url.charAt(0) === '_' || /^\/(screens|states|author|group)\/?$/.test(location.pathname)) return;
         try {
           var q = new URLSearchParams(location.search);
           if (q.get('engine') === 'off') return;

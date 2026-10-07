@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` is a different file: the Claude Design bundle's notes.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D88). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
@@ -32,7 +32,9 @@ Server (built: server/, docs/SERVER.md, D81; the base paths of .env.server)
 
 **Every payload is parsed at the boundary** with the Zod schemas, for the real server and the mock alike. Parsing also applies the copy rules (`src/i18n/copy.ts`: no dashes as punctuation, no emoji, "skills" not "competency") to engine and AI text. A payload that does not parse is an `EngineError` with code `badPayload`.
 
-**Bundle.** The participant's first load is held under 250 KB of gzipped JS (D79) (`scripts/budget.ts`, run by `npm run build`). The mock engine, the live screen, the reports, the group report, the author chat, the theme loader and the galleries are lazy chunks.
+**Engine copy is message codes** (D83). Every sentence the engine writes (headlines, reasons, rules, outcome lines, badge reasons, week end banners, report findings) is sent as `{ code: 'engine.*', params }` (`src/engine/copy.ts`); the contract's `Text` words it on the client from the ICU catalog (`src/i18n/messages/<locale>/engine.json`) in the participant's language, so components still receive strings. Parameters may nest: messages, lists (`{ list, conj }`), money (`{ money, currency, locale, display }`, formatted in the participant's locale) and authored templates (`{ template, params }`). Authored storyline copy (events, emails, persona lines, report narratives) stays a plain string in the storyline's language (`StorylineConfig.locale`). The language comes from the launch: `?locale=es` (a Spanish skeleton ships, every other key falls back to English one by one), `en-XA` and `ar-XB` are pseudo locales for overflow and right to left testing. Server side code that needs plain text uses `wordEnglish` (`src/i18n/engineCopyEn.ts`).
+
+**Bundle.** The participant's first load is held under 250 KB of gzipped JS (D79) (`scripts/budget.ts`, run by `npm run build`; it counts preloaded chunks too). The mock engine, the live screen, the reports, the group report, the author chat, the theme loader and the galleries are lazy chunks; the engine contract (Zod) and the engine's copy load beside the first view, preloaded, out of the first load's code (D87).
 
 **Devices.** Laptops, desktops and tablets (D69): 1440 is the design, 1024 to 1279 folds the Actions panel, 744 to 1023 in portrait uses the tablet layouts (D73). Narrower than 744 shows a notice. Chrome, Edge 123+, Firefox 120+, Safari 17.5+ (native `light-dark()`, D21).
 
@@ -48,7 +50,9 @@ Schema: `src/engine/contract.ts`. JSON Schemas: `docs/schemas/engine-view.json`,
 
 - Requests carry the session cookie (`credentials: 'include'`); the server identifies the participant from the launch.
 - **Errors:** a non 2xx answer with `{ "message": string, "code": string }`. `code` is stable and the UI words it from the catalog (for example `unknownStyle`, `refused`, `liveCap`); 5xx is treated as retryable, a network failure as `network` (retryable). The UI keeps what the participant typed on any failure.
-- **Intents** (`Intent`): `confirmStyles`, `openProfile`, `planAction`, `openConversation`, `sendTurn`, `submitInteraction`, `interruptTurn` (with `shownChars`, how much of the streamed line was on screen), `requestHint`, `nextCandidate`, `chooseCandidate`, `endInteraction`, `abandonInteraction`, `dismissCard`, `clearOutcome`, `endPeriod`, `chooseReward`, `submitReflection`, `startNextPeriod`.
+- **Intents** (`Intent`): `confirmStyles`, `openProfile`, `planAction`, `openConversation`, `sendTurn`, `submitInteraction`, `submitPlan` (a written plan's fields, D85), `interruptTurn` (with `shownChars`, how much of the streamed line was on screen), `requestHint`, `nextCandidate`, `chooseCandidate`, `endInteraction`, `abandonInteraction`, `dismissCard`, `clearOutcome`, `endPeriod`, `chooseReward`, `submitReflection`, `startNextPeriod`, `startPractice` and `skipPractice` (the Week 0 practice, D84).
+- **Retries and idempotency** (D86): the client keeps intents in order and, while offline or after a network failure, holds them (in local storage, for a server run) and sends them again on reconnect, each with the same `Idempotency-Key` header. The server should answer a repeated key with the stored result instead of applying the intent twice. 5xx answers are retried three times (1, 3 and 8 seconds), then reported.
+- **The first view early** (D87): `index.html` asks for `GET {engine}/sessions/{session}/view` in an inline script before the app's code arrives; a strict CSP needs that script's hash.
 - **The view never includes a member's needed style**, the fit table, raw model scores or the lens's source. Members' stats are `null` until the profile is opened (D39).
 - **Streaming:** abort the request to stop a line, then send `interruptTurn`. A body that ends without `done` or `error` is read as a retryable error. Details: `src/ai/sse.ts`, `docs/SPEECH.md`.
 - **The report** (`EngineView.report`) is null until the run ends, then a `ReportView` (`src/engine/reportContract.ts`, `docs/schemas/report-view.json`). The first load checks only that it is an object; the end screen and the report (both lazy) parse it.
@@ -152,7 +156,7 @@ docker compose up --build   # the production image
 | Initial JS (gzipped) | 250 KB | `npm run build` (`scripts/budget.ts`) |
 | LCP | 2.5 s (board and group report 3 s) | `npm run vitals` |
 | CLS | 0.1 | `npm run vitals` |
-| TBT (stands in for INP) | 300 ms (board and group report 600 ms) | `npm run vitals` |
+| TBT (stands in for INP) | 300 ms (board 400 ms, D87) | `npm run vitals` |
 | INP on the board (a few clicks and keys) | 200 ms | `npm run vitals` |
 | Transfer, first load, board and group report | 450 KB | `npm run vitals` |
 | Transfer, opening the report | 100 KB | `npm run vitals` |
@@ -176,11 +180,11 @@ The board and group report budgets sit above the usual 2.5 s and 200 ms: compili
 
 - **The server is built** (D81, `docs/SERVER.md`); its own limits are in `docs/SERVER.md` section 15 (live model streaming needs a contract change, replay across engine changes, LTI and SSO are a seam, no assessor screen yet). The paths stay in one file per client (`src/api/http.ts`, `src/engine/client.ts`, `src/speech/transcription.ts`, `src/author/drafter.ts`).
 - **AI on the server:** built in `ai/` (D82, `docs/AI.md`): `createNpcModel`, `createEvaluator`, `createAuthorDrafter`, `createTranscriber`, with versioned prompts, guardrails, verbatim quote checks, repair and mock fallbacks, and two gates (`npm run ai:calibrate`, `npm run ai:persona-check`) that pass on the mock. To configure: `ANTHROPIC_API_KEY`, `SPEECH_URL`, `SPEECH_KEY`. Not yet done: running both gates against the real model (no key in this repo), the live stream wiring in the server, a websocket speech adapter. The evaluator scores the words only, never the voice (SPEECH.md).
-- **Engine text is English** (D60): headlines, reasons, events and NPC lines come from the engine as strings. A second language needs either server side localization or codes the client words.
+- **Languages** (D83): engine copy is codes the client words; only English and a Spanish skeleton (the HUD, time, settings, inbox, outcome and every engine code) ship. A real language needs its catalog files and storylines authored in it. NPC lines are model output: the mock's persona lines are English only. A turn that opens with engine copy streams its English words from the server (`wordEnglish`), then shows in the participant's language.
 - **Contract field names keep British spelling** where they already shipped (`organisation`, `behaviours`, a moment's `behaviour`); the copy shown is US English (D78). Renaming them is a breaking change to agree with the server team.
-- **Open decisions** in `docs/DECISIONS.md`: D9 (minus signs, proposed), D12 (HUD week label), D15 (breakpoints, mostly settled by D69 and D73), D16 (Week 0 practice chat, not designed), D23 (the command palette's page behind it), D30, D33, D35, D37 (simulation rules, proposed), D61 (the onboarding mic test is simulated; the resume recap uses fixture data), D19 (what is still missing from the GenieKreator docs).
-- **Performance next steps:** split the board's and the group report's first render (each one long task on a slow CPU), and trim the first load's scripts (React DOM, TanStack Query and the Radix dialog are most of it), to bring the board and group report to LCP 2.5 s and TBT 200 ms. The 200 KB initial JS budget has 0.3 KB left.
-- **Not built:** interview and written plan formats have no design (built in the shared shell, D52, awaiting design review); phones (D69); offline play.
+- **Decisions the product owner can revisit:** D9, D12, D15, D16, D23, D30, D33, D35 and D37 were decided with documented defaults in D88. D61's mic test and resume recap were built in D68. Still open: D19 (what is still missing from the GenieKreator docs) and the visual redesign (D80, on hold).
+- **Performance:** the first renders are split and Zod left the first load (D87). The board and the group report reach TBT 300 ms or near it, but not LCP 2.5 s: at the measured network the first load's bytes take about 2 s, and the board's largest paint is a portrait after them. Next steps: React DOM is most of the remaining first load; the view's parse (about 70 ms at 4x CPU) could use a lighter schema. The initial JS budget is 250 KB (D79).
+- **Not built:** a design for the interview, the written plan and the Week 0 practice (functional in the shared shell, D52, D84, D85, awaiting the canvas, D80); phones (D69); playing offline (the client holds actions while offline and sends them on reconnect, D86, but the mock engine is the only offline engine).
 - **The design prototype** (`?engine=off`, `/screens`, `/states`) stays for parity only; it is not a product surface.
 
 ## 11. What the engineer configures (server)

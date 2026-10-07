@@ -1,7 +1,9 @@
 # iLead, a Business Simulation: participant app
 
 React 19 + Vite + TypeScript implementation of the iLead 2.0 participant interface designed in Claude Design.
-The original design bundle (prototypes, chat transcript, design system) lives in `project/` and `chats/` and is the visual source of truth. The bundle's handoff notes are in `HANDOFF.md`.
+The original design bundle (prototypes, chat transcript, design system) lives in `project/` and `chats/` and is kept for the parity check; the design canvas in `docs/design/canvas/` is the visual source (D80). The handoff is `docs/HANDOFF.md`.
+
+Languages: `?locale=es` plays in the Spanish skeleton, `?locale=en-XA` and `?locale=ar-XB` are pseudo locales for overflow and right to left checks (D83).
 
 ## Run it
 

@@ -65,7 +65,7 @@
 
 **Performance:**
 - The board route's initial JS stays under 250 KB gzipped (200 KB until D79). The mock engine, the live screen, the galleries and every ported screen past onboarding load on demand.
-- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4, 196.3 KB at D69, 197.3 KB at D72 (the theme bootstrap; the theme loader is a lazy chunk) and is 199.7 KB now (D78: the launch prefetch).
+- `npm run build` fails if the initial JS goes over budget (`scripts/budget.ts`). It was 178 KB gzipped at M4, 196.3 KB at D69, 197.3 KB at D72 (the theme bootstrap; the theme loader is a lazy chunk) 199.7 KB at D78 (the launch prefetch) and BUNDLE_AFTER after the post M8 work (D87: Zod and the engine copy load beside the first view).
 
 ## Status
 
@@ -84,6 +84,8 @@
 | Author chat prototype | Done, approved (D74) |
 | Report 3.0 and group report | Done, approved (D75 to D77) |
 | M8 | Done, approved (D78) |
+| Server and AI layer | Done (D81, D82) |
+| Post M8 completion | Done, awaiting approval (D83 to D88) |
 
 ## Milestones
 
@@ -130,6 +132,22 @@ Each one ends with a demo, a summary and a stop for approval.
 - Preflight on and legacy aliases removed (D6, D7).
 - Lint at 0 warnings, US spelling in lens and report copy, the flaky inbox and pause tests made robust.
 - Handoff docs: `docs/HANDOFF.md` and the JSON Schemas in `docs/schemas/` (`npm run schemas`).
+
+## Post M8 completion
+
+Every remaining aspect except the visual redesign (the canvas, D80, on hold) and the server and AI layer (built in parallel, D81 and D82). Each item has its decision.
+
+| Item | Decision | What was built |
+|---|---|---|
+| Localization of engine text | D83 | Engine copy as `engine.*` codes worded through the ICU catalog; authored copy keeps the storyline's locale; `?locale=`; a Spanish skeleton; pseudo locales `en-XA` and `ar-XB`; numbers, money and dates by locale; logical CSS for right to left; copy lint over every locale. Seeded replays unchanged. |
+| Open decisions | D88 | D9, D12, D15, D23, D30, D33, D35, D37 decided with defaults; D16 built as D84. |
+| Week 0 practice | D84 | An unscored, skippable practice conversation in the live shell before week 1, configured per storyline. |
+| Interview and written plan | D85 | Structured interview questions and the hire's outcome; the plan's fields evaluated like an email, with a check in promise. Stories and E2E. |
+| Performance | D87 | Zod and the engine copy out of the first load (preloaded beside the first view), the first view asked for early, the board's and group report's first renders split; board TBT budget 400 ms, group report 300 ms. |
+| Save and resume | D86 | Ordered intent queue with an offline banner, retries and idempotency keys; remembered run; drafts kept across a reload; an unsaved work guard. |
+| Docs | | `docs/HANDOFF.md` current (budget 250 KB, the mic test and recap built in D68, the new contract parts), root `HANDOFF.md` points to it. |
+
+Still open: D19 (GenieKreator docs), the canvas redesign (D80), designs for the interview, the plan and the practice, real languages beyond the skeleton, LCP 2.5 s on the board and the group report at the measured network.
 
 ## Running M0
 

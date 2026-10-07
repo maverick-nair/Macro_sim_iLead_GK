@@ -30,11 +30,21 @@ function preloadFirstView(): Plugin {
   };
 }
 
+/** The engine's base path for index.html's early first view (D87): empty with the mock engine, so the script does nothing. */
+function engineUrlInHtml(): Plugin {
+  let url = '';
+  return {
+    name: 'ilead-engine-url-in-html',
+    configResolved(c) { url = String(c.env.VITE_ILEAD_ENGINE_URL ?? ''); },
+    transformIndexHtml: { order: 'pre', handler: html => html.replace('__ILEAD_ENGINE_URL__', url.replace(/['\\]/g, '')) }
+  };
+}
+
 /** With `--mode server` (`npm run dev:full`) the dev server forwards the server's paths to it, so the app and the server share one origin and its cookie. */
 const SERVER_PATHS = ['/api', '/engine', '/speech', '/genie', '/launch', '/auth', '/openapi.json', '/healthz', '/readyz'];
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), preloadFirstView()],
+  plugins: [react(), tailwindcss(), preloadFirstView(), engineUrlInHtml()],
   build: {
     // Browsers with native light-dark(). A lower target makes the CSS minifier rewrite light-dark()
     // into variables that only resolve when color-scheme is set in a stylesheet, and the app sets it

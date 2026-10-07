@@ -56,7 +56,7 @@ WCAG 2.2 AA is a hard bar in the brief, and the docs win on behaviour, so the li
 
 ## Copy rules vs spec
 
-**D9. Minus signs in deltas.** Proposed.
+**D9. Minus signs in deltas.** Decided in D88 (as proposed).
 The spec says "deltas carry + and - signs", and the copy rules ban every dash character. The prototype already writes "Trust −3" with U+2212 MINUS SIGN, which is a math symbol in Unicode (category Sm), not a dash.
 Proposal:
 - The catalog lint fails on hyphen-minus U+002D and every Unicode dash (category Pd: hyphen, en dash, em dash and others).
@@ -80,7 +80,7 @@ The prototype computes state in the UI, which breaks rule 1. These calculations 
 The spec says "skill ratings appear only in the report" (principle 4), and card stats should be hidden until a profile is first opened. The design shows Skill, Morale and Result bars on every board card from the start.
 Following the spec would visibly change the main board. I need a product call.
 
-**D12. HUD week label.** Proposed.
+**D12. HUD week label.** Decided in D88: on screen as designed, the spec's wording for screen readers.
 The spec asks for "Week x of 8". The design shows "Week 2 · Day 3". Proposal: keep the design's layout and use the string "Week 2 of 8 · Day 3", which takes about 30px more in the HUD.
 
 **D13. Clock pausing.** Decided, following the spec.
@@ -95,7 +95,7 @@ The spec defines 7 formats. The design covers 4: 1:1 RolePlay, email, team meeti
 
 Proposal: build chat in the shared shell, reusing the transcript bubble and input bar from the 1:1, and show you a frame before going further. Interview and plan stay out of scope until designed.
 
-**D15. Breakpoints with no design.** Open. The 390 items are superseded by D69: phones are not supported, and the 390 frames are retired.
+**D15. Breakpoints with no design.** Decided in D88 (settled by D69 and D73). The 390 items are superseded by D69: phones are not supported, and the 390 frames are retired.
 The brief asks for visual regression at 1440, 1024 and 390 for every screen. The design defines:
 - 1440 for every screen
 - 1280 only for the client theme board
@@ -107,7 +107,7 @@ Proposal:
 - The 2px bar applies only where a design frame exists.
 - 1024 and the other 390 screens get layouts derived from the spec, approved through Storybook screenshots, then locked as baselines.
 
-**D16. Optional Week 0 practice chat** (spec onboarding step 7). Open. It is not designed. It depends on configuration that lives in the missing GenieKreator Configuration Spec.
+**D16. Optional Week 0 practice chat** (spec onboarding step 7). Decided: built in D84. Was open: It is not designed. It depends on configuration that lives in the missing GenieKreator Configuration Spec.
 
 ## Design bugs carried over as is
 
@@ -141,7 +141,7 @@ The CSS minifier lowered `light-dark()` into variables that only resolve when `c
 The Radix tooltip closes on any ancestor scroll and on pointer down, but the design keeps the tooltip open when you click a letter.
 - Arrow keys move focus within D, G, P and E, and Enter or Space picks. That's the Radix toggle group behavior. Selecting on every arrow press would fire a toast per key.
 
-**D23. Command palette uses a non-modal Radix dialog.** Proposed.
+**D23. Command palette uses a non-modal Radix dialog.** Decided in D88: the board behind is inert.
 Modal mode sets `pointer-events: none` on the body, which changes the board's gradient pills behind the scrim by up to 28/255.
 - Focus is still trapped (Tab loops inside), Escape closes, and focus returns to whatever opened it.
 - But the page behind is not hidden from screen readers.
@@ -172,7 +172,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 
 **D29. Stars can be 0 to 3 per period.** Decided (your call, 4 Oct). Each star has its own rule (People, Leadership, Business), so a period can end with none. This supersedes the spec's "1 to 3".
 
-**D30. Trust rules are new.** Proposed (SIMULATION.md section 3).
+**D30. Trust rules are new.** Decided in D88 (SIMULATION.md section 3).
 - It moves with style match, how a conversation lands, promises kept or broken, responsiveness, and fairness.
 - It changes play three ways: it scales how well positive actions land (0.8 to 1.2), it makes misreads likelier under 30, and it gates hidden concerns.
 - It also feeds mood and the resignation and complaint triggers.
@@ -186,13 +186,13 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The design's half day labels ("½ day") stay only in the `/screens` design fixtures (D34). The playable app shows whole days.
 - A storyline can still opt into half days through config.
 
-**D33. Weekly style values are new defaults.** Proposed. The Model doc defines the weekly style rule but gives no numbers, so SIMULATION.md 4.4 sets defaults inside the workbook's bounds. Calibration may tune them.
+**D33. Weekly style values are new defaults.** Decided in D88. The Model doc defines the weekly style rule but gives no numbers, so SIMULATION.md 4.4 sets defaults inside the workbook's bounds. Calibration may tune them.
 
 **D34. Two data sets.** Decided.
 - The `/screens` and `/states` galleries keep the prototype's numbers, so design parity stays provable.
 - The playable app runs the calibrated Sales Elevator storyline from the workbook. Its numbers and stages will differ from the design frames by intent.
 
-**D35. Live interactions use 1.0's maths.** Proposed.
+**D35. Live interactions use 1.0's maths.** Decided in D88.
 - In 1.0 you picked one of four written options; in 2.0 you speak or write freely.
 - The AI evaluator classifies your words as one of the four styles, and 1.0's mismatch maths then applies unchanged.
 - A Strong conversation improves the mismatch by one step; a Weak one worsens it by one.
@@ -203,7 +203,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - But with a positive buffer the factor goes above 1, and a stage outputs more than its conversion ratio allows.
 - The engine divides by `100 + buffer` instead. A buffer of 0 gives exactly the Model doc formula; any buffer keeps every stage at or below its ratio.
 
-**D37. Thoughtless play can do worse than doing nothing.** Proposed.
+**D37. Thoughtless play can do worse than doing nothing.** Decided in D88.
 - Calibrated Sales Elevator: passive play reaches 54% of target, random play 49%, good play 110%.
 - Random styles and random actions mostly mismatch, and the Model doc punishes mismatches, so random play ends below passive play.
 - I set the random band to 35 to 65% (it was 55 to 80%). If you want busy play to be gentler than idle play, the lever is the size of the mismatch penalties in the effect tables.
@@ -274,7 +274,7 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - The mood ring's 600ms colour change is snapped to `duration.slow` (300ms), per D24.
 - Still open: Space as push to talk (D18), and chat in the shell (D14). `LiveTranscript` and `LiveInputBar` are ready for chat.
 
-**D52. The three undesigned live formats.** Decided (built in M4 in the designed live screens' visual language; please review with design).
+**D52. The three undesigned live formats.** Decided (built in M4 in the designed live screens' visual language; please review with design). The interview and the written plan were finished in D85.
 - **Chat:** a thread like Teams or Slack. Sim time shows as dividers ("Week 2, Day 3") rather than a stamp per message. A streaming NPC turn with no words yet shows "Kent is typing" outside the log, so screen readers hear only finished turns. The thread ends with "Kent signed off" or "You closed the chat".
 - **Interview:** the candidate portrait has a neutral ring with no mood read, plus a CV card and private question notes. After two candidates, a comparison table with no portraits: CV fields, your notes, then Hire or Pass for each. Exactly one hire or a pass on both, confirmed with one button. A line reads "Decide on the CV and what you hear, nothing else."
 - **Written plan:** goals, measures, owner, due (the sub-periods left in this period) and support needed; each field can be dictated. Required fields are checked on submit, with focus moving to the first gap. After submitting, the plan is read only beside the NPC's short check in.
@@ -334,9 +334,9 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - Components and accessibility: D57. Board and live screens: D58.
 - Visual regression: the design frames stay held by `npm run parity` (67 frames). The engine screens now have Playwright baselines (`tests/e2e/visual.spec.ts`): onboarding, style setting, board and the 1:1, at 1440 and 1024 (390 for onboarding and the phone board) in dark, light and the client theme. Refresh with `npx playwright test visual --update-snapshots` after an intended change, and review the images in the diff.
 
-**D60. Engine text is server content.** Decided for now. Headlines, reasons, causes, event cards and NPC lines come from the engine in English and are sanitized by the client, not looked up in the ICU catalog. The UI chrome is fully in the catalog. When a second language is configured, the engine either localizes on the server (GenieKreator authors per language) or sends codes with parameters that the client words. The view contract keeps them as plain strings until that choice is made.
+**D60. Engine text is server content.** Superseded by D83 (engine copy is message codes the client words). Was: Headlines, reasons, causes, event cards and NPC lines come from the engine in English and are sanitized by the client, not looked up in the ICU catalog. The UI chrome is fully in the catalog. When a second language is configured, the engine either localizes on the server (GenieKreator authors per language) or sends codes with parameters that the client words. The view contract keeps them as plain strings until that choice is made.
 
-**D61. Still open after the review.** The engine HUD has no Pause button (the prototype HUD does); the onboarding mic test is simulated; the resume recap uses fixture data; phones keep the prototype board (D43) until the 390 board is designed; the trust ring number overflows at 200% text; Halden's second accent is 4.03:1 on raised surfaces (Halden is a sample client theme; a real client theme is checked by the token build when it is added); the onboarding step dots carry `aria-label` on a plain div; the /screens and /states intro links are 4.3:1 (review tools, not participant screens).
+**D61. Still open after the review.** Closed: the mic test and the resume recap were built in D68, the rest in D68 and D78 (D88). Was: The engine HUD has no Pause button (the prototype HUD does); the onboarding mic test is simulated; the resume recap uses fixture data; phones keep the prototype board (D43) until the 390 board is designed; the trust ring number overflows at 200% text; Halden's second accent is 4.03:1 on raised surfaces (Halden is a sample client theme; a real client theme is checked by the token build when it is added); the onboarding step dots carry `aria-label` on a plain div; the /screens and /states intro links are 4.3:1 (review tools, not participant screens).
 
 **D62. M5 game rules on the GenieKreator formulas.** Decided. `docs/genie/scoring-and-report.md` section 6 replaces the 2.0 scoring designed here (SIMULATION 7, rewritten). The engine computes everything; `npm run calibrate` now also reports the score and tier spread per player type (good play: Platinum in 60 of 60 runs; passive and random: Bronze, with 2 Silver runs for random).
 - **Week score with no live interaction:** the doc says "0.8 × weekly style fit %". Read literally, the funnel part would vanish too. The engine moves only the live weight to style fit (0.8 × fit + 0.2 × funnel), the same way L falls back to capability % with no live interaction. Say if you meant the literal reading.
@@ -539,6 +539,50 @@ The full rule set is in `docs/SIMULATION.md`. It is built from the iLead 1.0 Mod
 - **Quality gates:** `npm run ai:calibrate` (85% per rubric, a starter set of 8 labelled samples per Sales Elevator live action) and `npm run ai:persona-check` (9 probes per NPC). Both pass on the mock (88 of 88, 189 of 189) and run on the real model when a key is set. Not yet run on the real model: no key in this environment.
 - **Speech:** a vendor neutral HTTP adapter that speaks the browser's chunked contract to `SPEECH_URL` with `SPEECH_KEY`; other vendors need a shim.
 - **Repo:** `ai/` is an npm workspace with its own `package.json`; its tests run with the root Vitest and it typechecks with `tsc -b`. Initial JS unchanged at 199.7 KB.
+
+**D83. Engine copy as message codes, worded in the participant's language.** Decided 2026-10-07 (product owner asked for codes the client words; supersedes D60 and D66's "the server localizes"). The product owner can revisit any default below.
+- **Contract.** Every sentence the engine writes is `{ code: 'engine.*', params }` (`src/engine/copy.ts`). The contract's `Text` accepts a plain string (authored or AI text), a message or an authored template, and words messages from the ICU catalog as it parses (`src/i18n/engineCopy.ts`), so components still get strings and none changed. Codes outside `engine.*` are refused. Parameters nest: messages, lists (joined with the locale's "and", "or" or commas), money (formatted in the participant's locale) and templates (authored copy whose placeholders hold engine words, such as the assessment bar in the report's about lines). The engine's logic no longer compares English labels: it checks codes (`hasCode`), and moments are de-duplicated by code and parameters.
+- **What stays authored.** Event titles and bodies, trigger messages, emails, persona lines, profiles and every report narrative bank are the storyline's strings, in the storyline's language: `StorylineConfig.locale` (default `en`), sent in the view as `storyline.locale`. GenieKreator authors one storyline per language. NPC words are model output; the mock's persona lines are English only.
+- **Replays.** The seeded replay hashes (`src/engine/sim/replay.test.ts`) did not change: the test words the codes in English before hashing, so they also prove the English catalog reproduces, byte for byte, the text the engine wrote before. Calibration is unchanged (`--check`: passive 57%, random 62%, good 112% of target).
+- **Locales.** `?locale=` on the launch sets the language, the page's `lang` and `dir`, and the locale numbers, dates and money format in. With no `?locale=`, English copy and the storyline's own money locale (lakh grouping stays for `en-IN`). A language's catalog may leave keys out; they fall back to English one by one. Shipped: `es`, a skeleton (the HUD, time, settings, the inbox, the outcome, the palette, the small screen notice, the offline banner, and the whole engine catalog), loaded on demand. Pseudo locales, built from English at run time: `en-XA` (accented, a third longer, in brackets: overflow and copy missing from the catalog show) and `ar-XB` (every message forced right to left, the page in `dir="rtl"`).
+- **Right to left.** 109 physical utilities became logical ones (`ps`, `pe`, `ms`, `me`, `start`, `end`, `text-start`, `text-end`, `rounded-es` and so on), identical in left to right. Kept physical on purpose: safe area padding (it is physical), centered overlays (`left-1/2` with a translate) and the style tooltip's anchoring. Not mirrored yet: slide animations and charts.
+- **Copy lint** (`src/i18n/catalog.test.ts`) covers every locale and both pseudo locales: ICU parses, no dashes, emoji or "competency" in visible text, keys only from English, arguments only from the English message, and a language's `engine.json` complete.
+- **Load.** The engine catalog is not in the first load: it loads beside the first view, preloaded (D87). Server side code that needs plain text (the AI layer's prompts and history, the server's token stream of a turn) uses `wordEnglish` (`src/i18n/engineCopyEn.ts`).
+- **Tests.** `tests/e2e/locale.spec.ts`: Spanish HUD and engine copy, `en-XA` without sideways scroll at 1440 and 1024, `ar-XB` right to left.
+
+**D84. The Week 0 practice conversation.** Decided 2026-10-07 (resolves D16 with defaults; the product owner can revisit).
+- After onboarding, week 1's style setting offers "Practice before week 1" (also `?practice=1` for demos and tests): a short 1:1 with a team member in the live shell, then back to style setting with one coaching tip. It is never evaluated, logged, scored or counted against the live cap, and nothing on the team moves. "Skip practice" closes the offer for the run. It is offered only before anything has happened in week 1.
+- Storyline config `practice`: `enabled` (default true), `with` (a member id, default the first member), `format` (`roleplay` or `chat`), `goal`, `turnLimit` (4), `minutes` (3). Intents `startPractice` and `skipPractice`; `endInteraction` and `abandonInteraction` close it; the view says `practice.available` and `live.practice`.
+- The offer is a plain card from the board's existing tokens and buttons; the canvas (D80) will design it. Story `Board/Practice offer`, `Board/Engine live/Practice`; unit tests `src/engine/sim/practice.test.ts`; E2E `tests/e2e/practice.spec.ts`.
+
+**D85. The interview and the written plan, finished.** Decided 2026-10-07 (building D52 in the shared shell, no new visual language).
+- **Interview.** The brief lists structured questions, the same for both candidates: authored per action (`live.questions`), otherwise three general ones. The candidate persona answers from the CV. Acceptance follows SIMULATION 4.3 (Strong or Adequate yes, Weak half the time, Harmful no), and the outcome now says what the decision came to: "{name} accepted the offer and joins {stage}", turned it down, no room, or "You passed on both candidates."
+- **Written plan.** Submitted once with its fields (`submitPlan`: goals, measures, owner, due, support); the NPC answers with the check in, and End evaluates the fields alone, like an email: specific (goals of six words or more Strong, three Adequate), measurable (a number in the measures and a due date), involvement (an owner and the support you give). Goals, measures and owner are required; the due date must be in this period. The due date becomes a promise to check in with that person (SIMULATION 5.4). The automated players still submit text, so calibration and replays are unchanged.
+- Tests: `src/engine/sim/formats.test.ts`; E2E in `tests/e2e/live.spec.ts` (structured questions, a hire that lands, passing on both, the plan's promise); stories `Board/Engine live/Written plan submitted`.
+
+**D86. Save and resume on the client.** Decided 2026-10-07 (the server stays authoritative; the product owner can revisit).
+- **Intent queue** (`src/engine/resilient.ts`): intents leave strictly in order. While the browser is offline, or a request fails on the network, they wait and go out on reconnect; a server run keeps the queue in local storage, so a reload sends what was left before it reads the view. Every intent carries an `Idempotency-Key`, the same on every retry. 5xx answers are retried three times (1, 3, 8 seconds), refusals are reported at once. TanStack Query's own offline pause is off (`networkMode: 'always'`), so the queue is the one place that decides.
+- **Offline banner** (`src/components/shell/ConnectionBanner.tsx`): a status region that says "You are offline. 1 action is saved here and goes out when you reconnect." or "Reconnecting.", in the existing notice style.
+- **Remembered run:** the launch's participant id is kept, so a reload without the launch link resumes the same run.
+- **Drafts and the unload guard** (`src/components/board/liveDraft.ts`): what is written in a live conversation and not sent (reply, email, sponsor notes, plan, interview notes) is kept in session storage per interaction and comes back after a reload; leaving the page asks first while there are unsent words or a conversation under way.
+- Tests: `src/engine/resilient.test.ts`, `tests/e2e/resume.spec.ts` (offline mid run on the mock, the unload prompt).
+
+**D87. Performance: lighter first load, split first renders.** Decided 2026-10-07.
+- **First load:** Zod and every schema left it: the engine client loads the contract beside the first request, the SSE reader with the first stream, and the transcription client checks its two response shapes by hand. The engine catalog loads the same way. Both are `modulepreload`ed (a small Vite plugin), so they download with the first load but are not compiled into its long task. Initial JS (preloads counted) 199.7 KB before this work, 205.6 KB with the engine catalog (D83), now BUNDLE_AFTER.
+- **Early first view:** `index.html` asks for the first view in an inline script before the app's code has downloaded (server runs only), and `main.tsx` starts the team's portraits as soon as the code runs. Preloading portraits from the head was tried and dropped: on this network it only slowed the code.
+- **Split renders:** the board's first render runs in a transition (React builds it in slices that yield), and the actions panel and inbox rail build in their own render after the first paint (`Deferred`, `src/lib/useAfterPaint.ts`). The group report renders its cover and first sections at once and the rest after the first paint (print renders everything).
+- **Numbers** (medians of 3, same machine and settings, LCP / CLS / TBT / INP / transfer): VITALS_TABLE
+- **Budgets:** board TBT 600 to 400 ms, group report TBT 600 to 300 ms. LCP stays 3 s for both: the first load's bytes alone take about 2 s on this network and the board's largest paint is a portrait after them. No budget was loosened. `npm run vitals -- --page board` measures one page.
+
+**D88. The open decisions, decided with defaults.** Decided 2026-10-07 (product owner: decide with sensible, documented defaults; each can be revisited).
+- **D9 minus signs:** as proposed and as built: the lint fails on hyphen-minus and every Unicode dash; numbers use U+2212, and every formatter (catalog, deltas, money, engine copy) swaps Intl's hyphen for it.
+- **D12 HUD week label:** the HUD keeps the design's "Week 2 · Day 3" on screen, and screen readers hear the spec's "Week 2 of 8, Day 3". The canvas (D80) settles the visible label.
+- **D15 breakpoints:** settled by D69 and D73: 1440 is the design, 1024 to 1279 folds the actions panel, 744 to 1023 portrait uses the tablet layouts, narrower shows the notice. Every engine screen has Playwright baselines at 1440, 1024 and 834; no more frames are needed until the canvas.
+- **D16 Week 0 practice:** built, D84.
+- **D23 command palette:** the board behind it is `inert` while it is open (no focus, no clicks, hidden from screen readers), keeping the non modal Radix dialog and its pixels. Checked with axe in `tests/e2e/board.spec.ts`.
+- **D30 trust rules, D33 weekly style values, D35 live interactions on 1.0's maths, D37 thoughtless play:** each was already implemented as proposed (SIMULATION 3, 4.4, 5.2 and 9) and is now Decided. Calibration `--check` passes unchanged for Sales Elevator: passive 57%, random 62%, good 112% of target, good play Platinum in 60 of 60 runs. The levers stay config (`trustRules`, `weeklyStyle`, the effect tables).
+- **D61 leftovers:** the mic test and the resume recap were built in D68; the rest of D61 was closed in D68 and D78.
+- **E2E port:** the gate asks for `E2E_PORT=5741`; the server's tests held that port during this work, so the runs here used 5747. The suite is the same on any port.
 
 ## Blocked on missing docs
 

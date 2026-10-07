@@ -270,7 +270,9 @@ In iLead 1.0 you picked one of four written options. In 2.0 you speak or write f
 - **NPC words** come from an `NpcModel`: an AI model on the server in production, streamed to the client and labelled as AI. The mock engine uses a transparent persona stand in that follows mood, trust and what you said. A hidden concern surfaces in the person's own words (`concernLine`) when you ask about it and they trust you enough (trust 45 or more, or you acknowledged them).
 - **Live cap [G]:** 2 live or hybrid actions per period (*config* `time.liveCap`). Inbox replies and sponsor briefings do not count.
 - **Sponsor briefings [G]:** scheduled in weeks 4 and 8 (*config* `sponsor.briefings`) as an urgent inbox item due by the end of the period. Skipping one costs sponsor confidence −10 (an issue escalated to the CEO).
-- **Interview [G]:** Hire interviews 2 candidates whose home stage has room, then you choose one or pass. How the interviews went sets the new hire's first trust in you (+6, +2, −3, −8).
+- **Interview [G]:** Hire interviews 2 candidates whose home stage has room, then you choose one or pass. How the interviews went sets the new hire's first trust in you (+6, +2, −3, −8). The brief lists the same structured questions for both candidates (*config* `live.questions`, otherwise three general ones), and the outcome says what the decision came to: joined, turned the offer down, no room, or passed on both (D85).
+- **Written plan [N]:** submitted once with its fields (goals, measures, owner, due, support), then the person's check in. Ending it evaluates the fields alone, like an email: specific (goals of six words or more Strong, three Adequate, else Weak), measurable (a number in the measures and a due date: both Strong, one Adequate), involvement (an owner and your support: both Strong, one Adequate). The due date becomes a promise to check in with that person (5.4) (D85).
+- **Week 0 practice [S][N]:** before week 1 a short conversation with one team member (*config* `practice`: on by default, the first member, 4 turns, 3 minutes), never evaluated, logged or scored, and skippable. It ends with one coaching tip (D84).
 
 ### 5.1 The evaluator returns [G]
 | Field | Meaning |
@@ -579,3 +581,7 @@ The authored `target` is the client's number and stays as it is. Starting member
 It then plays 200 runs per policy and checks every band. The output is a report (`calibration/<storyline>.md`) with the before and after values. The tuned values are written back to the storyline with `calibrated` set to whether every band and the member mix pass; when one fails, the script also exits with an error. `--check` only measures and reports. The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
 
 For the Sales Elevator default, calibration starts from the workbook's starting values; the prototype's on-screen numbers are only design fixtures for the `/screens` gallery.
+
+## 10. Engine copy (D83)
+
+Every sentence the engine writes is a message code with parameters (`src/engine/copy.ts`), worded on the client from the catalog in the participant's language (`src/i18n/messages/<locale>/engine.json`). Authored copy (events, triggers, emails, persona lines, report narratives) stays as authored, in the storyline's language (`locale`). The rules above quote the English wording.
