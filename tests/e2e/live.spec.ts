@@ -137,7 +137,7 @@ test('push to talk: Space held speaks, Enter sends (with voice consent)', async 
   await expect(page.getByRole('log').getByText(/Thanks for making time/)).toBeVisible();
 });
 
-test('a failed send keeps your words; the sponsor briefing pins throughput against the ideal', async ({ page }) => {
+test('a failed send is retried and keeps your words until it lands; the sponsor briefing pins throughput against the ideal', async ({ page }) => {
   // The mock engine stands in for the server: the next intent of a named type fails with a network error.
   await page.route('**/src/engine/mock.ts*', async route => {
     const res = await route.fetch();
@@ -155,10 +155,9 @@ test('a failed send keeps your words; the sponsor briefing pins throughput again
   const box = page.getByRole('textbox', { name: 'Your reply' });
   await box.fill('Here is my update.');
   await box.press('Enter');
-  await expect(page.getByText(/You seem to be offline/)).toBeVisible({ timeout: 10_000 });
-  await expect(box).toHaveValue('Here is my update.');
-  await box.press('Enter');
-  await expect(box).toHaveValue('');
+  // D86: a network failure is not lost: the client sends the turn again, and the words leave the box
+  // only once the engine has them.
+  await expect(box).toHaveValue('', { timeout: 10_000 });
 });
 
 test('email: written once, then the outcome; the live cap blocks a third live action', async ({ page }) => {

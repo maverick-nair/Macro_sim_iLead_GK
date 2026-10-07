@@ -82,6 +82,8 @@ test('profile: stats revealed, timeline from the engine, actions for that person
 
 test('keyboard: the inbox comes after the actions in tab order', async ({ page }) => {
   await toBoard(page);
+  // The actions panel and the inbox rail render once the board has painted (D87).
+  await expect(page.getByRole('button', { name: /^Inbox/ }).first()).toBeVisible();
   const order = await page.evaluate(() => {
     const all = Array.from(document.querySelectorAll<HTMLElement>('button, [tabindex="0"]')).filter(el => !el.hasAttribute('disabled'));
     const actions = all.findIndex(el => el.closest('aside[aria-label="Actions"]'));
