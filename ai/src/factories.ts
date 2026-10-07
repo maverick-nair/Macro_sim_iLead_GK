@@ -5,6 +5,7 @@ import { createAnthropicTransport } from './llm/anthropic';
 import type { LlmTransport } from './llm/transport';
 import { createAnthropicNpcModel, createMockNpcModel } from './npc/models';
 import { createHttpTranscriber, createMockTranscriber } from './speech/transcriber';
+import { createAnthropicSyntheticPlayer, createMockSyntheticPlayer, type SyntheticPlayer, type SyntheticPlayerConfig } from './synthetic/player';
 import type { AuthorDrafter, Evaluator, NpcModel, Transcriber } from './types';
 
 /**
@@ -42,4 +43,14 @@ export function createTranscriber(config: TranscriberConfig): Transcriber {
   if (config.provider === 'mock') return createMockTranscriber(config.mock?.script, config.mock?.wordsPerChunk);
   if (!config.http?.url) throw new Error('createTranscriber: provider "http" needs http.url (SPEECH_URL)');
   return createHttpTranscriber(config.http, config.logger ?? consoleLogger);
+}
+
+/**
+ * GenieKreator's synthetic players with AI (D110): a model writes each persona's lines in the calibration.
+ * Same interface as the engine's offline templates, which also answer when the model fails. Model settings
+ * default to the NPC role's (fast, low effort).
+ */
+export function createSyntheticPlayer(config: SyntheticPlayerConfig): SyntheticPlayer {
+  if (config.provider === 'mock') return createMockSyntheticPlayer();
+  return createAnthropicSyntheticPlayer({ transport: transportFor(config.anthropic), settings: settingsFor('npc', config.model), logger: config.logger ?? consoleLogger });
 }
