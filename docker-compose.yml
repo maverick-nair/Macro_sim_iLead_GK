@@ -1,0 +1,48 @@
+# iLead locally or on one host (docs/SERVER.md "Deploy").
+#   cp .env.example .env    # fill in LAUNCH_SECRET at least (32+ characters)
+#   docker compose up --build                       # server + app on http://localhost:8787, SQLite in a volume
+#   docker compose --profile postgres up --build    # with Postgres: set DATABASE_URL=postgres://ilead:ilead@db:5432/ilead in .env
+#   docker compose --profile mail up                # with Mailpit, a fake SMTP inbox on http://localhost:8025:
+#                                                   #   set SMTP_URL=smtp://mailpit:1025 in .env
+# The app's static build is served by the server (STATIC_DIR). To serve it from a CDN instead, build it
+# with `npm run build:server-app`, upload dist-server/, route /api /engine /speech /genie /launch /auth
+# to the server on the same origin, and unset STATIC_DIR.
+
+services:
+  server:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8787}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    ports:
+      - "8787:8787"
+    volumes:
+      - ilead-data:/data
+    restart: unless-stopped
+
+  db:
+    image: postgres:16
+    profiles: [postgres]
+    environment:
+      POSTGRES_USER: ilead
+      POSTGRES_PASSWORD: ilead
+      POSTGRES_DB: ilead
+    volumes:
+      - ilead-pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ilead"]
+      interval: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit
+    profiles: [mail]
+    ports:
+      - "8025:8025"
+
+volumes:
+  ilead-data:
+  ilead-pg:

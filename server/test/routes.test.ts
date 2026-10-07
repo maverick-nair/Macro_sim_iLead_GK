@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { AuthorDraftResponse, AuthorTurnResponse, Brief } from '../../src/api/author';
 import salesElevator from '../../src/engine/storylines/sales-elevator.json';
 import halden from '../../src/theme/samples/halden.json';
-import { loadConfig } from '../src/config';
+import fs from 'node:fs';
+import path from 'node:path';
+import { ConfigSchema, loadConfig } from '../src/config';
 import { ADMIN_TOKEN, playToEnd, testServer, type TestServer } from './helpers';
 
 let s: TestServer;
@@ -164,5 +166,11 @@ describe('operations', () => {
     expect(c.SMTP_URL).toBeUndefined();
     expect(c.appUrl).toBe('http://localhost:8787');
     expect(loadConfig({}).COOKIE_SECURE).toBe(false);
+  });
+
+  it('documents every variable in .env.example', () => {
+    const example = fs.readFileSync(path.resolve(import.meta.dirname, '../../.env.example'), 'utf8');
+    const missing = Object.keys(ConfigSchema.shape).filter(k => !new RegExp(`\\b${k}=`).test(example));
+    expect(missing).toEqual([]);
   });
 });
