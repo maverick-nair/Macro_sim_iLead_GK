@@ -35,7 +35,8 @@ export const ConfigSchema = z.object({
   LAUNCH_AUDIENCE: z.string().default('ilead'),
   SESSION_COOKIE: z.string().default('ilead_session'),
   SESSION_TTL_HOURS: int(12),
-  COOKIE_SECURE: bool(true),
+  /** Default: on in production, off in development (plain http on localhost). */
+  COOKIE_SECURE: z.enum(['true', 'false', '1', '0', 'yes', 'no']).optional().transform(v => (v === undefined ? undefined : ['true', '1', 'yes'].includes(v))),
   COOKIE_SAMESITE: z.enum(['Lax', 'Strict', 'None']).default('Lax'),
   COOKIE_DOMAIN: z.string().optional(),
   /** Where `/launch` sends the participant after signing in, relative to PUBLIC_URL or absolute. */
@@ -93,10 +94,11 @@ export const ConfigSchema = z.object({
   ADMIN_TOKEN: z.string().min(32, 'ADMIN_TOKEN must be at least 32 characters').optional()
 });
 
-export type Config = z.output<typeof ConfigSchema> & { appUrl: string; dev: boolean };
+export type Config = Omit<z.output<typeof ConfigSchema>, 'COOKIE_SECURE'> & { COOKIE_SECURE: boolean; appUrl: string; dev: boolean };
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
-  const r = ConfigSchema.safeParse(env);
+  // An empty variable (`SMTP_URL=` in an env file) means unset.
+  const r = ConfigSchema.safeParse(Object.fromEntries(Object.entries(env).filter(([, v]) => v !== '')));
   if (!r.success) {
     const lines = r.error.issues.map(i => `  ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid server configuration:\n${lines}`);
@@ -104,7 +106,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const c = r.data;
   const dev = c.NODE_ENV !== 'production';
   if (!c.LAUNCH_SECRET && !dev) throw new Error('Invalid server configuration:\n  LAUNCH_SECRET: required in production (32 characters or more)');
-  return { ...c, appUrl: (c.APP_URL ?? c.PUBLIC_URL).replace(/\/$/, ''), dev };
+  return { ...c, COOKIE_SECURE: c.COOKIE_SECURE ?? !dev, appUrl: (c.APP_URL ?? c.PUBLIC_URL).replace(/\/$/, ''), dev };
 }
 
 /** A development only secret, so `npm run server:dev` works with no setup. Never used in production. */

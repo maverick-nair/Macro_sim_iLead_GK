@@ -40,7 +40,7 @@ export async function openSqlite(file: string): Promise<Db> {
     async exec(sql) { raw.exec(sql); },
     tx: fn => fn(direct),
     async ping() { raw.prepare('SELECT 1').get(); },
-    async close() { raw.close(); }
+    async close() { if (raw.isOpen) raw.close(); }
   };
   // Outside a transaction every call waits for any open transaction to finish.
   return {

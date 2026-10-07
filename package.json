@@ -22,7 +22,15 @@
     "schemas": "tsx scripts/schemas.ts",
     "vitals": "tsx scripts/vitals.ts",
     "e2e": "playwright test",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "dev:full": "tsx server/scripts/dev-full.ts",
+    "build:server-app": "vite build --mode server --outDir dist-server",
+    "server": "node --import tsx server/src/index.ts",
+    "server:dev": "tsx watch --clear-screen=false server/src/index.ts",
+    "server:migrate": "node --import tsx server/src/index.ts --migrate-only",
+    "server:mint": "tsx server/scripts/mint.ts",
+    "test:server": "vitest run --config server/vitest.config.ts",
+    "e2e:server": "playwright test --config server/playwright.config.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.17",
@@ -41,6 +49,7 @@
     "playwright-core": "1.56.1",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "tsx": "^4.23.15",
     "zod": "^4.6.5",
     "zustand": "^5.0.15"
   },
@@ -69,7 +78,6 @@
     "smtp-server": "^3.19.17",
     "storybook": "^10.6.1",
     "tailwindcss": "^4.3.3",
-    "tsx": "^4.23.15",
     "typescript": "~5.9",
     "typescript-eslint": "^8.71.0",
     "vite": "^8.3.2",
