@@ -131,8 +131,14 @@ export const MIGRATIONS: Migration[] = [
 ];
 
 export async function migrate(db: Db, migrations = MIGRATIONS): Promise<number[]> {
-  await db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (id INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at TEXT NOT NULL)');
-  const done = new Set((await db.all<{ id: number }>('SELECT id FROM schema_migrations')).map(r => Number(r.id)));
+  let rows: Array<{ id: number }>;
+  try {
+    rows = await db.all<{ id: number }>('SELECT id FROM schema_migrations');
+  } catch {
+    await db.exec('CREATE TABLE schema_migrations (id INTEGER PRIMARY KEY, name TEXT NOT NULL, applied_at TEXT NOT NULL)');
+    rows = [];
+  }
+  const done = new Set(rows.map(r => Number(r.id)));
   const applied: number[] = [];
   for (const m of [...migrations].sort((a, b) => a.id - b.id)) {
     if (done.has(m.id)) continue;

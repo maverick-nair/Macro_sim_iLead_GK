@@ -42,7 +42,9 @@ export function registerAdmin(ctx: ServerContext) {
   }, async (c, { body, principal }) => {
     const r = parseStoryline(body.config);
     if (!r.ok) throw badRequest('The storyline does not parse', { issues: r.issues.slice(0, 20) });
-    const copy = guardDraft(body.config);
+    // Author copy rules (D70): no em dashes or dashes as punctuation, no emojis, "skills" never "competency", no
+    // certification claims, KNOLSKAPE lens titles only. Hyphenated words are fine: the app's copy rules word them for participants.
+    const copy = guardDraft(body.config).filter(i => i.rule !== 'dash');
     if (copy.length) throw badRequest('The storyline breaks the copy rules', { issues: copy.slice(0, 20) });
     if (!ExternalId.safeParse(r.config.id).success) throw badRequest('The storyline id must be letters, digits and . _ : @ | -');
     const saved = await repo.saveStoryline({ id: r.config.id, status: body.status, name: r.config.name, config: body.config, createdBy: principal!.id });
@@ -50,7 +52,9 @@ export function registerAdmin(ctx: ServerContext) {
   });
 
   // ---- Themes ----
-  routes.add({ method: 'put', path: '/api/admin/themes/{id}', tag: 'admin', auth: ['author', 'cohort_admin'], params: { id: ExternalId }, body: named(ThemeConfigSchema, 'ThemeConfig'),
+  // Comments (`$description`, `$comment`) are allowed in theme files, as the theme loader allows them; they are not stored.
+  const ThemeBody = z.preprocess(v => (v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).filter(([k]) => !k.startsWith('$'))) : v), named(ThemeConfigSchema, 'ThemeConfig'));
+  routes.add({ method: 'put', path: '/api/admin/themes/{id}', tag: 'admin', auth: ['author', 'cohort_admin'], params: { id: ExternalId }, body: ThemeBody,
     summary: 'Save a client theme (theme-config.json)', responses: { 204: { description: 'Saved' }, 400: Err }
   }, async (c, { params, body }) => {
     await repo.putTheme(params.id, body);
