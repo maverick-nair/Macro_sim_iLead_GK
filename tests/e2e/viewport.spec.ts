@@ -421,53 +421,77 @@ test.describe('documents', () => {
   }, page => [page.getByRole('button', { name: 'Download PDF' })]);
 });
 
+/**
+ * /author (D105): laptops and tablets down to 1024 by 768 and 834 wide (no phones). The chat, the
+ * recording, the lens step, First draft ready, every workspace tab, the character editor, Add an
+ * action, the framework sheet and the library admin page. Panes scroll on their own; the page never does.
+ */
 test.describe('/author', () => {
-  const composer = (page: Page) => [page.getByRole('textbox', { name: /^Your (new )?answer$/ }), page.getByRole('button', { name: 'Send', exact: true })];
+  const LAND = [...LAPTOPS, [1024, 768], [1180, 820]] as const;
+  const UPRIGHT = [[834, 1194], [834, 1112]] as const;
+  function author(name: string, reach: (page: Page) => Promise<void>, primary: Primary) {
+    test(`${name}, landscape`, async ({ page }) => {
+      test.setTimeout(180_000);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await reach(page);
+      await across(page, LAND, 'panes', primary, name);
+    });
+    test(`${name}, portrait`, async ({ page }) => {
+      test.setTimeout(180_000);
+      await page.setViewportSize({ width: 834, height: 1194 });
+      await reach(page);
+      await across(page, UPRIGHT, 'panes', primary, name);
+    });
+  }
   const chip = (page: Page, name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
-  async function answer(page: Page) {
-    for (const c of ['Senior leaders', 'Retail and consumer goods', 'Leading through change or transformation', 'Fictional company', '10 (default)', /^Service delivery/, /^Standard/, 'English, United Kingdom']) await chip(page, c).click();
+  const composer = (page: Page) => [page.getByRole('textbox', { name: 'Your answer' }), page.getByRole('button', { name: 'Send', exact: true })];
+  const top = (page: Page) => [page.getByRole('button', { name: 'Review and publish' }), page.getByRole('button', { name: 'Play a week' })];
+  async function toLens(page: Page) {
+    await page.goto('/author');
+    await chip(page, 'First time managers').click();
+    await chip(page, 'Manufacturing').click();
+    for (const c of ['Hitting targets without burning out the team', 'Fictional company', /^10/, /^Sales Elevator funnel/, 'Standard', 'English, India', 'No framework', 'Professional']) await chip(page, c).click();
+    await expect(page.getByRole('button', { name: 'Use this lens' }).first()).toBeVisible();
+  }
+  async function workspace(page: Page, tab: string) {
+    await page.goto('/author');
+    await page.getByRole('button', { name: 'Skip to the workspace' }).click();
+    await page.goto(`/author/workspace/${tab}`);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   }
 
-  both('author chat', 'play', async page => {
+  author('author chat', async page => {
     await page.goto('/author');
     await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
   }, composer);
-
-  both('author client framework', 'panes', async page => {
+  author('author recording', async page => {
     await page.goto('/author');
-    await answer(page);
-    await page.getByRole('textbox', { name: 'Your answer' }).fill('## Coaching\n- Asks open questions\n- Listens before advising\n## Ownership\n- Keeps promises\n- Names the next step\n## Courage\n- Raises hard topics early\n- Says no when it matters');
-    await page.getByRole('button', { name: 'Send', exact: true }).click();
-    await chip(page, 'Direct and brisk').click();
-    await page.getByRole('radio', { name: /^Client Leadership Model/ }).check();
-    await expect(page.getByRole('heading', { name: 'Client Leadership Model' })).toBeVisible();
-    await expect(page.getByRole('table')).toBeAttached();
-  }, page => [page.getByRole('heading', { name: 'Client Leadership Model' })]);
-
-  both('author lens picker', 'panes', async page => {
-    await page.goto('/author');
-    await answer(page);
-    await chip(page, 'No framework').click();
-    await chip(page, 'Direct and brisk').click();
-    await expect(page.getByRole('radio', { name: 'Adaptive Leadership' })).toBeChecked();
-  }, page => [page.getByRole('button', { name: 'Confirm lens and preview the build' })]);
-
-  both('author preview', 'panes', async page => {
-    await page.goto('/author');
-    await answer(page);
-    await chip(page, 'No framework').click();
-    await chip(page, 'Direct and brisk').click();
-    await page.getByRole('button', { name: 'Confirm lens and preview the build' }).click();
-  }, page => [page.getByRole('button', { name: 'Confirm and lock' })]);
-
-  both('author confirmed', 'panes', async page => {
-    await page.goto('/author');
-    await answer(page);
-    await chip(page, 'No framework').click();
-    await chip(page, 'Direct and brisk').click();
-    await page.getByRole('button', { name: 'Confirm lens and preview the build' }).click();
-    await page.getByRole('button', { name: 'Confirm and lock' }).click();
-  }, page => [page.getByRole('button', { name: 'Play this draft' })]);
+    await page.getByRole('button', { name: 'Record your answer' }).click();
+  }, page => [page.getByRole('button', { name: 'Stop and review' })]);
+  author('author lens', toLens, page => [page.getByRole('button', { name: 'Use this lens' }).first(), page.getByRole('button', { name: 'Send', exact: true })]);
+  author('author first draft ready', async page => {
+    await toLens(page);
+    await page.getByRole('button', { name: 'Use this lens' }).first().click();
+  }, page => [page.getByRole('button', { name: 'Open the workspace' })]);
+  for (const tab of ['overview', 'brief', 'story', 'process', 'team', 'lens', 'actions', 'events', 'scoring', 'brand', 'calibrate', 'publish']) {
+    author(`author workspace ${tab}`, page => workspace(page, tab), tab === 'publish' ? page => [...top(page), page.getByRole('button', { name: 'Publish', exact: true })] : top);
+  }
+  author('author character editor', async page => {
+    await workspace(page, 'team');
+    await page.getByRole('button', { name: 'Edit profile' }).click();
+  }, page => [page.getByRole('button', { name: 'Save changes' }), page.getByRole('button', { name: 'Cancel' })]);
+  author('author add an action', async page => {
+    await workspace(page, 'actions');
+    await page.getByRole('button', { name: 'Add an action' }).click();
+  }, page => [page.getByRole('button', { name: 'Add to this simulation' })]);
+  author('author skills framework', async page => {
+    await workspace(page, 'scoring');
+    await page.getByRole('button', { name: 'Use your own skills framework instead' }).click();
+  }, page => [page.getByRole('button', { name: /^Confirm \d+ skills$/ })]);
+  author('author library admin', async page => {
+    await page.goto('/author/library');
+    await expect(page.getByRole('heading', { level: 1, name: 'Action library' })).toBeVisible();
+  }, page => [page.getByRole('button', { name: 'Save as beta' })]);
 });
 
 /**
@@ -527,7 +551,15 @@ test.describe('baselines', () => {
       test(`author at ${at}`, async ({ page }) => {
         await page.goto('/author');
         await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+        await expect(page.getByText('Saved just now')).toBeVisible();
         await still(page, `fit-${at}-author`);
+      });
+      test(`author workspace at ${at}`, async ({ page }) => {
+        await page.goto('/author');
+        await page.getByRole('button', { name: 'Skip to the workspace' }).click();
+        await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
+        await expect(page.getByText('Saved just now')).toBeVisible();
+        await still(page, `fit-${at}-author-workspace`);
       });
     });
   }

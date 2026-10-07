@@ -162,7 +162,7 @@ export function Chip({ pressed, onClick, children, tone = 'primary' }: { pressed
 
 /** A region that scrolls on its own, focusable so the keyboard can scroll it. */
 export function Scroll({ label, className = '', children }: { label: string; className?: string; children: ReactNode }) {
-  return <div role="region" aria-label={label} tabIndex={0} className={`min-h-0 overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-author-primary ${className}`}>{children}</div>;
+  return <div role="region" aria-label={label} tabIndex={0} className={`relative min-h-0 overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-author-primary ${className}`}>{children}</div>;
 }
 
 export function CardHead({ title, children, level = 2, id }: { title: ReactNode; children?: ReactNode; level?: 2 | 3; id?: string }) {

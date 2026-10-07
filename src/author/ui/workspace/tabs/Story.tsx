@@ -103,9 +103,9 @@ export default function Story() {
                       className={`min-h-10.5 flex-1 cursor-pointer rounded-10 border border-solid px-3 text-start text-13 font-700 ${s.key === screen ? 'border-author-primary bg-author-primary-faint' : 'border-author-line-control bg-author-surface'} focus-visible:outline-2 focus-visible:outline-author-primary`}>
                       {i + 1} &middot; {s.title}
                     </button>
-                    <span className="flex flex-col">
-                      <button type="button" className="cursor-pointer border-0 bg-transparent px-1 text-12 text-author-label disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-author-primary" disabled={i === 0} aria-label={`Move ${s.title} up`} onClick={() => edit(x => { const a = x.story.screens; [a[i - 1], a[i]] = [a[i], a[i - 1]]; }, 'story.screens')}>&#9650;</button>
-                      <button type="button" className="cursor-pointer border-0 bg-transparent px-1 text-12 text-author-label disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-author-primary" disabled={i === d.story.screens.length - 1} aria-label={`Move ${s.title} down`} onClick={() => edit(x => { const a = x.story.screens; [a[i + 1], a[i]] = [a[i], a[i + 1]]; }, 'story.screens')}>&#9660;</button>
+                    <span className="flex gap-0.5">
+                      <button type="button" className="flex size-7 cursor-pointer items-center justify-center rounded-6 border-0 bg-transparent text-12 text-author-label hover:bg-author-track disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-author-primary" disabled={i === 0} aria-label={`Move ${s.title} up`} onClick={() => edit(x => { const a = x.story.screens; [a[i - 1], a[i]] = [a[i], a[i - 1]]; }, 'story.screens')}>&#9650;</button>
+                      <button type="button" className="flex size-7 cursor-pointer items-center justify-center rounded-6 border-0 bg-transparent text-12 text-author-label hover:bg-author-track disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-author-primary" disabled={i === d.story.screens.length - 1} aria-label={`Move ${s.title} down`} onClick={() => edit(x => { const a = x.story.screens; [a[i + 1], a[i]] = [a[i], a[i + 1]]; }, 'story.screens')}>&#9660;</button>
                     </span>
                   </li>
                 ))}

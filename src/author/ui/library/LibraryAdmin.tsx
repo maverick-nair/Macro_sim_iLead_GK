@@ -36,7 +36,7 @@ export function LibraryAdmin() {
         <span className="text-13 text-author-muted">Changes reach authors in new drafts; published simulations keep their version</span>
         <button type="button" className={BUTTON.link} onClick={() => navigate({ page: 'workspace', tab: 'actions' })}>Back to the workspace</button>
       </header>
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_27rem] gap-5 p-6 max-[1100px]:grid-cols-1 max-[1100px]:overflow-y-auto">
+      <div role="region" aria-label="Library" tabIndex={0} className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_27rem] grid-rows-[minmax(0,1fr)] gap-5 p-6 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-author-primary max-[1100px]:grid-cols-1 max-[1100px]:grid-rows-none max-[1100px]:overflow-y-auto">
         <Scroll label="Interaction types and action templates" className="flex flex-col">
           <div className="flex flex-col gap-4">
             <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="types">

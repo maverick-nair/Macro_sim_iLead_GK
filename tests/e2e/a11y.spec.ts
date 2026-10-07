@@ -5,7 +5,7 @@ import path from 'node:path';
 
 /**
  * Accessibility, consolidated (M8, D78): axe (WCAG 2.2 AA) on every route and major state of the
- * participant app, the reports, the group report and the author chat, in the dark, light and client
+ * participant app, the reports, the group report and /author (light only, walked once per width), in the dark, light and client
  * (Halden) themes, at 1440, 1024 and 834 (a portrait tablet, D73), plus the small screen notice at 390
  * and a custom theme through the theme loader (Brightwater, corrected). Then a keyboard only path
  * through a full week and a live conversation.
@@ -442,41 +442,78 @@ for (const [theme, q] of Object.entries(THEMES)) {
           }
         });
 
-        test('author chat, each step', async ({ page }) => {
-          test.setTimeout(120_000);
-          await page.goto(url('/author', q));
-          const progress = page.getByText(/^Question \d+ of about \d+$/);
-          await expect(progress).toBeVisible();
+        // /author is light only (D105), whatever the participant theme: walked once, at each width.
+        if (theme === 'dark') test('author: the chat, the lens, first draft, every workspace tab and dialog, the library', async ({ page }) => {
+          test.setTimeout(240_000);
+          await page.goto('/author');
+          await expect(page.getByText(/^Question \d+ of about \d+$/)).toBeVisible();
           await scan(page, 'author: first question');
           const chip = (name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
-          await chip('Senior leaders').click();
+          await chip('First time managers').click();
+          await chip('Manufacturing').click();
+          await chip('Hitting targets without burning out the team').click();
+          await chip('Fictional company').click();
           await page.getByRole('textbox', { name: 'Your answer' }).fill('30');
           await page.getByRole('button', { name: 'Send', exact: true }).click();
+          await expect(page.getByRole('alert')).toBeVisible();
           await scan(page, 'author: an answer refused');
-          for (const c of ['Leading through change or transformation', 'Fictional company', '10 (default)', /^Service delivery/, /^Standard/, 'English, United Kingdom', 'No framework', 'Direct and brisk']) {
-            const ch = chip(c);
-            if (await ch.count()) await ch.click();
-            else break;
-          }
-          // Whatever is still asked, the first suggestion answers it.
-          for (let i = 0; i < 6 && !(await page.getByRole('heading', { name: 'Choose your leadership lens' }).count()); i++) await page.getByRole('group', { name: 'Suggested answers' }).getByRole('button').first().click();
-          await expect(page.getByRole('heading', { name: 'Choose your leadership lens' })).toBeVisible();
+          await page.getByRole('textbox', { name: 'Your answer' }).fill('');
+          await page.getByRole('button', { name: 'Record your answer' }).click();
+          await expect(page.getByText(/^Recording/)).toBeVisible();
+          await scan(page, 'author: recording');
+          await page.getByRole('button', { name: 'Stop and review' }).click();
+          await expect(page.getByText(/Transcribed from your recording/)).toBeVisible();
+          await scan(page, 'author: transcript to review');
+          await page.getByRole('button', { name: 'Send', exact: true }).click();
+          for (const c of [/^Sales Elevator funnel/, 'Standard', 'English, India', 'No framework', 'Professional']) await chip(c).click();
+          await expect(page.getByRole('button', { name: 'Use this lens' }).first()).toBeVisible();
+          if (w < 1180) await page.getByText('Your simulation so far').click();
           await scan(page, 'author: lens');
-          if (w < 1280) {
-            await page.getByText('Your simulation so far').click();
-            await scan(page, 'author: summary open');
-            await page.getByText('Your simulation so far').click();
+          await page.getByRole('button', { name: 'See all 8 lenses, or upload your own framework' }).click();
+          await page.getByRole('button', { name: 'More detail' }).first().click();
+          await scan(page, 'author: all lenses');
+          await page.getByRole('button', { name: 'Use this lens' }).first().click();
+          await expect(page.getByRole('heading', { level: 1, name: /Your simulation is playable/ })).toBeVisible();
+          await scan(page, 'author: first draft ready');
+          await page.getByRole('button', { name: 'Open the workspace' }).click();
+          for (const tab of ['Overview', 'Brief', 'Story and world', 'Work process', 'Team', 'Leadership lens', 'Actions and conversations', 'Events', 'Scoring and report', 'Brand and theme', 'Test with synthetic players', 'Review and publish']) {
+            await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: new RegExp(tab) }).click();
+            await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+            await page.waitForTimeout(100);
+            await scan(page, `author: ${tab}`);
           }
-          await page.getByRole('button', { name: 'Confirm lens and preview the build' }).click();
-          await expect(page.getByRole('heading', { name: 'Build preview' })).toBeVisible();
-          await scan(page, 'author: build preview');
-          await page.getByRole('button', { name: 'Confirm and lock' }).click();
-          await expect(page.getByRole('heading', { name: 'Your draft is ready' })).toBeVisible();
-          await page.getByText('Lens module output').click();
-          await scan(page, 'author: locked');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Story and world/ }).click();
+          for (const sub of ['Market and competitors', 'Sponsor and intro screens']) { await page.getByRole('tab', { name: sub }).click(); await scan(page, `author: story, ${sub}`); }
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Team/ }).click();
+          if (w < 1280) await page.getByRole('button', { name: 'Ask Kora' }).click();
+          await page.getByRole('complementary', { name: 'Ask Kora' }).getByRole('button', { name: /more defensive/ }).click();
+          await expect(page.getByRole('region', { name: 'Proposed change' })).toBeVisible();
+          await scan(page, 'author: Kora proposes a change');
+          if (w < 1280) await page.getByRole('button', { name: 'Close Ask Kora' }).click();
+          await page.getByRole('button', { name: 'Edit profile' }).click();
+          for (const t of ['Identity', 'Voice', 'Personality', 'Starting stats']) { await page.getByRole('dialog').getByRole('tab', { name: t }).click(); await scan(page, `author: character editor, ${t}`); }
+          await page.keyboard.press('Escape');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Actions and conversations/ }).click();
+          await page.getByRole('button', { name: /Send for training/ }).click();
+          await scan(page, 'author: a static decision');
+          await page.getByRole('button', { name: 'Add an action' }).click();
+          await page.getByRole('textbox', { name: 'What should the participant be able to do?' }).fill('Approve or refuse a discount, then explain it.');
+          await page.getByRole('button', { name: 'Set it up with Kora' }).click();
+          await scan(page, 'author: add an action');
+          await page.keyboard.press('Escape');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Leadership lens/ }).click();
           await page.getByRole('button', { name: 'Change lens' }).click();
-          await expect(page.getByRole('alertdialog')).toBeVisible();
-          await scan(page, 'author: change lens warning');
+          await scan(page, 'author: change lens');
+          await page.keyboard.press('Escape');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Scoring and report/ }).click();
+          await page.getByRole('button', { name: 'Use your own skills framework instead' }).click();
+          await page.getByRole('dialog').locator('input[type=file]').setInputFiles({ name: 'framework.md', mimeType: 'text/markdown', buffer: Buffer.from('## Builds trust\n- Keeps promises\n- Admits mistakes\n## Coaches for growth\n- Asks before telling\n- Agrees next steps\n## Leads change\n') });
+          await expect(page.getByRole('table', { name: 'Skills from your framework' })).toBeVisible();
+          await scan(page, 'author: skills framework');
+          await page.keyboard.press('Escape');
+          await page.goto('/author/library');
+          await expect(page.getByRole('heading', { level: 1, name: 'Action library' })).toBeVisible();
+          await scan(page, 'author: library admin');
         });
 
         if (theme !== 'client') {
