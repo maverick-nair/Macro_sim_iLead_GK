@@ -126,8 +126,24 @@ CREATE TABLE pdf_cache (
 );
 `;
 
+/**
+ * The client's `Idempotency-Key` per run (D86, D100): a repeated key is answered with the stored result
+ * instead of applying the intent again. Written in the same transaction as the event it answers.
+ */
+const intentKeys = `
+CREATE TABLE intent_keys (
+  run_id TEXT NOT NULL REFERENCES runs(id) ON DELETE CASCADE,
+  key TEXT NOT NULL,
+  seq INTEGER NOT NULL,
+  result TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  PRIMARY KEY (run_id, key)
+);
+`;
+
 export const MIGRATIONS: Migration[] = [
-  { id: 1, name: 'initial', sql: { sqlite: initial('sqlite'), postgres: initial('postgres') } }
+  { id: 1, name: 'initial', sql: { sqlite: initial('sqlite'), postgres: initial('postgres') } },
+  { id: 2, name: 'intent_keys', sql: intentKeys }
 ];
 
 export async function migrate(db: Db, migrations = MIGRATIONS): Promise<number[]> {

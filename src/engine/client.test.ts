@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createHttpClient, EngineError, lazyClient } from './client';
-import { createMockClient } from './mock';
+import { createMockClient, createMockDemoClient } from './mock';
 
 describe('engine client', () => {
   it('mock: runs the engine and returns parsed views', async () => {
@@ -29,6 +29,32 @@ describe('engine client', () => {
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify({ message: 'No days left', code: 'noCapacity' }), { status: 409 }));
     const c = createHttpClient('https://engine.test', 'abc', fetchImpl as unknown as typeof fetch);
     await expect(c.send({ type: 'endPeriod' })).rejects.toMatchObject({ code: 'noCapacity', retryable: false });
+  });
+
+  it('demo: its own engine, instant decisions only, the real run untouched (D92)', async () => {
+    const real = createMockClient({ seed: 1 });
+    const before = await real.view();
+    const demo = createMockDemoClient();
+    const v = await demo.view();
+    await demo.send({ type: 'confirmStyles', styles: Object.fromEntries(v.members.map(m => [m.id, 'G'])) });
+    const key = v.guide.demo.action!;
+    const r = await demo.send({ type: 'planAction', action: key, option: v.actions.find(a => a.key === key)!.options[0].key, memberIds: [v.guide.demo.with!] });
+    expect(r.view.outcome).not.toBeNull();
+    await expect(demo.send({ type: 'planAction', action: 'f2f', memberIds: ['kent'] })).rejects.toMatchObject({ code: 'notInDemo' });
+    await expect(demo.send({ type: 'endPeriod' })).rejects.toMatchObject({ code: 'notInDemo' });
+    expect(await real.view()).toEqual(before);
+  });
+
+  it('http: the demo resource lives under the session and never takes the early first view', async () => {
+    const view = await createMockClient({ seed: 2 }).view();
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(view), { status: 200 }));
+    const early = Promise.reject(new Error('not this one'));
+    early.catch(() => undefined);
+    (globalThis as { __ileadEarlyView?: unknown }).__ileadEarlyView = { session: 'abc', view: early };
+    const c = createHttpClient('https://engine.test', 'abc', fetchImpl as unknown as typeof fetch, '/demo');
+    await c.view();
+    expect(fetchImpl).toHaveBeenCalledWith('https://engine.test/sessions/abc/demo/view', expect.anything());
+    (globalThis as { __ileadEarlyView?: unknown }).__ileadEarlyView = null;
   });
 
   it('lazy: loads the client once, on first use', async () => {

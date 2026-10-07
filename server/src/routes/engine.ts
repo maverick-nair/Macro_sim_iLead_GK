@@ -53,7 +53,8 @@ export function registerEngine(ctx: ServerContext) {
 
   routes.add({
     method: 'post', path: '/engine/sessions/{session}/intents', tag: 'engine', auth: ['participant'], params: session, body: IntentBody,
-    summary: 'Apply an intent', description: 'Intents on one run apply one at a time. A refused intent answers 409 with the engine\'s code and changes nothing.',
+    summary: 'Apply an intent',
+    description: 'Intents on one run apply one at a time. A refused intent answers 409 with the engine\'s code and changes nothing. With an `Idempotency-Key` header (1 to 200 characters), a key this run has already applied is answered with the stored result and nothing is applied again (D86, D100).',
     responses: { 200: { description: 'IntentResult', schema: Result }, 400: Err, 409: Err, 429: Err }
   }, async (c, { params, principal, body }) => {
     const run = await current(principal, params.session);
@@ -64,7 +65,37 @@ export function registerEngine(ctx: ServerContext) {
         return c.json({ message: 'Too many requests. Wait a moment and try again.', code: 'rateLimited' }, 429);
       }
     }
-    return c.json(await runs.dispatch(run.id, body));
+    const key = c.req.header('idempotency-key')?.trim();
+    if (key !== undefined && (key.length < 1 || key.length > 200)) return c.json({ message: 'Idempotency-Key must be 1 to 200 characters.', code: 'badIdempotencyKey' }, 400);
+    return c.json(await runs.dispatch(run.id, body, key));
+  });
+
+  // ---- The demo round (D92): its own engine, in memory, never logged or scored ----
+
+  /** The caller's own session, as for the run. */
+  function owner(principal: Principal | null, sessionId: string) {
+    if (!principal || principal.id !== sessionId) throw forbidden('This session belongs to someone else.');
+    return ownerOf(principal);
+  }
+
+  routes.add({
+    method: 'get', path: '/engine/sessions/{session}/demo/view', tag: 'engine', auth: ['participant'], params: session,
+    summary: 'The demo round\'s view', description: 'An unscored demo on the run\'s storyline with a fixed seed, kept in memory only (D92). The real run is never touched.',
+    responses: { 200: { description: 'EngineView', schema: View }, 403: Err }
+  }, async (c, { params, principal }) => c.json(await runs.demoView(owner(principal, params.session))));
+
+  routes.add({
+    method: 'post', path: '/engine/sessions/{session}/demo/intents', tag: 'engine', auth: ['participant'], params: session, body: IntentBody,
+    summary: 'Apply an intent in the demo', description: 'Instant decisions only: styles, profiles, instant actions, outcomes and cards. Anything else answers 409 `notInDemo`.',
+    responses: { 200: { description: 'IntentResult', schema: Result }, 409: Err }
+  }, async (c, { params, principal, body }) => c.json(await runs.demoDispatch(owner(principal, params.session), body)));
+
+  routes.add({
+    method: 'delete', path: '/engine/sessions/{session}/demo', tag: 'engine', auth: ['participant'], params: session,
+    summary: 'End the demo round', responses: { 204: { description: 'Gone' } }
+  }, async (c, { params, principal }) => {
+    runs.endDemo(owner(principal, params.session));
+    return c.body(null, 204);
   });
 
   routes.add({

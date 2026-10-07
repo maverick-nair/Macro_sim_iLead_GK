@@ -12,6 +12,7 @@ import type { Repository } from '../store';
 import type { RunRow } from '../store/repo';
 import { Recorder, ReplayError, type AiCall } from './recorder';
 import { configOf, type Storylines } from './storylines';
+import { DEMO_SEED, demoRefusal } from '../../../src/engine/demo';
 
 /** The engine build that wrote a run's log: replays are exact on the same engine (docs/SERVER.md "Replay"). */
 export const ENGINE_VERSION = (() => {
@@ -51,6 +52,8 @@ export class RunError extends Error {
  */
 export class RunService {
   private readonly cache = new Map<string, Live>();
+  /** Demo rounds (D92), per participant: in memory only, never logged, scored or summarized. */
+  private readonly demos = new Map<string, { engine: Engine; config: StorylineConfig }>();
   private readonly locks = new Map<string, Promise<unknown>>();
 
   constructor(
@@ -166,9 +169,20 @@ export class RunService {
     return this.withLock(runId, async () => (await this.load(runId)).engine.view());
   }
 
-  /** Applies one intent: on success it is in the log, on any failure nothing changed (the engine is rebuilt from the log). */
-  async dispatch(runId: string, intent: Intent): Promise<Result> {
+  /**
+   * Applies one intent: on success it is in the log, on any failure nothing changed (the engine is rebuilt from the log).
+   * With the client's `Idempotency-Key` (D86, D100), a key already applied on this run is answered with the
+   * result stored for it, and the intent is not applied again: a retry after a lost answer is safe.
+   */
+  async dispatch(runId: string, intent: Intent, key?: string): Promise<Result> {
     return this.withLock(runId, async () => {
+      if (key) {
+        const stored = await this.repo.getIntentResult(runId, key);
+        if (stored) {
+          this.log.info('intent repeated, stored result returned', { runId, seq: stored.seq });
+          return stored.result as Result;
+        }
+      }
       const live = await this.load(runId);
       live.recorder.begin();
       let result: Result;
@@ -189,7 +203,7 @@ export class RunService {
       };
       const seq = live.run.eventCount + 1;
       try {
-        await this.repo.appendEvent(runId, { seq, kind: 'intent', payload: intent, ai }, patch, summary ? { lensId: live.run.lensId, summary } : undefined);
+        await this.repo.appendEvent(runId, { seq, kind: 'intent', payload: intent, ai }, patch, summary ? { lensId: live.run.lensId, summary } : undefined, key ? { key, result } : undefined);
       } catch (e) {
         this.forget(runId);
         if (e instanceof ConflictError) throw new RunError('The run moved on in another window. Try again.', 'conflict', 409);
@@ -223,6 +237,39 @@ export class RunService {
       live.run = { ...live.run, eventCount: seq };
       return view;
     });
+  }
+
+  /**
+   * The participant's demo round (D92): its own engine on the run's storyline and a fixed seed, kept in
+   * memory only. Nothing is logged, summarized or scored, and the real run is never touched. `fresh` starts it over.
+   */
+  private async demoOf(owner: RunOwner, fresh = false) {
+    const key = `${owner.participantId}:${owner.storylineId ?? ''}`;
+    let d = fresh ? undefined : this.demos.get(key);
+    if (!d) {
+      const s = await this.storylines.resolve(owner.storylineId, owner.purpose);
+      d = { engine: createEngine(s.config, { seed: DEMO_SEED }), config: s.config };
+      this.demos.delete(key);
+      this.demos.set(key, d);
+      while (this.demos.size > this.cacheSize) this.demos.delete(this.demos.keys().next().value!);
+    }
+    return d;
+  }
+
+  async demoView(owner: RunOwner, fresh = false) {
+    return (await this.demoOf(owner, fresh)).engine.view();
+  }
+
+  /** An intent in the demo: instant decisions only (conversations are the Week 0 practice's, D84). */
+  async demoDispatch(owner: RunOwner, intent: Intent): Promise<Result> {
+    const d = await this.demoOf(owner);
+    const refusal = demoRefusal(intent, k => d.config.actions.find(a => a.key === k)?.kind);
+    if (refusal) throw new RunError('The demo takes instant decisions only.', refusal);
+    return d.engine.dispatch(intent);
+  }
+
+  endDemo(owner: RunOwner) {
+    this.demos.delete(`${owner.participantId}:${owner.storylineId ?? ''}`);
   }
 
   async records(runId: string) {

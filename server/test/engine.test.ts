@@ -172,4 +172,63 @@ describe('the engine on the server', () => {
     const bad = await s.launch({ sub: 'p-2', storyline: 'no_such_storyline' });
     expect((await s.req('/engine/sessions/p-2/view', { cookie: bad })).status).toBe(404);
   });
+
+  it('honors the client\'s Idempotency-Key: a repeated key returns the stored result and applies nothing twice (D86, D100)', async () => {
+    s = await testServer();
+    const cookie = await s.launch({ sub: 'p-1' });
+    const v = await view(cookie);
+    await send(cookie, { type: 'confirmStyles', styles: Object.fromEntries(v.members.map(m => [m.id, 'G'])) });
+    const intent = { type: 'planAction', action: 'energize', option: 'team_lunch', memberIds: [] };
+    const post = (key: string) => s.req(`${base}/intents`, { method: 'POST', cookie, json: intent, headers: { 'idempotency-key': key } });
+    const first = await post('key-1');
+    expect(first.status).toBe(200);
+    const a = await first.json() as IntentResult;
+    const runId = (await s.ctx.repo.listRuns('p-1'))[0].id;
+    expect(await s.ctx.repo.listEvents(runId)).toHaveLength(2);
+    // The answer was lost on the way; the client sends the same intent with the same key.
+    const again = await post('key-1');
+    expect(again.status).toBe(200);
+    expect(await again.json()).toEqual(a);
+    expect(await s.ctx.repo.listEvents(runId)).toHaveLength(2);
+    expect((await view(cookie)).clock.capacityLeft).toBe(a.view.clock.capacityLeft);
+    // After a restart the stored result is still there (it is in the database, not in memory).
+    s.ctx.runs.forget(runId);
+    expect(await (await post('key-1')).json()).toEqual(a);
+    // A new key applies a new intent; a bad key is refused before anything is applied.
+    const other = await s.req(`${base}/intents`, { method: 'POST', cookie, json: { type: 'clearOutcome' }, headers: { 'idempotency-key': 'key-2' } });
+    expect(other.status).toBe(200);
+    expect(await s.ctx.repo.listEvents(runId)).toHaveLength(3);
+    const bad = await s.req(`${base}/intents`, { method: 'POST', cookie, json: { type: 'clearOutcome' }, headers: { 'idempotency-key': 'x'.repeat(201) } });
+    expect(bad.status).toBe(400);
+    expect(await s.ctx.repo.listEvents(runId)).toHaveLength(3);
+  });
+
+  it('plays a demo round on its own engine: instant decisions only, never logged, the run untouched (D92)', async () => {
+    s = await testServer();
+    const cookie = await s.launch({ sub: 'p-1' });
+    const before = await view(cookie);
+    const demo = await s.json<EngineView>(`${base}/demo/view`, { cookie });
+    expect(EngineView.safeParse(demo).success).toBe(true);
+    expect(demo.phase).toBe('style');
+    const dsend = (intent: unknown) => s.req(`${base}/demo/intents`, { method: 'POST', cookie, json: intent });
+    const styled = await dsend({ type: 'confirmStyles', styles: Object.fromEntries(demo.members.map(m => [m.id, 'G'])) });
+    expect(styled.status).toBe(200);
+    const action = demo.guide.demo.action!;
+    const acted = await dsend({ type: 'planAction', action, option: demo.actions.find(a => a.key === action)!.options[0].key, memberIds: [demo.guide.demo.with] });
+    expect(acted.status).toBe(200);
+    expect(((await acted.json()) as IntentResult).view.outcome).not.toBeNull();
+    // Conversations and the period end belong to the real run.
+    const live = await dsend({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });
+    expect(live.status).toBe(409);
+    expect(await live.json()).toMatchObject({ code: 'notInDemo' });
+    expect((await dsend({ type: 'endPeriod' })).status).toBe(409);
+    // The real run did not move, and nothing was logged for it.
+    expect(await view(cookie)).toEqual(before);
+    expect(await s.ctx.repo.listEvents((await s.ctx.repo.listRuns('p-1'))[0].id)).toHaveLength(0);
+    // Ending the demo drops it; the next view starts it afresh.
+    expect((await s.req(`${base}/demo`, { method: 'DELETE', cookie })).status).toBe(204);
+    expect((await s.json<EngineView>(`${base}/demo/view`, { cookie })).phase).toBe('style');
+    // Someone else's demo is not reachable.
+    expect((await s.req('/engine/sessions/p-2/demo/view', { cookie })).status).toBe(403);
+  });
 });

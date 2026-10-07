@@ -51,8 +51,10 @@ export interface Repository {
    * Appends an event and updates the run in one transaction, if the run is still at `expectedSeq - 1`
    * events; otherwise ConflictError (another instance wrote first).
    */
-  appendEvent(runId: string, event: Omit<RunEvent, 'createdAt'>, patch: Partial<Pick<RunRow, 'status' | 'scoreTotal' | 'conversions' | 'capability' | 'headline' | 'endedAt'>>, summary?: { lensId: string; summary: unknown }): Promise<void>;
+  appendEvent(runId: string, event: Omit<RunEvent, 'createdAt'>, patch: Partial<Pick<RunRow, 'status' | 'scoreTotal' | 'conversions' | 'capability' | 'headline' | 'endedAt'>>, summary?: { lensId: string; summary: unknown }, idempotency?: { key: string; result: unknown }): Promise<void>;
   listEvents(runId: string): Promise<RunEvent[]>;
+  /** The result stored for a client's `Idempotency-Key` on a run (D100), or null when the key is new. */
+  getIntentResult(runId: string, key: string): Promise<{ seq: number; result: unknown } | null>;
   putSummary(runId: string, lensId: string, summary: unknown): Promise<void>;
   getSummary(runId: string): Promise<unknown | null>;
   /** Run summaries for the benchmark: every run of a lens. */
@@ -140,7 +142,7 @@ export class SqlRepository implements Repository {
       await db.run('DELETE FROM email_log WHERE participant_id = ?', [id]);
       const runIds = (await db.all<{ id: string }>('SELECT id FROM runs WHERE participant_id = ?', [id])).map(r => r.id);
       for (const rid of runIds) {
-        for (const t of ['run_events', 'run_summaries', 'reviews', 'pdf_cache']) await db.run(`DELETE FROM ${t} WHERE run_id = ?`, [rid]);
+        for (const t of ['run_events', 'run_summaries', 'reviews', 'pdf_cache', 'intent_keys']) await db.run(`DELETE FROM ${t} WHERE run_id = ?`, [rid]);
       }
       await db.run('DELETE FROM runs WHERE participant_id = ?', [id]);
       const r = await db.run('DELETE FROM participants WHERE id = ?', [id]);
@@ -228,7 +230,7 @@ export class SqlRepository implements Repository {
     return rows.map(r => ({ ...runOf(r), name: str(r.pname), summary: parse(r.summary) }));
   }
 
-  async appendEvent(runId: string, e: Omit<RunEvent, 'createdAt'>, patch: Parameters<Repository['appendEvent']>[2], summary?: { lensId: string; summary: unknown }) {
+  async appendEvent(runId: string, e: Omit<RunEvent, 'createdAt'>, patch: Parameters<Repository['appendEvent']>[2], summary?: { lensId: string; summary: unknown }, idempotency?: { key: string; result: unknown }) {
     await this.db.tx(async db => {
       const t = now();
       await db.run('INSERT INTO run_events (run_id, seq, kind, payload, ai, created_at) VALUES (?, ?, ?, ?, ?, ?)', [runId, e.seq, e.kind, json(e.payload), json(e.ai), t]);
@@ -239,7 +241,12 @@ export class SqlRepository implements Repository {
       const r = await db.run(`UPDATE runs SET ${sets.join(', ')} WHERE id = ? AND event_count = ?`, [...vals, runId, e.seq - 1]);
       if (!r.changes) throw new ConflictError(`run ${runId} moved on before event ${e.seq}`);
       if (summary) await this.summaryIn(db, runId, summary.lensId, summary.summary, t);
+      if (idempotency) await db.run('INSERT INTO intent_keys (run_id, key, seq, result, created_at) VALUES (?, ?, ?, ?, ?)', [runId, idempotency.key, e.seq, json(idempotency.result), t]);
     });
+  }
+  async getIntentResult(runId: string, key: string) {
+    const [r] = await this.db.all('SELECT seq, result FROM intent_keys WHERE run_id = ? AND key = ?', [runId, key]);
+    return r ? { seq: Number(r.seq), result: parse(r.result) } : null;
   }
   private async summaryIn(db: Db, runId: string, lensId: string, summary: unknown, t = now()) {
     await db.run('INSERT INTO run_summaries (run_id, lens_id, summary, updated_at) VALUES (?, ?, ?, ?) ON CONFLICT (run_id) DO UPDATE SET summary = excluded.summary, lens_id = excluded.lens_id, updated_at = excluded.updated_at', [runId, lensId, json(summary), t]);
@@ -309,7 +316,7 @@ export class SqlRepository implements Repository {
       const old = await this.db.all<{ id: string }>('SELECT id FROM runs WHERE updated_at < ?', [beforeIso]);
       for (const { id } of old) {
         await this.db.tx(async db => {
-          for (const t of ['run_events', 'run_summaries', 'reviews', 'pdf_cache']) await db.run(`DELETE FROM ${t} WHERE run_id = ?`, [id]);
+          for (const t of ['run_events', 'run_summaries', 'reviews', 'pdf_cache', 'intent_keys']) await db.run(`DELETE FROM ${t} WHERE run_id = ?`, [id]);
           await db.run('DELETE FROM runs WHERE id = ?', [id]);
         });
         runs++;

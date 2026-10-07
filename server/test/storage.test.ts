@@ -38,7 +38,7 @@ const run = (id: string, participantId: string, attempt = 1) => ({
 describe.each(stores)('repository on %s', (_name, open, { rollback }) => {
   async function repo() {
     const db = await open();
-    expect(await migrate(db)).toEqual([1]);
+    expect(await migrate(db)).toEqual([1, 2]);
     expect(await migrate(db)).toEqual([]);
     return new SqlRepository(db);
   }

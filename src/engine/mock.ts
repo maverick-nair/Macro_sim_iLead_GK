@@ -8,6 +8,7 @@ import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
 import { withSixStyles } from './storylines/sixStyles';
 import { neededStyles, play, type Policy } from './sim/policies';
+import { DEMO_SEED, demoRefusal } from './demo';
 
 /**
  * The mock engine adapter: the same engine code the server runs, in the browser, on a storyline
@@ -80,6 +81,24 @@ export function createMockClient(opts: { config?: StorylineConfig; seed?: number
     },
     // The mock engine already has the NPC's words; it streams them at a speaking pace.
     streamTurn: (_id, turn, signal) => mockStream(turn.text, { signal, turnId: turn.id, tokensPerSecond: opts.tokensPerSecond ?? 14 })
+  };
+}
+
+/**
+ * The demo round on the mock (D92): a second engine on the same storyline with the demo seed, taking
+ * the demo's intents only, as the server's demo resource does.
+ */
+export function createMockDemoClient(opts: { config?: StorylineConfig; lens?: string | null; latencyMs?: number } = {}): EngineClient {
+  const config = opts.config ?? defaultStoryline(opts.lens);
+  const inner = createMockClient({ config, seed: DEMO_SEED, latencyMs: opts.latencyMs });
+  return {
+    view: inner.view,
+    async send(intent) {
+      const refusal = demoRefusal(intent, k => config.actions.find(a => a.key === k)?.kind);
+      if (refusal) throw new EngineError('The demo takes instant decisions only.', refusal);
+      return inner.send(intent);
+    },
+    streamTurn: inner.streamTurn
   };
 }
 

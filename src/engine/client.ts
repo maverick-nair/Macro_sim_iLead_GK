@@ -46,8 +46,12 @@ export function parse<T>(schema: { safeParse(v: unknown): { success: true; data:
   return r.data;
 }
 
-export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: typeof fetch = fetch): EngineClient & { sendWithId(intent: Intent, requestId?: string): Promise<IntentResult> } {
-  const root = `${baseUrl.replace(/\/$/, '')}/sessions/${encodeURIComponent(sessionId)}`;
+/**
+ * `suffix` addresses a sub resource of the session: `/demo` is the demo round's own engine (D92), which
+ * never takes the early first view.
+ */
+export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: typeof fetch = fetch, suffix = ''): EngineClient & { sendWithId(intent: Intent, requestId?: string): Promise<IntentResult> } {
+  const root = `${baseUrl.replace(/\/$/, '')}/sessions/${encodeURIComponent(sessionId)}${suffix}`;
   async function call(path: string, init?: RequestInit) {
     let res: Response;
     try {
@@ -71,7 +75,7 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
     // The engine's copy is worded as a payload is parsed: its catalog loads beside the first request (D83).
     async view() {
       // The first view may already be on its way from the page's head (D87); a failed one is asked again.
-      const early = takeEarlyView(sessionId);
+      const early = suffix ? null : takeEarlyView(sessionId);
       const body = early ? early.catch(() => call('/view')) : call('/view');
       const [b, c] = await Promise.all([body, contract(), loadEngineCopy()]);
       return parse(c.EngineView, b);
@@ -103,6 +107,23 @@ export function lazyClient(load: () => Promise<EngineClient>): EngineClient {
     send: async i => (await get()).send(i),
     async *streamTurn(id, turn, signal) { yield* (await get()).streamTurn(id, turn, signal); }
   };
+}
+
+/**
+ * The demo round's engine (D92): the server's demo resource, or a mock engine of its own on the same
+ * storyline and the demo seed. Either way it is a separate engine, so the real run is never touched.
+ * `end` drops it on the server.
+ */
+export function createDemoClient(sessionId = 'local', fetchImpl: typeof fetch = fetch): EngineClient & { end(): Promise<void> } {
+  const url = import.meta.env.VITE_ILEAD_ENGINE_URL as string | undefined;
+  if (url) {
+    const c = createHttpClient(url, sessionId, fetchImpl, '/demo');
+    const end = () => fetchImpl(`${url.replace(/\/$/, '')}/sessions/${encodeURIComponent(sessionId)}/demo`, { method: 'DELETE', credentials: 'include' }).then(() => undefined, () => undefined);
+    return { view: c.view, send: c.send, streamTurn: c.streamTurn, end };
+  }
+  const q = new URLSearchParams(globalThis.location?.search ?? '');
+  const c = lazyClient(() => import('./mock').then(m => m.createMockDemoClient({ lens: q.get('lens') })));
+  return { ...c, end: async () => undefined };
 }
 
 /** HTTP when `VITE_ILEAD_ENGINE_URL` is set, otherwise the mock engine, loaded on first use. */

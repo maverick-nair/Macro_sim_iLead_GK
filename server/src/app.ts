@@ -92,7 +92,7 @@ export function createApp(deps: AppDeps) {
     permissionsPolicy: { microphone: ['self'], camera: [], geolocation: [] }
   }));
   if (config.CORS_ORIGINS.length) {
-    app.use(cors({ origin: config.CORS_ORIGINS, credentials: true, allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-Id'], allowMethods: ['GET', 'POST', 'PUT', 'DELETE'], exposeHeaders: ['X-Request-Id', 'Retry-After'], maxAge: 600 }));
+    app.use(cors({ origin: config.CORS_ORIGINS, credentials: true, allowHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Request-Id', 'Idempotency-Key'], allowMethods: ['GET', 'POST', 'PUT', 'DELETE'], exposeHeaders: ['X-Request-Id', 'Retry-After'], maxAge: 600 }));
   }
   app.use(compress());
 
