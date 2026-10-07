@@ -21,7 +21,7 @@ export function ConnectionBanner({ source }: { source: ConnectionSource | null }
   const s = useSyncExternalStore(source?.subscribe ?? none, source ? source.state : () => ALWAYS, () => ALWAYS);
   const message = !s.online ? t('app.offline', { count: s.pending }) : s.retrying ? t('app.reconnecting', { count: s.pending }) : '';
   return (
-    <div role="status" className={message ? 'absolute top-3 left-1/2 z-50 max-w-[min(640px,calc(100%-32px))] -translate-x-1/2 rounded-14 border border-status-attention bg-status-attention-soft px-3.5 py-2.5 text-center text-13 text-fg-primary' : 'sr-only'}>
+    <div role="status" className={message ? 'absolute top-3 left-1/2 z-50 max-w-(--il-board-panel-max-width) -translate-x-1/2 rounded-14 border border-status-attention bg-status-attention-soft px-3.5 py-2.5 text-center text-13 text-fg-primary' : 'sr-only'}>
       {message}
     </div>
   );
