@@ -742,6 +742,15 @@ Details: `docs/CALIBRATION-SYNTHETIC.md`.
 - On Review and publish the line is advisory when the test has not run, when it ran on an earlier version of the draft, or when it found things to look at; a failed check blocks publishing, as D118 says.
 - `/author/calibrate` stays as a standalone review page for the same screen.
 
+**D120. Hardening after the authoring and calibration review.** Decided 2026-10-07.
+- **The draft keeps work.** Author inputs carry the schema's limits (`SHORT_MAX` 400, `TEXT_MAX` 4000: `TextInput` defaults to the short limit, `TextArea` to the text one), every `edit` and `replace` clamps the draft to the schema, and a stored draft that fails to parse is kept as it was under `ilead.author.workspace.backup` and repaired (`src/author/model/repair.ts`): strings and lists over a limit are cut, any other failing section goes back to its default. Only a value that is not a draft at all starts fresh. Saved action templates are parsed with Zod; entries that do not parse are dropped.
+- **Cancel is a cancel.** An AbortError from inside a playthrough, or an aborted signal, becomes `CalibrationError('cancelled')`, so a cancel mid playthrough is no longer recorded as failed. The client sends DELETE when a poll fails (code `pollFailed`, which does not fall back to the browser), reads an aborted fetch as cancelled, and removes its abort listeners when a wait ends.
+- **Server limits.** `CALIBRATION_PER_OWNER` (2) jobs queued or running per author, more answer 429 `tooManyCalibrations`; action probes cover the first 40 actions (`MAX_PROBE_ACTIONS`) and a run is at most 200 playthroughs (`MAX_PLAYTHROUGHS`); `CALIBRATION_TIME_LIMIT_MS` (10 minutes) stops a job, which fails with `timeLimit`; finished jobs are pruned every minute on an unref'd timer, not only when a job starts.
+- **The publish check.** A run in which a level did not play, or with the probes off, is advisory whatever its checks say, with a summary that says it was not a full test.
+- **AI players.** The persona description moves from the cached system block into the user message, in a `<how_you_play>` block escaped with `quoteInput`, and the lens, action and people names are quoted too (`synthetic-player` prompt version 2).
+- **Accessibility.** Recording an answer moves focus to Stop and review; Cancel returns it to the microphone, and stopping moves it to the answer box.
+- Comments and the lens prompt that still said "2 to 6 styles" say 4 or 5 (D104).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
