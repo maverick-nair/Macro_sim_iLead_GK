@@ -182,5 +182,7 @@
   "engine.hire.passed": "Descartaste a ambos candidatos. El puesto sigue libre.",
   "engine.hire.noRoom": "Ya no hay sitio en la etapa de {name}, así que no se hizo ninguna oferta.",
   "engine.hire.joined": "{name} aceptó la oferta y se incorpora a {stage}.",
-  "engine.hire.turnedDown": "{name} rechazó la oferta tras la entrevista."
+  "engine.hire.turnedDown": "{name} rechazó la oferta tras la entrevista.",
+  "engine.example.person": "{need} ({needShort})",
+  "engine.example.why": "{style} es lo que mejor encaja aquí. {styleShort}"
 }

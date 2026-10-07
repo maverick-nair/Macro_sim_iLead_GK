@@ -24,31 +24,41 @@
       "key": "leads",
       "name": "Leads",
       "conversionRatio": 0.62,
-      "ideal": 2
+      "ideal": 2,
+      "about": "Finds new prospects and makes first contact, so the funnel always has buyers to talk to.",
+      "suits": "Prospecting, energy for outreach and resilience after a no."
     },
     {
       "key": "qualify",
       "name": "Qualify",
       "conversionRatio": 0.5,
-      "ideal": 2
+      "ideal": 2,
+      "about": "Checks each lead's budget, need and timing, and passes on only the ones worth a proposal.",
+      "suits": "Good questions, careful listening and sound judgment."
     },
     {
       "key": "proposal",
       "name": "Proposal",
       "conversionRatio": 0.3,
-      "ideal": 2
+      "ideal": 2,
+      "about": "Turns a qualified need into an elevator solution and a priced proposal.",
+      "suits": "Product knowledge, clear writing and attention to detail."
     },
     {
       "key": "negotiation",
       "name": "Negotiation",
       "conversionRatio": 0.5,
-      "ideal": 2
+      "ideal": 2,
+      "about": "Works through price, terms and objections with the buyer.",
+      "suits": "Composure, persuasion and knowing where the limits are."
     },
     {
       "key": "conversion",
       "name": "Conversion",
       "conversionRatio": 0.5,
-      "ideal": 2
+      "ideal": 2,
+      "about": "Closes the deal and hands the customer over to installation.",
+      "suits": "Follow through, relationship building and closing skills."
     }
   ],
   "sponsor": {

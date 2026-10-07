@@ -234,7 +234,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
       const fit = { skill: Math.max(0, Math.min(100, base.skill + j())), morale: Math.max(0, Math.min(100, base.morale + j())), result: Math.max(0, Math.min(100, base.result + j())) };
       m.assessedStages = [...new Set([...m.assessedStages, stage])];
       m.assessments[stage] = fit;
-      log(sim, { kind: 'action', title: msg('engine.assessed', { stage: stageName(sim, stage), skill: fit.skill, morale: fit.morale, result: fit.result }), memberIds: [m.id], changes: [] });
+      log(sim, { kind: 'action', title: msg('engine.assessed', { stage: stageName(sim, stage), skill: fit.skill, morale: fit.morale, result: fit.result }), memberIds: [m.id], changes: [], action: a.key });
       break;
     }
     default:
@@ -258,7 +258,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     changes.push(...keepPromises(sim, a.key, input.memberIds));
     changes.push(...respond(sim, rng, a.key, a.scope === 'team' ? sim.members.map(m => m.id) : input.memberIds));
     const title: Copy = o.label === a.description ? a.name : msg('engine.choice', { action: a.name, option: o.label });
-    if (a.rule !== 'assess') log(sim, { kind: 'action', title, memberIds: input.memberIds, changes });
+    if (a.rule !== 'assess') log(sim, { kind: 'action', title, memberIds: input.memberIds, changes, action: a.key });
     // Static decisions show what they changed, with reasons, like conversations do (rule 5).
     const affected = [...new Set(changes.map(c => c.subject).filter(id => id !== 'sponsor'))];
     const assessed = a.rule === 'assess' ? sim.log[sim.log.length - 1]?.title : undefined;
@@ -340,7 +340,7 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
       changes.push(...trustChange(m, -4, reason));
     }
   }
-  log(sim, { kind: 'action', title: a.name, memberIds: targets.map(m => m.id), changes });
+  log(sim, { kind: 'action', title: a.name, memberIds: targets.map(m => m.id), changes, action: a.key });
   return changes;
 }
 
@@ -457,7 +457,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     // SIMULATION 4.3: a Weak interview lands the candidate half the time, a Harmful one never.
     const accepts = ev.band === 'strong' || ev.band === 'adequate' || (ev.band === 'weak' && rng.chance(0.5));
     if (cid && room && !accepts) {
-      log(sim, { kind: 'interaction', title: msg('engine.hire.declined', { name: firstName(sim, cid) }), memberIds: [], changes: [] });
+      log(sim, { kind: 'interaction', title: msg('engine.hire.declined', { name: firstName(sim, cid) }), memberIds: [], changes: [], action: it.actionKey });
     }
     // The outcome says what the decision came to (D85): a hire, an offer turned down, no room, or nobody chosen.
     hireLine = !cid ? msg('engine.hire.passed')
@@ -520,7 +520,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     changed: [sponsorLine, hireLine].filter(x => x !== null) as Copy[]
   };
   sim.outcome = outcome;
-  log(sim, { kind: 'interaction', title: outcome.headline, memberIds: affected, changes, quote: ev.evidence[0] });
+  log(sim, { kind: 'interaction', title: outcome.headline, memberIds: affected, changes, quote: ev.evidence[0], action: it.actionKey });
   return outcome;
 }
 

@@ -14,7 +14,7 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   // Conversations left open when the period ends are closed unfinished: they never score later.
   for (const [id, it] of Object.entries(sim.interactions)) {
     delete sim.interactions[id];
-    log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: sim.config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [] });
+    log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: sim.config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [], action: it.actionKey });
   }
   runRemaining(sim, rng);
   drift(sim);

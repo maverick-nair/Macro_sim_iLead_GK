@@ -249,7 +249,12 @@ export interface LogEntry {
   memberIds: string[];
   changes: Change[];
   quote?: string;
+  /** The action (or conversation) this entry came from, for the History filter (D95). Not part of what the run decides. */
+  action?: string;
 }
+
+/** A progress milestone reached (D93): revenue against the target, or a stage's output against its run ideal. */
+export interface Milestone { key: string; kind: 'target' | 'stage'; stage: string | null; pct: number; period: number; sub: number }
 
 export interface Outcome {
   id: string;
@@ -382,6 +387,8 @@ export interface Sim {
   practice: 'offered' | 'done' | 'skipped';
   /** Each member's result at the start of each period, for time spent with top and bottom performers. */
   periodStartResults: Array<Record<string, number>>;
+  /** Progress milestones reached, in order (D93). Read only by the view: no rule depends on them. */
+  milestones: Milestone[];
 }
 
 export type { Mismatch, NeedKey, Style, Triple };

@@ -30,7 +30,7 @@ describe('lens schema (D70)', () => {
   });
 
   it('takes 2 to 6 styles with unique keys and letters', () => {
-    const two = { ...DEFAULT_LENS, styles: DEFAULT_LENS.styles.slice(0, 2), fit: Object.fromEntries(NEEDS.map(n => [n, { D: 0, G: 1 }])) };
+    const two = { ...DEFAULT_LENS, examples: undefined, styles: DEFAULT_LENS.styles.slice(0, 2), fit: Object.fromEntries(NEEDS.map(n => [n, { D: 0, G: 1 }])) };
     expect(issues({ ...withLens(two), actions: raw.actions.map(a => ({ ...a, options: a.options.map(o => ({ ...o, style: undefined })) })) })).toEqual([]);
     expect(issues(withLens({ ...two, styles: DEFAULT_LENS.styles.slice(0, 1), fit: Object.fromEntries(NEEDS.map(n => [n, { D: 0 }])) })).join()).toMatch(/lens\.styles/);
     const seven = [...SIX_STYLES_LENS.styles, { key: 'extra', letter: 'X', name: 'Extra', short: 'One more.', description: 'One more.' }];
@@ -38,6 +38,11 @@ describe('lens schema (D70)', () => {
     const dup = { ...DEFAULT_LENS, styles: DEFAULT_LENS.styles.map(s => ({ ...s, letter: 'D' })) };
     expect(issues(withLens(dup)).join()).toMatch(/letters must be unique/);
     expect(issues(withLens({ ...DEFAULT_LENS, styles: DEFAULT_LENS.styles.map((s, i) => ({ ...s, letter: i ? 'ABC' : s.letter })) })).join()).toMatch(/One or two characters/);
+  });
+
+  it('checks the worked examples name styles the lens has (D91)', () => {
+    expect(issues(withLens({ ...DEFAULT_LENS, examples: [{ need: 'lowSkill_lowMorale', style: 'Z', person: 'Someone new.', why: 'Because.' }] })).join()).toMatch(/lens\.examples\.0\.style: No style called Z/);
+    expect(issues(withLens(DEFAULT_LENS))).toEqual([]);
   });
 
   it('needs every style in every need, only known styles, and one fit of 0 per need', () => {

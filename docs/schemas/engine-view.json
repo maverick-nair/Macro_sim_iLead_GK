@@ -66,6 +66,36 @@
               "type": "null"
             }
           ]
+        },
+        "video": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "src": {
+                  "type": "string"
+                },
+                "poster": {
+                  "type": "string"
+                },
+                "captions": {
+                  "type": "string"
+                },
+                "transcript": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/Text"
+                  }
+                }
+              },
+              "required": [
+                "transcript"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -145,6 +175,39 @@
               "key",
               "label",
               "short"
+            ]
+          }
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "need": {
+                "type": "string",
+                "enum": [
+                  "lowSkill_lowMorale",
+                  "lowSkill_highMorale",
+                  "highSkill_lowMorale",
+                  "highSkill_highMorale"
+                ]
+              },
+              "style": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+              },
+              "person": {
+                "$ref": "#/$defs/Text"
+              },
+              "why": {
+                "$ref": "#/$defs/Text"
+              }
+            },
+            "required": [
+              "need",
+              "style",
+              "person",
+              "why"
             ]
           }
         }
@@ -497,6 +560,15 @@
               },
               "relations": {
                 "$ref": "#/$defs/Text"
+              },
+              "attitude": {
+                "$ref": "#/$defs/Text"
+              },
+              "awareness": {
+                "$ref": "#/$defs/Text"
+              },
+              "responsibilities": {
+                "$ref": "#/$defs/Text"
               }
             },
             "required": [
@@ -651,6 +723,26 @@
           },
           "bottleneck": {
             "type": "boolean"
+          },
+          "about": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "suits": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -970,6 +1062,12 @@
                   "minimum": 0,
                   "maximum": 9007199254740991
                 },
+                "cooldown": {
+                  "default": 0,
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
                 "targets": {
                   "anyOf": [
                     {
@@ -1237,6 +1335,18 @@
                 "stages"
               ]
             }
+          },
+          "cooldown": {
+            "default": 0,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "unlockPeriod": {
+            "default": 1,
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
           },
           "blocked": {
             "anyOf": [
@@ -3013,6 +3123,10 @@
           },
           "quote": {
             "$ref": "#/$defs/Text"
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -3025,6 +3139,148 @@
           "changes"
         ]
       }
+    },
+    "trends": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1
+      },
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": [
+            "number",
+            "null"
+          ]
+        }
+      }
+    },
+    "milestones": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "target",
+              "stage"
+            ]
+          },
+          "stage": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pct": {
+            "type": "number"
+          },
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "sub": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "key",
+          "kind",
+          "stage",
+          "pct",
+          "period",
+          "sub"
+        ]
+      }
+    },
+    "guide": {
+      "type": "object",
+      "properties": {
+        "tour": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "steps": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "$ref": "#/$defs/Text"
+                  },
+                  "body": {
+                    "$ref": "#/$defs/Text"
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "enabled",
+            "steps"
+          ]
+        },
+        "demo": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "with": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "action": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "enabled",
+            "with",
+            "action"
+          ]
+        }
+      },
+      "required": [
+        "tour",
+        "demo"
+      ]
     },
     "live": {
       "anyOf": [

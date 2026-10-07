@@ -322,6 +322,43 @@
             "id",
             "title"
           ]
+        },
+        "examples": {
+          "minItems": 1,
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "need": {
+                "type": "string",
+                "enum": [
+                  "lowSkill_lowMorale",
+                  "lowSkill_highMorale",
+                  "highSkill_lowMorale",
+                  "highSkill_highMorale"
+                ]
+              },
+              "person": {
+                "type": "string",
+                "minLength": 1
+              },
+              "style": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+              },
+              "why": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "need",
+              "person",
+              "style",
+              "why"
+            ]
+          }
         }
       },
       "required": [
@@ -476,6 +513,14 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
+          },
+          "about": {
+            "type": "string",
+            "minLength": 1
+          },
+          "suits": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -630,6 +675,18 @@
               "relations": {
                 "default": "",
                 "type": "string"
+              },
+              "attitude": {
+                "type": "string",
+                "minLength": 1
+              },
+              "awareness": {
+                "type": "string",
+                "minLength": 1
+              },
+              "responsibilities": {
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -804,6 +861,18 @@
               "relations": {
                 "default": "",
                 "type": "string"
+              },
+              "attitude": {
+                "type": "string",
+                "minLength": 1
+              },
+              "awareness": {
+                "type": "string",
+                "minLength": 1
+              },
+              "responsibilities": {
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -3866,6 +3935,125 @@
           "type": "number",
           "minimum": 1,
           "maximum": 10
+        }
+      }
+    },
+    "video": {
+      "type": "object",
+      "properties": {
+        "src": {
+          "type": "string",
+          "minLength": 1
+        },
+        "poster": {
+          "type": "string"
+        },
+        "captions": {
+          "type": "string"
+        },
+        "transcript": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "transcript"
+      ]
+    },
+    "tour": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "steps": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "demo": {
+      "default": {
+        "enabled": true
+      },
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "with": {
+          "type": "string"
+        },
+        "action": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      }
+    },
+    "milestones": {
+      "default": {
+        "target": [
+          25,
+          50,
+          75,
+          100
+        ],
+        "stages": [
+          50,
+          100
+        ]
+      },
+      "type": "object",
+      "properties": {
+        "target": {
+          "default": [
+            25,
+            50,
+            75,
+            100
+          ],
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        },
+        "stages": {
+          "default": [
+            50,
+            100
+          ],
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
         }
       }
     },

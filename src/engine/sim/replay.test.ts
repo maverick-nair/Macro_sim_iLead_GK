@@ -18,7 +18,9 @@ const config = parsed.config;
 
 async function digest(policy: Policy, seed: number) {
   const { view } = await play(config, policy, seed);
-  const { members, money, periods, score, history, badges } = view;
+  const { members, money, periods, score, badges } = view;
+  // A log entry's `action` (D95) labels where it came from for the History filter; it decides nothing, so it is left out.
+  const history = view.history.map(({ action: _action, ...entry }) => entry);
   const r = view.report!;
   const facts = { members, money, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
     skills: r.skills.map(s => ({ key: s.key, observations: s.observations, score: s.score, level: s.level, quotes: s.quotes })), summary: r.summary };

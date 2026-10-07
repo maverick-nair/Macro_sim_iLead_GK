@@ -69,7 +69,11 @@ export const Stage = z.object({
   key: z.string().regex(/^[a-z][a-z0-9_]*$/),
   name: z.string().min(1),
   conversionRatio: Ratio,
-  ideal: z.number().int().min(0)
+  ideal: z.number().int().min(0),
+  /** What the stage does, for its info popover on the board and in Objectives (D97). */
+  about: Copy.optional(),
+  /** Which skills and strengths suit the stage (1.0's Module Scope). */
+  suits: Copy.optional()
 });
 
 export const MIN_STAGES = 3;
@@ -87,7 +91,14 @@ export const Person = z.object({
   start: Stats.extend({ trust: Score.optional() }),
   /** Values in every stage, used by swap and assess (docs/SIMULATION.md 4.3). */
   byStage: z.record(z.string(), Stats),
-  profile: z.object({ previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: z.string(), relations: z.string().default('') }),
+  /**
+   * Profile facts. `attitude`, `awareness` and `responsibilities` are optional authored rows (1.0's profile
+   * note, D97): shown only when the storyline gives them.
+   */
+  profile: z.object({
+    previous: z.string(), tenure: z.string(), experience: z.string(), skills: z.string(), remarks: z.string(), relations: z.string().default(''),
+    attitude: z.string().min(1).optional(), awareness: z.string().min(1).optional(), responsibilities: z.string().min(1).optional()
+  }),
   hiddenConcern: Copy.optional(),
   /** What the person says, in their own words, when a conversation surfaces the concern. */
   concernLine: Copy.optional(),
@@ -356,7 +367,12 @@ export const Lens = z.object({
   needs: z.object({ lowSkill_lowMorale: LensNeed, lowSkill_highMorale: LensNeed, highSkill_lowMorale: LensNeed, highSkill_highMorale: LensNeed }),
   fit: z.object({ lowSkill_lowMorale: FitRow, lowSkill_highMorale: FitRow, highSkill_lowMorale: FitRow, highSkill_highMorale: FitRow }),
   /** Adds report only skills (D70); never game mechanics. */
-  secondary: z.object({ id: z.enum(LENS_IDS), title: Copy }).optional()
+  secondary: z.object({ id: z.enum(LENS_IDS), title: Copy }).optional(),
+  /**
+   * Worked examples for the Tutorial (D91): an archetypal person (never a team member), the style that
+   * fits them and why. Left out, two are worded from the needs and the styles that fit them.
+   */
+  examples: z.array(z.object({ need: z.enum(NEEDS), person: Copy, style: StyleKey, why: Copy })).min(1).max(6).optional()
 }).superRefine((l, ctx) => {
   const keys = l.styles.map(s => s.key);
   if (new Set(keys).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style keys must be unique' });
@@ -367,6 +383,7 @@ export const Lens = z.object({
     for (const k of Object.keys(row)) if (!keys.includes(k)) ctx.addIssue({ code: 'custom', path: ['fit', need, k], message: `No style called ${k}` });
     if (!keys.some(k => row[k] === 0)) ctx.addIssue({ code: 'custom', path: ['fit', need], message: 'At least one style must fit this need (0)' });
   }
+  for (const [i, ex] of (l.examples ?? []).entries()) if (!keys.includes(ex.style)) ctx.addIssue({ code: 'custom', path: ['examples', i, 'style'], message: `No style called ${ex.style}` });
   if (l.secondary && l.secondary.id === l.id) ctx.addIssue({ code: 'custom', path: ['secondary', 'id'], message: 'The secondary lens must differ from the primary' });
 });
 
@@ -574,6 +591,31 @@ export const StorylineConfig = z.object({
     turnLimit: z.number().int().min(1).max(12).default(4),
     minutes: z.number().min(1).max(10).default(3)
   }).default({ enabled: true, format: 'roleplay', turnLimit: 4, minutes: 3 }),
+  /**
+   * The sponsor's welcome video (onboarding, and Tutorial and video during play, D90): where it is, an
+   * optional poster and captions track, and its transcript (also the Tutorial's Transcript tab).
+   */
+  video: z.object({ src: z.string().min(1).optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Copy).min(1).max(20) }).optional(),
+  /**
+   * The guided tour (D94): on by default; `steps` rewords any step by its key (title, body), so authors can
+   * fit the tips to the storyline. Unknown keys are ignored.
+   */
+  tour: z.object({ enabled: z.boolean().default(true), steps: z.record(z.string(), z.object({ title: Copy.optional(), body: Copy.optional() })).default({}) })
+    .default({ enabled: true, steps: {} }),
+  /**
+   * The demo round before the run (D92): unscored, on its own engine. `with` is the person the guided
+   * action is taken with (the first member when left out); `action` the static action it teaches (the
+   * first static member action when left out).
+   */
+  demo: z.object({ enabled: z.boolean().default(true), with: z.string().optional(), action: Key.optional() }).default({ enabled: true }),
+  /**
+   * Progress milestones (D93): a notification when revenue reaches these percentages of the target, and
+   * when a stage's output so far reaches these percentages of its ideal for the whole run.
+   */
+  milestones: z.object({
+    target: z.array(z.number().int().min(1).max(100)).max(6).default([25, 50, 75, 100]),
+    stages: z.array(z.number().int().min(1).max(100)).max(4).default([50, 100])
+  }).default({ target: [25, 50, 75, 100], stages: [50, 100] }),
   /** Role coverage (Teardown hidden rule 6, Configuration Spec eligibility): at most this many people per stage. */
   maxPerStage: z.number().int().min(1).default(2),
   /** Weekly drift (Configuration Spec, Targets and KPIs): what someone loses in a period nobody acted with them. */
@@ -623,6 +665,12 @@ export const StorylineConfig = z.object({
   c.actions.forEach((a, i) => a.options.forEach((o, j) => {
     if (o.style !== undefined && !styleKeys.has(o.style)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'style'], message: `No style called ${o.style} in the lens` });
   }));
+  if (c.demo.with && !memberIds.has(c.demo.with)) ctx.addIssue({ code: 'custom', path: ['demo', 'with'], message: `No team member called ${c.demo.with}` });
+  if (c.demo.action) {
+    const a = c.actions.find(x => x.key === c.demo.action);
+    if (!a) ctx.addIssue({ code: 'custom', path: ['demo', 'action'], message: `Unknown action ${c.demo.action}` });
+    else if (a.kind !== 'static' || a.scope !== 'member') ctx.addIssue({ code: 'custom', path: ['demo', 'action'], message: 'The demo teaches an instant action with one person: pick a static member action' });
+  }
   if (c.practice.with && !memberIds.has(c.practice.with)) ctx.addIssue({ code: 'custom', path: ['practice', 'with'], message: `No team member called ${c.practice.with}` });
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))
     ctx.addIssue({ code: 'custom', path: ['thresholds'], message: 'Thresholds must rise: low < amber < high' });

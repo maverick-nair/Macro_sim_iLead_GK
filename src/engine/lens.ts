@@ -46,6 +46,8 @@ export interface Lens {
   fit: Record<NeedKey, Record<string, Fit>>;
   /** A secondary lens adds report only skills (D70). */
   secondary?: { id: LensId; title: string };
+  /** Worked examples for the Tutorial (D91): an archetypal person, the style that fits them and why. */
+  examples?: Array<{ need: NeedKey; person: string; style: string; why: string }>;
 }
 
 /** What the participant may see of the lens (the view's `lens`). */

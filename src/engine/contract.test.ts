@@ -44,7 +44,7 @@ describe('engine contract', () => {
   it('accepts everything the engine produces, from first view to the end of a run', async () => {
     const e = createEngine(config, { seed: 1 });
     expect(EngineView.safeParse(e.view()).error?.issues ?? []).toEqual([]);
-    expect(EngineView.parse(e.view()).storyline).toEqual({ locale: 'en', name: 'Sales Elevator, Innov8 Elevators', organisation: 'Innov8 Elevators' });
+    expect(EngineView.parse(e.view()).storyline).toEqual({ locale: 'en', name: 'Sales Elevator, Innov8 Elevators', organisation: 'Innov8 Elevators', video: null });
     expect(EngineView.parse(e.view()).sponsor).toMatchObject({ name: 'Paula Jacob', title: 'Regional Sales Director' });
     const styles = await neededStyles(e);
     expect(IntentResult.safeParse(await e.dispatch({ type: 'confirmStyles', styles })).error?.issues ?? []).toEqual([]);

@@ -204,13 +204,22 @@ for a in actions:
             if o['key'] == 'reassign': o.update(targets=[1, 1], pickStage=True)
             if o['key'] == 'swap': o.update(targets=[2, 2], distinctStages=True)
 
+# What each stage does and which skills suit it (1.0's Module Scope, D97), for the stage info popovers.
+STAGE_INFO = {
+    'leads': ('Finds new prospects and makes first contact, so the funnel always has buyers to talk to.', 'Prospecting, energy for outreach and resilience after a no.'),
+    'qualify': ("Checks each lead's budget, need and timing, and passes on only the ones worth a proposal.", 'Good questions, careful listening and sound judgment.'),
+    'proposal': ('Turns a qualified need into an elevator solution and a priced proposal.', 'Product knowledge, clear writing and attention to detail.'),
+    'negotiation': ('Works through price, terms and objections with the buyer.', 'Composure, persuasion and knowing where the limits are.'),
+    'conversion': ('Closes the deal and hands the customer over to installation.', 'Follow through, relationship building and closing skills.'),
+}
+
 # GenieKreator values (docs/genie/RECONCILIATION.md) are set above; calibration values come from
 # `npm run calibrate`, so run it after importing.
 storyline = dict(
     id='sales_elevator', name='Sales Elevator, Innov8 Elevators',
     money=dict(currency='USD', locale='en-US', display='symbol', target=240000, valuePerConversion=30000, inputPerSubPeriod=[8]),
     time=dict(period=dict(unit='week', count=8), costStep=1),
-    stages=[dict(key=k, name=n, conversionRatio=c, ideal=2) for k, n, c, _ in STAGES],
+    stages=[dict(key=k, name=n, conversionRatio=c, ideal=2, about=STAGE_INFO[k][0], suits=STAGE_INFO[k][1]) for k, n, c, _ in STAGES],
     sponsor=dict(name='Paula Jacob', title='Regional Sales Director', styleLine='To each their own. Your people need different things from you this week.'),
     members=members, candidates=candidates,
     actions=actions,

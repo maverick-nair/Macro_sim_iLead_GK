@@ -171,7 +171,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
         if (it.actionKey === live.PRACTICE) { live.endPractice(sim, intent.interactionId); return { view: buildView(sim), changes: [] }; }
         delete sim.interactions[intent.interactionId];
-        log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [] });
+        log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [], action: it.actionKey });
         return { view: buildView(sim), changes: [] };
       }
       case 'dismissCard':

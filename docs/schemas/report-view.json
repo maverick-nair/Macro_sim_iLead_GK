@@ -110,6 +110,39 @@
             ]
           }
         },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "need": {
+                "type": "string",
+                "enum": [
+                  "lowSkill_lowMorale",
+                  "lowSkill_highMorale",
+                  "highSkill_lowMorale",
+                  "highSkill_highMorale"
+                ]
+              },
+              "style": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_]{0,15}$"
+              },
+              "person": {
+                "$ref": "#/$defs/Text"
+              },
+              "why": {
+                "$ref": "#/$defs/Text"
+              }
+            },
+            "required": [
+              "need",
+              "style",
+              "person",
+              "why"
+            ]
+          }
+        },
         "secondary": {
           "anyOf": [
             {

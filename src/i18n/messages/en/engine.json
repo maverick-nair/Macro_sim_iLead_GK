@@ -182,5 +182,7 @@
   "engine.hire.passed": "You passed on both candidates. The seat stays open.",
   "engine.hire.noRoom": "There is no room in {name}'s stage now, so no offer went out.",
   "engine.hire.joined": "{name} accepted the offer and joins {stage}.",
-  "engine.hire.turnedDown": "{name} turned the offer down after the interview."
+  "engine.hire.turnedDown": "{name} turned the offer down after the interview.",
+  "engine.example.person": "{need} ({needShort})",
+  "engine.example.why": "{style} fits best here. {styleShort}"
 }

@@ -33,7 +33,7 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     events: { schedule: {}, fired: [], pending: [] }, pulseAtStart: 0,
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
     periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start,
-    actionRecords: [], periodStartResults: [], practice: config.practice.enabled ? 'offered' : 'skipped'
+    actionRecords: [], periodStartResults: [], practice: config.practice.enabled ? 'offered' : 'skipped', milestones: []
   };
   sim.events.schedule = scheduleEvents(sim);
   markPeriodStart(sim);
@@ -181,6 +181,7 @@ export function runSubPeriod(sim: Sim, rng: Rng) {
   sim.absSub += 1;
   if (sim.sub === 1) triggersAtPeriodStart(sim, rng);
   runFunnel(sim);
+  checkMilestones(sim);
   checkBadges(sim, 'conversion');
   runEvents(sim, rng);
   triggersEverySub(sim, rng);
@@ -212,10 +213,39 @@ export function runFunnel(sim: Sim) {
 }
 
 /** Ideal throughput per stage for the period: everyone in the funnel performing at the High threshold. */
-export function idealThroughput(sim: Sim): number[] {
+export function idealThroughput(sim: Sim, period = sim.period): number[] {
   const { stages, money, performanceThreshold, thresholds } = sim.config;
-  let input = money.inputPerSubPeriod[Math.min(sim.period, money.inputPerSubPeriod.length) - 1] * perPeriod(sim);
+  let input = money.inputPerSubPeriod[Math.min(period, money.inputPerSubPeriod.length) - 1] * perPeriod(sim);
   return stages.map(st => (input = input * st.conversionRatio * (thresholds.high + performanceThreshold) / (100 + performanceThreshold)));
+}
+
+/** Each stage's ideal output over the whole run (the sum of every period's ideal). */
+export function runIdeal(sim: Sim): number[] {
+  const out = sim.config.stages.map(() => 0);
+  for (let p = 1; p <= sim.config.time.period.count; p++) idealThroughput(sim, p).forEach((v, i) => { out[i] += v; });
+  return out;
+}
+
+/**
+ * Progress milestones (D93): revenue reaching a share of the target, and a stage's output so far reaching
+ * a share of its ideal for the run. Recorded once each, when first reached; nothing else reads them, so
+ * no rule, draw or score changes.
+ */
+export function checkMilestones(sim: Sim) {
+  const { milestones, money, stages } = sim.config;
+  const reached = new Set(sim.milestones.map(m => m.key));
+  const add = (key: string, kind: 'target' | 'stage', stage: string | null, pct: number) => {
+    if (reached.has(key)) return;
+    reached.add(key);
+    sim.milestones.push({ key, kind, stage, pct, period: sim.period, sub: sim.sub });
+  };
+  const share = sim.funnel.value / money.target * 100;
+  for (const pct of [...milestones.target].sort((a, b) => a - b)) if (share >= pct) add(`target:${pct}`, 'target', null, pct);
+  const ideal = runIdeal(sim);
+  stages.forEach((st, i) => {
+    const s = ideal[i] > 0 ? sim.funnel.stageOut[i] / ideal[i] * 100 : 0;
+    for (const pct of [...milestones.stages].sort((a, b) => a - b)) if (s >= pct) add(`stage:${st.key}:${pct}`, 'stage', st.key, pct);
+  });
 }
 
 // ---------------------------------------------------------------- events (6.3)

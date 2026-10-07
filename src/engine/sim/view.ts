@@ -1,12 +1,13 @@
 import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, PRACTICE, practiceAvailable, practicePartner, speakerFor, turnLimit } from './live';
 import { purposeOf } from '../config';
-import { lensView } from '../lens';
 import { buildReport } from '../report/build';
 import { finalScore } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, idealThroughput, perPeriod, person, teamAverage } from './sim';
+import { bestStyle, lensView, NEEDS } from '../lens';
 import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
+import type { StorylineConfig } from '../config';
 import { msg, type Copy } from '../copy';
 
 /**
@@ -112,16 +113,21 @@ export function buildView(sim: Sim) {
       careerGoal: m.concernShared ? p.careerGoal ?? null : null, assessedStages: m.assessedStages, assessments: m.assessments,
       unread: sim.inbox.some(x => x.from === m.id && x.state === 'open'),
       promise: sim.promises.find(x => x.memberId === m.id && x.state === 'open')?.text ?? null,
+      // The optional authored rows (D97) are sent only when the storyline has them.
       profile: p.profile
     };
   };
+  const demoAction = c.demo.action ?? c.actions.find(a => a.kind === 'static' && a.scope === 'member')?.key ?? null;
   const score = finalScore(sim);
   return {
     phase: sim.phase,
     /** Read only storyline identity, for onboarding. */
-    storyline: { name: c.name, organisation: c.organisation ?? null, locale: c.locale, ...(c.intro ? { intro: c.intro } : null) },
-    /** The lens's styles and needs; never the fit table or the source (D70). */
-    lens: lensView(c.lens),
+    storyline: { name: c.name, organisation: c.organisation ?? null, locale: c.locale, ...(c.intro ? { intro: c.intro } : null), video: c.video ?? null },
+    /**
+     * The lens's styles and needs; never the fit table or the source (D70). The Tutorial's worked examples
+     * (D91) are authored archetypes, or two worded from the needs and the first style that fits each.
+     */
+    lens: { ...lensView(c.lens), examples: c.lens.examples ?? defaultExamples(c.lens) },
     clock: {
       period: sim.period, periods: c.time.period.count, periodUnit: c.time.period.unit,
       subPeriod: Math.min(sim.sub + 1, c.time.subPeriod.perPeriod), subPeriodUnit: c.time.subPeriod.unit,
@@ -143,7 +149,9 @@ export function buildView(sim: Sim) {
     })(),
     maxPerStage: c.maxPerStage,
     funnel: c.stages.map((st, i) => ({ key: st.key, name: st.name, members: sim.members.filter(m => m.stage === st.key).length, ideal: st.ideal,
-      throughput: Math.round(sim.funnel.stageOutPeriod[i] * 10) / 10, idealThroughput: Math.round(ideal[i] * 10) / 10, bottleneck: i === bottleneck })),
+      throughput: Math.round(sim.funnel.stageOutPeriod[i] * 10) / 10, idealThroughput: Math.round(ideal[i] * 10) / 10, bottleneck: i === bottleneck,
+      // What the stage does and which skills suit it (D97), when authored.
+      about: st.about ?? null, suits: st.suits ?? null })),
     actions: c.actions.map(a => ({
       key: a.key, name: a.name, description: a.description, scope: a.scope, kind: a.kind, format: a.format ?? null,
       cost: a.rule === 'hire' && sim.hireBudget ? 0 : a.cost,
@@ -151,7 +159,9 @@ export function buildView(sim: Sim) {
       targets: a.targets,
       prerequisite: a.prerequisite ?? null,
       rule: a.rule,
-      options: a.options.map(o => ({ key: o.key, label: o.label, cost: a.rule === 'hire' && sim.hireBudget ? 0 : o.cost ?? a.cost, away: o.away,
+      // For the list of every action (D97): how long before it can be taken again, and when it unlocks.
+      cooldown: a.cooldownDays, unlockPeriod: a.unlockPeriod,
+      options: a.options.map(o => ({ key: o.key, label: o.label, cost: a.rule === 'hire' && sim.hireBudget ? 0 : o.cost ?? a.cost, away: o.away, cooldown: o.cooldownDays ?? a.cooldownDays,
         // Stages a move can go to, with a reason where the stage has no room (role coverage).
         stages: o.pickStage ? c.stages.map(st => ({ key: st.key, blocked: a.rule === 'swap' && sim.members.filter(m => m.stage === st.key).length >= c.maxPerStage ? { reason: 'stageFull' as const, stage: st.key } : null })) : null, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,
@@ -182,12 +192,36 @@ export function buildView(sim: Sim) {
     pendingReward: sim.pendingReward,
     perks: { bonusDay: sim.bonusPeriod !== null && sim.bonusPeriod >= sim.period, hireBudget: sim.hireBudget, teamActivity: sim.freeTeamActivity, checkIn: sim.checkInPeriod === sim.period },
     history: sim.log,
+    /**
+     * Each person's result at the start of every period so far, then now (D96): the profile's result trend
+     * and the result overview. Only for people whose profile has been opened (D39).
+     */
+    trends: Object.fromEntries(sim.members.filter(m => m.revealed).map(m => [m.id, [...sim.periodStartResults.slice(0, sim.period).map(r => r[m.id] ?? null), m.result]])),
+    /** Progress milestones reached, in order (D93). */
+    milestones: sim.milestones,
+    /** The guided tour's settings and the demo round on offer (D92, D94). */
+    guide: {
+      tour: { enabled: c.tour.enabled, steps: c.tour.steps },
+      demo: { enabled: c.demo.enabled && !!demoAction, with: c.demo.with ?? c.members[0]?.id ?? null, action: demoAction }
+    },
     live: liveView(sim),
     /** The Week 0 practice on offer, and who it is with (D16, D84). */
     practice: { available: practiceAvailable(sim), partner: practicePartner(sim) },
     liveCap: { cap: sim.config.time.liveCap, used: sim.liveTaken[sim.period] ?? 0 },
     report: sim.phase === 'ended' ? buildReport(sim) : null
   };
+}
+
+/**
+ * Two worked examples when the lens has none authored (D91): the "keen to learn" and "capable but
+ * cautious" needs, each with the first style that fits it, worded by the client from the need and style.
+ */
+function defaultExamples(lens: StorylineConfig['lens']) {
+  return NEEDS.filter(n => n === 'lowSkill_highMorale' || n === 'highSkill_lowMorale').map(need => {
+    const style = bestStyle(lens, need);
+    const s = lens.styles.find(x => x.key === style)!;
+    return { need, style, person: msg('engine.example.person', { need: lens.needs[need].label, needShort: lens.needs[need].short }), why: msg('engine.example.why', { style: s.name, styleShort: s.short }) };
+  });
 }
 
 export type EngineView = ReturnType<typeof buildView>;

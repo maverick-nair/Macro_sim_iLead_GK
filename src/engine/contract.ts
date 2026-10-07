@@ -45,7 +45,9 @@ export const NeedKey = z.enum(['lowSkill_lowMorale', 'lowSkill_highMorale', 'hig
 export const LensView = z.object({
   id: Id, title: Text,
   styles: z.array(z.object({ key: StyleKey, letter: z.string().min(1).max(2), name: Text, short: Text, description: Text })).min(2).max(6),
-  needs: z.array(z.object({ key: NeedKey, label: Text, short: Text })).length(4)
+  needs: z.array(z.object({ key: NeedKey, label: Text, short: Text })).length(4),
+  /** The Tutorial's worked examples (D91): an archetypal person (never a team member), the style that fits and why. */
+  examples: z.array(z.object({ need: NeedKey, style: StyleKey, person: Text, why: Text })).default([])
 });
 export const Mood = z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']);
 export const Score = z.number().min(0).max(100);
@@ -109,7 +111,8 @@ export const MemberView = z.object({
   assessments: z.record(Id, z.object({ skill: Score, morale: Score, result: Score })),
   unread: z.boolean(),
   promise: Text.nullable(),
-  profile: z.object({ previous: Text, tenure: Text, experience: Text, skills: Text, remarks: Text, relations: Text })
+  /** `attitude`, `awareness` and `responsibilities` come only when the storyline authors them (D97). */
+  profile: z.object({ previous: Text, tenure: Text, experience: Text, skills: Text, remarks: Text, relations: Text, attitude: Text.optional(), awareness: Text.optional(), responsibilities: Text.optional() })
 });
 
 export const Clock = z.object({
@@ -165,12 +168,16 @@ export const ActionView = z.object({
     cost: Num,
     /** Sub-periods the person is away afterwards (training). */
     away: z.number().int().min(0),
+    /** Sub-periods before this option can be taken again (D97). */
+    cooldown: z.number().int().min(0).default(0),
     /** Overrides the action's people to pick. */
     targets: z.tuple([z.number(), z.number()]).nullable(),
     distinctStages: z.boolean(), pickStage: z.boolean(),
     /** For options where you pick a stage: each stage and why it cannot take someone, if so. */
     stages: z.array(z.object({ key: Id, blocked: Block.nullable() })).nullable()
   })),
+  /** Sub-periods before it can be taken again, and the period it unlocks in (D97: the list of every action). */
+  cooldown: z.number().int().min(0).default(0), unlockPeriod: z.number().int().min(1).default(1),
   /** Why a team action is unavailable, or null. */
   blocked: Block.nullable(),
   /** Why a member action is unavailable for each member, or null. */
@@ -179,7 +186,9 @@ export const ActionView = z.object({
 
 export const LogEntry = z.object({
   id: Id, period: z.number().int(), sub: z.number().int(), kind: z.enum(['style', 'action', 'interaction', 'event', 'trigger', 'periodEnd']),
-  title: Text, memberIds: z.array(Id), changes: z.array(MetricChange), quote: Text.optional()
+  title: Text, memberIds: z.array(Id), changes: z.array(MetricChange), quote: Text.optional(),
+  /** The action or conversation it came from, for the History filter (D95). */
+  action: Id.optional()
 });
 
 export const SponsorLevel = z.enum(['low', 'wavering', 'steady', 'confident', 'champion']);
@@ -216,7 +225,9 @@ export const PeriodSummary = z.object({
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
   /** The storyline's name, the organisation the participant joins and the authored welcome letter, for onboarding. */
-  storyline: z.object({ name: Text, organisation: Text.nullable(), locale: z.string().default('en'), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish() }),
+  storyline: z.object({ name: Text, organisation: Text.nullable(), locale: z.string().default('en'), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish(),
+    /** The welcome video, replayable from Tutorial and video (D90): its file, poster, captions track and transcript. */
+    video: z.object({ src: z.string().optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Text) }).nullish() }),
   lens: LensView,
   clock: Clock,
   money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
@@ -226,7 +237,9 @@ export const EngineView = z.object({
   pulse: z.object({ value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']), upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
   /** Role coverage: at most this many people per stage. */
   maxPerStage: z.number().int().min(1),
-  funnel: z.array(z.object({ key: Id, name: Text, members: z.number().int(), ideal: z.number().int(), throughput: Num, idealThroughput: Num, bottleneck: z.boolean() })),
+  funnel: z.array(z.object({ key: Id, name: Text, members: z.number().int(), ideal: z.number().int(), throughput: Num, idealThroughput: Num, bottleneck: z.boolean(),
+    /** What the stage does and which skills suit it, when authored (D97). */
+    about: Text.nullable().default(null), suits: Text.nullable().default(null) })),
   actions: z.array(ActionView),
   promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0) })),
   /** `briefing`: a scheduled sponsor briefing, opened with `openConversation` kind `sponsor`; other messages are replies. News needs no answer. */
@@ -261,6 +274,18 @@ export const EngineView = z.object({
   /** Unlock rewards in hand, not yet used. */
   perks: z.object({ bonusDay: z.boolean(), hireBudget: z.boolean(), teamActivity: z.boolean(), checkIn: z.boolean() }),
   history: z.array(LogEntry),
+  /**
+   * Each revealed person's result at the start of every period so far, then now (D96): the profile's trend
+   * and the result overview. A null is a period they were not on the team yet.
+   */
+  trends: z.record(Id, z.array(Num.nullable())).default({}),
+  /** Progress milestones reached, in order (D93): revenue against the target, or a stage against its run ideal. */
+  milestones: z.array(z.object({ key: Id, kind: z.enum(['target', 'stage']), stage: Id.nullable(), pct: Num, period: z.number().int(), sub: z.number().int() })).default([]),
+  /** The guided tour (D94) and the demo round (D92), as the storyline sets them. */
+  guide: z.object({
+    tour: z.object({ enabled: z.boolean(), steps: z.record(z.string(), z.object({ title: Text.optional(), body: Text.optional() })) }),
+    demo: z.object({ enabled: z.boolean(), with: Id.nullable(), action: Id.nullable() })
+  }).default({ tour: { enabled: true, steps: {} }, demo: { enabled: false, with: null, action: null } }),
   live: LiveView.nullable(),
   /** The Week 0 practice conversation (D16, D84): on offer before week 1 begins, with this team member. */
   practice: z.object({ available: z.boolean(), partner: Id.nullable() }).default({ available: false, partner: null }),
