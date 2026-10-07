@@ -1,0 +1,150 @@
+{
+  "storyline": "sales-elevator",
+  "version": 1,
+  "about": "Starter rubric calibration set for the Sales Elevator storyline: authored sample answers per live action, each labelled with the band an expert assessor gives it (Strong, Adequate, Weak, Harmful; two of each, more welcome). The participant's words only, as the evaluator receives them (turns joined by new lines). Authors extend this set before publish; the gate passes at 85% agreement per action.",
+  "actions": {
+    "f2f": {
+      "counterpart": "kent",
+      "samples": [
+        { "id": "f2f-strong-1", "band": "strong", "text": "Kent, thanks for making time. How are you finding the role so far?\nI hear you, it sounds like the job has not matched what you were promised. Tell me more about what you expected when you joined.\nWhat do you think would make the work feel worthwhile again? Let's agree on one change together, and I will come back to you by Friday with what I can do." },
+        { "id": "f2f-strong-2", "band": "strong", "text": "Before we talk numbers, how are you doing, honestly?\nI understand the last few weeks have been frustrating. Help me understand what is getting in the way for you.\nWhat would you do first if it were your call? Then let's put that into a plan together, and we can check the next step on Thursday." },
+        { "id": "f2f-adequate-1", "band": "adequate", "text": "Hi Kent, thanks for coming in. I wanted to check how things are going. The lead numbers have dipped a bit, so let's look at your pipeline this week." },
+        { "id": "f2f-adequate-2", "band": "adequate", "text": "How is the week going for you? I need your call list updated so we can see where the leads are stuck. Send it over when you can." },
+        { "id": "f2f-weak-1", "band": "weak", "text": "Kent, your numbers are down again. I expect more leads from you. Just get them up." },
+        { "id": "f2f-weak-2", "band": "weak", "text": "Look, everyone has a tough week sometimes. Keep going and it will sort itself out. Anyway, I have another meeting soon." },
+        { "id": "f2f-harmful-1", "band": "harmful", "text": "Honestly Kent, you are useless at this. Stop complaining to everyone or you will be out." },
+        { "id": "f2f-harmful-2", "band": "harmful", "text": "This is all your fault. The whole funnel is stuck because of you, and I am tired of hearing excuses." }
+      ]
+    },
+    "coach": {
+      "counterpart": "beth",
+      "samples": [
+        { "id": "coach-strong-1", "band": "strong", "text": "Beth, thanks for making time for this. What part of qualifying calls feels hardest for you right now?\nI hear you. Let's practice one call together now, and then you try the next one while I listen. How would you open it?\nWe can review your progress on Wednesday, and the next step is three calls on your own by Friday." },
+        { "id": "coach-strong-2", "band": "strong", "text": "I want to help you grow into the proposal work. Walk me through how you handled the last client objection?\nThat sounds like a tough one. What would you try differently?\nLet's agree the plan: you lead the next call tomorrow and I will coach you after it." },
+        { "id": "coach-adequate-1", "band": "adequate", "text": "Beth, I watched your call this morning. It was okay but you rushed the close. Try slowing down next time. What do you think?" },
+        { "id": "coach-adequate-2", "band": "adequate", "text": "Let's go through your qualifying script together. I think the questions in the middle are too long. Can you shorten them by Thursday?" },
+        { "id": "coach-weak-1", "band": "weak", "text": "Just use the script as written. Read it word for word on every call." },
+        { "id": "coach-weak-2", "band": "weak", "text": "You should know this by now. Watch how Ruth does it and copy her." },
+        { "id": "coach-harmful-1", "band": "harmful", "text": "Beth, do you plan to have kids soon? I need to know if I can count on you." },
+        { "id": "coach-harmful-2", "band": "harmful", "text": "Stop being so pathetic about one bad call. Shut up and dial." }
+      ]
+    },
+    "feedback": {
+      "counterpart": "justin",
+      "samples": [
+        { "id": "feedback-strong-1", "band": "strong", "text": "Thanks for flagging this, Justin, I appreciate it. I can see the handover delays are hurting your numbers. What is the main blocker on your side? I will speak to Green today, and let's agree the next step when we talk at 4." },
+        { "id": "feedback-strong-2", "band": "strong", "text": "Sorry you have been waiting on this. I hear you. How long has the routing been broken? I will fix the lead routing this afternoon, then send you a note by end of day." },
+        { "id": "feedback-adequate-1", "band": "adequate", "text": "Thanks, got it. I will look into it this week." },
+        { "id": "feedback-adequate-2", "band": "adequate", "text": "Okay, understood. What do you need from me? Let's talk about it in our one to one." },
+        { "id": "feedback-weak-1", "band": "weak", "text": "Not now, I am busy." },
+        { "id": "feedback-weak-2", "band": "weak", "text": "Everyone has problems with routing. Deal with it like the rest of the team." },
+        { "id": "feedback-harmful-1", "band": "harmful", "text": "Stop whining, Justin. It's your fault the leads are late, so fix it yourself." },
+        { "id": "feedback-harmful-2", "band": "harmful", "text": "Keep this off the record, but just backdate the entries so the report looks fine." }
+      ]
+    },
+    "swap": {
+      "counterpart": "justin",
+      "samples": [
+        { "id": "swap-strong-1", "band": "strong", "text": "Justin, thanks for being open about wanting a move. I hear you, three years in qualification is a long time.\nHere is the plan: you move to Sales Conversion from Monday, and Mandy takes over your accounts. What would you need from me to make the first month work?\nLet's agree the next step together tomorrow." },
+        { "id": "swap-strong-2", "band": "strong", "text": "I want to explain a change before you hear it from anyone else. We need more depth in proposals, so I am moving you to work with Lowe.\nI understand this is a big shift. How do you feel about it? Help me understand what worries you, and then we can plan the handover together by Friday." },
+        { "id": "swap-adequate-1", "band": "adequate", "text": "We are moving you to proposals this week because it should suit your skills. What questions do you have?" },
+        { "id": "swap-adequate-2", "band": "adequate", "text": "I understand you wanted a change, so I am moving you to Sales Conversion, and Mandy will take your seat. Let's see how it goes, and we will talk again this week." },
+        { "id": "swap-weak-1", "band": "weak", "text": "From Monday you swap seats with Mandy. That is decided." },
+        { "id": "swap-weak-2", "band": "weak", "text": "HR says we have to shuffle people around, so you are moving. Not my decision." },
+        { "id": "swap-harmful-1", "band": "harmful", "text": "Frankly you are incompetent in qualification, so I am moving you somewhere you can do less damage." },
+        { "id": "swap-harmful-2", "band": "harmful", "text": "Don't tell HR about this move yet. We will sort out the paperwork later." }
+      ]
+    },
+    "fire": {
+      "counterpart": "derick",
+      "samples": [
+        { "id": "fire-strong-1", "band": "strong", "text": "Derick, thank you for meeting me. I am sorry, this is a difficult conversation. We have reviewed your results over the last two months, and I have decided to end your role at the end of this month.\nI understand this is hard to hear. What questions do you have?\nHR will walk you through the support package tomorrow, and I will help you with references. How would you like to tell the team? Your view matters on that." },
+        { "id": "fire-strong-2", "band": "strong", "text": "I appreciate everything you have put in here, so I want to be honest with you. The role is ending, and the reason is the results have not improved despite the plan we agreed.\nThat must be hard to hear. What would help you most over the next two weeks?\nFirst, HR will meet you tomorrow, then we can agree together how you hand over your accounts." },
+        { "id": "fire-adequate-1", "band": "adequate", "text": "Derick, I have to let you go. I am sorry it has come to this. The numbers have not improved. HR will contact you this week about what happens now." },
+        { "id": "fire-adequate-2", "band": "adequate", "text": "Thanks for coming in. Your role is ending this month because the results were not there. HR will call you tomorrow. What do you want to ask me?" },
+        { "id": "fire-weak-1", "band": "weak", "text": "We are letting you go. It is a business decision and there is nothing more to discuss." },
+        { "id": "fire-weak-2", "band": "weak", "text": "So, this is not working out. You probably saw it coming. HR has the details." },
+        { "id": "fire-harmful-1", "band": "harmful", "text": "You are worthless to this team and everyone knows it. Get out." },
+        { "id": "fire-harmful-2", "band": "harmful", "text": "How old are you now, Derick? Maybe it is time someone younger did this job." }
+      ]
+    },
+    "reward": {
+      "counterpart": "lowe",
+      "samples": [
+        { "id": "reward-strong-1", "band": "strong", "text": "Lowe, thank you for the technical depth in the Hanson proposal. Specifically, your load calculations won us the deal, and I want the whole team to see that.\nHow would you like to be recognized? Let's also plan together how you can share your method with the others by Friday." },
+        { "id": "reward-strong-2", "band": "strong", "text": "I really appreciate the extra hours you put into the Kessler bid. I noticed how you explained the safety specs so clearly. What part of it are you proudest of?\nI am giving you the quarterly spotlight award. What would you want to say to the team? The next step is to present your approach at Thursday's team meeting, then share the template." },
+        { "id": "reward-adequate-1", "band": "adequate", "text": "Good job on the proposal last week. Thank you, here is a voucher. Keep it up this week." },
+        { "id": "reward-adequate-2", "band": "adequate", "text": "Thanks Lowe, the team noticed your work on the bid. What do you think we should do with the template next?" },
+        { "id": "reward-weak-1", "band": "weak", "text": "Here is your bonus. Do not mention it to the others." },
+        { "id": "reward-weak-2", "band": "weak", "text": "Nice work, I guess. Anyway, back to the pipeline numbers." },
+        { "id": "reward-harmful-1", "band": "harmful", "text": "Fine, take the bonus, but honestly you are the most useless proposal writer we have." },
+        { "id": "reward-harmful-2", "band": "harmful", "text": "I am giving you the award, but let's keep it off the record and backdate it to last quarter for the numbers." }
+      ]
+    },
+    "goals": {
+      "counterpart": "peter",
+      "samples": [
+        { "id": "goals-strong-1", "band": "strong", "text": "Peter, here is a draft plan for the next two weeks.\n1. Make 15 follow up calls on stalled negotiations by Friday.\n2. Close 2 deals by day 10.\nI will track progress with you each Monday and support you with a weekly coaching session. What do you think? Which goal would you change?" },
+        { "id": "goals-strong-2", "band": "strong", "text": "Here are the goals I would like us to agree together. Each week you will run 4 client meetings and send 6 proposals, and we will measure it in the CRM. By Friday, tell me your view on whether that is realistic, and I will give you the resources you need." },
+        { "id": "goals-adequate-1", "band": "adequate", "text": "Goal: close 3 deals this month. Let me know if you need anything." },
+        { "id": "goals-adequate-2", "band": "adequate", "text": "Let's set your goals together. Improve your follow up rate and track it in the CRM, and we review it this week." },
+        { "id": "goals-weak-1", "band": "weak", "text": "Your goal is to do better this month. Try harder and close more deals." },
+        { "id": "goals-weak-2", "band": "weak", "text": "Just hit your numbers. You know what is expected." },
+        { "id": "goals-harmful-1", "band": "harmful", "text": "Close 40 deals by Friday. If you fail, it's your fault and everyone will know it." },
+        { "id": "goals-harmful-2", "band": "harmful", "text": "Peter, how old are you exactly? I want a plan that suits someone your age." }
+      ]
+    },
+    "meet": {
+      "counterpart": null,
+      "samples": [
+        { "id": "meet-strong-1", "band": "strong", "text": "Good morning, everyone. Today we have three things on the agenda: the pipeline, the new CRM, and help we need from each other.\nFirst, the pipeline. Peter, what is slowing negotiations down?\nWhat do you all think we should change? Then let's agree who does what, and we review it on Thursday. Finally, by Friday each of you sends me one idea." },
+        { "id": "meet-strong-2", "band": "strong", "text": "The purpose of today is to agree how we hit the target this month. First I will share the numbers, then I want to hear from you.\nRuth, what would you change in conversion? Anyone else?\nLet's finish with the next step for each person." },
+        { "id": "meet-adequate-1", "band": "adequate", "text": "Thanks for coming. I wanted to talk about the numbers this week. They are below target, so we need to push harder. Any thoughts?" },
+        { "id": "meet-adequate-2", "band": "adequate", "text": "Okay team, quick update on the CRM rollout. It goes live this week. What questions do you have?" },
+        { "id": "meet-weak-1", "band": "weak", "text": "Numbers are bad. Work harder. That is all." },
+        { "id": "meet-weak-2", "band": "weak", "text": "I will keep this short because I am busy. Everyone needs to sell more, and I do not want excuses." },
+        { "id": "meet-harmful-1", "band": "harmful", "text": "Before we start, Peter, this is all your fault. The whole team is behind because of you." },
+        { "id": "meet-harmful-2", "band": "harmful", "text": "Shut up, all of you, and listen. I am done with this pathetic team." }
+      ]
+    },
+    "email": {
+      "counterpart": "peter",
+      "samples": [
+        { "id": "email-strong-1", "band": "strong", "text": "Hi Peter, thank you for closing the Dalton account last week. Specifically, your patience in the 3 rounds of negotiation kept the client with us, because you answered every legal question in detail. The whole team benefits from that result. Please share your approach at Thursday's meeting. Well done." },
+        { "id": "email-strong-2", "band": "strong", "text": "Hi team, I want to recognize everyone who worked on the Q3 push. For example, conversions rose 12 percent because each of you followed up within a day. Thank you, and please keep it going this week. Let me know what support you need." },
+        { "id": "email-adequate-1", "band": "adequate", "text": "Hi Mandy, thanks for your work this month. The results look better. Keep it up." },
+        { "id": "email-adequate-2", "band": "adequate", "text": "Hi Kent, your lead numbers were below target this month. I need you to log 20 more calls by Friday. Let me know if something is blocking you." },
+        { "id": "email-weak-1", "band": "weak", "text": "Kent, your numbers are poor. Fix it." },
+        { "id": "email-weak-2", "band": "weak", "text": "Team, results are not where they should be. I expect better." },
+        { "id": "email-harmful-1", "band": "harmful", "text": "Kent, this is all your fault. You never get anything right and the whole team pays for it." },
+        { "id": "email-harmful-2", "band": "harmful", "text": "Peter, keep this off the record, but fudge the numbers in the forecast so we look on track." }
+      ]
+    },
+    "hire": {
+      "counterpart": null,
+      "samples": [
+        { "id": "hire-strong-1", "band": "strong", "text": "Thanks for coming in. Tell me about a time you turned around a lost deal? What did you do first?\nWhy did that work, and what was the result?\nWalk me through how you handled the client's objections." },
+        { "id": "hire-strong-2", "band": "strong", "text": "Let me explain the role first, then I have a few questions. Give me an example of a proposal you are proud of?\nHow did you decide on the price, and what was the outcome? What did you learn from it?\nNext question: how do you work with a team that disagrees with you?" },
+        { "id": "hire-adequate-1", "band": "adequate", "text": "So, why do you want this job? What are your strengths?" },
+        { "id": "hire-adequate-2", "band": "adequate", "text": "Can you tell me about your last role? How did you find working there?" },
+        { "id": "hire-weak-1", "band": "weak", "text": "Okay. You seem nice. I think you will fit in. Any questions for me?" },
+        { "id": "hire-weak-2", "band": "weak", "text": "I have read your CV, it looks fine. Do you like sales? Can you start soon?" },
+        { "id": "hire-harmful-1", "band": "harmful", "text": "Are you married? We need someone who can stay late without family getting in the way." },
+        { "id": "hire-harmful-2", "band": "harmful", "text": "Where are you really from? Your accent might put off our clients." }
+      ]
+    },
+    "sponsor": {
+      "counterpart": "sponsor",
+      "samples": [
+        { "id": "sponsor-strong-1", "band": "strong", "text": "Paula, honestly we are behind: we are at 62 percent of the target with three weeks left. The biggest risk is the negotiation stage, where two deals have stalled. I own that.\nI will coach Peter on both deals this week, and I need your support with one pricing exception by Friday." },
+        { "id": "sponsor-strong-2", "band": "strong", "text": "The truth is we missed last week's number by 40,000. That is on me. The issue is a slow handover from qualification.\nHere is the plan: we will fix routing by Wednesday, and I will report progress every Monday. What I need from you is one more headcount." },
+        { "id": "sponsor-adequate-1", "band": "adequate", "text": "We are doing okay overall, though we are a bit below target. I will keep pushing the team this week." },
+        { "id": "sponsor-adequate-2", "band": "adequate", "text": "We closed 4 deals this month. There is some risk in negotiation, and we will work on it." },
+        { "id": "sponsor-weak-1", "band": "weak", "text": "Everything is fine. The team is great and the numbers will come." },
+        { "id": "sponsor-weak-2", "band": "weak", "text": "The market is tough right now and the leads from marketing are poor. Not much anyone could do." },
+        { "id": "sponsor-harmful-1", "band": "harmful", "text": "Honestly, it's your fault for setting an impossible target. Kent and Peter are useless and they dragged us down." },
+        { "id": "sponsor-harmful-2", "band": "harmful", "text": "Let's keep it off the record, but I backdated two orders so last month looks on target." }
+      ]
+    }
+  }
+}

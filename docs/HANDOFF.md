@@ -73,6 +73,8 @@ Interface: `IleadApi` in `src/api/types.ts`; HTTP adapter `createHttpApi` in `sr
 
 Base `VITE_ILEAD_SPEECH_URL`. Chunked uploads, one request at a time, transcript only (no audio kept, no voice or emotion inference): `POST /transcriptions` `{ mimeType, mode, language? }` gives `201 { id }`; `POST /transcriptions/{id}/chunks?seq={n}` raw audio gives `{ results }`; `POST /transcriptions/{id}/end` gives the remaining finals; `DELETE /transcriptions/{id}` cancels. `results` is `[{ kind: 'partial' | 'final', text }]`. Full contract: `docs/SPEECH.md`.
 
+On the server, `createTranscriber(config)` from `ai/` (D82, `docs/AI.md` 7) forwards the chunks to a speech to text service configured by `SPEECH_URL` and `SPEECH_KEY` (vendor neutral, the same chunked contract; a mock without them). NPC replies stream from `createNpcModel(config)`; `docs/AI.md` 2 shows how to wire them to the stream endpoint.
+
 ## 5. The author chat (GenieKreator)
 
 Base `VITE_GENIE_URL`. Schemas in `src/api/author.ts`; prompts the server must follow in `docs/genie/prompts/author-chat.md` and `leadership-lens.md`. A 404 or 501 falls back to the templates turn by turn.
@@ -83,6 +85,8 @@ Base `VITE_GENIE_URL`. Schemas in `src/api/author.ts`; prompts the server must f
 | `POST /author/draft` | `AuthorDraftRequest`: `{ brief, leadership_lens }` (the locked Leadership Lens module) | `AuthorDraftResponse`: `{ storyline, preview }` |
 
 The client checks every draft against the storyline schema and the copy guard (`src/author/copyGuard.ts`) and uses the templates when either fails. JSON Schemas: `docs/schemas/author-*.json`.
+
+The server implementation is `createAuthorDrafter(config)` in `ai/` (D82, `docs/AI.md`): the model reads answers, uploads and frameworks and writes the draft's copy; the question policy, the lens precedence and the template's mechanics stay rules; every draft passes the schema and the copy guard on the server too, or the templates draft is returned.
 
 ## 6. Configuration schemas
 
@@ -157,7 +161,7 @@ The board and group report budgets sit above the usual 2.5 s and 200 ms: compili
 ## 10. Known limits and open items
 
 - **The server is not built.** Every endpoint above is a proposal, kept in one file per client (`src/api/http.ts`, `src/engine/client.ts`, `src/speech/transcription.ts`, `src/author/drafter.ts`) so the paths are easy to align.
-- **AI on the server:** the evaluator and the NPC model need prompts and guardrails on the server; the mock's heuristics are for demos and tests only. The evaluator scores the words only, never the voice (SPEECH.md).
+- **AI on the server:** built in `ai/` (D82, `docs/AI.md`): `createNpcModel`, `createEvaluator`, `createAuthorDrafter`, `createTranscriber`, with versioned prompts, guardrails, verbatim quote checks, repair and mock fallbacks, and two gates (`npm run ai:calibrate`, `npm run ai:persona-check`) that pass on the mock. To configure: `ANTHROPIC_API_KEY`, `SPEECH_URL`, `SPEECH_KEY`. Not yet done: running both gates against the real model (no key in this repo), the live stream wiring in the server, a websocket speech adapter. The evaluator scores the words only, never the voice (SPEECH.md).
 - **Engine text is English** (D60): headlines, reasons, events and NPC lines come from the engine as strings. A second language needs either server side localization or codes the client words.
 - **Contract field names keep British spelling** where they already shipped (`organisation`, `behaviours`, a moment's `behaviour`); the copy shown is US English (D78). Renaming them is a breaking change to agree with the server team.
 - **Open decisions** in `docs/DECISIONS.md`: D9 (minus signs, proposed), D12 (HUD week label), D15 (breakpoints, mostly settled by D69 and D73), D16 (Week 0 practice chat, not designed), D23 (the command palette's page behind it), D30, D33, D35, D37 (simulation rules, proposed), D61 (the onboarding mic test is simulated; the resume recap uses fixture data), D19 (what is still missing from the GenieKreator docs).
