@@ -21,6 +21,8 @@
     "lint:copy": "vitest run src/i18n/catalog.test.ts",
     "storybook:smoke": "storybook build -o storybook-static --quiet && tsx tests/visual/stories-smoke.ts storybook-static",
     "calibrate": "tsx scripts/calibrate.ts",
+    "ai:calibrate": "tsx ai/scripts/calibrate.ts",
+    "ai:persona-check": "tsx ai/scripts/persona-check.ts",
     "benchmark": "tsx scripts/benchmark.ts",
     "schemas": "tsx scripts/schemas.ts",
     "vitals": "tsx scripts/vitals.ts",
