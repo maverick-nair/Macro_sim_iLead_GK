@@ -63,15 +63,15 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
   return (
     <div role="group" aria-label={t('stylesetting.member.aria', { name: m.name, title: m.title, mood: t('member.mood', { mood: m.mood }) })} data-member-id={m.id}
       className={`flex flex-col rounded-20 border-2 bg-surface-card backdrop-blur-12 ${styleChanged(m) ? 'border-accent-secondary' : 'border-line-default'}`}>
-      <div className={`relative h-30 overflow-hidden rounded-t-18 ${portraitBackdrop(m.away)}`}>
-        <img src={m.img} alt="" className={`size-full object-cover object-(--il-stylesetting-portrait-position) mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
+      <div className={`relative h-30 overflow-hidden rounded-t-18 short:h-19 shorter:h-15 ${portraitBackdrop(m.away)}`}>
+        <img src={m.img} alt="" className={`size-full object-cover object-(--il-stylesetting-portrait-position) mix-blend-multiply short:object-(--il-stylesetting-portrait-position-compact) ${m.away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-stylesetting-portrait-overlay)" />
         <div className="absolute bottom-2 start-3 flex flex-col text-member-on-portrait">
           <b className="text-15">{m.name}</b>
           <span className="text-12">{m.title}</span>
         </div>
       </div>
-      <div className="flex flex-col gap-2.5 px-3 pt-2.5 pb-3">
+      <div className="flex flex-col gap-2.5 px-3 pt-2.5 pb-3 short:gap-1.5 short:pt-2 short:pb-2">
         <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>
         <LastPeriodTag periodUnit={periodUnit} style={m.lastStyle} reaction={m.lastReaction} />
         <div data-tour="style-control"><StyleControl size="md" value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} /></div>

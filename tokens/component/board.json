@@ -8,6 +8,10 @@
       "value": "64px minmax(0, 1fr) calc({space.unit} * 6 + 72px)",
       "$description": "Narrow boards (under 1280 wide) with the actions panel folded to its 72px rail (D58)"
     },
+    "scroll-fade": {
+      "value": "linear-gradient(to bottom, transparent, color-mix(in oklch, var(--il-color-surface-solid) 92%, transparent))",
+      "$description": "The fade at the bottom of a region that scrolls inside the board, when more is below (D101)"
+    },
     "panel-max-width": {
       "value": "560px",
       "$description": "Period end and run end panels"

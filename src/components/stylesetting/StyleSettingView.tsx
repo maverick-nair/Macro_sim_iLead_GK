@@ -6,6 +6,7 @@ import { useI18n } from '../../i18n';
 import { useLens } from '../style/lens';
 import { mark, rich } from './rich';
 import { StyleSettingCard } from './StyleSettingCard';
+import { ScrollArea } from '../shell/ScrollArea';
 import { StyleSettingList } from './StyleSettingList';
 import { StyleSummary } from './StyleSummary';
 import { initials, type PeriodUnit, type StyleSettingMember } from './types';
@@ -105,8 +106,8 @@ function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine:
   const grid = introGrid(lens.styles.length);
   return (
     <div id={defsId} data-tour="style-definitions" className={`grid ${grid.className} gap-3`}>
-      <div className={`flex items-center gap-3 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 ${grid.prompt}`}>
-        <span aria-hidden="true" className="flex size-11 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">{initials(sponsorName)}</span>
+      <div className={`flex items-center gap-3 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 short:py-2 ${grid.prompt}`}>
+        <span aria-hidden="true" className="flex size-11 short:size-9 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">{initials(sponsorName)}</span>
         <span className="text-14 text-pretty">
           <span className="sr-only">{t('stylesetting.sponsor.says', { name: sponsorName })}</span>
           {t('common.quote', { text: sponsorLine })}
@@ -115,7 +116,7 @@ function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine:
       </div>
       <div role="list" aria-label={t('stylesetting.definitions.aria')} className="contents">
         {lens.styles.map(s => (
-          <div key={s.key} role="listitem" className="flex items-start gap-2.5 rounded-18 border border-line-default bg-surface-card px-3.5 py-3">
+          <div key={s.key} role="listitem" className="flex items-start gap-2.5 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 short:py-2">
             <span aria-hidden="true" className={`flex size-7.5 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
             <span className="flex flex-col">
               <b className="text-14">{s.name}</b>
@@ -152,7 +153,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
 
   const Root = p.embedded ? 'div' : 'main';
   return (
-    <Root className="flex flex-1 flex-col gap-4.5 px-8 pt-5 pb-8 tablet-portrait:px-6 tablet-portrait:pb-30" style={{ minHeight: p.minHeight }}>
+    <Root className="flex min-h-0 flex-1 flex-col gap-4.5 px-8 pt-5 pb-8 short:gap-3 short:pt-3 short:pb-4 tablet-portrait:px-6 tablet-portrait:pb-30" style={{ minHeight: p.minHeight }}>
       <header className="flex items-center gap-4">
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-stylesetting-logo-tracking) text-transparent">{t('hud.logo')}</span>
         {/* The screen's heading is the visible "Week 2 of 8 · Style setting", styled as designed. */}
@@ -174,18 +175,21 @@ export function StyleSettingView(p: StyleSettingViewProps) {
 
       <Intro sponsorName={p.sponsorName} sponsorLine={p.sponsorLine} />
 
-      {layout === 'cards' && (
-        <div className="grid grid-cols-5 gap-3.5 tablet-portrait:grid-cols-3">
-          {members.map(m => (
-            <StyleSettingCard key={m.id} member={m} periodUnit={periodUnit}
-              onStyle={k => p.onStyle(m.id, k)} onRationale={text => p.onRationale(m.id, text)}
-              tooltip={tipFor(m.id)} onTooltipChange={p.onTooltipChange && (k => p.onTooltipChange!(k ? { id: m.id, style: k } : null))}
-              rationaleAddon={p.rationaleAddon?.(m.id)} />
-          ))}
-        </div>
-      )}
+      {/* The team scrolls inside the screen when it does not fit the window (D101); the header and its Review stay put. */}
+      <ScrollArea label={t('stylesetting.team.aria')} className="-mx-2 px-2 pb-1">
+        {layout === 'cards' && (
+          <div className="grid grid-cols-5 gap-3.5 short:gap-2.5 tablet-portrait:grid-cols-3">
+            {members.map(m => (
+              <StyleSettingCard key={m.id} member={m} periodUnit={periodUnit}
+                onStyle={k => p.onStyle(m.id, k)} onRationale={text => p.onRationale(m.id, text)}
+                tooltip={tipFor(m.id)} onTooltipChange={p.onTooltipChange && (k => p.onTooltipChange!(k ? { id: m.id, style: k } : null))}
+                rationaleAddon={p.rationaleAddon?.(m.id)} />
+            ))}
+          </div>
+        )}
 
-      {layout === 'list' && <StyleSettingList members={members} periodUnit={periodUnit} onStyle={p.onStyle} />}
+        {layout === 'list' && <StyleSettingList members={members} periodUnit={periodUnit} onStyle={p.onStyle} />}
+      </ScrollArea>
 
       {view === 'summary' && (
         <StyleSummary members={members} periodUnit={periodUnit} period={p.period} onBack={p.onBack} onConfirm={p.onConfirm} confirmDisabled={confirmDisabled} focusOnOpen={focusSummary} />

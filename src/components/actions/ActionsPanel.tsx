@@ -99,11 +99,11 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
     );
   }
   return (
-    <aside aria-label={t('actions.title')} data-tour="actions" className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0">
+    <aside aria-label={t('actions.title')} data-tour="actions" className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0 short:pb-3">
       <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
         <SubPeriodUnitContext.Provider value={subPeriodUnit}>
           {drawer ? drawer : (
-            <div className="flex flex-1 flex-col gap-3.5 px-4.5 py-4">
+            <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto overscroll-contain px-4.5 py-4 short:gap-2.5 short:py-3">
               <div className="flex items-baseline justify-between">
                 <span className="flex items-center gap-1.5">
                   <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>

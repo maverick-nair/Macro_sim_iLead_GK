@@ -283,6 +283,7 @@
   --il-app-loading-shimmer: ilShimmer 1.4s linear infinite;
   --il-board-columns: 64px minmax(0, 1fr) 330px;
   --il-board-columns-collapsed: 64px minmax(0, 1fr) calc(var(--il-space-unit) * 6 + 72px);
+  --il-board-scroll-fade: linear-gradient(to bottom, transparent, color-mix(in oklch, var(--il-color-surface-solid) 92%, transparent));
   --il-board-panel-max-width: 560px;
   --il-button-radius: var(--il-radius-pill);
   --il-button-font-weight: var(--il-font-weight-700);
@@ -407,6 +408,7 @@
   --il-member-portrait-away: var(--il-fill-portrait-away);
   --il-member-portrait-overlay: linear-gradient(180deg, transparent 50%, var(--il-color-member-portrait-shade) 100%);
   --il-member-portrait-position: center 12%;
+  --il-member-portrait-position-compact: center 26%;
   --il-member-card-shadow: 0 6px 20px var(--il-color-member-shadow-rest);
   --il-member-card-shadow-selected: 0 0 0 1px var(--il-color-accent-secondary), 0 12px 36px var(--il-color-member-glow);
   --il-member-card-transition: translate var(--il-duration-base) var(--il-easing-settle), box-shadow var(--il-duration-base) var(--il-easing-brand), opacity var(--il-duration-base) var(--il-easing-brand);
@@ -448,6 +450,7 @@
   --il-outcome-band-columns: auto minmax(0,1.4fr) minmax(0,1fr) auto;
   --il-outcome-band-shadow: var(--il-shadow-outcome-glow);
   --il-outcome-band-enter: ilIn var(--il-duration-slow) var(--il-easing-settle);
+  --il-outcome-band-max-height-short: 34dvh;
   --il-outcome-portrait-ring: 0 0 0 3px var(--il-color-status-gain);
   --il-outcome-eyebrow-tracking: var(--il-tracking-eyebrow);
   --il-outcome-headline-tracking: var(--il-tracking-headline);
@@ -514,6 +517,7 @@
   --il-stylesetting-intro-leading: 1.4;
   --il-stylesetting-portrait-overlay: linear-gradient(180deg, transparent 50%, var(--il-color-stylesetting-portrait-shade));
   --il-stylesetting-portrait-position: center 12%;
+  --il-stylesetting-portrait-position-compact: center 26%;
   --il-stylesetting-list-columns: minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr);
   --il-stylesetting-list-lead-lens: minmax(160px,1.4fr) minmax(110px,1fr) minmax(110px,1fr);
   --il-stylesetting-list-radio-lens: minmax(52px,96px);

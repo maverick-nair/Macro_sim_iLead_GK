@@ -9,7 +9,8 @@
     },
     "portrait": {
       "overlay": { "value": "linear-gradient(180deg, transparent 50%, {color.stylesetting.portrait-shade})" },
-      "position": { "value": "center 12%", "$description": "Keeps faces in frame in the 120px card portrait" }
+      "position": { "value": "center 12%", "$description": "Keeps faces in frame in the 120px card portrait" },
+      "position-compact": { "value": "center 26%", "$description": "Keeps faces in frame in the shorter portrait of a short window (D101)" }
     },
     "list": {
       "columns": { "value": "minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr)", "$description": "Member, stats, last period, four style radios, reason" },

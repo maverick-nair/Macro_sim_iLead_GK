@@ -101,35 +101,7 @@ export function OutcomePanel(p: OutcomePanelProps) {
   const step = replies ? Math.max(0, Math.min(replies.length - 1, p.step ?? 0)) : 0;
   const current = replies?.[step];
 
-  return (
-    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-6 mt-0 mb-3.5 grid animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 rounded-22 border border-line-strong bg-surface-material px-5 py-4 shadow-(--il-outcome-band-shadow)">
-      <div className="size-21 overflow-hidden rounded-round bg-portrait-calm shadow-(--il-outcome-portrait-ring)">
-        <img src={p.person.img} alt={p.person.name} className="size-full object-cover object-top mix-blend-multiply" />
-      </div>
-      <div className="flex min-w-0 flex-col gap-2">
-        <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
-        <Heading level={p.headingLevel ?? 3} className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking)">{p.headline}</Heading>
-        {/* A decision with no words (energize, training, assess) has no reply to quote. */}
-        {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5">
-          {p.onReplay && (
-            <button type="button" onClick={p.onReplay} aria-label={t('outcome.replay', { name: p.person.shortName })}
-              className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}><PlayIcon /></button>
-          )}
-          <span className="text-14 text-pretty">{quote}</span>
-        </div>}
-        {p.whyOpen && <div id={whyId} className="contents">{details()}</div>}
-      </div>
-      <div className="flex min-w-0 flex-col gap-2.5">
-        {/* The whole team can be affected: the faces wrap on a narrow board (a tablet, D69) instead of squeezing. */}
-        <div className="flex flex-wrap gap-2">
-          {p.affected.map(a => (
-            <button key={a.id} type="button" onClick={() => p.onReveal(a.id)} aria-label={t('outcome.face', { name: a.name })} aria-pressed={p.revealed === a.id}
-              className={`relative size-11 flex-none cursor-pointer overflow-hidden rounded-round border-2 border-solid bg-transparent bg-portrait-calm p-0 ${p.revealed === a.id ? 'border-accent-secondary' : 'border-line-strong'} ${focus}`}>
-              <img src={a.img} alt="" className="size-full object-cover object-top mix-blend-multiply" />
-            </button>
-          ))}
-        </div>
-        {current && replies ? (
+  const stepper = current && replies ? (
           <div role="group" aria-label={t('outcome.replies.aria', { n: step + 1, total: replies.length, name: current.person.name })} data-tour="replies"
             className="flex flex-col gap-2 rounded-14 bg-surface-raised px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
@@ -147,7 +119,39 @@ export function OutcomePanel(p: OutcomePanelProps) {
               {current.changes.length > 0 && <div className="flex flex-wrap gap-1.5">{current.changes.map((c, i) => <ReasonChip key={i} {...c} showNumbers={p.showNumbers} onToggle={p.onToggleNumbers} />)}</div>}
             </div>
           </div>
-        ) : p.reaction && <span aria-live="polite" className="rounded-12 bg-surface-raised px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
+  ) : null;
+
+  return (
+    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-6 mt-0 mb-3.5 grid flex-none animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 rounded-22 border border-line-strong bg-surface-material px-5 py-4 shadow-(--il-outcome-band-shadow) short:mb-2 short:max-h-(--il-outcome-band-max-height-short) short:gap-4 short:overflow-y-auto short:overscroll-contain short:py-2.5">
+      <div className="size-21 overflow-hidden rounded-round bg-portrait-calm shadow-(--il-outcome-portrait-ring) short:size-14">
+        <img src={p.person.img} alt={p.person.name} className="size-full object-cover object-top mix-blend-multiply" />
+      </div>
+      <div className="flex min-w-0 flex-col gap-2">
+        <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
+        <Heading level={p.headingLevel ?? 3} className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking) short:text-17">{p.headline}</Heading>
+        {/* A decision with no words (energize, training, assess) has no reply to quote. */}
+        {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5">
+          {p.onReplay && (
+            <button type="button" onClick={p.onReplay} aria-label={t('outcome.replay', { name: p.person.shortName })}
+              className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}><PlayIcon /></button>
+          )}
+          <span className="text-14 text-pretty">{quote}</span>
+        </div>}
+        {/* Each person's own reply (D98) reads with the headline, so the band stays short. */}
+        {stepper}
+        {p.whyOpen && <div id={whyId} className="contents">{details()}</div>}
+      </div>
+      <div className="flex min-w-0 flex-col gap-2.5">
+        {/* The whole team can be affected: the faces wrap on a narrow board (a tablet, D69) instead of squeezing. */}
+        <div className="flex flex-wrap gap-2">
+          {p.affected.map(a => (
+            <button key={a.id} type="button" onClick={() => p.onReveal(a.id)} aria-label={t('outcome.face', { name: a.name })} aria-pressed={p.revealed === a.id}
+              className={`relative size-11 flex-none cursor-pointer overflow-hidden rounded-round border-2 border-solid bg-transparent bg-portrait-calm p-0 short:size-8 ${p.revealed === a.id ? 'border-accent-secondary' : 'border-line-strong'} ${focus}`}>
+              <img src={a.img} alt="" className="size-full object-cover object-top mix-blend-multiply" />
+            </button>
+          ))}
+        </div>
+        {!replies && p.reaction && <span aria-live="polite" className="rounded-12 bg-surface-raised px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
         <div className="flex flex-wrap gap-1.5">{chips}</div>
         <span className="text-13 text-fg-secondary">{p.ripple}</span>
         {changed.map((c, i) => <span key={i} className="text-13">{c}</span>)}

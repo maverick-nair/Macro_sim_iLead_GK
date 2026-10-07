@@ -110,6 +110,11 @@ for (const theme of ['dark', 'light'] as const) {
     await axe(page, 'team');
     await press(page, start);
 
+    // The demo round is offered before the run (D92); this flow skips it (guide.spec.ts plays it).
+    await expect(page.getByRole('heading', { level: 1, name: 'Try the demo first?' })).toBeFocused();
+    await axe(page, 'demo offer');
+    await press(page, page.getByRole('button', { name: 'Skip to the simulation' }));
+
     // Style setting, then the board: the profiles read in onboarding show their stats on the cards.
     await setStyles(page);
     await expect(page.getByRole('button', { name: /^Kent Goldberg, .*Skill \d+/ })).toBeVisible();

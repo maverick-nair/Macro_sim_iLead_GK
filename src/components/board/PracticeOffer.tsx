@@ -17,7 +17,7 @@ export interface PracticeOfferProps {
 export function PracticeOffer({ name, busy, onStart, onSkip }: PracticeOfferProps) {
   const { t } = useI18n();
   return (
-    <section aria-labelledby="practice-offer-title" className="mx-6 mt-4 flex flex-wrap items-center gap-4 rounded-20 border border-line-strong bg-surface-raised p-5">
+    <section aria-labelledby="practice-offer-title" className="mx-6 mt-4 flex flex-none flex-wrap items-center gap-4 rounded-20 border border-line-strong bg-surface-raised p-5 short:mt-2 short:gap-3 short:px-4 short:py-2.5">
       <div className="flex min-w-0 flex-1 basis-80 flex-col gap-1">
         <h2 id="practice-offer-title" className="m-0 text-16 font-700">{t('board.practice.title')}</h2>
         <p className="m-0 text-14 text-fg-secondary">{t('board.practice.body', { name })}</p>

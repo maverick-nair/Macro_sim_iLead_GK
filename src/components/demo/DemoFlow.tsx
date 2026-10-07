@@ -21,6 +21,8 @@ export interface DemoFlowProps {
   minHeight?: string;
   /** Where it starts (stories): the offer, the demo board, or "You are ready". */
   initialStage?: 'offer' | 'run' | 'done';
+  /** The demo board fits the window, as the board does (D101). */
+  fit?: boolean;
 }
 
 const EYEBROW = 'text-12 font-700 tracking-(--il-onboarding-eyebrow-tracking) text-accent-secondary uppercase';
@@ -33,7 +35,7 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
  * decision: a style, selecting a person, an instant action and its impact. Exit demo asks first (the
  * demo cannot be played again). It ends with "You are ready" and Play simulation.
  */
-export default function DemoFlow({ onDone, onPause, onSettings, paused, minHeight, initialStage = 'offer' }: DemoFlowProps) {
+export default function DemoFlow({ onDone, onPause, onSettings, paused, minHeight, initialStage = 'offer', fit }: DemoFlowProps) {
   const { t } = useI18n();
   const [stage, setStage] = useState<'offer' | 'run' | 'done'>(initialStage);
   const [client] = useState(() => createDemoClient(rememberedRun() ?? 'local'));
@@ -45,7 +47,7 @@ export default function DemoFlow({ onDone, onPause, onSettings, paused, minHeigh
   if (stage === 'run') {
     return (
       <EngineProvider client={client}>
-        <DemoRun paused={paused} onPause={onPause} onSettings={onSettings} onFinish={() => { useUi.getState().reset(); setStage('done'); }} onLeave={finish} />
+        <DemoRun fit={fit} paused={paused} onPause={onPause} onSettings={onSettings} onFinish={() => { useUi.getState().reset(); setStage('done'); }} onLeave={finish} />
       </EngineProvider>
     );
   }
@@ -67,7 +69,7 @@ export default function DemoFlow({ onDone, onPause, onSettings, paused, minHeigh
 }
 
 /** The demo board with its banner, its tips and the Exit demo confirmation. */
-function DemoRun({ paused, onPause, onSettings, onFinish, onLeave }: { paused?: boolean; onPause: () => void; onSettings: () => void; onFinish: () => void; onLeave: () => void }) {
+function DemoRun({ fit, paused, onPause, onSettings, onFinish, onLeave }: { fit?: boolean; paused?: boolean; onPause: () => void; onSettings: () => void; onFinish: () => void; onLeave: () => void }) {
   const { t } = useI18n();
   const { data: v } = useEngineView();
   const selected = useUi(s => s.selectedIds[0] ?? null);
@@ -111,7 +113,7 @@ function DemoRun({ paused, onPause, onSettings, onFinish, onLeave }: { paused?: 
   return (
     <>
       <div className="flex flex-1 flex-col" inert={confirmExit}>
-        <EngineBoard demo={{ prefill, banner }} paused={paused || confirmExit} onPause={onPause} onSettings={onSettings} />
+        <EngineBoard demo={{ prefill, banner }} fit={fit} paused={paused || confirmExit} onPause={onPause} onSettings={onSettings} />
       </div>
       {step && (
         <Coachmark target={target} trap={false} stepKey={step} onEscape={() => setConfirmExit(true)}

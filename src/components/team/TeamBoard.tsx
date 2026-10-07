@@ -132,10 +132,10 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
   const hintText = t('team.hint', { kind: hint.kind, name: hint.kind === 'selected' ? hint.name : '' });
 
   return (
-    <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-3 px-5 pt-1 pb-6">
+    <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-3 px-5 pt-1 pb-6 short:gap-2 short:pb-3">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-baseline gap-3">
-          <Heading level={headingLevel} className="m-0 text-20 font-700 tracking-(--il-team-title-tracking)">{t('team.title')}</Heading>
+          <Heading level={headingLevel} className="m-0 text-20 font-700 tracking-(--il-team-title-tracking) short:text-17">{t('team.title')}</Heading>
           <span aria-live="polite" className="text-13 text-fg-secondary">{hintText}</span>
         </div>
         <div className="relative flex items-center gap-2">
@@ -152,9 +152,9 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
           {legendOpen && <StyleLegend id={legendId} periodUnit={periodUnit} />}
         </div>
       </div>
-      <div className={`grid gap-3 ${GRID_COLS[columns.length] ?? 'grid-cols-6'}`}>
+      <div className={`grid gap-3 short:gap-2 ${GRID_COLS[columns.length] ?? 'grid-cols-6'}`}>
         {columns.map(({ key, cards, ...col }, i) => (
-          <div key={key} className="flex min-w-0 flex-col gap-2.5">
+          <div key={key} className="flex min-w-0 flex-col gap-2.5 short:gap-2">
             <StageHeader {...col} periodUnit={periodUnit} alignEnd={i >= columns.length / 2} />
             {cards.map(({ id, ...card }) => <MemberCard key={id} memberId={id} {...card} />)}
           </div>

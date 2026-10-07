@@ -121,6 +121,12 @@ export interface EngineBoardProps {
   demo?: DemoMode;
   /** Starts with this guided tour open (stories and tests); otherwise each tour starts itself the first time (D94). */
   startTour?: TourArea;
+  /**
+   * Fit the window (D101): the board, style setting and the live screen take exactly its height and scroll
+   * inside their regions, never the page; the week end, the end screen and the report stay documents. At
+   * large text sizes (D56) the page may scroll.
+   */
+  fit?: boolean;
 }
 
 export interface DemoMode {
@@ -130,6 +136,9 @@ export interface DemoMode {
   banner: ReactNode;
 }
 
+
+/** The play screens in the window's height exactly; with text larger than 100% (D56) they may grow and the page scroll. */
+const FIT = 'h-dvh max-h-dvh overflow-hidden text-large:h-auto text-large:max-h-none text-large:min-h-dvh text-large:overflow-visible';
 
 /** The catalog's words for an engine that could not be reached or answered nonsense. */
 const loadCode = (e: unknown) => (e instanceof EngineError ? (e.code === 'badPayload' ? 'badPayload' : e.code === 'network' ? 'network' : 'other') : 'network');
@@ -171,23 +180,38 @@ export function EngineBoard(props: EngineBoardProps) {
 function TeamScroll({ stages, label, children }: { stages: number; label: string; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [scrolls, setScrolls] = useState(false);
+  /** More of the team below the fold (D101): a fade at the bottom says so. */
+  const [more, setMore] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
-    const check = () => setScrolls(el.scrollWidth > el.clientWidth + 1);
+    const check = () => {
+      setScrolls(el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1);
+      setMore(el.scrollTop + el.clientHeight < el.scrollHeight - 2);
+    };
     const ro = new ResizeObserver(check);
     ro.observe(el);
+    // The inner column stretches to the region; the team inside it is what grows.
     if (el.firstElementChild) ro.observe(el.firstElementChild);
+    if (el.firstElementChild?.firstElementChild) ro.observe(el.firstElementChild.firstElementChild);
+    el.addEventListener('scroll', check, { passive: true });
     check();
-    return () => ro.disconnect();
+    return () => { ro.disconnect(); el.removeEventListener('scroll', check); };
   }, []);
-  // A card column at least 44 spacing units wide, the 3 unit gaps between, and the board's 5 unit padding each side.
-  const minWidth = `calc(var(--spacing) * ${44 * stages + 3 * Math.max(0, stages - 1) + 10})`;
-  const base = 'col-start-2 row-start-1 flex min-h-0 min-w-0 flex-col';
+  // A card column at least 38 spacing units (152px) wide, so five stages fit beside the Actions panel at 1280 (D101), the 3 unit gaps between, and the board's 5 unit padding each side.
+  const minWidth = `calc(var(--spacing) * ${38 * stages + 3 * Math.max(0, stages - 1) + 10})`;
+  const base = 'col-start-2 row-start-1 relative flex min-h-0 min-w-0 flex-col';
   const inner = <div className="flex flex-1 flex-col" style={{ minWidth }}>{children}</div>;
-  return scrolls
-    ? <div ref={ref} role="region" aria-label={label} tabIndex={0} className={`${base} overflow-x-auto focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary`}>{inner}</div>
-    : <div ref={ref} className={base}>{inner}</div>;
+  // The team scrolls inside its region when it does not fit the window (D101): narrow windows sideways,
+  // short windows down. Then it is a focusable, named scroll region, and a fade marks what is below.
+  return (
+    <div className={base}>
+      {scrolls
+        ? <div ref={ref} role="region" aria-label={label} tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">{inner}</div>
+        : <div ref={ref} className="flex min-h-0 flex-1 flex-col overflow-auto">{inner}</div>}
+      {more && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-(image:--il-board-scroll-fade)" />}
+    </div>
+  );
 }
 
 function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
@@ -988,7 +1012,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <>
             {top}
             {outcome}
-            <div className={`relative grid min-h-0 flex-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
+            <div className={`relative grid min-h-0 flex-1 grid-rows-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
               {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
                 <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns}
@@ -1022,7 +1046,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
         <Suspense fallback={null}>
           {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
-            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header button[aria-expanded]')} />}
+            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header [data-hud-score]')} />}
           {pal && plainBoard && <CommandPalette open onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />}
           {panel && <PlayPanels panel={panel} view={v} nameOf={nameOf} availability={availability} onClose={() => setPanel(null)}
             onTour={() => { setPanel(null); setTour('board'); }}
@@ -1034,7 +1058,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }
 
   return (
-    <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} data-celebration={v.gamification.celebration} data-tablet={tablet ? '' : undefined} className="relative flex flex-1 flex-col">
+    <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} data-celebration={v.gamification.celebration} data-tablet={tablet ? '' : undefined}
+      data-fit={app.fit && !weekEnd && !endScreen ? '' : undefined}
+      className={`relative flex min-h-0 flex-1 flex-col ${app.fit && !weekEnd && !endScreen ? FIT : ''}`}>
       {/* The week end, the end screen and the report bring their own headings. */}
       {!weekEnd && !endScreen && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
       {body}

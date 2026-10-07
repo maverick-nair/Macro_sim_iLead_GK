@@ -3,7 +3,8 @@
     "band": {
       "columns": { "value": "auto minmax(0,1.4fr) minmax(0,1fr) auto", "$description": "Portrait, what happened, who it affected, actions" },
       "shadow": { "value": "{shadow.outcome-glow}" },
-      "enter": { "value": "ilIn {duration.slow} {easing.settle}" }
+      "enter": { "value": "ilIn {duration.slow} {easing.settle}" },
+      "max-height-short": { "value": "34dvh", "$description": "On a short window the band scrolls inside this height, so the team keeps the rest (D101)" }
     },
     "portrait": {
       "ring": { "value": "0 0 0 3px {color.status.gain}", "$description": "The person the outcome is about" }

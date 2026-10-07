@@ -68,7 +68,7 @@ export interface MetricsStripProps {
   sponsor: SponsorConfidence;
 }
 
-const tile = 'flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12';
+const tile = 'flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12 short:gap-1 short:py-1.5';
 const PULSE = [
   { group: 'upbeat', bg: 'bg-metrics-pulse-upbeat' },
   { group: 'steady', bg: 'bg-metrics-pulse-steady' },
@@ -112,7 +112,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
       aria-label={t('metrics.pulse.valueAria', { value: number(pulse.value), dir: pulseDir, unit: pulse.periodUnit ?? 'week', ...counts })} className={tile}>
       <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
       <div className="flex items-baseline gap-2">
-        <b className="text-22 font-700">{number(pulse.value)}</b>
+        <b className="text-22 font-700 short:text-18">{number(pulse.value)}</b>
         <span className={`text-12 font-700 ${pulseTone}`}><span aria-hidden="true">{t('metric.trend.glyph', { dir: pulseDir })}</span>{' '}{t('metric.trend.word', { dir: pulseDir })}</span>
       </div>
       {moodBar}
@@ -121,7 +121,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   const targetTile = (
     <div role="group" aria-label={t('metrics.target.aria', { value, target: goal })} data-tour="target" className={`${tile} tablet-portrait:col-span-2`}>
       <span className="text-12 text-fg-secondary">{target.label ?? t('metrics.target.label')}</span>
-      <div className="flex items-baseline gap-1.5 text-large:flex-wrap"><b className="text-20">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
+      <div className="flex items-baseline gap-1.5 text-large:flex-wrap"><b className="text-20 short:text-17">{value}</b><span className="text-12 text-fg-secondary">{t('metrics.target.of', { target: goal })}</span></div>
       <div className="relative h-1.5 rounded-3 bg-track">
         <div className="absolute top-0 bottom-0 start-0 rounded-3 bg-meter" style={{ width: pct(target.target ? target.value / target.target : 0) }} />
         <div title={paceTitle} className="absolute -top-0.75 -bottom-0.75 w-0.5 bg-fg-primary" style={{ left: pct(target.pace) }} />
@@ -159,7 +159,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   );
 
   return (
-    <section aria-label={t('metrics.strip.aria')} data-tour="kpis" className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
+    <section aria-label={t('metrics.strip.aria')} data-tour="kpis" className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 short:pb-2 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
       {pulseTile}
       {targetTile}

@@ -63,6 +63,12 @@ export interface AppProps {
   engine?: boolean;
   /** Out of sight behind the small screen notice (D69): nothing moves, as while paused. */
   held?: boolean;
+  /**
+   * Fit the play screens to the window (D101): the board, style setting, the live screen and the demo take
+   * exactly its height and scroll inside their own regions, never the page. At large text sizes the page may
+   * scroll. The galleries and stories leave it off and size frames with `minHeight`.
+   */
+  fit?: boolean;
 }
 
 type Stats = Record<string, Record<MetricKey, number>>;
@@ -135,6 +141,11 @@ function applyMoves(stats: Stats, outcome: Outcome): Stats {
  * Layout of the themed root. Colors and type come from the generated `.il-theme` token layers. The
  * padding keeps a tablet's status bar and home indicator clear (D69); it is 0 on laptops and desktops.
  */
+/**
+ * The engine's screens fill the window (D101). The board fits it exactly (`fit` on EngineBoard); the week
+ * end, the end screen and the report are documents and may scroll the page.
+ */
+const PLAY_FIT = 'flex min-h-dvh flex-col';
 const THEME_ROOT = 'il-theme relative flex flex-col overflow-hidden pt-(--il-app-safe-top) pr-(--il-app-safe-right) pb-(--il-app-safe-bottom) pl-(--il-app-safe-left) font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]';
 
 export function App(p: AppProps) {
@@ -318,17 +329,17 @@ export function App(p: AppProps) {
                 ? <div>{p.screen ? <EngineOnboarding act={act} minHeight={minH} /> : <EngineStart act={act} minHeight={minH} onResume={resume} />}</div>
                 : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
               {engine && scr === 'demo' && (
-                <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
-                  <DemoFlow minHeight={minH} paused={!!s.overlay || held} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
+                <div className={p.fit ? PLAY_FIT : 'flex flex-1 flex-col'} style={p.fit ? undefined : { minHeight: minH }}>
+                  <DemoFlow minHeight={minH} fit={p.fit} paused={!!s.overlay || held} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
                     onDone={() => { useUi.getState().setPracticeOffer(true); act.go('style'); }} />
                 </div>
               )}
               {engine && (scr === 'style' || scr === 'board') && (
-                <div className="flex flex-1 flex-col" style={{ minHeight: minH }}>
+                <div className={p.fit ? PLAY_FIT : 'flex flex-1 flex-col'} style={p.fit ? undefined : { minHeight: minH }}>
                   <EngineBoard voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
                     paused={!!s.overlay || held} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
                     actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })}
-                    onExit={exitUrl ? () => act.overlay('exit') : undefined} />
+                    onExit={exitUrl ? () => act.overlay('exit') : undefined} fit={p.fit} />
                 </div>
               )}
               {!engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}

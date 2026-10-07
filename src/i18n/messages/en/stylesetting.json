@@ -44,5 +44,6 @@
   "stylesetting.summary.away": "{name}'s applies when {pronoun, select, he {he is} she {she is} other {they are}} back from {reason, select, leave {leave} other {training}}.",
   "stylesetting.summary.missing": "{count, plural, one {# style still to choose.} other {# styles still to choose.}}",
   "stylesetting.back": "Go back",
-  "stylesetting.confirm": "Confirm styles"
+  "stylesetting.confirm": "Confirm styles",
+  "stylesetting.team.aria": "Your team"
 }

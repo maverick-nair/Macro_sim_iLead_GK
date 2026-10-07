@@ -19,6 +19,10 @@
       "position": {
         "value": "center 12%",
         "$description": "Keeps faces in frame in the 118px portrait"
+      },
+      "position-compact": {
+        "value": "center 26%",
+        "$description": "Keeps faces in frame in the shorter portrait of a short window (D101)"
       }
     },
     "card": {

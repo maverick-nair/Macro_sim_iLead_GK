@@ -165,7 +165,7 @@ export function Hud(p: HudProps) {
   const rich = p.breakdown !== undefined;
 
   return (
-    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2 tablet-portrait:min-h-18 tablet-portrait:flex-nowrap tablet-portrait:gap-3 tablet-portrait:border-b tablet-portrait:border-line-default">
+    <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap short:py-2 text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2 tablet-portrait:min-h-18 tablet-portrait:flex-nowrap tablet-portrait:gap-3 tablet-portrait:border-b tablet-portrait:border-line-default">
       <div className="flex items-center gap-2.5 tablet-portrait:-order-3">
         <ClientLogo />
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
@@ -206,7 +206,7 @@ export function Hud(p: HudProps) {
         onBlur={e => { if (!wrap.current?.contains(e.relatedTarget as Node | null)) setOpen(false); }}
         onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); scoreButton.current?.focus(); } }}>
         {/* A disclosure: Enter, Space (a click with no pointer) and a tap toggle the breakdown. A mouse click keeps it open, since hovering already opened it. */}
-        <button ref={scoreButton} type="button" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
+        <button ref={scoreButton} type="button" data-hud-score="" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
           onPointerDown={e => { touch.current = e.pointerType !== 'mouse'; }}
           onClick={e => setOpen(e.detail === 0 || touch.current ? !open : true)}
           className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:border tablet-portrait:border-line-strong tablet-portrait:px-3.5 ${focus}`}>

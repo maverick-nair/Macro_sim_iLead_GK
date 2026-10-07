@@ -136,8 +136,8 @@ export function MemberCard(props: MemberCardProps) {
       className={`relative flex flex-col rounded-18 border-2 bg-surface-card backdrop-blur-12 outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-2 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
     >
       <button type="button" aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} onClick={e => { e.stopPropagation(); onSelect(); }} className="il-select sr-only" />
-      <div className={`relative h-29.5 overflow-hidden rounded-t-16 ${backdrop(mood, away)}`}>
-        <img src={img} alt="" className={`absolute inset-0 size-full object-cover object-(--il-member-portrait-position) mix-blend-multiply ${away ? 'grayscale' : ''}`} />
+      <div className={`relative h-29.5 overflow-hidden rounded-t-16 short:h-21 shorter:h-17 ${backdrop(mood, away)}`}>
+        <img src={img} alt="" className={`absolute inset-0 size-full object-cover object-(--il-member-portrait-position) mix-blend-multiply short:object-(--il-member-portrait-position-compact) ${away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-member-portrait-overlay)" />
         {selected && <span aria-hidden="true" className="absolute top-2 start-2 flex size-6 items-center justify-center rounded-round bg-(image:--il-fill-brand) text-brand-deep-space"><Check /></span>}
         <div className="absolute top-2 end-2 flex gap-1">
@@ -157,7 +157,7 @@ export function MemberCard(props: MemberCardProps) {
           {!statsHidden && <TrustRing value={trust} placement="inline" />}
         </div>
       </div>
-      <div className="flex flex-col gap-2 px-3 pt-2.5 pb-3">
+      <div className="flex flex-col gap-2 px-3 pt-2.5 pb-3 short:gap-1.5 short:pt-2 short:pb-2">
         {/*
           Name and title truncate beside the profile button. On cards too narrow to leave the name
           64px (a 1024 wide board), the button moves to its own row so the name gets the full width.

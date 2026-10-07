@@ -70,7 +70,7 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
     <ApiContext.Provider value={api}>
       <EngineProvider client={engine}>
         <SmallScreenGate theme={theme} clientTheme={applied}>
-          {covered => <App screen={q.get('start') === 'board' ? 'board' : q.get('start') === 'demo' ? 'demo' : undefined} engine={q.get('engine') !== 'off'} theme={theme} clientTheme={applied} held={covered} minHeight="100vh" />}
+          {covered => <App screen={q.get('start') === 'board' ? 'board' : q.get('start') === 'demo' ? 'demo' : undefined} engine={q.get('engine') !== 'off'} theme={theme} clientTheme={applied} held={covered} minHeight="100vh" fit />}
         </SmallScreenGate>
       </EngineProvider>
     </ApiContext.Provider>
