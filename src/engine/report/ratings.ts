@@ -1,6 +1,7 @@
 import { bandScore, roundHalfUp } from '../sim/score';
 import { firstName } from '../sim/sim';
 import type { Band, LiveRecord, Sim } from '../sim/types';
+import { msg, type Copy, type Msg } from '../copy';
 
 /**
  * Skill ratings (docs/genie/scoring-and-report.md 5.4), shared by the report (`build.ts`) and the run
@@ -8,13 +9,13 @@ import type { Band, LiveRecord, Sim } from '../sim/types';
  */
 
 export const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
-const Unit = (sim: Sim) => sim.config.time.period.unit[0].toUpperCase() + sim.config.time.period.unit.slice(1);
 export const shortName = (sim: Sim, id: string) => (id === 'sponsor' ? sim.config.sponsor.name.split(' ')[0] : firstName(sim, id));
 
 /** "Week 2, Meet face to face with Kent" */
-export function when(sim: Sim, r: LiveRecord) {
-  const who = r.memberIds.length === 1 ? ` with ${shortName(sim, r.memberIds[0])}` : r.actionKey === 'sponsor' ? ` with ${shortName(sim, 'sponsor')}` : '';
-  return `${Unit(sim)} ${r.period}, ${r.title ?? r.actionKey}${who}`;
+export function when(sim: Sim, r: LiveRecord): Msg {
+  const who = r.memberIds.length === 1 ? shortName(sim, r.memberIds[0]) : r.actionKey === 'sponsor' ? shortName(sim, 'sponsor') : null;
+  const base = { unit: sim.config.time.period.unit, n: r.period, title: r.title ?? r.actionKey };
+  return who ? msg('engine.when.with', { ...base, name: who }) : msg('engine.when', base);
 }
 
 /** The level index a skill score reaches on the storyline's scale. */
@@ -32,7 +33,7 @@ export interface SkillRating {
   capped: boolean;
   level: { index: number; name: string } | null;
   anchor: string | null;
-  quotes: Array<{ text: string; when: string }>;
+  quotes: Array<{ text: string; when: Copy }>;
   /** The live records this skill was observed in, most recent last. */
   recordIds: string[];
   /** Whether every record behind the rating was reviewed by an assessor, some were, or none. */

@@ -5,6 +5,7 @@ import { sponsorLevel } from './view';
 import { advanceStreak, checkBadges, leadershipScore, nextStreakBonus, pulse, roundHalfUp, tierFor, weekScore } from './score';
 import { addMessage, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
 import type { Change, PeriodSummary, Sim } from './types';
+import { msg, type Copy } from '../copy';
 
 /** Period end, gamification and the move to the next period (docs/SIMULATION.md section 7). */
 
@@ -13,7 +14,7 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   // Conversations left open when the period ends are closed unfinished: they never score later.
   for (const [id, it] of Object.entries(sim.interactions)) {
     delete sim.interactions[id];
-    log(sim, { kind: 'interaction', title: `${sim.config.actions.find(a => a.key === it.actionKey)?.name ?? 'Conversation'} left unfinished`, memberIds: it.memberIds, changes: [] });
+    log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: sim.config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [] });
   }
   runRemaining(sim, rng);
   drift(sim);
@@ -31,8 +32,9 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   const sFrom = sim.sponsorAtStart;
   const unit = sim.config.time.period.unit;
   const onPace = sim.funnel.periodValue >= valueIdeal;
-  const paceChanges = sponsorChange(sim, onPace ? g.sponsor.periodPace.met : g.sponsor.periodPace.missed, onPace ? `Revenue on pace this ${unit}` : `Revenue behind pace this ${unit}`);
-  if (paceChanges.length) log(sim, { kind: 'periodEnd', title: onPace ? `Revenue on pace this ${unit}` : `Revenue behind pace this ${unit}`, memberIds: [], changes: paceChanges });
+  const paceText = msg('engine.pace', { onPace: onPace ? 'yes' : 'no', unit });
+  const paceChanges = sponsorChange(sim, onPace ? g.sponsor.periodPace.met : g.sponsor.periodPace.missed, paceText);
+  if (paceChanges.length) log(sim, { kind: 'periodEnd', title: paceText, memberIds: [], changes: paceChanges });
   // Crossing the unlock line upward offers one reward; dropping below the check in line costs a day next period.
   // No unlock at the last period end: there is no next period to use it in.
   const unlockOffer = sim.period < count && sFrom < g.sponsor.unlockAt && sim.sponsor.value >= g.sponsor.unlockAt ? [...g.unlocks] : null;
@@ -41,13 +43,13 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   if (checkIn) {
     sim.checkInPeriod = sim.period + 1;
     const first = sim.config.sponsor.name.split(' ')[0];
-    addMessage(sim, { from: 'sponsor', kind: 'news', title: 'CEO check in', body: `${first}'s confidence has dropped. The CEO wants a check in, which takes a ${sim.config.time.subPeriod.unit} of your time next ${unit}.`, dueIn: null, urgent: true });
+    addMessage(sim, { from: 'sponsor', kind: 'news', title: msg('engine.checkIn.title'), body: msg('engine.checkIn.body', { name: first, sub: sim.config.time.subPeriod.unit, unit }), dueIn: null, urgent: true });
   }
 
   // Role change requests ignored through the period cost trust (6.4).
   for (const m of sim.members) {
     if (m.roleChangeRequestedPeriod !== null && m.roleChangeRequestedPeriod < sim.period && m.reassignedInPeriod !== sim.period) {
-      trustChange(m, sim.config.triggers.find(t => t.kind === 'roleChangeRequest')?.params.ignoredTrust ?? -4, { label: 'Request ignored', cause: `${firstName(sim, m.id)} asked to change roles and nothing happened.`, rule: 'Ignoring a role change request lowers trust.', evidence: [] });
+      trustChange(m, sim.config.triggers.find(t => t.kind === 'roleChangeRequest')?.params.ignoredTrust ?? -4, { label: msg('engine.ignored.label'), cause: msg('engine.ignored.cause', { name: firstName(sim, m.id) }), rule: msg('engine.ignored.rule'), evidence: [] });
       m.roleChangeRequestedPeriod = null;
     }
     m.periodEnds.push({ result: m.result, morale: m.morale, trust: m.trust });
@@ -74,32 +76,28 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
     funnel, bottleneck, unlockOffer, checkIn, news: sim.period < count ? upcomingNews(sim) : []
   };
   sim.periods.push(summary);
-  log(sim, { kind: 'periodEnd', title: `End of ${unit} ${sim.period}`, memberIds: [], changes: [] });
+  log(sim, { kind: 'periodEnd', title: msg('engine.periodEnd', { unit, n: sim.period }), memberIds: [], changes: [] });
   sim.phase = sim.period >= count ? 'ended' : 'periodEnd';
   return summary;
 }
 
 /**
  * The week end banner, worded from what happened: someone who bounced back, else the stars; then one
- * sentence on people and one on the business (D60: engine text is server content).
+ * sentence on people and one on the business, as message codes the client words (D60, D83).
  */
 function storyOf(sim: Sim, week: PeriodSummary['week'], kpis: PeriodSummary['kpis'], pace: number, bottleneck: string | null) {
   const unit = sim.config.time.period.unit;
   const start = new Map(sim.members.map(m => [m.id, m.periodEnds.length > 1 ? m.periodEnds[m.periodEnds.length - 2].morale : sim.config.members.find(p => p.id === m.id)?.start.morale ?? m.morale]));
   const back = sim.members.map(m => ({ m, gain: m.morale - (start.get(m.id) ?? m.morale) })).filter(x => x.gain >= 8 && (start.get(x.m.id) ?? 100) < 50).sort((a, b) => b.gain - a.gain)[0];
-  const headline = back ? `${firstName(sim, back.m.id)} is back in the game.`
-    : week.stars === 3 ? `A ${unit} to remember.`
-    : week.stars === 2 ? `A solid ${unit}.`
-    : week.stars === 1 ? `A mixed ${unit}.`
-    : `A hard ${unit}.`;
+  const headline: Copy = back ? msg('engine.week.back', { name: firstName(sim, back.m.id) }) : msg('engine.week.stars', { stars: week.stars, unit });
   const people = week.styleFit.total
-    ? `You gave ${week.styleFit.correct} of ${week.styleFit.total} people the style they needed${kpis.morale.end > kpis.morale.start ? ', and team morale rose' : kpis.morale.end < kpis.morale.start ? ', but team morale slipped' : ''}.`
-    : '';
+    ? msg('engine.week.people', { correct: week.styleFit.correct, total: week.styleFit.total, morale: kpis.morale.end > kpis.morale.start ? 'up' : kpis.morale.end < kpis.morale.start ? 'down' : 'flat' })
+    : null;
   const stage = bottleneck ? sim.config.stages.find(s => s.key === bottleneck)?.name ?? bottleneck : null;
-  const business = pace >= 1
-    ? `Revenue is on pace${stage ? `; ${stage} is the stage to watch next ${unit}` : ''}.`
-    : `Revenue is behind pace${stage ? `, so next ${unit} is about ${stage}` : ''}.`;
-  return { headline, line: [people, business].filter(Boolean).join(' ') };
+  const business = stage
+    ? msg('engine.week.businessStage', { onPace: pace >= 1 ? 'yes' : 'no', stage, unit })
+    : msg('engine.week.business', { onPace: pace >= 1 ? 'yes' : 'no' });
+  return { headline, line: people ? msg('engine.week.line', { people, business }) : business };
 }
 
 /** Applies a chosen unlock reward (Configuration Spec, Unlock rewards). */
@@ -109,10 +107,8 @@ export function chooseReward(sim: Sim, key: string) {
   if (key === 'bonus_day') sim.bonusPeriod = sim.period + 1;
   if (key === 'hire_budget') sim.hireBudget = true;
   if (key === 'team_activity') sim.freeTeamActivity = true;
-  log(sim, { kind: 'periodEnd', title: `Reward taken: ${REWARD_NAMES[key] ?? key}`, memberIds: [], changes: [] });
+  log(sim, { kind: 'periodEnd', title: msg('engine.rewardTaken', { reward: key }), memberIds: [], changes: [] });
 }
-
-const REWARD_NAMES: Record<string, string> = { bonus_day: 'a bonus day', hire_budget: 'extra hire budget', team_activity: 'a team activity without cooldown' };
 
 export function startNextPeriod(sim: Sim) {
   if (sim.phase !== 'periodEnd') throw new IntentError('The period has not ended', 'wrongPhase');
@@ -149,12 +145,12 @@ function drift(sim: Sim) {
   const changes: Change[] = [];
   for (const m of sim.members) {
     if (touched.has(m.id) || m.away > 0) continue;
-    const reason = { label: 'Left alone', cause: `Nobody spent time with ${firstName(sim, m.id)} this ${unit}.`, rule: `Without any attention, people lose ${morale} morale${result ? ` and ${result} result` : ''} a ${unit}.`, evidence: [] };
+    const reason = { label: msg('engine.drift.label'), cause: msg('engine.drift.cause', { name: firstName(sim, m.id), unit }), rule: result ? msg('engine.drift.rule2', { morale, result, unit }) : msg('engine.drift.rule', { morale, unit }), evidence: [] };
     for (const [k, by] of [['morale', morale], ['result', result]] as const) {
       if (!by) continue;
       const from = m[k], to = Math.max(0, from - by);
       if (to !== from) { m[k] = to; changes.push({ subject: m.id, metric: k, from, to, delta: to - from, reason }); }
     }
   }
-  if (changes.length) log(sim, { kind: 'periodEnd', title: 'Some people were left alone', memberIds: [...new Set(changes.map(c => c.subject))], changes });
+  if (changes.length) log(sim, { kind: 'periodEnd', title: msg('engine.drift.log'), memberIds: [...new Set(changes.map(c => c.subject))], changes });
 }

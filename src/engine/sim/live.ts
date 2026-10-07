@@ -4,6 +4,7 @@ type Person = StorylineConfig['members'][number];
 import { IntentError } from './actions';
 import { firstName, member, nextId, person } from './sim';
 import type { Interaction, Mood, Sim, Turn } from './types';
+import { msg, type Copy } from '../copy';
 import { moodOf } from './view';
 
 /**
@@ -27,10 +28,10 @@ export interface NpcContext {
   concernRevealed: boolean;
   actionName: string;
   /** Body of the message being replied to (chat replies open with it). */
-  replyTo?: string;
+  replyTo?: Copy;
 }
 
-export interface NpcReply { text: string; revealsConcern?: boolean; signsOff?: boolean }
+export interface NpcReply { text: Copy; revealsConcern?: boolean; signsOff?: boolean }
 
 export interface NpcModel {
   reply(ctx: NpcContext): NpcReply | Promise<NpcReply>;
@@ -106,16 +107,8 @@ export const personaNpc: NpcModel = {
   }
 };
 
-/** Coaching tips per format, one per interaction (Configuration Spec, Hints: on request). */
-const HINTS: Record<string, string> = {
-  roleplay: 'Ask an open question about how they are doing before you get to the plan, then agree one concrete next step.',
-  chat: 'Answer what they asked first, then say what happens next and by when.',
-  email: 'Name the specific result or behaviour, say why it matters, and close with what you expect next.',
-  meeting: 'Start with the purpose and agenda, invite the quiet people by name, and close with who does what.',
-  sponsor: 'Own the numbers, name the biggest risk honestly, and say what support you need.',
-  interview: 'Ask for a specific example, then probe what they did and what happened. Keep every question about the job.',
-  plan: 'Make each goal measurable and dated, and agree the support you will give.'
-};
+/** Coaching tips per format, one per interaction (Configuration Spec, Hints: on request): `engine.hint` in the catalog. */
+const HINT_FORMATS = new Set(['roleplay', 'chat', 'email', 'meeting', 'sponsor', 'interview', 'plan']);
 
 export function speakerFor(sim: Sim, it: Interaction): string {
   if (it.format === 'sponsor') return 'sponsor';
@@ -211,15 +204,17 @@ export function interruptTurn(sim: Sim, id: string, turnId: string, shownChars: 
   const it = get(sim, id);
   const t = it.turns.find(x => x.id === turnId);
   if (!t || t.by === 'you') throw new IntentError('Unknown turn', 'unknownTurn');
-  if (shownChars < t.text.length) { t.text = t.text.slice(0, Math.max(0, shownChars)).trimEnd(); t.interrupted = true; }
+  // Engine copy is worded on the client, so only a plain line can be cut where it stopped; a message is kept whole.
+  if (typeof t.text !== 'string') t.interrupted = true;
+  else if (shownChars < t.text.length) { t.text = t.text.slice(0, Math.max(0, shownChars)).trimEnd(); t.interrupted = true; }
 }
 
 /** One coaching tip per interaction, when the author allows hints. */
-export function requestHint(sim: Sim, id: string): string {
+export function requestHint(sim: Sim, id: string): Copy {
   const it = get(sim, id);
   const mode = sim.config.actions.find(a => a.key === it.actionKey)?.live.hints ?? 'onRequest';
   if (mode === 'off') throw new IntentError('Hints are off for this interaction', 'noHints');
-  it.hint ??= HINTS[it.format] ?? HINTS.roleplay;
+  it.hint ??= msg('engine.hint', { format: HINT_FORMATS.has(it.format) ? it.format : 'roleplay' });
   return it.hint;
 }
 
@@ -234,6 +229,6 @@ export async function nextCandidate(sim: Sim, npc: NpcModel, id: string) {
 }
 
 /** Everything the participant said or wrote, for the evaluator. */
-export const participantText = (it: Interaction) => it.turns.filter(t => t.by === 'you').map(t => t.text).join('\n');
+export const participantText = (it: Interaction) => it.turns.filter(t => t.by === 'you').map(t => String(t.text)).join('\n');
 /** The NPC's last words, for the outcome panel. */
 export const lastNpcWords = (it: Interaction) => [...it.turns].reverse().find(t => t.by !== 'you')?.text ?? '';

@@ -16,13 +16,21 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "$ref": "#/$defs/Text"
         },
         "organisation": {
-          "type": [
-            "string",
-            "null"
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Text"
+            },
+            {
+              "type": "null"
+            }
           ]
+        },
+        "locale": {
+          "default": "en",
+          "type": "string"
         },
         "intro": {
           "anyOf": [
@@ -32,19 +40,19 @@
                 "welcome": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   }
                 },
                 "product": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   }
                 },
                 "targets": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   }
                 }
               },
@@ -73,7 +81,7 @@
           "minLength": 1
         },
         "title": {
-          "type": "string"
+          "$ref": "#/$defs/Text"
         },
         "styles": {
           "minItems": 2,
@@ -92,13 +100,13 @@
                 "maxLength": 2
               },
               "name": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "short": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "description": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             },
             "required": [
@@ -127,10 +135,10 @@
                 ]
               },
               "label": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "short": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             },
             "required": [
@@ -258,10 +266,10 @@
             "minLength": 1
           },
           "name": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "title": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "pronoun": {
             "type": "string",
@@ -398,15 +406,23 @@
             "type": "boolean"
           },
           "shared": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "careerGoal": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "assessedStages": {
@@ -452,31 +468,35 @@
             "type": "boolean"
           },
           "promise": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "profile": {
             "type": "object",
             "properties": {
               "previous": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "tenure": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "experience": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "skills": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "remarks": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "relations": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             },
             "required": [
@@ -611,7 +631,7 @@
             "minLength": 1
           },
           "name": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "members": {
             "type": "integer",
@@ -658,10 +678,10 @@
             "minLength": 1
           },
           "name": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "description": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "scope": {
             "type": "string",
@@ -736,7 +756,7 @@
                   "minLength": 1
                 },
                 "label": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 },
                 "blocked": {
                   "anyOf": [
@@ -1666,7 +1686,7 @@
             "minLength": 1
           },
           "text": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "state": {
             "type": "string",
@@ -1714,10 +1734,10 @@
             ]
           },
           "title": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "body": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "urgent": {
             "type": "boolean"
@@ -1786,10 +1806,10 @@
             ]
           },
           "title": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "body": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "memberId": {
             "anyOf": [
@@ -1841,13 +1861,13 @@
                   "type": "object",
                   "properties": {
                     "label": {
-                      "type": "string"
+                      "$ref": "#/$defs/Text"
                     },
                     "cause": {
-                      "type": "string"
+                      "$ref": "#/$defs/Text"
                     },
                     "rule": {
-                      "type": "string"
+                      "$ref": "#/$defs/Text"
                     },
                     "evidence": {
                       "type": "array",
@@ -1855,10 +1875,10 @@
                         "type": "object",
                         "properties": {
                           "quote": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           },
                           "by": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           },
                           "judgedByAI": {
                             "type": "boolean"
@@ -1891,9 +1911,13 @@
             }
           },
           "label": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "messageId": {
@@ -1940,10 +1964,10 @@
               "minLength": 1
             },
             "headline": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             },
             "reply": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             },
             "affected": {
               "type": "array",
@@ -1959,7 +1983,7 @@
                 "minLength": 1
               },
               "additionalProperties": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             },
             "changes": {
@@ -2001,13 +2025,13 @@
                     "type": "object",
                     "properties": {
                       "label": {
-                        "type": "string"
+                        "$ref": "#/$defs/Text"
                       },
                       "cause": {
-                        "type": "string"
+                        "$ref": "#/$defs/Text"
                       },
                       "rule": {
-                        "type": "string"
+                        "$ref": "#/$defs/Text"
                       },
                       "evidence": {
                         "type": "array",
@@ -2015,10 +2039,10 @@
                           "type": "object",
                           "properties": {
                             "quote": {
-                              "type": "string"
+                              "$ref": "#/$defs/Text"
                             },
                             "by": {
-                              "type": "string"
+                              "$ref": "#/$defs/Text"
                             },
                             "judgedByAI": {
                               "type": "boolean"
@@ -2051,16 +2075,20 @@
               }
             },
             "ripple": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "changed": {
               "maxItems": 2,
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             },
             "from": {
@@ -2071,7 +2099,7 @@
                   "minLength": 1
                 },
                 "name": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 },
                 "img": {
                   "type": [
@@ -2146,7 +2174,7 @@
                   "minLength": 1
                 },
                 "name": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 }
               },
               "required": [
@@ -2253,7 +2281,7 @@
                 "minLength": 1
               },
               "name": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "min": {
                 "type": "number"
@@ -2325,10 +2353,10 @@
             "maximum": 9007199254740991
           },
           "headline": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "line": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "week": {
             "type": "object",
@@ -2505,7 +2533,7 @@
                   "minLength": 1
                 },
                 "reason": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 }
               },
               "required": [
@@ -2646,15 +2674,19 @@
                   ]
                 },
                 "title": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 },
                 "body": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 },
                 "impact": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 }
               },
@@ -2704,10 +2736,10 @@
             "minLength": 1
           },
           "name": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "description": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "earned": {
             "type": "boolean"
@@ -2725,9 +2757,13 @@
             ]
           },
           "reason": {
-            "type": [
-              "string",
-              "null"
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
             ]
           }
         },
@@ -2746,10 +2782,10 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "$ref": "#/$defs/Text"
         },
         "title": {
-          "type": "string"
+          "$ref": "#/$defs/Text"
         },
         "img": {
           "type": [
@@ -2758,7 +2794,7 @@
           ]
         },
         "styleLine": {
-          "type": "string"
+          "$ref": "#/$defs/Text"
         },
         "value": {
           "type": "number"
@@ -2785,7 +2821,7 @@
             "type": "object",
             "properties": {
               "text": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               },
               "delta": {
                 "type": "number"
@@ -2878,7 +2914,7 @@
             ]
           },
           "title": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "memberIds": {
             "type": "array",
@@ -2926,13 +2962,13 @@
                   "type": "object",
                   "properties": {
                     "label": {
-                      "type": "string"
+                      "$ref": "#/$defs/Text"
                     },
                     "cause": {
-                      "type": "string"
+                      "$ref": "#/$defs/Text"
                     },
                     "rule": {
-                      "type": "string"
+                      "$ref": "#/$defs/Text"
                     },
                     "evidence": {
                       "type": "array",
@@ -2940,10 +2976,10 @@
                         "type": "object",
                         "properties": {
                           "quote": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           },
                           "by": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           },
                           "judgedByAI": {
                             "type": "boolean"
@@ -2976,7 +3012,7 @@
             }
           },
           "quote": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           }
         },
         "required": [
@@ -3016,15 +3052,23 @@
               "minLength": 1
             },
             "actionName": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "optionLabel": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "oneShot": {
@@ -3040,7 +3084,7 @@
                     "minLength": 1
                   },
                   "name": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "img": {
                     "type": [
@@ -3064,7 +3108,7 @@
                   "minLength": 1
                 },
                 "name": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 },
                 "img": {
                   "type": [
@@ -3090,15 +3134,19 @@
               "type": "object",
               "properties": {
                 "goal": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 },
                 "known": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   }
                 },
                 "mood": {
@@ -3121,7 +3169,7 @@
                 "promises": {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   }
                 },
                 "declaredStyle": {
@@ -3158,7 +3206,7 @@
                     "minLength": 1
                   },
                   "text": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "voice": {
                     "type": "boolean"
@@ -3207,9 +3255,13 @@
                   ]
                 },
                 "text": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 }
               },
@@ -3230,7 +3282,7 @@
                         "minLength": 1
                       },
                       "name": {
-                        "type": "string"
+                        "$ref": "#/$defs/Text"
                       },
                       "img": {
                         "type": [
@@ -3239,22 +3291,22 @@
                         ]
                       },
                       "title": {
-                        "type": "string"
+                        "$ref": "#/$defs/Text"
                       },
                       "cv": {
                         "type": "object",
                         "properties": {
                           "previous": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           },
                           "experience": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           },
                           "skills": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           },
                           "remarks": {
-                            "type": "string"
+                            "$ref": "#/$defs/Text"
                           }
                         },
                         "required": [
@@ -3386,5 +3438,140 @@
     "live",
     "liveCap",
     "report"
-  ]
+  ],
+  "$defs": {
+    "Text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMessage"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyTemplate"
+        }
+      ]
+    },
+    "EngineCopyMessage": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^engine\\.[A-Za-z0-9_.]+$"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "description": "An engine.* catalog code with parameters, worded on the client (D83)."
+    },
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMessage"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyTemplate"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMoney"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyList"
+        }
+      ]
+    },
+    "EngineCopyTemplate": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      },
+      "required": [
+        "template",
+        "params"
+      ],
+      "description": "Authored copy with {placeholders} filled on the client."
+    },
+    "EngineCopyMoney": {
+      "type": "object",
+      "properties": {
+        "money": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "locale": {
+          "type": "string",
+          "minLength": 2
+        },
+        "display": {
+          "type": "string",
+          "enum": [
+            "symbol",
+            "narrowSymbol",
+            "code"
+          ]
+        }
+      },
+      "required": [
+        "money",
+        "currency",
+        "locale",
+        "display"
+      ]
+    },
+    "EngineCopyList": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "conj": {
+          "type": "string",
+          "enum": [
+            "and",
+            "or",
+            "comma"
+          ]
+        }
+      },
+      "required": [
+        "list",
+        "conj"
+      ]
+    }
+  }
 }

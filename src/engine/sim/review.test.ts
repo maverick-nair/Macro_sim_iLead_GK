@@ -1,3 +1,4 @@
+import { wordAll as en } from '../../i18n/engineCopy';
 import { describe, expect, it } from 'vitest';
 import { parseStoryline, type StorylineConfig } from '../config';
 import { lazyClient } from '../client';
@@ -17,22 +18,22 @@ async function onBoard(seed = 1, cfg = config) {
 }
 async function nextPeriod(e: Awaited<ReturnType<typeof onBoard>>) {
   await e.dispatch({ type: 'endPeriod' });
-  const v = e.view();
+  const v = en(e.view());
   if (v.pendingReward) await e.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] });
-  if (e.view().phase === 'periodEnd') {
+  if (en(e.view()).phase === 'periodEnd') {
     await e.dispatch({ type: 'startNextPeriod' });
     await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
   }
 }
 async function toPeriod(e: Awaited<ReturnType<typeof onBoard>>, n: number) {
-  while (e.view().clock.period < n && e.view().phase !== 'ended') await nextPeriod(e);
+  while (en(e.view()).clock.period < n && en(e.view()).phase !== 'ended') await nextPeriod(e);
 }
 
 describe('review fixes', () => {
   it('answers a message once: reopening it resumes the same conversation', async () => {
     const e = await onBoard(3);
     await toPeriod(e, 4);
-    const brief = e.view().inbox.find(m => m.title.startsWith('Briefing'))!;
+    const brief = en(e.view()).inbox.find(m => m.title.startsWith('Briefing'))!;
     const a = await e.dispatch({ type: 'openConversation', kind: 'sponsor', messageId: brief.id });
     const b = await e.dispatch({ type: 'openConversation', kind: 'sponsor', messageId: brief.id });
     expect(b.interactionId).toBe(a.interactionId);
@@ -44,33 +45,33 @@ describe('review fixes', () => {
     const e = await onBoard();
     const r = await e.dispatch({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });
     await e.dispatch({ type: 'endPeriod' });
-    expect(e.view().live).toBeNull();
-    expect(e.view().history.some(l => /left unfinished/.test(l.title))).toBe(true);
+    expect(en(e.view()).live).toBeNull();
+    expect(en(e.view()).history.some(l => /left unfinished/.test(l.title))).toBe(true);
     await expect(e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'Hello' })).rejects.toMatchObject({ code: 'unknownInteraction' });
   });
 
   it('drifts everyone left alone, even after a sponsor briefing', async () => {
     const e = await onBoard(3);
     await toPeriod(e, 4);
-    const brief = e.view().inbox.find(m => m.title.startsWith('Briefing'))!;
+    const brief = en(e.view()).inbox.find(m => m.title.startsWith('Briefing'))!;
     const r = await e.dispatch({ type: 'openConversation', kind: 'sponsor', messageId: brief.id });
     await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'We are behind and I own that.' });
     await e.dispatch({ type: 'endPeriod' });
-    expect(e.view().history.some(l => l.title === 'Some people were left alone')).toBe(true);
+    expect(en(e.view()).history.some(l => l.title === 'Some people were left alone')).toBe(true);
   });
 
   it('penalises a missed briefing in its own period, including the last one', async () => {
     const e = await onBoard(3);
     await toPeriod(e, 4);
     await e.dispatch({ type: 'endPeriod' });
-    expect(e.view().periods.at(-1)!.period).toBe(4);
-    expect(e.view().history.some(l => l.title === 'Sponsor briefing missed' && l.period === 4)).toBe(true);
+    expect(en(e.view()).periods.at(-1)!.period).toBe(4);
+    expect(en(e.view()).history.some(l => l.title === 'Sponsor briefing missed' && l.period === 4)).toBe(true);
     await e.dispatch({ type: 'startNextPeriod' });
     await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
     await toPeriod(e, 8);
     await e.dispatch({ type: 'endPeriod' });
-    expect(e.view().phase).toBe('ended');
-    expect(e.view().history.some(l => l.title === 'Sponsor briefing missed' && l.period === 8)).toBe(true);
+    expect(en(e.view()).phase).toBe('ended');
+    expect(en(e.view()).history.some(l => l.title === 'Sponsor briefing missed' && l.period === 8)).toBe(true);
   });
 
   it('checks training cover across everyone picked', async () => {
@@ -81,21 +82,21 @@ describe('review fixes', () => {
   it('assess reveals role fit for the chosen stage', async () => {
     const e = await onBoard();
     await e.dispatch({ type: 'planAction', action: 'assess', memberIds: ['justin'], stage: 'conversion' });
-    const fit = e.view().members.find(m => m.id === 'justin')!.assessments.conversion;
+    const fit = en(e.view()).members.find(m => m.id === 'justin')!.assessments.conversion;
     expect(fit).toBeDefined();
     expect(fit.skill).toBeGreaterThanOrEqual(0);
-    expect(e.view().history.some(l => /Assessed for/.test(l.title))).toBe(true);
+    expect(en(e.view()).history.some(l => /Assessed for/.test(l.title))).toBe(true);
   });
 
   it('a harmful interview never lands the candidate', async () => {
     const cfg = { ...config, maxPerStage: 3, actions: config.actions.map(a => (a.key === 'hire' ? { ...a, unlockPeriod: 1 } : a)) };
     const e = await onBoard(2, cfg);
     const r = await e.dispatch({ type: 'planAction', action: 'hire', memberIds: [] });
-    const cand = e.view().live!.candidates![0].id;
+    const cand = en(e.view()).live!.candidates![0].id;
     await e.dispatch({ type: 'sendTurn', interactionId: r.interactionId!, text: 'How old are you? Are you married?' });
     await e.dispatch({ type: 'chooseCandidate', interactionId: r.interactionId!, candidateId: cand });
-    expect(e.view().members.some(m => m.id === cand)).toBe(false);
-    expect(e.view().history.some(l => /turned the offer down/.test(l.title))).toBe(true);
+    expect(en(e.view()).members.some(m => m.id === cand)).toBe(false);
+    expect(en(e.view()).history.some(l => /turned the offer down/.test(l.title))).toBe(true);
   });
 
   it('letting someone go unsettles the rest of the team', async () => {
@@ -114,7 +115,7 @@ describe('review fixes', () => {
     const short = { ...config, time: { ...config.time, period: { ...config.time.period, count: 3 } }, sponsor: { ...config.sponsor, briefings: undefined } };
     const e = await onBoard(1, short as StorylineConfig);
     await toPeriod(e, 2);
-    expect(e.view().inbox.some(m => m.title.startsWith('Briefing'))).toBe(true);
+    expect(en(e.view()).inbox.some(m => m.title.startsWith('Briefing'))).toBe(true);
   });
 
   it('lazyClient retries after a failed load', async () => {
@@ -128,7 +129,7 @@ describe('review fixes', () => {
   it('static decisions produce an outcome with their changes and reasons', async () => {
     const e = await onBoard();
     await e.dispatch({ type: 'planAction', action: 'energize', option: 'team_lunch', memberIds: [] });
-    const oc = e.view().outcome!;
+    const oc = en(e.view()).outcome!;
     expect(oc.headline).toMatch(/Energize the team/);
     expect(oc.changes.length).toBeGreaterThan(0);
     expect(oc.changes.every(c => c.reason.evidence.length > 0)).toBe(true);
@@ -136,9 +137,9 @@ describe('review fixes', () => {
 
   it('move options say which stages have no room', async () => {
     const e = await onBoard();
-    const reassign = e.view().actions.find(a => a.key === 'swap')!.options.find(o => o.key === 'reassign')!;
+    const reassign = en(e.view()).actions.find(a => a.key === 'swap')!.options.find(o => o.key === 'reassign')!;
     expect(reassign.stages!.every(st => st.blocked?.reason === 'stageFull')).toBe(true);
-    const assess = e.view().actions.find(a => a.key === 'assess')!.options[0];
+    const assess = en(e.view()).actions.find(a => a.key === 'assess')!.options[0];
     expect(assess.stages!.every(st => st.blocked === null)).toBe(true);
   });
 
@@ -146,11 +147,11 @@ describe('review fixes', () => {
     const e = await onBoard();
     const r = await e.dispatch({ type: 'planAction', action: 'fire', memberIds: ['peter'] });
     await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'I am sorry. Here is what happens next, step by step.' });
-    expect(e.view().outcome!.from.name).toBe('Peter Higgins');
+    expect(en(e.view()).outcome!.from.name).toBe('Peter Higgins');
   });
 
   it('team averages carry a trend from the engine', async () => {
     const e = await onBoard();
-    expect(e.view().kpis.every(k => ['up', 'down', 'flat'].includes(k.trend))).toBe(true);
+    expect(en(e.view()).kpis.every(k => ['up', 'down', 'flat'].includes(k.trend))).toBe(true);
   });
 });

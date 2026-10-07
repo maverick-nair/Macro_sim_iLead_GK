@@ -1,5 +1,5 @@
 import { parseStoryline, type Purpose, type StorylineConfig, type StorylineInput } from '../engine/config';
-import { BenchmarkSummary, type GroupReport } from '../engine/groupContract';
+import { BenchmarkSummary, type GroupReportInput } from '../engine/groupContract';
 import salesElevator from '../engine/storylines/sales-elevator.json';
 import { withSixStyles } from '../engine/storylines/sixStyles';
 import { buildGroupReport, summarizeBenchmark } from '../engine/report/group';
@@ -79,7 +79,7 @@ async function cachedBenchmark(lens: string | null | undefined): Promise<Benchma
 }
 
 /** The mock cohort's group report (`getGroupReport` on the mock API). */
-export async function mockGroupReport(cohortId: string, opts: MockGroupOptions = {}): Promise<GroupReport> {
+export async function mockGroupReport(cohortId: string, opts: MockGroupOptions = {}): Promise<GroupReportInput> {
   const purpose = opts.purpose ?? 'development';
   const config = mockStoryline(opts.lens, purpose);
   const size = Math.max(0, Math.min(200, opts.size ?? (purpose === 'assessment' ? 18 : 37)));

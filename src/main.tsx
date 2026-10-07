@@ -8,6 +8,8 @@ import { EngineProvider } from './engine/react';
 import { createDefaultClient } from './engine/client';
 import { useMediaQuery } from './lib/useMediaQuery';
 import { startTheme, useThemeState } from './theme/bootstrap';
+import { appLocale, dirOf, setAppLocale } from './i18n/core';
+import { loadEngineCopy, loadLocale } from './i18n/locales';
 import './styles/global.css';
 
 // The galleries are review tools; they stay out of the participant's bundle.
@@ -66,6 +68,14 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
   );
 }
 
+// The participant's language from the launch (`?locale=es`, D83): numbers, dates and money follow it, and
+// the page's lang and dir. `en-XA` and `ar-XB` are pseudo locales for testing overflow and right to left.
+setAppLocale(new URLSearchParams(location.search).get('locale'));
+document.documentElement.lang = appLocale();
+document.documentElement.dir = dirOf(appLocale());
+// The engine's copy loads now, beside the first view (D83).
+void loadEngineCopy().catch(() => undefined);
+
 const path = location.pathname.replace(/\/+$/, '');
 const play = !['/screens', '/states', '/author', '/group'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
 const launched = play ? launch() : null;
@@ -79,8 +89,11 @@ function Root() {
   return launched && <Play launched={launched} />;
 }
 
-createRoot(document.getElementById('root')!).render(
+const render = () => createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Root />
   </StrictMode>
 );
+// English is in the first load; another language's catalog comes first (a failed load renders in English).
+if (appLocale() === 'en') render();
+else void loadLocale().catch(e => console.warn('Locale catalog failed to load, showing English', e)).then(render);

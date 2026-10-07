@@ -1,6 +1,7 @@
 import type { StorylineConfig } from '../config';
 import type { NeedKey } from '../lens';
 import type { Mismatch, Style, Triple } from './rules';
+import type { Copy } from '../copy';
 
 export type MetricKey = 'skill' | 'morale' | 'result' | 'trust';
 export type Band = 'strong' | 'adequate' | 'weak' | 'harmful';
@@ -33,10 +34,10 @@ export interface Evaluation {
   skills?: Array<{ key: string; band: Band; evidence: string[] }>;
 }
 
-export interface EvidenceQuote { quote: string; by: string; judgedByAI: boolean }
+export interface EvidenceQuote { quote: Copy; by: Copy; judgedByAI: boolean }
 
 /** Why a number moved. Every metric change carries one (brief, rule 5). */
-export interface Reason { label: string; cause: string; rule: string; evidence: EvidenceQuote[] }
+export interface Reason { label: Copy; cause: Copy; rule: Copy; evidence: EvidenceQuote[] }
 
 export interface Change {
   /** Member id, or 'team' / 'sponsor'. */
@@ -108,7 +109,8 @@ export interface Turn {
   id: string;
   /** 'you', a member or candidate id, or 'sponsor'. */
   by: string;
-  text: string;
+  /** The participant's words, or the NPC's: model output, or engine copy when a reply opens with the message it answers. */
+  text: Copy;
   voice?: boolean;
   /** The participant spoke over the NPC; the text is what was shown. */
   interrupted?: boolean;
@@ -122,7 +124,7 @@ export interface Interaction {
   startedAt: number;
   replyTo?: string;
   turns: Turn[];
-  hint: string | null;
+  hint: Copy | null;
   concernRevealed: boolean;
   /** The NPC signed off; the participant can only end it now. */
   closed: boolean;
@@ -142,8 +144,8 @@ export interface InboxMessage {
   id: string;
   from: string;
   kind: 'chat' | 'email' | 'sponsor' | 'news';
-  title: string;
-  body: string;
+  title: Copy;
+  body: Copy;
   atAbsSub: number;
   dueAbsSub: number | null;
   urgent: boolean;
@@ -190,7 +192,7 @@ export interface LiveRecord {
   /** Report fields (scoring-and-report.md 5 and 7). Optional so tests can build bare records. */
   id?: string;
   sub?: number;
-  title?: string;
+  title?: Copy;
   /** The style the evaluator read, when the conversation is style tagged (one person). */
   styleShown?: Style | null;
   skills?: Array<{ key: string; band: Band; evidence: string[] }>;
@@ -238,7 +240,7 @@ export interface LogEntry {
   period: number;
   sub: number;
   kind: 'style' | 'action' | 'interaction' | 'event' | 'trigger' | 'periodEnd';
-  title: string;
+  title: Copy;
   memberIds: string[];
   changes: Change[];
   quote?: string;
@@ -249,21 +251,21 @@ export interface Outcome {
   actionKey: string;
   /** Who the reply is from: a member id or 'sponsor'. */
   speaker: string;
-  headline: string;
-  reply: string;
+  headline: Copy;
+  reply: Copy;
   affected: string[];
-  reactions: Record<string, string>;
+  reactions: Record<string, Copy>;
   changes: Change[];
-  ripple: string | null;
-  changed: string[];
+  ripple: Copy | null;
+  changed: Copy[];
 }
 
 /** How the period went (scoring-and-report.md 6, week score and stars). */
 export interface PeriodSummary {
   period: number;
   /** One line headline and a sentence on the week, worded by the engine. */
-  headline: string;
-  line: string;
+  headline: Copy;
+  line: Copy;
   week: {
     score: number;
     stars: number;
@@ -282,7 +284,7 @@ export interface PeriodSummary {
   pace: number;
   /** Periods in a row at the streak's star level, and the bonus it earned this period. */
   streak: { count: number; bonus: number; total: number; next: number | null };
-  newBadges: Array<{ key: string; reason: string }>;
+  newBadges: Array<{ key: string; reason: Copy }>;
   /** Confidence and its level word at the start and end of the period. */
   sponsor: { from: number; to: number; fromLevel: SponsorLevel; toLevel: SponsorLevel };
   pulse: { from: number; to: number };
@@ -321,8 +323,8 @@ export interface Sim {
   /** Streak bonus earned so far, up to the cap. */
   streakBonus: number;
   /** Badge keys in the order earned, with when and why. */
-  badges: Array<{ key: string; period: number; reason: string }>;
-  sponsor: { value: number; causes: Array<{ text: string; delta: number }> };
+  badges: Array<{ key: string; period: number; reason: Copy }>;
+  sponsor: { value: number; causes: Array<{ text: Copy; delta: number }> };
   /** Team means at the start of the run, for the People pillar. */
   runStart: { morale: number; trust: number };
   liveRecords: LiveRecord[];

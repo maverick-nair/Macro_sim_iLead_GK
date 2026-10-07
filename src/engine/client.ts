@@ -1,4 +1,5 @@
 import { readSse } from '../ai/sse';
+import { loadEngineCopy } from '../i18n/locales';
 import { EngineView, Intent, IntentResult, type StreamChunk } from './contract';
 
 /**
@@ -44,11 +45,14 @@ export function createHttpClient(baseUrl: string, sessionId: string, fetchImpl: 
     return body;
   }
   return {
+    // The engine's copy is worded as a payload is parsed: its catalog loads beside the first request (D83).
     async view() {
-      return parse(EngineView, await call('/view'));
+      const [body] = await Promise.all([call('/view'), loadEngineCopy()]);
+      return parse(EngineView, body);
     },
     async send(intent) {
-      return parse(IntentResult, await call('/intents', { method: 'POST', body: JSON.stringify(parse(Intent, intent)) }));
+      const [body] = await Promise.all([call('/intents', { method: 'POST', body: JSON.stringify(parse(Intent, intent)) }), loadEngineCopy()]);
+      return parse(IntentResult, body);
     },
     async *streamTurn(interactionId, turn, signal) {
       let res: Response;

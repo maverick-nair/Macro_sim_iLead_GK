@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { parseStoryline } from '../config';
+import { wordAll } from '../../i18n/engineCopy';
 import salesElevator from '../storylines/sales-elevator.json';
 import { play, type Policy } from './policies';
 
@@ -8,6 +9,8 @@ import { play, type Policy } from './policies';
  * Replay guard (D70): the lens drives style fit through a table, and the Readiness Based default must
  * replay every seeded run exactly as the quadrant maths did. The hashes cover what the run decides
  * (people, money, periods, score, log, badges and the report's run facts), not text added later.
+ * Engine copy is message codes since D83: the hash reads it worded in English, which must be the very
+ * text the engine wrote before, so the codes and the English catalog are checked here too.
  */
 const parsed = parseStoryline(salesElevator);
 if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
@@ -20,7 +23,7 @@ async function digest(policy: Policy, seed: number) {
   const facts = { members, money, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
     skills: r.skills.map(s => ({ key: s.key, observations: s.observations, score: s.score, level: s.level, quotes: s.quotes })), summary: r.summary };
   // Portraits moved to WebP (D78), an asset change, not a decision: hashed as the PNGs they were recorded with.
-  const json = JSON.stringify(facts).replace(/\/assets\/npc\/(\w+)\.webp/g, '/assets/npc/$1.png');
+  const json = JSON.stringify(wordAll(facts)).replace(/\/assets\/npc\/(\w+)\.webp/g, '/assets/npc/$1.png');
   return createHash('sha256').update(json).digest('hex').slice(0, 16);
 }
 

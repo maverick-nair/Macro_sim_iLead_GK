@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
+import { wordCopy } from '../i18n/engineCopy';
+import type { Copy, Param as CopyParam } from './copy';
 import type { ReportViewInput } from './reportContract';
 
 // Zod compiles a fast path for each object schema on its first parse. The views are parsed a few times
@@ -14,8 +16,21 @@ z.config({ jitless: true });
  * engine and the mock alike, which also applies the copy rules to all engine and AI text.
  */
 
-/** Text from the engine or an AI model, made safe for the copy rules on the way in. */
-export const Text = z.string().transform(sanitizeCopy);
+/**
+ * Engine copy (D60, D83): the engine sends a message code with parameters, worded on the client from the
+ * ICU catalog in the participant's language. Codes are `engine.*` keys only. Parameters may nest:
+ * messages, lists, money (formatted in the participant's locale) and authored templates.
+ */
+const Param: z.ZodType<CopyParam> = z.lazy(() => z.union([z.string(), z.number(), CopyMsg, CopyTemplate, CopyMoney, CopyList]));
+const CopyMsg = z.object({ code: z.string().regex(/^engine\.[A-Za-z0-9_.]+$/), params: z.record(z.string(), Param).optional() }).meta({ id: 'EngineCopyMessage', description: 'An engine.* catalog code with parameters, worded on the client (D83).' });
+const CopyTemplate = z.object({ template: z.string(), params: z.record(z.string(), Param) }).meta({ id: 'EngineCopyTemplate', description: 'Authored copy with {placeholders} filled on the client.' });
+const CopyMoney = z.object({ money: z.number().finite(), currency: z.string().length(3), locale: z.string().min(2), display: z.enum(['symbol', 'narrowSymbol', 'code']) }).meta({ id: 'EngineCopyMoney' });
+const CopyList = z.object({ list: z.array(Param), conj: z.enum(['and', 'or', 'comma']) }).meta({ id: 'EngineCopyList' });
+/**
+ * Text the participant reads: authored or AI written strings, or engine copy as a code with parameters,
+ * worded in the participant's language and made safe for the copy rules on the way in.
+ */
+export const Text = z.union([z.string(), CopyMsg, CopyTemplate]).meta({ id: 'Text' }).transform(v => sanitizeCopy(typeof v === 'string' ? v : wordCopy(v as Copy)));
 const Id = z.string().min(1);
 const Num = z.number().finite();
 
@@ -199,7 +214,7 @@ export const PeriodSummary = z.object({
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
   /** The storyline's name, the organisation the participant joins and the authored welcome letter, for onboarding. */
-  storyline: z.object({ name: Text, organisation: Text.nullable(), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish() }),
+  storyline: z.object({ name: Text, organisation: Text.nullable(), locale: z.string().default('en'), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish() }),
   lens: LensView,
   clock: Clock,
   money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),

@@ -56,9 +56,10 @@ const groupSeries = (t: ReturnType<typeof useI18n>['t'], benchmark: boolean): Ba
 
 /** The cover: the client's logo and the wordmark, "Group report", the cohort (the page's h1), the storyline and lens, and the counts. */
 export function GroupCover({ report }: { report: R }) {
-  const { t, number } = useI18n();
+  const { t, number, date: formatDate } = useI18n();
   const date = new Date(`${report.cohort.date}T12:00:00`);
-  const when = Number.isNaN(date.getTime()) ? report.cohort.date : date.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  // In the viewer's locale (D83).
+  const when = Number.isNaN(date.getTime()) ? report.cohort.date : formatDate(date);
   const boxes = [
     { key: 'participants', value: number(report.participants) },
     { key: 'completed', value: number(report.completed) },

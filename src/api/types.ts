@@ -1,6 +1,6 @@
 import type { Settings, PlannedAction } from '../app/types';
 import type { LiveVariant, Outcome, Scenario, StyleKey } from '../data/types';
-import type { GroupReport } from '../engine/groupContract';
+import type { GroupReportInput } from '../engine/groupContract';
 import type { HistoryEntry } from '../engine/reportContract';
 
 /**
@@ -58,7 +58,7 @@ export interface IleadApi {
    * (or `POST /cohort/report` with `GroupReportRequest` where the server stores only summaries). Null
    * when there is no such cohort (404). The page parses it with `GroupReport` (src/engine/groupContract.ts).
    */
-  getGroupReport(cohortId: string): Promise<GroupReport | null>;
+  getGroupReport(cohortId: string): Promise<GroupReportInput | null>;
 }
 
 export interface LeaderboardResult { score: number; conversions: number; capability: number }

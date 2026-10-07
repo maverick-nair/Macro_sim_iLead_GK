@@ -1,3 +1,4 @@
+import { wordAll as en } from '../../i18n/engineCopy';
 import { describe, expect, it } from 'vitest';
 import { copyViolations } from '../../i18n/copy';
 import { EngineView } from '../contract';
@@ -24,7 +25,7 @@ const rec = (sim: Sim, skills: Array<[string, Band, string?]>, extra: Partial<Li
   sim.liveRecords.push(r);
   return r;
 };
-const skill = (sim: Sim, key: string) => buildReport(sim).skills.find(s => s.key === key)!;
+const skill = (sim: Sim, key: string) => en(buildReport(sim)).skills.find(s => s.key === key)!;
 
 describe('skill ratings', () => {
   it('needs 2 observations from 2 different conversations, else "Not enough evidence"', () => {
@@ -58,10 +59,10 @@ describe('skill ratings', () => {
     const sim = createSim(config, 1);
     const keys = config.report.skills.map(s => s.key);
     for (const k of keys.slice(0, 3)) { rec(sim, [[k, 'adequate']]); rec(sim, [[k, 'adequate']]); }
-    expect(buildReport(sim).summary.level).toBeNull();
+    expect(en(buildReport(sim)).summary.level).toBeNull();
     rec(sim, [[keys[3], 'adequate']]); rec(sim, [[keys[3], 'adequate']]);
-    expect(buildReport(sim).summary.level).toEqual({ index: 2, name: 'Proficient' });
-    expect(buildReport(sim).summary.narrative).toBe(config.report.narratives.overall[2]);
+    expect(en(buildReport(sim)).summary.level).toEqual({ index: 2, name: 'Proficient' });
+    expect(en(buildReport(sim)).summary.narrative).toBe(config.report.narratives.overall[2]);
   });
 
   it('quotes only verbatim words from the participant, best band first, up to 2', () => {
@@ -77,7 +78,7 @@ describe('skill ratings', () => {
     const sim = createSim(config, 1);
     const bands: Band[] = ['strong', 'strong', 'adequate', 'adequate', 'weak', 'weak', 'harmful', 'adequate'];
     config.report.skills.forEach((s, i) => { rec(sim, [[s.key, bands[i]]]); rec(sim, [[s.key, bands[i]]]); });
-    const { strengths, priorities } = buildReport(sim).summary;
+    const { strengths, priorities } = en(buildReport(sim)).summary;
     expect(strengths).toHaveLength(3);
     expect(priorities).toHaveLength(3);
     expect(strengths.some(k => priorities.includes(k))).toBe(false);
@@ -99,7 +100,7 @@ describe('the whole report from a run', () => {
   it('builds every section, passes the contract, and keeps to the copy rules', async () => {
     const r = await play(config, 'random', 5);
     expect(EngineView.safeParse(r.view).success).toBe(true);
-    const rep = r.view.report!;
+    const rep = en(r.view.report!);
     expect(rep.available).toBe(true);
     expect(rep.sections).toEqual(DEFAULT_SECTIONS.development);
     expect(rep.moments.length).toBeGreaterThanOrEqual(5);
@@ -118,7 +119,7 @@ describe('the whole report from a run', () => {
     for (const purpose of ['development', 'assessment'] as const) {
       const c = parseStoryline({ ...salesElevator, purpose });
       if (!c.ok) throw new Error(c.issues.join());
-      const rep = (await play(c.config, 'random', 7)).view.report!;
+      const rep = en((await play(c.config, 'random', 7)).view.report!);
       expect(ReportView.safeParse(rep).success).toBe(true);
       expect(rep.sections).toEqual(DEFAULT_SECTIONS[purpose]);
       expect(rep.actionSummary.map(a => a.key)).toEqual(c.config.actions.map(a => a.key));
@@ -148,13 +149,13 @@ describe('human review', () => {
     const r = await e.dispatch({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });
     await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'ok.' });
     // Finish the run so the report exists.
-    while (e.view().phase !== 'ended') {
+    while (en(e.view()).phase !== 'ended') {
       await e.dispatch({ type: 'endPeriod' });
-      const v = e.view();
+      const v = en(e.view());
       if (v.pendingReward) await e.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] });
-      if (e.view().phase === 'periodEnd') { await e.dispatch({ type: 'startNextPeriod' }); await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) }); }
+      if (en(e.view()).phase === 'periodEnd') { await e.dispatch({ type: 'startNextPeriod' }); await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) }); }
     }
-    const before = e.view();
+    const before = en(e.view());
     expect(before.report!.methodology).toMatchObject({ reviewed: false, reviewedCount: 0 });
     const id = before.report!.moments.find(m => m.title.startsWith('Meet face to face with Kent'))?.id;
     expect(id).toBeTruthy();

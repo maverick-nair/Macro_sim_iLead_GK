@@ -4,6 +4,7 @@ import { parse, TYPE, type MessageFormatElement } from '@formatjs/icu-messagefor
 import { describe, expect, it } from 'vitest';
 import { copyViolations, formatDelta, sanitizeCopy } from './copy';
 import { createI18n } from './index';
+import { pseudoCatalog } from './pseudo';
 
 const dir = path.join(import.meta.dirname, 'messages');
 const files = (locale: string) => fs.readdirSync(path.join(dir, locale)).filter(f => f.endsWith('.json'));
@@ -36,15 +37,49 @@ describe('string catalog lint', () => {
         const seen = new Map<string, string>();
         const dupes = files(locale).flatMap(f => Object.keys(read(locale, f)).filter(k => { const d = seen.has(k); seen.set(k, f); return d; }));
         expect(dupes).toEqual([]);
-        const index = fs.readFileSync(path.join(dir, locale, 'index.ts'), 'utf8');
-        expect(files(locale).filter(f => !index.includes(`'./${f}'`))).toEqual([]);
+        // engine.json loads on its own beside the first view (src/i18n/locales.ts).
+        const index = fs.readFileSync(path.join(dir, locale, 'index.ts'), 'utf8') + fs.readFileSync(path.join(dir, '..', 'locales.ts'), 'utf8');
+        expect(files(locale).filter(f => !index.includes(`'./${f}'`) && !index.includes(`'./messages/${locale}/${f}'`))).toEqual([]);
       });
-      it('has exactly the English keys', () => {
-        expect(Object.keys(messages).sort()).toEqual(Object.keys(catalogs.en).sort());
-      });
+      if (locale !== 'en') {
+        // Another language may leave keys out (they fall back to English one by one), never add its own, and
+        // reads only arguments the English message has (it may not need them all: Spanish needs no pronoun).
+        it('has only English keys, reading only their arguments', () => {
+          expect(Object.keys(messages).filter(k => !(k in catalogs.en))).toEqual([]);
+          const diff = Object.entries(messages).filter(([k, m]) => args(parse(m)).some(a => !args(parse(catalogs.en[k])).includes(a))).map(([k]) => k);
+          expect(diff).toEqual([]);
+        });
+        it('words every engine code (engine.json is complete)', () => {
+          expect(Object.keys(read(locale, 'engine.json')).sort()).toEqual(Object.keys(read('en', 'engine.json')).sort());
+        });
+      }
+    });
+  }
+
+  // The pseudo locales (D83) are built from English at run time: the same rules hold for what they show.
+  for (const tag of ['en-XA', 'ar-XB']) {
+    it(`${tag} parses and keeps to the copy rules`, () => {
+      const pseudo = pseudoCatalog(catalogs.en, tag);
+      const bad = Object.entries(pseudo).flatMap(([k, m]) => visibleText(parse(m)).flatMap(t => copyViolations(t).map(v => `${k}: ${v}`)));
+      expect(bad).toEqual([]);
+      expect(Object.entries(pseudo).filter(([k, m]) => args(parse(m)).join() !== args(parse(catalogs.en[k])).join())).toEqual([]);
     });
   }
 });
+
+/** The arguments a message reads, sorted. */
+function args(els: MessageFormatElement[]): string[] {
+  const out = new Set<string>();
+  const walk = (list: MessageFormatElement[]) => {
+    for (const el of list) {
+      if ('value' in el && el.type !== TYPE.literal && typeof el.value === 'string') out.add(el.value);
+      if (el.type === TYPE.select || el.type === TYPE.plural) for (const o of Object.values(el.options)) walk(o.value);
+      if (el.type === TYPE.tag) { out.add(el.value); walk(el.children); }
+    }
+  };
+  walk(els);
+  return [...out].sort();
+}
 
 describe('copy rules', () => {
   it('flags dashes, emoji and competency', () => {

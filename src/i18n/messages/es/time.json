@@ -1,0 +1,10 @@
+{
+  "time.period": "{unit, select, year {Año} month {Mes} week {Semana} day {Día} other {Periodo}} {n}",
+  "time.periodOf": "{unit, select, year {Año} month {Mes} week {Semana} day {Día} other {Periodo}} {n} de {total}",
+  "time.subPeriod": "{unit, select, quarter {Trimestre} month {Mes} week {Semana} day {Día} hour {Hora} other {Paso}} {n}",
+  "time.amount": "{unit, select, quarter {{n, plural, =0 {Ningún trimestre} one {# trimestre} other {# trimestres}}} month {{n, plural, =0 {Ningún mes} one {# mes} other {# meses}}} week {{n, plural, =0 {Ninguna semana} one {# semana} other {# semanas}}} day {{n, plural, =0 {Ningún día} one {# día} other {# días}}} hour {{n, plural, =0 {Ninguna hora} one {# hora} other {# horas}}} other {#}}",
+  "time.left": "Quedan {amount}",
+  "time.endPeriod": "Terminar {unit, select, year {el año} month {el mes} week {la semana} day {el día} other {el periodo}}",
+  "time.capacityAria": "Quedan {left} de {total} {unit, select, quarter {trimestres} month {meses} week {semanas} day {días} hour {horas} other {pasos}} {period, select, year {este año} month {este mes} week {esta semana} day {este día} other {este periodo}}",
+  "time.endPeriodNumber": "Terminar {unit, select, year {el año} month {el mes} week {la semana} day {el día} other {el periodo}} {n}"
+}

@@ -9,6 +9,7 @@ import type { Band, Change, Outcome, PeriodSummary, Turn } from './types';
 import * as live from './live';
 import { buildView, type EngineView } from './view';
 import { summarizeRun, type RunSummary } from '../report/summary';
+import { msg, type Copy } from '../copy';
 
 /**
  * The iLead engine. Authoritative: the UI sends intents and renders the returned view.
@@ -43,7 +44,7 @@ export interface Result {
   /** sendTurn: the NPC's answer, which the client streams. */
   turn?: Turn;
   /** requestHint: the coaching tip. */
-  hint?: string;
+  hint?: Copy;
 }
 
 export interface Engine {
@@ -140,7 +141,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         const it = sim.interactions[intent.interactionId];
         if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
         delete sim.interactions[intent.interactionId];
-        log(sim, { kind: 'interaction', title: `${config.actions.find(a => a.key === it.actionKey)?.name ?? 'Conversation'} left unfinished`, memberIds: it.memberIds, changes: [] });
+        log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [] });
         return { view: buildView(sim), changes: [] };
       }
       case 'dismissCard':

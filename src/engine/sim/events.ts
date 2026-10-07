@@ -4,6 +4,7 @@ import { createRng, type Rng } from './rng';
 import { mismatchType, type Mismatch } from './rules';
 import { addMessage, effectChanges, firstName, fit, gendered, log, member, misread, nextId, sponsorChange } from './sim';
 import type { Change, EventCard, MemberSim, NewsItem, Reason, Sim } from './types';
+import { msg } from '../copy';
 
 /**
  * Events (Configuration Spec, Events and NPC initiated moments): fixed, random or conditional timing;
@@ -87,8 +88,8 @@ export function fireEvent(sim: Sim, rng: Rng, ev: EventConfig) {
     const reason: Reason = {
       label: ev.title,
       cause: body,
-      evidence: [{ quote: ev.title, by: 'News', judgedByAI: false }],
-      rule: `Events hit harder when you lead someone in a style that does not fit them: ${mt === 0 ? 'half' : mt === 1 ? 'full' : 'one and a half times'} impact here.`
+      evidence: [{ quote: ev.title, by: msg('engine.news'), judgedByAI: false }],
+      rule: msg('engine.event.rule', { share: mt === 0 ? 'half' : mt === 1 ? 'full' : 'more' })
     };
     changes.push(...effectChanges(sim, rng, m, ev.impact, reason, { scale: EVENT_SHARE[mt], useTrust: false }));
     if (ev.away > 0) { m.away = Math.max(m.away, ev.away); m.awayReason = 'leave'; m.awaySetAt = sim.absSub; }
@@ -133,7 +134,7 @@ export function respond(sim: Sim, rng: Rng, actionKey: string, memberIds: string
     const ev = sim.config.events.find(e => e.key === p.eventKey);
     const m = p.memberId ? member(sim, p.memberId) : undefined;
     if (ev?.response && m && sim.absSub <= p.dueAbsSub) {
-      const reason: Reason = { label: 'Responded in time', cause: `You responded to "${ev.title}" in time.`, rule: `Responding to ${firstName(sim, m.id)} within ${ev.response.within} ${sim.config.time.subPeriod.unit}s is what this moment needed.`, evidence: [] };
+      const reason: Reason = { label: msg('engine.responded.label'), cause: msg('engine.responded.cause', { title: ev.title }), rule: msg('engine.responded.rule', { name: firstName(sim, m.id), n: ev.response.within, unit: sim.config.time.subPeriod.unit }), evidence: [] };
       out.push(...effectChanges(sim, rng, m, ev.response.onTime, reason, { useTrust: false }));
     }
   }
@@ -149,7 +150,7 @@ function checkResponses(sim: Sim, rng: Rng) {
     if (!ev?.escalation) continue;
     if (ev.escalation.sponsor) {
       const first = sim.config.sponsor.name.split(' ')[0];
-      log(sim, { kind: 'trigger', title: `${ev.title} escalated`, memberIds: p.memberId ? [p.memberId] : [], changes: sponsorChange(sim, sim.config.gamification.sponsor.escalation, `${ev.title} reached ${first} unanswered`) });
+      log(sim, { kind: 'trigger', title: msg('engine.escalated', { title: ev.title }), memberIds: p.memberId ? [p.memberId] : [], changes: sponsorChange(sim, sim.config.gamification.sponsor.escalation, msg('engine.escalated.sponsor', { title: ev.title, name: first })) });
     }
     const next = ev.escalation.event ? sim.config.events.find(e => e.key === ev.escalation!.event) : undefined;
     if (next && !sim.events.fired.includes(next.key)) fireEvent(sim, rng, next);

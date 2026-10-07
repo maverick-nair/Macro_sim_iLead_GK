@@ -1,5 +1,6 @@
 import type { Decorator, Preview } from '@storybook/react-vite';
 import { I18nProvider } from '../src/i18n';
+import { loadEngineCopy } from '../src/i18n/locales';
 import { BrandContext } from '../src/theme/brand';
 import { resolveTheme } from '../src/theme/loader';
 import brightwater from '../src/theme/samples/brightwater.json';
@@ -34,6 +35,8 @@ const withTheme: Decorator = (Story, ctx) => {
 
 const preview: Preview = {
   decorators: [withTheme],
+  // Engine copy is worded as payloads are parsed (D83): its catalog is in before any story renders.
+  loaders: [async () => { await loadEngineCopy(); return {}; }],
   globalTypes: {
     theme: {
       description: 'Theme',

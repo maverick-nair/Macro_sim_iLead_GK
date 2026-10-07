@@ -1,8 +1,9 @@
 import type { Purpose, StorylineConfig } from '../config';
-import type { BenchmarkSummary, CompletionBucket, GroupReport, GroupSection } from '../groupContract';
+import type { BenchmarkSummary, CompletionBucket, GroupReportInput as GroupReportPayload, GroupSection } from '../groupContract';
 import { fitOf, NEEDS, type Lens } from '../lens';
 import { DEFAULT_GROUP_COPY, type GroupCopy } from './groupDefaults';
 import { impactBand, type RunSummary } from './summary';
+import { listOf, msg, template, type Copy, type Param } from '../copy';
 import type { VerdictKey } from './verdict';
 
 /**
@@ -47,11 +48,13 @@ const meanOrNull = (xs: Array<number | null | undefined>) => {
   return ys.length ? r2(mean(ys)) : null;
 };
 const pct = (part: number, whole: number) => (whole ? r2((100 * part) / whole) : 0);
-const fill = (text: string, vars: Record<string, string | number>) => text.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
+const fillText = (text: string, vars: Record<string, string | number>) => text.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
+/** Fills authored copy; values that are engine copy make a template the client fills in its language (D83). */
+const fill = (text: string, vars: Record<string, Param>): Copy => (Object.values(vars).every(v => typeof v === 'string' || typeof v === 'number') ? fillText(text, vars as Record<string, string | number>) : /\{\w+\}/.test(text) ? template(text, vars) : text);
 const byLevel = <T>(list: T[], index: number, levels: number): T => list[Math.min(list.length - 1, Math.round((index * (list.length - 1)) / Math.max(1, levels - 1)))];
 const band3 = (v: number, lo: number, hi: number) => (v < lo ? 'low' as const : v < hi ? 'mid' as const : 'high' as const);
 const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
-const list = (xs: string[], last: string) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ${last} ${xs[xs.length - 1]}`);
+const list = (xs: string[], conj: 'and' | 'or'): Param => (xs.length < 2 ? xs.join('') : listOf(xs, conj));
 
 /** The completion bucket of a run: 50% or less, over 50 to under 80, 80 to under 100, and 100. */
 export function completionBucket(completion: number): CompletionBucket {
@@ -155,7 +158,7 @@ const DEVELOPMENT_SECTIONS: GroupSection[] = ['about', 'skills', 'distribution',
 const ASSESSMENT_SECTIONS: GroupSection[] = ['about', 'verdicts', 'skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways'];
 
 /** The group report from a cohort's run summaries (D75, D77). See the rules above. */
-export function buildGroupReport({ runs, names, benchmark: bench = null, cohort }: GroupReportInput): GroupReport {
+export function buildGroupReport({ runs, names, benchmark: bench = null, cohort }: GroupReportInput): GroupReportPayload {
   const c = cohort.storyline, r = c.report, lens = cohort.lens ?? c.lens;
   const settings = r.group;
   const P: GroupCopy = settings.copy ?? DEFAULT_GROUP_COPY;
@@ -176,15 +179,15 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
   const compare = (group: number | null, base: number | null | undefined, near: number, digits: (d: number) => number) => {
     if (group === null || base === null || base === undefined) return null;
     const d = digits(group - base);
-    return Math.abs(d) < near ? P.compare.level : fill(d > 0 ? P.compare.above : P.compare.below, { diff: `${Math.abs(d)} ${Math.abs(d) === 1 ? 'point' : 'points'}` });
+    return Math.abs(d) < near ? P.compare.level : fill(d > 0 ? P.compare.above : P.compare.below, { diff: msg('engine.group.points', { n: Math.abs(d) }) });
   };
   const rated = (score: number | null) => ({ score, outOf10: score === null ? null : r1(score / 10), level: score === null ? null : { index: levelOf(scale, score), name: scale[levelOf(scale, score)].name } });
 
   // ---- about
-  const barWords = `an overall level of ${scale[r.assessment.bar.overall].name}, with no skill below ${scale[r.assessment.bar.floor].name}`;
+  const barWords = msg('engine.report.bar', { overall: scale[r.assessment.bar.overall].name, floor: scale[r.assessment.bar.floor].name });
   const about = {
     lines: P.about.map(l => fill(l, { unit, n })),
-    howToRead: [...P.howToRead, ...(b ? [fill(P.benchmark, { n: b.participants })] : [])].map(l => fill(l, { unit, n, min: settings.minimumCohort })),
+    howToRead: [...P.howToRead, ...(b ? [fillText(P.benchmark, { n: b.participants })] : [])].map(l => fill(l, { unit, n, min: settings.minimumCohort })),
     confidentiality: fill(P.confidentiality[purpose], { min: settings.minimumCohort })
   };
 
@@ -299,13 +302,14 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
   // ---- assessment: verdicts and the participant table, by name
   const labels = r.assessment.labels;
   const label = (k: VerdictKey | 'none') => (k === 'none' ? labels.insufficient : labels[k]);
-  const assessed = runs.map((run, i) => ({ run, name: names?.[i] ?? `Participant ${i + 1}` }));
+  // Unnamed participants sort by their number and read "Participant 3" in the viewer's language.
+  const assessed = runs.map((run, i) => ({ run, sortName: names?.[i] ?? `Participant ${i + 1}`, name: names?.[i] ?? msg('engine.group.participant', { n: i + 1 }) }));
   const verdictCounts = g.verdicts?.counts ?? {};
   const assessment = purpose === 'assessment' ? {
     bar: barWords,
     narrative: fill(P.verdicts, { met: (verdictCounts.exceeds ?? 0) + (verdictCounts.meets ?? 0), total: n }),
     verdicts: VERDICTS.map(k => ({ key: k, label: label(k), count: verdictCounts[k] ?? 0, share: pct(verdictCounts[k] ?? 0, n), benchmark: b?.verdicts ? pct(b.verdicts.counts[k] ?? 0, b.verdicts.assessed) : null })),
-    participants: assessed.sort((x, y) => x.name.localeCompare(y.name, 'en') || runs.indexOf(x.run) - runs.indexOf(y.run)).map(({ run, name }) => {
+    participants: assessed.sort((x, y) => x.sortName.localeCompare(y.sortName, 'en') || runs.indexOf(x.run) - runs.indexOf(y.run)).map(({ run, name }) => {
       const key = run.verdict?.overall ?? null;
       const rv = run.review ?? { conversations: 0, reviewed: 0 };
       return {

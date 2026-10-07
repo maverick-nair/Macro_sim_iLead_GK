@@ -1,3 +1,4 @@
+import { wordAll as en } from '../i18n/engineCopy';
 import { describe, expect, it } from 'vitest';
 import { copyViolations } from '../i18n/copy';
 import { parseStoryline, type StorylineConfig, type StorylineInput } from './config';
@@ -86,8 +87,8 @@ describe('Six Leadership Styles, end to end (D70)', () => {
     expect(Object.keys(r.style.shares)).toEqual(SIX_STYLES_LENS.styles.map(s => s.key));
     expect(r.style.grid).toHaveLength(4);
     expect(r.style.grid.every(row => row.length === 6)).toBe(true);
-    expect(r.methodology.lines[0]).toBe('This simulation looks at leadership through the Six Leadership Styles lens.');
-    expect(r.methodology.lines[1]).toMatch(/Inspire and Deliver/);
+    expect(en(r.methodology.lines[0])).toBe('This simulation looks at leadership through the Six Leadership Styles lens.');
+    expect(en(r.methodology.lines[1])).toMatch(/Inspire and Deliver/);
     // Report only skills: in the skills section, never in the summary or the plan.
     const only = r.skills.filter(s => s.reportOnly).map(s => s.key);
     expect(only).toEqual(['team_engagement', 'delivery_performance']);
@@ -106,7 +107,7 @@ describe('Six Leadership Styles, end to end (D70)', () => {
     expect(Object.values(styles).every(k => config.lens.styles.some(s => s.key === k))).toBe(true);
     await expect(e.dispatch({ type: 'confirmStyles', styles: { ...styles, kent: 'D' } })).rejects.toMatchObject({ code: 'unknownStyle' });
     await e.dispatch({ type: 'confirmStyles', styles });
-    expect(e.view().members.find(m => m.id === 'kent')!.style).toBe(styles.kent);
+    expect(en(e.view()).members.find(m => m.id === 'kent')!.style).toBe(styles.kent);
   });
 
   it('keeps report only skills out of the score: the Leadership Score does not move with them', async () => {

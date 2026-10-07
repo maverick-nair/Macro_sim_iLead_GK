@@ -7,6 +7,7 @@ import { finalScore } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
+import { msg, type Copy } from '../copy';
 
 /**
  * What the participant may see. Built from engine state, never computed by the UI. Deliberately
@@ -39,11 +40,11 @@ function who(sim: Sim, id: string) {
 }
 
 /** The goal of a conversation that is not an action: the sponsor briefing, or a reply to a message. */
-function goalFor(sim: Sim, it: Sim['interactions'][string]): string | null {
+function goalFor(sim: Sim, it: Sim['interactions'][string]): Copy | null {
   const first = sim.config.sponsor.name.split(' ')[0];
-  if (it.actionKey === 'sponsor') return `Give ${first} an honest update: where you stand against target, the biggest risk, and what you need.`;
-  const msg = it.replyTo ? sim.inbox.find(m => m.id === it.replyTo) : undefined;
-  return msg ? `Reply to ${msg.from === 'sponsor' ? first : person(sim, msg.from).name.split(' ')[0]} about: ${msg.title}` : null;
+  if (it.actionKey === 'sponsor') return msg('engine.goal.sponsor', { name: first });
+  const m = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
+  return m ? msg('engine.goal.reply', { name: m.from === 'sponsor' ? first : person(sim, m.from).name.split(' ')[0], title: m.title }) : null;
 }
 
 /** The open live interaction, everything the shell shows (spec, Live interaction screens). */
@@ -113,7 +114,7 @@ export function buildView(sim: Sim) {
   return {
     phase: sim.phase,
     /** Read only storyline identity, for onboarding. */
-    storyline: { name: c.name, organisation: c.organisation ?? null, ...(c.intro ? { intro: c.intro } : null) },
+    storyline: { name: c.name, organisation: c.organisation ?? null, locale: c.locale, ...(c.intro ? { intro: c.intro } : null) },
     /** The lens's styles and needs; never the fit table or the source (D70). */
     lens: lensView(c.lens),
     clock: {

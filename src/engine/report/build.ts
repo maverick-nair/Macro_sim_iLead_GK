@@ -1,20 +1,20 @@
 import { DEFAULT_SECTIONS, purposeOf, type Purpose } from '../config';
-import { moneyFormatter } from '../money';
 import { roundHalfUp, capability, leadershipScore, tierFor } from '../sim/score';
 import { fitOf, lensView, NEEDS } from '../lens';
 import { firstName, person, styleName } from '../sim/sim';
 import type { Sim, Style } from '../sim/types';
 import { overallOf, rateSkills, shortName, when, type SkillRating } from './ratings';
 import { summarizeRun, type RunSummary } from './summary';
+import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
  * run. Every element traces to engine output or authored copy; no text here is written by a model at
- * runtime. Sentences are English server content (D60), filled from templates and the narrative banks.
+ * runtime. The engine's own sentences are message codes the client words (D60, D83); narratives come
+ * from the storyline's authored banks, filled with the run's values.
  */
 
 const unitName = (sim: Sim) => sim.config.time.period.unit;
-const Unit = (sim: Sim) => unitName(sim)[0].toUpperCase() + unitName(sim).slice(1);
 const nameOf = (sim: Sim, id: string) => (id === 'sponsor' ? sim.config.sponsor.name : person(sim, id)?.name ?? id);
 
 /** Most frequent values; ties listed. */
@@ -27,17 +27,18 @@ function dominant<T>(xs: T[]): T[] {
 
 /** Fills {placeholders} in authored copy. */
 export const fillCopy = (text: string, vars: Record<string, string | number>) => text.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
+/** Fills authored copy whose values include engine copy: a template the client fills in its language. */
+const fillWith = (text: string, vars: Record<string, Param>): Copy => (Object.values(vars).every(v => typeof v === 'string' || typeof v === 'number') ? fillCopy(text, vars as Record<string, string | number>) : /\{\w+\}/.test(text) ? template(text, vars) : text);
 /** A line from a list keyed by level, read in proportion to the scale (the list may be shorter or longer than the scale). */
 export const byLevel = <T>(list: T[], index: number, levels: number): T => list[Math.min(list.length - 1, Math.round((index * (list.length - 1)) / Math.max(1, levels - 1)))];
-/** "A, B and C". */
-const list = (xs: string[], last: string) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} ${last} ${xs[xs.length - 1]}`);
-const names = (xs: string[]) => list(xs, 'and');
+/** "A, B and C", "A, B or C", in the participant's language. */
+const names = (xs: string[]): Param => (xs.length < 2 ? xs.join('') : listOf(xs, 'and'));
+const either = (xs: string[]): Param => (xs.length < 2 ? xs.join('') : listOf(xs, 'or'));
 const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
 const band3 = (v: number, lo: number, hi: number) => (v < lo ? 'low' as const : v < hi ? 'mid' as const : 'high' as const);
 
 export function buildReport(sim: Sim) {
   const c = sim.config, r = c.report, g = c.gamification;
-  const money = moneyFormatter(c.money);
   const unit = unitName(sim);
   const score = leadershipScore(sim);
   const tier = tierFor(sim, score.total);
@@ -65,10 +66,13 @@ export function buildReport(sim: Sim) {
     const low = [...owners].sort((a, b) => a.result - b.result)[0];
     const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
     return { stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
-      why: low && stat ? `${firstName(sim, low.id)} owns the stage with the lowest result there; ${stat} is ${low[stat]}, the weakest of ${pr(sim, low.id)} numbers.` : null };
+      why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: pr(sim, low.id) }) : null };
   })() : null;
   const share = sim.funnel.value / c.money.target;
-  const businessLine = `${purpose === 'assessment' ? 'The team reached' : 'You reached'} ${Math.round(share * 100)}% of the ${money.format(c.money.target)} target with ${Math.floor(sim.funnel.conversions)} deals${bottleneck ? `; ${bottleneck.name} was the bottleneck in ${bottleneck.periods} of ${sim.periods.length} ${unit}s` : ''}.`;
+  const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions) };
+  const businessLine = bottleneck
+    ? msg('engine.report.businessStage', { ...businessBase, stage: bottleneck.name, periods: bottleneck.periods, total: sim.periods.length, unit })
+    : msg('engine.report.business', businessBase);
 
   // ---- 2. Style flexibility and fit (3): the lens's styles (D70); grid rows are the four needs, columns the styles.
   const styles: Style[] = c.lens.styles.map(s => s.key);
@@ -105,37 +109,44 @@ export function buildReport(sim: Sim) {
       quote: gapRec?.quotes?.[0] ? { text: gapRec.quotes[0], when: when(sim, gapRec) } : null,
       note: note ? { text: note.text, period: note.period } : null,
       // Trust lost to repeated gaps: the logged "Mixed signals" changes for this person.
-      trustCost: sim.log.flatMap(l => l.changes).filter(ch => ch.subject === m.id && ch.metric === 'trust' && ch.reason.label === 'Mixed signals').reduce((a, ch) => a + ch.delta, 0)
+      trustCost: sim.log.flatMap(l => l.changes).filter(ch => ch.subject === m.id && ch.metric === 'trust' && hasCode(ch.reason.label, 'engine.mixed.label')).reduce((a, ch) => a + ch.delta, 0)
     };
   }).filter(x => x.intent.length);
 
   // ---- 5. Key moments (SBI), 5 to 7, ranked by impact
   const intentFor = (memberId: string | undefined, period: number) => (memberId ? weekly.find(d => d.memberId === memberId && d.period === period)?.chosen ?? null : null);
-  const change = (ch: { subject: string; metric: string; delta: number }) => `${ch.subject === 'team' ? 'The team' : shortName(sim, ch.subject)} ${ch.metric} ${ch.delta > 0 ? '+' : '−'}${Math.abs(ch.delta)}`;
-  const fromLive = sim.liveRecords.filter(rec => rec.band !== 'adequate').map(rec => ({
-    id: rec.id ?? `${rec.period}`, kind: rec.band === 'strong' ? 'best' as const : 'revisit' as const, period: rec.period, memberId: rec.memberIds.length === 1 ? rec.memberIds[0] : null,
-    title: `${rec.title ?? rec.actionKey}${rec.memberIds.length === 1 ? ` with ${shortName(sim, rec.memberIds[0])}` : ''} ${rec.band === 'strong' ? 'went well' : rec.band === 'weak' ? 'did not land' : 'went badly'}`,
-    situation: `${Unit(sim)} ${rec.period}. ${rec.memberIds.length === 1 ? `${shortName(sim, rec.memberIds[0])} needed a conversation.` : rec.actionKey === 'sponsor' ? `${shortName(sim, 'sponsor')} wanted an update.` : 'The team needed you.'}`,
-    behaviour: `You chose ${rec.title ?? rec.actionKey}${rec.styleShown ? ` and came across as ${styleName(sim, rec.styleShown)}` : ''}.`,
-    quote: rec.quotes?.[0] ?? null,
-    impact: rec.changes?.length ? rec.changes.slice(0, 3).map(change).join(', ') + '.' : 'No visible change.',
-    intent: intentFor(rec.memberIds[0], rec.period), weight: rec.impact ?? 0, sub: rec.sub ?? 0
-  }));
-  const fromLog = sim.log.filter(l => /escalated|Promise (kept|broken)|went unanswered/.test(l.title) || l.changes.some(ch => ch.reason.label === 'Promise kept' || ch.reason.label === 'Promise broken')).map(l => {
-    const good = /kept/i.test(l.title) || l.changes.some(ch => ch.reason.label === 'Promise kept');
+  const change = (ch: { subject: string; metric: string; delta: number }) => msg('engine.report.change', { who: ch.subject === 'team' ? msg('engine.report.theTeam') : shortName(sim, ch.subject), metric: ch.metric, delta: ch.delta });
+  const impactOf = (chs: Array<{ subject: string; metric: string; delta: number }>): Copy => (chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange'));
+  const unit0 = { unit: unitName(sim) };
+  const fromLive = sim.liveRecords.filter(rec => rec.band !== 'adequate').map(rec => {
+    const one = rec.memberIds.length === 1;
+    const title: Copy = rec.title ?? rec.actionKey;
+    return {
+      id: rec.id ?? `${rec.period}`, kind: rec.band === 'strong' ? 'best' as const : 'revisit' as const, period: rec.period, memberId: one ? rec.memberIds[0] : null,
+      title: one ? msg('engine.live.with', { action: title, who: shortName(sim, rec.memberIds[0]), band: rec.band }) : msg('engine.live.done', { action: title, band: rec.band }),
+      situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team', name: one ? shortName(sim, rec.memberIds[0]) : shortName(sim, 'sponsor') }),
+      behaviour: rec.styleShown ? msg('engine.moment.chose.style', { title, style: styleName(sim, rec.styleShown) }) : msg('engine.moment.chose', { title }),
+      quote: rec.quotes?.[0] ?? null,
+      impact: impactOf(rec.changes?.slice(0, 3) ?? []),
+      intent: intentFor(rec.memberIds[0], rec.period), weight: rec.impact ?? 0, sub: rec.sub ?? 0
+    };
+  });
+  const LOGGED = ['engine.escalated', 'engine.promise.kept', 'engine.promise.broken', 'engine.log.unanswered'];
+  const fromLog = sim.log.filter(l => LOGGED.some(code => hasCode(l.title, code)) || l.changes.some(ch => hasCode(ch.reason.label, 'engine.promise.kept') || hasCode(ch.reason.label, 'engine.promise.broken'))).map(l => {
+    const good = hasCode(l.title, 'engine.promise.kept') || l.changes.some(ch => hasCode(ch.reason.label, 'engine.promise.kept'));
     const who = l.memberIds[0];
     return {
       id: l.id, kind: good ? 'best' as const : 'revisit' as const, period: l.period, memberId: who ?? null,
-      title: who ? `${l.title}: ${shortName(sim, who)}` : l.title,
-      situation: `${Unit(sim)} ${l.period}. ${l.changes[0]?.reason.cause ?? l.title}`,
-      behaviour: good ? 'You did what you said you would.' : 'It waited too long for an answer.',
-      quote: null, impact: l.changes.length ? l.changes.slice(0, 3).map(ch => change({ subject: ch.subject === 'sponsor' ? 'sponsor' : ch.subject, metric: ch.metric === 'confidence' ? 'confidence' : ch.metric, delta: ch.delta })).join(', ') + '.' : 'No visible change.',
+      title: who ? msg('engine.moment.titleWho', { title: l.title, name: shortName(sim, who) }) : l.title,
+      situation: msg('engine.moment.at', { ...unit0, n: l.period, text: l.changes[0]?.reason.cause ?? l.title }),
+      behaviour: msg(good ? 'engine.moment.kept' : 'engine.moment.waited'),
+      quote: null, impact: impactOf(l.changes.slice(0, 3).map(ch => ({ subject: ch.subject, metric: ch.metric, delta: ch.delta }))),
       intent: intentFor(who, l.period), weight: l.changes.reduce((a, ch) => a + Math.abs(ch.delta), 0), sub: l.sub
     };
   });
   // One moment per title (the same thing three times teaches nothing), the weightiest kept.
   const moments = [...fromLive, ...fromLog].sort((a, b) => b.weight - a.weight || a.period - b.period || a.sub - b.sub)
-    .filter((m, i, arr) => arr.findIndex(x => x.title === m.title) === i).slice(0, 7)
+    .filter((m, i, arr) => arr.findIndex(x => copyKey(x.title) === copyKey(m.title)) === i).slice(0, 7)
     .sort((a, b) => a.period - b.period || a.sub - b.sub).map(({ weight: _w, sub: _s, ...m }) => m);
 
   // ---- 6. People outcomes
@@ -170,8 +181,8 @@ export function buildReport(sim: Sim) {
   const dom1 = dom.length === 1 ? dom[0] : null;
   const domLine = purpose === 'development' && dom1 ? r.narratives.dominant[dom1] : undefined;
   // Methodology names the lens in participant language; the source ("based on") is author only (D70).
-  const lensLines = [`This simulation looks at leadership through the ${c.lens.title} lens.`,
-    ...(c.lens.secondary ? [`Your report also looks at ${c.lens.secondary.title}. Those skills are marked Report only: they never change your score.`] : [])];
+  const lensLines: Copy[] = [msg('engine.report.lens', { title: c.lens.title }),
+    ...(c.lens.secondary ? [msg('engine.report.lensSecondary', { title: c.lens.secondary.title })] : [])];
   const v3 = report3(sim, purpose, skills, plan.map(p => p.name));
   return {
     available: sim.phase === 'ended',
@@ -213,7 +224,7 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
   const run: RunSummary = summarizeRun(sim);
   const levels = r.scale.length;
   const bar = r.assessment.bar;
-  const barWords = `an overall level of ${r.scale[bar.overall].name}, with no skill below ${r.scale[bar.floor].name}`;
+  const barWords = msg('engine.report.bar', { overall: r.scale[bar.overall].name, floor: r.scale[bar.floor].name });
   const styleLabel = (k: string) => styleName(sim, k);
   const needsFor = (k: string) => {
     const fits = NEEDS.filter(n => fitOf(c.lens, k, n) === 0);
@@ -258,14 +269,14 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
   // Styles summary: a narrative per style, the preferred style.
   const styleSummary = {
     perStyle: run.styles.perStyle.map(s => {
-      const vars = { style: styleLabel(s.key), needs: list(needsFor(s.key), 'or') };
-      if (!s.count) return { key: s.key, narrative: [fillCopy(P.style.unused, vars)] };
-      const lines = [fillCopy(P.style[band3(s.accuracy ?? 0, 40, 70)], vars)];
-      if (s.proportion < s.neededShare - 10) lines.push(fillCopy(P.style.under, vars));
-      else if (s.proportion > s.neededShare + 10) lines.push(fillCopy(P.style.over, vars));
+      const vars = { style: styleLabel(s.key), needs: either(needsFor(s.key)) };
+      if (!s.count) return { key: s.key, narrative: [fillWith(P.style.unused, vars)] };
+      const lines = [fillWith(P.style[band3(s.accuracy ?? 0, 40, 70)], vars)];
+      if (s.proportion < s.neededShare - 10) lines.push(fillWith(P.style.under, vars));
+      else if (s.proportion > s.neededShare + 10) lines.push(fillWith(P.style.over, vars));
       return { key: s.key, narrative: lines };
     }),
-    preferred: run.styles.preferred.length ? fillCopy(P.preferred, {
+    preferred: run.styles.preferred.length ? fillWith(P.preferred, {
       styles: names(run.styles.preferred.map(styleLabel)),
       pct: roundHalfUp(run.styles.perStyle.find(s => s.key === run.styles.preferred[0])?.proportion ?? 0)
     }) : null
@@ -284,7 +295,7 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
 
   // The plan: development gets the 30, 60 and 90 day path and the check ins; assessment lists development needs neutrally.
   const path = purpose === 'development' && planSkills.length ? {
-    day30: fillCopy(r.path.day30, { skills: names(planSkills.map(lower)) }), day60: fillCopy(r.path.day60, { skills: names(planSkills.map(lower)) }), day90: fillCopy(r.path.day90, { skills: names(planSkills.map(lower)) })
+    day30: fillWith(r.path.day30, { skills: names(planSkills.map(lower)) }), day60: fillWith(r.path.day60, { skills: names(planSkills.map(lower)) }), day90: fillWith(r.path.day90, { skills: names(planSkills.map(lower)) })
   } : null;
   const checkIns = purpose === 'development' ? [...new Set([r.checkInDays, 30, 60, 90])].filter(d => d >= r.checkInDays).sort((a, b) => a - b) : [];
   const needs = verdict ? skills.filter(s => !s.reportOnly && run.verdict!.skills[s.key] === 'development').map(s => ({
@@ -296,7 +307,7 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
     skillNotes,
     sections: {
       run,
-      about: { lines: P.about.map(l => fillCopy(l, { unit, bar: barWords })), howToRead: P.howToRead.map(l => fillCopy(l, { unit, bar: barWords })), confidentiality: P.confidentiality },
+      about: { lines: P.about.map(l => fillWith(l, { unit, bar: barWords })), howToRead: P.howToRead.map(l => fillWith(l, { unit, bar: barWords })), confidentiality: P.confidentiality },
       verdict,
       objectives, adaptability, styleSummary, consistency, actionSummary,
       thought: r.thought, takeaways: r.takeaways,

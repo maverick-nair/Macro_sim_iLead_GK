@@ -1,4 +1,5 @@
 import { createDefaultApi } from '../api';
+import { loadEngineCopy } from '../i18n/locales';
 import { startTheme } from '../theme/bootstrap';
 
 // The `/group` route's launch: a few lines in the first load, so main.tsx can start the report's request
@@ -20,7 +21,8 @@ export function groupLaunch(search = location.search) {
  */
 export function startGroup(launch: ReturnType<typeof groupLaunch>) {
   startTheme(() => launch.api.getTheme());
-  const report = launch.api.getGroupReport(launch.cohort);
+  // The engine's copy (D83) loads beside the report, which is worded as it is parsed.
+  const report = Promise.all([launch.api.getGroupReport(launch.cohort), loadEngineCopy()]).then(([r]) => r);
   report.catch(() => undefined);
   return { ...launch, report };
 }

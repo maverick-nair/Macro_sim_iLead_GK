@@ -1,5 +1,6 @@
 import { firstName, idealThroughput, teamAverage } from './sim';
 import type { Band, Sim } from './types';
+import { msg, type Msg } from '../copy';
 
 /**
  * Game scores on the GenieKreator formulas (docs/genie/scoring-and-report.md section 6). Every input is
@@ -100,41 +101,41 @@ export function checkBadges(sim: Sim, moment: BadgeMoment) {
   }
 }
 
-function rule(sim: Sim, r: string, moment: BadgeMoment): string | null {
+function rule(sim: Sim, r: string, moment: BadgeMoment): Msg | null {
   const unit = sim.config.time.period.unit;
   switch (r) {
     case 'first_close':
-      return moment === 'conversion' && sim.funnel.conversions >= 1 ? 'Your team closed its first deal.' : null;
+      return moment === 'conversion' && sim.funnel.conversions >= 1 ? msg('engine.badge.firstClose') : null;
     case 'read_the_room': {
       if (moment !== 'periodEnd') return null;
       const w = sim.decisions.period.filter(d => d.source === 'weeklyStyle');
       const ok = w.filter(d => d.mismatch === 0).length;
-      return w.length && ok / w.length >= 0.9 ? `${ok} of ${w.length} people got the style they needed this ${unit}.` : null;
+      return w.length && ok / w.length >= 0.9 ? msg('engine.badge.readTheRoom', { ok, total: w.length, unit }) : null;
     }
     case 'flex_master': {
       if (moment !== 'periodEnd') return null;
       // Every style of the lens (D70), each at the right moment at least twice.
       const counts: Record<string, number> = Object.fromEntries(sim.config.lens.styles.map(s => [s.key, 0]));
       for (const d of sim.decisions.run) if (d.mismatch === 0 && d.chosen in counts) counts[d.chosen]++;
-      return Object.values(counts).every(n => n >= 2) ? 'You used every style at the right moment at least twice.' : null;
+      return Object.values(counts).every(n => n >= 2) ? msg('engine.badge.flexMaster') : null;
     }
     case 'concern_uncovered': {
       if (moment !== 'interaction') return null;
       const n = [...sim.members, ...sim.departed].filter(m => m.concernShared).length;
       const need = Math.min(5, sim.members.length);
-      return n >= need ? `${n} people opened up to you about what was on their mind.` : null;
+      return n >= need ? msg('engine.badge.concern', { n }) : null;
     }
     case 'promise_keeper': {
       if (moment !== 'runEnd') return null;
       const made = sim.promises.filter(p => p.state !== 'open' || p.dueAbsSub <= sim.absSub);
-      return made.length >= 3 && !made.some(p => p.state === 'broken') ? `You made ${made.length} promises and kept every one.` : null;
+      return made.length >= 3 && !made.some(p => p.state === 'broken') ? msg('engine.badge.promiseKeeper', { n: made.length }) : null;
     }
     case 'fair_hand':
-      return moment === 'interaction' || moment === 'periodEnd' ? (sim.fairRecognitions >= 3 ? 'You recognized people three times and nobody felt passed over.' : null) : null;
+      return moment === 'interaction' || moment === 'periodEnd' ? (sim.fairRecognitions >= 3 ? msg('engine.badge.fairHand') : null) : null;
     case 'turnaround': {
       if (moment !== 'periodEnd') return null;
       const m = sim.members.find(x => x.lowestMorale < 30 && x.morale > 60);
-      return m ? `${firstName(sim, m.id)} went from morale below 30 to ${m.morale}.` : null;
+      return m ? msg('engine.badge.turnaround', { name: firstName(sim, m.id), morale: m.morale }) : null;
     }
     case 'change_champion': {
       if (moment !== 'interaction') return null;
@@ -143,12 +144,12 @@ function rule(sim: Sim, r: string, moment: BadgeMoment): string | null {
       if (sim.config.report.skills.some(s => s.key === 'communicating_change' && s.reportOnly)) return null;
       const rates = (rec: Sim['liveRecords'][number]) => (sim.config.report.linkage[rec.actionKey] ?? []).includes('communicating_change');
       const n = sim.liveRecords.filter(rec => rec.band === 'strong' && rates(rec)).length;
-      return n >= 2 ? 'You explained a change really well, twice.' : null;
+      return n >= 2 ? msg('engine.badge.changeChampion') : null;
     }
     case 'steady_hand':
-      return moment === 'runEnd' && !sim.liveRecords.some(rec => rec.band === 'harmful') ? 'No conversation went badly in the whole run.' : null;
+      return moment === 'runEnd' && !sim.liveRecords.some(rec => rec.band === 'harmful') ? msg('engine.badge.steadyHand') : null;
     case 'target_crusher':
-      return moment === 'periodEnd' && sim.funnel.value >= sim.config.money.target ? 'Your team reached the revenue target.' : null;
+      return moment === 'periodEnd' && sim.funnel.value >= sim.config.money.target ? msg('engine.badge.targetCrusher') : null;
   }
   return null;
 }

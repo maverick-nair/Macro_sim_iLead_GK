@@ -508,6 +508,12 @@ export const StorylineConfig = z.object({
   name: z.string(),
   /** The organisation the participant joins (Configuration Spec, Organisation name), as the sponsor and consent screens name it. */
   organisation: z.string().min(1).optional(),
+  /**
+   * The language the storyline's authored copy is written in (events, emails, persona lines, report
+   * narratives), as a BCP 47 tag (D83). The engine's own copy is sent as codes and worded in the
+   * participant's language; authored copy stays as written. GenieKreator authors one storyline per language.
+   */
+  locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/).default('en'),
   /** The sponsor's authored welcome letter (onboarding), drafted by the author chat (D74). Left out, onboarding words one from the storyline's facts. */
   intro: z.object({ welcome: z.array(Copy).min(1).max(4), product: z.array(Copy).min(1).max(4), targets: z.array(Copy).min(1).max(4) }).optional(),
   /** The leadership lens: styles, needs and fit (D70). Readiness Based Leadership when left out. */

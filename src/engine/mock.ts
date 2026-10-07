@@ -2,6 +2,7 @@ import { parseStoryline, type StorylineConfig, type StorylineInput } from './con
 import { EngineView, Intent, IntentResult } from './contract';
 import { mockStream } from '../ai/mockStream';
 import { EngineError, parse, type EngineClient } from './client';
+import { loadEngineCopy } from '../i18n/locales';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
@@ -61,7 +62,7 @@ export function createMockClient(opts: { config?: StorylineConfig; seed?: number
   const config = opts.config ?? defaultStoryline(opts.lens);
   const engine = createEngine(config, { seed: opts.seed ?? 1, evaluator: opts.evaluator });
   const ready = opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
-  const wait = async () => { await ready; if (opts.latencyMs) await new Promise(r => setTimeout(r, opts.latencyMs)); };
+  const wait = async () => { await Promise.all([ready, loadEngineCopy()]); if (opts.latencyMs) await new Promise(r => setTimeout(r, opts.latencyMs)); };
   return {
     async view() {
       await wait();
@@ -88,7 +89,7 @@ export function createMockClient(opts: { config?: StorylineConfig; seed?: number
  * page and the report stories).
  */
 export async function playToEnd(opts: { policy?: Policy; seed?: number; reflection?: string[]; rating?: number | null; config?: StorylineConfig } = {}) {
-  const r = await play(opts.config ?? defaultStoryline(), opts.policy ?? 'good', opts.seed ?? 3);
+  const [r] = await Promise.all([play(opts.config ?? defaultStoryline(), opts.policy ?? 'good', opts.seed ?? 3), loadEngineCopy()]);
   if (opts.reflection) await r.engine.dispatch({ type: 'submitReflection', answers: opts.reflection, rating: opts.rating ?? null });
   return parse(EngineView, r.engine.view());
 }

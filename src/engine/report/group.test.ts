@@ -1,3 +1,4 @@
+import { wordAll as en } from '../../i18n/engineCopy';
 import { describe, expect, it } from 'vitest';
 import { BenchmarkSummary, GroupReport } from '../groupContract';
 import { parseStoryline, type StorylineConfig, type StorylineInput } from '../config';
@@ -211,8 +212,8 @@ describe('buildGroupReport, development', () => {
     const h = buildGroupReport({ runs: five(), benchmark: bench, cohort: cohort('development') });
     expect(h.benchmark).toEqual({ participants: 2 });
     expect(h.skills!.rows[0].benchmark).toEqual({ score: 50, outOf10: 5, level: { index: 1, name: 'Developing' } });
-    expect(h.skills!.rows[0].compare).toBe('The group is 1 point above the benchmark.');
-    expect(h.styles!.adaptability).toMatchObject({ benchmark: 60, compare: 'The group is 10 points above the benchmark.' });
+    expect(en(h.skills!.rows[0].compare)).toBe('The group is 1 point above the benchmark.');
+    expect(en(h.styles!.adaptability)).toMatchObject({ benchmark: 60, compare: 'The group is 10 points above the benchmark.' });
     expect(h.business!.benchmark).toEqual({ revenue: 180000, conversions: 0, share: 75 });
     expect(h.business!.beatTarget.benchmark).toBe(50);
     expect(h.styles!.perStyle[0].benchmark).toEqual({ proportion: 10, accuracy: 50 }); // 2 of the benchmark's 20 choices
@@ -270,7 +271,7 @@ describe('buildGroupReport, assessment', () => {
 
   it('counts verdicts with labels and the bar', () => {
     const a = g.assessment!;
-    expect(a.bar).toBe('an overall level of Proficient, with no skill below Developing');
+    expect(en(a.bar)).toBe('an overall level of Proficient, with no skill below Developing');
     expect(a.verdicts.map(v => [v.key, v.count, v.share])).toEqual([['exceeds', 1, 25], ['meets', 1, 25], ['approaching', 0, 0], ['below', 1, 25], ['none', 1, 25]]);
     expect(a.verdicts[4].label).toBe('Not enough evidence for a verdict');
     expect(a.narrative).toBe('2 of 4 participants met or exceeded the bar.');

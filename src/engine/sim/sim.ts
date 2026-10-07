@@ -5,6 +5,7 @@ import { applyEffect, applyTrust, clamp, type Mismatch, type Style, type Triple 
 import { runEvents, scheduleEvents } from './events';
 import { checkBadges } from './score';
 import type { ActionRecord, Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
+import { msg, type Copy } from '../copy';
 
 /**
  * Simulation state and the passage of time: funnel, scheduled events, triggers, promises and
@@ -106,13 +107,13 @@ export function trustChange(m: MemberSim, delta: number, reason: Reason): Change
   return d === 0 ? [] : [{ subject: m.id, metric: 'trust', from, to: m.trust, delta: d, reason }];
 }
 
-/** The sponsor meter's rule in words, from the authored numbers (scoring-and-report.md 6). */
+/** The sponsor meter's rule, from the authored numbers (scoring-and-report.md 6). */
 function sponsorRule(sim: Sim) {
-  const s = sim.config.gamification.sponsor, f = (n: number) => (n > 0 ? `+${n}` : `−${Math.abs(n)}`), unit = sim.config.time.period.unit;
-  return `Sponsor confidence moves with briefings (${f(s.briefing.strong)}, ${f(s.briefing.adequate)}, ${f(s.briefing.weak)} or ${f(s.briefing.harmful)} by how they land), revenue against each ${unit}'s share of the target (${f(s.periodPace.met)} or ${f(s.periodPace.missed)}) and escalations (${f(s.escalation)}).`;
+  const s = sim.config.gamification.sponsor;
+  return msg('engine.sponsor.rule', { strong: s.briefing.strong, adequate: s.briefing.adequate, weak: s.briefing.weak, harmful: s.briefing.harmful, unit: sim.config.time.period.unit, met: s.periodPace.met, missed: s.periodPace.missed, escalation: s.escalation });
 }
 
-export function sponsorChange(sim: Sim, delta: number, text: string): Change[] {
+export function sponsorChange(sim: Sim, delta: number, text: Copy): Change[] {
   const from = sim.sponsor.value;
   sim.sponsor.value = clamp(from + delta);
   const d = sim.sponsor.value - from;
@@ -231,7 +232,7 @@ function fire(sim: Sim, rng: Rng, kind: string, m: MemberSim, extra: { away?: nu
   const t = trigger(sim, kind)!;
   sim.triggerCount[kind] = fired(sim, kind) + 1;
   const text = gendered(t.message, sim, m.id);
-  const reason: Reason = { label: TRIGGER_LABELS[kind] ?? kind, cause: text, rule: TRIGGER_RULES[kind] ?? '', evidence: [{ quote: text, by: person(sim, m.id).name.split(' ')[0], judgedByAI: false }] };
+  const reason: Reason = { label: msg('engine.trigger.label', { kind }), cause: text, rule: msg('engine.trigger.rule', { kind }), evidence: [{ quote: text, by: person(sim, m.id).name.split(' ')[0], judgedByAI: false }] };
   const changes = t.impact.some(v => v !== 0) ? effectChanges(sim, rng, m, t.impact, reason, { useTrust: false }) : [];
   if (extra.away) { m.away = extra.away; m.awayReason = 'leave'; m.awaySetAt = sim.absSub; }
   if (extra.leave) {
@@ -242,19 +243,6 @@ function fire(sim: Sim, rng: Rng, kind: string, m: MemberSim, extra: { away?: nu
   log(sim, { kind: 'trigger', title: reason.label, memberIds: [m.id], changes });
 }
 
-const TRIGGER_LABELS: Record<string, string> = {
-  casualLeave: 'Casual leave', medicalLeave: 'Medical leave', clueless: 'Clueless in a new role', demoralized: 'Demoralized',
-  lackOfTraining: 'Lack of training', moraleDrops: 'Morale drops', resignation: 'Resignation', roleChangeRequest: 'Role change request',
-  complains: 'Team member complains', trainingRequest: 'Training request'
-};
-const TRIGGER_RULES: Record<string, string> = {
-  clueless: 'Moving someone to a new role without training costs them skill.',
-  lackOfTraining: 'A long slide in result with no training lowers skill, morale and result.',
-  moraleDrops: 'Strong performers who go unrecognized for a while lose morale.',
-  resignation: 'People leave when result collapses, or when trust and morale are both very low.',
-  roleChangeRequest: 'People who stay in one role a long time ask to move. Ignoring it costs trust.',
-  complains: 'A falling result or low trust over time leads to a complaint.'
-};
 
 const periodsFor = (sim: Sim, fraction: number) => Math.max(1, Math.round(fraction * sim.config.time.period.count));
 const decliningPeriods = (m: MemberSim, n: number) => {
@@ -344,29 +332,29 @@ function scheduleBriefing(sim: Sim) {
   if (!briefingPeriods(sim).includes(sim.period)) return;
   if (sim.inbox.some(m => m.briefing && m.atAbsSub === sim.absSub)) return;
   const first = sim.config.sponsor.name.split(' ')[0];
-  addMessage(sim, { from: 'sponsor', kind: 'sponsor', title: `Briefing with ${first}`, body: `${first} wants your update on the team and the target this ${sim.config.time.period.unit}.`, dueIn: perPeriod(sim) - 1, urgent: true });
+  addMessage(sim, { from: 'sponsor', kind: 'sponsor', title: msg('engine.briefing.title', { name: first }), body: msg('engine.briefing.body', { name: first, unit: sim.config.time.period.unit }), dueIn: perPeriod(sim) - 1, urgent: true });
   sim.inbox[sim.inbox.length - 1].briefing = true;
 }
 
-export function addMessage(sim: Sim, msg: { from: string; kind: InboxMessage['kind']; title: string; body: string; dueIn: number | null; urgent?: boolean }) {
-  sim.inbox.push({ id: nextId(sim, 'm'), from: msg.from, kind: msg.kind, title: msg.title, body: msg.body, atAbsSub: sim.absSub,
-    dueAbsSub: msg.dueIn === null ? null : sim.absSub + msg.dueIn, urgent: !!msg.urgent, state: 'open' });
+export function addMessage(sim: Sim, m: { from: string; kind: InboxMessage['kind']; title: Copy; body: Copy; dueIn: number | null; urgent?: boolean }) {
+  sim.inbox.push({ id: nextId(sim, 'm'), from: m.from, kind: m.kind, title: m.title, body: m.body, atAbsSub: sim.absSub,
+    dueAbsSub: m.dueIn === null ? null : sim.absSub + m.dueIn, urgent: !!m.urgent, state: 'open' });
 }
 
 /** Unanswered messages past due cost trust (3.1); promises past due are broken (5.4). */
 function dueChecks(sim: Sim) {
-  for (const msg of sim.inbox) {
-    if (msg.state !== 'open' || msg.dueAbsSub === null || sim.absSub <= msg.dueAbsSub) continue;
-    msg.state = 'expired';
-    const m = member(sim, msg.from);
+  for (const x of sim.inbox) {
+    if (x.state !== 'open' || x.dueAbsSub === null || sim.absSub <= x.dueAbsSub) continue;
+    x.state = 'expired';
+    const m = member(sim, x.from);
     if (m) {
-      const changes = trustChange(m, -5, { label: 'No reply', cause: `${firstName(sim, m.id)} did not hear back from you in time.`, rule: 'A message left unanswered past its due day lowers trust by 5.', evidence: [] });
-      log(sim, { kind: 'trigger', title: 'Message went unanswered', memberIds: [m.id], changes });
-    } else if (msg.briefing) {
+      const changes = trustChange(m, -5, { label: msg('engine.noReply.label'), cause: msg('engine.noReply.cause', { name: firstName(sim, m.id) }), rule: msg('engine.noReply.rule', { n: 5 }), evidence: [] });
+      log(sim, { kind: 'trigger', title: msg('engine.log.unanswered'), memberIds: [m.id], changes });
+    } else if (x.briefing) {
       // A skipped briefing escalates (Design doc: issue escalated to the CEO, −10).
-      log(sim, { kind: 'trigger', title: 'Sponsor briefing missed', memberIds: [], changes: sponsorChange(sim, sim.config.gamification.sponsor.escalation, 'Missed the sponsor briefing') });
-    } else if (msg.from === 'sponsor') {
-      log(sim, { kind: 'trigger', title: 'Sponsor message unanswered', memberIds: [], changes: sponsorChange(sim, -5, 'No reply yet to the sponsor') });
+      log(sim, { kind: 'trigger', title: msg('engine.log.briefingMissed'), memberIds: [], changes: sponsorChange(sim, sim.config.gamification.sponsor.escalation, msg('engine.sponsor.briefingMissed')) });
+    } else if (x.from === 'sponsor') {
+      log(sim, { kind: 'trigger', title: msg('engine.log.sponsorUnanswered'), memberIds: [], changes: sponsorChange(sim, -5, msg('engine.sponsor.noReply')) });
     }
   }
   for (const pr of sim.promises) {
@@ -374,8 +362,8 @@ function dueChecks(sim: Sim) {
     pr.state = 'broken';
     const m = member(sim, pr.memberId);
     if (m) {
-      const changes = trustChange(m, -8, { label: 'Promise broken', cause: `You told ${firstName(sim, m.id)}: "${pr.text}", and it did not happen in time.`, rule: 'A broken promise lowers trust by 8.', evidence: [{ quote: pr.text, by: 'You', judgedByAI: true }] });
-      log(sim, { kind: 'trigger', title: 'Promise broken', memberIds: [m.id], changes });
+      const changes = trustChange(m, -8, { label: msg('engine.promise.broken'), cause: msg('engine.promise.broken.cause', { name: firstName(sim, m.id), promise: pr.text }), rule: msg('engine.promise.broken.rule', { n: 8 }), evidence: [{ quote: pr.text, by: YOU, judgedByAI: true }] });
+      log(sim, { kind: 'trigger', title: msg('engine.promise.broken'), memberIds: [m.id], changes });
     }
   }
 }
@@ -387,9 +375,12 @@ export function keepPromises(sim: Sim, actionKey: string, memberIds: string[]): 
     if (pr.state !== 'open' || !memberIds.includes(pr.memberId) || !pr.fulfilledBy.includes(actionKey)) continue;
     pr.state = 'kept';
     const m = member(sim, pr.memberId);
-    if (m) out.push(...trustChange(m, 6, { label: 'Promise kept', cause: `You did what you told ${firstName(sim, m.id)} you would: "${pr.text}".`, rule: 'Keeping a promise by its due day raises trust by 6.', evidence: [{ quote: pr.text, by: 'You', judgedByAI: true }] }));
+    if (m) out.push(...trustChange(m, 6, { label: msg('engine.promise.kept'), cause: msg('engine.promise.kept.cause', { name: firstName(sim, m.id), promise: pr.text }), rule: msg('engine.promise.kept.rule', { n: 6 }), evidence: [{ quote: pr.text, by: YOU, judgedByAI: true }] }));
   }
   return out;
 }
 
 export const metricName = (k: MetricKey) => METRIC_NAMES[k];
+
+/** "You": the participant, as the speaker of a quote. */
+export const YOU = msg('engine.you');

@@ -1,3 +1,4 @@
+import { wordAll as en } from '../../i18n/engineCopy';
 import { describe, expect, it } from 'vitest';
 import { parseStoryline, type StorylineConfig } from '../config';
 import salesElevator from '../storylines/sales-elevator.json';
@@ -45,7 +46,7 @@ describe('events (6.3)', () => {
     const sim = createSim(config, 3);
     sim.phase = 'board';
     runSubPeriod(sim, createRng(3));
-    const card = sim.cards.find(c => c.key === 'new_crm_system');
+    const card = en(sim.cards).find(c => c.key === 'new_crm_system');
     expect(card).toBeDefined();
     expect(card!.changes.length).toBeGreaterThan(0);
     expect(card!.changes.every(c => c.reason.label && c.reason.cause && c.reason.evidence.length)).toBe(true);
@@ -64,7 +65,7 @@ describe('triggers (6.4)', () => {
     m.trust = 5; m.morale = 5;
     runSubPeriod(sim, rng);
     expect(sim.members.some(x => x.id === m.id)).toBe(false);
-    expect(sim.inbox.some(x => x.from === m.id && /Resignation/.test(x.title))).toBe(true);
+    expect(en(sim.inbox).some(x => x.from === m.id && /Resignation/.test(x.title))).toBe(true);
   });
 
   it('casual leave takes a high performer away in its period, with a message', () => {
@@ -86,13 +87,13 @@ describe('role coverage (Teardown hidden rule 6)', () => {
     const e = await onBoard();
     const r = await e.dispatch({ type: 'planAction', action: 'fire', memberIds: ['kent'] });
     await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'I am sorry. Here is what happens next.' });
-    expect(e.view().actions.find(a => a.key === 'fire')!.blockedFor.beth).toMatchObject({ reason: 'lastInStage' });
+    expect(en(e.view()).actions.find(a => a.key === 'fire')!.blockedFor.beth).toMatchObject({ reason: 'lastInStage' });
   });
 
   it('a full team hires nobody', async () => {
     const cfg = { ...config, actions: config.actions.map(a => (a.key === 'hire' ? { ...a, unlockPeriod: 1 } : a)) };
     const e = await onBoard(1, cfg);
-    expect(e.view().actions.find(a => a.key === 'hire')!.blocked).toMatchObject({ reason: 'teamFull' });
+    expect(en(e.view()).actions.find(a => a.key === 'hire')!.blocked).toMatchObject({ reason: 'teamFull' });
   });
 
   it('reassign refuses a full stage and moves someone into a stage with room', async () => {
@@ -102,6 +103,6 @@ describe('role coverage (Teardown hidden rule 6)', () => {
     await e.dispatch({ type: 'submitInteraction', interactionId: r.interactionId!, text: 'I am sorry. Here is what happens next.' });
     const m = await e.dispatch({ type: 'planAction', action: 'swap', option: 'reassign', memberIds: ['kent'], stage: 'qualify' });
     await e.dispatch({ type: 'submitInteraction', interactionId: m.interactionId!, text: 'Let me explain why this move matters for you.' });
-    expect(e.view().members.find(x => x.id === 'kent')!.stage).toBe('qualify');
+    expect(en(e.view()).members.find(x => x.id === 'kent')!.stage).toBe('qualify');
   });
 });

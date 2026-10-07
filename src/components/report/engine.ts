@@ -15,7 +15,7 @@ import './messages';
  */
 
 export type { ReportView };
-type Fmt = Pick<I18n, 't' | 'number' | 'delta' | 'locale'>;
+type Fmt = Pick<I18n, 't' | 'number' | 'delta' | 'formatLocale'>;
 export interface MoneyFormat { format: (n: number) => string; compact: (n: number) => string }
 
 export interface ReportModelOptions {
@@ -96,7 +96,7 @@ export function teamSeries(i18n: Fmt, money: MoneyFormat, r: ReportView): TeamSe
       key: k.metric, label, end: number(end), values: k.series, target: null, domain: multipleDomain(k.series, null),
       note: t('report.team.change', { dir: end > k.start ? 'up' : end < k.start ? 'down' : 'same', start: number(k.start) }),
       summary: t('report.team.aria', { label, start: number(k.start), end: number(end) }),
-      cells: k.series.map(number), targetCells: null
+      cells: k.series.map(n => number(n)), targetCells: null
     };
   }));
 }
@@ -114,7 +114,7 @@ function verdictData(i18n: Fmt, v: { key: string | null; label: string; recordId
 }
 
 export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o: ReportModelOptions): ReportModel {
-  const { t, number, delta, locale } = i18n;
+  const { t, number, delta, formatLocale: locale } = i18n;
   const unit = r.periodUnit;
   const purpose = r.purpose;
   // Style names come from the storyline's lens (D70).

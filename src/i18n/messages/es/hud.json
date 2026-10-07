@@ -1,0 +1,15 @@
+{
+  "hud.clientLogo": "Logotipo de {name}",
+  "hud.clientLogoUnnamed": "Logotipo del cliente",
+  "hud.nav.aria": "Menú del juego",
+  "hud.nav.item": "{key, select, objective {Objetivo} funnel {Embudo} history {Historial} badges {Insignias} more {Más} other {}}",
+  "hud.pause.aria": "Pausar la simulación",
+  "hud.pause.label": "Pausa",
+  "hud.score.aria": "Puntuación de liderazgo {total}. Ver el desglose",
+  "hud.score.title": "Puntuación de liderazgo",
+  "hud.score.body": "Se compone de tres partes. Cada punto se gana; nada se resta por ir despacio.",
+  "hud.score.pillar": "{pillar, select, business {Negocio} people {Personas} leadership {Liderazgo} other {}}",
+  "hud.streak": "Racha de {n} {unit, select, year {años} month {meses} week {semanas} day {días} other {periodos}}",
+  "hud.palette.aria": "Buscar personas y acciones",
+  "hud.settings.aria": "Ajustes"
+}

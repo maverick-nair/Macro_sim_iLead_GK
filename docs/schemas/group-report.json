@@ -11,7 +11,7 @@
       "type": "object",
       "properties": {
         "name": {
-          "type": "string"
+          "$ref": "#/$defs/Text"
         },
         "date": {
           "type": "string"
@@ -31,12 +31,16 @@
               "minLength": 1
             },
             "name": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             },
             "organisation": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             }
           },
@@ -54,7 +58,7 @@
               "minLength": 1
             },
             "title": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             }
           },
           "required": [
@@ -143,7 +147,7 @@
               "maximum": 9007199254740991
             },
             "message": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             }
           },
           "required": [
@@ -182,17 +186,17 @@
         "lines": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           }
         },
         "howToRead": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           }
         },
         "confidentiality": {
-          "type": "string"
+          "$ref": "#/$defs/Text"
         }
       },
       "required": [
@@ -249,7 +253,7 @@
               "maximum": 100
             },
             "narrative": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             }
           },
           "required": [
@@ -275,7 +279,7 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "min": {
                     "type": "number"
@@ -297,12 +301,16 @@
                     "minLength": 1
                   },
                   "name": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "description": {
-                    "type": [
-                      "string",
-                      "null"
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "reportOnly": {
@@ -334,7 +342,7 @@
                                 "maximum": 9007199254740991
                               },
                               "name": {
-                                "type": "string"
+                                "$ref": "#/$defs/Text"
                               }
                             },
                             "required": [
@@ -388,7 +396,7 @@
                                     "maximum": 9007199254740991
                                   },
                                   "name": {
-                                    "type": "string"
+                                    "$ref": "#/$defs/Text"
                                   }
                                 },
                                 "required": [
@@ -414,12 +422,16 @@
                     ]
                   },
                   "narrative": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "compare": {
-                    "type": [
-                      "string",
-                      "null"
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "distribution": {
@@ -433,7 +445,7 @@
                           "maximum": 9007199254740991
                         },
                         "name": {
-                          "type": "string"
+                          "$ref": "#/$defs/Text"
                         },
                         "count": {
                           "type": "integer",
@@ -491,7 +503,7 @@
             "prompts": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             }
           },
@@ -666,12 +678,12 @@
               }
             },
             "narrative": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             },
             "prompts": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             }
           },
@@ -709,10 +721,10 @@
                     "type": "string"
                   },
                   "name": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "description": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   }
                 },
                 "required": [
@@ -744,12 +756,16 @@
                   ]
                 },
                 "narrative": {
-                  "type": "string"
+                  "$ref": "#/$defs/Text"
                 },
                 "compare": {
-                  "type": [
-                    "string",
-                    "null"
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
                   ]
                 }
               },
@@ -802,9 +818,13 @@
               }
             },
             "preferredNarrative": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "perStyle": {
@@ -874,7 +894,7 @@
                   "narrative": {
                     "type": "array",
                     "items": {
-                      "type": "string"
+                      "$ref": "#/$defs/Text"
                     }
                   }
                 },
@@ -891,7 +911,7 @@
             "prompts": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             }
           },
@@ -918,7 +938,7 @@
             "actions": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             },
             "deviations": {
@@ -959,9 +979,13 @@
                     ]
                   },
                   "narrative": {
-                    "type": [
-                      "string",
-                      "null"
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   }
                 },
@@ -990,7 +1014,7 @@
           "type": "object",
           "properties": {
             "stage": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             },
             "periods": {
               "type": "array",
@@ -1024,15 +1048,19 @@
               }
             },
             "narrative": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "prompts": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             }
           },
@@ -1063,7 +1091,7 @@
                     "minLength": 1
                   },
                   "name": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "frequency": {
                     "type": "number",
@@ -1109,15 +1137,19 @@
               }
             },
             "narrative": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "prompts": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             }
           },
@@ -1202,15 +1234,19 @@
               ]
             },
             "narrative": {
-              "type": [
-                "string",
-                "null"
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Text"
+                },
+                {
+                  "type": "null"
+                }
               ]
             },
             "prompts": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/$defs/Text"
               }
             }
           },
@@ -1236,12 +1272,12 @@
             "minLength": 1
           },
           "title": {
-            "type": "string"
+            "$ref": "#/$defs/Text"
           },
           "questions": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             }
           }
         },
@@ -1258,10 +1294,10 @@
           "type": "object",
           "properties": {
             "bar": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             },
             "narrative": {
-              "type": "string"
+              "$ref": "#/$defs/Text"
             },
             "verdicts": {
               "type": "array",
@@ -1286,7 +1322,7 @@
                     ]
                   },
                   "label": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "count": {
                     "type": "integer",
@@ -1326,7 +1362,7 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string"
+                    "$ref": "#/$defs/Text"
                   },
                   "completion": {
                     "type": "number",
@@ -1334,9 +1370,13 @@
                     "maximum": 100
                   },
                   "level": {
-                    "type": [
-                      "string",
-                      "null"
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "verdict": {
@@ -1356,9 +1396,13 @@
                     ]
                   },
                   "label": {
-                    "type": [
-                      "string",
-                      "null"
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
                     ]
                   },
                   "review": {
@@ -1415,5 +1459,140 @@
     "attention",
     "takeaways",
     "assessment"
-  ]
+  ],
+  "$defs": {
+    "Text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMessage"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyTemplate"
+        }
+      ]
+    },
+    "EngineCopyMessage": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^engine\\.[A-Za-z0-9_.]+$"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "description": "An engine.* catalog code with parameters, worded on the client (D83)."
+    },
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMessage"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyTemplate"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMoney"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyList"
+        }
+      ]
+    },
+    "EngineCopyTemplate": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      },
+      "required": [
+        "template",
+        "params"
+      ],
+      "description": "Authored copy with {placeholders} filled on the client."
+    },
+    "EngineCopyMoney": {
+      "type": "object",
+      "properties": {
+        "money": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "locale": {
+          "type": "string",
+          "minLength": 2
+        },
+        "display": {
+          "type": "string",
+          "enum": [
+            "symbol",
+            "narrowSymbol",
+            "code"
+          ]
+        }
+      },
+      "required": [
+        "money",
+        "currency",
+        "locale",
+        "display"
+      ]
+    },
+    "EngineCopyList": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "conj": {
+          "type": "string",
+          "enum": [
+            "and",
+            "or",
+            "comma"
+          ]
+        }
+      },
+      "required": [
+        "list",
+        "conj"
+      ]
+    }
+  }
 }

@@ -7,8 +7,9 @@ import { respond } from './events';
 import { checkBadges } from './score';
 import {
   addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
-  styleName, stageName, trustChange
+  styleName, stageName, trustChange, YOU
 } from './sim';
+import { msg, type Copy, type Msg } from '../copy';
 import type { ActionRecord, Band, Change, Evaluation, Interaction, LiveRecord, MemberSim, Outcome, Reason, Sim } from './types';
 
 /** Actions and live interactions (docs/SIMULATION.md sections 4 and 5). */
@@ -26,14 +27,17 @@ const action = (sim: Sim, key: string) => {
   return a;
 };
 const effectFor = (o: Option, mt: Mismatch): Triple => (mt === 0 ? o.effects.m0 : mt === 1 ? o.effects.m1 : o.effects.m2 ?? o.effects.m1);
-const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '0');
-const triple = (t: Triple) => `skill ${signed(t[0])}, morale ${signed(t[1])}, result ${signed(t[2])}`;
+const triple = (t: Triple) => msg('engine.effects', { skill: t[0], morale: t[1], result: t[2] });
 
-/** Plain words for an effect table, used as the reason's rule text. */
-function ruleText(sim: Sim, a: Action, o: Option) {
-  const name = a.options.length > 1 ? `${a.name} (${o.label.length > 40 && o.style ? styleName(sim, o.style) : o.label})` : a.name;
-  return `${name}: a fitting approach gives ${triple(o.effects.m0)}; a partial miss ${triple(o.effects.m1)}${o.effects.m2 ? `; a clear miss ${triple(o.effects.m2)}` : ''}.`;
+/** An effect table in words, used as the reason's rule. */
+function ruleText(sim: Sim, a: Action, o: Option): Msg {
+  const name: Copy = a.options.length > 1 ? msg('engine.actionOption', { action: a.name, option: o.label.length > 40 && o.style ? styleName(sim, o.style) : o.label }) : a.name;
+  return o.effects.m2
+    ? msg('engine.rule.effects3', { name, fit: triple(o.effects.m0), partial: triple(o.effects.m1), clear: triple(o.effects.m2) })
+    : msg('engine.rule.effects2', { name, fit: triple(o.effects.m0), partial: triple(o.effects.m1) });
 }
+/** Mismatch 0, 1 and 2 as a select value. */
+const MT = ['fit', 'partial', 'clear'] as const;
 
 // ---------------------------------------------------------------- weekly styles (4.4)
 
@@ -52,38 +56,38 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
     const wasNeeded = m.neededAtStart;
     // Changing someone's style when what they need has not changed feels erratic (3.1).
     if (sim.period > 1 && m.lastStyle && chosen !== m.lastStyle && m.neededPrevStart !== null && wasNeeded === m.neededPrevStart && fit(sim, m.lastStyle, wasNeeded) === 0) {
-      changes.push(...trustChange(m, sim.config.trustRules.erraticStyleChange, { label: 'Style changed', cause: `You changed how you lead ${firstName(sim, m.id)}, though what ${pr(sim, m.id)} ${pr(sim, m.id) === 'they' ? 'need' : 'needs'} had not changed.`, rule: `Changing someone’s style without a reason lowers trust by ${-sim.config.trustRules.erraticStyleChange}.`, evidence: [{ quote: `${m.lastStyle ? styleName(sim, m.lastStyle) : ''} to ${styleName(sim, chosen)} for ${firstName(sim, m.id)}`, by: 'You', judgedByAI: false }] }));
+      changes.push(...trustChange(m, sim.config.trustRules.erraticStyleChange, { label: msg('engine.erratic.label'), cause: msg('engine.erratic.cause', { name: firstName(sim, m.id), pronoun: pr(sim, m.id) }), rule: msg('engine.erratic.rule', { n: -sim.config.trustRules.erraticStyleChange }), evidence: [{ quote: msg('engine.evidence.styleChange', { from: m.lastStyle ? styleName(sim, m.lastStyle) : '', to: styleName(sim, chosen), name: firstName(sim, m.id) }), by: YOU, judgedByAI: false }] }));
     }
     m.lastStyle = m.style ?? chosen;
     m.style = chosen;
     const diff = record(sim, m, chosen, 'weeklyStyle');
     const mt = mismatchType(diff, rng, misread(sim, m));
     const reason: Reason = {
-      evidence: [{ quote: `${styleName(sim, chosen)} for ${firstName(sim, m.id)}${notes[m.id] ? `: ${notes[m.id]}` : ''}`, by: 'You', judgedByAI: false }],
-      label: mt === 0 ? 'Style fits' : 'Style missed',
+      evidence: [{ quote: notes[m.id] ? msg('engine.evidence.styleNote', { style: styleName(sim, chosen), name: firstName(sim, m.id), note: notes[m.id] }) : msg('engine.evidence.style', { style: styleName(sim, chosen), name: firstName(sim, m.id) }), by: YOU, judgedByAI: false }],
+      label: msg(mt === 0 ? 'engine.style.fits' : 'engine.style.missed'),
       // Never name the needed style: working it out is the game (D54).
-      cause: `You chose ${styleName(sim, chosen)} for ${firstName(sim, m.id)}, and it ${mt === 0 ? 'fit what they needed this week' : mt === 1 ? 'was not quite what they needed' : 'was far from what they needed'}.`,
-      rule: `The weekly style lands as ${mt === 0 ? 'a fit' : mt === 1 ? 'a partial miss' : 'a clear miss'}: fits give ${triple(w.m0)}, partial misses ${triple(w.m1)}, clear misses ${triple(w.m2 ?? w.m1)}.`
+      cause: msg('engine.style.cause', { style: styleName(sim, chosen), name: firstName(sim, m.id), mt: MT[mt] }),
+      rule: msg('engine.style.rule', { mt: MT[mt], fit: triple(w.m0), partial: triple(w.m1), clear: triple(w.m2 ?? w.m1) })
     };
     changes.push(...effectChanges(sim, rng, m, mt === 0 ? w.m0 : mt === 1 ? w.m1 : w.m2 ?? w.m1, reason));
-    changes.push(...trustChange(m, mt === 0 ? 2 : mt === 2 ? -3 : 0, { ...reason, label: mt === 0 ? 'Led the right way' : 'Led the wrong way', rule: 'Being led the way you need builds trust: +2 for a fit, −3 for a clear miss.' }));
+    changes.push(...trustChange(m, mt === 0 ? 2 : mt === 2 ? -3 : 0, { ...reason, label: msg(mt === 0 ? 'engine.style.trustUp' : 'engine.style.trustDown'), rule: msg('engine.style.trustRule', { up: 2, down: -3 }) }));
   }
   sim.phase = 'board';
-  log(sim, { kind: 'style', title: 'Styles set for the period', memberIds: sim.members.map(m => m.id), changes });
+  log(sim, { kind: 'style', title: msg('engine.log.styles'), memberIds: sim.members.map(m => m.id), changes });
   // The sponsor's team message, with each person's reaction (spec, weekly style setting: Result).
   const affected = [...new Set(changes.map(c => c.subject))];
   const net = (id: string) => changes.filter(c => c.subject === id).reduce((s, c) => s + c.delta, 0);
   const upbeat = affected.filter(id => net(id) > 0).length;
   sim.outcome = {
     id: nextId(sim, 'o'), actionKey: 'styles', speaker: 'sponsor',
-    headline: `Styles are set for ${sim.config.time.period.unit} ${sim.period}`,
-    reply: `Thanks for setting the tone. ${sim.config.sponsor.name.split(' ')[0]} will be watching how the team responds.`,
+    headline: msg('engine.styles.headline', { unit: sim.config.time.period.unit, n: sim.period }),
+    reply: msg('engine.styles.reply', { name: sim.config.sponsor.name.split(' ')[0] }),
     affected,
-    reactions: Object.fromEntries(affected.map(id => [id, net(id) > 0 ? 'Feels led the way they need.' : net(id) < 0 ? 'Does not feel led the way they need.' : 'Taking it in.'])),
+    reactions: Object.fromEntries(affected.map(id => [id, msg(net(id) > 0 ? 'engine.reaction.styleUp' : net(id) < 0 ? 'engine.reaction.styleDown' : 'engine.reaction.neutral')])),
     changes,
     ripple: null,
     // Team feedback by share of matches (Configuration Spec, Leadership model).
-    changed: [`${upbeat === sim.members.length ? 'The whole team' : upbeat * 2 > sim.members.length ? 'Most of the team' : upbeat * 2 === sim.members.length ? 'Half the team' : 'Fewer than half the team'} responded well to how you plan to lead them.`]
+    changed: [msg('engine.styles.changed', { share: upbeat === sim.members.length ? 'all' : upbeat * 2 > sim.members.length ? 'most' : upbeat * 2 === sim.members.length ? 'half' : 'few' })]
   };
   return changes;
 }
@@ -210,15 +214,15 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     case 'weeklyStyle':
       for (const m of sim.members.filter(x => x.away === 0)) {
         const mt = mismatchType(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng, misread(sim, m));
-        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: `${o.label} with the team. ${firstName(sim, m.id)} is being led ${m.style ? styleName(sim, m.style) : 'without a set style'} this period, which ${mt === 0 ? 'fits' : 'does not fit'} what they need.`, rule: ruleText(sim, a, o), evidence: [] }));
+        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: msg('engine.team.cause', { option: o.label, name: firstName(sim, m.id), style: m.style ? styleName(sim, m.style) : msg('engine.noStyle'), fit: mt === 0 ? 'yes' : 'no' }), rule: ruleText(sim, a, o), evidence: [] }));
       }
       break;
     case 'training':
       for (const m of targets) {
         const mt = trainingMismatch(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng);
-        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: 'Training', cause: `${firstName(sim, m.id)} went to the ${o.label.toLowerCase()}.`, rule: ruleText(sim, a, o), evidence: [] }));
+        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: msg('engine.training.label'), cause: msg('engine.training.cause', { name: firstName(sim, m.id), option: o.label.toLowerCase() }), rule: ruleText(sim, a, o), evidence: [] }));
         m.away = o.away; m.awayReason = o.away ? 'training' : null; m.awaySetAt = sim.absSub; m.trainedInPeriod = sim.period;
-        if (m.trainingRequestedPeriod === sim.period) changes.push(...trustChange(m, 4, { label: 'Request heard', cause: `${firstName(sim, m.id)} asked for training and got it.`, rule: 'Granting a training request raises trust by 4.', evidence: [] }));
+        if (m.trainingRequestedPeriod === sim.period) changes.push(...trustChange(m, 4, { label: msg('engine.training.heard'), cause: msg('engine.training.heard.cause', { name: firstName(sim, m.id) }), rule: msg('engine.training.heard.rule', { n: 4 }), evidence: [] }));
       }
       break;
     case 'assess': {
@@ -230,7 +234,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
       const fit = { skill: Math.max(0, Math.min(100, base.skill + j())), morale: Math.max(0, Math.min(100, base.morale + j())), result: Math.max(0, Math.min(100, base.result + j())) };
       m.assessedStages = [...new Set([...m.assessedStages, stage])];
       m.assessments[stage] = fit;
-      log(sim, { kind: 'action', title: `Assessed for ${stageName(sim, stage)}: skill about ${fit.skill}, morale about ${fit.morale}, result about ${fit.result}`, memberIds: [m.id], changes: [] });
+      log(sim, { kind: 'action', title: msg('engine.assessed', { stage: stageName(sim, stage), skill: fit.skill, morale: fit.morale, result: fit.result }), memberIds: [m.id], changes: [] });
       break;
     }
     default:
@@ -238,7 +242,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   }
 
   // Evidence for decisions with no words: the choice itself, as the participant made it (rule 5).
-  const choice = { quote: a.options.length > 1 ? `${a.name}: ${o.label}` : a.name, by: 'You', judgedByAI: false };
+  const choice = { quote: a.options.length > 1 ? msg('engine.choice', { action: a.name, option: o.label }) : a.name, by: YOU, judgedByAI: false };
   for (const c of changes) if (!c.reason.evidence.length) c.reason = { ...c.reason, evidence: [choice] };
 
   // The report's record of this action (D76): who it reached and what it did to each of them.
@@ -253,7 +257,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   if (a.kind === 'static') {
     changes.push(...keepPromises(sim, a.key, input.memberIds));
     changes.push(...respond(sim, rng, a.key, a.scope === 'team' ? sim.members.map(m => m.id) : input.memberIds));
-    const title = o.label === a.description ? a.name : `${a.name}: ${o.label}`;
+    const title: Copy = o.label === a.description ? a.name : msg('engine.choice', { action: a.name, option: o.label });
     if (a.rule !== 'assess') log(sim, { kind: 'action', title, memberIds: input.memberIds, changes });
     // Static decisions show what they changed, with reasons, like conversations do (rule 5).
     const affected = [...new Set(changes.map(c => c.subject).filter(id => id !== 'sponsor'))];
@@ -263,7 +267,7 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
       headline: assessed ?? title, reply: '', affected,
       reactions: Object.fromEntries(affected.map(id => {
         const net = changes.filter(c => c.subject === id).reduce((s, c) => s + c.delta, 0);
-        return [id, net > 0 ? 'Glad about it.' : net < 0 ? 'Not happy about it.' : 'Taking it in.'];
+        return [id, msg(net > 0 ? 'engine.reaction.glad' : net < 0 ? 'engine.reaction.unhappy' : 'engine.reaction.neutral')];
       })),
       changes, ripple: null, changed: []
     };
@@ -306,9 +310,9 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
       m.skill = Math.max(0, Math.min(100, base.skill + j()));
       m.morale = Math.max(0, Math.min(100, base.morale + j()));
       m.result = Math.max(0, Math.min(100, base.result + j()));
-      const reason: Reason = { label: 'New role', cause: `${firstName(sim, m.id)} moved from ${stageName(sim, m.stage)} to ${stageName(sim, to)}.`, rule: 'In a new stage, people perform at their level for that stage, give or take 6.', evidence: [] };
+      const reason: Reason = { label: msg('engine.swap.label'), cause: msg('engine.swap.cause', { name: firstName(sim, m.id), from: stageName(sim, m.stage), to: stageName(sim, to) }), rule: msg('engine.swap.rule', { n: 6 }), evidence: [] };
       for (const k of ['skill', 'morale', 'result'] as const) if (m[k] !== before[k]) changes.push({ subject: m.id, metric: k, from: before[k], to: m[k], delta: m[k] - before[k], reason });
-      if (!m.assessedStages.includes(to)) changes.push(...effectChanges(sim, rng, m, [0, -3, 0], { label: 'Not assessed first', cause: `You moved ${firstName(sim, m.id)} without assessing ${pr(sim, m.id) === 'she' ? 'her' : pr(sim, m.id) === 'they' ? 'them' : 'him'} for ${stageName(sim, to)}.`, rule: 'Skipping the assessment before a move costs 3 morale.', evidence: [] }, { useTrust: false }));
+      if (!m.assessedStages.includes(to)) changes.push(...effectChanges(sim, rng, m, [0, -3, 0], { label: msg('engine.unassessed.label'), cause: msg('engine.unassessed.cause', { name: firstName(sim, m.id), pronoun: pr(sim, m.id), stage: stageName(sim, to) }), rule: msg('engine.unassessed.rule', { n: 3 }), evidence: [] }, { useTrust: false }));
       m.stage = to; m.stageSincePeriod = sim.period; m.reassignedInPeriod = sim.period; m.roleChangeRequestedPeriod = null;
     }
   }
@@ -316,13 +320,13 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
     const m = targets[0];
     const top = [...sim.members].filter(x => x.away === 0).sort((x, y) => y.result - x.result)[0];
     const o = a.options[0];
-    changes.push(...effectChanges(sim, rng, m, o.effects.m0, { label: 'Rewarded', cause: `You rewarded ${firstName(sim, m.id)}.`, rule: ruleText(sim, a, o), evidence: [] }));
+    changes.push(...effectChanges(sim, rng, m, o.effects.m0, { label: msg('engine.reward.label'), cause: msg('engine.reward.cause', { name: firstName(sim, m.id) }), rule: ruleText(sim, a, o), evidence: [] }));
     m.recognizedAt = sim.absSub;
     if (!top || top === m) sim.fairRecognitions += 1;
     if (top && top !== m) {
-      const reason: Reason = { label: 'Passed over', cause: `${firstName(sim, top.id)} is the top performer and saw ${firstName(sim, m.id)} rewarded instead.`, rule: 'Rewarding anyone but the top performer upsets the top performer (Model doc).', evidence: [] };
+      const reason: Reason = { label: msg('engine.passedOver.label'), cause: msg('engine.passedOver.cause', { top: firstName(sim, top.id), name: firstName(sim, m.id) }), rule: msg('engine.passedOver.rule'), evidence: [] };
       changes.push(...effectChanges(sim, rng, top, o.effects.m1, reason, { useTrust: false }));
-      changes.push(...trustChange(top, -6, { ...reason, rule: 'Rewarding someone else while you are the top performer lowers trust by 6.' }));
+      changes.push(...trustChange(top, -6, { ...reason, rule: msg('engine.passedOver.trustRule', { n: 6 }) }));
     }
   }
   if (a.rule === 'fire') {
@@ -330,7 +334,7 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
     sim.members = sim.members.filter(x => x !== gone);
     sim.departed.push(gone);
     for (const m of sim.members) {
-      const reason: Reason = { label: 'Colleague let go', cause: `You let ${firstName(sim, gone.id)} go.`, rule: 'Letting someone go unsettles everyone else: morale drops (Model doc), and trust falls by 4.', evidence: [] };
+      const reason: Reason = { label: msg('engine.letGo.label'), cause: msg('engine.letGo.cause', { name: firstName(sim, gone.id) }), rule: msg('engine.letGo.rule', { n: 4 }), evidence: [] };
       const ripple = a.options[0].effects.m1.some(v => v !== 0) ? a.options[0].effects.m1 : [0, -3, 0] as Triple;
       changes.push(...effectChanges(sim, rng, m, ripple, reason, { useTrust: false }));
       changes.push(...trustChange(m, -4, reason));
@@ -344,7 +348,6 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
 
 const BAND_TRUST: Record<Band, number> = { strong: 6, adequate: 2, weak: -3, harmful: -8 };
 const BAND_CHAT_MORALE: Record<Band, number> = { strong: 3, adequate: 1, weak: -1, harmful: -4 };
-const BAND_WORDS: Record<Band, string> = { strong: 'went well', adequate: 'landed', weak: 'did not land', harmful: 'went badly' };
 
 function adjust(mt: Mismatch, band: Band): Mismatch {
   if (band === 'strong') return Math.max(0, mt - 1) as Mismatch;
@@ -353,9 +356,9 @@ function adjust(mt: Mismatch, band: Band): Mismatch {
   return mt;
 }
 
-const quotes = (ev: Evaluation): Reason['evidence'] => ev.evidence.slice(0, 2).map(q => ({ quote: q, by: 'You', judgedByAI: true }));
+const quotes = (ev: Evaluation): Reason['evidence'] => ev.evidence.slice(0, 2).map(q => ({ quote: q, by: YOU, judgedByAI: true }));
 
-export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev: Evaluation, npcReply = ''): Outcome {
+export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev: Evaluation, npcReply: Copy = ''): Outcome {
   const it = sim.interactions[interactionId];
   if (!it) throw new IntentError('Unknown or finished interaction', 'unknownInteraction');
   if (sim.phase !== 'board') throw new IntentError('Conversations happen on the board', 'wrongPhase');
@@ -367,40 +370,42 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   const a = it.actionKey === 'reply' || it.actionKey === 'sponsor' ? null : action(sim, it.actionKey);
   const changes: Change[] = [];
   const targets = (a?.scope === 'team' && a.rule === 'styleOption' ? sim.members.filter(m => m.away === 0) : it.memberIds.map(id => member(sim, id)).filter(Boolean)) as MemberSim[];
-  const label = (who: string) => `${a?.name ?? 'Conversation'} with ${who} ${BAND_WORDS[ev.band]}`;
+  const actionCopy: Copy = a?.name ?? msg('engine.conversation');
+  const label = (who: Copy) => msg('engine.live.with', { action: actionCopy, who, band: ev.band });
   sim.liveCount++;
   const vp = (sim.voicePeriods[sim.period] ??= { voice: 0, total: 0 });
   vp.total++; if (ev.usedVoice) vp.voice++;
 
   const useRecord = it.recordId ? sim.actionRecords.find(r => r.id === it.recordId) : undefined;
   const table = a?.live.consequences?.[ev.band];
-  let sponsorLine: string | null = null;
+  let sponsorLine: Copy | null = null;
   if (it.actionKey === 'sponsor') {
-    const msg = sim.inbox.find(x => x.id === it.replyTo);
-    if (msg) msg.state = 'answered';
-    changes.push(...sponsorChange(sim, sim.config.gamification.sponsor.briefing[ev.band], `Sponsor briefing ${BAND_WORDS[ev.band]}`));
-    sponsorLine = changes.some(c => c.subject === 'sponsor' && c.delta > 0) ? `${sim.config.sponsor.name.split(' ')[0]} is more confident in you now.` : changes.some(c => c.subject === 'sponsor' && c.delta < 0) ? `${sim.config.sponsor.name.split(' ')[0]} is less confident in you now.` : null;
+    const briefingMsg = sim.inbox.find(x => x.id === it.replyTo);
+    if (briefingMsg) briefingMsg.state = 'answered';
+    changes.push(...sponsorChange(sim, sim.config.gamification.sponsor.briefing[ev.band], msg('engine.sponsor.briefing', { band: ev.band })));
+    const sponsorFirst = sim.config.sponsor.name.split(' ')[0];
+    sponsorLine = changes.some(c => c.subject === 'sponsor' && c.delta > 0) ? msg('engine.sponsor.moreConfident', { name: sponsorFirst }) : changes.some(c => c.subject === 'sponsor' && c.delta < 0) ? msg('engine.sponsor.lessConfident', { name: sponsorFirst }) : null;
   } else if (a && table && a.rule !== 'hire') {
     // Authored consequence table for the band (Configuration Spec, Consequence table).
-    const reason: Reason = { label: label(targets.length === 1 ? firstName(sim, targets[0].id) : 'the team'), cause: `How the ${a.name.toLowerCase()} landed.`, rule: `The author set what each outcome does for ${a.name}.`, evidence: quotes(ev) };
+    const reason: Reason = { label: label(targets.length === 1 ? firstName(sim, targets[0].id) : msg('engine.theTeam')), cause: msg('engine.table.cause', { action: a.name.toLowerCase() }), rule: msg('engine.table.rule', { action: a.name }), evidence: quotes(ev) };
     const ids = new Set(targets.map(m => m.id));
     for (const m of targets) {
       changes.push(...effectChanges(sim, rng, m, [table.target[0], table.target[1], table.target[2]], reason, { useTrust: false }));
       changes.push(...trustChange(m, table.target[3], reason));
     }
     if (table.bystanders) for (const m of sim.members.filter(x => !ids.has(x.id) && x.away === 0)) {
-      const ripple = { ...reason, label: 'Noticed', cause: `${firstName(sim, m.id)} noticed how the ${a.name.toLowerCase()} went.` };
+      const ripple = { ...reason, label: msg('engine.noticed.label'), cause: msg('engine.noticed.cause', { name: firstName(sim, m.id), action: a.name.toLowerCase() }) };
       changes.push(...effectChanges(sim, rng, m, [table.bystanders[0], table.bystanders[1], table.bystanders[2]], ripple, { useTrust: false }));
       changes.push(...trustChange(m, table.bystanders[3], ripple));
     }
-    if (table.sponsor) changes.push(...sponsorChange(sim, table.sponsor, `${a.name} ${BAND_WORDS[ev.band]}`));
+    if (table.sponsor) changes.push(...sponsorChange(sim, table.sponsor, msg('engine.live.done', { action: a.name, band: ev.band })));
   } else if (it.actionKey === 'reply') {
     if (replyMsg && !targets.length) replyMsg.state = 'answered';
     for (const m of targets) {
-      const msg = sim.inbox.find(x => x.id === it.replyTo);
-      const onTime = msg && msg.state === 'open';
-      if (msg) msg.state = 'answered';
-      const reason: Reason = { label: `Reply to ${firstName(sim, m.id)} ${BAND_WORDS[ev.band]}`, cause: `You replied to ${firstName(sim, m.id)}${onTime ? ' in time' : ''}.`, rule: 'A reply lifts morale by 3, 1, −1 or −4 depending on how it lands, and an on time reply raises trust by 3.', evidence: quotes(ev) };
+      const inMsg = sim.inbox.find(x => x.id === it.replyTo);
+      const onTime = inMsg && inMsg.state === 'open';
+      if (inMsg) inMsg.state = 'answered';
+      const reason: Reason = { label: msg('engine.reply.label', { name: firstName(sim, m.id), band: ev.band }), cause: msg('engine.reply.cause', { name: firstName(sim, m.id), onTime: onTime ? 'yes' : 'no' }), rule: msg('engine.reply.rule'), evidence: quotes(ev) };
       changes.push(...effectChanges(sim, rng, m, [0, BAND_CHAT_MORALE[ev.band], 0], reason));
       if (onTime) changes.push(...trustChange(m, 3, reason));
       changes.push(...trustChange(m, BAND_TRUST[ev.band] > 0 ? 0 : BAND_TRUST[ev.band], reason));
@@ -417,13 +422,13 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       const mt = adjust(mismatchType(diff, rng, misread(sim, m)), ev.band);
       const reason: Reason = {
         label: label(firstName(sim, m.id)),
-        cause: `Your approach read as ${ev.confidence < 0.5 ? 'mostly ' : ''}${styleName(sim, ev.styleUsed)}, which ${mt === 0 ? 'fit' : 'did not fit'} what ${firstName(sim, m.id)} needed.`,
-        rule: `${ruleText(sim, a, option)} A conversation that goes very well counts one step better, one that falls flat one step worse.`,
+        cause: msg('engine.approach.cause', { mostly: ev.confidence < 0.5 ? 'yes' : 'no', style: styleName(sim, ev.styleUsed), fit: mt === 0 ? 'yes' : 'no', name: firstName(sim, m.id) }),
+        rule: msg('engine.approach.rule', { rule: ruleText(sim, a, option) }),
         evidence: quotes(ev)
       };
       changes.push(...effectChanges(sim, rng, m, effectFor(option, mt), reason, { boost: ev.band === 'strong' ? 1.2 : 1 }));
       const t = a.format === 'meeting' ? Math.round(BAND_TRUST[ev.band] / 2) : BAND_TRUST[ev.band];
-      changes.push(...trustChange(m, t, { ...reason, rule: 'How a conversation lands moves trust: +6, +2, −3 or −8 (half in a team meeting).' }));
+      changes.push(...trustChange(m, t, { ...reason, rule: msg('engine.approach.trustRule') }));
     }
   } else if (a && a.rule === 'trend') {
     for (const m of targets) {
@@ -434,14 +439,14 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       const base: Mismatch = intent === 'warn' ? (trend < 0 ? 0 : 1) : trend >= 0 ? 0 : 1;
       const mt = adjust(base, ev.band);
       const reason: Reason = {
-        label: `Email to ${firstName(sim, m.id)} ${BAND_WORDS[ev.band]}`,
-        cause: `Your email read as ${intent === 'warn' ? 'a warning' : intent === 'neutral' ? 'neutral' : 'congratulations'}; ${firstName(sim, m.id)}'s result has ${trend >= 0 ? 'held or risen' : 'fallen'} recently.`,
-        rule: `${ruleText(sim, a, o)} Congratulate when results hold or rise, warn when they fall.`,
+        label: msg('engine.email.label', { name: firstName(sim, m.id), band: ev.band }),
+        cause: msg('engine.email.cause', { intent, name: firstName(sim, m.id), trend: trend >= 0 ? 'up' : 'down' }),
+        rule: msg('engine.email.rule', { rule: ruleText(sim, a, o) }),
         evidence: quotes(ev)
       };
       changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), reason, { scale: intent === 'neutral' ? 0.5 : 1 }));
       if (intent === 'congratulate') m.recognizedAt = sim.absSub;
-      addMessage(sim, { from: m.id, kind: 'email', title: `Re: your email`, body: npcReply || 'Thanks for the note.', dueIn: null });
+      addMessage(sim, { from: m.id, kind: 'email', title: msg('engine.email.re'), body: npcReply || msg('engine.email.thanks'), dueIn: null });
     }
   } else if (a && a.rule === 'hire') {
     // The participant chose after interviewing (Design doc, Hire member). How the interviews went
@@ -451,27 +456,27 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     // SIMULATION 4.3: a Weak interview lands the candidate half the time, a Harmful one never.
     const accepts = ev.band === 'strong' || ev.band === 'adequate' || (ev.band === 'weak' && rng.chance(0.5));
     if (cid && room && !accepts) {
-      log(sim, { kind: 'interaction', title: `${firstName(sim, cid)} turned the offer down`, memberIds: [], changes: [] });
+      log(sim, { kind: 'interaction', title: msg('engine.hire.declined', { name: firstName(sim, cid) }), memberIds: [], changes: [] });
     }
     if (cid && room && accepts && sim.candidates.includes(cid)) {
       const p = person(sim, cid);
       const hire = { ...createMemberFrom(sim, cid), stage: p.homeStage };
       sim.members.push(hire);
       sim.candidates = sim.candidates.filter(c => c !== cid);
-      changes.push(...trustChange(hire, BAND_TRUST[ev.band], { label: 'First impression', cause: `${firstName(sim, cid)} joined after an interview that ${BAND_WORDS[ev.band]}.`, rule: 'How the interview went sets a new hire’s first trust in you: +6, +2, −3 or −8.', evidence: quotes(ev) }));
+      changes.push(...trustChange(hire, BAND_TRUST[ev.band], { label: msg('engine.hire.label'), cause: msg('engine.hire.cause', { name: firstName(sim, cid), band: ev.band }), rule: msg('engine.hire.rule'), evidence: quotes(ev) }));
     }
   } else if (a && a.rule === 'fire') {
     // The exit conversation: the team watches how it was handled (Design doc: team morale and trust).
     const gone = firstName(sim, it.memberIds[0]);
     for (const m of sim.members.filter(x => x.away === 0)) {
-      const reason: Reason = { label: `Exit conversation ${BAND_WORDS[ev.band]}`, cause: `The team saw how you handled ${gone}'s exit.`, rule: 'A dignified, clear exit steadies the team: morale +3, +1, −1 or −4, and trust follows how it lands, at half strength.', evidence: quotes(ev) };
+      const reason: Reason = { label: msg('engine.exit.label', { band: ev.band }), cause: msg('engine.exit.cause', { name: gone }), rule: msg('engine.exit.rule'), evidence: quotes(ev) };
       changes.push(...effectChanges(sim, rng, m, [0, BAND_CHAT_MORALE[ev.band], 0], reason));
       changes.push(...trustChange(m, Math.round(BAND_TRUST[ev.band] / 2), reason));
     }
   } else if (a) {
     // Hybrid conversation after a locked decision: how it lands moves morale and trust.
     for (const m of targets) {
-      const reason: Reason = { label: label(firstName(sim, m.id)), cause: `You explained the decision to ${firstName(sim, m.id)}.`, rule: 'Explaining a decision well softens it: morale +3, +1, −1 or −4, and trust follows how it lands.', evidence: quotes(ev) };
+      const reason: Reason = { label: label(firstName(sim, m.id)), cause: msg('engine.explained.cause', { name: firstName(sim, m.id) }), rule: msg('engine.explained.rule'), evidence: quotes(ev) };
       changes.push(...effectChanges(sim, rng, m, [0, BAND_CHAT_MORALE[ev.band], 0], reason));
       changes.push(...trustChange(m, BAND_TRUST[ev.band], reason));
     }
@@ -486,7 +491,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   }
   if (main && ev.flags.concernSurfaced && !main.concernShared && person(sim, main.id).hiddenConcern && (main.trust >= 45 || ev.band === 'strong')) {
     main.concernShared = true;
-    changes.push(...trustChange(main, 4, { label: 'Opened up', cause: `${firstName(sim, main.id)} shared what is really on ${pr(sim, main.id) === 'she' ? 'her' : pr(sim, main.id) === 'they' ? 'their' : 'his'} mind.`, rule: 'When someone trusts you enough to share a concern, trust rises by 4.', evidence: quotes(ev) }));
+    changes.push(...trustChange(main, 4, { label: msg('engine.openedUp.label'), cause: msg('engine.openedUp.cause', { name: firstName(sim, main.id), pronoun: pr(sim, main.id) }), rule: msg('engine.openedUp.rule', { n: 4 }), evidence: quotes(ev) }));
   }
   // Live interaction record for the week score and the Leadership pillar; an expected response to an event; badges.
   changes.push(...respond(sim, rng, it.actionKey, it.memberIds, it.replyTo));
@@ -497,12 +502,12 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   const affected = [...new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject))];
   const outcome: Outcome = {
     id: nextId(sim, 'o'), actionKey: it.actionKey, speaker: main?.id ?? (it.format === 'sponsor' ? 'sponsor' : it.memberIds[0] ?? 'sponsor'),
-    headline: main ? `${a?.name ?? 'Conversation'} with ${firstName(sim, main.id)} ${BAND_WORDS[ev.band]}` : `${a?.name ?? 'Conversation'} ${BAND_WORDS[ev.band]}`,
+    headline: main ? msg('engine.live.with', { action: actionCopy, who: firstName(sim, main.id), band: ev.band }) : msg('engine.live.done', { action: actionCopy, band: ev.band }),
     reply: npcReply,
     affected,
     reactions: Object.fromEntries(affected.map(id => {
       const net = changes.filter(c => c.subject === id && c.metric !== 'confidence').reduce((s, c) => s + c.delta, 0);
-      return [id, net > 0 ? 'Feels better about how you lead.' : net < 0 ? 'Not happy with how that went.' : 'Taking it in.'];
+      return [id, msg(net > 0 ? 'engine.reaction.better' : net < 0 ? 'engine.reaction.worse' : 'engine.reaction.neutral')];
     })),
     changes,
     ripple: null,
@@ -517,7 +522,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
 const words = (t: string) => t.split(/\s+/).filter(Boolean).length;
 
 /** What the report keeps about a finished conversation (scoring-and-report.md 5 and 7). */
-function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[], actionName: string | undefined, msg: { title: string } | undefined): LiveRecord {
+function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[], actionName: string | undefined, replyMsg: { title: Copy } | undefined): LiveRecord {
   const mine = it.turns.filter(t => t.by === 'you');
   const theirs = it.turns.filter(t => t.by !== 'you');
   const phrases = sim.config.report.recognitionPhrases.map(p => p.toLowerCase());
@@ -526,13 +531,13 @@ function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[]
   const people = new Map<string, number>();
   for (const c of changes) if (c.subject !== 'sponsor' && c.metric !== 'confidence') people.set(c.subject, (people.get(c.subject) ?? 0) + Math.abs(c.delta));
   const tagged = it.memberIds.length === 1 && !UNTAGGED.has(it.format) && it.actionKey !== 'reply' && it.actionKey !== 'sponsor';
-  const title = it.actionKey === 'sponsor' ? 'Sponsor briefing' : it.actionKey === 'reply' ? `Reply: ${msg?.title ?? 'a message'}` : actionName ?? it.actionKey;
+  const title: Copy = it.actionKey === 'sponsor' ? msg('engine.record.sponsor') : it.actionKey === 'reply' ? msg('engine.record.reply', { title: replyMsg?.title ?? msg('engine.record.aMessage') }) : actionName ?? it.actionKey;
   return {
     id: nextId(sim, 'r'), period: sim.period, sub: sim.sub, actionKey: it.actionKey, format: it.format, band: ev.band, memberIds: it.memberIds, title,
     styleShown: tagged ? ev.styleUsed : null,
     skills: ev.skills ?? [],
-    quotes: mine.map(t => t.text),
-    talk: { you: words(said), npc: theirs.reduce((n, t) => n + words(t.text), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition, spoken: mine.some(t => t.voice) },
+    quotes: mine.map(t => String(t.text)),
+    talk: { you: words(said), npc: theirs.reduce((n, t) => n + (typeof t.text === 'string' ? words(t.text) : 0), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition, spoken: mine.some(t => t.voice) },
     concern: !!ev.flags.concernSurfaced,
     impact: [...people.values()].reduce((a, b) => a + b, 0),
     changes: [...changes].filter(c => c.subject !== 'sponsor').sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta)).slice(0, 4).map(c => ({ subject: c.subject, metric: c.metric, delta: c.delta }))
@@ -556,9 +561,9 @@ function intentGap(sim: Sim, m: MemberSim, ev: Evaluation): Change[] {
   gaps.push(sim.period);
   if (!gaps.includes(sim.period - 1)) return [];
   return trustChange(m, sim.config.trustRules.intentGap, {
-    label: 'Mixed signals',
-    cause: `You said you would lead ${firstName(sim, m.id)} with ${styleName(sim, m.style)}, but in conversation it came across as ${styleName(sim, ev.styleUsed)}, two ${sim.config.time.period.unit}s running.`,
-    rule: `When what you declare and what you do differ two ${sim.config.time.period.unit}s in a row, trust drops by ${-sim.config.trustRules.intentGap}.`,
+    label: msg('engine.mixed.label'),
+    cause: msg('engine.mixed.cause', { name: firstName(sim, m.id), declared: styleName(sim, m.style), shown: styleName(sim, ev.styleUsed), unit: sim.config.time.period.unit }),
+    rule: msg('engine.mixed.rule', { unit: sim.config.time.period.unit, n: -sim.config.trustRules.intentGap }),
     evidence: quotes(ev)
   });
 }

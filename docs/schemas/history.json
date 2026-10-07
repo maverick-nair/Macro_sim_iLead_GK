@@ -14,7 +14,7 @@
         "type": "string"
       },
       "headline": {
-        "type": "string"
+        "$ref": "#/$defs/Text"
       },
       "summary": {
         "type": "object",
@@ -964,5 +964,140 @@
       "headline",
       "summary"
     ]
+  },
+  "$defs": {
+    "Text": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMessage"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyTemplate"
+        }
+      ]
+    },
+    "EngineCopyMessage": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^engine\\.[A-Za-z0-9_.]+$"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      },
+      "required": [
+        "code"
+      ],
+      "description": "An engine.* catalog code with parameters, worded on the client (D83)."
+    },
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMessage"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyTemplate"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyMoney"
+        },
+        {
+          "$ref": "#/$defs/EngineCopyList"
+        }
+      ]
+    },
+    "EngineCopyTemplate": {
+      "type": "object",
+      "properties": {
+        "template": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      },
+      "required": [
+        "template",
+        "params"
+      ],
+      "description": "Authored copy with {placeholders} filled on the client."
+    },
+    "EngineCopyMoney": {
+      "type": "object",
+      "properties": {
+        "money": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "locale": {
+          "type": "string",
+          "minLength": 2
+        },
+        "display": {
+          "type": "string",
+          "enum": [
+            "symbol",
+            "narrowSymbol",
+            "code"
+          ]
+        }
+      },
+      "required": [
+        "money",
+        "currency",
+        "locale",
+        "display"
+      ]
+    },
+    "EngineCopyList": {
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        "conj": {
+          "type": "string",
+          "enum": [
+            "and",
+            "or",
+            "comma"
+          ]
+        }
+      },
+      "required": [
+        "list",
+        "conj"
+      ]
+    }
   }
 }

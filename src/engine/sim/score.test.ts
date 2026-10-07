@@ -1,3 +1,4 @@
+import { wordAll as en } from '../../i18n/engineCopy';
 import { describe, expect, it } from 'vitest';
 import type { NeedKey } from '../lens';
 import { GeneralEvent, parseStoryline, type StorylineConfig } from '../config';
@@ -115,13 +116,13 @@ describe('sponsor confidence and unlocks', () => {
     for (const [text, delta] of [['Honestly, we are behind on 2 stages and I own that. The biggest risk is proposals. I will coach the team; here is the plan: the call lists by Friday. What I need from you is support.', 20], ['ok.', -10]] as const) {
       const e = createEngine(config, { seed: 4 });
       await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
-      while (e.view().clock.period < 4) {
+      while (en(e.view()).clock.period < 4) {
         await e.dispatch({ type: 'endPeriod' });
-        if (e.view().pendingReward) await e.dispatch({ type: 'chooseReward', reward: e.view().pendingReward![0] });
+        if (en(e.view()).pendingReward) await e.dispatch({ type: 'chooseReward', reward: en(e.view()).pendingReward![0] });
         await e.dispatch({ type: 'startNextPeriod' });
         await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
       }
-      const brief = e.view().inbox.find(m => m.briefing)!;
+      const brief = en(e.view()).inbox.find(m => m.briefing)!;
       const o = await e.dispatch({ type: 'openConversation', kind: 'sponsor', messageId: brief.id });
       const r = await e.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text });
       expect(r.changes.find(c => c.subject === 'sponsor')?.delta).toBe(delta);
@@ -135,7 +136,7 @@ describe('sponsor confidence and unlocks', () => {
     const s = endPeriod(sim, rng());
     const expected = s.valueThisPeriod >= s.valueIdeal ? 5 : -5;
     expect(s.sponsor.to - s.sponsor.from).toBe(expected);
-    expect(sim.log.some(l => l.title.startsWith('Revenue') && l.changes.some(c => c.subject === 'sponsor'))).toBe(true);
+    expect(en(sim.log).some(l => l.title.startsWith('Revenue') && l.changes.some(c => c.subject === 'sponsor'))).toBe(true);
   });
 
   it('crossing 70 upward offers the three unlocks; each one works', () => {
@@ -161,7 +162,7 @@ describe('sponsor confidence and unlocks', () => {
     runSubPeriodsWithoutFunnel(sim);
     const s = endPeriod(sim, rng());
     expect(s.checkIn).toBe(true);
-    expect(sim.inbox.some(m => m.title === 'CEO check in')).toBe(true);
+    expect(en(sim.inbox).some(m => m.title === 'CEO check in')).toBe(true);
     startNextPeriod(sim);
     expect(capacity(sim)).toBe(sim.config.time.subPeriod.perPeriod - 1);
   });
@@ -189,7 +190,7 @@ function runSubPeriodsWithoutFunnel(sim: Sim) {
 }
 
 describe('badges (each condition true and false)', () => {
-  const earned = (sim: Sim, key: string) => sim.badges.some(b => b.key === key);
+  const earned = (sim: Sim, key: string) => en(sim.badges).some(b => b.key === key);
 
   it('First Close: the first conversion', () => {
     const sim = fresh();
@@ -267,7 +268,7 @@ describe('badges (each condition true and false)', () => {
     const sim = fresh();
     sim.funnel.conversions = 2;
     checkBadges(sim, 'conversion'); checkBadges(sim, 'conversion');
-    expect(sim.badges.filter(b => b.key === 'first_close')).toEqual([{ key: 'first_close', period: 1, reason: 'Your team closed its first deal.' }]);
+    expect(en(sim.badges).filter(b => b.key === 'first_close')).toEqual([{ key: 'first_close', period: 1, reason: 'Your team closed its first deal.' }]);
   });
 });
 
@@ -300,7 +301,7 @@ describe('events', () => {
     const cfg = withEvents([{ ...base, key: 'stage_hit', target: 'stage:leads', impact: [0, -5, 0] }]);
     const sim = createSim(cfg, 1);
     fireEvent(sim, rng(), cfg.events[0]);
-    const hit = new Set(sim.log.at(-1)!.changes.map(c => c.subject));
+    const hit = new Set(en(sim.log).at(-1)!.changes.map(c => c.subject));
     expect([...hit].every(id => sim.members.find(m => m.id === id)!.stage === 'leads')).toBe(true);
     expect(hit.size).toBe(sim.members.filter(m => m.stage === 'leads').length);
   });
@@ -309,9 +310,9 @@ describe('events', () => {
     const cfg = withEvents([{ ...base, key: 'ask', target: 'kent', delivery: 'chat', response: { actions: ['f2f'], within: 2, onTime: [0, 4, 0] } }]);
     const sim = createSim(cfg, 1);
     fireEvent(sim, rng(), cfg.events[0]);
-    const msg = sim.inbox.at(-1)!;
+    const msg = en(sim.inbox).at(-1)!;
     expect(msg).toMatchObject({ from: 'kent', kind: 'chat', title: 'Something happened' });
-    expect(sim.cards).toEqual([]);
+    expect(en(sim.cards)).toEqual([]);
     const changes = respond(sim, rng(), 'reply', [], msg.id);
     expect(changes.some(c => c.subject === 'kent' && c.metric === 'morale' && c.delta > 0)).toBe(true);
     expect(sim.events.pending).toEqual([]);
@@ -329,16 +330,16 @@ describe('events', () => {
     runSubPeriod(sim, rng()); runSubPeriod(sim, rng());
     expect(sim.sponsor.value - before).toBeLessThanOrEqual(cfg.gamification.sponsor.escalation);
     expect(sim.events.fired).toContain('complaint');
-    expect(sim.cards.some(c => c.key === 'complaint')).toBe(true);
+    expect(en(sim.cards).some(c => c.key === 'complaint')).toBe(true);
   });
 
   it('a sponsor call rings as a card and leaves a message to answer', () => {
     const cfg = withEvents([{ ...base, key: 'call', target: 'sponsor', delivery: 'sponsorCall', card: 'crisis' }]);
     const sim = createSim(cfg, 1);
     fireEvent(sim, rng(), cfg.events[0]);
-    expect(sim.cards.at(-1)).toMatchObject({ delivery: 'sponsorCall', card: 'crisis' });
-    expect(sim.inbox.at(-1)).toMatchObject({ from: 'sponsor', kind: 'sponsor', urgent: true });
-    expect(sim.cards.at(-1)!.messageId).toBe(sim.inbox.at(-1)!.id);
+    expect(en(sim.cards).at(-1)).toMatchObject({ delivery: 'sponsorCall', card: 'crisis' });
+    expect(en(sim.inbox).at(-1)).toMatchObject({ from: 'sponsor', kind: 'sponsor', urgent: true });
+    expect(en(sim.cards).at(-1)!.messageId).toBe(en(sim.inbox).at(-1)!.id);
   });
 
   it('a bulletin for next period is news at this week end, and lands with no card', () => {
@@ -351,7 +352,7 @@ describe('events', () => {
     startNextPeriod(sim); sim.phase = 'board';
     runSubPeriod(sim, rng());
     expect(sim.events.fired).toContain('news');
-    expect(sim.cards.some(c => c.key === 'news')).toBe(false);
+    expect(en(sim.cards).some(c => c.key === 'news')).toBe(false);
   });
 
   it('rejects events that cannot work: two timings, a chat to the whole team, an unknown follow up', () => {
