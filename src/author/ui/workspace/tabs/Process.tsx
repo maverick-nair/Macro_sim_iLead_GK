@@ -16,7 +16,8 @@ export default function Process() {
   const regen = useRegenerate('process');
   const pr = d.process;
   const tone = toneOf(d.marks['process.stages']);
-  const unit = (i: number) => (i === 0 ? ' leads' : i === pr.stages.length - 1 ? ' deals' : '');
+  const last = pr.stages.length - 1;
+  const unit = (i: number) => (i === 0 ? ' leads' : i === last ? ' deals' : '');
   return (
     <TabBody label="Work process" head={<TabHead title="Work process" actions={regen.button}>How the team turns leads into revenue, and what good looks like each week.</TabHead>}>
       {regen.note}

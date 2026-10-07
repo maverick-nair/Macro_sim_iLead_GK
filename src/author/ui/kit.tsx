@@ -234,7 +234,7 @@ export function SubTabs<T extends string>({ label, value, tabs, onChange, idBase
           onKeyDown={e => { if (e.key === 'ArrowRight') { e.preventDefault(); move(1); } if (e.key === 'ArrowLeft') { e.preventDefault(); move(-1); } }}
           className={variant === 'pill'
             ? `min-h-9.5 cursor-pointer rounded-8 border-0 px-3 text-13 font-700 ${value === t.value ? 'bg-author-surface text-author-ink shadow-[0_1px_2px_rgb(20_26_46/0.12)]' : 'bg-transparent text-author-label'} ${FOCUS}`
-            : `-mb-px min-h-10.5 cursor-pointer border-0 border-b-2 border-solid bg-transparent px-3.5 text-14 font-700 ${value === t.value ? 'border-author-primary text-author-ink' : 'border-transparent text-author-muted'} ${FOCUS}`}>
+            : `min-h-10.5 -mb-px cursor-pointer border-0 border-b-2 border-solid bg-transparent px-3.5 text-14 font-700 ${value === t.value ? 'border-author-primary text-author-ink' : 'border-transparent text-author-muted'} ${FOCUS}`}>
           {t.label}
         </button>
       ))}

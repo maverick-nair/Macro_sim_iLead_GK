@@ -18,12 +18,12 @@ export const MOCK_ANSWERS: Record<QuestionId, string> = {
   role_level: 'First time sales managers, about two years into the role.',
   industry: 'Commercial elevators. B2B, long sales cycles.',
   challenge: 'Deals stall at negotiation and new reps burn out in the first quarter.',
-  client: 'Ascent Lifts, a regional elevator maker.',
+  client: 'Ascent Lifts',
   team_size: 'Ten. Eight account managers, a pre sales engineer and a sales coordinator who keeps the pipeline clean.',
-  process: 'Leads, Qualify, Proposal, Negotiation, Close.',
+  process: 'Leads, Qualify, Proposal, Negotiation, Close',
   duration: 'Standard, about an hour.',
   language: 'English, India.',
-  framework: 'We do not have our own framework. They mostly lead the way they were led.',
+  framework: 'No, we do not have our own framework. They mostly lead the way they were led.',
   tone: 'Professional, with real pressure in it.'
 };
 
