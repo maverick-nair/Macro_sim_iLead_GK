@@ -168,7 +168,11 @@
                       "beginner",
                       "developing",
                       "proficient",
-                      "expert"
+                      "expert",
+                      "riskTaker",
+                      "conservative",
+                      "peopleFirst",
+                      "businessFirst"
                     ]
                   },
                   "runs": {
@@ -296,7 +300,10 @@
                     ]
                   },
                   "agreement": {
-                    "type": "number"
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   },
                   "adaptability": {
                     "type": "number"
@@ -337,6 +344,42 @@
                   },
                   "concerns": {
                     "type": "number"
+                  },
+                  "sd": {
+                    "type": "number"
+                  },
+                  "pillars": {
+                    "type": "object",
+                    "properties": {
+                      "business": {
+                        "type": "number"
+                      },
+                      "people": {
+                        "type": "number"
+                      },
+                      "leadership": {
+                        "type": "number"
+                      },
+                      "streak": {
+                        "type": "number"
+                      },
+                      "capped": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "business",
+                      "people",
+                      "leadership",
+                      "streak",
+                      "capped"
+                    ]
+                  },
+                  "styleRead": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
                   }
                 },
                 "required": [
@@ -376,7 +419,13 @@
                       "events",
                       "styleEffect",
                       "conversationEffect",
-                      "target"
+                      "target",
+                      "combined",
+                      "idle",
+                      "archetypes",
+                      "tradeOff",
+                      "mechanics",
+                      "overlap"
                     ]
                   },
                   "status": {
@@ -423,7 +472,11 @@
                       "beginner",
                       "developing",
                       "proficient",
-                      "expert"
+                      "expert",
+                      "riskTaker",
+                      "conservative",
+                      "peopleFirst",
+                      "businessFirst"
                     ]
                   },
                   "index": {
@@ -446,7 +499,11 @@
                             "enum": [
                               "style",
                               "action",
-                              "band"
+                              "band",
+                              "energize",
+                              "busy",
+                              "pair",
+                              "idle"
                             ]
                           },
                           "key": {
@@ -607,6 +664,52 @@
                     "required": [
                       "expected",
                       "handled"
+                    ]
+                  },
+                  "pillars": {
+                    "type": "object",
+                    "properties": {
+                      "business": {
+                        "type": "number"
+                      },
+                      "people": {
+                        "type": "number"
+                      },
+                      "leadership": {
+                        "type": "number"
+                      },
+                      "streak": {
+                        "type": "number"
+                      },
+                      "capped": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "business",
+                      "people",
+                      "leadership",
+                      "streak",
+                      "capped"
+                    ]
+                  },
+                  "styleRead": {
+                    "type": "object",
+                    "properties": {
+                      "meant": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "read": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "meant",
+                      "read"
                     ]
                   }
                 },
@@ -640,7 +743,11 @@
                       "beginner",
                       "developing",
                       "proficient",
-                      "expert"
+                      "expert",
+                      "riskTaker",
+                      "conservative",
+                      "peopleFirst",
+                      "businessFirst"
                     ]
                   },
                   "index": {
@@ -663,7 +770,11 @@
                             "enum": [
                               "style",
                               "action",
-                              "band"
+                              "band",
+                              "energize",
+                              "busy",
+                              "pair",
+                              "idle"
                             ]
                           },
                           "key": {
@@ -824,6 +935,52 @@
                     "required": [
                       "expected",
                       "handled"
+                    ]
+                  },
+                  "pillars": {
+                    "type": "object",
+                    "properties": {
+                      "business": {
+                        "type": "number"
+                      },
+                      "people": {
+                        "type": "number"
+                      },
+                      "leadership": {
+                        "type": "number"
+                      },
+                      "streak": {
+                        "type": "number"
+                      },
+                      "capped": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "business",
+                      "people",
+                      "leadership",
+                      "streak",
+                      "capped"
+                    ]
+                  },
+                  "styleRead": {
+                    "type": "object",
+                    "properties": {
+                      "meant": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      },
+                      "read": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "meant",
+                      "read"
                     ]
                   }
                 },

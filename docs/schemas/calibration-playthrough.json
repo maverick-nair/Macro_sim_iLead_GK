@@ -9,7 +9,11 @@
         "beginner",
         "developing",
         "proficient",
-        "expert"
+        "expert",
+        "riskTaker",
+        "conservative",
+        "peopleFirst",
+        "businessFirst"
       ]
     },
     "index": {

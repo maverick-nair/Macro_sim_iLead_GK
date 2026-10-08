@@ -33,9 +33,15 @@ describe('a calibration run', () => {
     const { results, playthroughs } = await runCalibration(raw, { personas: { beginner: 2, developing: 2, proficient: 2, expert: 2 }, seed: 3 }, { ranOn: 'cli', onProgress: (d, t) => progress.push([d, t]), yieldEvery: async () => undefined });
     expect(CalibrationResults.parse(results)).toBeTruthy();
     expect(results.runs).toHaveLength(8);
-    // Two seeds for each style and each action, and two each with every conversation Strong, then Weak (D132).
-    expect(results.probes).toHaveLength(2 * (4 + raw.actions.length) + 4);
+    // Three seeds for each style alone and with team energy, two for each action, as many actions as possible,
+    // reading without acting and six pairs of actions (D149), and two each with every conversation Strong, then Weak (D132).
+    const kinds = (k: string) => results.probes.filter(p => p.probe?.kind === k).length;
+    expect([kinds('style'), kinds('action'), kinds('energize'), kinds('busy'), kinds('idle'), kinds('pair'), kinds('band')]).toEqual([12, 2 * raw.actions.length, 12, 2, 2, 12, 4]);
     expect(results.probes.filter(p => p.probe?.kind === 'band').map(p => p.probe!.key)).toEqual(['strong', 'strong', 'weak', 'weak']);
+    expect(results.probes.filter(p => p.probe?.kind === 'pair').every(p => p.persona === 'expert' && p.probe!.key.split('+').length === 2)).toBe(true);
+    // Each run says where its points came from and how often its words were read as meant.
+    expect(results.runs.every(r => r.pillars && r.styleRead && r.styleRead.read <= r.styleRead.meant)).toBe(true);
+    expect(results.personas.every(p => p.sd !== undefined && p.pillars && p.styleRead !== null)).toBe(true);
     expect(results.checks.find(c => c.key === 'unused')).toMatchObject({ status: 'pass', detail: '"Hire member" and "Let go" are rare by design and not counted.' });
     expect(progress[0]).toEqual([0, 8 + results.probes.length]);
     expect(progress.at(-1)).toEqual([8 + results.probes.length, 8 + results.probes.length]);
@@ -52,7 +58,7 @@ describe('a calibration run', () => {
     expect(talk.turns.length).toBeGreaterThan(2);
     for (const pt of playthroughs) for (const c of pt.conversations) expect(copyViolations(c.why), c.why).toEqual([]);
     expect(calibrationPublishCheck(results, { draft: raw })).toMatchObject({ blocking: false, action: 'See results' });
-  });
+  }, 30_000);
 
   it('replays exactly for the same draft and settings', async () => {
     const s = { personas: { developing: 1, expert: 1 }, seed: 9, probes: false };
@@ -88,9 +94,9 @@ describe('a calibration run', () => {
     const extra = Array.from({ length: 60 }, (_, i) => ({ ...raw.actions[0], key: `extra_${i}` }));
     const config = parseDraft({ ...raw, actions: [...raw.actions, ...extra] });
     const s = CalibrationSettings.parse({ personas: { beginner: 25, developing: 25, proficient: 25, expert: 25 } });
-    const { runs, probes } = checkedPlan(config, s);
+    const { runs, probes, pairs, bands } = checkedPlan(config, s);
     expect(probes.filter(p => p.probe.kind === 'action')).toHaveLength(2 * MAX_PROBE_ACTIONS);
-    expect(runs.length + probes.length).toBeLessThanOrEqual(MAX_PLAYTHROUGHS);
+    expect(runs.length + probes.length + pairs + bands.length).toBeLessThanOrEqual(MAX_PLAYTHROUGHS);
   });
 
   it('plans seeds per persona, so every persona meets the same team', () => {
@@ -130,6 +136,37 @@ describe('checks that catch broken configs (D132)', () => {
     expect((await statusOf(broken(c => { c.money.target = c.money.target / 10; }), false)).target).toBe('fail');
     expect((await statusOf(broken(c => { c.money.target = 1e12; }), false)).target).toBe('fail');
   }, 30_000);
+});
+
+describe('checks that catch broken configs (D149, D150)', () => {
+  const run = async (draft: unknown, personas: Record<string, number> = { expert: 2 }) => (await runCalibration(draft, { personas, seed: 1 }, { ranOn: 'cli', yieldEvery: async () => undefined })).results;
+  const check = (r: Awaited<ReturnType<typeof run>>, key: string) => r.checks.find(c => c.key === key);
+
+  it('team energy that dominates fails the combined check: a routine beats judgement', async () => {
+    const energize = broken(c => {
+      c.id = 'energize_dominance';
+      for (const o of c.actions.find(a => a.key === 'energize')!.options) { o.effects = { m0: [8, 25, 30], m1: [8, 25, 30], m2: [8, 25, 30] }; o.cooldownDays = 0; }
+    });
+    const r = await run(energize);
+    expect(check(r, 'combined')).toMatchObject({ status: 'fail' });
+    expect(check(r, 'combined')?.title).toMatch(/^A routine wins over judgement: .*(Energize the team|Team energy every week)/);
+  }, 60_000);
+
+  it('a storyline where reading people alone reaches Gold warns: do nothing after diagnosis', async () => {
+    const heavy = broken(c => { c.id = 'do_nothing_gold'; c.gamification.weights = { business: 0.1, people: 0.1, leadership: 0.8 }; });
+    expect(check(await run(heavy), 'idle')).toMatchObject({ status: 'warn', title: expect.stringMatching(/^Reading people right without taking any action reaches Gold/) });
+    const light = broken(c => { c.id = 'acting_counts'; c.gamification.weights = { business: 0.45, people: 0.45, leadership: 0.1 }; });
+    expect(check(await run(light), 'idle')).toMatchObject({ status: 'pass' });
+  }, 60_000);
+
+  it('Sales Elevator: the combined finding is advice on the bundled storyline, and a failure on a copy of it', async () => {
+    const r = await run(raw, { expert: 3, peopleFirst: 2 });
+    expect(check(r, 'combined')).toMatchObject({ status: 'warn', detail: expect.stringMatching(/^A storyline finding on the bundled Sales Elevator/) });
+    // People first beats the Expert on score and revenue: no trade-off between people and results.
+    expect(check(r, 'tradeOff')).toMatchObject({ status: 'warn' });
+    const copy = await run({ ...raw, id: 'draft_sales_copy' }, { expert: 3 });
+    expect(check(copy, 'combined')).toMatchObject({ status: 'fail' });
+  }, 60_000);
 });
 
 describe('the publish check', () => {

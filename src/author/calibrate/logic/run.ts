@@ -3,6 +3,8 @@ import type { Copy } from '../../../engine/copy';
 import { heuristicEvaluator, type Evaluator } from '../../../engine/sim/evaluator';
 import type { NpcModel } from '../../../engine/sim/live';
 import { playSynthetic, type Probe } from '../../../engine/sim/synthetic';
+import { energizeAction } from '../../../engine/sim/syntheticPolicy';
+import { pairCount, probePersona, topPairs } from '../../../engine/sim/syntheticProbes';
 import type { SyntheticSpeaker } from '../../../engine/sim/syntheticSpeech';
 import type { Band } from '../../../engine/sim/types';
 import { aggregate } from './aggregate';
@@ -71,28 +73,53 @@ export function parseDraft(draft: unknown): StorylineConfig {
 }
 
 /**
- * The playthroughs a calibration will play, in order: each persona's, then the probes. Action probes
- * cover the first MAX_PROBE_ACTIONS actions, so a storyline with many actions cannot make a run unbounded.
- * With the probes on, conversation probes (`bands`) play Proficient twice with every conversation Strong
+ * Seeds each probe plays (D114): two, and three for the probes that borrow a Proficient's sound play (one style
+ * for everyone, team energy with one style), whose spread between seeds is widest (D149).
+ */
+export const PROBE_SEEDS = 2;
+export const seedsFor = (p: Probe) => (p.kind === 'style' || p.kind === 'energize' ? 3 : PROBE_SEEDS);
+
+type Planned = { persona: PersonaKey; index: number; seed: number; probe: Probe };
+
+/**
+ * The playthroughs a calibration will play, in order: each persona's (the four levels, then any player types
+ * turned on), then the probes. Action probes cover the first MAX_PROBE_ACTIONS actions, so a storyline with
+ * many actions cannot make a run unbounded. With the probes on: one style for everyone and one action every
+ * day (D114); team energy every week with one style, as many actions as possible, and reading people without
+ * acting (D149); pairs of actions repeated (`pairs`, chosen from the action probes' scores once they have
+ * played, D149); and conversation probes (`bands`) that play Proficient twice with every conversation Strong
  * and twice with every conversation Weak, on the same seeds (D132).
  */
 export function plan(config: StorylineConfig, s: CalibrationSettings) {
   const runs: Array<{ persona: PersonaKey; index: number; seed: number }> = [];
   for (const persona of PERSONA_KEYS) for (let i = 0; i < (s.personas[persona] ?? 0); i++) runs.push({ persona, index: i, seed: s.seed + i });
-  const probes: Array<{ persona: PersonaKey; index: number; seed: number; probe: Probe }> = [];
+  const probes: Planned[] = [];
+  let pairs = 0;
   if (s.probes) {
-    const all: Probe[] = [...config.lens.styles.map(x => ({ kind: 'style' as const, style: x.key })), ...config.actions.slice(0, MAX_PROBE_ACTIONS).map(a => ({ kind: 'action' as const, action: a.key }))];
-    for (const probe of all) for (let i = 0; i < 2; i++) probes.push({ persona: probe.kind === 'style' ? 'proficient' : 'developing', index: i, seed: s.seed + 500 + i, probe });
+    const all: Probe[] = [
+      ...config.lens.styles.map(x => ({ kind: 'style' as const, style: x.key })),
+      ...config.actions.slice(0, MAX_PROBE_ACTIONS).map(a => ({ kind: 'action' as const, action: a.key })),
+      ...(energizeAction(config) ? config.lens.styles.map(x => ({ kind: 'energize' as const, style: x.key })) : []),
+      { kind: 'busy' }, { kind: 'idle' }
+    ];
+    for (const probe of all) for (let i = 0; i < seedsFor(probe); i++) probes.push({ persona: probePersona(probe), index: i, seed: s.seed + 500 + i, probe });
+    pairs = pairCount(config) * PROBE_SEEDS;
   }
   const bands: Array<{ persona: PersonaKey; index: number; seed: number; band: Band }> = [];
   if (s.probes) for (const band of BAND_PROBES) for (let i = 0; i < 2; i++) bands.push({ persona: 'proficient', index: i, seed: s.seed + 700 + i, band });
-  return { runs, probes, bands };
+  return { runs, probes, pairs, bands };
+}
+
+/** The pair probes, once the action probes have played: the top actions by their scores (D149). */
+export function pairProbes(config: StorylineConfig, s: CalibrationSettings, played: RunResult[]): Planned[] {
+  const singles = played.filter(r => r.probe?.kind === 'action').map(r => ({ action: r.probe!.key, score: r.score }));
+  return topPairs(config, singles).flatMap(actions => Array.from({ length: PROBE_SEEDS }, (_, i) => ({ persona: 'expert' as const, index: i, seed: s.seed + 500 + i, probe: { kind: 'pair' as const, actions } })));
 }
 
 /** The plan, refused when it is over MAX_PLAYTHROUGHS playthroughs in all. */
 export function checkedPlan(config: StorylineConfig, s: CalibrationSettings): ReturnType<typeof plan> {
   const p = plan(config, s);
-  const total = p.runs.length + p.probes.length + p.bands.length;
+  const total = p.runs.length + p.probes.length + p.pairs + p.bands.length;
   if (total > MAX_PLAYTHROUGHS) throw new CalibrationError('These settings cannot run.', 'badSettings', [`${total} playthroughs with the probes; at most ${MAX_PLAYTHROUGHS} in one run. Play fewer, or turn the probes off.`]);
   return p;
 }
@@ -105,8 +132,8 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
   if (!parsed.success) throw new CalibrationError('These settings cannot run.', 'badSettings', parsed.error.issues.map(i => i.message));
   const settings = parsed.data;
   const config = parseDraft(draft);
-  const { runs: todo, probes: probing, bands } = checkedPlan(config, settings);
-  const total = todo.length + probing.length + bands.length;
+  const { runs: todo, probes: probing, pairs, bands } = checkedPlan(config, settings);
+  const total = todo.length + probing.length + pairs + bands.length;
   const tick = deps.yieldEvery ?? nextTick;
   const opts = { speaker: deps.speaker, evaluator: deps.evaluator, npc: deps.npc, signal: deps.signal, word: deps.word };
   const runs: RunResult[] = [];
@@ -132,14 +159,16 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
     deps.onProgress?.(++done, total);
     await tick();
   }
-  for (const p of probing) {
+  // Probes play on the offline templates and evaluator: they test the mechanics, not the words, and cost no model calls.
+  const probe = async (p: Planned) => {
     check();
-    // Probes play on the offline templates and evaluator: they test the mechanics, not the words, and cost no model calls.
     const run = await guarded(() => playSynthetic(config, p.persona, p.seed, { probe: p.probe, signal: deps.signal, word: deps.word }));
     probes.push(runResultOf(run, p.index, config));
     deps.onProgress?.(++done, total);
     await tick();
-  }
+  };
+  for (const p of probing) await probe(p);
+  if (pairs) for (const p of pairProbes(config, settings, probes)) await probe(p);
   for (const b of bands) {
     check();
     // Conversation probes too play offline, with every conversation rated one band: does a conversation change what happens?

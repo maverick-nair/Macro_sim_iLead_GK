@@ -5,24 +5,35 @@ import { z } from 'zod';
  * (`POST /genie/calibrations`) and the author's screen. JSON Schemas: docs/schemas/calibration-*.json.
  */
 
-export const PERSONA_KEYS = ['beginner', 'developing', 'proficient', 'expert'] as const;
+/** The four levels, then the four player types (D150), off unless the author turns them on. */
+export const LEVEL_KEYS = ['beginner', 'developing', 'proficient', 'expert'] as const;
+export const ARCHETYPE_KEYS = ['riskTaker', 'conservative', 'peopleFirst', 'businessFirst'] as const;
+export const PERSONA_KEYS = [...LEVEL_KEYS, ...ARCHETYPE_KEYS] as const;
 export const PersonaKey = z.enum(PERSONA_KEYS);
 export type PersonaKey = z.infer<typeof PersonaKey>;
+export type LevelKey = (typeof LEVEL_KEYS)[number];
+export type ArchetypeKey = (typeof ARCHETYPE_KEYS)[number];
+export const isLevelKey = (k: string): k is LevelKey => (LEVEL_KEYS as readonly string[]).includes(k);
+
+/** Playthroughs per level by default (D149: 10, was 5, so a level's spread is worth reading). */
+export const DEFAULT_RUNS = 10;
 
 /** At most this many playthroughs per persona, and in one calibration. */
 export const MAX_RUNS_PER_PERSONA = 25;
 export const MAX_RUNS = 100;
 /** Action probes play the first this many actions (two playthroughs each); a storyline's actions are not capped. */
 export const MAX_PROBE_ACTIONS = 40;
-/** At most this many playthroughs in one calibration, persona runs and probes together. */
-export const MAX_PLAYTHROUGHS = 200;
+/** At most this many playthroughs in one calibration, persona runs and probes together (D149: 250, was 200, for the combined probes). */
+export const MAX_PLAYTHROUGHS = 250;
 
 const Runs = z.number().int().min(0).max(MAX_RUNS_PER_PERSONA);
+const Describe = z.string().max(600);
 
 /** What to run: playthroughs per persona, the first seed, whether to probe for dominant strategies. */
 export const CalibrationSettings = z.object({
-  personas: z.object({ beginner: Runs, developing: Runs, proficient: Runs, expert: Runs }).partial()
-    .default({ beginner: 5, developing: 5, proficient: 5, expert: 5 })
+  /** Playthroughs per level and per player type; a player type left out does not play. */
+  personas: z.object({ beginner: Runs, developing: Runs, proficient: Runs, expert: Runs, riskTaker: Runs, conservative: Runs, peopleFirst: Runs, businessFirst: Runs }).partial()
+    .default({ beginner: DEFAULT_RUNS, developing: DEFAULT_RUNS, proficient: DEFAULT_RUNS, expert: DEFAULT_RUNS })
     .refine(p => Object.values(p).reduce((a, b) => a + (b ?? 0), 0) >= 1, 'Include at least one playthrough')
     .refine(p => Object.values(p).reduce((a, b) => a + (b ?? 0), 0) <= MAX_RUNS, `At most ${MAX_RUNS} playthroughs in one run`),
   /** The first seed; playthrough i of a persona plays seed + i, so a calibration replays exactly. */
@@ -32,7 +43,7 @@ export const CalibrationSettings = z.object({
   /** The tier Experts should reach and Beginners should not, by key. Left out, the second tier from the top. */
   targetTier: z.string().regex(/^[a-z][a-z0-9_]*$/).optional(),
   /** How each persona plays, in the author's words: read by AI players only. */
-  describe: z.object({ beginner: z.string().max(600), developing: z.string().max(600), proficient: z.string().max(600), expert: z.string().max(600) }).partial().optional()
+  describe: z.object({ beginner: Describe, developing: Describe, proficient: Describe, expert: Describe, riskTaker: Describe, conservative: Describe, peopleFirst: Describe, businessFirst: Describe }).partial().optional()
 });
 export type CalibrationSettings = z.output<typeof CalibrationSettings>;
 export type CalibrationSettingsInput = z.input<typeof CalibrationSettings>;
@@ -42,6 +53,13 @@ export const CalibrationRequest = CalibrationSettings.extend({ storyline: z.reco
 export type CalibrationRequest = z.input<typeof CalibrationRequest>;
 
 const Band = z.enum(['strong', 'adequate', 'weak', 'harmful']);
+
+/**
+ * Probe kinds (D114, D132, D149): `style`, `action`, `energize` and `busy` play without reading people;
+ * `pair` and `idle` read people as an Expert does; `band` forces every conversation's rating.
+ */
+export const PROBE_KINDS = ['style', 'action', 'band', 'energize', 'busy', 'pair', 'idle'] as const;
+const Pillars = z.object({ business: z.number(), people: z.number(), leadership: z.number(), streak: z.number() });
 const Num = z.number();
 const Int = z.number().int();
 
@@ -54,7 +72,7 @@ export const RunResult = z.object({
    * Set for a probe: a dominant strategy probe (the style or the action it leaned on, D114), or a conversation
    * probe (`band`: every conversation rated Strong, or Weak, to see whether conversations change what happens, D132).
    */
-  probe: z.object({ kind: z.enum(['style', 'action', 'band']), key: z.string() }).nullable(),
+  probe: z.object({ kind: z.enum(PROBE_KINDS), key: z.string() }).nullable(),
   score: Num,
   max: Num,
   tier: z.object({ key: z.string(), name: z.string(), index: Int.min(0) }),
@@ -70,14 +88,21 @@ export const RunResult = z.object({
   concerns: z.array(z.string()),
   /** Times each action was taken. */
   actions: z.record(z.string(), Int),
-  events: z.object({ expected: Int, handled: Int })
+  events: z.object({ expected: Int, handled: Int }),
+  /**
+   * Where the Leadership Score came from (D149), in points that add up to it: each pillar's weighted share
+   * and the streak bonus; `capped` when revenue passed the target, so Business could rise no further.
+   */
+  pillars: Pillars.extend({ capped: z.boolean() }).optional(),
+  /** Conversations in a style the player meant, and how many the evaluator read as that style (D151). */
+  styleRead: z.object({ meant: Int, read: Int }).optional()
 });
 export type RunResult = z.infer<typeof RunResult>;
 
 export const CheckStatus = z.enum(['pass', 'warn', 'fail']);
 export type CheckStatus = z.infer<typeof CheckStatus>;
 export const Check = z.object({
-  key: z.enum(['ordered', 'expertTier', 'beginnerTier', 'skills', 'conversations', 'separation', 'dominant', 'unused', 'events', 'styleEffect', 'conversationEffect', 'target']),
+  key: z.enum(['ordered', 'expertTier', 'beginnerTier', 'skills', 'conversations', 'separation', 'dominant', 'unused', 'events', 'styleEffect', 'conversationEffect', 'target', 'combined', 'idle', 'archetypes', 'tradeOff', 'mechanics', 'overlap']),
   status: CheckStatus,
   /** One plain sentence, what the author reads in the list. */
   title: z.string(),
@@ -101,12 +126,19 @@ export const PersonaStats = z.object({
   beatTarget: Int,
   /** The most common overall skill level and its name, and the share of playthroughs whose level fits the persona. */
   level: z.object({ index: Int.nullable(), name: z.string() }),
-  agreement: Num,
+  /** The share of playthroughs whose skill level fits the level played; null for a player type, which has no level. */
+  agreement: Num.nullable(),
   adaptability: Num,
   /** Mean conversation band, 0 harmful to 3 strong, and the count of each band. */
   bandScore: Num,
   bands: z.object({ strong: Int, adequate: Int, weak: Int, harmful: Int }),
-  concerns: Num
+  concerns: Num,
+  /** The spread of the Leadership Score: standard deviation (D149). */
+  sd: Num.optional(),
+  /** Mean points from each pillar and the streak bonus, and the share of runs whose Business was capped (D149). */
+  pillars: Pillars.extend({ capped: Num }).optional(),
+  /** Evaluator agreement: the share of conversations whose words the evaluator read as the style meant, or null (D151). */
+  styleRead: Num.nullable().optional()
 });
 export type PersonaStats = z.infer<typeof PersonaStats>;
 
