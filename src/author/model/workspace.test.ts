@@ -2,7 +2,6 @@ import { describe, expect, it, vi } from 'vitest';
 import { Brief } from '../../api/author';
 import { parseRoute } from '../ui/route';
 import { changeLens } from '../ui/workspace/tabs/Lens';
-import { regenerate } from '../ui/workspace/tabs/regenerate';
 import { describeAction, parseMyLibrary } from '../ui/workspace/ActionAdd';
 import { readability } from '../ui/workspace/tabs/Brand';
 import { checksOf } from '../ui/workspace/tabs/Publish';
@@ -10,7 +9,10 @@ import { MOCK_ANSWERS } from '../voice';
 import { applyAnswer } from '../questions';
 import { AuthorDraft, WORKSPACE_BACKUP_KEY, WORKSPACE_KEY } from './draft';
 import { toStoryline } from './export';
-import { applySuggestion, propose } from './kora';
+import { understand } from './intents';
+import { applySuggestion } from './kora';
+import { applyOps } from './patch';
+import { regenerate } from './regenerate';
 import { needsOf, tabStatus } from './needs';
 import { emptyChat, seedDraft } from './seed';
 import { createAuthorStore, loadDraft, nextMark } from './store';
@@ -36,7 +38,9 @@ describe('the author store (D105)', () => {
     expect(nextMark('ai', 'you')).toBe('edited');
     expect(nextMark(undefined, 'you')).toBe('you');
     expect(nextMark('you', 'you')).toBe('you');
-    expect(nextMark('you', 'ai')).toBe('ai');
+    expect(nextMark('you', 'ai')).toBe('edited');
+    expect(nextMark('edited', 'ai')).toBe('edited');
+    expect(nextMark('ai', 'ai')).toBe('ai');
     const s = createAuthorStore(draft(), null);
     s.getState().edit(d => { d.story.company.about = 'Mine now.'; }, 'story.company.about');
     expect(s.getState().draft.marks['story.company.about']).toBe('edited');
@@ -97,20 +101,22 @@ describe('needs, Kora and regeneration', () => {
     expect(checksOf(d).filter(c => c.blocking && c.state !== 'passed')).toEqual([]);
   });
 
-  it('proposes a change before applying it, by character, sponsor, run length or a new character', () => {
+  it('proposes a change before applying it, by character, run length, a new character or the sponsor', () => {
     const d = draft();
     const first = d.team[0].first;
-    const p = propose(d, 'team', `Make ${first} more defensive in the first meeting`)!;
-    expect(p.label).toBe('Persona');
-    expect(p.after).toMatch(/guarded/);
-    p.apply(d);
-    expect(d.team[0].persona).toBe(p.after);
-    expect(propose(d, 'overview', 'Shorten it to a 30 minute Lite run')!.after).toMatch(/Lite/);
-    const add = propose(d, 'overview', 'Add a remote team member')!;
-    add.apply(d);
+    const p = understand(d, 'team', `Make ${first} more defensive in the first meeting`);
+    if (p.kind !== 'change') throw new Error(p.reply);
+    expect(p.changes[0].field).toMatch(/· Persona$/);
+    expect(p.changes[0].after).toMatch(/defensive when questioned/);
+    applyOps(d, p.ops);
+    expect(d.team[0].persona).toBe(p.changes[0].after);
+    expect(understand(d, 'overview', 'Shorten it to a 30 minute Lite run')).toMatchObject({ kind: 'change', changes: expect.arrayContaining([expect.objectContaining({ field: 'Run length', after: 'Lite' })]) });
+    const add = understand(d, 'overview', 'Add a remote team member');
+    if (add.kind !== 'change') throw new Error(add.reply);
+    applyOps(d, add.ops);
     expect(d.team.at(-1)!.persona).toMatch(/video/);
-    expect(propose(d, 'story', 'Make the sponsor more demanding')!.after).toMatch(/plan from you/);
-    expect(propose(d, 'story', '   ')).toBeNull();
+    expect(understand(d, 'story', 'Make the sponsor more demanding')).toMatchObject({ kind: 'change', changes: expect.arrayContaining([expect.objectContaining({ field: 'Welcome letter', after: expect.stringMatching(/plan from you/) })]) });
+    expect(understand(d, 'story', '   ')).toMatchObject({ kind: 'reply' });
   });
 
   it('applies suggestions, and regenerating keeps what the author wrote', () => {
@@ -121,7 +127,7 @@ describe('needs, Kora and regeneration', () => {
     d.story.company.about = 'Kora changed this.';
     d.story.company.hq = 'Mine';
     d.marks['story.company.hq'] = 'edited';
-    regenerate(d, 'story');
+    regenerate(d, { tab: 'story' });
     expect(d.story.company.about).toBe(before);
     expect(d.story.company.hq).toBe('Mine');
   });

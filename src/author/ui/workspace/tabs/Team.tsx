@@ -3,11 +3,11 @@ import { needOf } from '../../../../engine/lens';
 import type { Character } from '../../../model/draft';
 import { applySuggestion } from '../../../model/kora';
 import { freshKey, PORTRAITS } from '../../../model/seed';
-import { useAuthor } from '../../../model/store';
+import { nextMark, useAuthor } from '../../../model/store';
 import { Avatar, Badge, BUTTON, CARD, Field, Icon, MarkOf, Scroll, TextArea, toneOf } from '../../kit';
 import { CharacterEditor } from '../CharacterEditor';
 import { TabBody, TabHead } from '../Workspace';
-import { useRegenerate } from './regenerate';
+import { useRegenerate, useRegenerateItem } from './regenerate';
 
 const MOOD = (c: Character) => (c.stats.morale >= 70 ? 'upbeat' : c.stats.morale >= 50 ? 'steady' : c.stats.morale >= 35 ? 'concerned' : 'frustrated');
 
@@ -20,6 +20,8 @@ export default function Team() {
   const d = useAuthor(s => s.draft);
   const edit = useAuthor(s => s.edit);
   const regen = useRegenerate('team', 'Regenerate the whole team');
+  const regenItem = useRegenerateItem();
+  const [itemNote, setItemNote] = useState<{ id: string; text: string } | null>(null);
   const [selected, setSelected] = useState(d.team[0]?.id ?? '');
   const [editing, setEditing] = useState<string | null>(null);
   const c = d.team.find(x => x.id === selected) ?? d.team[0];
@@ -70,8 +72,10 @@ export default function Team() {
                 <span className="text-13 text-author-body">{c.title} &middot; {markOf(c.id) === 'ai' ? 'generated from your challenge' : 'edited by you'}</span>
               </div>
               <button type="button" className={BUTTON.secondary} onClick={() => setEditing(c.id)}>{Icon.pencil(14)} Edit profile</button>
+              <button type="button" className={BUTTON.secondary} onClick={() => setItemNote({ id: c.id, text: regenItem({ character: c.id }) })}>{Icon.refresh(14)} Regenerate<span className="sr-only"> {c.first} {c.last}</span></button>
               {d.team.length > 6 && <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { x.team = x.team.filter(m => m.id !== c.id); for (const m of x.team) m.relationships = m.relationships.filter(r => r.with !== c.id); setSelected(x.team[0].id); })}>Remove<span className="sr-only"> {c.first}</span></button>}
             </div>
+            {itemNote?.id === c.id && <p role="status" className="m-0 text-13 text-author-body">{itemNote.text}</p>}
             <dl className="m-0 grid grid-cols-3 gap-3">
               <div className="flex flex-col gap-1"><dt className="text-13 font-700 text-author-label">Stage</dt><dd className="m-0 rounded-10 border border-solid border-author-line-control px-3 py-2 text-14">{stageName(c.stage)}</dd></div>
               <div className="flex flex-col gap-1"><dt className="text-13 font-700 text-author-label">Starting skill</dt><dd className={`m-0 rounded-10 border border-solid px-3 py-2 text-14 ${toneOf(d.marks[`team.${c.id}.stats`])}`}>{c.stats.skill} &middot; {c.stats.skill >= 70 ? 'strong' : c.stats.skill >= 40 ? 'steady' : 'low'}</dd></div>
@@ -83,7 +87,7 @@ export default function Team() {
               <div className="flex flex-wrap items-center gap-3 rounded-14 border-[1.5px] border-dashed border-author-kora p-4">
                 <span aria-hidden="true" className="text-author-kora">{Icon.spark()}</span>
                 <p className="m-0 min-w-60 flex-1 text-14"><b>Suggestion:</b> {suggestion.text}</p>
-                <button type="button" className={BUTTON.kora} onClick={() => edit(x => { for (const p of applySuggestion(x, suggestion.id)) x.marks[p] = 'ai'; })}>Use</button>
+                <button type="button" className={BUTTON.kora} onClick={() => edit(x => { for (const p of applySuggestion(x, suggestion.id)) x.marks[p] = nextMark(x.marks[p], 'ai'); })}>Use</button>
                 <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { const s = x.suggestions.find(y => y.id === suggestion.id); if (s) s.done = true; })}>Dismiss</button>
               </div>
             )}

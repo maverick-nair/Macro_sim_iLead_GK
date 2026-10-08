@@ -57,6 +57,7 @@ describe('AI provider wiring', () => {
     expect(typeof (ai.npc as unknown as { stream: unknown }).stream).toBe('function');
     expect((ai.evaluator as unknown as { provider: string }).provider).toBe('anthropic');
     expect((ai.author as unknown as { provider: string }).provider).toBe('anthropic');
+    expect((ai.editor as unknown as { provider: string }).provider).toBe('anthropic');
   });
 
   it('plays a conversation through the real ai/ module\'s objects (per role mock providers, no network)', async () => {
@@ -64,6 +65,8 @@ describe('AI provider wiring', () => {
     expect((ai.npc as unknown as { provider: string }).provider).toBe('mock');
     // Synthetic players on the mock provider: the calibration keeps the engine's templates.
     expect(ai.synthetic).toBeUndefined();
+    // Ask Kora on the mock author role: no editor, so /genie/author/edit answers 501 and the app's rules answer.
+    expect(ai.editor).toBeUndefined();
     s = await testServer({ ai });
     const { turn, end } = await oneTurn(s);
     expect(turn.text.length).toBeGreaterThan(0);

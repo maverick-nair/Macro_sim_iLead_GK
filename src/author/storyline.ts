@@ -278,12 +278,13 @@ function draftEvents(brief: Brief, ctx: DraftContext, lib: LibraryLens, members:
   return named.map(e => (e.period !== undefined ? { ...e, period: Math.ceil(e.period / 2) } : e.window ? { ...e, window: { ...e.window, from: 2, to: 3 } } : e));
 }
 
-const WELCOME: Record<Tone, string> = {
+/** The welcome letter's first line and the targets' closing line per tone (Kora's tone change swaps them, D125). */
+export const WELCOME: Record<Tone, string> = {
   professional: 'Welcome to {company}. I am glad you are here.',
   warm: 'Welcome to {company}. We are so glad to have you with us.',
   direct: 'Welcome to {company}. Let us get straight to it.'
 };
-const CLOSE: Record<Tone, string> = {
+export const CLOSE: Record<Tone, string> = {
   professional: 'Your time is limited each week. Spend it where it matters most.',
   warm: 'You will not do this alone. Lean on your team, and on me.',
   direct: 'Your time is short each week. Spend it well.'

@@ -10,7 +10,7 @@ import { emptyChat, seedDraft } from './seed';
  *
  * Every change goes through `edit` (or `replace`), which clones the draft, applies the change, clamps
  * it to the schema and marks the paths it touched: the author's edit turns `ai` into `edited` and
- * leaves `you` as it is; Kora's change (`by: 'ai'`) marks `ai`. Every change is one step of undo,
+ * leaves `you` as it is; Kora's change (`by: 'ai'`) marks `ai`, or `edited` on a field the author owns. Every change is one step of undo,
  * named by its `label` (or a name read from the change), and typing into one field merges into one
  * step. A change that replaces or removes work saves a named version first (history.ts).
  *
@@ -147,8 +147,9 @@ function write(storage: Storage, json: string): true | 'full' | 'blocked' {
   return 'full';
 }
 
+/** Kora's change to a field the author owns keeps it theirs, as Edited, so Regenerate never takes it back (D126). */
 export function nextMark(current: Mark | undefined, by: 'you' | 'ai'): Mark {
-  if (by === 'ai') return 'ai';
+  if (by === 'ai') return current === 'you' || current === 'edited' ? 'edited' : 'ai';
   return current === 'ai' || current === 'edited' ? 'edited' : 'you';
 }
 

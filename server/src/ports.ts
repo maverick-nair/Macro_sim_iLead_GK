@@ -1,5 +1,6 @@
 import { MockDrafter } from '../../src/author/drafter';
 import type { AuthorDraftRequest, AuthorDraftResponse, AuthorTurnRequest, AuthorTurnResponse } from '../../src/api/author';
+import type { AuthorEditRequest, AuthorEditResponse } from '../../src/api/authorEdit';
 import { heuristicEvaluator, type EvaluationInput, type Evaluator as EngineEvaluator } from '../../src/engine/sim/evaluator';
 import { personaNpc, type NpcContext, type NpcModel as EngineNpcModel, type NpcReply } from '../../src/engine/sim/live';
 import type { Band, Evaluation } from '../../src/engine/sim/types';
@@ -32,6 +33,11 @@ export type { EvaluationInput, Evaluation, NpcContext, NpcReply, Band };
 export interface AuthorDrafter {
   turn(req: AuthorTurnRequest): Promise<AuthorTurnResponse | null>;
   draft(req: AuthorDraftRequest): Promise<AuthorDraftResponse | null>;
+}
+
+/** Ask Kora with a model (`POST /genie/author/edit`, D127). Null: not offered, and the app uses its rules. */
+export interface AuthorEditor {
+  edit(req: AuthorEditRequest): Promise<AuthorEditResponse | null>;
 }
 
 export interface TranscriptResult { kind: 'partial' | 'final'; text: string }
@@ -84,6 +90,8 @@ export interface AiModule {
   createNpcModel(config: AiRoleConfigs['npc']): NpcModel | Promise<NpcModel>;
   createEvaluator(config: AiRoleConfigs['evaluator']): Evaluator | Promise<Evaluator>;
   createAuthorDrafter(config: AiRoleConfigs['author']): AuthorDrafter | Promise<AuthorDrafter>;
+  /** Ask Kora with a model (D127). Optional: without it `/genie/author/edit` answers 501 and the app's rules answer. */
+  createAuthorEditor?(config: AiRoleConfigs['author']): AuthorEditor | Promise<AuthorEditor>;
   createTranscriber?(config: AiRoleConfigs['transcriber']): unknown;
   /** GenieKreator's synthetic players with AI (D112): a persona's lines in a calibration. Optional: without it the templates speak. */
   createSyntheticPlayer?(config: AiRoleConfigs['synthetic']): SyntheticSpeaker | Promise<SyntheticSpeaker>;
@@ -97,6 +105,8 @@ export interface AiPorts {
   npc: NpcModel;
   evaluator: Evaluator;
   author: AuthorDrafter;
+  /** Ask Kora with a model (D127). Unset: `/genie/author/edit` answers 501 and the app reads instructions with its rules. */
+  editor?: AuthorEditor;
   /** Null: speech is off (`SPEECH_PROVIDER=off`), and the transcription routes answer 501. */
   transcriber: Transcriber | null;
   /** Synthetic players' words in a calibration (D112). Unset: the engine's offline templates. */
