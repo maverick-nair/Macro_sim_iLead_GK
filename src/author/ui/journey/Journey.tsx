@@ -11,7 +11,9 @@ import { Composer } from './Composer';
 import { Intro } from './Intro';
 import { SoFar } from './SoFar';
 import { useJourney, type Journey as J } from './useJourney';
-import { DECIDE } from '../../questions';
+import { DECIDE, questionFor as askFor } from '../../questions';
+import type { QuestionId } from '../../../api/author';
+import { QUESTION_IDS } from '../../../api/author';
 
 /** `**bold**` in Kora's notes. */
 function rich(text: string): ReactNode {
@@ -138,7 +140,7 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
     if (el) el.scrollTop = chat.log.length ? el.scrollHeight : 0;
   }, [chat.log.length, chat.current?.id, chat.recommendation, j.busy]);
 
-  const panel = <SoFar chat={chat} />;
+  const panel = <SoFar chat={chat} onChange={id => j.startEdit(id)} />;
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <Header subtitle="New iLead business simulation">
@@ -165,7 +167,9 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
           <Scroll label="Conversation with Kora" className="relative -mx-1 flex-1 px-1">
             <div ref={log} role="log" aria-label="Conversation" className="flex flex-col gap-3 pb-2">
               <Intro folded={chat.log.length > 0} />
-              {chat.log.map((e, i) => e.kind === 'note'
+              {chat.log.map((e, i) => e.kind === 'took'
+                ? <Took key={i} items={e.items} j={j} />
+                : e.kind === 'note'
                 ? e.took
                   ? (
                     <div key={i} className="flex max-w-[37rem] flex-col gap-1.5 rounded-16 border border-solid border-author-ai-line bg-author-ai-field px-4 py-3">
@@ -190,21 +194,39 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
                   <button type="button" className={BUTTON.secondary} onClick={j.changeBrief}>Change the brief</button>
                 </div>
               )}
-              {question && !j.fitOpen && (
+              {j.clarify && !j.fitOpen && !j.editing && (
+                <Bubble from="kora"><span className="sr-only">Kora asks: </span>{j.clarify.prompt}</Bubble>
+              )}
+              {question && !j.fitOpen && !j.clarify && (
                 <Bubble from="kora">
                   {question.prompt}
                   {question.confirm && <span className="mt-1 block text-14 text-author-body">From what you shared: {question.confirm}. Is that right?</span>}
                   {question.help && <span className="mt-1 block text-14 text-author-body">{question.help}</span>}
                 </Bubble>
               )}
-              {j.editing && <Bubble from="kora">Tell me the new answer to: {questionFor(j, j.editing)}</Bubble>}
-              {chat.recommendation && !chat.current && !j.editing && !j.fitOpen && <LensStep j={j} />}
-              {j.busy && <p className="m-0 text-14 text-author-muted" role="status">Kora is thinking.</p>}
+              {j.editing && <Bubble from="kora">Tell me the new answer to: {askFor(j.editing).prompt}</Bubble>}
+              {j.pending && <PendingCard j={j} />}
+              {chat.recommendation && !chat.current && !j.editing && !j.fitOpen && !j.clarify && <LensStep j={j} />}
+              {j.busy && (
+                <p className="m-0 flex items-center gap-3 text-14 text-author-muted">
+                  <span role="status">Kora is thinking.</span>
+                  <button type="button" className={BUTTON.link} onClick={j.cancel}>Cancel</button>
+                </p>
+              )}
+              {j.failure && !j.busy && (
+                <div role="alert" className="flex max-w-[44rem] flex-col gap-2 self-start rounded-16 border border-solid border-author-need-line bg-author-need-field px-4 py-3">
+                  <p className="m-0 text-15 font-700 text-author-need">{j.failure.message}</p>
+                  <span className="flex flex-wrap gap-2">
+                    <button type="button" className={BUTTON.primary} onClick={j.retry}>Retry</button>
+                    <button type="button" className={BUTTON.secondary} onClick={j.continueOffline}>Continue offline</button>
+                  </span>
+                </div>
+              )}
             </div>
           </Scroll>
-          {(question || j.editing) && !(j.fitOpen && !j.editing) && (
+          {(question || j.editing || j.clarify) && !(j.fitOpen && !j.editing) && (
             <div className="flex flex-none flex-wrap gap-2" role="group" aria-label="Suggested answers">
-              {(j.editing ? [] : [...question!.chips.slice(0, 6), ...question!.chips.slice(6).filter(c => c.value === DECIDE)]).map(c => (
+              {(j.editing ? [] : j.clarify ? j.clarify.choices : [...question!.chips.slice(0, 6), ...question!.chips.slice(6).filter(c => c.value === DECIDE)]).map(c => (
                 <button key={c.value} type="button" disabled={j.busy} onClick={() => void j.answer(c.value)}
                   className={`min-h-10 cursor-pointer rounded-pill border border-solid px-4 text-14 font-700 ${/default/i.test(c.label) ? 'border-author-kora bg-author-ai-field text-author-ink' : 'border-author-line-control bg-author-surface text-author-ink hover:bg-author-track'} ${FOCUS}`}>
                   {c.label.replace(' (default)', ' · suggested')}
@@ -239,6 +261,37 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
   );
 }
 
-function questionFor(j: J, id: NonNullable<J['editing']>): string {
-  return j.chat.log.find(e => e.kind === 'qa' && e.id === id)?.kind === 'qa' ? (j.chat.log.find(e => e.kind === 'qa' && e.id === id) as { prompt: string }).prompt : id;
+const isQuestion = (id: string): id is QuestionId => (QUESTION_IDS as readonly string[]).includes(id);
+
+/** "I took these from your brief" (D146): each thing a long answer or an upload gave, with a way to change it. */
+function Took({ items, j }: { items: Array<{ id: string; label: string; value: string }>; j: J }) {
+  return (
+    <section aria-label="I took these from your brief" className="flex max-w-[44rem] flex-col gap-2 self-start rounded-16 border border-solid border-author-ai-line bg-author-ai-field px-4 py-3">
+      <span className={`${EYEBROW} text-author-ai`}>I took these from your brief</span>
+      <ul className="m-0 flex list-none flex-col gap-1 p-0 text-15 leading-[1.45]">
+        {items.map(it => (
+          <li key={it.id}>
+            <b>{it.label}:</b> {it.value}
+            {isQuestion(it.id) && <> <button type="button" className={BUTTON.link} disabled={j.busy} onClick={() => j.startEdit(it.id as QuestionId)}>Change<span className="sr-only"> {it.label}</span></button></>}
+          </li>
+        ))}
+      </ul>
+      <p className="m-0 text-13 text-author-body">I will skip the questions these answer. {items.some(it => !isQuestion(it.id)) ? 'Stakeholders, objectives and dilemmas stay with the brief: edit them in the Brief once the draft is ready.' : 'Change any of them here, or later in the Brief.'}</p>
+    </section>
+  );
+}
+
+/** An answer changed later: what it changes in the draft, then Apply or Keep as note only (D146). */
+function PendingCard({ j }: { j: J }) {
+  const p = j.pending!;
+  return (
+    <section aria-label="What this change does" className="flex max-w-[44rem] flex-col gap-2 self-start rounded-16 border-2 border-solid border-author-kora bg-author-surface px-4 py-3">
+      <p className="m-0 text-15"><b>{askFor(p.id).prompt}</b> &rarr; &ldquo;{p.raw}&rdquo;</p>
+      <p className="m-0 text-15">{p.summary.length ? <>This changes: {p.summary.join(', ')}.</> : 'Nothing else in the draft depends on it.'}</p>
+      <span className="flex flex-wrap gap-2">
+        <button type="button" className={BUTTON.kora} onClick={j.applyPending}>Apply</button>
+        <button type="button" className={BUTTON.secondary} onClick={j.keepPendingAsNote}>Keep as note only</button>
+      </span>
+    </section>
+  );
 }

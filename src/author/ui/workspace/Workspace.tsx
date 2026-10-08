@@ -12,6 +12,7 @@ import { NAV } from '../sections';
 import { AuthorBoundary } from '../safety/Boundary';
 import { UndoControls } from '../safety/UndoControls';
 import { KoraPanel } from './KoraPanel';
+import { UpdatePrompt } from './UpdatePrompt';
 
 /**
  * Each tab is its own chunk. A chunk that fails to load is tried once more (retryImport); when it still
@@ -146,6 +147,7 @@ export function Workspace({ tab }: { tab: Tab }) {
       <div className={`relative grid min-h-0 flex-1 ${tablet ? 'grid-cols-1 grid-rows-[auto_minmax(0,1fr)]' : wide && showKora ? 'grid-cols-[15.5rem_minmax(0,1fr)_20rem]' : 'grid-cols-[14rem_minmax(0,1fr)]'}`}>
         {nav}
         <main className="flex min-h-0 min-w-0 flex-col bg-author-canvas">
+          <UpdatePrompt />
           <AuthorBoundary key={tab} retry={retryTab}>
             <Suspense fallback={<p className="m-0 p-7 text-14 text-author-muted">Loading.</p>}>
               <Page />

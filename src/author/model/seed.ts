@@ -268,7 +268,8 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       participants: brief.roleLevel ?? 'First time managers', industry: brief.industry ?? ind.label, client: brief.client ?? '', challenge: brief.challenge ?? '',
       purpose: 'development', run: brief.duration ?? 'standard', language: brief.language ?? REGIONS.find(r => r.id === (brief.region ?? 'global'))!.label,
       conversationBy: 'both', tones: [TONE_LABELS[brief.tone ?? 'professional']], documents: brief.documents.map(d => ({ name: d.name, use: d.text ? 'Read for the brief' : 'Kept for the server to read' })),
-      minutesPerWeek: DURATION_MODES[brief.duration ?? 'standard'].weeks === 4 ? 8 : 9, targetSkills: '', saveAndResume: true
+      minutesPerWeek: DURATION_MODES[brief.duration ?? 'standard'].weeks === 4 ? 8 : 9, targetSkills: '', saveAndResume: true,
+      stakeholders: structuredClone(brief.stakeholders ?? []), objectives: [...(brief.objectives ?? [])], dilemmas: structuredClone(brief.dilemmas ?? [])
     },
     story: {
       company: { name: ctx.company, hq: HQ[brief.region ?? 'global'], about: `${ctx.company} offers ${ctx.product}, ${ind.productLine}, to ${ind.customers} across the region.`, team: `${pressureName} and the stages around it`, office: 'Glass office, city view', logo: ctx.company.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() },

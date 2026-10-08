@@ -19,6 +19,19 @@ export const REGION_IDS = ['global', 'us', 'uk', 'india', 'singapore', 'uae', 'a
 /** One uploaded or pasted document. The prototype reads text files only; a PDF keeps its name and no text. */
 export const AuthorDocument = z.object({ name: z.string().min(1), text: z.string().nullable() });
 
+/**
+ * People outside the team the brief names (D146): kept as the author's notes and passed to the drafter, which may
+ * use them in events and the sponsor's voice; the template plays only the participant's own team (D133).
+ */
+export const Stakeholder = z.object({ name: z.string().max(120), role: z.string().max(200), relation: z.string().max(120) });
+export type Stakeholder = z.infer<typeof Stakeholder>;
+/**
+ * A dilemma the brief names ("short term revenue vs customer trust"), in the shape a choice event can be seeded
+ * from later: a title, the two options and what is at stake (empty when the brief does not say).
+ */
+export const Dilemma = z.object({ title: z.string().max(200), a: z.string().max(200), b: z.string().max(200), stake: z.string().max(400) });
+export type Dilemma = z.infer<typeof Dilemma>;
+
 /** What the author has told the chat so far. Every field is optional until asked or read from an upload. */
 export const Brief = z.object({
   roleLevel: z.string().optional(),
@@ -35,7 +48,11 @@ export const Brief = z.object({
   /** The client leadership framework text. Null: the author has none. */
   framework: z.string().nullable().optional(),
   tone: z.enum(TONE_IDS).optional(),
-  documents: z.array(AuthorDocument).default([])
+  documents: z.array(AuthorDocument).default([]),
+  /** Read from a long answer or an upload (D146): people outside the team, what the programme must achieve, the dilemmas. */
+  stakeholders: z.array(Stakeholder).max(20).optional(),
+  objectives: z.array(z.string().min(1).max(400)).max(12).optional(),
+  dilemmas: z.array(Dilemma).max(12).optional()
 });
 export type Brief = z.output<typeof Brief>;
 
@@ -58,7 +75,12 @@ export const AuthorTurnRequest = z.object({
   /** Question ids asked so far, in order. */
   asked: z.array(z.enum(QUESTION_IDS)),
   /** The author's raw answers by question id. */
-  answers: z.record(z.string(), z.string())
+  answers: z.record(z.string(), z.string()),
+  /**
+   * Question ids a long answer or an upload answered, which the chat said back ("I took these from your brief") with a
+   * way to change each (D146): they count as confirmed, so they are not asked again to reach the minimum.
+   */
+  taken: z.array(z.enum(QUESTION_IDS)).optional()
 });
 export type AuthorTurnRequest = z.input<typeof AuthorTurnRequest>;
 
@@ -69,11 +91,20 @@ export const FrameworkDimension = z.object({ name: z.string().min(1), behaviours
 export type FrameworkDimension = z.infer<typeof FrameworkDimension>;
 
 /**
- * The next turn: a question, or the lens step once the brief is complete. `brief` is the brief with
- * anything the server read from the answers and uploads filled in; `progress` is "Question n of about m".
+ * One short question when an answer is ambiguous or contradicts itself (D147): two industries, two team sizes, a
+ * team size in words, participants given as a level only. The choices answer the question `id`.
+ */
+export const Clarify = z.object({ id: z.enum(QUESTION_IDS), prompt: z.string().min(1).max(400), choices: z.array(Chip).min(2).max(8) });
+export type Clarify = z.infer<typeof Clarify>;
+
+/**
+ * The next turn: a question, a clarifying question, or the lens step once the brief is complete. `brief` is the
+ * brief with anything the server read from the answers and uploads filled in; `progress` is "Question n of about m"
+ * (fewer than five when a long answer or an upload answered the rest, D146).
  */
 export const AuthorTurnResponse = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('question'), brief: Brief, question: Question, progress: z.object({ n: z.number().int().min(1), about: z.number().int().min(5).max(10) }) }),
+  z.object({ kind: z.literal('question'), brief: Brief, question: Question, progress: z.object({ n: z.number().int().min(1), about: z.number().int().min(1).max(10) }) }),
+  z.object({ kind: z.literal('clarify'), brief: Brief, clarify: Clarify }),
   z.object({ kind: z.literal('lens'), brief: Brief, recommendation: Recommendation, framework: z.array(FrameworkDimension).nullable() })
 ]);
 export type AuthorTurnResponse = z.infer<typeof AuthorTurnResponse>;

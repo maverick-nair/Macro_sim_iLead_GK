@@ -34,6 +34,8 @@ export function DraftReady() {
               Your simulation is playable. {needs.length ? `${words[needs.length] ?? needs.length} thing${needs.length === 1 ? '' : 's'} need${needs.length === 1 ? 's' : ''} you before you publish.` : 'Nothing needs you before you publish.'}
             </h1>
             <p className="m-0 text-16 leading-[1.5] text-author-body">I built it from your {draft.chat.asked.length} answers{draft.chat.brief.documents.length ? ' and the documents you shared' : ''}. Everything is editable, and you can regenerate any section without starting over.</p>
+            {/* Never a made up client without saying so (D146). */}
+            {!draft.chat.brief.client && <p className="m-0 text-15 leading-[1.5] text-author-body">No client was named, so the company is fictional: <b>{draft.story.company.name}</b>. Name it in the Brief or in Story and world.</p>}
             <dl className="m-0 grid grid-cols-3 gap-3">
               <div className="flex flex-col rounded-12 bg-author-track p-4"><dt className="text-13 text-author-body">Answers from you</dt><dd className="m-0 order-first text-28 font-800">{draft.chat.asked.length}</dd></div>
               <div className="flex flex-col rounded-12 bg-author-ai-field p-4"><dt className="text-13 text-author-body">Fields generated</dt><dd className="m-0 order-first text-28 font-800">{counts.ai}</dd></div>

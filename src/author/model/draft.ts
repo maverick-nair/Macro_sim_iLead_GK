@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Brief, FrameworkDimension, QUESTION_IDS } from '../../api/author';
+import { Brief, Clarify, Dilemma, FrameworkDimension, QUESTION_IDS, Stakeholder } from '../../api/author';
 import { CONDITION_METRICS, EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
@@ -42,10 +42,15 @@ export const MAX_TEAM = MAX_MEMBERS;
 export const MIN_DAYS = 3;
 export const MAX_DAYS = 7;
 
-/** The chat's transcript: a question with the author's answer, or a note from Kora. */
+/**
+ * The chat's transcript: a question with the author's answer, a note from Kora, or what Kora took from a long answer
+ * or an upload, each with a way to change it (D146). A `took` item's id is a question id or stakeholders, objectives
+ * or dilemmas.
+ */
 export const ChatEntry = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('qa'), id: z.enum(QUESTION_IDS), prompt: Short, answer: Text, voice: z.boolean().default(false) }),
-  z.object({ kind: z.literal('note'), text: Text, took: z.boolean().default(false) })
+  z.object({ kind: z.literal('note'), text: Text, took: z.boolean().default(false) }),
+  z.object({ kind: z.literal('took'), items: z.array(z.object({ id: z.string().max(40), label: Short, value: Text })).max(20) })
 ]);
 export type ChatEntry = z.infer<typeof ChatEntry>;
 
@@ -64,7 +69,11 @@ export const Chat = z.object({
    * The template fit check (D133, `fit.ts`): what the brief asks for that iLead cannot play yet. `open` waits for the
    * author to continue with a team leadership version or change the brief; `seen` keeps the kinds already raised.
    */
-  fit: z.object({ status: z.enum(['open', 'accepted']), from: z.enum(QUESTION_IDS).nullable(), kinds: z.array(z.string()), seen: z.array(z.string()) }).nullable().optional()
+  fit: z.object({ status: z.enum(['open', 'accepted']), from: z.enum(QUESTION_IDS).nullable(), kinds: z.array(z.string()), seen: z.array(z.string()) }).nullable().optional(),
+  /** One short question with choices, waiting for the author (D147). */
+  clarify: Clarify.nullable().optional(),
+  /** Questions a long answer or an upload answered, said back with a way to change each (D146). */
+  taken: z.array(z.enum(QUESTION_IDS)).optional()
 });
 export type Chat = z.infer<typeof Chat>;
 
@@ -313,7 +322,14 @@ export const AuthorDraft = z.object({
     documents: z.array(z.object({ name: Short, use: Short })),
     minutesPerWeek: z.number().int().min(3).max(30),
     targetSkills: Text,
-    saveAndResume: z.boolean()
+    saveAndResume: z.boolean(),
+    /**
+     * Read from the brief (D146): people outside the team, what the programme must achieve, and dilemmas in a shape
+     * that can seed choice events later. Author notes: Kora drafts from them; the simulation does not play them yet.
+     */
+    stakeholders: z.array(Stakeholder).max(20).default([]),
+    objectives: z.array(Short).max(12).default([]),
+    dilemmas: z.array(Dilemma).max(12).default([])
   }),
   story: z.object({
     company: z.object({ name: Short, hq: Short, about: Text, team: Short, office: Short, logo: Short }),

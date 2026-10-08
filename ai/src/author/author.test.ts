@@ -6,7 +6,8 @@ import { buildModule } from '../../../src/author/module';
 import { StorylineConfig, type StorylineInput } from '../../../src/engine/config';
 import { settingsFor, silentLogger } from '../config';
 import { createFakeTransport, type FakeReply } from '../llm/fake';
-import { createAnthropicAuthorDrafter, createMockAuthorDrafter, groundFramework } from './models';
+import type { LlmTransport } from '../llm/transport';
+import { createAnthropicAuthorDrafter, createMockAuthorDrafter, groundFramework, TURN_DEADLINE_MS } from './models';
 import type { BriefReading, DraftCopy } from './schema';
 
 function drafter(script: FakeReply[]) {
@@ -43,6 +44,51 @@ describe('the author turn', () => {
     const { d } = drafter([reading({ industry: 'Banking and financial services', client: { kind: 'named', name: 'Big Bank' } })]);
     const r = await d.turn({ brief: { industry: 'Healthcare', client: null }, asked: ['industry', 'client'], answers: { industry: 'Healthcare' } });
     expect(r.brief).toMatchObject({ industry: 'Healthcare', client: null });
+  });
+
+  it('reads stakeholders, objectives and dilemmas from a pasted brief, and never keeps a name the text does not have (D146)', async () => {
+    const brief = 'VPs of Customer Operations at Northstar Health Partners. Key stakeholders: Dana Whitfield, the COO and their boss. Dilemmas: short-term revenue vs customer trust.';
+    const { d } = drafter([reading({
+      roleLevel: 'VPs of Customer Operations', client: { kind: 'named', name: 'Northstar Health Partners' },
+      stakeholders: [{ name: 'Dana Whitfield', role: 'COO', relation: 'boss' }, { name: 'Invented Person', role: 'CEO', relation: 'senior leader' }],
+      objectives: ['Retain key talent'], dilemmas: [{ a: 'short-term revenue', b: 'customer trust', stake: null }]
+    })]);
+    const r = await d.turn({ brief: {}, asked: ['role_level'], answers: { role_level: brief } });
+    expect(r.brief).toMatchObject({
+      roleLevel: 'VPs of Customer Operations', client: 'Northstar Health Partners',
+      stakeholders: [{ name: 'Dana Whitfield', role: 'COO', relation: 'boss' }], objectives: ['Retain key talent'],
+      dilemmas: [{ title: 'Short term revenue or customer trust', a: 'Short term revenue', b: 'Customer trust', stake: '' }]
+    });
+    // A client the text does not name is never kept.
+    const { d: d2 } = drafter([reading({ client: { kind: 'named', name: 'Greenfield Hospitals' } })]);
+    expect((await d2.turn({ brief: {}, asked: ['role_level'], answers: { role_level: brief } })).brief.client).toBeUndefined();
+  });
+
+  it('asks the model\'s clarifying question for a field still open, and ignores one about a field the brief has (D147)', async () => {
+    const ask = { question: 'industry' as const, prompt: 'Banking or healthcare?', choices: ['Banking and financial services', 'Healthcare'] };
+    const { d } = drafter([reading({ clarify: ask })]);
+    const r = await d.turn({ brief: {}, asked: ['industry'], answers: { industry: 'banking but actually a hospital' } });
+    expect(r).toMatchObject({ kind: 'clarify', clarify: { id: 'industry', prompt: 'Banking or healthcare?', choices: [{ label: 'Banking and financial services', value: 'Banking and financial services' }, { label: 'Healthcare', value: 'Healthcare' }] } });
+    const { d: d2 } = drafter([reading({ clarify: ask })]);
+    expect((await d2.turn({ brief: { industry: 'Healthcare' }, asked: ['industry'], answers: { industry: 'Healthcare' } })).kind).toBe('question');
+  });
+
+  it('a reading that takes too long ends before the app gives up, and the rules answer the turn (D148)', async () => {
+    const slow: LlmTransport = {
+      complete: (_req, signal) => new Promise((_, reject) => signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))),
+      stream: () => { throw new Error('not used'); }
+    };
+    const logger = { ...silentLogger, warn: vi.fn(), error: vi.fn() };
+    const d = createAnthropicAuthorDrafter({ transport: slow, settings: settingsFor('author'), logger, turnDeadlineMs: 30 });
+    const r = await d.turn({ brief: {}, asked: ['role_level'], answers: { role_level: 'First time managers' } });
+    expect(r).toMatchObject({ kind: 'question', question: { id: 'industry' } });
+    expect(logger.error).toHaveBeenCalledOnce();
+    expect(TURN_DEADLINE_MS).toBeLessThan(30_000);
+    // The author's own cancel still cancels.
+    const ctl = new AbortController();
+    const cancelled = d.turn({ brief: {}, asked: ['role_level'], answers: { role_level: 'x' } }, { signal: ctl.signal });
+    ctl.abort();
+    await expect(cancelled).rejects.toThrow();
   });
 
   it('falls back to the templates for the turn when the reading fails', async () => {

@@ -47,7 +47,11 @@ export function briefFromDraft(d: AuthorDraft): Brief {
     duration: d.brief.run,
     region: chat.region ?? regionOf(d.brief.language)?.id,
     language: d.brief.language || chat.language,
-    tone: toneOf(d.brief.tones[0]) ?? chat.tone
+    tone: toneOf(d.brief.tones[0]) ?? chat.tone,
+    // The brief's notes as the author keeps them in the Brief tab (D146), for the drafter.
+    stakeholders: d.brief.stakeholders.slice(0, 20),
+    objectives: d.brief.objectives.filter(o => o.trim()).slice(0, 12),
+    dilemmas: d.brief.dilemmas.filter(x => x.a.trim() || x.b.trim()).slice(0, 12)
   });
 }
 

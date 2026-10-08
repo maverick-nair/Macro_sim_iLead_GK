@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import { createStore, useStore, type StoreApi } from 'zustand';
+import type { Change } from './deps';
 import { AuthorDraft, WORKSPACE_BACKUP_KEY, WORKSPACE_KEY, WORKSPACE_VERSIONS_KEY, type Mark } from './draft';
 import { differs, inferChange, isQuota, labelOfMark, MAX_VERSIONS, pushStep, readVersions, trimVersions, writeVersions, type Step, type Version } from './history';
 import { clampDraft, repairDraft } from './repair';
@@ -72,6 +73,11 @@ export interface AuthorState {
   /** Another tab changed the stored draft; saving is paused until the author picks one. */
   conflict: { at: number } | null;
   recovery: Recovery | null;
+  /**
+   * A change other content may still refer to (D148): a rename, a new lens or framework, a new challenge. The
+   * workspace offers to update every place it finds, as one step of undo. In memory only.
+   */
+  offer: Change | null;
 
   /** Changes the draft. `options` may be the marked path(s), as before, or EditOptions. */
   edit(change: (d: AuthorDraft) => void, options?: string | string[] | EditOptions, by?: 'you' | 'ai'): void;
@@ -93,6 +99,8 @@ export interface AuthorState {
   dismissRecovery(): void;
   /** Puts the original stored draft back, when it parses. */
   restoreOriginal(): void;
+  /** Offers to update what still refers to the old value, or closes the offer (null). */
+  setOffer(c: Change | null): void;
 }
 
 export function freshDraft(): AuthorDraft {
@@ -225,6 +233,8 @@ export function createAuthorStore(initial?: AuthorDraft, storage: Storage | null
       versionsFailed: false,
       conflict: null,
       recovery,
+      offer: null,
+      setOffer(c) { set({ offer: c }); },
       edit(change, options, by) {
         const o = normalize(options, by);
         const before = get().draft;
