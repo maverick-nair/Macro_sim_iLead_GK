@@ -49,7 +49,7 @@ export function DraftReady() {
             )}
             <div className="flex flex-wrap gap-3">
               <button type="button" className={BUTTON.big} onClick={() => open('overview')}>Open the workspace</button>
-              <button type="button" className={`${BUTTON.secondary} min-h-12 px-5 text-16`} onClick={() => { const r = playDraft(draft); setProblem(r.ok ? null : `The draft does not play yet: ${r.issues[0]}`); }}>Preview week 1 as a participant</button>
+              <button type="button" className={`${BUTTON.secondary} min-h-12 px-5 text-16`} onClick={() => { const r = playDraft(draft); setProblem(r.ok ? null : r.reason === 'storage' ? r.issues[0] : `The draft does not play yet: ${r.issues[0]}`); }}>Preview week 1 as a participant</button>
             </div>
             {problem && <p role="alert" className="m-0 text-14 font-700 text-author-decline">{problem}</p>}
             <p className="m-0 text-13 text-author-muted">The draft is already playable. A preview lets you feel the story and the team before you refine them; it uses placeholders for the items that need you and saves no scores.</p>

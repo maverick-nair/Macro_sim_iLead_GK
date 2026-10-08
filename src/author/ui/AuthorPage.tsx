@@ -3,11 +3,13 @@ import { useEffect, useMemo, type ReactNode } from 'react';
 import type { StoreApi } from 'zustand';
 import { SmallScreenGate } from '../../app/SmallScreenGate';
 import type { Drafter } from '../drafter';
-import { AuthorStoreContext, createAuthorStore, useAuthor, type AuthorState } from '../model/store';
+import { AuthorStoreContext, bindAuthorStore, createAuthorStore, useAuthor, type AuthorState } from '../model/store';
 import { DraftReady } from './journey/DraftReady';
 import { JourneyPage } from './journey/Journey';
 import { LibraryAdmin } from './library/LibraryAdmin';
 import { navigate, useRoute, type Route } from './route';
+import { AuthorBoundary } from './safety/Boundary';
+import { SafetyNotices } from './safety/SafetyNotices';
 import { Workspace } from './workspace/Workspace';
 
 /** The authoring tool's root: the canvas's light look, whatever the participant theme (D105). */
@@ -24,12 +26,25 @@ export function AuthorRoutes({ route, drafters }: { route: Route; drafters?: Dra
   return stage === 'chat' ? <JourneyPage drafters={drafters} /> : <DraftReady />;
 }
 
+/**
+ * The store, saved at once when the page is hidden or closed and told when another tab changes the
+ * draft (D123); the notices that say when work is at risk above every page; and a boundary that
+ * shows a message with Reload instead of a blank page. The pages fit the frame below the notices.
+ */
 export function AuthorApp({ store, drafters, route }: { store?: StoreApi<AuthorState>; drafters?: Drafter[]; route?: Route }) {
   const s = useMemo(() => store ?? createAuthorStore(), [store]);
   const current = useRoute();
+  useEffect(() => bindAuthorStore(s), [s]);
   return (
     <AuthorStoreContext.Provider value={s}>
-      <AuthorRoot><AuthorRoutes route={route ?? current} drafters={drafters} /></AuthorRoot>
+      <AuthorRoot>
+        <div className="flex h-dvh flex-col overflow-hidden">
+          <SafetyNotices />
+          <div className="author-frame flex min-h-0 flex-1 flex-col">
+            <AuthorBoundary whole><AuthorRoutes route={route ?? current} drafters={drafters} /></AuthorBoundary>
+          </div>
+        </div>
+      </AuthorRoot>
     </AuthorStoreContext.Provider>
   );
 }

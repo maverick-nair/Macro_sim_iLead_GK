@@ -272,6 +272,9 @@ export function createAuthorStore(initial?: AuthorDraft, storage: Storage | null
       resolveConflict(pick) {
         if (!get().conflict) return;
         if (pick === 'mine') {
+          // Theirs is kept as a version, so keeping mine loses nothing either.
+          const theirs = readStored(storage).draft;
+          if (theirs) saveVersion(theirs, 'Changes from another tab');
           set({ conflict: null, saveFailed: false });
           persist(true);
           return;

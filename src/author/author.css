@@ -6,3 +6,6 @@
 @import '../styles/tailwind-theme.generated.css' theme(reference);
 @import '../styles/variants.css';
 @source '.';
+
+/* Every /author page fills the frame below the safety notices (D123). Unlayered, so it wins over a page's h-dvh. */
+.author-frame > * { height: 100%; min-height: 0; }

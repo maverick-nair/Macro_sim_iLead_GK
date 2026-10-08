@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { retryImport } from '../../../lib/lazyRetry';
 import { useMediaQuery } from '../../../lib/useMediaQuery';
 import type { Tab } from '../../model/draft';
 import { needsOf, tabStatus } from '../../model/needs';
@@ -7,22 +8,30 @@ import { Badge, BUTTON, FOCUS, Icon, savedText, Scroll } from '../kit';
 import { playDraft } from '../play';
 import { navigate } from '../route';
 import { NAV } from '../sections';
+import { AuthorBoundary } from '../safety/Boundary';
+import { UndoControls } from '../safety/UndoControls';
 import { KoraPanel } from './KoraPanel';
 
-const Tabs = {
-  overview: lazy(() => import('./tabs/Overview')),
-  brief: lazy(() => import('./tabs/Brief')),
-  story: lazy(() => import('./tabs/Story')),
-  process: lazy(() => import('./tabs/Process')),
-  team: lazy(() => import('./tabs/Team')),
-  lens: lazy(() => import('./tabs/Lens')),
-  actions: lazy(() => import('./tabs/Actions')),
-  events: lazy(() => import('./tabs/Events')),
-  scoring: lazy(() => import('./tabs/Scoring')),
-  brand: lazy(() => import('./tabs/Brand')),
-  calibrate: lazy(() => import('./tabs/Calibrate')),
-  publish: lazy(() => import('./tabs/Publish'))
+/**
+ * Each tab is its own chunk. A chunk that fails to load is tried once more (retryImport); when it still
+ * fails, the tab's boundary offers Try again, which makes that tab's loader afresh (D123).
+ */
+const loaders = {
+  overview: () => import('./tabs/Overview'),
+  brief: () => import('./tabs/Brief'),
+  story: () => import('./tabs/Story'),
+  process: () => import('./tabs/Process'),
+  team: () => import('./tabs/Team'),
+  lens: () => import('./tabs/Lens'),
+  actions: () => import('./tabs/Actions'),
+  events: () => import('./tabs/Events'),
+  scoring: () => import('./tabs/Scoring'),
+  brand: () => import('./tabs/Brand'),
+  calibrate: () => import('./tabs/Calibrate'),
+  publish: () => import('./tabs/Publish')
 } satisfies Record<Tab, unknown>;
+const lazyTab = (t: Tab) => lazy(() => retryImport(loaders[t]));
+const Tabs = Object.fromEntries(Object.keys(loaders).map(t => [t, lazyTab(t as Tab)])) as Record<Tab, ReturnType<typeof lazyTab>>;
 
 /** Tabs that show Ask Kora beside them; the lens, actions and publish pages use the full width. */
 const WITH_KORA: Tab[] = ['overview', 'brief', 'story', 'process', 'team', 'events', 'scoring', 'brand', 'calibrate'];
@@ -75,17 +84,19 @@ export function Workspace({ tab }: { tab: Tab }) {
   const wide = useMediaQuery('(min-width: 1280px)');
   const tablet = !useMediaQuery('(min-width: 1024px)');
   const [kora, setKora] = useState(false);
-  const [problem, setProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<{ text: string; checks: boolean } | null>(null);
+  const [, setAttempt] = useState(0);
   const needs = needsOf(draft).length;
   const Page = Tabs[tab];
+  const retryTab = () => { Tabs[tab] = lazyTab(tab); setAttempt(n => n + 1); };
   const showKora = WITH_KORA.includes(tab);
   useEffect(() => { if (draft.stage !== 'workspace') edit(d => { d.stage = 'workspace'; }); }, [draft.stage, edit]);
   useEffect(() => { document.title = `${NAV.find(n => n.tab === tab)!.label}, ${draft.title}: GenieKreator`; }, [tab, draft.title]);
 
   const play = () => {
     const r = playDraft(draft);
-    if (r.ok) edit(d => { d.publish.played = true; });
-    setProblem(r.ok ? null : `This draft does not play yet. ${r.issues[0]}`);
+    if (r.ok) edit(d => { d.publish.played = true; }, { history: false });
+    setProblem(r.ok ? null : r.reason === 'storage' ? { text: r.issues[0], checks: false } : { text: `This draft does not play yet. ${r.issues[0]}`, checks: true });
   };
 
   const nav = (
@@ -124,17 +135,20 @@ export function Workspace({ tab }: { tab: Tab }) {
         {needs > 0 ? <Badge kind="need"><span className="max-[1100px]:sr-only">Draft &middot; </span>{needs} need{needs === 1 ? 's' : ''} you</Badge> : <Badge kind="done">Ready to publish</Badge>}
         <span className="flex-1" />
         <span className="shrink-0 text-13 text-author-muted max-[1180px]:sr-only" role="status">{saved}</span>
+        <UndoControls />
         {!wide && showKora && <button type="button" className={BUTTON.koraOutline} aria-expanded={kora} onClick={() => setKora(!kora)}>{Icon.chat(14)} Ask Kora</button>}
         <button type="button" className={BUTTON.secondary} onClick={play}>Play a week</button>
         <button type="button" className={BUTTON.primary} onClick={() => navigate({ page: 'workspace', tab: 'publish' })}>Review and publish</button>
       </header>
-      {problem && <p role="alert" className="m-0 flex-none bg-author-need-field px-6 py-2 text-14 font-700 text-author-need">{problem} <button type="button" className={BUTTON.link} onClick={() => navigate({ page: 'workspace', tab: 'publish' })}>See the checks</button></p>}
+      {problem && <p role="alert" className="m-0 flex-none bg-author-need-field px-6 py-2 text-14 font-700 text-author-need">{problem.text} {problem.checks && <button type="button" className={BUTTON.link} onClick={() => navigate({ page: 'workspace', tab: 'publish' })}>See the checks</button>}</p>}
       <div className={`relative grid min-h-0 flex-1 ${tablet ? 'grid-cols-1 grid-rows-[auto_minmax(0,1fr)]' : wide && showKora ? 'grid-cols-[15.5rem_minmax(0,1fr)_20rem]' : 'grid-cols-[14rem_minmax(0,1fr)]'}`}>
         {nav}
         <main className="flex min-h-0 min-w-0 flex-col bg-author-canvas">
-          <Suspense fallback={<p className="m-0 p-7 text-14 text-author-muted">Loading.</p>}>
-            <Page />
-          </Suspense>
+          <AuthorBoundary key={tab} retry={retryTab}>
+            <Suspense fallback={<p className="m-0 p-7 text-14 text-author-muted">Loading.</p>}>
+              <Page />
+            </Suspense>
+          </AuthorBoundary>
         </main>
         {showKora && (wide ? <KoraPanel tab={tab} /> : kora && (
           <div className="absolute inset-y-0 end-0 z-30 flex w-[min(22rem,100%)] flex-col shadow-[0_0_30px_rgb(20_26_46/0.2)]">
