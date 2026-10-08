@@ -11,6 +11,7 @@ import { buildView, type EngineView } from './view';
 import { summarizeRun, type RunSummary } from '../report/summary';
 import { msg, type Copy } from '../copy';
 import { resolveChoice } from './business';
+import { engageStakeholder, openStakeholderMessage, stakeholderEvaluation, stakeholderMessage } from './stakeholders';
 
 /**
  * The iLead engine. Authoritative: the UI sends intents and renders the returned view.
@@ -38,7 +39,8 @@ export type Intent =
   | { type: 'submitPlan'; interactionId: string; plan: PlanFields; text: string; usedVoice?: boolean }
   | { type: 'startPractice' }
   | { type: 'skipPractice' }
-  | { type: 'decide'; choiceId: string; option: string };
+  | { type: 'decide'; choiceId: string; option: string }
+  | { type: 'engageStakeholder'; stakeholder: string; interaction: string; option?: string };
 
 export interface Result {
   view: EngineView;
@@ -91,7 +93,9 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
     // A written plan is evaluated on its fields, like an email; the check in after it is conversation only (D85).
     const text = it.plan ? live.planText(it.plan) : live.participantText(it);
     if (!text.trim()) throw new IntentError('Say something first', 'empty');
-    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey), skills: config.report.linkage[it.actionKey] ?? [], styles: config.lens.styles, ...(it.plan ? { plan: it.plan } : {}) });
+    // A stakeholder conversation (D161) is evaluated as its own format, on the skills its interaction rates.
+    const sh = it.stakeholder ? stakeholderEvaluation(sim, it) : null;
+    const ev = await evaluator.evaluate({ format: it.stakeholder?.format ?? it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: sh ? sh.rubric : rubric(it.actionKey), skills: sh ? sh.skills : config.report.linkage[it.actionKey] ?? [], styles: config.lens.styles, ...(it.plan ? { plan: it.plan } : {}) });
     // The plan's due date is a promise to check in on it with that person (SIMULATION 5.4).
     if (it.plan?.due && !ev.flags.promise) {
       ev.flags.promise = { text: it.plan.goals.length > 60 ? `${it.plan.goals.slice(0, 57).trimEnd()}...` : it.plan.goals, dueInSubPeriods: Math.max(1, it.plan.due - sim.sub), fulfilledBy: ['f2f', 'coach', 'feedback', 'goals'] };
@@ -121,7 +125,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         return { view: buildView(sim), changes: r.changes, interactionId: r.interactionId ?? undefined };
       }
       case 'openConversation': {
-        const id = openConversation(sim, intent.kind, intent.messageId);
+        // A stakeholder's message (D162): their meeting, or a reply in writing to them.
+        const id = intent.kind === 'reply' && stakeholderMessage(sim, intent.messageId) ? openStakeholderMessage(sim, rng, intent.messageId!) : openConversation(sim, intent.kind, intent.messageId);
         await live.opening(sim, npc, id);
         return { view: buildView(sim), changes: [], interactionId: id };
       }
@@ -202,6 +207,12 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         if (sim.phase !== 'board') throw new IntentError('Choices are made on the board', 'wrongPhase');
         const rec = resolveChoice(sim, rng, intent.choiceId, intent.option, 'you');
         return { view: buildView(sim), changes: rec.changes };
+      }
+      case 'engageStakeholder': {
+        // A stakeholder interaction (D161): a static decision resolves now; a live one opens a conversation.
+        const r = engageStakeholder(sim, rng, intent);
+        if (r.interactionId) await live.opening(sim, npc, r.interactionId);
+        return { view: buildView(sim), changes: r.changes, interactionId: r.interactionId ?? undefined };
       }
     }
   }

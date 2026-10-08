@@ -124,7 +124,9 @@ export function buildReport(sim: Sim) {
     return {
       id: rec.id ?? `${rec.period}`, kind: rec.band === 'strong' ? 'best' as const : 'revisit' as const, period: rec.period, memberId: one ? rec.memberIds[0] : null,
       title: one ? msg('engine.live.with', { action: title, who: shortName(sim, rec.memberIds[0]), band: rec.band }) : msg('engine.live.done', { action: title, band: rec.band }),
-      situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team', name: one ? shortName(sim, rec.memberIds[0]) : shortName(sim, 'sponsor') }),
+      // A stakeholder conversation (D164) is a moment with one person outside the team.
+      situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one || rec.stakeholder ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team',
+        name: one ? shortName(sim, rec.memberIds[0]) : rec.stakeholder ? (sim.config.stakeholders.find(s => s.key === rec.stakeholder)?.name.split(' ')[0] ?? rec.stakeholder) : shortName(sim, 'sponsor') }),
       behaviour: rec.styleShown ? msg('engine.moment.chose.style', { title, style: styleName(sim, rec.styleShown) }) : msg('engine.moment.chose', { title }),
       quote: rec.quotes?.[0] ?? null,
       impact: impactOf(rec.changes?.slice(0, 3) ?? []),

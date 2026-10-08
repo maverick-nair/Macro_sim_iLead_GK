@@ -6,6 +6,8 @@ import { runEvents, scheduleEvents } from './events';
 import { dynamicsSeed, growthShare, outputShare, trustShare } from './dynamics';
 import { choiceDueChecks, startVars } from './business';
 import { checkBadges } from './score';
+import { markRelationsStart, startStakeholders } from './stakeholderState';
+import { stakeholderDueChecks } from './stakeholders';
 import type { ActionRecord, Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
 import { msg, type Copy } from '../copy';
 
@@ -37,7 +39,8 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     vars: startVars({ config }), varCauses: {}, flags: [], counters: {}, openChoices: [], choices: [], varsAtStart: startVars({ config }), extraRevenue: 0, dynState: dynamicsSeed(seed), attrition: [],
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
     periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start,
-    actionRecords: [], periodStartResults: [], practice: config.practice.enabled ? 'offered' : 'skipped', milestones: []
+    actionRecords: [], periodStartResults: [], practice: config.practice.enabled ? 'offered' : 'skipped', milestones: [],
+    stakeholders: startStakeholders(config), stakeholderRequests: [], stakeholderRecords: []
   };
   sim.events.schedule = scheduleEvents(sim);
   markPeriodStart(sim);
@@ -168,6 +171,7 @@ function markPeriodStart(sim: Sim) {
   sim.varsAtStart = { ...sim.vars };
   sim.attrition = [];
   sim.pulseAtStart = (sim.periodStart.kpis.morale + sim.periodStart.kpis.trust) / 2;
+  markRelationsStart(sim);
 }
 
 export { markPeriodStart };
@@ -197,6 +201,8 @@ export function runSubPeriod(sim: Sim, rng: Rng) {
   triggersEverySub(sim, rng);
   dueChecks(sim);
   choiceDueChecks(sim, rng);
+  // Stakeholder requests past their deadline (D162).
+  if (sim.stakeholderRequests.length) stakeholderDueChecks(sim, rng);
   for (const m of sim.members) {
     if (m.away > 0 && m.awaySetAt !== sim.absSub && --m.away === 0) m.awayReason = null;
     m.resultHistory.push(m.result);

@@ -10,6 +10,8 @@ import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
 import type { StorylineConfig } from '../config';
 import { msg, type Copy } from '../copy';
 import { choiceBody, varName } from './business';
+import { engagedNow, interactionLabel, interactionOf, offered, stakeholderBlock, stakeholderMood } from './stakeholders';
+import { relationLevel, stakeholderConfig } from './stakeholderState';
 
 /**
  * What the participant may see. Built from engine state, never computed by the UI. Deliberately
@@ -37,6 +39,8 @@ export function sponsorLevel(sim: Sim, v = sim.sponsor.value): SponsorLevel {
 function who(sim: Sim, id: string) {
   const c = sim.config;
   if (id === 'sponsor') return { id, name: c.sponsor.name, img: c.sponsor.portrait ?? null };
+  const sh = stakeholderConfig(sim, id);
+  if (sh) return { id, name: sh.name, img: sh.portrait ?? null };
   const p = c.members.find(x => x.id === id) ?? c.candidates.find(x => x.id === id);
   return p ? { id, name: p.name, img: p.portrait ?? null } : { id, name: c.sponsor.name, img: c.sponsor.portrait ?? null };
 }
@@ -46,7 +50,8 @@ function goalFor(sim: Sim, it: Sim['interactions'][string]): Copy | null {
   const first = sim.config.sponsor.name.split(' ')[0];
   if (it.actionKey === 'sponsor') return msg('engine.goal.sponsor', { name: first });
   const m = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
-  return m ? msg('engine.goal.reply', { name: m.from === 'sponsor' ? first : person(sim, m.from).name.split(' ')[0], title: m.title }) : null;
+  const sh = m ? stakeholderConfig(sim, m.from) : undefined;
+  return m ? msg('engine.goal.reply', { name: m.from === 'sponsor' ? first : sh ? sh.name.split(' ')[0] : person(sim, m.from).name.split(' ')[0], title: m.title }) : null;
 }
 
 /** The open live interaction, everything the shell shows (spec, Live interaction screens). */
@@ -59,23 +64,29 @@ function liveView(sim: Sim) {
   const option = a?.options.find(o => o.key === it.optionKey);
   const main = it.memberIds[0] ? sim.members.find(m => m.id === it.memberIds[0]) : undefined;
   const p = main ? person(sim, main.id) : undefined;
-  const who = (pid: string) => pid === 'sponsor' ? { id: 'sponsor', name: c.sponsor.name, img: c.sponsor.portrait ?? null } : { id: pid, name: person(sim, pid).name, img: person(sim, pid).portrait ?? null };
+  const sh = it.stakeholder ? stakeholderConfig(sim, it.stakeholder.key) : undefined;
+  const shx = sh ? interactionOf(sim, it) : null;
+  const who = (pid: string) => pid === 'sponsor' ? { id: 'sponsor', name: c.sponsor.name, img: c.sponsor.portrait ?? null }
+    : sh && pid === sh.key ? { id: sh.key, name: sh.name, img: sh.portrait ?? null } : { id: pid, name: person(sim, pid).name, img: person(sim, pid).portrait ?? null };
   const yours = it.turns.filter(t => t.by === 'you').length;
   const mode = a?.live.hints ?? 'onRequest';
   return {
-    id, format: it.format, actionKey: it.actionKey, actionName: a?.name ?? null, optionLabel: option && a && a.options.length > 1 ? option.label : null,
+    id, format: it.format, actionKey: it.actionKey, actionName: a?.name ?? (sh && shx ? interactionLabel(shx) : null), optionLabel: option && a && a.options.length > 1 ? option.label : null,
     oneShot: ONE_SHOT.has(it.format),
-    people: (it.format === 'meeting' ? sim.members.filter(m => m.away === 0).map(m => m.id) : it.memberIds).map(who),
+    people: (it.format === 'meeting' ? sim.members.filter(m => m.away === 0).map(m => m.id) : sh ? [sh.key] : it.memberIds).map(who),
     speaker: who(speakerFor(sim, it)),
     /** Team meeting: attendees with a hand up, first to speak first. */
     raisedHands: it.format === 'meeting' ? it.hands ?? [] : [],
     brief: {
-      goal: it.actionKey === PRACTICE ? c.practice.goal ?? msg('engine.practice.goal', { name: person(sim, it.memberIds[0]).name.split(' ')[0] }) : a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
-      // An interview's brief is its structured questions, the same for every candidate (D85).
+      goal: it.actionKey === PRACTICE ? c.practice.goal ?? msg('engine.practice.goal', { name: person(sim, it.memberIds[0]).name.split(' ')[0] })
+        : sh ? (shx ? shx.goal ?? msg('engine.stakeholder.goal', { type: shx.type, name: sh.name.split(' ')[0] }) : goalFor(sim, it))
+        : a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
+      // An interview's brief is its structured questions, the same for every candidate (D85). A stakeholder's: who they are and where you stand.
       known: it.format === 'interview'
         ? a?.live.questions ?? [msg('engine.interview.q1'), msg('engine.interview.q2'), msg('engine.interview.q3')]
+        : sh ? [msg('engine.stakeholder.known', { role: sh.role, kind: sh.kind, level: relationLevel(sim.stakeholders[sh.key]) }), sh.about, sim.stakeholders[sh.key]?.concernShared ? sh.hiddenConcern : undefined].filter((x): x is NonNullable<typeof x> => !!x && (typeof x !== 'string' || !!x.trim()))
         : [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
-      mood: main ? moodOf(main, sim) : null,
+      mood: main ? moodOf(main, sim) : sh ? stakeholderMood(sim, sh.key) : null,
       promises: sim.promises.filter(x => x.state === 'open' && it.memberIds.includes(x.memberId)).map(x => x.text),
       declaredStyle: main?.style ?? null
     },
@@ -90,7 +101,9 @@ function liveView(sim: Sim) {
       return { id: cid, name: cp.name, title: cp.title, img: cp.portrait ?? null, cv: { previous: cp.profile.previous, experience: cp.profile.experience, skills: cp.profile.skills, remarks: cp.profile.remarks } };
     }) ?? null,
     candidate: it.candidate ?? null,
-    replyTo: it.replyTo ?? null
+    replyTo: it.replyTo ?? null,
+    /** A conversation with a stakeholder (D161): who they are and which interaction it is. */
+    stakeholder: sh ? { key: sh.key, role: sh.role, kind: sh.kind, type: shx?.type ?? 'reply' } : null
   };
 }
 
@@ -222,6 +235,22 @@ export function buildView(sim: Sim) {
     choices: sim.choices.map(r => ({ id: r.id, eventKey: r.eventKey, title: r.title, option: r.option, label: r.label, outcome: r.outcome, by: r.by, period: r.period, sub: r.sub,
       changes: r.changes, variables: r.variables.filter(x => c.variables.find(v => v.key === x.key)?.shown).map(x => ({ ...x, name: varName(sim, x.key) })), revenue: Math.round(r.revenue),
       triggered: r.triggered.map(t => ({ key: t.key, title: t.title, period: t.period })) })),
+    /** Stakeholders outside the team (D160 to D162): their relationship, what you can do with each now, and what they asked for. */
+    stakeholders: c.stakeholders.map(s => {
+      const st = sim.stakeholders[s.key];
+      const req = sim.stakeholderRequests.find(r => r.stakeholder === s.key && r.state === 'open');
+      const msgOf = req ? sim.inbox.find(x => x.id === req.messageId) : undefined;
+      return {
+        key: s.key, name: s.name, role: s.role, kind: s.kind, pronoun: s.pronoun, img: s.portrait ?? null, about: s.about ?? null,
+        trust: st.trust, satisfaction: st.satisfaction, start: { ...st.atStart }, level: relationLevel(st), mood: stakeholderMood(sim, s.key),
+        causes: st.moves.slice(-3).reverse().map(m => ({ text: m.cause, trust: m.trust, satisfaction: m.satisfaction })),
+        engaged: engagedNow(sim, s.key), concern: st.concernShared ? s.hiddenConcern ?? null : null,
+        interactions: offered(sim, s).map(x => ({ key: x.key, type: x.type, label: interactionLabel(x), kind: x.kind, cost: x.cost, goal: x.goal ?? null,
+          options: x.options ? x.options.map(o => ({ key: o.key, label: o.label, detail: o.detail ?? null })) : null,
+          blocked: sim.phase === 'board' ? stakeholderBlock(sim, s, x) : null })),
+        request: req ? { id: req.id, messageId: req.messageId, kind: req.kind, title: msgOf?.title ?? '', interaction: req.interaction, dueInSubPeriods: Math.max(0, req.dueAbsSub - sim.absSub) } : null
+      };
+    }),
     report: sim.phase === 'ended' ? buildReport(sim) : null
   };
 }

@@ -516,7 +516,9 @@ export const Business = z.object({
   set: z.array(Key).max(6).default([]),
   clear: z.array(Key).max(6).default([]),
   count: z.record(Key, z.number().int()).default({}),
-  followUps: z.array(Delay.extend({ event: Key })).max(3).default([])
+  followUps: z.array(Delay.extend({ event: Key })).max(3).default([]),
+  /** Stakeholder relationships moved (D161), by stakeholder key: trust and satisfaction, each −30 to 30. */
+  stakeholders: z.record(Key, z.object({ trust: z.number().int().min(-30).max(30).default(0), satisfaction: z.number().int().min(-30).max(30).default(0) })).optional()
 });
 export type Business = z.output<typeof Business>;
 
@@ -531,7 +533,9 @@ export const Clause = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('flag'), flag: Key, is: z.boolean().default(true) }),
   z.object({ kind: z.literal('counter'), counter: Key, op: Compare, value: z.number() }),
   z.object({ kind: z.literal('variable'), variable: Key, op: Compare, value: z.number() }),
-  z.object({ kind: z.literal('metric'), metric: z.enum(CONDITION_METRICS), op: Compare, value: z.number() })
+  z.object({ kind: z.literal('metric'), metric: z.enum(CONDITION_METRICS), op: Compare, value: z.number() }),
+  /** A stakeholder's relationship (D163): their trust in you or their satisfaction, 0 to 100. */
+  z.object({ kind: z.literal('stakeholder'), stakeholder: Key, measure: z.enum(['trust', 'satisfaction']), op: Compare, value: z.number() })
 ]);
 export type Clause = z.output<typeof Clause>;
 
@@ -565,6 +569,114 @@ export const Choice = z.object({
   /** The option that applies when nobody chooses in time. Left out, `ignored` applies (or nothing). */
   default: Key.optional(),
   ignored: ChoiceOption.omit({ key: true, label: true, detail: true }).partial({ outcome: true }).optional()
+});
+
+// ---------------------------------------------------------------- stakeholders (D160 to D165)
+
+/** Who a stakeholder is to the participant (D160): the AI character and the board word it from this. */
+export const STAKEHOLDER_KINDS = ['manager', 'peer', 'customer', 'executive', 'board', 'union', 'partner', 'other'] as const;
+/** The ways to engage a stakeholder (D161). */
+export const STAKEHOLDER_INTERACTIONS = ['meet', 'present', 'negotiate', 'email'] as const;
+/** At most this many stakeholders per storyline (D160). */
+export const MAX_STAKEHOLDERS = 8;
+const RelationNeeds = z.object({ trust: Score.optional(), satisfaction: Score.optional() });
+
+/** What a stakeholder interaction, a static option or a request does (D161), before the relationship scales it. */
+const StakeholderEffectBase = z.object({
+  /** The stakeholder's trust in you and their satisfaction, each −30 to 30. */
+  trust: z.number().int().min(-30).max(30).default(0),
+  satisfaction: z.number().int().min(-30).max(30).default(0),
+  /** Business variables, revenue, sponsor confidence, flags, follow ups and other stakeholders. */
+  business: Business.default(() => Business.parse({})),
+  /** Skill, morale and result for team members (headcount won, a deadline moved): on `who`. */
+  people: Effect.default([0, 0, 0]),
+  who: z.string().regex(/^(team|stage:[a-z][a-z0-9_]*|[a-z][a-z0-9_]*)$/).default('team'),
+  /** What happened, shown after it and in the report. */
+  outcome: Copy.optional()
+});
+/**
+ * A stakeholder effect (D161). `needs`: it lands only while the stakeholder's trust and satisfaction are at least
+ * these values; otherwise `otherwise` applies (a negotiation that a strained relationship cannot carry).
+ */
+export const StakeholderEffect = StakeholderEffectBase.extend({ needs: RelationNeeds.optional(), otherwise: StakeholderEffectBase.optional() });
+export type StakeholderEffect = z.output<typeof StakeholderEffect>;
+
+/** One option of a static stakeholder decision (D161): its effect and its leadership read. */
+export const StakeholderOption = z.object({ key: Key, label: Copy, detail: Copy.optional(), effect: StakeholderEffect.default(() => StakeholderEffect.parse({})), read: Read.default([]) });
+
+/**
+ * A way to engage one stakeholder (D161): a live conversation (meet, present, negotiate, or an email written once)
+ * through the same AI character and evaluator as the team's, or a static decision with options. It costs days,
+ * never the team's live cap, and each stakeholder can be engaged once a period.
+ */
+export const StakeholderInteraction = z.object({
+  key: Key,
+  type: z.enum(STAKEHOLDER_INTERACTIONS),
+  /** The button's words. Left out, the type's ("Meet", "Present", "Negotiate", "Email"). */
+  label: Copy.optional(),
+  /** What the participant is there to do, shown before it starts. */
+  goal: Copy.optional(),
+  kind: z.enum(['live', 'static']).default('live'),
+  cost: z.number().min(0).default(1),
+  /** The first period it is offered. */
+  from: z.number().int().min(1).default(1),
+  /** Offered only while these hold (D163), for example once their trust is 60 or more. */
+  if: z.array(Clause).min(1).max(3).optional(),
+  /** The skills a live interaction rates. Left out, the type's defaults that the framework has. */
+  skills: z.array(Key).max(4).optional(),
+  rubric: z.array(z.object({ key: Key, label: Copy })).min(2).max(4).optional(),
+  turnLimit: z.number().int().min(1).max(30).default(8),
+  minutes: z.number().min(1).max(15).default(5),
+  opening: z.enum(['npc', 'participant']).default('npc'),
+  /** Live: what each band does. Left out, the defaults (`STAKEHOLDER_BANDS` in sim/stakeholders.ts). */
+  consequences: z.object({ strong: StakeholderEffect, adequate: StakeholderEffect, weak: StakeholderEffect, harmful: StakeholderEffect }).partial().optional(),
+  /** Static: the options, 2 to 4. */
+  options: z.array(StakeholderOption).min(2).max(4).optional()
+}).superRefine((x, ctx) => {
+  if (x.kind === 'static' && !x.options) ctx.addIssue({ code: 'custom', path: ['options'], message: 'A static interaction needs 2 to 4 options' });
+  if (x.kind === 'live' && x.options) ctx.addIssue({ code: 'custom', path: ['options'], message: 'A live interaction has no options: its consequences follow how the conversation went' });
+  if (x.options && new Set(x.options.map(o => o.key)).size !== x.options.length) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Option keys must be unique' });
+});
+
+/**
+ * A stakeholder outside the team (D160): a manager, a peer, a customer, an executive, the board, a union, a partner.
+ * Never in the work funnel and never a result: they act on the business through variables, sponsor confidence,
+ * flags and events, and keep their own relationship with the participant (trust and satisfaction, 0 to 100).
+ */
+export const Stakeholder = z.object({
+  key: Key,
+  name: z.string().min(1),
+  /** Their job title, as the board shows it: "Chief Financial Officer". */
+  role: z.string().min(1),
+  kind: z.enum(STAKEHOLDER_KINDS),
+  pronoun: z.enum(['he', 'she', 'they']).default('they'),
+  portrait: z.string().optional(),
+  /** What the participant knows about them, on the board. */
+  about: Copy.optional(),
+  hiddenConcern: Copy.optional(),
+  concernLine: Copy.optional(),
+  /** How the AI character plays them (D130's persona fields). */
+  npc: NpcPersona.optional(),
+  start: z.object({ trust: Score.default(50), satisfaction: Score.default(50) }).default({ trust: 50, satisfaction: 50 }),
+  /** What they lose at each period end in which you did not engage them (0 by default: no drift). */
+  drift: z.object({ trust: z.number().int().min(-20).max(0).default(0), satisfaction: z.number().int().min(-20).max(0).default(0) }).default({ trust: 0, satisfaction: 0 }),
+  interactions: z.array(StakeholderInteraction).max(4).default([])
+}).superRefine((s, ctx) => {
+  if (new Set(s.interactions.map(i => i.key)).size !== s.interactions.length) ctx.addIssue({ code: 'custom', path: ['interactions'], message: 'Interaction keys must be unique' });
+});
+export type Stakeholder = z.output<typeof Stakeholder>;
+
+/**
+ * A request from a stakeholder (D162): a message to answer in writing, or a meeting they ask for, by a deadline.
+ * Answered in time, `onTime` applies; ignored, `ifIgnored` does (and the event's escalation, if any).
+ */
+export const StakeholderRequest = z.object({
+  kind: z.enum(['message', 'meeting']).default('message'),
+  /** A meeting request: the interaction of theirs that answers it. Left out, any of their interactions. */
+  interaction: Key.optional(),
+  within: z.number().int().min(1).max(10).default(2),
+  onTime: StakeholderEffect.default(() => StakeholderEffect.parse({ trust: 3, satisfaction: 3 })),
+  ifIgnored: StakeholderEffect.default(() => StakeholderEffect.parse({ trust: -6, satisfaction: -8 }))
 });
 
 /** How an action decides its mismatch type (docs/SIMULATION.md 4.3). */
@@ -690,8 +802,15 @@ export const GeneralEvent = z.object({
    */
   response: z.object({ actions: z.array(Key).min(1), within: z.number().int().min(1).max(5).default(2), onTime: Effect.default([0, 2, 0]) }).optional(),
   /** If the response does not come in time: a follow up event, and whether it reaches the sponsor. */
-  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true), delay: Delay.optional() }).optional()
+  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true), delay: Delay.optional() }).optional(),
+  /** The stakeholder the event comes from (D162): a chat or email is their message, a card shows them. */
+  stakeholder: Key.optional(),
+  /** What the stakeholder asks for, by when (D162). Needs `stakeholder`. */
+  request: StakeholderRequest.optional()
 }).superRefine((e, ctx) => {
+  if (e.request && !e.stakeholder) ctx.addIssue({ code: 'custom', path: ['request'], message: 'A request comes from a stakeholder: name them' });
+  if (e.request && e.response) ctx.addIssue({ code: 'custom', path: ['response'], message: 'A stakeholder request is answered by answering them: leave the expected response out' });
+  if (e.request && e.choice) ctx.addIssue({ code: 'custom', path: ['request'], message: 'A decision is answered by choosing: leave the request out' });
   if (e.choice) {
     const keys = e.choice.options.map(o => o.key);
     if (new Set(keys).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['choice', 'options'], message: 'Option keys must be unique' });
@@ -702,7 +821,7 @@ export const GeneralEvent = z.object({
   const kinds = [e.period !== undefined, !!e.window, !!e.when].filter(Boolean).length;
   if (kinds > 1) ctx.addIssue({ code: 'custom', path: ['period'], message: 'Give a fixed period, a random window or a condition, not more than one' });
   if (e.window && e.window.from > e.window.to) ctx.addIssue({ code: 'custom', path: ['window'], message: 'The window must start before it ends' });
-  if ((e.delivery === 'chat' || e.delivery === 'email') && e.target === 'team') ctx.addIssue({ code: 'custom', path: ['delivery'], message: 'A chat or email comes from one person: target a member' });
+  if ((e.delivery === 'chat' || e.delivery === 'email') && e.target === 'team' && !e.stakeholder) ctx.addIssue({ code: 'custom', path: ['delivery'], message: 'A chat or email comes from one person: target a member' });
 });
 
 export const TRIGGER_KINDS = ['casualLeave', 'medicalLeave', 'clueless', 'demoralized', 'lackOfTraining', 'moraleDrops', 'resignation', 'roleChangeRequest', 'complains', 'trainingRequest'] as const;
@@ -820,6 +939,8 @@ export const StorylineConfig = z.object({
   dynamics: Dynamics.optional(),
   /** Business variables (D136), 0 to 6. */
   variables: z.array(Variable).max(MAX_VARIABLES).default([]),
+  /** Stakeholders outside the team (D160), 0 to 8. */
+  stakeholders: z.array(Stakeholder).max(MAX_STAKEHOLDERS).default([]),
   /** Funnel buffer from the Model doc, set by calibration. */
   performanceThreshold: z.number().min(-50).max(400),
   calibrated: z.boolean().default(false)
@@ -920,6 +1041,64 @@ export const StorylineConfig = z.object({
     (e.if ?? []).forEach((cl, k) => { if (cl.kind === 'variable' && !varKeys.has(cl.variable)) ctx.addIssue({ code: 'custom', path: ['events', i, 'if', k, 'variable'], message: `No variable called ${cl.variable}` }); });
     if (e.escalation?.event === e.key) ctx.addIssue({ code: 'custom', path: ['events', i, 'escalation', 'event'], message: 'An event cannot follow itself' });
   });
+
+  // Stakeholders (D160 to D165): their keys are their own, and every reference to one names one that exists.
+  const shKeys = new Set(c.stakeholders.map(s => s.key));
+  if (shKeys.size !== c.stakeholders.length) ctx.addIssue({ code: 'custom', path: ['stakeholders'], message: 'Stakeholder keys must be unique' });
+  c.stakeholders.forEach((s, i) => {
+    if (ids.has(s.key) || ['team', 'member', 'sponsor', 'news', 'you', 'target'].includes(s.key)) ctx.addIssue({ code: 'custom', path: ['stakeholders', i, 'key'], message: `${s.key} is already a person or a reserved name: give the stakeholder another key` });
+    for (const k of Object.keys(s.npc?.reactions ?? {})) if (!styleKeys.has(k)) ctx.addIssue({ code: 'custom', path: ['stakeholders', i, 'npc', 'reactions', k], message: `No style called ${k} in the lens` });
+    s.interactions.forEach((x, j) => {
+      const at = ['stakeholders', i, 'interactions', j];
+      if (x.from > c.time.period.count) ctx.addIssue({ code: 'custom', path: [...at, 'from'], message: 'Offered only after the last period' });
+      if (Math.abs(x.cost / c.time.costStep - Math.round(x.cost / c.time.costStep)) > 1e-9) ctx.addIssue({ code: 'custom', path: [...at, 'cost'], message: `Cost must be a multiple of ${c.time.costStep}` });
+      for (const k of x.skills ?? []) if (!skillKeys.has(k)) ctx.addIssue({ code: 'custom', path: [...at, 'skills'], message: `No skill called ${k}` });
+      for (const [band, eff] of Object.entries(x.consequences ?? {})) checkEffect(eff, [...at, 'consequences', band]);
+      x.options?.forEach((o, k) => {
+        checkEffect(o.effect, [...at, 'options', k, 'effect']);
+        o.read.forEach((r, n) => { if (!skillKeys.has(r.skill)) ctx.addIssue({ code: 'custom', path: [...at, 'options', k, 'read', n, 'skill'], message: `No skill called ${r.skill}` }); });
+      });
+      checkClauses(x.if, [...at, 'if']);
+    });
+  });
+  function checkEffect(eff: StakeholderEffect | undefined, path: Array<string | number>) {
+    if (!eff) return;
+    for (const e of [eff, eff.otherwise]) {
+      if (!e) continue;
+      checkBusiness(e.business, [...path, 'business']);
+      if (e.who !== 'team') checkWho(e.who, [...path, 'who']);
+    }
+  }
+  function checkClauses(clauses: Clause[] | undefined, path: Array<string | number>) {
+    (clauses ?? []).forEach((cl, k) => {
+      if (cl.kind === 'variable' && !varKeys.has(cl.variable)) ctx.addIssue({ code: 'custom', path: [...path, k, 'variable'], message: `No variable called ${cl.variable}` });
+      if (cl.kind === 'stakeholder' && !shKeys.has(cl.stakeholder)) ctx.addIssue({ code: 'custom', path: [...path, k, 'stakeholder'], message: `No stakeholder called ${cl.stakeholder}` });
+    });
+  }
+  c.events.forEach((e, i) => {
+    if (e.stakeholder && !shKeys.has(e.stakeholder)) ctx.addIssue({ code: 'custom', path: ['events', i, 'stakeholder'], message: `No stakeholder called ${e.stakeholder}` });
+    (e.if ?? []).forEach((cl, k) => { if (cl.kind === 'stakeholder' && !shKeys.has(cl.stakeholder)) ctx.addIssue({ code: 'custom', path: ['events', i, 'if', k, 'stakeholder'], message: `No stakeholder called ${cl.stakeholder}` }); });
+    if (e.request) {
+      const sh = c.stakeholders.find(s => s.key === e.stakeholder);
+      if (e.request.interaction && sh && !sh.interactions.some(x => x.key === e.request!.interaction)) ctx.addIssue({ code: 'custom', path: ['events', i, 'request', 'interaction'], message: `${sh.name} has no interaction called ${e.request.interaction}` });
+      if (e.request.kind === 'meeting' && sh && !sh.interactions.length) ctx.addIssue({ code: 'custom', path: ['events', i, 'request', 'kind'], message: `${sh.name} asks to meet, but has no interaction to answer with` });
+      checkEffect(e.request.onTime, ['events', i, 'request', 'onTime']);
+      checkEffect(e.request.ifIgnored, ['events', i, 'request', 'ifIgnored']);
+    }
+  });
+  // Every business effect that moves a stakeholder names one that exists.
+  const businesses: Array<[Business | undefined, Array<string | number>]> = [];
+  c.actions.forEach((a, i) => a.options.forEach((o, j) => { for (const k of ['always', 'm0', 'm1', 'm2'] as const) businesses.push([o.business?.[k], ['actions', i, 'options', j, 'business', k]]); }));
+  c.events.forEach((e, i) => {
+    businesses.push([e.business, ['events', i, 'business']]);
+    e.choice?.options.forEach((o, j) => businesses.push([o.business, ['events', i, 'choice', 'options', j, 'business']]));
+    if (e.choice?.ignored) businesses.push([e.choice.ignored.business, ['events', i, 'choice', 'ignored', 'business']]);
+  });
+  c.stakeholders.forEach((s, i) => s.interactions.forEach((x, j) => {
+    for (const [band, eff] of Object.entries(x.consequences ?? {})) for (const e of [eff, eff?.otherwise]) businesses.push([e?.business, ['stakeholders', i, 'interactions', j, 'consequences', band, 'business']]);
+    x.options?.forEach((o, k) => { for (const e of [o.effect, o.effect.otherwise]) businesses.push([e?.business, ['stakeholders', i, 'interactions', j, 'options', k, 'effect', 'business']]); });
+  }));
+  for (const [b, path] of businesses) for (const k of Object.keys(b?.stakeholders ?? {})) if (!shKeys.has(k)) ctx.addIssue({ code: 'custom', path: [...path, 'stakeholders', k], message: `No stakeholder called ${k}` });
 });
 
 export type StorylineConfig = z.output<typeof StorylineConfig>;

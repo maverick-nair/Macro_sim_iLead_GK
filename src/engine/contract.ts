@@ -155,7 +155,9 @@ export const LiveView = z.object({
   candidate: z.number().int().min(0).nullable(),
   replyTo: Id.nullable(),
   /** The Week 0 practice (D84): not scored; ending it gives a tip, not an outcome. */
-  practice: z.boolean().default(false)
+  practice: z.boolean().default(false),
+  /** A conversation with a stakeholder outside the team (D161): who they are, and which interaction it is. */
+  stakeholder: z.object({ key: Id, role: Text, kind: z.string(), type: z.enum(['meet', 'present', 'negotiate', 'email', 'reply']) }).nullable().default(null)
 });
 
 export const ActionView = z.object({
@@ -224,7 +226,9 @@ export const PeriodSummary = z.object({
   /** Choices made, or left to their default, this period (D137). */
   choices: z.array(z.object({ id: Id, title: Text, label: Text.nullable(), by: z.enum(['you', 'default']) })).optional(),
   /** People off sick or gone because their morale stayed low (D135). */
-  attrition: z.array(z.object({ memberId: Id, name: Text, kind: z.enum(['sick', 'resigned']) })).optional()
+  attrition: z.array(z.object({ memberId: Id, name: Text, kind: z.enum(['sick', 'resigned']) })).optional(),
+  /** Each stakeholder's relationship at the period's start and end (D160). */
+  stakeholders: z.array(z.object({ key: Id, name: Text, trust: z.object({ start: Num, end: Num }), satisfaction: z.object({ start: Num, end: Num }) })).optional()
 });
 
 /** How a business variable reads (D136): money in the storyline's currency, a percentage or points. */
@@ -244,6 +248,29 @@ export const ChoiceView = z.object({
   id: Id, eventKey: Id, title: Text, option: Id.nullable(), label: Text.nullable(), outcome: Text.nullable(), by: z.enum(['you', 'default']), period: z.number().int(), sub: z.number().int(),
   changes: z.array(MetricChange), variables: z.array(z.object({ key: Id, name: Text, delta: Num })), revenue: Num,
   triggered: z.array(z.object({ key: Id, title: Text, period: z.number().int() }))
+});
+
+/** Who a stakeholder is to the participant (D160). */
+export const StakeholderKind = z.enum(['manager', 'peer', 'customer', 'executive', 'board', 'union', 'partner', 'other']);
+/**
+ * A stakeholder outside the team (D160 to D162): their relationship with the participant (trust and satisfaction,
+ * 0 to 100, with the period's start and the last causes), what can be done with them now, and their open request.
+ */
+export const StakeholderView = z.object({
+  key: Id, name: Text, role: Text, kind: StakeholderKind, pronoun: z.enum(['he', 'she', 'they']), img: z.string().nullable(), about: Text.nullable(),
+  trust: Score, satisfaction: Score, start: z.object({ trust: Score, satisfaction: Score }),
+  level: z.enum(['strained', 'cool', 'steady', 'good', 'strong']), mood: Mood,
+  causes: z.array(z.object({ text: Text, trust: Num, satisfaction: Num })),
+  /** Engaged this period: each stakeholder can be engaged once a period. */
+  engaged: z.boolean(),
+  /** Their hidden concern, once a conversation surfaced it. */
+  concern: Text.nullable(),
+  interactions: z.array(z.object({
+    key: Id, type: z.enum(['meet', 'present', 'negotiate', 'email']), label: Text, kind: z.enum(['live', 'static']), cost: Num, goal: Text.nullable(),
+    options: z.array(z.object({ key: Id, label: Text, detail: Text.nullable() })).nullable(),
+    blocked: Block.nullable()
+  })),
+  request: z.object({ id: Id, messageId: Id, kind: z.enum(['message', 'meeting']), title: Text, interaction: Id.nullable(), dueInSubPeriods: z.number().int().min(0) }).nullable()
 });
 
 /** Everything the participant may see. Never includes a member's needed style. */
@@ -272,7 +299,9 @@ export const EngineView = z.object({
   /** Event cards. `sponsorCall` rings before it shows; `messageId` is the message to answer, if any. */
   cards: z.array(z.object({ id: Id, key: Id, card: CardKind, delivery: z.enum(['modal', 'sponsorCall']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange), label: Text.nullable(), messageId: Id.nullable(),
     /** The choice the card opens, when the event is a choice (D137). */
-    choiceId: Id.optional() })),
+    choiceId: Id.optional(),
+    /** The stakeholder the event comes from (D162). */
+    stakeholder: Id.optional() })),
   /** `from` resolves the speaker for display: a member, a departed member, a candidate or the sponsor. */
   outcome: Outcome.extend({ from: z.object({ id: Id, name: Text, img: z.string().nullable() }) }).nullable(),
   /**
@@ -322,6 +351,8 @@ export const EngineView = z.object({
   /** Choices waiting for the participant, and choices made (D137). */
   openChoices: z.array(OpenChoice).default([]),
   choices: z.array(ChoiceView).default([]),
+  /** Stakeholders outside the team (D160): none in a storyline without them. */
+  stakeholders: z.array(StakeholderView).default([]),
   /**
    * The report, once the run has ended. Its schema is `ReportView` in `./reportContract`, which the end
    * screen and the report (both loaded on demand) parse with `parseReport`; the first load only checks
@@ -358,7 +389,9 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('startPractice') }),
   z.object({ type: z.literal('skipPractice') }),
   /** A choice event's option (D137). Costs no time. */
-  z.object({ type: z.literal('decide'), choiceId: Id, option: Id })
+  z.object({ type: z.literal('decide'), choiceId: Id, option: Id }),
+  /** A stakeholder interaction (D161): a live one opens a conversation; a static one needs its option. Costs its days. */
+  z.object({ type: z.literal('engageStakeholder'), stakeholder: Id, interaction: Id, option: Id.optional() })
 ]);
 
 export const IntentResult = z.object({
@@ -396,3 +429,4 @@ export type Mood = z.output<typeof Mood>;
 export type VariableView = z.output<typeof VariableView>;
 export type OpenChoice = z.output<typeof OpenChoice>;
 export type ChoiceView = z.output<typeof ChoiceView>;
+export type StakeholderView = z.output<typeof StakeholderView>;

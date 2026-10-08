@@ -2,6 +2,7 @@ import { bandScore, roundHalfUp } from '../sim/score';
 import { firstName } from '../sim/sim';
 import type { Band, LiveRecord, Sim } from '../sim/types';
 import { msg, type Copy, type Msg } from '../copy';
+import { stakeholderReadRecords } from '../sim/stakeholders';
 
 /**
  * Skill ratings (docs/genie/scoring-and-report.md 5.4), shared by the report (`build.ts`) and the run
@@ -53,7 +54,8 @@ export function choiceRecords(sim: Sim): LiveRecord[] {
 
 export function rateSkills(sim: Sim): SkillRating[] {
   const r = sim.config.report;
-  const records = [...sim.liveRecords, ...choiceRecords(sim)];
+  // Stakeholder conversations are live records already; their static decisions' reads join the choices' (D164).
+  const records = [...sim.liveRecords, ...choiceRecords(sim), ...stakeholderReadRecords(sim)];
   return r.skills.map((sk, order) => {
     const obs = records.flatMap(rec => (rec.skills ?? []).filter(o => o.key === sk.key).map(o => ({ ...o, rec })));
     const interactions = new Set(obs.map(o => o.rec.id ?? o.rec));

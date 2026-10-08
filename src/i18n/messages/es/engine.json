@@ -196,5 +196,17 @@
   "engine.choice.defaultLabel": "Sin decisión",
   "engine.choice.rule": "{by, select, you {Lo que elegiste tiene el efecto que la simulación le da.} other {Una decisión sin tomar a tiempo aplica su opción por defecto.}}",
   "engine.choice.nobody": "Nadie",
-  "engine.choice.log": "{title}: {option}{by, select, you {} other { (por defecto)}}"
+  "engine.choice.log": "{title}: {option}{by, select, you {} other { (por defecto)}}",
+  "engine.stakeholder.label": "{type, select, meet {Reunirte} present {Presentar} negotiate {Negociar} email {Escribir} other {Responder}}",
+  "engine.stakeholder.title": "{action} con {name}",
+  "engine.stakeholder.option": "{action}: {option}",
+  "engine.stakeholder.goal": "{type, select, meet {Escucha qué necesita {name} de tu equipo y acordad qué pasa después.} present {Informa a {name} de dónde está tu equipo: las cifras, el mayor riesgo y lo que necesitas.} negotiate {Acuerda prioridades con {name}: entiende qué necesita, pon opciones sobre la mesa y fijad qué da cada parte.} email {Escribe a {name}: sé concreto, di por qué importa y qué pasa después.} other {Responde a {name}.}}",
+  "engine.stakeholder.known": "{role}, {kind, select, manager {tu responsable} peer {un par de otro equipo} customer {un cliente} executive {un directivo} board {del consejo} union {del sindicato} partner {un socio} other {de fuera de tu equipo}}. La relación es {level, select, strained {tensa} cool {fría} steady {estable} good {buena} other {sólida}}.",
+  "engine.stakeholder.moved": "{name}: confianza {trust}, satisfacción {satisfaction}",
+  "engine.stakeholder.declined": "{name} no quiso llegar tan lejos: la relación no daba para tanto.",
+  "engine.stakeholder.rule": "Lo que {name} aceptó tiene el efecto que la simulación le da, según cuánto confía en ti.",
+  "engine.stakeholder.onTime": "Respondiste a {name} a tiempo.",
+  "engine.stakeholder.ignored": "No respondiste a {name} a tiempo: {title}.",
+  "engine.stakeholder.drift": "{name} no supo nada de ti {unit, select, year {este año} month {este mes} week {esta semana} day {hoy} other {este periodo}}.",
+  "engine.stakeholder.openedUp": "{name} te contó lo que de verdad le preocupa."
 }

@@ -196,5 +196,17 @@
   "engine.choice.defaultLabel": "No decision",
   "engine.choice.rule": "{by, select, you {What you chose plays out as the simulation sets it.} other {A decision left past its deadline takes its default.}}",
   "engine.choice.nobody": "Nobody",
-  "engine.choice.log": "{title}: {option}{by, select, you {} other { (default)}}"
+  "engine.choice.log": "{title}: {option}{by, select, you {} other { (default)}}",
+  "engine.stakeholder.label": "{type, select, meet {Meet} present {Present} negotiate {Negotiate} email {Email} other {Reply}}",
+  "engine.stakeholder.title": "{action} with {name}",
+  "engine.stakeholder.option": "{action}: {option}",
+  "engine.stakeholder.goal": "{type, select, meet {Hear what {name} needs from your team, and agree what happens next.} present {Brief {name} on where your team stands: the numbers, the biggest risk and what you need.} negotiate {Agree priorities with {name}: find out what they need, put options on the table and settle what each side gives.} email {Write to {name}: be specific, say why it matters and what happens next.} other {Answer {name}.}}",
+  "engine.stakeholder.known": "{role}, {kind, select, manager {your manager} peer {a peer in another team} customer {a customer} executive {an executive} board {on the board} union {from the union} partner {a partner} other {outside your team}}. The relationship is {level, select, strained {strained} cool {cool} steady {steady} good {good} other {strong}}.",
+  "engine.stakeholder.moved": "{name}: trust {trust}, satisfaction {satisfaction}",
+  "engine.stakeholder.declined": "{name} would not go that far: the relationship could not carry it.",
+  "engine.stakeholder.rule": "What {name} agreed plays out as the simulation sets it, scaled by how much they trust you.",
+  "engine.stakeholder.onTime": "You answered {name} in time.",
+  "engine.stakeholder.ignored": "You did not answer {name} in time: {title}.",
+  "engine.stakeholder.drift": "{name} heard nothing from you this {unit, select, year {year} month {month} week {week} day {day} other {period}}.",
+  "engine.stakeholder.openedUp": "{name} told you what is really worrying them."
 }
