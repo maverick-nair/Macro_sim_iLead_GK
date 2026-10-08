@@ -71,7 +71,8 @@ export function offered(sim: Sim, s: Stakeholder): Interact[] {
 export function stakeholderBlock(sim: Sim, s: Stakeholder, x: Interact): { reason: 'locked'; period: number } | { reason: 'capacity'; need: number; have: number } | { reason: 'cooldown'; in: number } | null {
   if (sim.period < x.from) return { reason: 'locked', period: x.from };
   if (x.cost > capacityLeft(sim)) return { reason: 'capacity', need: x.cost, have: capacityLeft(sim) };
-  if (engagedNow(sim, s.key)) return { reason: 'cooldown', in: Math.max(1, perPeriod(sim) - sim.sub) };
+  // Once a period, unless they asked for this meeting (D162): a request can always be answered.
+  if (engagedNow(sim, s.key) && !meetingRequest(sim, s.key, x.key)) return { reason: 'cooldown', in: Math.max(1, perPeriod(sim) - sim.sub) };
   return null;
 }
 

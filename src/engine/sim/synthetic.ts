@@ -9,6 +9,7 @@ import { planFields, templateSpeaker, type Level, type SpeakerContext, type Synt
 import type { Evaluation } from './types';
 import type { EngineView } from './view';
 import type { RunSummary } from '../report/summary';
+import { StakeholderPlayer } from './stakeholderPlayers';
 
 /**
  * Synthetic players (D112, docs/CALIBRATION-SYNTHETIC.md): four proficiency levels that play a whole
@@ -180,6 +181,8 @@ class Player {
   private assessed = false;
   private trainedAt = -10;
   private energizedAt = -10;
+  /** Stakeholders outside the team (D165), played by level in their own module, on their own seeded stream. */
+  private readonly stakeholderPlay: StakeholderPlayer;
 
   constructor(private readonly config: StorylineConfig, private readonly engine: Engine, private readonly persona: PersonaKey, private readonly seed: number, private readonly opts: PlayOptions, private readonly evaluations: Evaluation[]) {
     const probe = opts.probe;
@@ -193,6 +196,20 @@ class Player {
     this.lens = { title: config.lens.title, styles: config.lens.styles.map(s => ({ key: s.key, name: s.name, short: s.short, description: s.description })) };
     this.speaker = opts.speaker ?? templateSpeaker;
     this.defaultStyle = probe?.kind === 'style' ? probe.style : this.rng.pick(this.keys);
+    this.stakeholderPlay = new StakeholderPlayer({ config, persona, level: this.level, rng: createRng((seed ^ seedFrom(`stakeholders:${persona}`)) >>> 0), send: i => this.send(i), view: () => this.engine.view(), evaluations: () => this.evaluations, english: c => this.english(c as Copy) });
+  }
+
+  /** Stakeholders (D165): the requests the persona answers or lets pass, and engaging them before anyone asks. Probes leave them alone. */
+  private async stakeholderStep(v: EngineView): Promise<EngineView> {
+    if (this.opts.probe || !this.config.stakeholders.length) return v;
+    const r = await this.stakeholderPlay.step(v);
+    this.conversations.push(...r.conversations);
+    for (const q of this.stakeholderPlay.requests) {
+      const w = this.week(q.period);
+      const e = w.events.find(x => x.key === q.key);
+      if (e) e.handled = q.handled; else w.events.push({ key: q.key, title: q.title, expected: true, handled: q.handled });
+    }
+    return r.view;
   }
 
   private english(c: Copy | null | undefined): string {
@@ -273,6 +290,7 @@ class Player {
   private async board(v: EngineView): Promise<EngineView> {
     for (let steps = 0; steps < 40 && v.phase === 'board'; steps++) {
       v = await this.answer(v);
+      v = await this.stakeholderStep(v);
       if (v.phase !== 'board') break;
       const step = this.next(v);
       if (!step) break;
@@ -302,7 +320,8 @@ class Player {
       v = (await this.send({ type: 'dismissCard', cardId: card.id })).view;
     }
     for (const m of v.inbox) {
-      if (m.from === 'news' || m.kind === 'news' || m.state !== 'open') continue;
+      // A stakeholder's message is theirs to answer (stakeholderStep, D165).
+      if (m.from === 'news' || m.kind === 'news' || m.state !== 'open' || this.config.stakeholders.some(s => s.key === m.from)) continue;
       // An event delivered as a chat or an email has no card: its message is the event.
       const title = this.english(m.title);
       const ev = this.config.events.find(e => e.response && e.title === title && (e.delivery === 'chat' || e.delivery === 'email'));

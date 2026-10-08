@@ -103,7 +103,7 @@ function liveView(sim: Sim) {
     candidate: it.candidate ?? null,
     replyTo: it.replyTo ?? null,
     /** A conversation with a stakeholder (D161): who they are and which interaction it is. */
-    stakeholder: sh ? { key: sh.key, role: sh.role, kind: sh.kind, type: shx?.type ?? 'reply' } : null
+    stakeholder: sh ? { key: sh.key, role: sh.role, kind: sh.kind, type: shx?.type ?? 'reply' as const } : null
   };
 }
 
