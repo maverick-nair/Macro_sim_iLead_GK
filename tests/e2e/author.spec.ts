@@ -193,6 +193,26 @@ test('Ask Kora proposes before it applies; Add an action with Kora; move an even
   expect(await page.locator('body').innerText()).not.toMatch(FORBIDDEN);
 });
 
+test('an event keeps the timing and response the author gives it; a shorter run moves what it leaves behind and says so (D128)', async ({ page }) => {
+  await workspace(page, 'Events');
+  const title = await page.getByRole('textbox', { name: 'Title' }).inputValue();
+  await page.getByRole('combobox', { name: 'When' }).selectOption({ label: 'When something happens' });
+  await page.getByRole('combobox', { name: 'Condition' }).selectOption({ label: 'Team trust falls below' });
+  await page.getByText(/^Response: what answers it/).click();
+  await page.getByRole('checkbox', { name: 'Meet the team' }).check();
+  await page.getByRole('combobox', { name: 'Days to respond' }).selectOption({ label: '4 days' });
+  await page.getByRole('checkbox', { name: /The sponsor hears of it/ }).check();
+  await expect(page.getByRole('button', { name: `${title} · When team trust is below 40` })).toBeVisible();
+
+  await openTab(page, 'Brief');
+  await page.getByText(/^Lite · 4 weeks/).click();
+  await expect(page.getByText(/^To fit the new length, \d+ items moved/)).toBeVisible();
+  await openTab(page, 'Events');
+  await expect(page.getByRole('list', { name: 'Week 4' })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Week 5' })).toHaveCount(0);
+  await expect(page.getByRole('list', { name: 'Week 4' }).getByRole('button').first()).toBeVisible();
+});
+
 test('the library admin page registers a new interaction type as beta', async ({ page }) => {
   await page.goto('/author/library');
   await expect(page.getByRole('heading', { level: 1, name: 'Action library' })).toBeVisible();
