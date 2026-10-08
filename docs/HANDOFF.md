@@ -22,7 +22,7 @@ Server (built: server/, docs/SERVER.md, D81; the base paths of .env.server)
   Engine        /engine/sessions/{session}/view, /intents, /interactions/.../stream   (VITE_ILEAD_ENGINE_URL=/engine)
   App API       /api/profile, /theme, /history, /report.pdf, /report/email, /cohort/...  (VITE_ILEAD_API_URL=/api)
   Speech        /speech/transcriptions...                                             (VITE_ILEAD_SPEECH_URL=/speech)
-  GenieKreator  /genie/author/turn, /genie/author/draft, /genie/calibrations          (VITE_GENIE_URL=/genie)
+  GenieKreator  /genie/author/turn, /genie/author/draft, /genie/author/edit, /genie/calibrations          (VITE_GENIE_URL=/genie)
   Sign in       /launch?token=<signed launch link>, /auth/me, /auth/logout
   Operations    /healthz, /readyz, /openapi.json
 ```
@@ -94,7 +94,7 @@ Built to the approved canvas in `docs/design/genie` (D105 to D111): the co-creat
 
 - **The draft** is one Zod model (`src/author/model/draft.ts`) kept in local storage (`ilead.author.workspace`) and parsed back on load. `seedDraft` fills it offline from the chat; `toStoryline` turns it into the engine's StorylineConfig (checked with the schema and the copy guard). Provenance marks: AI, You, Edited, Needs you (computed), Suggestion (Kora's dashed ideas).
 - **Voice answers** use the participant app's speech client (MediaRecorder and the chunked transcription endpoints served with `createTranscriber` from `ai/`), at `VITE_GENIE_SPEECH_URL` or else `VITE_ILEAD_SPEECH_URL`; without either, an offline mock voice (`src/author/voice.ts`).
-- **Ask Kora** runs on rules offline (`src/author/model/kora.ts`); a server would answer the same proposals with the model.
+- **Ask Kora** turns an instruction into structured changes shown as a diff to apply or discard, never words appended to the content (D125): offline by rules (`src/author/model/intents.ts`), with a server by the model (`POST /author/edit`, D127), which falls back to the rules and says so. **Regenerate** drafts from the draft as it is now and keeps every field the author wrote (D126).
 - **Test with synthetic players** renders `CalibrateSlot` from `src/author/calibrate/index.ts` when it exists (props in `src/author/ui/workspace/tabs/Calibrate.tsx`), else a coming soon panel.
 - **Not yet in the engine config** (kept in the draft for the server's AI character): voice sliders, motivation, reactions per style, topics, age, custom fields, an event's lead flow. Publishing offline records the version and offers the configuration to download; a server publishes it.
 
@@ -106,6 +106,7 @@ Base `VITE_GENIE_URL`. Schemas in `src/api/author.ts`; prompts the server must f
 |---|---|---|
 | `POST /author/turn` | `AuthorTurnRequest`: `{ brief, asked, answers }` | `AuthorTurnResponse`: `{ kind: 'question', brief, question, progress }` or `{ kind: 'lens', brief, recommendation, framework }` |
 | `POST /author/draft` | `AuthorDraftRequest`: `{ brief, leadership_lens }` (the locked Leadership Lens module) | `AuthorDraftResponse`: `{ storyline, preview }` |
+| `POST /author/edit` | `AuthorEditRequest` (`src/api/authorEdit.ts`): `{ instruction, tab, view: { context, fields } }`, the whitelisted fields Kora may change | `AuthorEditResponse`: `{ kind: 'patch', reply, ops: [{ path, value }] }` or `{ kind: 'reply', reply, options }`; the app checks the patch against the draft (D127) and falls back to its rules on 404, 501, 502 or after 30 seconds |
 
 The client checks every draft against the storyline schema and the copy guard (`src/author/copyGuard.ts`) and uses the templates when either fails. JSON Schemas: `docs/schemas/author-*.json`.
 
