@@ -77,6 +77,12 @@ describe('reading a detailed brief (D146)', () => {
     expect(none.brief.teamSize).toBe(10);
   });
 
+  it('asked for the challenge, a long answer is the challenge in the author\'s words', () => {
+    const text = 'Deals stall at negotiation. New reps burn out in the first quarter. Managers firefight instead of coaching, and nobody owns the pipeline review.';
+    expect(applyAnswer(blank(), 'challenge', text).brief.challenge).toBe(text);
+    expect(applyAnswer(blank(), 'challenge', MERGER_BRIEF).brief.challenge).toMatch(/^Keeping service levels and morale up/);
+  });
+
   it('splits sentences without breaking on abbreviations', () => {
     expect(sentences('We sell to U.S. clients, e.g. banks. The team is new.\nTone: warm')).toEqual(['We sell to U.S. clients, e.g. banks.', 'The team is new.', 'Tone: warm']);
   });

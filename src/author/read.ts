@@ -188,12 +188,19 @@ export function teamSizesIn(text: string): number[] {
 const SIZE_CHOICES: ChipOf[] = [6, 8, 10, 12].map(n => ({ label: String(n), value: String(n) }));
 export const SIZE_PROMPT = 'How many people? iLead teams have 6 to 12. Pick 6 for a small team, 8 or 10 for a typical one, or 12 for a large one.';
 
-function challengeIn(all: string[]): string | undefined {
+/** The challenge a sentence names as one: "The challenge is ...", "Challenge: ...". */
+export function namedChallenge(all: string[]): string | undefined {
   for (const s of all) {
     const labelled = s.match(/^\s*(?:the\s+)?(?:main\s+|key\s+|business\s+|big(?:gest)?\s+)?challenge\s*(?:is|:|=|will\s+be|we\s+face\s+is)\s*(?:that\s+)?(.+)$/i)
       ?? s.match(/\bthe\s+(?:main\s+|key\s+|business\s+|big(?:gest)?\s+)?challenge\s+(?:is|will\s+be)\s+(?:that\s+)?(.+)$/i);
     if (labelled) return cap(tidy(labelled[1])).slice(0, 400);
   }
+  return undefined;
+}
+
+function challengeIn(all: string[]): string | undefined {
+  const named = namedChallenge(all);
+  if (named) return named;
   const s = all.find(x => /\b(?:struggl\w*|challenge|pressure|facing|problem|need\s+to|must|have\s+to|difficult|stall\w*|miss\w*\s+(?:targets?|deadlines?))\b/i.test(x)
     && !/\b(?:stakeholders?|objectives?|goals?|dilemmas?|tone|framework|participants)\b/i.test(x));
   return s ? tidy(s).slice(0, 400) : undefined;

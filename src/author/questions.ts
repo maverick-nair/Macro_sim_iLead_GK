@@ -2,7 +2,7 @@ import type { Brief, Clarify, Question, QuestionId } from '../api/author';
 import { QUESTION_IDS } from '../api/author';
 import { CHALLENGES, DEFAULT_PROCESS, DURATION_MODES, INDUSTRIES, OTHER_CHALLENGES, parseStages, PROCESSES, regionOf, REGIONS, ROLE_LEVELS, TONE_LABELS } from './context';
 import { inferBrief, parseTeamSize } from './extract';
-import { fillBrief, frameworkOf, industryClarify, industryOfText, inlineFramework, isLong, levelOnly, readBrief, sentences, SIZE_PROMPT, sizeClarify, tookFrom, type TookItem } from './read';
+import { fillBrief, frameworkOf, industryClarify, industryOfText, inlineFramework, isLong, levelOnly, namedChallenge, readBrief, sentences, SIZE_PROMPT, sizeClarify, tookFrom, type TookItem } from './read';
 
 /**
  * The author chat's question policy (docs/genie/prompts/author-chat.md), as rules: ten core questions
@@ -182,7 +182,8 @@ function applyLong(brief: Brief, id: QuestionId, text: string): Applied {
   const r = readBrief(text, brief);
   let next = fillBrief(brief, r.fields);
   // The question asked takes the part of the answer that is its own; a challenge may be the whole answer.
-  if (id === 'challenge' && !next.challenge) next = { ...next, challenge: text.slice(0, 4000) };
+  // Asked for the challenge, a long answer is the challenge in the author's words, unless it names one ("The challenge is ...").
+  if (id === 'challenge' && !brief.challenge) next = { ...next, challenge: namedChallenge(sentences(text)) ?? text.slice(0, 4000) };
   if (id === 'tone' && !next.tone) next = { ...next, tone: pick(text, { professional: 'Professional', warm: 'Warm', direct: 'Direct' }) ?? 'professional' };
   if (id === 'process' && !next.process) { const s = parseStages(text); if (s) next = { ...next, process: s }; }
   // The question's own reading when the brief rules found nothing: "Ten. Eight account managers ..." is ten people.
