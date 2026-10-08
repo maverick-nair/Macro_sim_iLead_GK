@@ -4,7 +4,7 @@ import { freshKey } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
 import { BUTTON, CARD, CardHead, Field, MarkOf, Select, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
-import { useRegenerate } from './regenerate';
+import { useRegenerate, useRegenerateItem } from './regenerate';
 
 const KIND: Record<EventDraft['kind'], { label: string; bar: string; text: string }> = {
   impact: { label: 'Impact', bar: 'bg-author-event-impact', text: 'text-author-decline' },
@@ -25,6 +25,8 @@ export default function Events() {
   const d = useAuthor(s => s.draft);
   const edit = useAuthor(s => s.edit);
   const regen = useRegenerate('events');
+  const regenItem = useRegenerateItem();
+  const [itemNote, setItemNote] = useState<{ key: string; text: string } | null>(null);
   const [selected, setSelected] = useState<string>(d.events.find(e => e.timing === 'fixed')?.key ?? d.events[0]?.key ?? '');
   const [dragging, setDragging] = useState<string | null>(null);
   const e = d.events.find(x => x.key === selected);
@@ -83,9 +85,10 @@ export default function Events() {
           <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="event-title">
             <CardHead id="event-title" title={e.title}>
               <MarkOf path={`events.${e.key}`} />
-              <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { const t = x.events.find(y => y.key === e.key); if (t) t.body = `${t.body.replace(/\s*The team is watching how you respond\.$/, '')} The team is watching how you respond.`.trim(); }, `events.${e.key}`, 'ai')}>Regenerate</button>
+              <button type="button" className={BUTTON.secondary} onClick={() => setItemNote({ key: e.key, text: regenItem({ event: e.key }) })}>Regenerate<span className="sr-only"> {e.title}</span></button>
               <button type="button" className={BUTTON.secondary} onClick={() => { edit(x => { x.events = x.events.filter(y => y.key !== e.key); }); setSelected(d.events.find(x => x.key !== e.key)?.key ?? ''); }}>Remove</button>
             </CardHead>
+            {itemNote?.key === e.key && <p role="status" className="m-0 text-13 text-author-body">{itemNote.text}</p>}
             <Field label="Title">{id => <TextInput id={id} value={e.title} onChange={ev => set({ title: ev.target.value })} />}</Field>
             <div className="grid grid-cols-4 gap-3 max-[1180px]:grid-cols-2">
               <Field label="Kind">{id => <Select id={id} value={e.kind} onChange={ev => set({ kind: ev.target.value as EventDraft['kind'] })}>{EVENT_KINDS.map(k => <option key={k} value={k}>{KIND[k].label}</option>)}</Select>}</Field>

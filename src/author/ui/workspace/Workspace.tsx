@@ -24,8 +24,8 @@ const Tabs = {
   publish: lazy(() => import('./tabs/Publish'))
 } satisfies Record<Tab, unknown>;
 
-/** Tabs that show Ask Kora beside them; the lens, actions and publish pages use the full width. */
-const WITH_KORA: Tab[] = ['overview', 'brief', 'story', 'process', 'team', 'events', 'scoring', 'brand', 'calibrate'];
+/** Tabs that show Ask Kora beside them (the lens and actions too, where decisions are designed, D125); publish uses the full width. */
+const WITH_KORA: Tab[] = ['overview', 'brief', 'story', 'process', 'team', 'lens', 'actions', 'events', 'scoring', 'brand', 'calibrate'];
 
 /** A tab's heading row: the title, one line on what it holds, and its actions. */
 export function TabHead({ title, children, actions }: { title: string; children?: ReactNode; actions?: ReactNode }) {

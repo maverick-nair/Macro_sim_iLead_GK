@@ -28,7 +28,7 @@ export default function Brief() {
             <TextArea id={id} rows={3} tone={toneOf(d.marks['brief.challenge'], !b.challenge.trim())} value={b.challenge}
               onChange={e => edit(x => {
                 x.brief.challenge = e.target.value;
-                if (!x.suggestions.some(s => s.id === 'brief.challenge' && !s.done)) x.suggestions.push({ id: 'brief.challenge', tab: 'brief', text: 'You changed the challenge. Update the events and two characters to match?', action: 'Update them', done: false });
+                if (!x.suggestions.some(s => s.id === 'brief.challenge' && !s.done)) x.suggestions.push({ id: 'brief.challenge', tab: 'brief', text: 'You changed the challenge. Draft the events and the welcome screens again from it? What you wrote stays.', action: 'Draft them again', done: false });
               }, 'brief.challenge')} />
           )}</Field>
           <Field label="Purpose" required>{() => (
