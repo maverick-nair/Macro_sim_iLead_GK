@@ -5,10 +5,10 @@
   "properties": {
     "personas": {
       "default": {
-        "beginner": 5,
-        "developing": 5,
-        "proficient": 5,
-        "expert": 5
+        "beginner": 10,
+        "developing": 10,
+        "proficient": 10,
+        "expert": 10
       },
       "type": "object",
       "properties": {
@@ -28,6 +28,26 @@
           "maximum": 25
         },
         "expert": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        },
+        "riskTaker": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        },
+        "conservative": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        },
+        "peopleFirst": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 25
+        },
+        "businessFirst": {
           "type": "integer",
           "minimum": 0,
           "maximum": 25
@@ -64,6 +84,22 @@
           "maxLength": 600
         },
         "expert": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "riskTaker": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "conservative": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "peopleFirst": {
+          "type": "string",
+          "maxLength": 600
+        },
+        "businessFirst": {
           "type": "string",
           "maxLength": 600
         }

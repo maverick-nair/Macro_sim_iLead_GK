@@ -3,6 +3,9 @@ import raw from '../../../engine/storylines/sales-elevator.json';
 import type { Copy } from '../../../engine/copy';
 import type { Evaluation } from '../../../engine/sim/types';
 import { copyViolations } from '../../../i18n/copy';
+import { toStoryline } from '../../model/export';
+import { freshDraft } from '../../model/store';
+import { changedActions, playsBundledActions } from './bundled';
 import { explain } from './explain';
 import { configHash } from './hash';
 import { calibrationPublishCheck } from './publish';
@@ -33,9 +36,15 @@ describe('a calibration run', () => {
     const { results, playthroughs } = await runCalibration(raw, { personas: { beginner: 2, developing: 2, proficient: 2, expert: 2 }, seed: 3 }, { ranOn: 'cli', onProgress: (d, t) => progress.push([d, t]), yieldEvery: async () => undefined });
     expect(CalibrationResults.parse(results)).toBeTruthy();
     expect(results.runs).toHaveLength(8);
-    // Two seeds for each style and each action, and two each with every conversation Strong, then Weak (D132).
-    expect(results.probes).toHaveLength(2 * (4 + raw.actions.length) + 4);
+    // Three seeds for each style alone and with team energy, two for each action, as many actions as possible,
+    // reading without acting and six pairs of actions (D149), and two each with every conversation Strong, then Weak (D132).
+    const kinds = (k: string) => results.probes.filter(p => p.probe?.kind === k).length;
+    expect([kinds('style'), kinds('action'), kinds('energize'), kinds('busy'), kinds('idle'), kinds('pair'), kinds('band')]).toEqual([12, 2 * raw.actions.length, 12, 2, 2, 12, 4]);
     expect(results.probes.filter(p => p.probe?.kind === 'band').map(p => p.probe!.key)).toEqual(['strong', 'strong', 'weak', 'weak']);
+    expect(results.probes.filter(p => p.probe?.kind === 'pair').every(p => p.persona === 'expert' && p.probe!.key.split('+').length === 2)).toBe(true);
+    // Each run says where its points came from and how often its words were read as meant.
+    expect(results.runs.every(r => r.pillars && r.styleRead && r.styleRead.read <= r.styleRead.meant)).toBe(true);
+    expect(results.personas.every(p => p.sd !== undefined && p.pillars && p.styleRead !== null)).toBe(true);
     // Two runs a persona is a small sample: since people dynamics (D135), swapping roles can go unused in it (a warning, never a failure).
     expect(results.checks.find(c => c.key === 'unused')).toMatchObject({ status: expect.stringMatching(/^(pass|warn)$/), detail: '"Hire member" and "Let go" are rare by design and not counted.' });
     expect(progress[0]).toEqual([0, 8 + results.probes.length]);
@@ -89,9 +98,9 @@ describe('a calibration run', () => {
     const extra = Array.from({ length: 60 }, (_, i) => ({ ...raw.actions[0], key: `extra_${i}` }));
     const config = parseDraft({ ...raw, actions: [...raw.actions, ...extra] });
     const s = CalibrationSettings.parse({ personas: { beginner: 25, developing: 25, proficient: 25, expert: 25 } });
-    const { runs, probes } = checkedPlan(config, s);
+    const { runs, probes, pairs, bands } = checkedPlan(config, s);
     expect(probes.filter(p => p.probe.kind === 'action')).toHaveLength(2 * MAX_PROBE_ACTIONS);
-    expect(runs.length + probes.length).toBeLessThanOrEqual(MAX_PLAYTHROUGHS);
+    expect(runs.length + probes.length + pairs + bands.length).toBeLessThanOrEqual(MAX_PLAYTHROUGHS);
   });
 
   it('plans seeds per persona, so every persona meets the same team', () => {
@@ -131,6 +140,47 @@ describe('checks that catch broken configs (D132)', () => {
     expect((await statusOf(broken(c => { c.money.target = c.money.target / 10; }), false)).target).toBe('fail');
     expect((await statusOf(broken(c => { c.money.target = 1e12; }), false)).target).toBe('fail');
   }, 30_000);
+});
+
+describe('checks that catch broken configs (D149, D150)', () => {
+  const run = async (draft: unknown, personas: Record<string, number> = { expert: 2 }) => (await runCalibration(draft, { personas, seed: 1 }, { ranOn: 'cli', yieldEvery: async () => undefined })).results;
+  const check = (r: Awaited<ReturnType<typeof run>>, key: string) => r.checks.find(c => c.key === key);
+
+  it('team energy that dominates fails the combined check: a routine beats judgement', async () => {
+    const energize = broken(c => {
+      c.id = 'energize_dominance';
+      for (const o of c.actions.find(a => a.key === 'energize')!.options) { o.effects = { m0: [8, 25, 30], m1: [8, 25, 30], m2: [8, 25, 30] }; o.cooldownDays = 0; }
+    });
+    const r = await run(energize);
+    expect(check(r, 'combined')).toMatchObject({ status: 'fail' });
+    expect(check(r, 'combined')?.title).toMatch(/^A routine wins over judgement: .*(Energize the team|Team energy every week)/);
+  }, 60_000);
+
+  it('a storyline where reading people alone reaches Gold warns: do nothing after diagnosis', async () => {
+    const heavy = broken(c => { c.id = 'do_nothing_gold'; c.gamification.weights = { business: 0.1, people: 0.1, leadership: 0.8 }; });
+    expect(check(await run(heavy), 'idle')).toMatchObject({ status: 'warn', title: expect.stringMatching(/^Reading people right without taking any action reaches Gold/) });
+    // People weighed most: only actions grow people. Since people dynamics and the recalibrated funnel (D135), reading
+    // without acting reaches the target in revenue, so a weighting with Business at 0.45 no longer keeps it under Gold.
+    const light = broken(c => { c.id = 'acting_counts'; c.gamification.weights = { business: 0.1, people: 0.8, leadership: 0.1 }; });
+    expect(check(await run(light), 'idle')).toMatchObject({ status: 'pass' });
+  }, 60_000);
+
+  it('Sales Elevator: the combined finding is advice on the bundled actions, and a failure once an author changes what they do', async () => {
+    const r = await run(raw, { expert: 3, peopleFirst: 2 });
+    expect(check(r, 'combined')).toMatchObject({ status: 'warn', detail: expect.stringMatching(/^A finding in the bundled Sales Elevator's calibrated actions/) });
+    // People first beats the Expert on score and revenue: no trade-off between people and results.
+    expect(check(r, 'tradeOff')).toMatchObject({ status: 'warn' });
+    // A draft keeps the bundled actions under its own id and wording: still advice.
+    expect(playsBundledActions(parseDraft({ ...raw, id: 'draft_acme', actions: raw.actions.map(a => ({ ...a, name: `${a.name} now` })) }))).toBe(true);
+    // A fresh /author draft plays them too (its actions switched off do not count), until the author changes one.
+    const fresh = parseDraft(toStoryline(freshDraft()).storyline);
+    expect(changedActions(fresh)).toEqual([]);
+    expect(playsBundledActions(fresh)).toBe(true);
+    const changed = broken(c => { c.id = 'draft_sales_copy'; c.actions.find(a => a.key === 'reward')!.cost = 2; });
+    expect(changedActions(changed)).toEqual(['reward']);
+    expect(playsBundledActions(changed)).toBe(false);
+    expect(check(await run(changed, { expert: 3 }), 'combined')).toMatchObject({ status: 'fail' });
+  }, 60_000);
 });
 
 describe('the publish check', () => {

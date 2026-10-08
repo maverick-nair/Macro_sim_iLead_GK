@@ -1,4 +1,8 @@
-import { PERSONA_KEYS, type CalibrationResults, type Check, type PersonaKey, type PersonaStats, type RunResult } from './schema';
+import { archetypeChecks } from './archetypes';
+import { knownFinding } from './findings';
+import { meanPillars, mechanicsChecks, sd } from './mechanics';
+import { isLevelKey, LEVEL_KEYS, PERSONA_KEYS, type CalibrationResults, type Check, type LevelKey, type PersonaKey, type PersonaStats, type RunResult } from './schema';
+import { strategyChecks } from './strategy';
 
 /**
  * From playthroughs to the author's results and checks (D113, D114). Pure functions: no engine, no I/O.
@@ -21,10 +25,22 @@ import { PERSONA_KEYS, type CalibrationResults, type Check, type PersonaKey, typ
  *                 Experts at least 80% of it (warn otherwise): a target trivially reachable, or out of reach
  *   choices       with choice events (D137): Beginner and Expert players end on different options, a distance of
  *                 0.2 or more between their choices (fail otherwise): a choice every level makes alike tests nothing
+ *   combined, idle         combined strategy probes (./strategy, D149)
+ *   archetypes, tradeOff   the four player types (./archetypes, D150)
+ *   mechanics, overlap     what drives the gaps between levels, and their spread (./mechanics, D149)
+ *
+ * The level checks read the four levels only; the player types have their own. A failure the bundled
+ * storyline is known to have is reported as advisory there (./findings).
  */
 
-export const NAMES: Record<PersonaKey, string> = { beginner: 'Beginner', developing: 'Developing', proficient: 'Proficient', expert: 'Expert' };
-export const LABELS: Record<PersonaKey, string> = { beginner: 'Low performer', developing: 'Average performer', proficient: 'High performer', expert: 'Exceptional performer' };
+export const NAMES: Record<PersonaKey, string> = {
+  beginner: 'Beginner', developing: 'Developing', proficient: 'Proficient', expert: 'Expert',
+  riskTaker: 'Risk taker', conservative: 'Conservative', peopleFirst: 'People first', businessFirst: 'Business first'
+};
+export const LABELS: Record<PersonaKey, string> = {
+  beginner: 'Low performer', developing: 'Average performer', proficient: 'High performer', expert: 'Exceptional performer',
+  riskTaker: 'Bold choices', conservative: 'Few, safe actions', peopleFirst: 'Morale and growth first', businessFirst: 'Results and revenue first'
+};
 
 export const THRESHOLDS = {
   expertTier: 0.8, beginnerTier: 0.1, skillsPass: 0.75, skillsWarn: 0.5, separation: 0.05, events: 0.8,
@@ -74,15 +90,15 @@ export function targetTierOf(tiers: Array<{ key: string; name: string; min: numb
  * for the Beginner and the Expert. On the default five levels: Beginner Novice or Developing, Developing
  * Developing or Proficient, Proficient Proficient or Advanced, Expert Advanced or Role Model.
  */
-export function expectedLevels(persona: PersonaKey, n: number): [number, number] {
-  const i = PERSONA_KEYS.indexOf(persona);
+export function expectedLevels(persona: LevelKey, n: number): [number, number] {
+  const i = LEVEL_KEYS.indexOf(persona);
   const x = (i * (n - 1)) / 3;
   let lo = Math.floor(x), hi = Math.ceil(x);
   if (lo === hi) { if (i < 2) hi = Math.min(n - 1, hi + 1); else lo = Math.max(0, lo - 1); }
   return [lo, hi];
 }
 
-const levelFits = (r: RunResult, n: number) => { const [lo, hi] = expectedLevels(r.persona, n); const l = r.level ?? 0; return l >= lo && l <= hi; };
+const levelFits = (r: RunResult, n: number) => { if (!isLevelKey(r.persona)) return false; const [lo, hi] = expectedLevels(r.persona, n); const l = r.level ?? 0; return l >= lo && l <= hi; };
 
 export function personaStats(persona: PersonaKey, runs: RunResult[], ctx: { tiers: Array<{ key: string; name: string; min: number }>; target: { min: number }; scale: string[] }): PersonaStats {
   const mine = runs.filter(r => r.persona === persona);
@@ -105,12 +121,21 @@ export function personaStats(persona: PersonaKey, runs: RunResult[], ctx: { tier
     share: range(mine.map(r => r.share)),
     beatTarget: mine.filter(r => r.share >= 1).length,
     level: { index: common, name: common === null ? 'Not rated' : ctx.scale[common] ?? String(common) },
-    agreement: mine.length ? mine.filter(r => levelFits(r, ctx.scale.length)).length / mine.length : 0,
+    agreement: !isLevelKey(persona) ? null : mine.length ? mine.filter(r => levelFits(r, ctx.scale.length)).length / mine.length : 0,
     adaptability: Math.round(mean(mine.map(r => r.adaptability)) * 10) / 10,
     bandScore: rated ? Math.round(((bands.strong * 3 + bands.adequate * 2 + bands.weak) / rated) * 100) / 100 : 0,
     bands,
-    concerns: Math.round(mean(mine.map(r => r.concerns.length)) * 10) / 10
+    concerns: Math.round(mean(mine.map(r => r.concerns.length)) * 10) / 10,
+    sd: Math.round(sd(mine.map(r => r.score)) * 10) / 10,
+    pillars: meanPillars(mine),
+    styleRead: styleRead(mine)
   };
+}
+
+/** Evaluator agreement (D151): of the conversations in a style the player meant, the share the evaluator read as that style. */
+function styleRead(runs: RunResult[]): number | null {
+  const meant = runs.reduce((n, r) => n + (r.styleRead?.meant ?? 0), 0);
+  return meant ? Math.round((runs.reduce((n, r) => n + (r.styleRead?.read ?? 0), 0) / meant) * 1000) / 1000 : null;
 }
 
 export interface CheckContext {
@@ -127,7 +152,7 @@ export interface CheckContext {
 
 export function checks(c: CheckContext): Check[] {
   const out: Check[] = [];
-  const present = c.personas.filter(p => p.runs > 0);
+  const present = c.personas.filter(p => p.runs > 0 && isLevelKey(p.persona));
   const stat = (k: PersonaKey) => present.find(p => p.persona === k);
   const target = c.target.name;
 
@@ -159,9 +184,9 @@ export function checks(c: CheckContext): Check[] {
   // Skill ratings match each level.
   const rated = present.reduce((n, p) => n + p.runs, 0);
   if (rated) {
-    const agree = present.reduce((n, p) => n + p.agreement * p.runs, 0) / rated;
-    const off = present.filter(p => p.agreement < THRESHOLDS.skillsPass).map(p => {
-      const [lo, hi] = expectedLevels(p.persona, c.scale.length);
+    const agree = present.reduce((n, p) => n + (p.agreement ?? 0) * p.runs, 0) / rated;
+    const off = present.filter(p => (p.agreement ?? 0) < THRESHOLDS.skillsPass).map(p => {
+      const [lo, hi] = expectedLevels(p.persona as LevelKey, c.scale.length);
       return `${NAMES[p.persona]} players were rated ${p.level.name} most often (expected ${c.scale[lo]}${hi !== lo ? ` or ${c.scale[hi]}` : ''})`;
     });
     const status = agree >= THRESHOLDS.skillsPass ? 'pass' : agree >= THRESHOLDS.skillsWarn ? 'warn' : 'fail';
@@ -187,10 +212,10 @@ export function checks(c: CheckContext): Check[] {
 
   const proficient = stat('proficient');
 
-  // Dominant strategies.
+  // Dominant strategies: one style for everyone, or one action every day (D114). Combined ones are ./strategy's.
   if (c.probesRan && c.probes.length) {
     const groups = new Map<string, RunResult[]>();
-    for (const p of c.probes) if (p.probe && p.probe.kind !== 'band') groups.set(`${p.probe.kind}:${p.probe.key}`, [...(groups.get(`${p.probe.kind}:${p.probe.key}`) ?? []), p]);
+    for (const p of c.probes) if (p.probe && (p.probe.kind === 'style' || p.probe.kind === 'action')) groups.set(`${p.probe.kind}:${p.probe.key}`, [...(groups.get(`${p.probe.kind}:${p.probe.key}`) ?? []), p]);
     const nameOf = (kind: string, key: string) => (kind === 'style' ? c.styles.find(s => s.key === key)?.name : c.actions.find(a => a.key === key)?.name) ?? key;
     const say = (kind: string, key: string) => (kind === 'style' ? `Leading everyone as ${nameOf(kind, key)}` : `Spending every day on ${nameOf(kind, key)}`);
       const winners: string[] = [], close: string[] = [];
@@ -276,6 +301,10 @@ export function checks(c: CheckContext): Check[] {
       ? { key: 'events', status: 'pass', title: `Expert players answered ${handled} of ${expected} events that call for an answer`, detail: null, fix: null }
       : { key: 'events', status: 'warn', title: `Expert players answered only ${handled} of ${expected} events that call for an answer`, detail: null, fix: 'Check each event\'s expected response: the action it asks for must be open, affordable and within the conversation limit in its window.' });
   }
+
+  out.push(...strategyChecks({ probes: c.probes, probesRan: c.probesRan, expert, target: c.target, styles: c.styles, actions: c.actions }));
+  out.push(...archetypeChecks({ personas: c.personas, runs: c.runs, scoreMax: c.scoreMax }));
+  out.push(...mechanicsChecks(present));
   return out;
 }
 
@@ -294,6 +323,8 @@ export interface AggregateFacts {
   players: CalibrationResults['players'];
   createdAt: string;
   durationMs: number;
+  /** The storyline plays the bundled Sales Elevator's calibrated actions: its known findings are advice (./findings). */
+  bundled?: boolean;
 }
 
 /** Every persona's numbers and the checks, from the playthroughs and probes. */
@@ -305,7 +336,7 @@ export function aggregate(runs: RunResult[], probes: RunResult[], f: AggregateFa
   return {
     version: 1, storyline: f.storyline, configHash: f.configHash, lens: f.lens, scale: f.scale, money: f.money, scoreMax: f.scoreMax, tiers: f.tiers, targetTier: target,
     personas,
-    checks: checks({ personas, runs, probes, probesRan: f.settings.probes, target, scale: f.scale, scoreMax: f.scoreMax, actions: f.actions, styles: f.lens.styles }),
+    checks: checks({ personas, runs, probes, probesRan: f.settings.probes, target, scale: f.scale, scoreMax: f.scoreMax, actions: f.actions, styles: f.lens.styles }).map(ch => knownFinding(!!f.bundled, ch)),
     runs, probes, concernsByPerson, actions: f.actions, settings: f.settings, ranOn: f.ranOn, players: f.players, createdAt: f.createdAt, durationMs: f.durationMs
   };
 }

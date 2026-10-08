@@ -2,10 +2,23 @@ import type { StorylineConfig } from '../../../engine/config';
 import { fitOf } from '../../../engine/lens';
 import { UNTAGGED } from '../../../engine/sim/live';
 import type { SyntheticRun } from '../../../engine/sim/synthetic';
+import { probeKey } from '../../../engine/sim/syntheticProbes';
 import { explain } from './explain';
 import type { Playthrough, RunResult } from './schema';
 
 /** What the aggregation and the playthrough view read from one synthetic run. Pure. */
+
+/** A conversation whose style counts: one person, a tagged format, not a reply or a briefing. */
+const isTagged = (c: SyntheticRun['conversations'][number]) => c.memberIds.length === 1 && !UNTAGGED.has(c.format) && c.actionKey !== 'reply' && c.actionKey !== 'sponsor';
+
+/** The Leadership Score in points from each pillar and the streak bonus (D149): they add up to the score. */
+export function pillarsOf(run: SyntheticRun, config: StorylineConfig): NonNullable<RunResult['pillars']> {
+  const g = config.gamification;
+  const per = (g.scale - g.streak.cap) / 100;
+  const s = run.view.score;
+  const pts = (w: number, x: number) => Math.round(per * w * x * 10) / 10;
+  return { business: pts(g.weights.business, s.business), people: pts(g.weights.people, s.people), leadership: pts(g.weights.leadership, s.leadership), streak: s.bonus, capped: s.business >= 100 };
+}
 
 export function runResultOf(run: SyntheticRun, index: number, config: StorylineConfig): RunResult {
   const s = run.summary;
@@ -14,9 +27,10 @@ export function runResultOf(run: SyntheticRun, index: number, config: StorylineC
   const bands = { strong: 0, adequate: 0, weak: 0, harmful: 0 };
   for (const c of run.conversations) if (c.evaluation) bands[c.evaluation.band]++;
   const weeks = run.weeks.flatMap(w => w.events.filter(e => e.expected));
+  const meant = run.conversations.filter(c => isTagged(c) && c.intent && c.evaluation);
   return {
     persona: run.persona, index, seed: run.seed,
-    probe: run.probe ? { kind: run.probe.kind, key: run.probe.kind === 'style' ? run.probe.style : run.probe.action } : null,
+    probe: run.probe ? { kind: run.probe.kind, key: probeKey(run.probe) } : null,
     score: s.score.total, max: s.score.max,
     tier: { key: tiers[tierIndex].key, name: tiers[tierIndex].name, index: tierIndex },
     share: Math.round((s.objectives.revenue / s.objectives.target) * 1000) / 1000,
@@ -27,7 +41,9 @@ export function runResultOf(run: SyntheticRun, index: number, config: StorylineC
     concerns: [...new Set(run.conversations.filter(c => c.concernSurfaced).flatMap(c => c.memberIds))],
     actions: Object.fromEntries(s.actions.map(a => [a.key, a.frequency])),
     events: { expected: weeks.length, handled: weeks.filter(e => e.handled).length },
-    choices: run.view.choices.map(c => ({ event: c.eventKey, option: c.option, by: c.by }))
+    choices: run.view.choices.map(c => ({ event: c.eventKey, option: c.option, by: c.by })),
+    pillars: pillarsOf(run, config),
+    styleRead: { meant: meant.length, read: meant.filter(c => c.evaluation!.styleUsed === c.intent).length }
   };
 }
 
@@ -46,7 +62,7 @@ export function playthroughOf(run: SyntheticRun, index: number, config: Storylin
     })),
     conversations: run.conversations.map((c, i) => {
       const e = c.evaluation;
-      const tagged = c.memberIds.length === 1 && !UNTAGGED.has(c.format) && c.actionKey !== 'reply' && c.actionKey !== 'sponsor';
+      const tagged = isTagged(c);
       const shown = e && tagged ? e.styleUsed : null;
       const fit = shown && c.need ? fitOf(config.lens, shown, c.need) === 0 : null;
       const first = c.names[0]?.split(' ')[0] ?? null;

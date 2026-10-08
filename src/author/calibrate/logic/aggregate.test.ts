@@ -11,7 +11,7 @@ const tierOf = (score: number) => { const i = TIERS.findIndex(t => score >= t.mi
 let n = 0;
 function run(persona: PersonaKey, score: number, o: Partial<RunResult> = {}): RunResult {
   return {
-    persona, index: n++, seed: 1, probe: null, score, max: 1000, tier: tierOf(score), share: score / 800, level: { beginner: 0, developing: 1, proficient: 3, expert: 4 }[persona],
+    persona, index: n++, seed: 1, probe: null, score, max: 1000, tier: tierOf(score), share: score / 800, level: ({ beginner: 0, developing: 1, proficient: 3, expert: 4 } as Record<string, number>)[persona] ?? 2,
     skills: [], adaptability: score / 10, bands: { strong: Math.round(score / 100), adequate: 2, weak: Math.round(10 - score / 100), harmful: 0 },
     concerns: persona === 'expert' ? ['kent'] : [], actions: { f2f: 2, coach: 1, assess: 0 }, events: { expected: 4, handled: persona === 'expert' ? 4 : 1 }, ...o
   };
@@ -43,12 +43,12 @@ describe('calibration aggregation', () => {
   it('passes a well calibrated storyline', () => {
     const r = aggregate(good(), probes([['style', 'D', 500], ['action', 'coach', 450]]), facts);
     expect(CalibrationResults.parse(r)).toBeTruthy();
-    expect(status(r)).toEqual({ ordered: 'pass', expertTier: 'pass', beginnerTier: 'pass', skills: 'pass', conversations: 'pass', separation: 'pass', dominant: 'pass', unused: 'warn', styleEffect: 'pass', target: 'pass', events: 'pass' });
+    expect(status(r)).toEqual({ ordered: 'pass', expertTier: 'pass', beginnerTier: 'pass', skills: 'pass', conversations: 'pass', separation: 'pass', dominant: 'pass', unused: 'warn', styleEffect: 'pass', target: 'pass', events: 'pass', overlap: 'pass' });
     expect(r.checks.find(c => c.key === 'unused')?.title).toBe('Nobody used "Assess member": it may be hard to find or not worth the time');
     expect(r.checks.find(c => c.key === 'beginnerTier')?.title).toBe('Beginner players never reach Gold');
     expect(r.checks.find(c => c.key === 'expertTier')?.title).toBe('Expert players reach Gold in 3 of 3 runs');
     expect(r.concernsByPerson).toEqual({ expert: { kent: 3 } });
-    expect(checkSummary(r.checks)).toBe('10 passed, 1 to look at');
+    expect(checkSummary(r.checks)).toBe('11 passed, 1 to look at');
   });
 
   it('fails when scores do not rise, Experts miss the tier or Beginners reach it', () => {
@@ -134,5 +134,24 @@ describe('calibration aggregation', () => {
     expect(huge).toMatchObject({ status: 'fail', title: 'The revenue target is out of reach: Expert players reach only 0% of it' });
     expect(aggregate(shares(0.4, 0.7), [], facts).checks.find(c => c.key === 'target')?.status).toBe('warn');
     expect(aggregate(shares(0.6, 1.4), [], facts).checks.find(c => c.key === 'target')?.status).toBe('pass');
+  });
+
+  it('reports each level\'s spread, points by pillar and evaluator agreement (D149, D151)', () => {
+    const pillars = (business: number, streak: number, capped = false) => ({ pillars: { business, people: 150, leadership: 250, streak, capped }, styleRead: { meant: 10, read: 8 } });
+    const runs = [run('expert', 880, pillars(270, 100, true)), run('expert', 920, pillars(250, 100, false)), run('beginner', 300, { styleRead: { meant: 4, read: 1 } })];
+    const s = personaStats('expert', runs, { tiers: TIERS, target: TIERS[1], scale: SCALE });
+    expect(s.sd).toBe(20);
+    expect(s.pillars).toEqual({ business: 260, people: 150, leadership: 250, streak: 100, capped: 0.5 });
+    expect(s.styleRead).toBe(0.8);
+    expect(personaStats('beginner', runs, { tiers: TIERS, target: TIERS[1], scale: SCALE })).toMatchObject({ styleRead: 0.25, pillars: undefined, sd: 0 });
+    // A player type has no level to fit.
+    expect(personaStats('peopleFirst', [run('peopleFirst', 900)], { tiers: TIERS, target: TIERS[1], scale: SCALE }).agreement).toBeNull();
+  });
+
+  it('keeps the level checks to the levels: a player type never breaks the order or the separation (D150)', () => {
+    const r = aggregate([...good(), run('conservative', 100), run('riskTaker', 990)], [], facts);
+    expect(r.personas.map(p => p.persona)).toEqual(['beginner', 'developing', 'proficient', 'expert', 'riskTaker', 'conservative']);
+    expect(status(r)).toMatchObject({ ordered: 'pass', separation: 'pass', skills: 'pass', conversations: 'pass' });
+    expect(CalibrationResults.parse(r)).toBeTruthy();
   });
 });

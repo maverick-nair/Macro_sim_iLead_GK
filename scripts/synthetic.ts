@@ -1,9 +1,11 @@
 /**
- * Synthetic players on the bundled storylines (D117, docs/CALIBRATION-SYNTHETIC.md): the four personas
- * play each storyline, conversations included, and the calibration checks are printed.
+ * Synthetic players on the bundled storylines (D117, D149 to D151, docs/CALIBRATION-SYNTHETIC.md): the four
+ * levels play each storyline, conversations included, with the strategy probes, and the calibration checks
+ * are printed with each level's spread, its points by pillar and the evaluator's agreement.
  *
- *   npm run synthetic                              every storyline in src/engine/storylines, 5 runs a persona
- *   npm run synthetic -- sales-elevator --runs 10  one storyline, 10 runs a persona
+ *   npm run synthetic                              every storyline in src/engine/storylines, 10 runs a level
+ *   npm run synthetic -- sales-elevator --runs 5   one storyline, 5 runs a level
+ *   npm run synthetic -- --types                   also the four player types (Risk taker, Conservative, People first, Business first)
  *   npm run synthetic -- --check                   exit 1 when a check fails (warnings do not fail)
  *   npm run synthetic -- --json out.json           also write the results
  *   npm run synthetic -- --no-probes --seed 7
@@ -13,8 +15,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { NAMES } from '../src/author/calibrate/logic/aggregate';
+import { describeProbe, probeGroups } from '../src/author/calibrate/logic/strategy';
 import { CalibrationError, runCalibration } from '../src/author/calibrate/logic/run';
-import type { CalibrationResults } from '../src/author/calibrate/logic/schema';
+import { ARCHETYPE_KEYS, DEFAULT_RUNS, LEVEL_KEYS, type CalibrationResults } from '../src/author/calibrate/logic/schema';
 import { wordEnglish } from '../src/i18n/engineCopyEn';
 
 const root = path.resolve(import.meta.dirname, '..');
@@ -22,7 +25,8 @@ const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(name);
 const value = (name: string) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : undefined; };
 const check = flag('--check');
-const runs = Number(value('--runs') ?? 5);
+const runs = Number(value('--runs') ?? DEFAULT_RUNS);
+const types = flag('--types');
 const seed = Number(value('--seed') ?? 1);
 const out = value('--json');
 const skip = new Set([value('--runs'), value('--seed'), value('--json')].filter(Boolean));
@@ -36,19 +40,31 @@ const mark = { pass: 'pass', warn: 'LOOK', fail: 'FAIL' } as const;
 function print(r: CalibrationResults, ms: number) {
   console.log(`\n${r.storyline.name} (${r.storyline.id}), ${r.lens.title}: ${r.runs.length} playthroughs and ${r.probes.length} probes in ${(ms / 1000).toFixed(1)} s`);
   console.log(`Target tier: ${r.targetTier.name} (${r.targetTier.min} points)\n`);
-  console.log('Player       Score range      Average  Tier       Revenue  Skills rated   Fits level  Conversations');
+  console.log('Player          Score range  SD   Average  Tier      Revenue  Skills rated  Fits level  Strong  Read as meant  Business People Leadership Streak');
   for (const p of r.personas) {
     const band = p.bands.strong + p.bands.adequate + p.bands.weak + p.bands.harmful;
+    const pl = p.pillars;
     console.log([
-      NAMES[p.persona].padEnd(12),
-      `${Math.round(p.score.min)} to ${Math.round(p.score.max)}`.padEnd(16),
+      NAMES[p.persona].padEnd(15),
+      `${Math.round(p.score.min)} to ${Math.round(p.score.max)}`.padEnd(12),
+      String(Math.round(p.sd ?? 0)).padEnd(4),
       String(Math.round(p.score.mean)).padEnd(8),
-      p.tier.name.padEnd(10),
+      p.tier.name.padEnd(9),
       pct(p.share.mean).padEnd(8),
-      p.level.name.padEnd(14),
-      pct(p.agreement).padEnd(11),
-      `${pct(p.bands.strong / Math.max(1, band))} Strong`
+      p.level.name.padEnd(13),
+      (p.agreement === null ? '' : pct(p.agreement)).padEnd(11),
+      pct(p.bands.strong / Math.max(1, band)).padEnd(7),
+      (p.styleRead === null || p.styleRead === undefined ? '' : pct(p.styleRead)).padEnd(14),
+      pl ? `${Math.round(pl.business)}${pl.capped >= 0.5 ? ' (capped)' : ''}`.padEnd(9) + String(Math.round(pl.people)).padEnd(7) + String(Math.round(pl.leadership)).padEnd(11) + Math.round(pl.streak) : ''
     ].join(' '));
+  }
+  if (r.probes.length) {
+    const best = (kinds: string[]) => probeGroups(r.probes, kinds).sort((a, b) => b.mean - a.mean)[0];
+    console.log('\nBest probes:');
+    for (const [label, kinds] of [['one style', ['style']], ['one action', ['action']], ['team energy and one style', ['energize']], ['as many actions as possible', ['busy']], ['a pair of actions', ['pair']], ['reading people, no action', ['idle']]] as const) {
+      const b = best([...kinds]);
+      if (b) console.log(`  ${label.padEnd(28)} ${String(Math.round(b.mean)).padStart(4)}  ${describeProbe(b.kind, b.key, { styles: r.lens.styles, actions: r.actions })}`);
+    }
   }
   console.log('');
   for (const c of r.checks) {
@@ -65,7 +81,8 @@ async function main() {
     const draft = JSON.parse(fs.readFileSync(file, 'utf8'));
     const t = performance.now();
     try {
-      const { results } = await runCalibration(draft, { personas: { beginner: runs, developing: runs, proficient: runs, expert: runs }, seed, probes: !flag('--no-probes') }, { ranOn: 'cli', word: wordEnglish, yieldEvery: async () => undefined });
+      const personas = Object.fromEntries([...LEVEL_KEYS, ...(types ? ARCHETYPE_KEYS : [])].map(k => [k, runs]));
+      const { results } = await runCalibration(draft, { personas, seed, probes: !flag('--no-probes') }, { ranOn: 'cli', word: wordEnglish, yieldEvery: async () => undefined });
       print(results, performance.now() - t);
       all.push(results);
       if (results.checks.some(c => c.status === 'fail')) failed = true;

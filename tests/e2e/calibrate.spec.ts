@@ -63,6 +63,47 @@ for (const theme of ['dark', 'light'] as const) {
   });
 }
 
+test('More player types: folded and off by default, then in the results beside the levels (D150)', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto('/author/calibrate?theme=light');
+  const TYPES = ['Risk taker', 'Conservative', 'People first', 'Business first'];
+  const more = page.locator('summary', { hasText: 'More player types' });
+  await expect(more).toBeVisible();
+  await expect(page.getByRole('switch', { name: 'Include Risk taker' })).toBeHidden();
+  await more.click();
+  for (const p of TYPES) {
+    await expect(page.getByRole('switch', { name: `Include ${p}` })).toHaveAttribute('aria-checked', 'false');
+    await expect(page.getByRole('textbox', { name: `How ${p} plays` })).toBeDisabled();
+  }
+  await axe(page, 'player types setup');
+
+  for (const p of TYPES) await page.getByRole('switch', { name: `Include ${p}` }).click();
+  await expect(more).toContainText('More player types, 4 on');
+  for (const id of ['beginner', 'developing', 'proficient', 'expert', 'riskTaker', 'conservative', 'peopleFirst', 'businessFirst']) await page.locator(`#cal-runs-${id}`).fill('1');
+  await page.getByRole('button', { name: 'Run 8 playthroughs' }).click();
+  await expect(page.getByRole('heading', { name: 'Results, 8 playthroughs' })).toBeVisible({ timeout: 60_000 });
+  const table = page.getByRole('table', { name: /Leadership Score, tier, revenue and skills rated for each level and player type/ });
+  for (const name of ['Beginner', 'Expert', ...TYPES]) await expect(table.getByRole('rowheader', { name, exact: true })).toBeVisible();
+  await expect(table.getByText('Player types')).toBeVisible();
+  // Each row's spread, the points by pillar and the evaluator agreement.
+  await expect(table.getByText(/, SD \d+$/).first()).toBeVisible();
+  const pillars = page.getByRole('table', { name: /Average points from Business, People, Leadership and the streak bonus/ });
+  await expect(pillars.getByRole('columnheader', { name: 'Words read as meant' })).toBeVisible();
+  await expect(pillars.getByRole('rowheader', { name: 'People first' })).toBeVisible();
+  // The player type checks, and the combined probes.
+  await expect(page.getByText(/^(Each player type plays out differently|Different ways of leading end up the same)/)).toBeVisible();
+  await expect(page.getByText(/^Putting people first (beats the Expert|trades off)/)).toBeVisible();
+  await expect(page.getByText(/^(A routine wins over judgement|No routine of repeated actions beats good leadership)/)).toBeVisible();
+  await axe(page, 'player types results');
+
+  await page.getByRole('button', { name: 'Watch a playthrough' }).click();
+  await page.getByRole('group', { name: 'Player' }).getByRole('button', { name: 'People first' }).click();
+  await expect(page.getByRole('group', { name: 'Player' }).getByRole('button', { name: 'People first' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('heading', { name: 'Week by week' })).toBeVisible();
+  await expect(page.getByText(/^Why (Strong|Adequate|Weak|Harmful): /)).toBeVisible();
+  await axe(page, 'player type playthrough');
+});
+
 test('shows what keeps a draft from playing, and the cancel', async ({ page }) => {
   await page.goto('/author/calibrate');
   await page.locator('#cal-runs-expert').fill('25');
