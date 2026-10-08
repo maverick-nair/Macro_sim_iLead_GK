@@ -2,7 +2,7 @@ import type { Brief, Clarify, Question, QuestionId } from '../api/author';
 import { QUESTION_IDS } from '../api/author';
 import { CHALLENGES, DEFAULT_PROCESS, DURATION_MODES, INDUSTRIES, OTHER_CHALLENGES, parseStages, PROCESSES, regionOf, REGIONS, ROLE_LEVELS, TONE_LABELS } from './context';
 import { inferBrief, parseTeamSize } from './extract';
-import { fillBrief, frameworkOf, industryClarify, industryOfText, inlineFramework, isLong, levelOnly, readBrief, SIZE_PROMPT, sizeClarify, tookFrom, type TookItem } from './read';
+import { fillBrief, frameworkOf, industryClarify, industryOfText, inlineFramework, isLong, levelOnly, readBrief, sentences, SIZE_PROMPT, sizeClarify, tookFrom, type TookItem } from './read';
 
 /**
  * The author chat's question policy (docs/genie/prompts/author-chat.md), as rules: ten core questions
@@ -185,6 +185,11 @@ function applyLong(brief: Brief, id: QuestionId, text: string): Applied {
   if (id === 'challenge' && !next.challenge) next = { ...next, challenge: text.slice(0, 4000) };
   if (id === 'tone' && !next.tone) next = { ...next, tone: pick(text, { professional: 'Professional', warm: 'Warm', direct: 'Direct' }) ?? 'professional' };
   if (id === 'process' && !next.process) { const s = parseStages(text); if (s) next = { ...next, process: s }; }
+  // The question's own reading when the brief rules found nothing: "Ten. Eight account managers ..." is ten people.
+  if (id === 'team_size' && next.teamSize === undefined && !r.clarify) { const n = parseTeamSize(text); if (n !== null) next = { ...next, teamSize: n }; }
+  if (id === 'duration' && !next.duration) { const d = pick(text, { full: 'Full', standard: 'Standard', lite: 'Lite' }); if (d) next = { ...next, duration: d }; }
+  if (id === 'language' && !next.region) { const reg = regionOf(text); if (reg) next = { ...next, region: reg.id, language: reg.label }; }
+  if (id === 'role_level' && !next.roleLevel) { const first = sentences(text)[0] ?? ''; if (first.length <= 100) next = { ...next, roleLevel: participantsOf(first.replace(/[.!]+$/, '')) }; }
   const clarify = r.clarify && !covered(next, r.clarify.id) ? r.clarify : undefined;
   return { brief: next, took: tookFrom(brief, next), answered: covered(next, id), ...(clarify ? { clarify } : null) };
 }

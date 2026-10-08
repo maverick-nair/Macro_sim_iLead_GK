@@ -1,12 +1,14 @@
 import { useMemo, type ReactNode } from 'react';
+import type { QuestionId } from '../../../api/author';
 import type { LensId } from '../../../engine/lens';
 import { DEFAULT_PROCESS } from '../../context';
 import { LENS_BY_ID } from '../../lenses';
 import type { Chat } from '../../model/draft';
 import { pressureOf } from '../../model/seed';
 import { buildModule } from '../../module';
+import { describe } from '../../questions';
 import { draftContext, draftStoryline } from '../../storyline';
-import { Avatar, Badge, CARD, type BadgeKind } from '../kit';
+import { Avatar, Badge, BUTTON, CARD, type BadgeKind } from '../kit';
 
 /**
  * "Your simulation so far" (docs/design/genie/ChatStart, D106): the draft filling in as the author
@@ -14,16 +16,21 @@ import { Avatar, Badge, CARD, type BadgeKind } from '../kit';
  * has generated from them; the deal value needs the author. Sections not reached yet say when they come.
  */
 
-function Row({ label, value, kind }: { label: string; value: ReactNode; kind: BadgeKind }) {
+/** One answer. With `onChange` it has a Change button: every answer can be changed later (D146). */
+function Row({ label, value, kind, onChange }: { label: string; value: ReactNode; kind: BadgeKind; onChange?: () => void }) {
   const tone = kind === 'need' ? 'border-author-need-line bg-author-need-field text-author-need' : kind === 'ai' ? 'border-author-ai-line bg-author-ai-field' : 'border-author-line-control bg-author-surface';
   return (
-    <div className="grid grid-cols-[7rem_minmax(0,1fr)_auto] items-center gap-3 border-b border-solid border-author-rule py-2 last:border-b-0">
+    <div className={`grid ${onChange ? 'grid-cols-[7rem_minmax(0,1fr)_auto_auto]' : 'grid-cols-[7rem_minmax(0,1fr)_auto]'} items-center gap-3 border-b border-solid border-author-rule py-2 last:border-b-0`}>
       <dt className="text-13 font-700 text-author-muted">{label}</dt>
-      <dd className={`m-0 truncate rounded-8 border border-solid px-2.5 py-1.5 text-13 ${tone}`}>{value}</dd>
+      <dd className={`m-0 truncate rounded-8 border border-solid px-2.5 py-1.5 text-13 ${tone}`} title={typeof value === 'string' ? value : undefined}>{value}</dd>
       <dd className="m-0"><Badge kind={kind} /></dd>
+      {onChange && <dd className="m-0"><button type="button" className={BUTTON.link} onClick={onChange}>Change<span className="sr-only"> {label}</span></button></dd>}
     </div>
   );
 }
+
+/** The answers beyond the first three, shown once given. */
+const MORE: Array<[QuestionId, string]> = [['client', 'Client'], ['team_size', 'Team size'], ['process', 'Work process'], ['duration', 'Run length'], ['language', 'Language'], ['framework', 'Framework'], ['tone', 'Tone']];
 
 function Section({ title, status, children, highlight = false }: { title: string; status: ReactNode; children?: ReactNode; highlight?: boolean }) {
   return (
@@ -37,7 +44,7 @@ function Section({ title, status, children, highlight = false }: { title: string
   );
 }
 
-export function SoFar({ chat }: { chat: Chat }) {
+export function SoFar({ chat, onChange }: { chat: Chat; onChange?: (id: QuestionId) => void }) {
   const b = chat.brief;
   const asked = new Set(chat.asked);
   const hasStory = !!(b.industry || b.client !== undefined);
@@ -65,9 +72,13 @@ export function SoFar({ chat }: { chat: Chat }) {
       {!chat.recommendation && (
         <Section title="Brief" status={briefDone ? <Badge kind="done" /> : <span className="text-author-muted">In progress</span>}>
           <dl className="m-0">
-            <Row label="Participants" value={b.roleLevel ?? 'Waiting for your answer'} kind={b.roleLevel ? 'you' : 'muted'} />
-            <Row label="Industry" value={b.industry ?? 'Waiting for your answer'} kind={b.industry ? 'you' : 'muted'} />
-            <Row label="Challenge" value={b.challenge ?? 'Waiting for your answer'} kind={b.challenge ? 'you' : 'muted'} />
+            <Row label="Participants" value={b.roleLevel ?? 'Waiting for your answer'} kind={b.roleLevel ? 'you' : 'muted'} onChange={b.roleLevel && onChange ? () => onChange('role_level') : undefined} />
+            <Row label="Industry" value={b.industry ?? 'Waiting for your answer'} kind={b.industry ? 'you' : 'muted'} onChange={b.industry && onChange ? () => onChange('industry') : undefined} />
+            <Row label="Challenge" value={b.challenge ?? 'Waiting for your answer'} kind={b.challenge ? 'you' : 'muted'} onChange={b.challenge && onChange ? () => onChange('challenge') : undefined} />
+            {MORE.filter(([id]) => describe(b, id)).map(([id, label]) => <Row key={id} label={label} value={describe(b, id)} kind="you" onChange={onChange ? () => onChange(id) : undefined} />)}
+            {!!b.stakeholders?.length && <Row label="Stakeholders" value={b.stakeholders.map(x => x.name || x.role).join(', ')} kind="you" />}
+            {!!b.objectives?.length && <Row label="Objectives" value={b.objectives.join('; ')} kind="you" />}
+            {!!b.dilemmas?.length && <Row label="Dilemmas" value={b.dilemmas.map(x => x.title).join('; ')} kind="you" />}
           </dl>
         </Section>
       )}

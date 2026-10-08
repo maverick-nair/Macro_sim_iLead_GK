@@ -125,7 +125,7 @@ export function Composer({ question, placeholder, multiline, busy, error, onSend
         )}
         <div className="flex items-end gap-2">
           <label className="sr-only" htmlFor="author-answer">Your answer</label>
-          <textarea id="author-answer" ref={box} rows={multiline ? 4 : 2} value={text} placeholder={placeholder} disabled={busy}
+          <textarea id="author-answer" ref={box} rows={multiline ? 4 : 2} value={text} placeholder={placeholder}
             onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !multiline) { e.preventDefault(); void submit(); } }}
             aria-invalid={!!error} aria-describedby={error ? 'author-error' : undefined}
             className={`min-h-12 flex-1 resize-none rounded-8 border-0 bg-transparent px-1 py-1.5 text-15 leading-[1.5] text-author-ink placeholder:text-author-muted ${FOCUS}`} />
