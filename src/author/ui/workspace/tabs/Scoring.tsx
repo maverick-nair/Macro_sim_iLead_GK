@@ -27,6 +27,7 @@ export function readFramework(name: string, text: string | null): Framework {
 function FrameworkSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const d = useAuthor(s => s.draft);
   const edit = useAuthor(s => s.edit);
+  const setOffer = useAuthor(s => s.setOffer);
   const f = d.scoring.framework;
   const setRow = (i: number, patch: Partial<Framework['rows'][number]>) => edit(x => { const r = x.scoring.framework?.rows[i]; if (r) Object.assign(r, patch); }, 'scoring.framework');
   const found = f?.rows.filter(r => r.behaviors.trim()).length ?? 0;
@@ -38,11 +39,10 @@ function FrameworkSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (
           if (!x.scoring.framework) return;
           x.scoring.framework.confirmed = true; x.scoring.framework.step = 3;
           x.scoring.skills = x.scoring.framework.rows.filter(r => r.include && r.behaviors.trim()).map(r => ({ key: r.skill.toLowerCase().replace(/[^a-z0-9]+/g, '_'), name: r.skill, reportOnly: false }));
-          for (const s of x.scoring.samples) s.call = null;
-          // Each action observes two of the new skills, in turn, so every skill is observed (D128); edit them per action.
-          const names = x.scoring.skills.map(k => k.name);
-          x.actions.forEach((a, i) => { a.scoredOn = [...new Set([names[i % names.length], names[(i + 1) % names.length]])]; });
-        }, { mark: 'scoring.framework', label: `Confirm the framework's ${found} skills`, restorePoint: true }); onOpenChange(false); }}>Confirm {found} skills</button>
+        }, { mark: 'scoring.framework', label: `Confirm the framework's ${found} skills`, restorePoint: true });
+        // The actions scored on the old skills and the old sample calls: "Update N places" (D148), which scores each
+        // action on two of the new skills in turn so every skill is observed (D128) and asks for the calls again.
+        setOffer({ kind: 'skills', why: 'framework' }); onOpenChange(false); }}>Confirm {found} skills</button>
         <button type="button" className={BUTTON.secondary} onClick={() => { onOpenChange(false); navigate({ page: 'workspace', tab: 'scoring' }); }}>Ask Kora about this framework</button>
         <span className="flex-1" />
         <button type="button" className={BUTTON.link} onClick={() => { edit(x => {

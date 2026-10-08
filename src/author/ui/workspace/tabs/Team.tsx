@@ -41,6 +41,7 @@ const MOOD = (c: Character) => (c.stats.morale >= 70 ? 'upbeat' : c.stats.morale
 export default function Team() {
   const d = useAuthor(s => s.draft);
   const edit = useAuthor(s => s.edit);
+  const setOffer = useAuthor(s => s.setOffer);
   const regen = useRegenerate('team', 'Regenerate the whole team');
   const regenItem = useRegenerateItem();
   const [itemNote, setItemNote] = useState<{ id: string; text: string } | null>(null);
@@ -149,7 +150,12 @@ export default function Team() {
       </div>
       {editingChar && (
         <CharacterEditor key={editingChar.id} draft={d} character={editingChar} open onOpenChange={o => { if (!o) setEditing(null); }}
-          onSave={(next, changed) => { edit(x => { const i = x.team.findIndex(m => m.id === next.id); if (i >= 0) x.team[i] = next; }, changed); setEditing(null); }} />
+          onSave={(next, changed) => {
+            edit(x => { const i = x.team.findIndex(m => m.id === next.id); if (i >= 0) x.team[i] = next; }, changed);
+            // A new name: every place that still says the old one is offered for update (D148).
+            if (next.first.trim() !== editingChar.first.trim() || next.last.trim() !== editingChar.last.trim()) setOffer({ kind: 'person', id: next.id, from: { first: editingChar.first, last: editingChar.last }, to: { first: next.first, last: next.last } });
+            setEditing(null);
+          }} />
       )}
     </TabBody>
   );

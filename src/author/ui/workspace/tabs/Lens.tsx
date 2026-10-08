@@ -34,6 +34,8 @@ export function changeLens(d: AuthorDraft, id: LensId) {
 export default function Lens() {
   const d = useAuthor(s => s.draft);
   const edit = useAuthor(s => s.edit);
+  // The old sample calls and anything scored on the old skills are offered for update (D148).
+  const setOffer = useAuthor(s => s.setOffer);
   const [choose, setChoose] = useState(false);
   const [next, setNext] = useState<LensId>(d.lens.id);
   const lens = d.lens;
@@ -121,7 +123,7 @@ export default function Lens() {
       </div>
       <Modal open={choose} onOpenChange={setChoose} title="Change lens" width="max-w-160" description={CHANGE_LENS_WARNING}
         footer={<>
-          <button type="button" className={BUTTON.primary} disabled={next === lens.id} onClick={() => { edit(x => changeLens(x, next)); setChoose(false); }}>Change to {LENS_BY_ID[next].title}</button>
+          <button type="button" className={BUTTON.primary} disabled={next === lens.id} onClick={() => { edit(x => changeLens(x, next)); setOffer({ kind: 'skills', why: 'lens' }); setChoose(false); }}>Change to {LENS_BY_ID[next].title}</button>
           <button type="button" className={BUTTON.secondary} onClick={() => setChoose(false)}>Keep {LENS_BY_ID[lens.id].title}</button>
         </>}>
         <div className="flex flex-col gap-2 px-6 py-4">

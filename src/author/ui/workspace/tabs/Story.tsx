@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuthor } from '../../../model/store';
 import { Avatar, BUTTON, CARD, CardHead, EYEBROW, Field, MarkOf, Segmented, SubTabs, TEXT_MAX, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
+import { useRenameOffer } from '../UpdatePrompt';
 import { useRegenerate } from './regenerate';
 
 type Sub = 'company' | 'market' | 'sponsor';
@@ -13,6 +14,7 @@ type Sub = 'company' | 'market' | 'sponsor';
 export default function Story() {
   const d = useAuthor(s => s.draft);
   const edit = useAuthor(s => s.edit);
+  const renameCompany = useRenameOffer('company'), renameProduct = useRenameOffer('product'), renameSponsor = useRenameOffer('sponsor');
   const regen = useRegenerate('story');
   const [sub, setSub] = useState<Sub>('company');
   const [screen, setScreen] = useState(d.story.screens[0]?.key ?? 'welcome');
@@ -35,7 +37,7 @@ export default function Story() {
             <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="company">
               <CardHead id="company" title="Company"><MarkOf path="story.company.name" /></CardHead>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Name" required>{id => <TextInput id={id} tone={tone('story.company.name', !c.name)} value={c.name} onChange={e => edit(x => { x.story.company.name = e.target.value; }, 'story.company.name')} />}</Field>
+                <Field label="Name" required>{id => <TextInput id={id} {...renameCompany} tone={tone('story.company.name', !c.name)} value={c.name} onChange={e => edit(x => { x.story.company.name = e.target.value; }, 'story.company.name')} />}</Field>
                 <Field label="Headquarters" optional>{id => <TextInput id={id} tone={tone('story.company.hq')} value={c.hq} onChange={e => edit(x => { x.story.company.hq = e.target.value; }, 'story.company.hq')} />}</Field>
               </div>
               <Field label="What it does">{id => <TextArea id={id} rows={3} tone={tone('story.company.about')} value={c.about} onChange={e => edit(x => { x.story.company.about = e.target.value; }, 'story.company.about')} />}</Field>
@@ -55,7 +57,7 @@ export default function Story() {
             <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="product">
               <CardHead id="product" title="Product"><MarkOf path="story.product.name" /></CardHead>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Product name" required need={!p.name.trim()}>{id => <TextInput id={id} tone={tone('story.product.name')} value={p.name} onChange={e => edit(x => { x.story.product.name = e.target.value; }, 'story.product.name')} />}</Field>
+                <Field label="Product name" required need={!p.name.trim()}>{id => <TextInput id={id} {...renameProduct} tone={tone('story.product.name')} value={p.name} onChange={e => edit(x => { x.story.product.name = e.target.value; }, 'story.product.name')} />}</Field>
                 <Field label="Average deal value" need={!p.dealValue} mark="story.product.dealValue">{id => (
                   <TextInput id={id} inputMode="decimal" tone={tone('story.product.dealValue', !p.dealValue)} placeholder="For example 30,000" value={p.dealValue ?? ''}
                     onChange={e => { const v = Number(e.target.value.replace(/[^\d.]/g, '')); edit(x => { x.story.product.dealValue = v > 0 ? v : null; }, 'story.product.dealValue'); }} />
@@ -120,7 +122,7 @@ export default function Story() {
               </CardHead>
               {current.key === 'welcome' && (
                 <div className="grid grid-cols-3 gap-3 max-[1000px]:grid-cols-1">
-                  <Field label="Sponsor" required>{id => <TextInput id={id} tone={tone('story.sponsor.name', !d.story.sponsor.name)} value={d.story.sponsor.name} onChange={e => edit(x => { x.story.sponsor.name = e.target.value; }, 'story.sponsor.name')} />}</Field>
+                  <Field label="Sponsor" required>{id => <TextInput id={id} {...renameSponsor} tone={tone('story.sponsor.name', !d.story.sponsor.name)} value={d.story.sponsor.name} onChange={e => edit(x => { x.story.sponsor.name = e.target.value; }, 'story.sponsor.name')} />}</Field>
                   <Field label="Title">{id => <TextInput id={id} tone={tone('story.sponsor.title')} value={d.story.sponsor.title} onChange={e => edit(x => { x.story.sponsor.title = e.target.value; }, 'story.sponsor.title')} />}</Field>
                   <Field label="Voice" optional>{id => <TextInput id={id} tone={tone('story.sponsor.voice')} value={d.story.sponsor.voice} onChange={e => edit(x => { x.story.sponsor.voice = e.target.value; }, 'story.sponsor.voice')} />}</Field>
                 </div>
