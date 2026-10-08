@@ -224,7 +224,7 @@ export const PeriodSummary = z.object({
   /** Choices made, or left to their default, this period (D137). */
   choices: z.array(z.object({ id: Id, title: Text, label: Text.nullable(), by: z.enum(['you', 'default']) })).optional(),
   /** People off sick or gone because their morale stayed low (D135). */
-  attrition: z.array(z.object({ memberId: Id, kind: z.enum(['sick', 'resigned']) })).optional()
+  attrition: z.array(z.object({ memberId: Id, name: Text, kind: z.enum(['sick', 'resigned']) })).optional()
 });
 
 /** How a business variable reads (D136): money in the storyline's currency, a percentage or points. */

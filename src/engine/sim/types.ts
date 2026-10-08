@@ -348,7 +348,7 @@ export interface PeriodSummary {
   /** Choices made or defaulted this period (D137). Left out when the storyline has none. */
   choices?: Array<{ id: string; title: Copy; label: Copy | null; by: 'you' | 'default' }>;
   /** People off sick or gone because morale stayed low (D135). Left out without dynamics. */
-  attrition?: Array<{ memberId: string; kind: 'sick' | 'resigned' }>;
+  attrition?: Array<{ memberId: string; name: string; kind: 'sick' | 'resigned' }>;
 }
 
 export interface Sim {
@@ -423,7 +423,7 @@ export interface Sim {
   /** The dynamics' own random stream's state (D135), so attrition never moves the run's other draws. */
   dynState: number;
   /** Attrition this period (D135), for the week end. */
-  attrition: Array<{ memberId: string; kind: 'sick' | 'resigned' }>;
+  attrition: Array<{ memberId: string; name: string; kind: 'sick' | 'resigned' }>;
   pendingReward: string[] | null;
   promises: PromiseRecord[];
   inbox: InboxMessage[];

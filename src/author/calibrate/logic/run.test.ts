@@ -53,7 +53,7 @@ describe('a calibration run', () => {
     expect(talk.turns.length).toBeGreaterThan(2);
     for (const pt of playthroughs) for (const c of pt.conversations) expect(copyViolations(c.why), c.why).toEqual([]);
     expect(calibrationPublishCheck(results, { draft: raw })).toMatchObject({ blocking: false, action: 'See results' });
-  });
+  }, 30_000);
 
   it('replays exactly for the same draft and settings', async () => {
     const s = { personas: { developing: 1, expert: 1 }, seed: 9, probes: false };

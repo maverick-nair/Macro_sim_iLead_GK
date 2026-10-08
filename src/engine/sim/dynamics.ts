@@ -51,6 +51,8 @@ export function trustShare(sim: Sim, m: MemberSim): number {
   return d ? share(m.trust, d.trust.full, d.trust.floor) : 1;
 }
 
+const nameOf = (sim: Sim, m: MemberSim) => sim.config.members.find(p => p.id === m.id)?.name ?? sim.config.candidates.find(p => p.id === m.id)?.name ?? m.id;
+
 /** One draw on the run's dynamics stream, which no other rule reads. */
 function draw(sim: Sim): number {
   const r = createRng(sim.dynState);
@@ -66,10 +68,10 @@ export const dynamicsSeed = (seed: number) => (seed ^ 0x0d1a7e5) >>> 0;
  * Attrition at a period end. Returns who went off sick or left, for the week end; the caller logs and messages.
  * `leave` removes a person from the team (the engine's resignation path).
  */
-export function attrition(sim: Sim, leave: (m: MemberSim) => void, notify: (m: MemberSim, kind: 'sick' | 'resigned', reason: Reason) => void): Array<{ memberId: string; kind: 'sick' | 'resigned' }> {
+export function attrition(sim: Sim, leave: (m: MemberSim) => void, notify: (m: MemberSim, kind: 'sick' | 'resigned', reason: Reason) => void): Sim['attrition'] {
   const d = dynamicsOf(sim);
   if (!d) return [];
-  const out: Array<{ memberId: string; kind: 'sick' | 'resigned' }> = [];
+  const out: Sim['attrition'] = [];
   const { below, chance, sickDays, resignAfter } = d.attrition;
   for (const m of [...sim.members]) {
     if (m.away > 0) continue;
@@ -88,12 +90,12 @@ export function attrition(sim: Sim, leave: (m: MemberSim) => void, notify: (m: M
     };
     if (resign) {
       leave(m);
-      out.push({ memberId: m.id, kind: 'resigned' });
+      out.push({ memberId: m.id, name: nameOf(sim, m), kind: 'resigned' });
     } else {
       m.away = Math.max(m.away, sickDays);
       m.awayReason = 'leave';
       m.awaySetAt = sim.absSub;
-      out.push({ memberId: m.id, kind: 'sick' });
+      out.push({ memberId: m.id, name: nameOf(sim, m), kind: 'sick' });
     }
     notify(m, resign ? 'resigned' : 'sick', reason);
   }

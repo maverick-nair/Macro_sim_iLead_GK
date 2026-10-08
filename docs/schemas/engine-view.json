@@ -2883,6 +2883,9 @@
                   "type": "string",
                   "minLength": 1
                 },
+                "name": {
+                  "$ref": "#/$defs/Text"
+                },
                 "kind": {
                   "type": "string",
                   "enum": [
@@ -2893,6 +2896,7 @@
               },
               "required": [
                 "memberId",
+                "name",
                 "kind"
               ]
             }
