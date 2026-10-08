@@ -1,7 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Brief } from '../../api/author';
+import { isChunkError, retryImport } from '../../lib/lazyRetry';
+import { playDraft, PLAY_STORAGE_FULL } from '../ui/play';
 import { changeLens } from '../ui/workspace/tabs/Lens';
-import { AuthorDraft, WORKSPACE_BACKUP_KEY, WORKSPACE_KEY, WORKSPACE_VERSIONS_KEY } from './draft';
+import { AuthorDraft, DRAFT_KEY, WORKSPACE_BACKUP_KEY, WORKSPACE_KEY, WORKSPACE_VERSIONS_KEY } from './draft';
 import { COALESCE_MS, MAX_UNDO, MAX_VERSIONS, readVersions } from './history';
 import { repairDraft } from './repair';
 import { emptyChat, seedDraft } from './seed';
@@ -316,6 +318,50 @@ describe('repair, field by field (D124)', () => {
     expect(r.draft.publish.version).toBe(0);
     expect(r.draft.chat.log).toHaveLength(d.chat.log.length);
     expect(r.draft.lens.styles.length).toBeGreaterThanOrEqual(4);
+  });
+});
+
+describe('Play a week never plays the wrong simulation (D123)', () => {
+  const playable = () => { const d = draft(); d.story.product.dealValue = 30000; return d; };
+
+  it('hands the draft over and opens the tab', () => {
+    const local = memoryStorage();
+    const opened: string[] = [];
+    expect(playDraft(playable(), u => opened.push(u), [() => memoryStorage(), () => local]).ok).toBe(true);
+    expect(opened).toHaveLength(1);
+    expect(JSON.parse(local.getItem(DRAFT_KEY)!).name).toBeTruthy();
+  });
+
+  it('with storage full, removes the older draft, makes room from versions, and says so when that is not enough', () => {
+    const local = memoryStorage(2000);
+    local.setItem(DRAFT_KEY, '{"name":"an older draft"}');
+    const opened: string[] = [];
+    const r = playDraft(playable(), u => opened.push(u), [() => memoryStorage(10), () => local]);
+    expect(r).toMatchObject({ ok: false, reason: 'storage', issues: [PLAY_STORAGE_FULL] });
+    expect(opened).toEqual([]);
+    expect(local.getItem(DRAFT_KEY)).toBeNull();
+
+    const roomy = memoryStorage(JSON.stringify(draft()).length * 2 + 2000);
+    const s = createAuthorStore(draft(), roomy);
+    s.getState().checkpoint('One');
+    s.getState().checkpoint('Two');
+    expect(readVersions(roomy)).toHaveLength(2);
+    expect(playDraft(playable(), u => opened.push(u), [() => roomy]).ok).toBe(true);
+    expect(readVersions(roomy).length).toBeLessThan(2);
+  });
+});
+
+describe('lazy chunks (D123)', () => {
+  it('tells a chunk that did not load from other errors, and tries once more', async () => {
+    expect(isChunkError(new TypeError('Failed to fetch dynamically imported module: http://x/a.js'))).toBe(true);
+    expect(isChunkError(Object.assign(new Error('x'), { name: 'ChunkLoadError' }))).toBe(true);
+    expect(isChunkError(new Error('Cannot read properties of undefined'))).toBe(false);
+    let n = 0;
+    const load = () => (++n === 1 ? Promise.reject(new TypeError('Importing a module script failed.')) : Promise.resolve('loaded'));
+    const p = retryImport(load, 10);
+    await vi.advanceTimersByTimeAsync(20);
+    await expect(p).resolves.toBe('loaded');
+    await expect(retryImport(() => Promise.reject(new Error('a bug')), 10)).rejects.toThrow('a bug');
   });
 });
 
