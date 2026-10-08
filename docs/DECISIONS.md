@@ -1044,6 +1044,10 @@ The report audit (P1) found narratives that contradicted the data: the overall n
 - **Events: what leads to a follow up.** The Events tab said "No event leads to this one yet." for an event reached only through a decision option's follow up (Client Trust's "The client signs at full price"), because it read only ignored events' follow ups. `leadsTo` (`model/choices.ts`) reads an ignored event's follow up, a stakeholder request left unanswered (its escalation) and a decision option's follow up; the timing line names each ("Follows "A discount to close this week" when "Hold the price" is chosen."), the removal warning counts them, and removing an event clears the options' follow ups too (`clearLeadsTo`). Unit tested in `model/choices.test.ts`.
 - **Not done.** A stakeholder request left unanswered is not counted in the narrative's evidence (D152 counts choices left to their default); the Stakeholders part shows it instead.
 
+**D167. The stakeholder bar loads only when a storyline has stakeholders.** Decided 2026-10-08.
+- `StakeholderBar` was in the participant's first load (about 2 KB before compression) although Sales Elevator has no stakeholders. The board now loads it lazily, like the stakeholders panel. Initial JS 221.8 KB.
+- Vitals measured back to back on this container: the code before P1 (50cbf22), the integration before this change (e7afc3b) and this commit all read first load LCP about 2550 ms and board TBT 430 to 470 ms, against earlier readings of 2440 to 2530 ms and 330 to 410 ms on a quieter machine. The P1 work adds about 7 KB of transfer and no measurable LCP or TBT; the overruns are the machine. Confirm on CI.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

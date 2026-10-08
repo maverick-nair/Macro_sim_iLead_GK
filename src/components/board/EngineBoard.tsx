@@ -35,6 +35,8 @@ const EngineEnd = lazy(() => import('./EngineEnd').then(m => ({ default: m.Engin
 // The development report (M6) and its charts load only when opened.
 const EngineReport = lazy(() => import('../report/EngineReport'));
 // The cohort rank in the score breakdown loads when the breakdown first opens with the leaderboard on.
+// Only storylines with stakeholders show the bar (D160), so it stays out of the first load (D167).
+const StakeholderBar = lazy(() => import('../stakeholders/StakeholderBar').then(m => ({ default: m.StakeholderBar })));
 const CohortRank = lazy(() => import('../gamification/CohortRank'));
 // The badge shelf and the command palette load when first opened (D73: room in the first load for the tablet board).
 const BadgeShelfDialog = lazy(() => import('../gamification/BadgeShelfDialog').then(m => ({ default: m.BadgeShelfDialog })));
@@ -64,7 +66,6 @@ const PlayPanels = lazy(() => import('../panels/PlayPanels'));
 // A choice event's decision (D137) loads on demand, with its copy.
 const DecisionDialog = lazy(() => import('../business/DecisionDialog'));
 import { BusinessBar, type BusinessItem } from '../business/BusinessBar';
-import { StakeholderBar } from '../stakeholders/StakeholderBar';
 // The stakeholders panel (D162) loads when first opened, with its copy.
 const StakeholdersPanel = lazy(() => import('../stakeholders/StakeholdersPanel'));
 import { formatVariable, variableTrend } from '../business/format';
@@ -1025,9 +1026,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         <MetricsStrip {...strip} />
         <BusinessBar items={business} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)}
           aside={v.stakeholders.length ? (
-            <StakeholderBar disabled={busy || ended || v.phase !== 'board'} onOpen={key => setStakeholdersOpen({ focus: key ?? null })} onAnswer={answerStakeholder}
+            <Suspense fallback={null}><StakeholderBar disabled={busy || ended || v.phase !== 'board'} onOpen={key => setStakeholdersOpen({ focus: key ?? null })} onAnswer={answerStakeholder}
               items={v.stakeholders.map(s => ({ key: s.key, name: s.name, img: s.img, level: s.level,
-                request: s.request && !ended ? { title: s.request.title, due: t('board.business.due', { n: s.request.dueInSubPeriods, unit }) } : null }))} />
+                request: s.request && !ended ? { title: s.request.title, due: t('board.business.due', { n: s.request.dueInSubPeriods, unit }) } : null }))} /></Suspense>
           ) : undefined} />
         <BoardNotices notices={notices} view={v} onDismiss={key => setDismissed(d => new Set([...d, key]))}
           onLeaderboard={() => openPanel({ kind: 'leaderboard' })} />
