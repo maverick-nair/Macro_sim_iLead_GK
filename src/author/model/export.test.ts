@@ -172,7 +172,8 @@ const AUTHOR_NOTES: Record<string, string> = {
   'process.pressure': 'Kora leans events and characters on it when drafting',
   'scoring.samples[].call': 'The author\'s check that scoring matches their judgment; Review and publish reads it',
   'publish.cohort': 'The publishing record',
-  'publish.notes': 'The publishing record'
+  'publish.notes': 'The publishing record',
+  'publish.skipTest': 'Publish without testing (D132): Review and publish reads it, the simulation never does'
 };
 
 /** Internal state, ids, and values the screen derives or shows read only. */

@@ -158,8 +158,29 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   // Required: every field the workspace labels Required, and the needs Kora could not fill.
   for (const n of needsOf(d)) if (n.id !== 'scoring.samples') block({ id: `required.${n.id}`, area: 'required', title: `${n.label} is empty`, detail: `Fill it in on ${n.where}.`, tab: n.tab, target: n.path });
 
-  // The engine plays it: every schema issue and every issue the export found.
-  (exported.issues as readonly unknown[]).forEach((i, k) => block({ id: `engine.${k}`, area: 'engine', title: 'The simulation does not play yet', detail: issueText(i), tab: 'overview' }));
+  // The engine plays it: every schema issue and every issue the export found (D128's `Exported.issues`), each
+  // on the tab where it is fixed. References the draft checks below with a target are not said twice.
+  const linkedEvents = new Set<string>();
+  const ids = new Set(d.team.map(c => c.id));
+  const stages = new Set(d.process.stages.map(s => s.key));
+  for (const e of d.events) if (!(e.who === 'team' || e.who === 'member' || e.who === 'sponsor' || ids.has(e.who) || (e.who.startsWith('stage:') && stages.has(e.who.slice(6))))) linkedEvents.add(e.key);
+  const strayMembers = new Set(d.team.filter(c => !stages.has(c.stage)).map(c => [c.first, c.last].filter(Boolean).join(' ') || c.id));
+  (exported.issues as readonly unknown[]).forEach((raw, k) => {
+    const text = issueText(raw);
+    const ev = text.match(/^Event "(.*?)": (.*)$/s);
+    if (ev) {
+      const e = d.events.find(x => (x.title || x.key) === ev[1]);
+      if (e && linkedEvents.has(e.key) && /no longer on the team|no longer in the work process/.test(ev[2])) return;
+      block({ id: `links.export.${e?.key ?? k}.${k}`, area: 'links', title: `The event ${quote(ev[1])} does not line up`, detail: ev[2].charAt(0).toUpperCase() + ev[2].slice(1), tab: 'events', ...(e ? { target: `events.${e.key}` } : null) });
+      return;
+    }
+    const stray = text.match(/^(.+) is in a stage that is no longer in the work process/);
+    if (stray && strayMembers.has(stray[1])) return;
+    const action = text.match(/^Action "(.+?)" is scored on/);
+    const a = action ? d.actions.find(x => x.name === action[1]) : undefined;
+    const tab: Tab = action ? 'actions' : /rating scale|Scoring and report/.test(text) ? 'scoring' : /best stage|stage that is no longer/.test(text) ? 'team' : 'overview';
+    block({ id: `engine.${k}`, area: 'engine', title: 'The simulation does not play yet', detail: text, tab, ...(a ? { target: `actions.${a.key}` } : null) });
+  });
   exported.copy.forEach((c, k) => block({ id: `copy.${k}`, area: 'copy', title: `Copy rule: ${c.rule.replace(/_/g, ' ')}`, detail: `"${c.text.slice(0, 80)}"`, tab: 'story' }));
 
   // Mechanics: enough actions, the core ones, choices that differ, styles that matter.
@@ -209,18 +230,12 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   const reportKeys = (exported.storyline.report?.skills ?? []).map(s => s.key);
   for (const k of duplicates(reportKeys)) if (!dupKeys.includes(k) && !dupNames.some(n => norm(n) === k.replace(/_/g, ' '))) block({ id: `names.reportkey.${k}`, area: 'names', title: 'The report would score one skill twice', detail: `Two skills export as ${quote(k)}. Rename one.`, tab: 'scoring' });
 
-  // Links: events, stages and relationships that point at people or stages that are gone.
-  const ids = new Set(d.team.map(c => c.id));
-  const stages = new Set(d.process.stages.map(s => s.key));
+  // Links: events, stages and relationships that point at people or stages that are gone. Other event
+  // references (a response, a follow up, a chat to a whole team) are the export's issues, above.
   const nameOf = (id: string) => { const c = d.team.find(x => x.id === id); return c ? [c.first, c.last].filter(Boolean).join(' ') : id; };
-  const actionKeys = new Set(inUse.map(a => a.key));
   for (const e of d.events) {
     const who = e.who;
-    const ok = who === 'team' || who === 'member' || who === 'sponsor' || ids.has(who) || (who.startsWith('stage:') && stages.has(who.slice(6)));
-    if (!ok) block({ id: `links.event.${e.key}`, area: 'links', title: who.startsWith('stage:') ? `The event ${quote(e.title || e.key)} is for a stage that no longer exists` : `The event ${quote(e.title || e.key)} is for someone no longer in the team`, detail: 'Pick who it is for again, or remove the event.', tab: 'events', target: `events.${e.key}` });
-    const asks = e.response.split(/[,\s]+/).filter(Boolean);
-    const known = asks.length > 0 && !asks.includes('reply') && asks.every(k => d.actions.some(a => a.key === k));
-    if (known && !asks.some(k => actionKeys.has(k))) advise({ id: `links.response.${e.key}`, area: 'links', title: `The event ${quote(e.title || e.key)} asks for an action that is switched off`, detail: 'Participants cannot answer it as intended. Switch the action on, or change the response.', tab: 'events', target: `events.${e.key}` });
+    if (linkedEvents.has(e.key)) block({ id: `links.event.${e.key}`, area: 'links', title: who.startsWith('stage:') ? `The event ${quote(e.title || e.key)} is for a stage that no longer exists` : `The event ${quote(e.title || e.key)} is for someone no longer in the team`, detail: 'Pick who it is for again, or remove the event.', tab: 'events', target: `events.${e.key}` });
   }
   for (const c of d.team) {
     if (!stages.has(c.stage)) block({ id: `links.stage.${c.id}`, area: 'links', title: `${nameOf(c.id)} works in a stage that no longer exists`, detail: 'Move them to one of the work process stages.', tab: 'team', target: `team.${c.id}.identity` });
