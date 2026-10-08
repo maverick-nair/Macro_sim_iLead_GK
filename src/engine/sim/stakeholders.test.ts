@@ -317,3 +317,12 @@ describe('the report reads stakeholder conversations (D164)', () => {
     expect(own.observations).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe('stakeholder formats in the stand in evaluator (D161)', () => {
+  it('rates a negotiation on interests, options and agreement, a meeting on influence, a presentation like a briefing', async () => {
+    const n = await heuristicEvaluator.evaluate({ format: 'negotiate', text: 'What matters most to you this quarter? We could move the date, or if you can fund one contractor, we will commit to the release. Agreed, I will confirm by Friday.' });
+    expect(n.dimensions.map(d => [d.key, d.band])).toEqual([['interests', 'strong'], ['options', 'strong'], ['agreement', 'strong']]);
+    expect((await heuristicEvaluator.evaluate({ format: 'stakeholder', text: 'Fine.' })).dimensions.map(d => d.key)).toEqual(['listening', 'clarity', 'influence']);
+    expect((await heuristicEvaluator.evaluate({ format: 'present', text: 'We are at 92%.' })).dimensions.map(d => d.key)).toEqual(['ownership', 'honesty', 'plan']);
+  });
+});
