@@ -36,7 +36,9 @@ describe('the author store (D105)', () => {
     expect(nextMark('ai', 'you')).toBe('edited');
     expect(nextMark(undefined, 'you')).toBe('you');
     expect(nextMark('you', 'you')).toBe('you');
-    expect(nextMark('you', 'ai')).toBe('ai');
+    expect(nextMark('you', 'ai')).toBe('edited');
+    expect(nextMark('edited', 'ai')).toBe('edited');
+    expect(nextMark('ai', 'ai')).toBe('ai');
     const s = createAuthorStore(draft(), null);
     s.getState().edit(d => { d.story.company.about = 'Mine now.'; }, 'story.company.about');
     expect(s.getState().draft.marks['story.company.about']).toBe('edited');

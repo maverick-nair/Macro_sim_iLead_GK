@@ -7,7 +7,7 @@ import { emptyChat, seedDraft } from './seed';
 /**
  * The author's draft in memory and in local storage (D105). Every change goes through `edit`, which
  * clones the draft, applies the change and marks the paths it touched: the author's edit turns `ai`
- * into `edited` and leaves `you` as it is; Kora's change (`by: 'ai'`) marks `ai`. Storage can be
+ * into `edited` and leaves `you` as it is; Kora's change (`by: 'ai'`) marks `ai`, or `edited` on a field the author owns. Storage can be
  * missing, full or blocked (private windows, a policy): reading and writing never throw, the draft
  * keeps working in memory and the header says it could not save. A stored draft that no longer parses
  * is kept as it was under WORKSPACE_BACKUP_KEY and repaired field by field (D120); every edit clamps
@@ -70,8 +70,9 @@ function save(storage: Storage | null, d: AuthorDraft): boolean {
   }
 }
 
+/** Kora's change to a field the author owns keeps it theirs, as Edited, so Regenerate never takes it back (D126). */
 export function nextMark(current: Mark | undefined, by: 'you' | 'ai'): Mark {
-  if (by === 'ai') return 'ai';
+  if (by === 'ai') return current === 'you' || current === 'edited' ? 'edited' : 'ai';
   return current === 'ai' || current === 'edited' ? 'edited' : 'you';
 }
 
