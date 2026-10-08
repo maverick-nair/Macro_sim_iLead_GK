@@ -107,7 +107,10 @@ export const ReportView = z.object({
    */
   skills: z.array(z.object({
     key: Id, name: Text, reportOnly: z.boolean(), observations: Int, score: Num.nullable(), capped: z.boolean(), level: Level.nullable(), anchor: Text.nullable(), quotes: z.array(Quote),
-    outOf10: Num.nullable(), description: Text.nullable(), narrative: Text
+    outOf10: Num.nullable(), description: Text.nullable(), narrative: Text,
+    /** Capped by what the participant did (D144): the signal, its share, the level the words alone reached, and the line that says so. */
+    reconciled: z.object({ signal: z.enum(['styleFit', 'diagnosis']), pct: Num, from: Int.min(0) }).nullable().default(null),
+    reconciliation: Text.nullable().default(null)
   })),
   scale: z.array(z.object({ name: Text, min: Num })),
   moments: z.array(z.object({ id: Id, kind: z.enum(['best', 'revisit']), period: Int, memberId: Id.nullable(), title: Text, situation: Text, behaviour: Text, quote: Text.nullable(), impact: Text, intent: StyleKey.nullable() })),

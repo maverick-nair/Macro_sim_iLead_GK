@@ -184,5 +184,6 @@
   "engine.hire.joined": "{name} accepted the offer and joins {stage}.",
   "engine.hire.turnedDown": "{name} turned the offer down after the interview.",
   "engine.example.person": "{need} ({needShort})",
-  "engine.example.why": "{style} fits best here. {styleShort}"
+  "engine.example.why": "{style} fits best here. {styleShort}",
+  "engine.report.reconciled": "{purpose, select, assessment {The words in conversation rated {from}, but {signal, select, diagnosis {weekly style plans} other {style choices}} fit what people needed {pct}% of the time, so this skill is rated {level}.} other {Your words in conversation rated {from}, but your {signal, select, diagnosis {weekly style plans} other {style choices}} fit what people needed {pct}% of the time, so this is rated {level}.}}"
 }

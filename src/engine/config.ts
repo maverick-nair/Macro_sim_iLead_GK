@@ -4,7 +4,7 @@ import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
 import { DEFAULT_LENS } from './lensLibrary';
 import {
   DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_PATH,
-  DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
+  DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_RECONCILE, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
 } from './report/defaults';
 
 /**
@@ -365,6 +365,15 @@ export const Report = z.object({
   impact: z.object({ low: z.number(), moderate: z.number(), high: z.number() }).default(DEFAULT_IMPACT),
   /** Actions whose styles the consistency section compares (the 1.0 report's five). */
   consistencyActions: z.array(Key).default(DEFAULT_CONSISTENCY_ACTIONS),
+  /**
+   * Ratings reconciled with behaviour (D144): per skill key, the measured signals that cap its word based
+   * rating (`styleFit`, `diagnosis`), and the caps (under `below`% the skill is rated at most `level`).
+   * Skills not listed are rated from words alone.
+   */
+  reconcile: z.object({
+    skills: z.record(Key, z.array(z.enum(['styleFit', 'diagnosis'])).min(1)),
+    caps: z.array(z.object({ below: Score, level: z.number().int().min(0) })).max(6)
+  }).default(DEFAULT_RECONCILE),
   /** Assessment purpose: the bar (positions on the rating scale) and the verdict labels (D75). */
   assessment: z.object({
     bar: z.object({ overall: z.number().int().min(0), floor: z.number().int().min(0) }),

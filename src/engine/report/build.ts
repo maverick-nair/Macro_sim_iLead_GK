@@ -242,7 +242,9 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
   const skillNotes = Object.fromEntries(skills.map(s => [s.key, {
     outOf10: s.score === null ? null : s.score / 10,
     description: r.skills.find(x => x.key === s.key)?.description ?? null,
-    narrative: fillCopy(s.level === null ? P.skillNone : byLevel(P.skill, s.level.index, levels), { skill: s.name })
+    narrative: fillCopy(s.level === null ? P.skillNone : byLevel(P.skill, s.level.index, levels), { skill: s.name }),
+    // Why a skill the words rated higher is rated where it is (D144).
+    reconciliation: s.reconciled && s.level ? msg('engine.report.reconciled', { purpose, signal: s.reconciled.signal, pct: roundHalfUp(s.reconciled.pct), from: r.scale[s.reconciled.from].name, level: s.level.name }) : null
   }]));
 
   // Verdicts (assessment only), each with the conversations it rests on and their review status.

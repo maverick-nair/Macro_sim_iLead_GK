@@ -349,3 +349,23 @@ export const DEFAULT_IMPACT = { low: -2, moderate: 3, high: 10 };
 
 /** The 1.0 report's consistency actions (Meet the Team, Meet Face to Face, Set Goals, Coach Member, Give Feedback) as action keys. */
 export const DEFAULT_CONSISTENCY_ACTIONS = ['meet', 'f2f', 'goals', 'coach', 'feedback'];
+
+/**
+ * Ratings reconciled with behaviour (D144). A skill about adapting style or reading needs is rated from
+ * the participant's words, then capped by what they did: `styleFit` is the share of every style choice
+ * that fit the person's need (overall leadership adaptability), `diagnosis` the share of weekly style
+ * settings that fit. With several signals the lowest counts. Under `below`% the skill is rated at most
+ * `level` (a position on the rating scale, 0 is the lowest). Keyed by skill key: the iLead framework's
+ * Situational flexibility, and the Readiness Based lens's dimensions as GenieKreator names them.
+ */
+export const DEFAULT_RECONCILE: { skills: Record<string, Array<'styleFit' | 'diagnosis'>>; caps: Array<{ below: number; level: number }> } = {
+  skills: {
+    situational_flexibility: ['styleFit', 'diagnosis'],
+    diagnosing_readiness: ['diagnosis'],
+    style_fit: ['styleFit'],
+    style_flexibility: ['styleFit'],
+    contextual_fit: ['styleFit']
+  },
+  caps: [{ below: 40, level: 1 }, { below: 70, level: 2 }]
+};
+

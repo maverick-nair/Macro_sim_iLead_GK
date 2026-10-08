@@ -63,6 +63,7 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
                   </span>
                 )}
                 {k.more.narrative && <span className="text-13 text-pretty">{k.more.narrative}</span>}
+                {k.more.reconciliation && <span className="text-13 text-pretty">{k.more.reconciliation}</span>}
                 {k.more.anchor && <span className="text-13 text-pretty">{k.more.anchor}</span>}
                 {k.quote && <Quote q={k.quote} />}
                 {k.more.quotes.map(q => <Quote key={q.text} q={q} />)}

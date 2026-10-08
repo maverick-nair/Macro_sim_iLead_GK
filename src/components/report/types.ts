@@ -67,6 +67,8 @@ export interface SkillRowData {
   more?: {
     anchor: string | null; observations: number; capped: boolean; quotes: ReportQuote[];
     outOf10?: string | null; description?: string | null; narrative?: string | null; verdict?: { label: string; tone: Tone; review: string } | null;
+    /** Why the rating is capped by what the participant did, not only what they said (D144). */
+    reconciliation?: string | null;
   };
 }
 

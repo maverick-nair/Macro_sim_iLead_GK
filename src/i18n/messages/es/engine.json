@@ -184,5 +184,6 @@
   "engine.hire.joined": "{name} aceptó la oferta y se incorpora a {stage}.",
   "engine.hire.turnedDown": "{name} rechazó la oferta tras la entrevista.",
   "engine.example.person": "{need} ({needShort})",
-  "engine.example.why": "{style} es lo que mejor encaja aquí. {styleShort}"
+  "engine.example.why": "{style} es lo que mejor encaja aquí. {styleShort}",
+  "engine.report.reconciled": "{purpose, select, assessment {Las palabras en las conversaciones se valoraron como {from}, pero {signal, select, diagnosis {los planes semanales de estilo} other {las elecciones de estilo}} se ajustaron a lo que las personas necesitaban el {pct} % de las veces, así que esta habilidad se valora como {level}.} other {Tus palabras en las conversaciones se valoraron como {from}, pero {signal, select, diagnosis {tus planes semanales de estilo} other {tus elecciones de estilo}} se ajustaron a lo que las personas necesitaban el {pct} % de las veces, así que se valora como {level}.}}"
 }
