@@ -53,6 +53,8 @@ describe('skill ratings', () => {
     for (let i = 0; i < 5; i++) rec(sim, [['results_ownership', 'strong']]);
     rec(sim, [['results_ownership', 'harmful']]);
     expect(skill(sim, 'results_ownership')).toMatchObject({ capped: true, level: { name: 'Developing' } });
+    // Its score is held under Proficient too, so the overall level averages what is shown (D170).
+    expect(skill(sim, 'results_ownership').score).toBe(59);
   });
 
   it('shows an overall level only when at least half the skills are rated', () => {
@@ -61,11 +63,15 @@ describe('skill ratings', () => {
     for (const k of keys.slice(0, 3)) { rec(sim, [[k, 'adequate']]); rec(sim, [[k, 'adequate']]); }
     expect(en(buildReport(sim)).summary.level).toBeNull();
     rec(sim, [[keys[3], 'adequate']]); rec(sim, [[keys[3], 'adequate']]);
-    expect(en(buildReport(sim)).summary.level).toEqual({ index: 2, name: 'Proficient' });
-    // The level line praises the whole run (D143): with no revenue at all, the data contradicts it.
-    expect(en(buildReport(sim)).summary.narrative).toBeNull();
+    // The words reach Proficient; with no revenue at all the business outcome holds the level at Developing (D168).
+    const capped = en(buildReport(sim)).summary;
+    expect(capped.level).toEqual({ index: 1, name: 'Developing' });
+    expect(capped.levelCap).toMatchObject({ from: { index: 2, name: 'Proficient' }, gates: ['business'] });
+    expect(capped.levelCap!.why).toBe('Rated Developing: your words rated Proficient, but revenue reached 0% of target.');
+    // The capped level's line is the one shown; the Proficient line praises the whole run (D143), and only fits once the revenue is in.
+    expect(capped.narrative).toBe(config.report.narratives.overall[1]);
     sim.funnel.value = config.money.target;
-    expect(en(buildReport(sim)).summary.narrative).toBe(config.report.narratives.overall[2]);
+    expect(en(buildReport(sim)).summary).toMatchObject({ level: { index: 2, name: 'Proficient' }, levelCap: null, narrative: config.report.narratives.overall[2] });
   });
 
   it('quotes only verbatim words from the participant, best band first, up to 2', () => {

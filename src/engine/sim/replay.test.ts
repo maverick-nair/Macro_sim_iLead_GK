@@ -39,10 +39,13 @@ describe('seeded replay', () => {
     // summary (headline, lines, drivers, the guarded level line), the moments' impact lines (net per person
     // and metric) and the reconciled skill ratings changed by design: the same runs hashed without those
     // fields matched the earlier code for all five players on seeds 1 to 3, so what the runs decide is unchanged.
+    // Re-recorded at D168 to D170, where the summary's overall level is capped by the outcomes (with the line that
+    // says why) and a harmful conversation holds a skill's score: hashed without the summary and the skills' scores
+    // and levels, passive, random and good on seeds 1 to 3 matched the D167 code.
     expect(out).toEqual({
-      'passive 1': '74ffc58af0e3ce98', 'passive 2': 'e243b0c1284bfb66',
-      'random 1': '84e35404c7d1a6b3', 'random 2': '69fbe55c1e9e0a26',
-      'good 1': 'a08fe8690122411d', 'good 2': 'a216ef5a90e7e302'
+      'passive 1': '97a812923c5d349a', 'passive 2': '97046b741bf8874c',
+      'random 1': '0a386e5a05bad675', 'random 2': '50152dcd411ff73a',
+      'good 1': 'f2afd87ba0a4c5c4', 'good 2': 'e99a663a1405dd0e'
     });
   });
 });

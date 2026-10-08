@@ -1,8 +1,8 @@
 import type { Purpose } from '../config';
-import { hasCode, isMsg, listOf, msg, type Copy, type Msg, type Param } from '../copy';
+import { hasCode, listOf, msg, type Copy, type Msg, type Param } from '../copy';
 import { firstName, styleName } from '../sim/sim';
 import type { Change, Sim } from '../sim/types';
-import { classify, contradicts, gatherEvidence, guard, MISSED, strengths, type Claim, type Evidence, type Profile, type Tone } from './evidence';
+import { classify, contradicts, gatherEvidence, guard, MISSED, resignations, strengths, type Claim, type Evidence, type Profile, type Tone } from './evidence';
 import type { RunSummary } from './summary';
 
 /**
@@ -161,8 +161,8 @@ export function drivers(sim: Sim, purpose: Purpose, bottleneck: BottleneckFact |
   const mixed = changesOf(sim, 'engine.mixed.label');
   if (mixed.length) push('mixed', Math.abs(total(mixed, 'trust')), 'negative', msg('engine.report.driver.mixed', { purpose, n: mixed.length, delta: total(mixed, 'trust') }));
 
-  // People who resigned.
-  for (const l of sim.log.filter(x => isMsg(x.title) && x.title.code === 'engine.trigger.label' && x.title.params?.kind === 'resignation')) {
+  // People who resigned, by a trigger or after weeks of low morale (D135, D170).
+  for (const l of resignations(sim)) {
     const id = l.memberIds[0];
     if (id) push(`resigned:${id}`, 30, 'negative', msg('engine.report.driver.resigned', { name: nameOf(sim, id), unit, n: l.period }));
   }

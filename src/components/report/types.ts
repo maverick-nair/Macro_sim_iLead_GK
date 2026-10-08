@@ -220,6 +220,8 @@ export interface MethodologyData {
 
 export interface SummaryExtras {
   level: string | null;
+  /** When the outcomes held the overall level under what the words reached (D168): why, in one line. */
+  levelWhy?: string | null;
   strengths: string[];
   priorities: string[];
   business: string;
@@ -250,6 +252,8 @@ export interface VerdictData {
   review: string;
   /** "Records: r8, r16". */
   records: string;
+  /** What held the verdict under the one the words alone would reach (D169). */
+  why?: string | null;
   quotes: ReportQuote[];
   tone: Tone;
 }

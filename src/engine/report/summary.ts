@@ -3,8 +3,9 @@ import { bestStyle, fitOf, NEEDS, type NeedKey } from '../lens';
 import { capability, leadershipScore, tierFor } from '../sim/score';
 import { totalSubs } from '../sim/sim';
 import type { ActionRecord, Sim } from '../sim/types';
-import { mean, overallOf, rateSkills } from './ratings';
-import { overallVerdict, skillVerdict, type SkillVerdictKey, type VerdictKey } from './verdict';
+import { outcomeOf, type Gate } from './outcomes';
+import { mean, rateSkills } from './ratings';
+import { skillVerdict, type SkillVerdictKey, type VerdictKey } from './verdict';
 
 /**
  * The run summary (D75, D76): every number the individual report 3.0 reads beyond Report 2.0, and what the
@@ -36,7 +37,11 @@ export interface RunSummary {
   /** Each period's stage throughput against its ideal: the funnel, week by week. */
   funnel: Array<{ period: number; stages: Array<{ stage: string; actual: number; ideal: number }> }>;
   skills: Array<{ key: string; reportOnly: boolean; observations: number; score: number | null; outOf10: number | null; level: number | null }>;
-  overall: { score: number | null; level: number | null };
+  /**
+   * The overall level, capped by what happened (D168): `words` is what the mean of the skill ratings reached,
+   * `caps` the gates that held it lower. Both absent in summaries stored before D168.
+   */
+  overall: { score: number | null; level: number | null; words?: { score: number | null; level: number | null }; caps?: Gate[] };
   styles: {
     /** Style tagged choices (weekly setting and one to one conversations) and how many fit the need. */
     total: number; fitted: number;
@@ -138,12 +143,14 @@ export function summarizeRun(sim: Sim): RunSummary {
 
   // ---- skills and verdicts
   const rated = rateSkills(sim);
-  const overall = overallOf(sim, rated);
+  // The overall level capped by the outcomes, and the verdict on it and the outcome gates (D168, D169).
+  const outcome = outcomeOf(sim, rated, objectives, purpose === 'assessment');
+  const overall = outcome.overall;
   const skills = rated.map(s => ({ key: s.key, reportOnly: s.reportOnly, observations: s.observations, score: s.score, outOf10: s.score === null ? null : s.score / 10, level: s.level?.index ?? null }));
   const bar = rep.assessment.bar;
   const primary = rated.filter(s => !s.reportOnly);
-  const verdict = purpose === 'assessment' ? {
-    overall: overallVerdict(overall.level, primary.map(s => s.level?.index ?? null), bar),
+  const verdict = outcome.verdict ? {
+    overall: outcome.verdict.key,
     skills: Object.fromEntries(primary.map(s => [s.key, skillVerdict(s.level?.index ?? null, bar)]))
   } : null;
 
@@ -250,7 +257,12 @@ export function summarizeRun(sim: Sim): RunSummary {
     score: { total: score.total, max: score.max, tier: tierFor(sim, score.total).key },
     objectives,
     funnel: sim.periods.map(p => ({ period: p.period, stages: p.funnel.map(f => ({ stage: f.stage, actual: r2(f.throughput), ideal: r2(f.ideal) })) })),
-    skills, overall: { score: overall.score === null ? null : r2(overall.score), level: overall.level },
+    skills,
+    overall: {
+      score: overall.score === null ? null : r2(overall.score), level: overall.level,
+      words: { score: overall.words.score === null ? null : r2(overall.words.score), level: overall.words.level },
+      caps: [...new Set(overall.binding.map(c => c.gate))]
+    },
     styles: stylesOut, consistency, actions, distribution, attention,
     review: { conversations: sim.liveRecords.length, reviewed: sim.liveRecords.filter(r => r.reviewed).length },
     verdict

@@ -2763,6 +2763,291 @@
             "events"
           ]
         },
+        "outcomes": {
+          "default": {
+            "fit": {
+              "signals": [
+                "styleFit",
+                "diagnosis"
+              ]
+            },
+            "business": {
+              "caps": [
+                {
+                  "below": 50,
+                  "level": 1
+                },
+                {
+                  "below": 80,
+                  "level": 2
+                }
+              ]
+            },
+            "people": {
+              "weak": {
+                "moraleDrop": 10,
+                "trustDrop": 5,
+                "skillDrop": 5,
+                "left": 1,
+                "level": 2
+              },
+              "collapsed": {
+                "moraleDrop": 25,
+                "trustDrop": 15,
+                "skillDrop": 15,
+                "left": 2,
+                "level": 1
+              }
+            },
+            "stakeholders": {
+              "strained": 1,
+              "level": 2
+            },
+            "decisions": {
+              "defaulted": 50,
+              "min": 2,
+              "level": 2
+            }
+          },
+          "type": "object",
+          "properties": {
+            "fit": {
+              "default": {
+                "signals": [
+                  "styleFit",
+                  "diagnosis"
+                ]
+              },
+              "type": "object",
+              "properties": {
+                "signals": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "styleFit",
+                      "diagnosis"
+                    ]
+                  }
+                },
+                "caps": {
+                  "maxItems": 6,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "below": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      "level": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "below",
+                      "level"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "signals"
+              ]
+            },
+            "business": {
+              "default": {
+                "caps": [
+                  {
+                    "below": 50,
+                    "level": 1
+                  },
+                  {
+                    "below": 80,
+                    "level": 2
+                  }
+                ]
+              },
+              "type": "object",
+              "properties": {
+                "caps": {
+                  "maxItems": 6,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "below": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "level": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "below",
+                      "level"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "caps"
+              ]
+            },
+            "people": {
+              "default": {
+                "weak": {
+                  "moraleDrop": 10,
+                  "trustDrop": 5,
+                  "skillDrop": 5,
+                  "left": 1,
+                  "level": 2
+                },
+                "collapsed": {
+                  "moraleDrop": 25,
+                  "trustDrop": 15,
+                  "skillDrop": 15,
+                  "left": 2,
+                  "level": 1
+                }
+              },
+              "type": "object",
+              "properties": {
+                "weak": {
+                  "type": "object",
+                  "properties": {
+                    "moraleDrop": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "trustDrop": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "skillDrop": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "left": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "level": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "moraleDrop",
+                    "trustDrop",
+                    "skillDrop",
+                    "left",
+                    "level"
+                  ]
+                },
+                "collapsed": {
+                  "type": "object",
+                  "properties": {
+                    "moraleDrop": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "trustDrop": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "skillDrop": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "left": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "level": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "moraleDrop",
+                    "trustDrop",
+                    "skillDrop",
+                    "left",
+                    "level"
+                  ]
+                }
+              },
+              "required": [
+                "weak",
+                "collapsed"
+              ]
+            },
+            "stakeholders": {
+              "default": {
+                "strained": 1,
+                "level": 2
+              },
+              "type": "object",
+              "properties": {
+                "strained": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "level": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "strained",
+                "level"
+              ]
+            },
+            "decisions": {
+              "default": {
+                "defaulted": 50,
+                "min": 2,
+                "level": 2
+              },
+              "type": "object",
+              "properties": {
+                "defaulted": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "min": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                },
+                "level": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "defaulted",
+                "min",
+                "level"
+              ]
+            }
+          }
+        },
         "assessment": {
           "type": "object",
           "properties": {

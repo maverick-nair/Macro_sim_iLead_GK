@@ -38,7 +38,11 @@ export const BenchmarkSummary = z.object({
   completion: z.object({ average: Pct, buckets: z.array(Bucket).length(4) }),
   /** Per skill: the mean score of the runs that rated it, and how many runs reached each level index (and none). */
   skills: z.array(z.object({ key: Id, reportOnly: z.boolean(), rated: Count, score: Num.nullable(), levels: z.array(Count), unrated: Count })),
-  overall: z.object({ rated: Count, score: Num.nullable(), levels: z.array(Count), unrated: Count }),
+  /**
+   * The overall level, capped by the outcomes (D168): the mean score, the runs at each level and none, and how many
+   * runs the outcomes held under what the words reached, by gate. `capped` is absent in benchmarks stored before D168.
+   */
+  overall: z.object({ rated: Count, score: Num.nullable(), levels: z.array(Count), unrated: Count, capped: z.object({ count: Count, gates: z.record(z.string(), Count) }).optional() }),
   objectives: z.object({ target: Num, revenue: Num, conversions: Num, share: Num, beatTarget: Count, team: Team }),
   styles: z.object({
     adaptability: Pct,
@@ -126,11 +130,14 @@ export const GroupReport = z.object({
   }).nullable(),
   attention: z.object({ group: Attention.nullable(), benchmark: Attention.nullable(), narrative: Text.nullable(), prompts: z.array(Text) }).nullable(),
   takeaways: z.array(z.object({ key: Id, title: Text, questions: z.array(Text) })),
+  /** How many participants who completed had their overall level held under what their words reached, and by what (D168); null when none or withheld. */
+  capped: Text.nullable().default(null),
   /** Assessment purpose only: the verdict distribution and the participant table (by name, never ranked). */
   assessment: z.object({
     bar: Text,
     narrative: Text,
     verdicts: z.array(z.object({ key: z.union([VerdictKey, z.literal('none')]), label: Text, count: Count, share: Pct, benchmark: Pct.nullable() })),
+    /** `level` is the capped overall level, marked when the outcomes held it down (D168). */
     participants: z.array(z.object({ name: Text, completion: Pct, level: Text.nullable(), verdict: VerdictKey.nullable(), label: Text.nullable(), review: ReviewStatus }))
   }).nullable()
 });

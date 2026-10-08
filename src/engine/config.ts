@@ -3,7 +3,7 @@ import { sanitizeCopy } from '../i18n/copy';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
 import { DEFAULT_LENS } from './lensLibrary';
 import {
-  DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_EVIDENCE, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_PATH,
+  DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_EVIDENCE, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_OUTCOMES, DEFAULT_PATH,
   DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_RECONCILE, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
 } from './report/defaults';
 
@@ -327,6 +327,8 @@ export const GroupCopy = z.object({
   prompts: z.object({ skills: Prompts, business: Prompts, styles: Prompts, funnel: Prompts, actions: Prompts, attention: Prompts }),
   takeaways: z.array(z.object({ key: Key, title: Copy, questions: z.array(Copy).min(1).max(6) })).max(8)
 });
+/** A people outcome gate (D168): the falls in points (0 is off) and the people who left that trigger it, and the level it allows. */
+const PeopleGate = z.object({ moraleDrop: z.number().min(0), trustDrop: z.number().min(0), skillDrop: z.number().min(0), left: z.number().int().min(1), level: z.number().int().min(0) });
 export const Report = z.object({
   /**
    * The primary lens's scoring dimensions are the skills (D70). `reportOnly` marks a secondary lens's
@@ -384,6 +386,17 @@ export const Report = z.object({
     sponsor: z.object({ strong: z.number(), weak: z.number() }),
     events: z.object({ weak: z.number().int().min(1) })
   }).default(DEFAULT_EVIDENCE),
+  /**
+   * The overall level capped by what happened (D168), and the outcome gates an assessment verdict reads (D169):
+   * each gate the run triggers holds the overall level at or under its `level`. Defaults and rules in report/defaults.ts.
+   */
+  outcomes: z.object({
+    fit: z.object({ signals: z.array(z.enum(['styleFit', 'diagnosis'])), caps: z.array(z.object({ below: Score, level: z.number().int().min(0) })).max(6).optional() }).default(DEFAULT_OUTCOMES.fit),
+    business: z.object({ caps: z.array(z.object({ below: z.number().min(0), level: z.number().int().min(0) })).max(6) }).default(DEFAULT_OUTCOMES.business),
+    people: z.object({ weak: PeopleGate, collapsed: PeopleGate }).default(DEFAULT_OUTCOMES.people),
+    stakeholders: z.object({ strained: z.number().int().min(1), level: z.number().int().min(0) }).default(DEFAULT_OUTCOMES.stakeholders),
+    decisions: z.object({ defaulted: Score, min: z.number().int().min(1), level: z.number().int().min(0) }).default(DEFAULT_OUTCOMES.decisions)
+  }).default(DEFAULT_OUTCOMES),
   /** Assessment purpose: the bar (positions on the rating scale) and the verdict labels (D75). */
   assessment: z.object({
     bar: z.object({ overall: z.number().int().min(0), floor: z.number().int().min(0) }),
@@ -405,6 +418,7 @@ export const Report = z.object({
   if (r.scale[0].min !== 0 || r.scale.some((l, i) => i > 0 && l.min <= r.scale[i - 1].min)) ctx.addIssue({ code: 'custom', path: ['scale'], message: 'Levels start at 0 and rise' });
   if (!(r.impact.low < r.impact.moderate && r.impact.moderate < r.impact.high)) ctx.addIssue({ code: 'custom', path: ['impact'], message: 'Impact bands must rise: low < moderate < high' });
   for (const k of ['business', 'styleFit', 'words', 'activity', 'sponsor'] as const) if (r.evidence[k].weak > r.evidence[k].strong) ctx.addIssue({ code: 'custom', path: ['evidence', k], message: 'The weak threshold must be at or below the strong one' });
+  if (r.outcomes.people.collapsed.level > r.outcomes.people.weak.level) ctx.addIssue({ code: 'custom', path: ['outcomes', 'people', 'collapsed', 'level'], message: 'A collapsed people outcome caps at or below a weak one' });
   const { overall, floor } = r.assessment.bar;
   if (overall >= r.scale.length || floor > overall) ctx.addIssue({ code: 'custom', path: ['assessment', 'bar'], message: `The bar is a level from 0 to ${r.scale.length - 1}, with the floor at or below it` });
 });

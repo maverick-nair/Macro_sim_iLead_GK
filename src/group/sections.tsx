@@ -103,7 +103,7 @@ export function WithheldNotice({ message }: { message: string }) {
 }
 
 /** Assessment: the verdict distribution against the benchmark, and the participant table by name. */
-export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }) {
+export function VerdictsSection({ data, capped = null }: { data: NonNullable<R['assessment']>; capped?: string | null }) {
   const { t, number } = useI18n();
   const hasBenchmark = data.verdicts.some(v => v.benchmark !== null);
   const series = groupSeries(t, hasBenchmark);
@@ -111,6 +111,7 @@ export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }
   return (
     <Section title={t('group.verdicts.title')} intro={t('group.verdicts.bar', { bar: data.bar })}>
       <p className={BODY}>{data.narrative}</p>
+      {capped && <p className={BODY}>{capped}</p>}
       <ChartBlock
         title={t('group.verdicts.chartTitle')}
         chart={<BarsChart series={series} max={100} label={t('group.verdicts.aria', { list: data.verdicts.map(v => t('group.verdicts.item', { label: v.label, pct: Math.round(v.share) })).join(t('report.listSeparator')) })}
@@ -136,7 +137,7 @@ export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }
 }
 
 /** Skills: the group's average out of 10 beside the benchmark's, with levels, and a narrative per skill. */
-export function SkillsSection({ data, participants }: { data: NonNullable<R['skills']>; participants: number }) {
+export function SkillsSection({ data, participants, capped = null }: { data: NonNullable<R['skills']>; participants: number; capped?: string | null }) {
   const { t, number } = useI18n();
   const hasBenchmark = data.rows.some(s => s.benchmark !== null);
   const series = groupSeries(t, hasBenchmark);
@@ -157,6 +158,7 @@ export function SkillsSection({ data, participants }: { data: NonNullable<R['ski
         }}
       />
       <SeriesLegend series={series} />
+      {capped && <p className={BODY}>{capped}</p>}
       <div className="grid gap-2.5 grid-cols-(--il-report-halves-columns)">
         {data.rows.map(s => (
           <article key={s.key} aria-label={s.name} className={CARD}>

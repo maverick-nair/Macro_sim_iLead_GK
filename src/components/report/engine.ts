@@ -104,10 +104,10 @@ export function teamSeries(i18n: Fmt, money: MoneyFormat, r: ReportView): TeamSe
 }
 
 /** A verdict's evidence, review status and records, worded for the report. */
-function verdictData(i18n: Fmt, v: { key: string | null; label: string; recordIds: string[]; quotes: Array<{ text: string; when: string }>; review: 'assessor' | 'mixed' | 'ai'; reviewed: number; total: number }, bar: string): VerdictData {
+function verdictData(i18n: Fmt, v: { key: string | null; label: string; why?: string | null; recordIds: string[]; quotes: Array<{ text: string; when: string }>; review: 'assessor' | 'mixed' | 'ai'; reviewed: number; total: number }, bar: string): VerdictData {
   const { t } = i18n;
   return {
-    key: v.key, label: v.label, bar: t('report.verdict.bar', { bar }),
+    key: v.key, label: v.label, bar: t('report.verdict.bar', { bar }), why: v.why ?? null,
     evidence: t('report.verdict.evidence', { n: v.total }),
     review: t('report.verdict.review', { review: v.review, reviewed: v.reviewed, total: v.total }),
     records: t('report.verdict.records', { ids: v.recordIds.join(t('report.listSeparator')) }),
@@ -142,7 +142,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
         return { key, data: r.about };
       case 'summary':
         return { key, narrative: r.summary.narrative, extras: {
-          level: r.summary.level?.name ?? null, strengths: r.summary.strengths.map(skillName), priorities: r.summary.priorities.map(skillName), business: r.summary.business,
+          level: r.summary.level?.name ?? null, levelWhy: r.summary.levelCap?.why ?? null, strengths: r.summary.strengths.map(skillName), priorities: r.summary.priorities.map(skillName), business: r.summary.business,
           verdict: r.verdict ? verdictData(i18n, r.verdict.overall, r.verdict.overall.bar) : null,
           headline: r.summary.headline, lines: r.summary.lines, drivers: r.summary.drivers
         } };
