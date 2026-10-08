@@ -8,7 +8,7 @@ import { parseReport } from '../reportContract';
 
 /**
  * Business variables, choice events, flags and conditions, and delayed follow ups (D136 to D138,
- * docs/SIMULATION.md 6.5 to 6.7), on Sales Elevator with the new blocks added. Each test names the rule.
+ * docs/SIMULATION.md 6.6 to 6.8), on Sales Elevator with the new blocks added. Each test names the rule.
  */
 
 const base = salesElevator as unknown as StorylineInput;

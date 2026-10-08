@@ -7,7 +7,7 @@ import { IntentError } from './errors';
 import { msg, type Copy } from '../copy';
 
 /**
- * The business state (D136 to D138, docs/SIMULATION.md 6.5 to 6.7): named business variables, flags and
+ * The business state (D136 to D138, docs/SIMULATION.md 6.6 to 6.8): named business variables, flags and
  * counters, conditions on them, follow ups after a delay, and choice events. Nothing here runs for a
  * storyline that uses none of it, so older storylines play exactly as before.
  */
