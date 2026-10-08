@@ -85,6 +85,18 @@ describe('calibration runners', () => {
     await expect(createServerRunner('/genie', { fetch: aborting, pollMs: 1 }).run(raw, settings)).rejects.toMatchObject({ code: 'cancelled' });
   });
 
+  it('end a poll that hangs after its timeout, say so, and stop the server job (D148)', async () => {
+    const s = await fakeServer();
+    const hanging = (async (url: string, init: RequestInit = {}) => {
+      if ((init.method ?? 'GET') !== 'GET') return s.fetch(url, init);
+      // Never answers; only the request's own signal ends it.
+      return new Promise<Response>((_, reject) => init.signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' }))));
+    }) as typeof globalThis.fetch;
+    await expect(createServerRunner('/genie', { fetch: hanging, pollMs: 1, timeoutMs: 20 }).run(raw, settings)).rejects.toMatchObject({ code: 'pollFailed', message: 'The server did not answer within 0 seconds. Run the test again.' });
+    await new Promise(r => setTimeout(r, 0));
+    expect(s.calls.map(c => c.method)).toEqual(['POST', 'DELETE']);
+  });
+
   it('remove the abort listener once a poll wait resolves', async () => {
     const s = await fakeServer();
     const ctl = new AbortController();

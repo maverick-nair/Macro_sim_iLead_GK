@@ -81,11 +81,32 @@ const wait = (ms: number, signal?: AbortSignal) => new Promise<void>((resolve, r
 
 const isAbortError = (e: unknown) => typeof e === 'object' && e !== null && (e as { name?: unknown }).name === 'AbortError';
 
+/** Each request to the server gets this long (D148): a poll that hangs ends the wait instead of holding the screen. */
+export const REQUEST_TIMEOUT_MS = 15_000;
+
+/** One request with its own timeout, cancelled with the run's signal too. A timeout is `CalibrateClientError('timeout')`. */
+async function timed(f: typeof fetch, url: string, init: RequestInit, ms: number, signal?: AbortSignal): Promise<Response> {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  const onAbort = () => ctl.abort();
+  signal?.addEventListener('abort', onAbort, { once: true });
+  try {
+    return await f(url, { ...init, signal: ctl.signal });
+  } catch (e) {
+    if (!signal?.aborted && ctl.signal.aborted) throw new CalibrateClientError(`The server did not answer within ${Math.round(ms / 1000)} seconds. Run the test again.`, 'timeout');
+    throw e;
+  } finally {
+    clearTimeout(t);
+    signal?.removeEventListener('abort', onAbort);
+  }
+}
+
 const newKey = () => (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`).replace(/[^A-Za-z0-9_.:]/g, '');
 
 /** On the server's job endpoint: start once (one Idempotency-Key for every retry), then poll. */
-export function createServerRunner(apiBase: string, opts: { fetch?: typeof fetch; pollMs?: number } = {}): CalibrationRunner & { offered(res: Response | null): boolean } {
-  const f = opts.fetch ?? ((...a: Parameters<typeof fetch>) => fetch(...a));
+export function createServerRunner(apiBase: string, opts: { fetch?: typeof fetch; pollMs?: number; timeoutMs?: number } = {}): CalibrationRunner & { offered(res: Response | null): boolean } {
+  const raw = opts.fetch ?? ((...a: Parameters<typeof fetch>) => fetch(...a));
+  const ms = opts.timeoutMs ?? REQUEST_TIMEOUT_MS;
   const base = apiBase.replace(/\/$/, '');
   const json = async (res: Response) => {
     const body = await res.json().catch(() => null) as { message?: string; code?: string; issues?: string[] } | null;
@@ -99,7 +120,7 @@ export function createServerRunner(apiBase: string, opts: { fetch?: typeof fetch
       let res: Response | null = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          res = await f(`${base}/calibrations`, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json', 'idempotency-key': key }, body: JSON.stringify({ ...settings, storyline: draft }), signal: o.signal });
+          res = await timed(raw, `${base}/calibrations`, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json', 'idempotency-key': key }, body: JSON.stringify({ ...settings, storyline: draft }) }, ms, o.signal);
           if (res.status < 500) break;
         } catch (e) {
           if (o.signal?.aborted || isAbortError(e)) throw cancelled();
@@ -112,19 +133,20 @@ export function createServerRunner(apiBase: string, opts: { fetch?: typeof fetch
       let job = CalibrationJob.parse(await json(res));
       // Cancelling, or losing the job while polling, stops it on the server: nobody is waiting for it.
       const id = job.id;
-      const onAbort = () => { void f(`${base}/calibrations/${id}`, { method: 'DELETE', credentials: 'include' }).catch(() => undefined); };
+      const onAbort = () => { void timed(raw, `${base}/calibrations/${id}`, { method: 'DELETE', credentials: 'include' }, ms).catch(() => undefined); };
       o.signal?.addEventListener('abort', onAbort, { once: true });
       try {
         while (job.status === 'queued' || job.status === 'running') {
           if (job.progress.total) o.onProgress?.(job.progress.done, job.progress.total);
           await wait(opts.pollMs ?? 800, o.signal);
-          job = CalibrationJob.parse(await json(await f(`${base}/calibrations/${id}`, { credentials: 'include', signal: o.signal })));
+          job = CalibrationJob.parse(await json(await timed(raw, `${base}/calibrations/${id}`, { credentials: 'include' }, ms, o.signal)));
         }
       } catch (e) {
         // The abort listener has already sent the DELETE.
         if (o.signal?.aborted || isAbortError(e)) throw cancelled();
         onAbort();
         // Not `network`: that would start the test again in the browser while the server's copy stops.
+        if (e instanceof CalibrateClientError && e.code === 'timeout') throw new CalibrateClientError(e.message, 'pollFailed');
         throw e instanceof CalibrateClientError ? e : new CalibrateClientError('The server stopped answering. Run the test again.', 'pollFailed');
       } finally {
         o.signal?.removeEventListener('abort', onAbort);
@@ -134,7 +156,7 @@ export function createServerRunner(apiBase: string, opts: { fetch?: typeof fetch
       o.onProgress?.(job.progress.total, job.progress.total);
       return {
         results: job.results,
-        playthrough: async (p, i) => Playthrough.parse(await json(await f(`${base}/calibrations/${id}/playthroughs/${p}/${i}`, { credentials: 'include' })))
+        playthrough: async (p, i) => Playthrough.parse(await json(await timed(raw, `${base}/calibrations/${id}/playthroughs/${p}/${i}`, { credentials: 'include' }, ms)))
       };
     }
   };
