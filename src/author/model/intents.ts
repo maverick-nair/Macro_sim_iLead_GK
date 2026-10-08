@@ -1,9 +1,11 @@
 import { TONE_LABELS } from '../context';
 import { LENS_BY_ID, type Tone } from '../lenses';
 import { CLOSE, WELCOME } from '../storyline';
-import type { ActionDraft, AuthorDraft, Character, EventDraft, Tab } from './draft';
+import { MAX_WEEKS, MIN_WEEKS, type ActionDraft, type AuthorDraft, type Character, type EventDraft, type Tab } from './draft';
+import { PACING as PACE } from './export';
 import { applyOps, checkOps, type Change, type EditOp } from './patch';
 import { regenerateItem } from './regenerate';
+import { fitRun, movedNote } from './run';
 import { effectText, freshKey, parseEffect, PORTRAITS, pronounsOf } from './seed';
 
 /**
@@ -91,7 +93,8 @@ const round2 = (n: number) => { const p = 10 ** Math.max(0, Math.floor(Math.log1
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 const PACING = ['forgiving', 'balanced', 'demanding'] as const;
 const IMPACTS = ['skill', 'morale', 'result'] as const;
-const needsAnswer = (e: EventDraft) => e.response.trim().length > 0;
+/** An event that expects a response (D128): some action answers it, within its days. */
+const needsAnswer = (e: EventDraft) => e.respondWith.length > 0;
 const list = (xs: string[]) => (xs.length <= 1 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`);
 
 function tense(events: EventDraft[], factor: number): EditOp[] {
@@ -110,33 +113,54 @@ function tense(events: EventDraft[], factor: number): EditOp[] {
   return ops;
 }
 
+/**
+ * What a pacing does, in words, from the export's own levers (D129): pacing is the one place the run's
+ * leads, how hard setbacks land, morale drift and the sponsor's reaction to an ignored event are set.
+ */
+function pacingWords(p: (typeof PACING)[number]): string {
+  if (p === 'balanced') return 'the calibrated pace';
+  const x = PACE[p], b = PACE.balanced;
+  const leads = Math.round(Math.abs(x.leads - 1) * 100);
+  return `${leads}% ${x.leads < 1 ? 'fewer' : 'more'} new leads, setbacks land ${Math.round(Math.abs(x.harm - 1) * 100)}% ${x.harm > 1 ? 'harder' : 'softer'}, morale drifts ${x.drift > b.drift ? 'faster' : 'slower'} when nobody acts, and an ignored event costs the sponsor's confidence ${-x.escalation} instead of ${-b.escalation}`;
+}
+
+/**
+ * Harder (D125): the target up about 15%, pacing one step up, and a day less to answer events that need an
+ * answer. Pacing carries the rest through the export (fewer leads, setbacks deeper, faster drift, a harsher
+ * sponsor), so the events' own effects are deepened only when pacing is already demanding.
+ */
 function harder(d: AuthorDraft): Step {
   const ops: EditOp[] = [];
   const said: string[] = [];
   if (d.process.revenue) { ops.push(set('process.revenue', round2(d.process.revenue * 1.15))); said.push('the revenue target goes up about 15%'); }
   const p = PACING.indexOf(d.process.pacing);
-  if (p < 2) { ops.push(set('process.pacing', PACING[p + 1])); said.push(`pacing becomes ${PACING[p + 1]}`); }
+  if (p < 2) { ops.push(set('process.pacing', PACING[p + 1])); said.push(`pacing becomes ${PACING[p + 1]} (${pacingWords(PACING[p + 1])})`); }
   const windows = d.events.filter(e => needsAnswer(e) && e.within > 1);
   for (const e of windows) ops.push(set(`events.${e.key}.within`, e.within - 1));
   if (windows.length) said.push('every event that needs an answer gives a day less to respond');
-  const before = ops.length;
-  for (const e of d.events) for (const k of IMPACTS) if (e[k] < 0) { const v = clamp(Math.min(e[k] - 1, Math.round(e[k] * 1.25)), -30, -1); if (v !== e[k]) ops.push(set(`events.${e.key}.${k}`, v)); }
-  if (ops.length > before) said.push('setbacks hit about a quarter harder');
+  if (p === 2) {
+    const before = ops.length;
+    for (const e of d.events) for (const k of IMPACTS) if (e[k] < 0) { const v = clamp(Math.min(e[k] - 1, Math.round(e[k] * 1.25)), -30, -1); if (v !== e[k]) ops.push(set(`events.${e.key}.${k}`, v)); }
+    if (ops.length > before) said.push('setbacks hit about a quarter harder');
+  }
   return { ops, said: said.length ? `Harder: ${list(said)}.` : '', none: 'It is already as hard as I can make it by rule.' };
 }
 
+/** Easier: the reverse, through the same pacing levers; the events' own effects soften only when pacing is already forgiving. */
 function easier(d: AuthorDraft): Step {
   const ops: EditOp[] = [];
   const said: string[] = [];
   if (d.process.revenue) { ops.push(set('process.revenue', round2(d.process.revenue * 0.87))); said.push('the revenue target goes down about 13%'); }
   const p = PACING.indexOf(d.process.pacing);
-  if (p > 0) { ops.push(set('process.pacing', PACING[p - 1])); said.push(`pacing becomes ${PACING[p - 1]}`); }
+  if (p > 0) { ops.push(set('process.pacing', PACING[p - 1])); said.push(`pacing becomes ${PACING[p - 1]} (${pacingWords(PACING[p - 1])})`); }
   const windows = d.events.filter(e => needsAnswer(e) && e.within < 5);
   for (const e of windows) ops.push(set(`events.${e.key}.within`, e.within + 1));
   if (windows.length) said.push('every event that needs an answer gives a day more to respond');
-  const before = ops.length;
-  for (const e of d.events) for (const k of IMPACTS) if (e[k] < -1) { const v = Math.min(-1, Math.round(e[k] * 0.75)); if (v !== e[k]) ops.push(set(`events.${e.key}.${k}`, v)); }
-  if (ops.length > before) said.push('setbacks hit about a quarter softer');
+  if (p === 0) {
+    const before = ops.length;
+    for (const e of d.events) for (const k of IMPACTS) if (e[k] < -1) { const v = Math.min(-1, Math.round(e[k] * 0.75)); if (v !== e[k]) ops.push(set(`events.${e.key}.${k}`, v)); }
+    if (ops.length > before) said.push('setbacks hit about a quarter softer');
+  }
   return { ops, said: said.length ? `Easier: ${list(said)}.` : '', none: 'It is already as gentle as I can make it by rule.' };
 }
 
@@ -197,16 +221,47 @@ function tradeOffs(d: AuthorDraft, s: Scope): Step {
   return { ops, said: said.length ? `Stronger trade-offs: ${list(said)}.` : '', none: 'I found no options or opportunities that only help, so there is no trade-off to add.' };
 }
 
+/** The follow up Kora writes for an event nobody answered: it plays only then, and costs the person more. */
+function followUpOf(e: EventDraft, key: string): EventDraft {
+  const morale = -Math.max(2, Math.round(Math.abs(e.morale) / 2));
+  const result = e.result < 0 ? -Math.max(1, Math.round(-e.result / 2)) : 0;
+  return {
+    key, title: `${e.title || 'An event'}: still not answered`, kind: e.kind === 'opportunity' ? 'impact' : e.kind, week: null, day: 1, timing: 'followup',
+    who: e.who, arrives: 'modal', body: `Nobody answered "${e.title || 'it'}" in time. It has come back, and it costs more now.`,
+    skill: 0, morale, result, leadFlow: 0, respondWith: [], within: e.within, onTime: [0, 2, 0], ifIgnored: { sponsor: false, followUp: null }, origin: 'yours'
+  };
+}
+
+/**
+ * Consequences carry forward (D125, structured by D128): every event that needs an answer gets an "If ignored"
+ * follow up the engine plays when the days to respond run out, and the sponsor hears of it. An event that
+ * already has a follow up keeps it; a follow up event nothing leads to yet is used first; otherwise Kora adds
+ * one. The export turns it into the engine's escalation (`escalation.event`, `escalation.sponsor`).
+ */
 function carryForward(d: AuthorDraft, s: Scope): Step {
   const ops: EditOp[] = [];
-  const events = (s.events.length ? s.events : d.events).filter(needsAnswer);
-  for (const e of events) {
-    const n = Math.max(2, Math.round(Math.abs(e.morale) / 2));
-    const when = e.week ? (e.week < d.process.weeks ? `in week ${e.week + 1}` : 'in the last days of the run') : 'the next week';
-    const text = `Comes back ${when} and costs a further ${n} morale; the sponsor asks what happened`;
-    if (e.ignored !== text) ops.push(set(`events.${e.key}.ignored`, text));
+  const keys = new Set(d.events.map(e => e.key));
+  const led = new Set(d.events.flatMap(e => (e.ifIgnored.followUp ? [e.ifIgnored.followUp] : [])));
+  const spare = d.events.filter(e => e.timing === 'followup' && !led.has(e.key));
+  let added = 0, linked = 0;
+  for (const e of (s.events.length ? s.events : d.events).filter(needsAnswer)) {
+    let follow = e.ifIgnored.followUp && keys.has(e.ifIgnored.followUp) && e.ifIgnored.followUp !== e.key ? e.ifIgnored.followUp : null;
+    if (!follow) {
+      const i = spare.findIndex(x => x.key !== e.key);
+      if (i >= 0) { follow = spare[i].key; spare.splice(i, 1); }
+      else {
+        follow = freshKey(`${e.key}_returns`, [...keys]);
+        keys.add(follow);
+        ops.push({ op: 'addEvent', value: followUpOf(e, follow) });
+        added++;
+      }
+      ops.push(set(`events.${e.key}.ifIgnored.followUp`, follow));
+      linked++;
+    }
+    if (!e.ifIgnored.sponsor) { ops.push(set(`events.${e.key}.ifIgnored.sponsor`, true)); if (e.ifIgnored.followUp === follow) linked++; }
   }
-  return { ops, said: ops.length ? `Consequences carry forward: ${ops.length} event${ops.length === 1 ? '' : 's'} that need an answer now come back later when ignored.` : '', none: s.events.length ? 'That event does not ask for an answer, so ignoring it has no follow-up to set.' : 'No event asks for an answer, so there is no follow-up to set.' };
+  const said = linked ? `Consequences carry forward: ${linked} event${linked === 1 ? '' : 's'} that need an answer now come back when ignored, after the days to respond run out, and the sponsor hears of it${added ? `; ${added} new follow up event${added === 1 ? '' : 's'} play only then` : ''}.` : '';
+  return { ops, said, none: s.events.length ? (s.events.some(needsAnswer) ? 'That event already comes back when ignored.' : 'That event does not ask for an answer, so ignoring it has no follow up to set.') : 'No event asks for an answer, so there is no follow up to set.' };
 }
 
 function eventTension(s: Scope): Step {
@@ -214,17 +269,21 @@ function eventTension(s: Scope): Step {
   return { ops, said: ops.length ? `More tense: ${list(s.events.map(e => e.title))} ${s.events.length === 1 ? 'hits' : 'hit'} harder${s.events.some(e => needsAnswer(e) && e.within > 1) ? ' and leave less time to respond' : ''}.` : '', none: 'That event is already as tense as I can make it.' };
 }
 
+/**
+ * Shorten, lengthen or set the run (D128): the same `fitRun` the Brief and Work process tabs use moves every
+ * fixed event, random window and action unlock with it (applyOps runs it for `process.weeks`), and Kora says
+ * what moved.
+ */
 function runLength(d: AuthorDraft, to: 'short' | 'long' | number): Step {
-  const weeks = to === 'short' ? 4 : to === 'long' ? 8 : clamp(to, 2, 12);
+  const weeks = to === 'short' ? 4 : to === 'long' ? 8 : clamp(to, MIN_WEEKS, MAX_WEEKS);
   const run = weeks <= 4 ? 'lite' : d.brief.run === 'lite' ? 'standard' : d.brief.run;
   if (weeks === d.process.weeks && run === d.brief.run) return { ops: [], said: '', none: `The run is already ${weeks} weeks.` };
   const ops: EditOp[] = [];
   if (run !== d.brief.run) ops.push(set('brief.run', run));
-  ops.push(set('process.weeks', weeks));
-  const minutes = run === 'lite' ? 8 : 9;
-  if (minutes !== d.brief.minutesPerWeek) ops.push(set('brief.minutesPerWeek', minutes));
-  for (const e of d.events) if (e.week && e.week > weeks) ops.push(set(`events.${e.key}.week`, Math.max(1, Math.min(weeks, Math.ceil((e.week * weeks) / d.process.weeks)))));
-  return { ops, said: `The run becomes ${weeks} weeks${run === 'lite' ? ', the Lite run of about 30 minutes' : ''}; events after week ${weeks} move earlier.` };
+  if (weeks !== d.process.weeks) ops.push(set('process.weeks', weeks));
+  const note = movedNote(fitRun(structuredClone(d), weeks));
+  const capped = typeof to === 'number' && to > MAX_WEEKS ? ` (${MAX_WEEKS} is the most the simulation plays)` : '';
+  return { ops, said: `The run becomes ${weeks} weeks${capped}${run === 'lite' ? ', the Lite run of about 30 minutes' : ''}.${note ? ` ${note}` : ''}` };
 }
 
 const NEW_NAMES: Array<[string, string, Character['gender']]> = [['Sam', 'Okoro', 'nonbinary'], ['Alex', 'Moreno', 'nonbinary'], ['Jordan', 'Reyes', 'nonbinary'], ['Robin', 'Das', 'nonbinary'], ['Casey', 'Morgan', 'nonbinary'], ['Noor', 'Haddad', 'woman']];
@@ -251,7 +310,8 @@ function addCharacter(d: AuthorDraft, s: Scope): Step {
 function removeCharacters(d: AuthorDraft, s: Scope): Step {
   if (!s.characters.length) return { ops: [], said: '', none: 'Who should leave the team? Name them and ask again.' };
   if (d.team.length - s.characters.length < 6) return { ops: [], said: '', none: 'A team needs at least 6 people, so I cannot remove anyone else.' };
-  return { ops: s.characters.map(c => ({ op: 'removeCharacter' as const, id: c.id })), said: `Removes ${list(s.characters.map(c => `${c.first} ${c.last}`.trim()))} from the team; events about them go to a team member Kora picks.` };
+  const theirs = d.events.filter(e => s.characters.some(c => c.id === e.who)).length;
+  return { ops: s.characters.map(c => ({ op: 'removeCharacter' as const, id: c.id })), said: `Removes ${list(s.characters.map(c => `${c.first} ${c.last}`.trim()))} from the team${theirs ? `; ${theirs} event${theirs === 1 ? '' : 's'} about them then hit${theirs === 1 ? 's' : ''} one person the engine picks, as listed. To send them elsewhere, remove the person in the Team tab instead` : ''}.` };
 }
 
 const clean = (s: string) => s.trim().replace(/^["'“‘]+|["'”’.!]+$/g, '').trim().slice(0, 60);
@@ -370,7 +430,14 @@ function regenerateOne(d: AuthorDraft, s: Scope): Step {
     const w = structuredClone(d);
     regenerateItem(w, { event: e.key }, s.variant);
     const after = w.events.find(x => x.key === e.key)!;
-    for (const k of ['title', 'body', 'skill', 'morale', 'result', 'within', 'ignored', 'response', 'week', 'day'] as const) if (JSON.stringify(after[k]) !== JSON.stringify(e[k]) && after[k] !== null) ops.push(set(`events.${e.key}.${k}`, after[k]));
+    const answerable = after.respondWith.every(k => k === 'reply' || d.actions.some(a => a.key === k));
+    for (const k of ['title', 'body', 'skill', 'morale', 'result', 'respondWith', 'within', 'week', 'day'] as const) {
+      if (k === 'respondWith' && !answerable) continue;
+      if (JSON.stringify(after[k]) !== JSON.stringify(e[k]) && after[k] !== null) ops.push(set(`events.${e.key}.${k}`, after[k]));
+    }
+    if (after.ifIgnored.sponsor !== e.ifIgnored.sponsor) ops.push(set(`events.${e.key}.ifIgnored.sponsor`, after.ifIgnored.sponsor));
+    const follow = after.ifIgnored.followUp;
+    if (follow !== e.ifIgnored.followUp && (follow === null || (follow !== e.key && d.events.some(x => x.key === follow)))) ops.push(set(`events.${e.key}.ifIgnored.followUp`, follow));
     if (ops.length) done.push(e.title);
   }
   for (const c of s.characters) {

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { Brief } from '../../api/author';
 import { AuthorDraft, type Tab } from './draft';
+import { toStoryline } from './export';
 import { charactersIn, eventsIn, understand, type KoraAnswer } from './intents';
 import { applyOps, checkOps, checkViewOps, editView } from './patch';
+import { fitRun } from './run';
 import { emptyChat, seedDraft } from './seed';
 
 const draft = () => seedDraft({
@@ -45,16 +47,18 @@ function applied(d: AuthorDraft, text: string, tab: Tab = 'overview') {
 }
 
 describe('Ask Kora offline: every instruction becomes structured changes (D125)', () => {
-  it('"make it harder" raises the target and pacing, shortens windows and deepens setbacks', () => {
+  it('"make it harder" raises the target and pacing, and shortens the structured response windows', () => {
     const d = draft();
     const { a, next } = applied(d, 'Make it harder');
     expect(next.process.revenue!).toBeGreaterThan(d.process.revenue!);
     expect(next.process.pacing).toBe('demanding');
     const e = d.events.find(x => x.key === 'budget_cut')!;
+    expect(e.respondWith.length).toBeGreaterThan(0);
     expect(next.events.find(x => x.key === 'budget_cut')!.within).toBe(e.within - 1);
-    expect(next.events.find(x => x.key === 'budget_cut')!.morale).toBeLessThan(e.morale);
+    // Setbacks deepen through pacing in the export (D129), not twice in the draft.
+    expect(next.events.find(x => x.key === 'budget_cut')!.morale).toBe(e.morale);
     expect(a.changes.find(c => c.path === 'process.revenue')).toMatchObject({ field: 'Revenue target', before: '240,000', after: '280,000' });
-    expect(a.reply).toMatch(/^Harder:/);
+    expect(a.reply).toMatch(/^Harder:.*pacing becomes demanding \(10% fewer new leads, setbacks land 25% harder/);
     // Nothing appended to the company or the first event, the audit's failure.
     expect(next.story.company.about).toBe(d.story.company.about);
     expect(next.events[0].body).toBe(d.events[0].body);
@@ -87,18 +91,64 @@ describe('Ask Kora offline: every instruction becomes structured changes (D125)'
     expect(next.events.find(e => e.key === 'big_referral')).toMatchObject({ morale: -2, result: 4 });
   });
 
-  it('"make consequences carry forward" sets what happens when an event is ignored', () => {
+  it('"make consequences carry forward" gives each event that needs an answer a real follow up the engine escalates to', () => {
     const d = draft();
-    const { next } = applied(d, 'Make consequences carry forward');
-    expect(next.events.find(e => e.key === 'budget_cut')!.ignored).toBe('Comes back in week 4 and costs a further 3 morale; the sponsor asks what happened');
-    expect(next.events.find(e => e.key === 'pulse_survey')!.ignored).toBe('');
+    const { a, next } = applied(d, 'Make consequences carry forward');
+    const cut = next.events.find(e => e.key === 'budget_cut')!;
+    expect(cut.ifIgnored.sponsor).toBe(true);
+    const follow = next.events.find(e => e.key === cut.ifIgnored.followUp)!;
+    expect(follow).toMatchObject({ timing: 'followup', week: null, respondWith: [] });
+    expect(follow.morale).toBeLessThan(0);
+    // An event with no response expected gets no follow up.
+    expect(next.events.find(e => e.key === 'pulse_survey')!.ifIgnored).toEqual(d.events.find(e => e.key === 'pulse_survey')!.ifIgnored);
+    expect(a.changes.find(c => c.path === 'events.budget_cut.ifIgnored.followUp')!.after).toBe(follow.title);
+    // The export plays it: the engine's escalation names the follow up, and nothing dangles.
+    const out = toStoryline(next);
+    expect(out.issues).toEqual([]);
+    expect(out.storyline.events!.find(e => e.key === 'budget_cut')!.escalation).toEqual({ sponsor: true, event: follow.key });
+    expect(out.storyline.events!.find(e => e.key === follow.key)).toMatchObject({ period: undefined, window: undefined, when: undefined });
+    // Asked again, nothing changes.
+    expect(ask(next, 'Make consequences carry forward')).toMatchObject({ kind: 'reply', reply: expect.stringMatching(/^Nothing to change/) });
+  });
+
+  it('a follow up event nothing leads to yet is used before a new one is made', () => {
+    const d = draft();
+    const spare = d.events.find(e => e.key !== 'budget_cut' && e.respondWith.length === 0)!;
+    Object.assign(spare, { timing: 'followup', week: null });
+    const cut = d.events.find(e => e.key === 'budget_cut')!;
+    cut.ifIgnored = { sponsor: false, followUp: null };
+    const { next } = applied(d, 'Make the budget cut event carry forward if ignored');
+    expect(next.events.find(e => e.key === 'budget_cut')!.ifIgnored).toEqual({ sponsor: true, followUp: spare.key });
+    expect(next.events).toHaveLength(d.events.length);
   });
 
   it('combines compatible intents in one instruction', () => {
     const d = draft();
     const { next } = applied(d, 'Make it harder and make consequences carry forward');
     expect(next.process.pacing).toBe('demanding');
-    expect(next.events.find(e => e.key === 'budget_cut')!.ignored).toMatch(/^Comes back/);
+    expect(next.events.find(e => e.key === 'budget_cut')!.ifIgnored.followUp).toBeTruthy();
+  });
+
+  it('"make it harder" changes the exported storyline: target, pacing levers, response windows and event impacts', () => {
+    const d = draft();
+    const { next } = applied(d, 'Make it harder');
+    const before = toStoryline(d), after = toStoryline(next);
+    expect(after.issues).toEqual([]);
+    const a = before.storyline, b = after.storyline;
+    expect(b.money.target).toBeGreaterThan(a.money.target);
+    // Pacing (D129): fewer leads, faster drift, a harsher sponsor on an ignored event.
+    expect(b.money.inputPerSubPeriod[0]).toBeLessThan(a.money.inputPerSubPeriod[0]);
+    expect(b.drift?.morale ?? 3).toBeGreaterThan(a.drift?.morale ?? 3);
+    expect(b.gamification?.sponsor?.escalation ?? -10).toBeLessThan(a.gamification?.sponsor?.escalation ?? -10);
+    const ev = (s: typeof a, k: string) => s.events!.find(e => e.key === k)!;
+    expect(ev(b, 'budget_cut').response!.within).toBe(ev(a, 'budget_cut').response!.within! - 1);
+    // Setbacks land harder: every negative impact is at least as deep, and some deeper.
+    const neg = (s: typeof a) => s.events!.flatMap(e => (e.impact ?? []).filter(v => v < 0));
+    expect(neg(b).reduce((x, y) => x + y, 0)).toBeLessThan(neg(a).reduce((x, y) => x + y, 0));
+    expect(ev(b, 'budget_cut').impact![1]).toBeLessThan(ev(a, 'budget_cut').impact![1]);
+    // Easier goes back the other way in the export too.
+    const eased = applied(next, 'Make it easier').next;
+    expect(toStoryline(eased).storyline.money.inputPerSubPeriod[0]).toBeGreaterThan(b.money.inputPerSubPeriod[0]);
   });
 
   it('regenerates one named event and nothing else; an ambiguous week asks which', () => {
@@ -118,15 +168,24 @@ describe('Ask Kora offline: every instruction becomes structured changes (D125)'
     expect(ask(d, 'Improve this event and make it more tense', 'events')).toMatchObject({ kind: 'reply', reply: expect.stringMatching(/^Which event\?/) });
   });
 
-  it('shortens and lengthens the run', () => {
+  it('shortens and lengthens the run with the same remapping as the Brief tab (fitRun)', () => {
     const d = draft();
-    const { next } = applied(d, 'Shorten it to a 30 minute Lite run');
+    const { a, next } = applied(d, 'Shorten it to a 30 minute Lite run');
     expect(next.brief.run).toBe('lite');
     expect(next.process.weeks).toBe(4);
     expect(Math.max(...next.events.map(e => e.week ?? 0))).toBeLessThanOrEqual(4);
+    const brief = structuredClone(d);
+    brief.brief.run = 'lite';
+    fitRun(brief, 4);
+    expect(next.events).toEqual(brief.events);
+    expect(next.actions.map(x => x.availableFrom)).toEqual(brief.actions.map(x => x.availableFrom));
+    expect(a.reply).toMatch(/To fit the new length, \d+ items? moved/);
+    expect(a.changes.some(c => c.field.endsWith('moves to fit the run'))).toBe(true);
+    expect(toStoryline(next).issues).toEqual([]);
     expect(ask(next, 'Shorten it')).toMatchObject({ kind: 'reply', reply: expect.stringMatching(/already 4 weeks/) });
     expect(applied(next, 'Make it longer').next.process.weeks).toBe(8);
     expect(applied(d, 'Make the run 6 weeks').next.process.weeks).toBe(6);
+    expect(change(d, 'Make the run 12 weeks').reply).toMatch(/becomes 10 weeks \(10 is the most/);
   });
 
   it('adds a character within the limit and says so honestly when the team is full', () => {
@@ -141,8 +200,12 @@ describe('Ask Kora offline: every instruction becomes structured changes (D125)'
   it('removes and renames a character, the company and a style', () => {
     const d = draft();
     const c = d.team[2];
-    const removed = applied(d, `Remove ${c.first} from the team`).next;
+    const theirs = d.events.find(e => e.who !== c.id && /^[a-z]/.test(e.who) && !['team', 'member', 'sponsor'].includes(e.who) && !e.who.startsWith('stage:'));
+    if (theirs) theirs.who = c.id;
+    const { a: rm, next: removed } = applied(d, `Remove ${c.first} from the team`);
     expect(removed.team.some(x => x.id === c.id)).toBe(false);
+    // Their events are said in the diff, never moved silently.
+    if (theirs) expect(rm.changes.find(x => x.path === `events.${theirs.key}.who`)).toMatchObject({ after: 'One person, the engine picks' });
     const renamed = applied(d, `Rename ${c.first} ${c.last} to Ana Lopez`).next.team[2];
     expect([renamed.first, renamed.last]).toEqual(['Ana', 'Lopez']);
     expect(applied(d, 'Rename the company to Harbour Clinics').next.story.company.name).toBe('Harbour Clinics');
@@ -215,5 +278,32 @@ describe('Kora\'s edits as data (the whitelist)', () => {
     expect(checkViewOps(view, [{ path: 'process.revenue', value: 300000 }])).toEqual([]);
     expect(checkViewOps(view, [{ path: 'events.budget_cut.body', value: 'x' }])).toHaveLength(1);
     expect(checkViewOps(view, [{ path: 'process.pacing', value: 'brutal' }])).toHaveLength(1);
+  });
+
+  it('checks structured event references: a follow up must exist and not be itself, a response must be an action', () => {
+    const d = draft();
+    expect(checkOps(d, [{ op: 'set', path: 'events.budget_cut.ifIgnored.followUp', value: 'nope' }])).toMatchObject({ ok: false });
+    expect(checkOps(d, [{ op: 'set', path: 'events.budget_cut.ifIgnored.followUp', value: 'budget_cut' }])).toMatchObject({ ok: false });
+    expect(checkOps(d, [{ op: 'set', path: 'events.budget_cut.respondWith', value: ['nope'] }])).toMatchObject({ ok: false });
+    expect(checkOps(d, [{ op: 'set', path: 'events.budget_cut.response', value: 'f2f' }])).toMatchObject({ ok: false });
+    expect(checkOps(d, [{ op: 'set', path: 'events.budget_cut.ignored', value: 'x' }])).toMatchObject({ ok: false });
+    const other = d.events.find(e => e.key !== 'budget_cut')!;
+    expect(checkOps(d, [{ op: 'set', path: 'events.budget_cut.ifIgnored.followUp', value: other.key }])).toMatchObject({ ok: true, changes: [{ after: other.title }] });
+    const view = editView(d, 'events');
+    expect(view.fields['events.budget_cut.respondWith']).toEqual(d.events.find(e => e.key === 'budget_cut')!.respondWith);
+    expect('events.budget_cut.ifIgnored.followUp' in view.fields).toBe(true);
+    expect(checkViewOps(view, [{ path: 'events.budget_cut.within', value: 9 }])).toHaveLength(1);
+  });
+
+  it('a new number of weeks set by the model moves events the same way (fitRun)', () => {
+    const d = draft();
+    const c = checkOps(d, [{ op: 'set', path: 'process.weeks', value: 4 }]);
+    expect(c.ok).toBe(true);
+    const next = structuredClone(d);
+    applyOps(next, (c as { ops: Parameters<typeof applyOps>[1] }).ops);
+    const ref = structuredClone(d);
+    fitRun(ref, 4);
+    expect(next.events).toEqual(ref.events);
+    expect(next.process.weeks).toBe(4);
   });
 });
