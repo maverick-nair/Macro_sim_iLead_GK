@@ -87,6 +87,8 @@ export function kindOf(relation: string, role = ''): Kind {
   if (/\b(customer|client)/.test(t)) return 'customer';
   if (/\b(board)/.test(t)) return 'board';
   if (/\b(union|works council)/.test(t)) return 'union';
+  // An HR or finance business partner works inside the organisation: a peer, not a partner company.
+  if (/\b(hr partner|hr business partner|business partner)/.test(t)) return 'peer';
   if (/\b(partner|vendor|supplier)/.test(t)) return 'partner';
   if (/\b(ceo|cfo|coo|cto|chief|executive|vp|vice president|director)/.test(t)) return 'executive';
   if (/\b(peer|colleague|head of|other team|department)/.test(t)) return 'peer';
@@ -94,16 +96,18 @@ export function kindOf(relation: string, role = ''): Kind {
 }
 
 /**
- * The stakeholders the brief names (D165), when the chat found some: `brief.stakeholders[]` with a name, a role and
- * how they relate. Read defensively, since a brief saved before that field has none; only those not yet created.
+ * The stakeholders the brief names (D165), when the chat found some (D146): name, role and how they relate. The
+ * Brief tab's list (`brief.stakeholders`, which the author can edit) comes first; else the chat's reading
+ * (`chat.brief.stakeholders`), read defensively since a brief saved before that field has none. Only those not yet
+ * created, up to the most a storyline takes.
  */
 const BriefStakeholders = z.array(z.object({ name: z.string().min(1), role: z.string().default(''), relation: z.string().optional() })).max(20);
-export function briefStakeholders(d: Pick<AuthorDraft, 'chat' | 'stakeholders'>): Array<{ name: string; role: string; kind: Kind }> {
-  const raw = (d.chat?.brief as Record<string, unknown> | undefined)?.stakeholders;
-  const r = BriefStakeholders.safeParse(raw);
-  if (!r.success) return [];
+export function briefStakeholders(d: Pick<AuthorDraft, 'chat' | 'stakeholders'> & { brief?: Partial<Pick<AuthorDraft['brief'], 'stakeholders'>> }): Array<{ name: string; role: string; kind: Kind }> {
+  const edited = BriefStakeholders.safeParse(d.brief?.stakeholders);
+  const read = BriefStakeholders.safeParse((d.chat?.brief as Record<string, unknown> | undefined)?.stakeholders);
+  const list = edited.success && edited.data.length ? edited.data : read.success ? read.data : [];
   const have = new Set(d.stakeholders.map(s => s.name.trim().toLowerCase()));
-  return r.data.filter(s => !have.has(s.name.trim().toLowerCase())).slice(0, MAX_STAKEHOLDERS - d.stakeholders.length)
+  return list.filter(s => !have.has(s.name.trim().toLowerCase())).slice(0, Math.max(0, MAX_STAKEHOLDERS - d.stakeholders.length))
     .map(s => ({ name: s.name.trim(), role: s.role.trim(), kind: kindOf(s.relation ?? '', s.role) }));
 }
 

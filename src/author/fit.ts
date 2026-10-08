@@ -9,12 +9,13 @@
  * model and should raise the same kinds.
  *
  * Budget and customer decisions are no longer raised (D152): the engine plays business variables, such as a
- * budget or customer satisfaction, and decisions with trade-offs that carry forward (D136 to D138), and the
- * drafter seeds them from the brief's objectives and dilemmas. Still missing: stakeholders outside the team as
- * characters (coming next), a merger across functions, and negotiations between several parties.
+ * budget or customer satisfaction, and decisions with trade offs that carry forward (D136 to D138), and the
+ * drafter seeds them from the brief's objectives and dilemmas. Nor are stakeholders outside the team (D166): up to
+ * eight people the participant meets, presents to, negotiates with or writes to (D160 to D165), created from the
+ * brief's. Still missing: a merger across several functions, and negotiations between several parties at once.
  */
 
-export const FIT_KINDS = ['no_team', 'stakeholders', 'merger', 'negotiation'] as const;
+export const FIT_KINDS = ['no_team', 'merger', 'negotiation'] as const;
 export type FitKind = (typeof FIT_KINDS)[number];
 
 export interface FitConcern {
@@ -37,17 +38,13 @@ const TEXT: Record<FitKind, Omit<FitConcern, 'kind'>> = {
     cannot: 'a role with no team of its own (every iLead participant leads 6 to 12 direct reports)',
     nearest: 'the participant leads a small team of direct reports, as in a first leadership role'
   },
-  stakeholders: {
-    cannot: 'people outside the team, such as a board, customers or peers, as characters the participant leads or manages (they are coming next)',
-    nearest: 'the participant leads their own team; the sponsor is the one voice from above, and a board, customers or peers appear in events, in decisions and in business measures such as customer trust'
-  },
   merger: {
     cannot: 'a merger or an integration across several functions',
     nearest: 'the participant leads one team through the merger\'s changes: new processes, new colleagues and uncertainty'
   },
   negotiation: {
     cannot: 'negotiations between several parties',
-    nearest: 'pressure from a negotiation arrives as events the team must handle'
+    nearest: 'the participant negotiates with one stakeholder at a time, such as the union or a client, and pressure from the wider negotiation arrives as events'
   }
 };
 
@@ -55,7 +52,6 @@ const RULES: Record<FitKind, (t: string) => boolean> = {
   no_team: t =>
     /\b(?:no|without|zero)\s+(?:direct\s+)?reports\b|\bno team\b|\b(?:do|does|don'?t|doesn'?t)\s+(?:not\s+)?(?:have|manage|lead)\s+(?:a team|anyone|people|direct reports)\b|\bnot people managers?\b/i.test(t)
     || /\bindividual contributors?\b(?![^.]*\b(?:moving|becom\w*|promot\w*|into leadership|first (?:team|leadership))\b)/i.test(t),
-  stakeholders: t => /\bstakeholders?\b|\bthe board\b|\bboard (?:members?|of directors)\b|\bpeers?\b|\bcross[- ]functional\b|\bmatrix(?:ed)? (?:organi[sz]ation|teams?|structure)\b|\binvestors?\b|\bregulators?\b/i.test(t),
   merger: t => /\b(?:mergers?|merged|merging|acquisitions?|acquired)\b/i.test(t) && /\bintegrat\w*|\bacross (?:the |both |two )?(?:functions|departments|organi[sz]ations?|business units|sites|hospitals|companies)\b|\bcross[- ]functional\b|\bfunctions\b/i.test(t),
   negotiation: t => /\bnegotiat\w*/i.test(t) && /\b(?:unions?|multi[- ]?party|several parties|multiple parties|between (?:the )?parties|stakeholders|payers?|suppliers and)\b/i.test(t)
 };
@@ -81,6 +77,6 @@ export function fitAccepted(concerns: FitConcern[]): string {
 }
 
 /** Kora's note, once, for senior participants. */
-export const SENIOR_NOTE = 'A note on fit: iLead puts a senior leader in front of their own team of 6 to 12 direct reports, such as their leadership team. Their wider organization, the board and their peers are not in the simulation yet.';
+export const SENIOR_NOTE = 'A note on fit: iLead puts a senior leader in front of their own team of 6 to 12 direct reports, such as their leadership team. The board, their peers and their manager can play as stakeholders outside the team.';
 
 export const FIT_TEXT = TEXT;

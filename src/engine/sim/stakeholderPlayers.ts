@@ -12,9 +12,10 @@ import type { EngineView } from './view';
  *   calibration   `policyStakeholders`, for the calibration players (policies.ts): good answers every request
  *                 and engages the stakeholder whose relationship is weakest once a week; random does either
  *                 half the time with any words; passive and careless never do.
- *   synthetic     `StakeholderPlayer`, for the synthetic personas (synthetic.ts), by level: a Beginner neglects
- *                 stakeholders and, when it does answer, escalates poorly; an Expert answers every request in
- *                 time and manages up and across before anyone asks.
+ *   synthetic     `StakeholderPlayer`, for the synthetic players (synthetic.ts), by the policy's `stakeholders`
+ *                 traits (D152, D166): a level's from `STAKEHOLDER_TRAITS` (a Beginner neglects stakeholders and,
+ *                 when it does answer, escalates poorly; an Expert answers every request in time and manages up
+ *                 and across before anyone asks), a player type's own, or none for a probe.
  *
  * The words are templates that the evaluator reads like any participant's (the same rubric cues), so what a
  * stronger player says rates higher. With an AI speaker the team conversations use it; these stay templates.

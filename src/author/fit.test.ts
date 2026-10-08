@@ -18,13 +18,14 @@ const noDash = (s: string) => { expect(s).not.toMatch(/\u2014|\u2013/); expect(c
 describe('the template fit check (D133)', () => {
   it('names everything the merger brief asks for that iLead cannot play, and the nearest fit', () => {
     const f = fitCheck(MERGER);
-    // The budget cut is a decision the engine plays now (D152): no longer a concern.
-    expect(f.concerns.map(c => c.kind)).toEqual(['stakeholders', 'merger', 'negotiation']);
+    // The budget cut is a decision (D152) and the board, unions and physician leaders are stakeholders (D166) the
+    // engine plays now: no longer concerns.
+    expect(f.concerns.map(c => c.kind)).toEqual(['merger', 'negotiation']);
     expect(f.senior).toBe(true);
     const say = fitMessage(f.concerns);
     expect(say).toMatch(/^Before I go on, a plain word on fit\. An iLead simulation is one leader with a team of 6 to 12 direct reports\. It cannot play /);
     expect(say).toContain('a merger or an integration across several functions');
-    expect(say).toContain('**The nearest fit:** the participant leads their own team');
+    expect(say).toContain('**The nearest fit:** the participant leads one team through the merger');
     expect(say).toMatch(/continue with a team leadership version, or change the brief\?$/);
     noDash(say.replace(/\*\*/g, ''));
     noDash(fitAccepted(f.concerns));
@@ -44,7 +45,9 @@ describe('the template fit check (D133)', () => {
   it('the intro says what the engine plays now and what is still missing', () => {
     expect(INTRO.goodFor).toMatch(/decisions with trade offs/);
     expect(INTRO.notYet).not.toMatch(/budget/i);
-    expect(INTRO.notYet).toMatch(/stakeholders outside the team .*coming next.*negotiations between several parties/);
+    expect(INTRO.goodFor).toMatch(/stakeholders outside the team/);
+    expect(INTRO.notYet).toMatch(/merger across several functions.*negotiations between several parties/);
+    expect(INTRO.notYet).not.toMatch(/stakeholders/);
   });
 
   it('says once that senior leaders get their own leadership team', () => {

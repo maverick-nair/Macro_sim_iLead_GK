@@ -7,6 +7,8 @@ import { applyOps, checkOps, checkViewOps, editView } from './patch';
 import { fitRun } from './run';
 import { emptyChat, seedDraft } from './seed';
 import { briefStakeholders } from './stakeholders';
+import { MERGER_BRIEF } from '../fixtures';
+import { readBrief } from '../read';
 
 const draft = () => seedDraft({
   ...emptyChat(),
@@ -407,6 +409,22 @@ describe('Kora on stakeholders outside the team (D165)', () => {
     // A brief saved before the field, or with something else there, offers none.
     (d.chat.brief as unknown as Record<string, unknown>).stakeholders = 'nobody';
     expect(briefStakeholders(d)).toEqual([]);
+  });
+
+  it('creates the stakeholders the chat read from a brief (D146, D166), as edited in the Brief tab', () => {
+    const brief = Brief.parse({ ...readBrief(MERGER_BRIEF, Brief.parse({})).fields, process: ['Intake', 'Review', 'Resolve', 'Follow up'] });
+    const d = seedDraft({ ...emptyChat(), brief }, 'workspace');
+    expect(briefStakeholders(d).map(s => [s.name, s.kind])).toEqual([
+      ['Dana Whitfield', 'manager'], ['Raj Patel', 'peer'], ['Lisa Chen', 'peer'], ['Marcus Bell', 'executive'], ['Priya Nair', 'union'], ['Tom Alvarez', 'customer']
+    ]);
+    const { a, next } = applied(d, 'Create the stakeholders from the brief', 'team');
+    expect(a.reply).toMatch(/^Adds 6 stakeholders from your brief: Dana Whitfield, COO; Raj Patel, Head of Claims at Bluewave Care;/);
+    expect(next.stakeholders.map(s => [s.name, s.role])).toContainEqual(['Tom Alvarez', 'account lead for their largest employer client']);
+    expect(toStoryline(next).issues).toEqual([]);
+    // The Brief tab's list wins once the author edits it.
+    const edited = structuredClone(d);
+    edited.brief.stakeholders = [{ name: 'Marcus Bell', role: 'CFO', relation: 'senior leader' }];
+    expect(briefStakeholders(edited).map(s => s.name)).toEqual(['Marcus Bell']);
   });
 
   it('keeps Kora\'s stakeholder edits to the whitelist, and shows the model their fields', () => {

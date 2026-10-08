@@ -53,7 +53,7 @@ test('the chat says what an iLead simulation is before question 1, then folds it
   const intro = page.getByRole('region', { name: 'What you are building: an iLead simulation' });
   await expect(intro).toBeVisible();
   await expect(intro).toContainText('a team of 6 to 12 direct reports through a staged work process, over up to 10 weeks');
-  await expect(intro).toContainText('Not covered yet: stakeholders outside the team');
+  await expect(intro).toContainText('Not covered yet: a merger across several functions');
   await expect(intro).toContainText('I am Kora.');
   await expect(intro.getByRole('term').filter({ hasText: 'Pressure point' })).toBeVisible();
   const question = page.getByRole('log').getByText('Who are your participants?');
@@ -76,7 +76,7 @@ test('a brief the template cannot play is named plainly, with the nearest fit an
   await type(page, MERGER);
   const log = page.getByRole('log');
   await expect(log).toContainText('Before I go on, a plain word on fit.');
-  await expect(log).toContainText('It cannot play people outside the team');
+  await expect(log).toContainText('It cannot play a merger or an integration across several functions');
   await expect(log).toContainText('a merger or an integration across several functions');
   await expect(log).toContainText('The nearest fit:');
   const choice = page.getByRole('group', { name: 'Does iLead fit this brief?' });
