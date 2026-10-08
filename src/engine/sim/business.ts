@@ -1,7 +1,7 @@
 import type { Business, Clause, GeneralEvent } from '../config';
 import type { z } from 'zod';
 import type { Rng } from './rng';
-import { addEffects, clampTo, effectChanges, gendered, log, member, nextId, perPeriod, sponsorChange, teamAverage, trustChange } from './sim';
+import { addEffects, clampTo, effectChanges, fill, gendered, log, member, nextId, perPeriod, sponsorChange, teamAverage, trustChange } from './sim';
 import type { ActionRecord, Change, ChoiceRecord, MemberSim, Reason, Sim } from './types';
 import { IntentError } from './errors';
 import { msg, type Copy } from '../copy';
@@ -147,7 +147,7 @@ export function resolveChoice(sim: Sim, rng: Rng, choiceId: string, optionKey: s
   sim.openChoices = sim.openChoices.filter(c => c !== open);
   sim.cards = sim.cards.filter(c => c.choiceId !== choiceId);
   const id = choiceId;
-  const label: Copy | null = picked?.label ?? null;
+  const label: Copy | null = picked ? fill(picked.label, sim, open.memberId) : null;
   const cause: Copy = label ? msg('engine.choice.cause', { title: ev.title, option: label, by }) : msg('engine.choice.none', { title: ev.title });
   const target = open.memberId ? [member(sim, open.memberId)].filter((m): m is MemberSim => !!m) : ev.target === 'team' ? sim.members.filter(m => m.away === 0) : ev.target.startsWith('stage:') ? sim.members.filter(m => m.stage === ev.target.slice(6)) : [];
   const changes: Change[] = [];
@@ -162,7 +162,7 @@ export function resolveChoice(sim: Sim, rng: Rng, choiceId: string, optionKey: s
     changes.push(...applied.changes);
   }
   const rec: ChoiceRecord = {
-    id, eventKey: ev.key, title: ev.title, memberId: open.memberId, option: picked?.key ?? null, label, outcome: opt?.outcome ?? null, by,
+    id, eventKey: ev.key, title: ev.title, memberId: open.memberId, option: picked?.key ?? null, label, outcome: opt?.outcome ? fill(opt.outcome, sim, open.memberId) : null, by,
     period: sim.period, sub: sim.sub, changes, variables: applied.variables, revenue: applied.revenue, flags: { set: applied.set, clear: applied.clear },
     triggered: [], read: by === 'you' ? picked?.read ?? [] : []
   };

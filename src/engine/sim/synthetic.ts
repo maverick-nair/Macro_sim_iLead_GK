@@ -31,6 +31,8 @@ import type { RunSummary } from '../report/summary';
  *   turns         how many lines it says in a conversation
  *   polish        speaks at its full level in a conversation (otherwise one level lower, as on an off day)
  *   slip          says something that blames, now and then
+ *   decide        makes a choice event's decision at all (otherwise its default applies, D137)
+ *   weigh         weighs people, leadership and business in a decision (otherwise takes the best short term business)
  */
 
 export const PERSONAS = ['beginner', 'developing', 'proficient', 'expert'] as const;
@@ -39,13 +41,15 @@ export type PersonaKey = (typeof PERSONAS)[number];
 export interface PersonaTraits {
   diagnose: number; oneStyle: number; adapt: number; events: number; focus: number; fitAction: number;
   keepPromises: number; promise: number; extras: number; waste: number; turns: [number, number]; polish: number; slip: number;
+  /** Choice events (D137): makes the decision at all, and weighs people and leadership beside business. */
+  decide: number; weigh: number;
 }
 
 export const PERSONA_TRAITS: Record<PersonaKey, PersonaTraits> = {
-  beginner: { diagnose: 0.1, oneStyle: 0.85, adapt: 0.2, events: 0.1, focus: 0.2, fitAction: 0.2, keepPromises: 0, promise: 0.3, extras: 0, waste: 0.9, turns: [1, 1], polish: 1, slip: 0.04 },
-  developing: { diagnose: 0.6, oneStyle: 0.15, adapt: 0.6, events: 0.5, focus: 0.6, fitAction: 0.6, keepPromises: 0.4, promise: 0.3, extras: 0.4, waste: 0.3, turns: [2, 2], polish: 0.75, slip: 0 },
-  proficient: { diagnose: 0.8, oneStyle: 0, adapt: 0.8, events: 0.8, focus: 0.75, fitAction: 0.8, keepPromises: 0.8, promise: 0.4, extras: 0.6, waste: 0.05, turns: [2, 3], polish: 0.6, slip: 0 },
-  expert: { diagnose: 0.97, oneStyle: 0, adapt: 1, events: 0.97, focus: 0.95, fitAction: 0.97, keepPromises: 1, promise: 0.5, extras: 0.9, waste: 0, turns: [3, 4], polish: 0.95, slip: 0 }
+  beginner: { diagnose: 0.1, oneStyle: 0.85, adapt: 0.2, events: 0.1, focus: 0.2, fitAction: 0.2, keepPromises: 0, promise: 0.3, extras: 0, waste: 0.9, turns: [1, 1], polish: 1, slip: 0.04, decide: 0.5, weigh: 0.05 },
+  developing: { diagnose: 0.6, oneStyle: 0.15, adapt: 0.6, events: 0.5, focus: 0.6, fitAction: 0.6, keepPromises: 0.4, promise: 0.3, extras: 0.4, waste: 0.3, turns: [2, 2], polish: 0.75, slip: 0, decide: 0.8, weigh: 0.5 },
+  proficient: { diagnose: 0.8, oneStyle: 0, adapt: 0.8, events: 0.8, focus: 0.75, fitAction: 0.8, keepPromises: 0.8, promise: 0.4, extras: 0.6, waste: 0.05, turns: [2, 3], polish: 0.6, slip: 0, decide: 0.95, weigh: 0.8 },
+  expert: { diagnose: 0.97, oneStyle: 0, adapt: 1, events: 0.97, focus: 0.95, fitAction: 0.97, keepPromises: 1, promise: 0.5, extras: 0.9, waste: 0, turns: [3, 4], polish: 0.95, slip: 0, decide: 1, weigh: 0.97 }
 };
 
 /** English names and how each plays, for the author's screen and the AI player's prompt. */
@@ -122,6 +126,23 @@ export interface SyntheticRun {
 }
 
 type Member = EngineView['members'][number];
+
+const BAND_SCORE = { strong: 100, adequate: 70, weak: 35, harmful: 0 } as const;
+const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+type ChoiceOption = NonNullable<StorylineConfig['events'][number]['choice']>['options'][number];
+
+/**
+ * An option's short term business value (D137), in points: revenue as a share of a period's target, each business
+ * variable's move as a share of its range (against it when less is better), sponsor confidence and the people's result.
+ */
+export function choiceBusiness(config: StorylineConfig, o: ChoiceOption): number {
+  const perPeriod = config.money.target / config.time.period.count;
+  const vars = Object.entries(o.business.variables).reduce((a, [k, d]) => {
+    const v = config.variables.find(x => x.key === k);
+    return v ? a + (100 * d / (v.max - v.min)) * (v.higherIsBetter ? 1 : -1) : a;
+  }, 0);
+  return 100 * o.business.revenue / perPeriod + vars + o.business.sponsor / 2 + o.people[2];
+}
 type ActionView = EngineView['actions'][number];
 interface Step { action: string; option?: string; memberIds: string[]; stage?: string; why: 'event' | 'promise' | 'develop' | 'extra' | 'waste' | 'probe'; eventKey?: string }
 
@@ -141,6 +162,8 @@ export async function playSynthetic(config: StorylineConfig, persona: PersonaKey
 
 class Player {
   private readonly rng: Rng;
+  /** Choice events draw on their own stream (D137): the same seed makes the same decisions whatever else differs. */
+  private readonly choiceRng: Rng;
   private readonly t: PersonaTraits;
   private readonly level: Level;
   private readonly keys: string[];
@@ -165,6 +188,7 @@ class Player {
     this.t = PERSONA_TRAITS[traitsOf];
     this.level = levelOf(traitsOf);
     this.rng = createRng((seed ^ seedFrom(`${persona}:${probe ? `${probe.kind}:${'style' in probe ? probe.style : probe.action}` : ''}`)) >>> 0);
+    this.choiceRng = createRng((seed ^ seedFrom(`choices:${persona}`)) >>> 0);
     this.keys = config.lens.styles.map(s => s.key);
     this.lens = { title: config.lens.title, styles: config.lens.styles.map(s => ({ key: s.key, name: s.name, short: s.short, description: s.description })) };
     this.speaker = opts.speaker ?? templateSpeaker;
@@ -260,6 +284,7 @@ class Player {
   /** Event cards and messages: decide once whether to answer, as the persona would; replies cost no time. */
   private async answer(v: EngineView): Promise<EngineView> {
     const probe = this.opts.probe;
+    v = await this.choose(v);
     for (const card of v.cards) {
       if (this.seen.has(card.id)) continue;
       this.seen.add(card.id);
@@ -299,6 +324,40 @@ class Player {
         if (!(e instanceof IntentError)) throw e;
       }
       v = this.engine.view();
+    }
+    return v;
+  }
+
+  /**
+   * Choice events (D137), by level: a player decides at all with `decide` (otherwise the default applies); weighing
+   * people and leadership beside business with `weigh`, otherwise taking the option best for business in the short
+   * term. Experts then follow through with the people the choice landed on. Probes leave every choice to its default.
+   * Reads the authored options, as the players read event responses (calibration, not a participant).
+   */
+  private async choose(v: EngineView): Promise<EngineView> {
+    if (this.opts.probe) return v;
+    for (const open of v.openChoices) {
+      if (this.seen.has(`choice:${open.id}`)) continue;
+      this.seen.add(`choice:${open.id}`);
+      const ev = this.config.events.find(e => e.key === open.eventKey);
+      const options = ev?.choice?.options ?? [];
+      if (!ev || !options.length || !this.choiceRng.chance(this.t.decide)) continue;
+      const weigh = this.choiceRng.chance(this.t.weigh);
+      const scored = options.map(o => ({ o, business: choiceBusiness(this.config, o), people: o.people[0] + o.people[1] + o.people[2] / 2 + 1.5 * o.trust, lead: o.read.length ? mean(o.read.map(r => BAND_SCORE[r.band])) : 50 }));
+      const best = [...scored].sort((a, b) => (weigh ? (b.lead + 3 * b.people + 0.5 * b.business) - (a.lead + 3 * a.people + 0.5 * a.business) : b.business - a.business))[0];
+      try {
+        v = (await this.send({ type: 'decide', choiceId: open.id, option: best.o.key })).view;
+      } catch (e) {
+        if (!(e instanceof IntentError)) throw e;
+        continue;
+      }
+      // Following through: talk with the people the choice landed on.
+      if (this.level >= 3 && (best.o.people.some(x => x < 0) || best.o.trust < 0 || best.o.who === 'team' || ev.target === 'team')) {
+        const meet = this.config.actions.find(a => a.scope === 'team' && a.rule === 'styleOption' && a.kind !== 'static');
+        const talks = this.config.actions.filter(a => a.scope === 'member' && a.rule === 'styleOption' && a.kind !== 'static').map(a => a.key);
+        if (open.memberId && talks.length) this.pending.push({ eventKey: `choice:${ev.key}`, memberId: open.memberId, actions: talks, period: v.clock.period, messageId: null });
+        else if (meet) this.pending.push({ eventKey: `choice:${ev.key}`, memberId: null, actions: [meet.key], period: v.clock.period, messageId: null });
+      }
     }
     return v;
   }

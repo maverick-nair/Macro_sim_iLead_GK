@@ -19,6 +19,8 @@ import { PERSONA_KEYS, type CalibrationResults, type Check, type PersonaKey, typ
  *                 target more than with every conversation Weak (fail otherwise): conversations change what happens
  *   target        Beginners average under the revenue target and Experts at least half of it (fail otherwise),
  *                 Experts at least 80% of it (warn otherwise): a target trivially reachable, or out of reach
+ *   choices       with choice events (D137): Beginner and Expert players end on different options, a distance of
+ *                 0.2 or more between their choices (fail otherwise): a choice every level makes alike tests nothing
  */
 
 export const NAMES: Record<PersonaKey, string> = { beginner: 'Beginner', developing: 'Developing', proficient: 'Proficient', expert: 'Expert' };
@@ -26,8 +28,28 @@ export const LABELS: Record<PersonaKey, string> = { beginner: 'Low performer', d
 
 export const THRESHOLDS = {
   expertTier: 0.8, beginnerTier: 0.1, skillsPass: 0.75, skillsWarn: 0.5, separation: 0.05, events: 0.8,
-  styleEffect: 0.05, conversationEffect: 0.05, targetEasy: 1, targetHard: 0.5, targetLow: 0.8
+  styleEffect: 0.05, conversationEffect: 0.05, targetEasy: 1, targetHard: 0.5, targetLow: 0.8, choices: 0.2
 } as const;
+
+/**
+ * How far apart two levels' choices are (D137): per choice event, the total variation distance between the shares of
+ * runs ending on each option (a choice left to its default counts as its own outcome), averaged over the events.
+ * 0 when every level chooses alike, 1 when they never agree.
+ */
+export function choiceDistance(a: RunResult[], b: RunResult[]): number | null {
+  const events = [...new Set([...a, ...b].flatMap(r => (r.choices ?? []).map(c => c.event)))];
+  if (!events.length || !a.length || !b.length) return null;
+  const outcome = (c: { option: string | null; by: string }) => (c.by === 'default' ? `default:${c.option ?? ''}` : c.option ?? '');
+  const shares = (runs: RunResult[], ev: string) => {
+    const m = new Map<string, number>();
+    for (const r of runs) for (const c of (r.choices ?? []).filter(x => x.event === ev)) m.set(outcome(c), (m.get(outcome(c)) ?? 0) + 1 / runs.length);
+    return m;
+  };
+  return mean(events.map(ev => {
+    const x = shares(a, ev), y = shares(b, ev);
+    return [...new Set([...x.keys(), ...y.keys()])].reduce((d, k) => d + Math.abs((x.get(k) ?? 0) - (y.get(k) ?? 0)), 0) / 2;
+  }));
+}
 
 export const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 export const median = (xs: number[]) => {
@@ -233,6 +255,15 @@ export function checks(c: CheckContext): Check[] {
         : low
           ? { key: 'target', status: 'warn', title: `Expert players reach only ${pct(expert!.share.mean)} of the revenue target`, detail: `Revenue against the target: ${levels}.`, fix: 'Strong leadership should come close to the target: lower it a little.' }
           : { key: 'target', status: 'pass', title: 'The revenue target suits the levels', detail: `Revenue against the target: ${levels}.`, fix: null });
+  }
+
+  // Choice events: the levels choose differently (D137).
+  const byLevel = (k: PersonaKey) => c.runs.filter(r => r.persona === k);
+  const distance = choiceDistance(byLevel('beginner'), byLevel('expert'));
+  if (distance !== null) {
+    out.push(distance < THRESHOLDS.choices
+      ? { key: 'choices', status: 'fail', title: 'Beginner and Expert players end up on the same options in the choice events', detail: `Their choices are ${Math.round(distance * 100)}% apart.`, fix: 'Give each option its own trade-off: one better for business now, another better for people or customers, and a leadership read that tells them apart.' }
+      : { key: 'choices', status: 'pass', title: 'Players at different levels choose differently', detail: `Beginner and Expert choices are ${Math.round(distance * 100)}% apart.`, fix: null });
   }
 
   // Events that expect an answer can be answered.

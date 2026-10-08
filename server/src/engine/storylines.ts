@@ -1,5 +1,6 @@
 import { parseStoryline, type Purpose, type StorylineConfig, type StorylineInput } from '../../../src/engine/config';
 import salesElevator from '../../../src/engine/storylines/sales-elevator.json';
+import clientTrust from '../../../src/engine/storylines/client-trust.json';
 import { withSixStyles } from '../../../src/engine/storylines/sixStyles';
 import type { Repository } from '../store';
 
@@ -10,7 +11,9 @@ import type { Repository } from '../store';
  */
 export const BUILT_IN: Record<string, () => StorylineInput> = {
   sales_elevator: () => structuredClone(salesElevator) as unknown as StorylineInput,
-  sales_elevator_six_styles: () => ({ ...withSixStyles(structuredClone(salesElevator) as unknown as StorylineInput), id: 'sales_elevator_six_styles' })
+  sales_elevator_six_styles: () => ({ ...withSixStyles(structuredClone(salesElevator) as unknown as StorylineInput), id: 'sales_elevator_six_styles' }),
+  /** The demo of dynamics, business variables and choice events (D141). */
+  client_trust: () => structuredClone(clientTrust) as unknown as StorylineInput
 };
 
 export class StorylineError extends Error {

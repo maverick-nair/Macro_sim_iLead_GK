@@ -376,7 +376,8 @@
                       "events",
                       "styleEffect",
                       "conversationEffect",
-                      "target"
+                      "target",
+                      "choices"
                     ]
                   },
                   "status": {
@@ -608,6 +609,35 @@
                       "expected",
                       "handled"
                     ]
+                  },
+                  "choices": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "event": {
+                          "type": "string"
+                        },
+                        "option": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "by": {
+                          "type": "string",
+                          "enum": [
+                            "you",
+                            "default"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "event",
+                        "option",
+                        "by"
+                      ]
+                    }
                   }
                 },
                 "required": [
@@ -825,6 +855,35 @@
                       "expected",
                       "handled"
                     ]
+                  },
+                  "choices": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "event": {
+                          "type": "string"
+                        },
+                        "option": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "by": {
+                          "type": "string",
+                          "enum": [
+                            "you",
+                            "default"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "event",
+                        "option",
+                        "by"
+                      ]
+                    }
                   }
                 },
                 "required": [

@@ -4,7 +4,7 @@ import { purposeOf } from '../config';
 import { buildReport } from '../report/build';
 import { finalScore } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
-import { capacity, capacityLeft, idealThroughput, perPeriod, person, teamAverage } from './sim';
+import { capacity, capacityLeft, fill, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import { bestStyle, lensView, NEEDS } from '../lens';
 import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
 import type { StorylineConfig } from '../config';
@@ -214,8 +214,9 @@ export function buildView(sim: Sim) {
     /** Choices waiting for the participant (D137): what is known and the options, never their consequences. */
     openChoices: sim.openChoices.map(oc => {
       const ev = c.events.find(e => e.key === oc.eventKey)!;
-      return { id: oc.id, eventKey: ev.key, card: ev.card, title: ev.title, body: choiceBody(sim, ev, oc.memberId), memberId: oc.memberId, known: ev.choice!.known,
-        options: ev.choice!.options.map(o => ({ key: o.key, label: o.label, detail: o.detail ?? null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub) };
+      const f = (t: string) => fill(t, sim, oc.memberId);
+      return { id: oc.id, eventKey: ev.key, card: ev.card, title: f(ev.title), body: choiceBody(sim, ev, oc.memberId), memberId: oc.memberId, known: ev.choice!.known.map(f),
+        options: ev.choice!.options.map(o => ({ key: o.key, label: f(o.label), detail: o.detail ? f(o.detail) : null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub) };
     }),
     /** Choices made or defaulted (D137), with what they changed: the decision's "what happened" and the History. */
     choices: sim.choices.map(r => ({ id: r.id, eventKey: r.eventKey, title: r.title, option: r.option, label: r.label, outcome: r.outcome, by: r.by, period: r.period, sub: r.sub,
