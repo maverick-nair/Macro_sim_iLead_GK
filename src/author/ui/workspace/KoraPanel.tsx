@@ -41,6 +41,13 @@ function Row({ c }: { c: Change }) {
   );
 }
 
+/** The name of a Kora change in undo and History (D122): the lead of Kora's reply ("Harder", "Consequences carry forward"), or the instruction. */
+function koraSummary(reply: string, asked: string): string {
+  const lead = reply.split(/[.:;]/)[0].trim();
+  const text = lead.length >= 3 ? lead : asked.trim();
+  return text.length > 60 ? `${text.slice(0, 59).trimEnd()}…` : text || 'a change';
+}
+
 /**
  * Ask Kora (D107, D125, D127): the copilot beside the tabs. Kora's ideas for this tab (dashed; nothing
  * changes until the author uses one) and plain instructions. An instruction comes back as a proposal, a
@@ -81,7 +88,7 @@ export function KoraPanel({ tab, onClose }: { tab: Tab; onClose?: () => void }) 
     // The draft may have changed since the proposal: check again against it as it is now.
     const c = checkOps(draft, a.ops);
     if (!c.ok || !c.ops.length) { setState({ kind: 'idle' }); setNote('The draft has changed since I proposed this. Ask again and I will work from it as it is now.'); return; }
-    edit(d => { applyOps(d, c.ops); }, c.marks, 'ai');
+    edit(d => { applyOps(d, c.ops); }, { mark: c.marks, by: 'ai', label: `Kora: ${koraSummary(a.reply, state.kind === 'answer' ? state.asked : '')}`, restorePoint: true });
     setState({ kind: 'idle' });
     setNote(`Applied ${c.ops.length} change${c.ops.length === 1 ? '' : 's'}. Fields you had written stay marked as yours.`);
   }
@@ -103,7 +110,7 @@ export function KoraPanel({ tab, onClose }: { tab: Tab; onClose?: () => void }) 
               <h3 className="m-0 text-14 font-800 text-author-ai">Suggestion</h3>
               <p className="m-0 text-13 leading-[1.5]">{s.text}</p>
               <div className="flex flex-wrap gap-2">
-                <button type="button" className={BUTTON.kora} onClick={() => edit(d => { const paths = applySuggestion(d, s.id); for (const p of paths) d.marks[p] = nextMark(d.marks[p], 'ai'); })}>{s.action}</button>
+                <button type="button" className={BUTTON.kora} onClick={() => edit(d => { const paths = applySuggestion(d, s.id); for (const p of paths) d.marks[p] = nextMark(d.marks[p], 'ai'); }, { label: `Kora: ${s.action}`, restorePoint: true })}>{s.action}</button>
                 <button type="button" className={BUTTON.secondary} onClick={() => edit(d => { const x = d.suggestions.find(y => y.id === s.id); if (x) x.done = true; })}>Not now</button>
               </div>
             </section>

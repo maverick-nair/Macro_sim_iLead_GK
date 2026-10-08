@@ -22,6 +22,15 @@ function removeCharacter(x: AuthorDraft, id: string, to: string) {
   }
 }
 
+/** The undo and History name of a removal (D122), with where the person's events went. */
+function removeLabel(d: AuthorDraft, c: Character, to: string): string {
+  const name = [c.first, c.last].filter(Boolean).join(' ') || c.id;
+  if (to === 'remove') return `Remove ${name} and their events`;
+  const other = d.team.find(m => m.id === to);
+  const where = to === 'team' ? 'the whole team' : to === 'member' ? 'one person the engine picks' : other ? [other.first, other.last].filter(Boolean).join(' ') : to;
+  return `Remove ${name}, their events to ${where}`;
+}
+
 const MOOD = (c: Character) => (c.stats.morale >= 70 ? 'upbeat' : c.stats.morale >= 50 ? 'steady' : c.stats.morale >= 35 ? 'concerned' : 'frustrated');
 
 /**
@@ -89,7 +98,7 @@ export default function Team() {
               <button type="button" className={BUTTON.secondary} onClick={() => setItemNote({ id: c.id, text: regenItem({ character: c.id }) })}>{Icon.refresh(14)} Regenerate<span className="sr-only"> {c.first} {c.last}</span></button>
               {d.team.length > MIN_TEAM && <button type="button" className={BUTTON.secondary} onClick={() => {
                 if (d.events.some(e => e.who === c.id)) setRemoving({ id: c.id, to: 'team' });
-                else { edit(x => removeCharacter(x, c.id, 'team')); setSelected(d.team.find(m => m.id !== c.id)?.id ?? ''); }
+                else { edit(x => removeCharacter(x, c.id, 'team'), { label: `Remove ${[c.first, c.last].filter(Boolean).join(' ') || c.id}`, restorePoint: true }); setSelected(d.team.find(m => m.id !== c.id)?.id ?? ''); }
               }}>Remove<span className="sr-only"> {c.first}</span></button>}
             </div>
             {removing?.id === c.id && (
@@ -103,7 +112,7 @@ export default function Team() {
                     <option value="remove">Remove them too</option>
                   </Select>
                 )}</Field>
-                <button type="button" className={BUTTON.secondary} onClick={() => { edit(x => removeCharacter(x, c.id, removing.to)); setRemoving(null); setSelected(d.team.find(m => m.id !== c.id)?.id ?? ''); }}>Remove {c.first}</button>
+                <button type="button" className={BUTTON.secondary} onClick={() => { edit(x => removeCharacter(x, c.id, removing.to), { label: removeLabel(d, c, removing.to), restorePoint: true }); setRemoving(null); setSelected(d.team.find(m => m.id !== c.id)?.id ?? ''); }}>Remove {c.first}</button>
                 <button type="button" className={BUTTON.link} onClick={() => setRemoving(null)}>Keep {c.first}</button>
               </div>
             )}
@@ -119,7 +128,7 @@ export default function Team() {
               <div className="flex flex-wrap items-center gap-3 rounded-14 border-[1.5px] border-dashed border-author-kora p-4">
                 <span aria-hidden="true" className="text-author-kora">{Icon.spark()}</span>
                 <p className="m-0 min-w-60 flex-1 text-14"><b>Suggestion:</b> {suggestion.text}</p>
-                <button type="button" className={BUTTON.kora} onClick={() => edit(x => { for (const p of applySuggestion(x, suggestion.id)) x.marks[p] = nextMark(x.marks[p], 'ai'); })}>Use</button>
+                <button type="button" className={BUTTON.kora} onClick={() => edit(x => { for (const p of applySuggestion(x, suggestion.id)) x.marks[p] = nextMark(x.marks[p], 'ai'); }, { label: `Kora: ${suggestion.action}`, restorePoint: true })}>Use</button>
                 <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { const s = x.suggestions.find(y => y.id === suggestion.id); if (s) s.done = true; })}>Dismiss</button>
               </div>
             )}

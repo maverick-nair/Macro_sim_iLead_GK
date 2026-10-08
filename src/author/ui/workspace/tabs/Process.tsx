@@ -40,9 +40,15 @@ export default function Process() {
   const unit = (i: number) => (i === 0 ? ' leads' : i === last ? ' deals' : '');
   const [moved, setMoved] = useState<string | null>(null);
   const [removing, setRemoving] = useState<{ key: string; to: string } | null>(null);
-  const resize = (weeks: number, days: number) => { let note: string | null = null; edit(x => { note = movedNote(fitRun(x, weeks, days)); }, ['process.weeks', 'process.daysPerWeek']); setMoved(note); };
+  const resize = (weeks: number, days: number) => {
+    let note: string | null = null;
+    edit(x => { note = movedNote(fitRun(x, weeks, days)); }, { mark: ['process.weeks', 'process.daysPerWeek'], label: `Change the run to ${weeks} weeks of ${days} days`, restorePoint: true });
+    setMoved(note);
+  };
   const ideal = idealPerWeek(pr);
   const removeStage = (key: string, to: string) => {
+    const name = pr.stages.find(s => s.key === key)?.name || key;
+    const into = pr.stages.find(s => s.key === to)?.name || to;
     edit(x => {
       const i = x.process.stages.findIndex(s => s.key === key);
       if (i < 0) return;
@@ -50,7 +56,7 @@ export default function Process() {
       for (const c of x.team) { if (c.stage === key) c.stage = to; if (c.bestStage === key) c.bestStage = ''; }
       for (const e of x.events) if (e.who === `stage:${key}`) e.who = `stage:${to}`;
       if (x.process.pressure === key) x.process.pressure = null;
-    }, 'process.stages');
+    }, { mark: 'process.stages', label: `Remove the stage "${name}", its people and events to ${into}`, restorePoint: true });
     setRemoving(null);
   };
   return (

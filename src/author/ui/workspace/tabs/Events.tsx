@@ -46,7 +46,8 @@ export default function Events() {
   const inUse = d.actions.filter(a => a.core || a.enabled);
   const followers = (key: string) => d.events.filter(x => x.ifIgnored.followUp === key);
   const remove = (key: string) => {
-    edit(x => { x.events = x.events.filter(y => y.key !== key); for (const y of x.events) if (y.ifIgnored.followUp === key) y.ifIgnored = { ...y.ifIgnored, followUp: null }; });
+    const gone = d.events.find(x => x.key === key);
+    edit(x => { x.events = x.events.filter(y => y.key !== key); for (const y of x.events) if (y.ifIgnored.followUp === key) y.ifIgnored = { ...y.ifIgnored, followUp: null }; }, { label: `Remove the event "${gone?.title || key}"`, restorePoint: true });
     setSelected(d.events.find(x => x.key !== key)?.key ?? '');
     setRemoving(null);
   };

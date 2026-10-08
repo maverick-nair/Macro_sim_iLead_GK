@@ -42,14 +42,14 @@ function FrameworkSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (
           // Each action observes two of the new skills, in turn, so every skill is observed (D128); edit them per action.
           const names = x.scoring.skills.map(k => k.name);
           x.actions.forEach((a, i) => { a.scoredOn = [...new Set([names[i % names.length], names[(i + 1) % names.length]])]; });
-        }, 'scoring.framework'); onOpenChange(false); }}>Confirm {found} skills</button>
+        }, { mark: 'scoring.framework', label: `Confirm the framework's ${found} skills`, restorePoint: true }); onOpenChange(false); }}>Confirm {found} skills</button>
         <button type="button" className={BUTTON.secondary} onClick={() => { onOpenChange(false); navigate({ page: 'workspace', tab: 'scoring' }); }}>Ask Kora about this framework</button>
         <span className="flex-1" />
         <button type="button" className={BUTTON.link} onClick={() => { edit(x => {
           const fresh = seedDraft({ ...x.chat, primary: x.lens.id, secondary: x.lens.secondary }, 'workspace');
           x.scoring.framework = null; x.scoring.skills = fresh.scoring.skills;
           for (const a of x.actions) a.scoredOn = fresh.actions.find(y => y.key === a.template)?.scoredOn ?? fresh.scoring.skills.filter(k => !k.reportOnly).slice(0, 2).map(k => k.name);
-        }); onOpenChange(false); }}>Keep the lens skills</button>
+        }, { label: 'Keep the lens skills', restorePoint: true }); onOpenChange(false); }}>Keep the lens skills</button>
       </>}>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
         <ol className="m-0 flex list-none flex-wrap gap-6 p-0 text-14 font-700" aria-label="Steps">

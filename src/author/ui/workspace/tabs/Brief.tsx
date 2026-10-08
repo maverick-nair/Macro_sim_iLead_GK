@@ -6,6 +6,7 @@ import { BUTTON, CARD, CardHead, Chip, Field, MarkOf, Segmented, Select, TEXT_MA
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate } from './regenerate';
 
+const RUN_NAMES = { full: 'Full', standard: 'Standard', lite: 'Lite' } as const;
 const TONES = ['Realistic', 'Light hearted', 'High stakes', 'Formal', 'Professional', 'Warm and encouraging', 'Direct and brisk'];
 
 /**
@@ -46,7 +47,7 @@ export default function Brief() {
         <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="format">
           <CardHead id="format" title="Format"><MarkOf path="brief.run" /></CardHead>
           <Field label="Run length" required>{() => (
-            <Segmented vertical label="Run length" value={b.run} onChange={v => { let note: string | null = null; edit(x => { x.brief.run = v; note = movedNote(fitRun(x, v === 'lite' ? 4 : 8)); }, ['brief.run', 'process.weeks']); setMoved(note); }}
+            <Segmented vertical label="Run length" value={b.run} onChange={v => { let note: string | null = null; edit(x => { x.brief.run = v; note = movedNote(fitRun(x, v === 'lite' ? 4 : 8)); }, { mark: ['brief.run', 'process.weeks'], label: `Change the run length to ${RUN_NAMES[v]}`, restorePoint: true }); setMoved(note); }}
               options={[{ value: 'full', label: 'Full · 8 weeks · 2 conversations a week' }, { value: 'standard', label: 'Standard · 8 weeks · 1 conversation a week' }, { value: 'lite', label: 'Lite · 4 weeks · 1 conversation a week' }]} />
           )}</Field>
           {moved && <p role="status" className="m-0 rounded-12 bg-author-need-field p-3 text-13 text-author-need">{moved}</p>}
