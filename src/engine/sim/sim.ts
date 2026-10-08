@@ -49,6 +49,20 @@ export const runFraction = (sim: Sim) => sim.absSub / totalSubs(sim);
 export const capacity = (sim: Sim) => perPeriod(sim) + (sim.bonusPeriod === sim.period ? 1 : 0) - (sim.checkInPeriod === sim.period ? 1 : 0);
 export const capacityLeft = (sim: Sim) => Math.max(0, capacity(sim) - sim.spent);
 export const nextId = (sim: Sim, prefix: string) => `${prefix}${++sim.seq}`;
+
+/**
+ * Changes to the same subject and metric merged into one net change, largest first, without those that
+ * net to zero (D145): "Peter trust +3, Peter trust −3" says nothing; the net says what happened.
+ */
+export function netChanges(chs: Array<{ subject: string; metric: string; delta: number }>): Array<{ subject: string; metric: string; delta: number }> {
+  const out: Array<{ subject: string; metric: string; delta: number }> = [];
+  for (const ch of chs) {
+    const same = out.find(x => x.subject === ch.subject && x.metric === ch.metric);
+    if (same) same.delta += ch.delta;
+    else out.push({ subject: ch.subject, metric: ch.metric, delta: ch.delta });
+  }
+  return out.filter(x => x.delta !== 0).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}
 export const present = (sim: Sim) => sim.members;
 export const available = (sim: Sim) => sim.members.filter(m => m.away === 0);
 export const member = (sim: Sim, id: string) => sim.members.find(m => m.id === id);

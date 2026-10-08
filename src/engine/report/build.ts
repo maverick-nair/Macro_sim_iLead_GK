@@ -1,7 +1,7 @@
 import { DEFAULT_SECTIONS, purposeOf, type Purpose } from '../config';
 import { roundHalfUp, capability, leadershipScore, tierFor } from '../sim/score';
 import { fitOf, lensView, NEEDS } from '../lens';
-import { firstName, person, styleName } from '../sim/sim';
+import { firstName, netChanges, person, styleName } from '../sim/sim';
 import type { Sim, Style } from '../sim/types';
 import { overallOf, rateSkills, shortName, when, type SkillRating } from './ratings';
 import { summarizeRun, type RunSummary } from './summary';
@@ -66,7 +66,8 @@ export function buildReport(sim: Sim) {
     const low = [...owners].sort((a, b) => a.result - b.result)[0];
     const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
     return { stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
-      why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: pr(sim, low.id) }) : null };
+      // The catalog selects on the person's pronoun itself (he, she, they), never a possessive.
+      why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: person(sim, low.id).pronoun }) : null };
   })() : null;
   const share = sim.funnel.value / c.money.target;
   const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions) };
@@ -116,7 +117,11 @@ export function buildReport(sim: Sim) {
   // ---- 5. Key moments (SBI), 5 to 7, ranked by impact
   const intentFor = (memberId: string | undefined, period: number) => (memberId ? weekly.find(d => d.memberId === memberId && d.period === period)?.chosen ?? null : null);
   const change = (ch: { subject: string; metric: string; delta: number }) => msg('engine.report.change', { who: ch.subject === 'team' ? msg('engine.report.theTeam') : shortName(sim, ch.subject), metric: ch.metric, delta: ch.delta });
-  const impactOf = (chs: Array<{ subject: string; metric: string; delta: number }>): Copy => (chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange'));
+  // Same person and metric merged into one net change, the 3 largest kept (D145).
+  const impactOf = (all: Array<{ subject: string; metric: string; delta: number }>): Copy => {
+    const chs = netChanges(all).slice(0, 3);
+    return chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange');
+  };
   const unit0 = { unit: unitName(sim) };
   const fromLive = sim.liveRecords.filter(rec => rec.band !== 'adequate').map(rec => {
     const one = rec.memberIds.length === 1;
@@ -127,7 +132,7 @@ export function buildReport(sim: Sim) {
       situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team', name: one ? shortName(sim, rec.memberIds[0]) : shortName(sim, 'sponsor') }),
       behaviour: rec.styleShown ? msg('engine.moment.chose.style', { title, style: styleName(sim, rec.styleShown) }) : msg('engine.moment.chose', { title }),
       quote: rec.quotes?.[0] ?? null,
-      impact: impactOf(rec.changes?.slice(0, 3) ?? []),
+      impact: impactOf(rec.changes ?? []),
       intent: intentFor(rec.memberIds[0], rec.period), weight: rec.impact ?? 0, sub: rec.sub ?? 0
     };
   });
@@ -140,7 +145,7 @@ export function buildReport(sim: Sim) {
       title: who ? msg('engine.moment.titleWho', { title: l.title, name: shortName(sim, who) }) : l.title,
       situation: msg('engine.moment.at', { ...unit0, n: l.period, text: l.changes[0]?.reason.cause ?? l.title }),
       behaviour: msg(good ? 'engine.moment.kept' : 'engine.moment.waited'),
-      quote: null, impact: impactOf(l.changes.slice(0, 3).map(ch => ({ subject: ch.subject, metric: ch.metric, delta: ch.delta }))),
+      quote: null, impact: impactOf(l.changes),
       intent: intentFor(who, l.period), weight: l.changes.reduce((a, ch) => a + Math.abs(ch.delta), 0), sub: l.sub
     };
   });
@@ -318,5 +323,4 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
   };
 }
 
-const pr = (sim: Sim, id: string) => { const p = person(sim, id).pronoun; return p === 'she' ? 'her' : p === 'they' ? 'their' : 'his'; };
 export type ReportView = ReturnType<typeof buildReport>;

@@ -6,7 +6,7 @@ import { mismatchType, trainingMismatch, type Mismatch, type Style, type Triple 
 import { respond } from './events';
 import { checkBadges } from './score';
 import {
-  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
+  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, netChanges, nextId, person, record, spend, sponsorChange,
   styleName, stageName, trustChange, YOU
 } from './sim';
 import { msg, type Copy, type Msg } from '../copy';
@@ -546,7 +546,8 @@ function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[]
     talk: { you: words(said), npc: theirs.reduce((n, t) => n + (typeof t.text === 'string' ? words(t.text) : 0), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition, spoken: mine.some(t => t.voice) },
     concern: !!ev.flags.concernSurfaced,
     impact: [...people.values()].reduce((a, b) => a + b, 0),
-    changes: [...changes].filter(c => c.subject !== 'sponsor').sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta)).slice(0, 4).map(c => ({ subject: c.subject, metric: c.metric, delta: c.delta }))
+    // Net per person and metric, so the report never lists "trust +3, trust −3" (D145).
+    changes: netChanges(changes.filter(c => c.subject !== 'sponsor')).slice(0, 4)
   };
 }
 
