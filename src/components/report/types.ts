@@ -128,6 +128,27 @@ export interface PlanItemData {
   enoughEvidence?: boolean;
 }
 
+/** One choice in "Decisions and consequences" (D137), worded for display. */
+export interface DecisionData {
+  key: string;
+  /** "Week 2". */
+  when: string;
+  title: string;
+  /** The option taken, or null when nothing applied. */
+  option: string | null;
+  by: 'you' | 'default';
+  outcome: string | null;
+  /** What it changed: people, then business variables and revenue, as display lines. */
+  changes: string[];
+  /** Later events it led to, with their week. */
+  led: string[];
+  /** The leadership it showed, in words. */
+  read: string[];
+}
+
+/** A business variable over the run (D136): start and end, formatted. */
+export interface BusinessVariableData { key: string; name: string; start: string; end: string; direction: 'up' | 'down' | 'flat'; better: boolean | null }
+
 export interface MomentData {
   key: string;
   kind: 'best' | 'revisit';

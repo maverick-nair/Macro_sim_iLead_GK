@@ -11,6 +11,7 @@ import { ReportProvider } from './context';
 import { buildReportModel, type SectionModel } from './engine';
 import { IntentSection, PlanSection } from './IntentPlan';
 import { MomentsSection } from './MomentsSection';
+import { DecisionsSection } from './DecisionsSection';
 import { AnalyticsSection, MethodologySection } from './NotesSections';
 import { PeopleSection } from './PeopleSection';
 import { ProgressSection, TakeawaysSection, ThoughtSection } from './ReflectSections';
@@ -58,6 +59,7 @@ export function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUn
     case 'actions': return <ActionsSection rows={s.rows} />;
     case 'distribution': return <DistributionSection data={s.data} />;
     case 'moments': return <MomentsSection moments={s.moments} />;
+    case 'decisions': return <DecisionsSection decisions={s.decisions} variables={s.variables} />;
     case 'people': return <PeopleSection people={s.people} />;
     case 'business': return <BusinessSection data={s.data} unit={unit} periods={periods} />;
     case 'analytics': return <AnalyticsSection data={s.data} />;

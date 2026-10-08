@@ -1,4 +1,4 @@
-import { DEFAULT_SECTIONS, purposeOf, type Purpose } from '../config';
+import { DEFAULT_SECTIONS, purposeOf, type Purpose, type ReportSection } from '../config';
 import { roundHalfUp, capability, leadershipScore, tierFor } from '../sim/score';
 import { fitOf, lensView, NEEDS } from '../lens';
 import { firstName, person, styleName } from '../sim/sim';
@@ -192,7 +192,7 @@ export function buildReport(sim: Sim) {
     storyline: { name: c.name, organisation: c.organisation ?? null },
     lens: { ...lensView(c.lens), secondary: c.lens.secondary ? { id: c.lens.secondary.id, title: c.lens.secondary.title } : null },
     periods: sim.periods.length, periodUnit: unit,
-    sections: r.sections ?? DEFAULT_SECTIONS[purpose],
+    sections: r.sections ?? withDecisions(DEFAULT_SECTIONS[purpose], sim),
     score: { total: score.total, max: score.max, tier: { key: tier.key, name: tier.name } },
     results: { revenue: Math.round(sim.funnel.value), target: c.money.target, share, conversions: Math.floor(sim.funnel.conversions), kpis },
     summary: {
@@ -213,6 +213,7 @@ export function buildReport(sim: Sim) {
     reflection: sim.reflection, questions: r.reflection,
     methodology: { lines: [...lensLines, ...r.methodology], reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
+    ...decisionsOf(sim, impactOf),
     ...v3.sections
   };
 }
@@ -319,4 +320,40 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
 }
 
 const pr = (sim: Sim, id: string) => { const p = person(sim, id).pronoun; return p === 'she' ? 'her' : p === 'they' ? 'their' : 'his'; };
+
+/** The default sections, with "Decisions and consequences" after the key moments when the storyline has choices or business variables (D137). */
+function withDecisions(sections: ReportSection[], sim: Sim): ReportSection[] {
+  const c = sim.config;
+  if (!c.events.some(e => e.choice) && !c.variables.some(v => v.shown)) return sections;
+  const at = sections.indexOf('moments');
+  return at < 0 ? [...sections, 'decisions'] : [...sections.slice(0, at + 1), 'decisions', ...sections.slice(at + 1)];
+}
+
+/**
+ * "Decisions and consequences" (D137): each choice, the option taken (or left to its default), what it changed for
+ * people, the business variables and revenue, the later events it led to, and the leadership it showed; and the
+ * shown business variables at the start and the end of the run. Data only: the narratives are not chosen here.
+ */
+function decisionsOf(sim: Sim, impactOf: (chs: Array<{ subject: string; metric: string; delta: number }>) => Copy) {
+  const c = sim.config;
+  const shown = new Map(c.variables.filter(v => v.shown).map(v => [v.key, v]));
+  const skillName = (k: string) => c.report.skills.find(s => s.key === k)?.name ?? k;
+  return {
+    decisions: sim.choices.map(ch => {
+      const people = ch.changes.filter(x => x.subject !== 'sponsor' && x.metric !== 'confidence');
+      const net = new Map<string, { subject: string; metric: string; delta: number }>();
+      for (const x of people) { const k = `${x.subject}|${x.metric}`; const n = net.get(k) ?? { subject: x.subject, metric: x.metric, delta: 0 }; n.delta += x.delta; net.set(k, n); }
+      return {
+        id: ch.id, period: ch.period, title: ch.title, option: ch.label, by: ch.by, outcome: ch.outcome,
+        impact: impactOf([...net.values()].filter(x => x.delta).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, 3)),
+        variables: ch.variables.filter(x => shown.has(x.key)).map(x => ({ key: x.key, name: shown.get(x.key)!.name, format: shown.get(x.key)!.format, delta: x.delta })),
+        revenue: Math.round(ch.revenue),
+        sponsor: ch.changes.filter(x => x.subject === 'sponsor').reduce((a, x) => a + x.delta, 0),
+        triggered: ch.triggered.map(t => ({ key: t.key, title: t.title, period: t.period })),
+        read: ch.read.map(x => ({ skill: skillName(x.skill), band: x.band }))
+      };
+    }),
+    businessVariables: [...shown.values()].map(v => ({ key: v.key, name: v.name, format: v.format, start: v.start, end: sim.vars[v.key] ?? v.start, higherIsBetter: v.higherIsBetter, weight: v.weight }))
+  };
+}
 export type ReportView = ReturnType<typeof buildReport>;

@@ -206,6 +206,7 @@
           "actions",
           "distribution",
           "moments",
+          "decisions",
           "people",
           "business",
           "analytics",
@@ -1199,6 +1200,201 @@
           "key",
           "name",
           "min"
+        ]
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "title": {
+            "$ref": "#/$defs/Text"
+          },
+          "option": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "by": {
+            "type": "string",
+            "enum": [
+              "you",
+              "default"
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "impact": {
+            "$ref": "#/$defs/Text"
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "$ref": "#/$defs/Text"
+                },
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "money",
+                    "percent",
+                    "points"
+                  ]
+                },
+                "delta": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "key",
+                "name",
+                "format",
+                "delta"
+              ]
+            }
+          },
+          "revenue": {
+            "type": "number"
+          },
+          "sponsor": {
+            "type": "number"
+          },
+          "triggered": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "$ref": "#/$defs/Text"
+                },
+                "period": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "key",
+                "title",
+                "period"
+              ]
+            }
+          },
+          "read": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "$ref": "#/$defs/Text"
+                },
+                "band": {
+                  "type": "string",
+                  "enum": [
+                    "strong",
+                    "adequate",
+                    "weak",
+                    "harmful"
+                  ]
+                }
+              },
+              "required": [
+                "skill",
+                "band"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "period",
+          "title",
+          "option",
+          "by",
+          "outcome",
+          "impact",
+          "variables",
+          "revenue",
+          "sponsor",
+          "triggered",
+          "read"
+        ]
+      }
+    },
+    "businessVariables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "$ref": "#/$defs/Text"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "money",
+              "percent",
+              "points"
+            ]
+          },
+          "start": {
+            "type": "number"
+          },
+          "end": {
+            "type": "number"
+          },
+          "higherIsBetter": {
+            "type": "boolean"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "format",
+          "start",
+          "end",
+          "higherIsBetter",
+          "weight"
         ]
       }
     },

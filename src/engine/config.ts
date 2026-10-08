@@ -265,7 +265,7 @@ export const Gamification = z.object({
  */
 export const REPORT_SECTIONS = [
   'about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution',
-  'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
+  'moments', 'decisions', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
 ] as const;
 export type ReportSection = (typeof REPORT_SECTIONS)[number];
 /** Why the storyline runs (D75): development reports never show verdicts; assessment reports do. */

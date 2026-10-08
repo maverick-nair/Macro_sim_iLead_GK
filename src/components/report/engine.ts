@@ -2,7 +2,7 @@ import type { HistoryEntry, ReportView } from '../../engine/reportContract';
 import type { I18n } from '../../i18n';
 import { checkInDate, intentTone, multipleDomain, talkRatio, verdictTone } from './display';
 import type {
-  AboutData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, ConsistencyData, DistributionData, FitRow, IntentCardData, MethodologyData,
+  AboutData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, BusinessVariableData, ConsistencyData, DecisionData, DistributionData, FitRow, IntentCardData, MethodologyData,
   MomentData, ObjectivesData, PeriodUnit, PersonData, PlanExtras, PlanItemData, ProgressData, Purpose, ReportHeaderData, SkillRowData, StyleExtras,
   StyleKey, StylesData, SummaryExtras, TeamSeries, ThoughtData, VerdictData
 } from './types';
@@ -42,6 +42,7 @@ export type SectionModel =
   | { key: 'actions'; rows: ActionRowData[] }
   | { key: 'distribution'; data: DistributionData }
   | { key: 'moments'; moments: MomentData[] }
+  | { key: 'decisions'; decisions: DecisionData[]; variables: BusinessVariableData[] }
   | { key: 'people'; people: PersonData[] }
   | { key: 'business'; data: BusinessData }
   | { key: 'analytics'; data: AnalyticsData }
@@ -237,6 +238,33 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
             behaviour: m.behaviour, quote: m.quote, impact: m.impact, intent: m.intent ? styleName(m.intent) : null
           }))
         };
+      case 'decisions': {
+        if (!r.decisions.length && !r.businessVariables.length) return null;
+        const value = (format: 'money' | 'percent' | 'points', v: number, signed = false) => {
+          const n = format === 'money' ? money.compact(Math.abs(v)) : number(Math.abs(Math.round(v)));
+          const sign = signed ? (v > 0 ? '+' : v < 0 ? '−' : '') : v < 0 ? '−' : '';
+          return format === 'percent' ? `${sign}${n}%` : `${sign}${n}`;
+        };
+        return {
+          key,
+          variables: r.businessVariables.map(v => ({
+            key: v.key, name: v.name, start: value(v.format, v.start), end: value(v.format, v.end),
+            direction: v.end > v.start ? 'up' as const : v.end < v.start ? 'down' as const : 'flat' as const,
+            better: v.end === v.start ? null : (v.end > v.start) === v.higherIsBetter
+          })),
+          decisions: r.decisions.map(d => ({
+            key: d.id, when: t('time.period', { unit, n: d.period }), title: d.title, option: d.option, by: d.by, outcome: d.outcome,
+            changes: [
+              ...(d.impact ? [d.impact] : []),
+              ...d.variables.map(x => t('report.decisions.variable', { name: x.name, value: value(x.format, x.delta, true) })),
+              ...(d.revenue ? [t('report.decisions.revenue', { value: `${d.revenue > 0 ? '+' : '−'}${money.compact(Math.abs(d.revenue))}` })] : []),
+              ...(d.sponsor ? [t('report.decisions.sponsor', { delta: d.sponsor })] : [])
+            ],
+            led: d.triggered.map(x => t('report.decisions.led', { title: x.title, when: t('time.period', { unit, n: x.period }) })),
+            read: d.read.map(x => t('report.decisions.read', { skill: x.skill, band: x.band }))
+          }))
+        };
+      }
       case 'people':
         return {
           key,

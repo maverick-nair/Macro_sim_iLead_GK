@@ -3,7 +3,8 @@ import { wordAll as en } from '../../i18n/engineCopy';
 import { parseStoryline, type StorylineConfig, type StorylineInput } from '../config';
 import salesElevator from '../storylines/sales-elevator.json';
 import { createEngine, IntentError, type Engine } from './engine';
-import { neededStyles } from './policies';
+import { neededStyles, play } from './policies';
+import { parseReport } from '../reportContract';
 
 /**
  * Business variables, choice events, flags and conditions, and delayed follow ups (D136 to D138,
@@ -243,5 +244,33 @@ describe('delayed follow ups (D138)', () => {
     expect(en(e.view()).history.some(l => l.title === 'The request again')).toBe(false);
     await nextWeek(e);
     expect(en(e.view()).history.find(l => l.title === 'The request again')?.period).toBe(2);
+  });
+});
+
+describe('the report: Decisions and consequences (D137)', () => {
+  it('lists each choice, the option taken, what it changed, what it led to and the leadership it showed', async () => {
+    const c = storyline({ variables: [BUDGET, { ...CSAT, drift: 0 }], events: [TRAINING_CUT, TRAINING_ASK] });
+    const e = createEngine(c, { seed: 8 });
+    await toBoard(e);
+    await nextWeek(e);
+    await day(e);
+    await e.dispatch({ type: 'decide', choiceId: e.view().openChoices[0].id, option: 'cut' });
+    while (e.view().clock.period < c.time.period.count) await nextWeek(e);
+    await e.dispatch({ type: 'endPeriod' });
+    const r = parseReport(e.view().report);
+    const at = r.sections.indexOf('moments');
+    expect(r.sections.slice(at, at + 2)).toEqual(['moments', 'decisions']);
+    expect(r.decisions).toHaveLength(1);
+    expect(r.decisions[0]).toMatchObject({ title: 'The training budget', option: 'Cut the training budget', by: 'you', outcome: 'Finance is happy. The three people hear their courses are off.',
+      variables: [{ key: 'budget', name: 'Budget', format: 'money', delta: -10000 }], triggered: [{ key: 'training_ask', title: 'Two people ask for the training you cut', period: 4 }],
+      read: [{ skill: 'Results ownership', band: 'adequate' }] });
+    expect(r.businessVariables.map(v => [v.key, v.start, v.end])).toEqual([['budget', 50000, 40000], ['csat', 70, 70]]);
+  });
+
+  it('is not in the report of a storyline without choices or variables', async () => {
+    const { view } = await play(storyline({}), 'passive', 1);
+    const r = parseReport(view.report);
+    expect(r.sections).not.toContain('decisions');
+    expect(r.decisions).toEqual([]);
   });
 });
