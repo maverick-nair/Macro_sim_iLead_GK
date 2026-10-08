@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78), kept current since (D79 to D142). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D153). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
@@ -61,6 +61,7 @@ Schema: `src/engine/contract.ts`. JSON Schemas: `docs/schemas/engine-view.json`,
 - **Consequences that carry forward** (D135 to D142): a new intent, `decide` (`{ type: 'decide', choiceId, option }`, board phase only; an unknown or closed choice is refused). The view adds `variables` (the shown business variables: key, name, format, value, the period's start, range, whether more is better, what it means, the last three causes), `openChoices` (decisions waiting: what is known and the options' labels, never their consequences, with the days left) and `choices` (decisions made or left to their default, with what they changed); an event card that opens a decision carries its `choiceId`. The week end's summary adds `variables`, `choices` and `attrition` (who went off sick or resigned) when the storyline uses them. The report adds `decisions` and `businessVariables` and the `decisions` section. All have defaults, so an older server's payload still parses. The mock plays the Client Trust demo with `?storyline=client-trust`; the server lists `client_trust` as a built in storyline.
 - **The view never includes a member's needed style**, the fit table, raw model scores or the lens's source. Members' stats are `null` until the profile is opened (D39).
 - **Streaming:** abort the request to stop a line, then send `interruptTurn`. A body that ends without `done` or `error` is read as a retryable error. Details: `src/ai/sse.ts`, `docs/SPEECH.md`.
+- **The report's summary** (D143 to D145) adds `profile`, `headline`, `lines` and `drivers` (what drove the results, which also names decisions and business variables that moved, D152), and a reconciled skill carries `reconciled`; all defaulted, so reports stored before still parse.
 - **The report** (`EngineView.report`) is null until the run ends, then a `ReportView` (`src/engine/reportContract.ts`, `docs/schemas/report-view.json`). The first load checks only that it is an object; the end screen and the report (both lazy) parse it.
 
 ## 3. The app API (proposed endpoints)
@@ -105,8 +106,8 @@ Base `VITE_GENIE_URL`. Schemas in `src/api/author.ts`; prompts the server must f
 
 | Method and path | Request | Response |
 |---|---|---|
-| `POST /author/turn` | `AuthorTurnRequest`: `{ brief, asked, answers }` | `AuthorTurnResponse`: `{ kind: 'question', brief, question, progress }` or `{ kind: 'lens', brief, recommendation, framework }` |
-| `POST /author/draft` | `AuthorDraftRequest`: `{ brief, leadership_lens }` (the locked Leadership Lens module) | `AuthorDraftResponse`: `{ storyline, preview }` |
+| `POST /author/turn` | `AuthorTurnRequest`: `{ brief, asked, answers, taken }` | `AuthorTurnResponse`: `{ kind: 'question', brief, question, progress }`, `{ kind: 'clarify', brief, clarify }` (D147) or `{ kind: 'lens', brief, recommendation, framework }`. The brief carries `stakeholders`, `objectives` and `dilemmas` (D146). The app waits 30 seconds; the server reads a turn in 25 (D148) |
+| `POST /author/draft` | `AuthorDraftRequest`: `{ brief, leadership_lens }` (the locked Leadership Lens module) | `AuthorDraftResponse`: `{ storyline, preview }`. With dilemmas in the brief, the storyline has decisions seeded from them and business variables from the objectives, worded by the model (`author-draft` version 3, D153). The app waits 120 seconds |
 | `POST /author/edit` | `AuthorEditRequest` (`src/api/authorEdit.ts`): `{ instruction, tab, view: { context, fields } }`, the whitelisted fields Kora may change | `AuthorEditResponse`: `{ kind: 'patch', reply, ops: [{ path, value }] }` or `{ kind: 'reply', reply, options }`; the app checks the patch against the draft (D127) and falls back to its rules on 404, 501, 502 or after 30 seconds |
 
 The client checks every draft against the storyline schema and the copy guard (`src/author/copyGuard.ts`) and uses the templates when either fails. JSON Schemas: `docs/schemas/author-*.json`.
@@ -210,7 +211,7 @@ The board and group report keep LCP 3 s: at this network the first load's bytes 
 - **Not built:** a design for the interview, the written plan and the Week 0 practice (functional in the shared shell, D52, D84, D85, awaiting the canvas, D80); phones (D69); playing offline (the client holds actions while offline and sends them on reconnect, D86, but the mock engine is the only offline engine).
 - **The design prototype** (`?engine=off`, `/screens`, `/states`) stays for parity only; it is not a product surface.
 - **Lens styles** (D104): every lens has 4 or 5 styles; Six Leadership Styles plays five (Drive merges Pacesetting and Commanding) and keeps its library title, which the product owner may rename. Authors rename styles per lens; report lines name a style with `{style}`.
-- **Consequences** (D135 to D142): the run summary and the group report do not carry choices or business variables yet; /author does not edit business effects on actions, counters, or an ignored decision's consequence without a default (the engine plays all three).
+- **Consequences** (D135 to D142, D152, D153): the run summary and the group report do not carry choices or business variables yet; decisions seeded from a brief's dilemmas are not seeded again when the author edits the dilemmas in the Brief tab; /author does not edit business effects on actions, counters, or an ignored decision's consequence without a default (the engine plays all three).
 - **/author** (D105 to D111, D128 to D130): offline it drafts with rules and templates; the model drafter, Kora on the model, PDF reading, the persona check on publish and publishing itself are the server's. What the export does not carry yet (the theme, the Story tab's visuals) is in section 5. The calibration tab's feature lands separately (`src/author/calibrate`).
 
 ## 11. What the engineer configures (server)

@@ -12,6 +12,7 @@ This is a different tool from `npm run calibrate` (`scripts/calibrate.ts`, SIMUL
 | Traits, the policy hooks and the four levels | `src/engine/sim/syntheticPolicy.ts` (`PERSONA_TRAITS`, `SKILL_TRAITS`, `Policy`, `PlayerApi`) |
 | The four player types | `src/engine/sim/syntheticArchetypes.ts` (`ARCHETYPES`, `ARCHETYPE_POLICIES`) |
 | The probes | `src/engine/sim/syntheticProbes.ts` (`Probe`, `probePolicy`, `topPairs`) |
+| How a choice event's options are weighed (D140, D152) | `src/engine/sim/syntheticChoices.ts` (`levelChoice`, `choiceBusiness`, `choicePeople`, `choiceLead`, `choiceSize`); each policy's `choose` hook |
 | What they say offline, and the speaker interface | `src/engine/sim/syntheticSpeech.ts` (`templateSpeaker`, `SyntheticSpeaker`, `SpeakerContext`), the phrasings in `syntheticPhrases.ts`, what they hear in `syntheticListen.ts` |
 | What they say with AI | `ai/src/synthetic/player.ts`, `createSyntheticPlayer(config)` from `ai/`; prompt `ai/prompts/synthetic-player.md` |
 | Run, aggregate, check, explain | `src/author/calibrate/logic/` (`run.ts`, `aggregate.ts`, `strategy.ts`, `archetypes.ts`, `mechanics.ts`, `findings.ts`, `bundled.ts`, `extract.ts`, `explain.ts`, `schema.ts`, `publish.ts`, `client.ts`, `worker.ts`, `chunked.ts`) |
@@ -19,7 +20,7 @@ This is a different tool from `npm run calibrate` (`scripts/calibrate.ts`, SIMUL
 | Public entry | `src/author/calibrate/index.ts`: `CalibrateSlot`, `calibrationPublishCheck` |
 | Server jobs | `server/src/calibration/jobs.ts`, `server/src/routes/calibrate.ts` |
 | CLI | `scripts/synthetic.ts` (`npm run synthetic`) |
-| Tests | `src/engine/sim/synthetic.test.ts` (players, probes, player types, trait monotonicity, speech), `src/author/calibrate/logic/*.test.ts` (`checks.test.ts` for the D149 and D150 checks), `ai/src/synthetic/player.test.ts`, `server/test/calibration.test.ts`, `tests/e2e/calibrate.spec.ts` |
+| Tests | `src/engine/sim/synthetic.test.ts` (players, probes, player types, trait monotonicity, speech), `src/author/calibrate/logic/*.test.ts` (`checks.test.ts` for the D149 and D150 checks, `choices.test.ts` for D140), `src/engine/sim/syntheticChoices.test.ts` (levels and player types decide, probes leave the default), `ai/src/synthetic/player.test.ts`, `server/test/calibration.test.ts`, `tests/e2e/calibrate.spec.ts` |
 
 ## 2. The personas
 
@@ -102,7 +103,7 @@ Every check that needs a look carries a suggested fix in plain words. The CLI an
 
 **Probes for dominant strategies (D114, D149).** One style for everyone all run with otherwise sound play (the Proficient's, three seeds per style), and one action every day it can be taken (with random styles, two seeds). Combined (`combined`): team energy every week with one style for everyone (three seeds per style), as many actions as the days allow in any style (`busy`), and a pair of actions alternated every day with an Expert's reading of people and nothing else (`pair`: every pair among the three best single action probes, leaving out hiring and letting go, and team energy; six pairs on Sales Elevator, two seeds each, chosen once the single probes have played). Reading everyone right every week and taking no action (`idle`, two seeds). Probes always play on the offline templates and evaluator: they test mechanics and cost no model calls, and their words always show the style they mean (the evaluator's reading of the style is overridden for probes only). A pair is judged against the Expert only: reaching the target tier with an Expert's reading is the reading, which `idle` measures.
 
-**The bundled actions' known finding (D149).** Every /author draft starts from Sales Elevator's calibrated actions, and on them pairs of actions repeated with an Expert's reading beat the Expert. `logic/bundled.ts` tells whether a storyline still plays those actions unchanged (what each action does, not its wording or style keys; actions switched off do not count); there `combined` is reported as advice with the finding (`logic/findings.ts`). Once an author changes what an action does, the check counts in full.
+**The bundled actions' known finding (D149).** Every /author draft starts from Sales Elevator's calibrated actions, and on them pairs of actions repeated with an Expert's reading beat the Expert. `logic/bundled.ts` tells whether a storyline still plays those actions unchanged (what each action does, not its wording or style keys; actions switched off do not count); there `combined` is reported as advice with the finding (`logic/findings.ts`). Once an author changes what an action does, the check counts in full. The bundled Client Trust (D141) plays the same actions with budget costs and quality gains on some options; for the bundled storylines those business effects on actions are left out of the comparison (D152), so the finding is advice there too, while an author's storyline that adds a business effect to an action has changed it.
 
 **Conversation probes (D132).** With the probes on, Proficient plays two more seeds with every conversation rated Strong and two with every conversation rated Weak (`forcedBand` in `logic/run.ts` wraps the offline evaluator and keeps everything but the band). They are kept in `results.probes` with `probe.kind` `band`, never count as a strategy, and feed `conversationEffect`. The style probes feed `styleEffect` as well as `dominant`.
 
@@ -152,48 +153,48 @@ const line = calibrationPublishCheck(kept, { draft });
 
 ## 8. Results on Sales Elevator and Client Trust
 
-`npm run synthetic` (seed 1, 5 playthroughs a persona, 38 probes, about 2.5 s each). Sales Elevator plays with people dynamics and its recalibrated funnel (D135):
+`npm run synthetic -- --types` (seed 1, 10 playthroughs a player, 70 probes, about 3.5 to 4.5 s a storyline), measured on the integrated P1 work (D152): Sales Elevator plays with people dynamics and its recalibrated funnel (D135), the players listen and speak apart from the evaluator (D151), and every player decides Client Trust's choice events by its level or its nature (D140, D152). Points are each pillar's weighted share and the streak bonus, which add up to the score; "read as meant" is the evaluator agreement.
 
-| Player | Score range | Average | Tier | Revenue | Skills rated | Fits level | Strong conversations |
-|---|---|---|---|---|---|---|---|
-| Beginner | 368 to 460 | 428 | Bronze | 72% | Novice | 100% | 0% |
-| Developing | 441 to 575 | 539 | Silver | 80% | Proficient | 100% | 12% |
-| Proficient | 825 to 914 | 871 | Platinum | 164% | Advanced | 100% | 65% |
-| Expert | 912 to 957 | 930 | Platinum | 167% | Role Model | 100% | 97% |
-
-Every check passes. "Hire member" and "Let go" were not used; they are rare by design and not counted (D132). The best probe, Directing for everyone, averages 617, under Gold (700) and 254 points under Proficient play (styles change the outcome). Every conversation Strong reaches 134% of the revenue target, every one Weak 108% (conversations change what happens). Beginners reach 72% of the target, Experts 167%. The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them; with dynamics, a team kept in good spirits also delivers in full.
-
-Client Trust (D141: dynamics, four business variables, four choice events):
-
-| Player | Score range | Average | Tier | Revenue | Skills rated | Fits level | Strong conversations |
-|---|---|---|---|---|---|---|---|
-| Beginner | 360 to 464 | 402 | Bronze | 61% | Novice | 100% | 0% |
-| Developing | 455 to 560 | 525 | Silver | 78% | Proficient | 80% | 11% |
-| Proficient | 841 to 872 | 862 | Platinum | 138% | Advanced | 100% | 61% |
-| Expert | 916 to 940 | 933 | Platinum | 140% | Role Model | 100% | 97% |
-
-Every check passes. Beginner and Expert choices are 95% apart (players at different levels choose differently); Directing for everyone averages 601; every conversation Strong reaches 121% of the target, every one Weak 106%.
-
-`npm run synthetic -- --types` (seed 1, 10 playthroughs a player, 70 probes). Points are each pillar's weighted share and the streak bonus, which add up to the score; "read as meant" is the evaluator agreement.
+Sales Elevator:
 
 | Player | Score range | SD | Average | Tier | Revenue | Skills rated | Strong conversations | Read as meant | Business | People | Leadership | Streak |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Beginner | 178 to 345 | 46 | 303 | Bronze | 48% | Developing | 0% | 51% | 129 | 45 | 130 | 0 |
-| Developing | 324 to 490 | 53 | 423 | Bronze | 67% | Developing | 3% | 72% | 180 | 66 | 179 | 0 |
-| Proficient | 835 to 905 | 19 | 872 | Platinum | 146% | Advanced | 69% | 94% | 270, capped | 200 | 303 | 100 |
-| Expert | 914 to 978 | 25 | 943 | Platinum | 156% | Role Model | 95% | 89% | 270, capped | 231 | 343 | 100 |
-| Risk taker | 605 to 843 | 89 | 715 | Silver | 103% | Proficient | 62% | 97% | 258 | 142 | 264 | 53 |
-| Conservative | 532 to 780 | 99 | 660 | Silver | 85% | Advanced | 66% | 93% | 230 | 117 | 267 | 48 |
-| People first | 960 to 983 | 7 | 973 | Platinum | 199% | Role Model | 96% | 97% | 270, capped | 270 | 334 | 100 |
-| Business first | 772 to 888 | 34 | 835 | Gold | 119% | Advanced | 75% | 98% | 268, capped | 169 | 304 | 95 |
+| Beginner | 159 to 374 | 59 | 323 | Bronze | 48% | Novice | 0% | 48% | 129 | 63 | 131 | 0 |
+| Developing | 339 to 571 | 61 | 462 | Bronze | 71% | Developing | 6% | 74% | 191 | 85 | 187 | 0 |
+| Proficient | 850 to 893 | 12 | 872 | Platinum | 168% | Advanced | 70% | 91% | 270, capped | 199 | 306 | 98 |
+| Expert | 914 to 978 | 20 | 946 | Platinum | 187% | Role Model | 95% | 91% | 270, capped | 232 | 344 | 100 |
+| Risk taker | 503 to 834 | 97 | 712 | Silver | 114% | Proficient | 62% | 92% | 261, capped | 143 | 264 | 45 |
+| Conservative | 519 to 793 | 106 | 661 | Silver | 82% | Advanced | 67% | 95% | 217 | 127 | 273 | 45 |
+| People first | 965 to 983 | 5 | 976 | Platinum | 256% | Not rated | 96% | 97% | 270, capped | 270 | 336 | 100 |
+| Business first | 749 to 880 | 36 | 834 | Gold | 134% | Advanced | 75% | 95% | 267, capped | 170 | 307 | 90 |
 
-Best probes: Directing for everyone 662 (three seeds), a team meeting every day 411, team energy every week with Directing for everyone 659, as many actions as possible 346, reading people without acting 735, and the pairs with an Expert's reading: team meeting and team energy 970, goals and team energy 970, team meeting and goals 966, team meeting and feedback 966, feedback and team energy 962, goals and feedback 842. Every conversation Strong reaches 871 points, every one Weak 534.
+Best probes: Directing for everyone 612, a team meeting every day 431, team energy every week with Partnering for everyone 657, as many actions as possible 384, reading people without acting 799, and the pairs with an Expert's reading: team meeting and team energy 984, team meeting and feedback 972, goals and team energy 966, team meeting and goals 964, feedback and team energy 956, goals and feedback 838.
 
-The level checks all pass: scores rise (303, 423, 872, 943), Experts reach Gold in 10 of 10 and Beginners never, skill ratings fit every level, styles and conversations change the outcome, the target suits the levels, Experts answered 28 of 30 events, and the levels' ranges do not overlap. Four things to look at, all storyline findings, none a failure: five of the six pairs beat the Expert (`combined`, advice on the bundled actions, D149); reading people without acting reaches Gold (`idle`, 735); People first beats the Expert on score and revenue (`tradeOff`, 973 and 199% against 943 and 156%); and Business is capped for Proficient and Expert, so only People and Leadership separate them (`mechanics`). The streak bonus is 100 of the 449 points between Developing and Proficient (22%), under the 40% advisory line. The player types play out differently (the closest pair still differs in most of its actions).
+Client Trust:
 
-The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them. Developing fell from 495 (D132) to 423 with the decoupled phrasings (72% read as meant, was about 94%) and with waste that no longer lands on team energy.
+| Player | Score range | SD | Average | Tier | Revenue | Skills rated | Strong conversations | Read as meant | Business | People | Leadership | Streak |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Beginner | 206 to 375 | 48 | 329 | Bronze | 50% | Developing | 0% | 49% | 140 | 57 | 133 | 0 |
+| Developing | 400 to 523 | 37 | 456 | Bronze | 68% | Developing | 3% | 68% | 175 | 98 | 185 | 0 |
+| Proficient | 818 to 892 | 21 | 856 | Platinum | 136% | Advanced | 70% | 91% | 241 | 213 | 303 | 100 |
+| Expert | 908 to 962 | 17 | 934 | Platinum | 147% | Role Model | 94% | 88% | 240 | 252 | 342 | 100 |
+| Risk taker | 558 to 873 | 99 | 696 | Silver | 99% | Proficient | 60% | 97% | 217 | 178 | 259 | 43 |
+| Conservative | 507 to 774 | 103 | 645 | Silver | 78% | Advanced | 69% | 96% | 191 | 143 | 261 | 50 |
+| People first | 916 to 936 | 7 | 926 | Platinum | 173% | Advanced | 95% | 95% | 230 | 270 | 326 | 100 |
+| Business first | 744 to 856 | 34 | 804 | Gold | 109% | Advanced | 73% | 93% | 231 | 183 | 296 | 95 |
 
-Timings in Node: 20 playthroughs and the 70 probes about 2.7 s on an idle machine, 40 playthroughs (the default) and the probes about 3.5 s; measured on a loaded machine (5.9 s and 7.7 s) against the D132 code on the same machine (5.2 s for 20 playthroughs and 38 probes, 2.4 s idle). The player builds fewer views per playthrough, so it is faster than before for the same work.
+Best probes: Directing for everyone 603, goals every day 411, team energy every week with Directing for everyone 610, as many actions as possible 364, reading people without acting 728, and the pairs: team meeting and team energy 948, goals and team energy 942, feedback and team energy 934, team meeting and feedback 932, goals and team meeting 924, goals and feedback 786. Choices (ten runs each): Beginners leave about half to the default and otherwise take the short term option; Experts hold the price, move the deadline, fund travel training and set limits on the rumour in nearly every run; Risk taker takes the discount, moves the deadline, funds the training and tells the team; Conservative takes every default; People first takes the discount (its people effects are the best: morale and result up for the person who closes), moves the deadline, funds the training and tells the team; Business first takes the discount, the weekend, the cut and limits. Beginner and Expert choices are 95% apart.
+
+On both storylines every level check passes: scores rise, Experts reach Gold in 10 of 10 and Beginners never, skill ratings fit every level, styles and conversations change the outcome, the target suits the levels, and the levels' ranges do not overlap. What to look at, all storyline findings, none a failure (D152 keeps them as found; rebalancing is the storylines' owner's):
+
+- **A routine beats the Expert** (`combined`, advice on the bundled actions): on Sales Elevator five of the six pairs (984 against 946); on Client Trust three, narrowly (948, 942 and 934 against 934), its budget costs on team energy do not change it.
+- **Reading people without acting reaches Gold** (`idle`, a warning): 799 on Sales Elevator (735 before dynamics and the recalibrated funnel), 728 on Client Trust.
+- **People first beats the Expert on score and revenue** (`tradeOff`): on Sales Elevator, 976 and 256% against 946 and 187%. On Client Trust it does not (926 and 173% against 934 and 147%): it wins on revenue, not on score.
+- **Business is capped** for Proficient and Expert on Sales Elevator (`mechanics`), so only People and Leadership separate them. Client Trust's variables give Business room above the target.
+
+The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them; with dynamics, a team kept in good spirits also delivers in full.
+
+Timings in Node: 40 playthroughs and the 70 probes about 3.4 s on Sales Elevator and 3.9 s on Client Trust, 80 playthroughs with the player types 4.6 s (this machine, loaded). Before the merge, on the synthetic players' branch: 20 playthroughs and the 70 probes about 2.7 s idle, 40 about 3.5 s.
 
 ## 9. Not done
 
