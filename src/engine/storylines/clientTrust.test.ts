@@ -43,4 +43,19 @@ describe('Client Trust', () => {
     expect(event('reorg_rumour').choice!.options.find(o => o.key === 'silent')!.business.followUps).toEqual([{ event: 'news_leaks', days: 0, weeks: 1 }]);
     expect(event('discount_deal').choice!.options.find(o => o.key === 'value')!.business.followUps).toEqual([{ event: 'client_signs', days: 0, weeks: 1 }]);
   });
+
+  it('has three stakeholders outside the team, with requests, a negotiation, and choices that move them (D165)', () => {
+    expect(c.stakeholders.map(s => [s.key, s.kind])).toEqual([['client_lead', 'customer'], ['cfo', 'executive'], ['delivery_lead', 'peer']]);
+    // At least one stakeholder initiated request, and one negotiation.
+    const requests = c.events.filter(e => e.request);
+    expect(requests.map(e => [e.stakeholder, e.request!.kind])).toEqual([['client_lead', 'meeting'], ['delivery_lead', 'meeting'], ['cfo', 'message']]);
+    expect(c.stakeholders.flatMap(s => s.interactions.filter(x => x.type === 'negotiate').map(x => `${s.key}.${x.key}.${x.kind}`))).toEqual(['client_lead.scope.live', 'cfo.contractor.static', 'delivery_lead.priorities.live']);
+    // The negotiation for budget lands only when the CFO trusts you enough.
+    expect(c.stakeholders[1].interactions[1].options![0].effect.needs).toEqual({ trust: 55 });
+    // Wired into the choice events and the variables.
+    expect(event('discount_deal').choice!.options.find(o => o.key === 'value')!.business.stakeholders).toEqual({ client_lead: { trust: 5, satisfaction: 2 } });
+    expect(event('training_or_hire').choice!.options.find(o => o.key === 'fund')!.business.stakeholders).toEqual({ cfo: { trust: -4, satisfaction: -8 } });
+    expect(event('client_escalates').if).toEqual([{ kind: 'stakeholder', stakeholder: 'client_lead', measure: 'satisfaction', op: 'below', value: 40 }]);
+    expect(event('client_renews').business!.revenue).toBeGreaterThan(0);
+  });
 });
