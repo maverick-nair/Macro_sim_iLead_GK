@@ -198,11 +198,12 @@ test('an event keeps the timing and response the author gives it; a shorter run 
   const title = await page.getByRole('textbox', { name: 'Title' }).inputValue();
   await page.getByRole('combobox', { name: 'When' }).selectOption({ label: 'When something happens' });
   await page.getByRole('combobox', { name: 'Condition' }).selectOption({ label: 'Team trust falls below' });
-  await page.getByText(/^Response: what answers it/).click();
+  await page.getByText(/^Response: none expected/).click();
   await page.getByRole('checkbox', { name: 'Meet the team' }).check();
   await page.getByRole('combobox', { name: 'Days to respond' }).selectOption({ label: '4 days' });
   await page.getByRole('checkbox', { name: /The sponsor hears of it/ }).check();
   await expect(page.getByRole('button', { name: `${title} · When team trust is below 40` })).toBeVisible();
+  await expect(page.getByText(/^Response: Meet the team, within 4 days; if ignored, it escalates$/)).toBeVisible();
 
   await openTab(page, 'Brief');
   await page.getByText(/^Lite · 4 weeks/).click();

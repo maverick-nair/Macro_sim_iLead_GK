@@ -162,8 +162,8 @@ export default function Events() {
               {(['skill', 'morale', 'result'] as const).map(k => <Field key={k} label={k[0].toUpperCase() + k.slice(1)}>{id => <TextInput id={id} inputMode="numeric" tone={toneOf(d.marks[`events.${e.key}`])} value={signed(e[k])} onChange={ev => set({ [k]: delta(ev.target.value) })} />}</Field>)}
               <Field label="Lead flow" hint={e.timing === 'fixed' ? 'Percent change in new leads that week' : 'Needs a fixed week'}>{id => <TextInput id={id} inputMode="numeric" disabled={e.timing !== 'fixed'} value={`${e.leadFlow < 0 ? '−' : ''}${Math.abs(e.leadFlow)}%`} onChange={ev => set({ leadFlow: Math.max(-100, Math.min(100, Math.round(Number(ev.target.value.replace('−', '-').replace('%', '')) || 0))) })} />}</Field>
             </div>
-            <details className="rounded-12 border border-solid border-author-line p-3" open={responds || undefined}>
-              <summary className="cursor-pointer text-15 font-800">Response: what answers it, the days to respond, what happens if ignored</summary>
+            <details className="rounded-12 border border-solid border-author-line p-3">
+              <summary className="cursor-pointer text-15 font-800">Response: {responds ? `${e.respondWith.map(k => answers.find(([v]) => v === k)?.[1] ?? k).join(' or ')}, within ${e.within} day${e.within === 1 ? '' : 's'}${e.ifIgnored.sponsor || e.ifIgnored.followUp ? '; if ignored, it escalates' : ''}` : 'none expected'}</summary>
               <div className="mt-3 grid grid-cols-2 gap-4 max-[1000px]:grid-cols-1">
                 <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
                   <legend className="mb-1 text-13 font-700 text-author-label">What counts as a response</legend>
