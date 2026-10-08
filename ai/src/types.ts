@@ -55,6 +55,8 @@ export interface NpcScene {
   guarded?: boolean;
   /** Interview: the role being hired for. */
   role?: string;
+  /** The lens's styles, so the character sheet names the styles a persona reacts to (D130). */
+  styles?: Array<{ key: string; name: string; short?: string }>;
 }
 
 /** The engine's context plus the scene. The engine's `NpcContext` alone is enough; the scene makes replies better. */

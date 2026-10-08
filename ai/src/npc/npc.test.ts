@@ -52,6 +52,21 @@ describe('NPC prompt assembly', () => {
     expect(meeting.messages[0].content).toMatch(/This is the opening line: you speak first/);
   });
 
+  it('writes the author\'s persona into the sheet: age, motivation, topics, how they talk, notes and reactions by style name (D130)', () => {
+    const base = kentTurn();
+    const persona = { ...base.speaker.persona!, npc: { age: '45 to 54', motivatedBy: 'Being trusted with big accounts', avoid: 'His divorce', reactions: { D: 'Bristles and goes quiet.', S: 'Relaxes and talks.' }, speech: { pace: 20, warmth: 80, formality: 90, replyLength: 'short' as const }, notes: [{ label: 'Hobby', value: 'Marathons' }] } };
+    const sheet = characterSheet(kentTurn({ speaker: { ...base.speaker, persona }, styles: [{ key: 'D', name: 'Directing', short: 'Tell and check' }, { key: 'S', name: 'Supporting' }] }));
+    expect(sheet).toMatch(/Age: 45 to 54/);
+    expect(sheet).toMatch(/What motivates you: Being trusted with big accounts/);
+    expect(sheet).toMatch(/Topics you will not discuss \(deflect politely, in role\): His divorce/);
+    expect(sheet).toMatch(/How you talk: unhurried, warmly, formally/);
+    expect(sheet).toMatch(/Reply length: short/);
+    expect(sheet).toMatch(/Hobby: Marathons/);
+    expect(sheet).toMatch(/- Directing \(Tell and check\): Bristles and goes quiet\./);
+    expect(sheet).toMatch(/- Supporting: Relaxes and talks\./);
+    expect(characterSheet(base)).not.toMatch(/How you react/);
+  });
+
   it('records a prompt version', () => {
     expect(npcPromptVersion()).toMatch(/^npc@\d+#[0-9a-f]{8}$/);
   });
