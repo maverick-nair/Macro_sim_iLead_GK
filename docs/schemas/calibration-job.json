@@ -373,7 +373,10 @@
                       "separation",
                       "dominant",
                       "unused",
-                      "events"
+                      "events",
+                      "styleEffect",
+                      "conversationEffect",
+                      "target"
                     ]
                   },
                   "status": {
@@ -442,7 +445,8 @@
                             "type": "string",
                             "enum": [
                               "style",
-                              "action"
+                              "action",
+                              "band"
                             ]
                           },
                           "key": {
@@ -658,7 +662,8 @@
                             "type": "string",
                             "enum": [
                               "style",
-                              "action"
+                              "action",
+                              "band"
                             ]
                           },
                           "key": {
@@ -868,6 +873,9 @@
                   },
                   "name": {
                     "type": "string"
+                  },
+                  "rare": {
+                    "type": "boolean"
                   }
                 },
                 "required": [

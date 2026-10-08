@@ -59,7 +59,12 @@ export const Chat = z.object({
   recommendation: z.object({ id: z.enum(LENS_IDS), reason: z.string(), rule: z.string() }).nullable(),
   primary: z.enum(LENS_IDS).nullable(),
   secondary: z.enum(LENS_IDS).nullable(),
-  clientDimensions: z.array(FrameworkDimension)
+  clientDimensions: z.array(FrameworkDimension),
+  /**
+   * The template fit check (D133, `fit.ts`): what the brief asks for that iLead cannot play yet. `open` waits for the
+   * author to continue with a team leadership version or change the brief; `seen` keeps the kinds already raised.
+   */
+  fit: z.object({ status: z.enum(['open', 'accepted']), from: z.enum(QUESTION_IDS).nullable(), kinds: z.array(z.string()), seen: z.array(z.string()) }).nullable().optional()
 });
 export type Chat = z.infer<typeof Chat>;
 
@@ -275,11 +280,23 @@ export const AuthorDraft = z.object({
     look: z.enum(['dark', 'light', 'participant']),
     preview: z.enum(['board', 'report'])
   }),
-  publish: z.object({ cohort: Short, notes: Text, version: z.number().int().min(0), played: z.boolean() }),
+  /**
+   * `skipTest`: the author ticked "Publish without testing" for this version (D132): a synthetic test that has
+   * not run, or not run fully, on this version is then advisory. It never covers a failed test, and it resets on publish.
+   */
+  publish: z.object({ cohort: Short, notes: Text, version: z.number().int().min(0), played: z.boolean(), skipTest: z.boolean().default(false) }),
   marks: z.record(z.string(), z.enum(MARKS)),
   suggestions: z.array(z.object({ id: z.string(), tab: z.enum(TABS), text: Text, action: Short, done: z.boolean() })),
-  /** Calibration results the Test tab reports, when it has run. */
-  calibration: z.object({ ranAt: z.number(), passed: z.boolean(), summary: Short, configHash: z.string().optional(), advisory: z.boolean().optional() }).nullable()
+  /**
+   * Calibration results the Test tab reports, when it has run (D119, D132). `status` is the last run's: passed, advisory
+   * (warnings only), failed, or partial (not all four levels, or the probes off). `failed` is sticky: set by a failed run
+   * and cleared only by a full run that passes, so an edit or a partial run never turns a failure into advice.
+   */
+  calibration: z.object({
+    ranAt: z.number(), passed: z.boolean(), summary: Short, configHash: z.string().optional(), advisory: z.boolean().optional(),
+    status: z.enum(['passed', 'advisory', 'failed', 'partial']).optional(),
+    failed: z.object({ summary: Short, configHash: z.string() }).nullable().optional()
+  }).nullable()
 });
 export type AuthorDraft = z.infer<typeof AuthorDraft>;
 

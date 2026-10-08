@@ -98,7 +98,12 @@ describe('needs, Kora and regeneration', () => {
     d.story.product.dealValue = 30000;
     for (const s of d.scoring.samples) s.call = s.scored;
     expect(needsOf(d)).toEqual([]);
-    expect(checksOf(d).filter(c => c.blocking && c.state !== 'passed')).toEqual([]);
+    // Only the synthetic test is left (D132): run it, or tick Publish without testing.
+    expect(checksOf(d).filter(c => c.blocking && c.state !== 'passed').map(c => c.id)).toEqual(['synthetic']);
+    const e = structuredClone(d);
+    e.publish.skipTest = true;
+    expect(checksOf(e).filter(c => c.blocking && c.state !== 'passed')).toEqual([]);
+    expect(checksOf(e).find(c => c.id === 'synthetic')?.state).toBe('advisory');
   });
 
   it('proposes a change before applying it, by character, run length, a new character or the sponsor', () => {

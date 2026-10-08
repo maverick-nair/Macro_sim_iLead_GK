@@ -1,9 +1,10 @@
 import { parseStoryline, type StorylineConfig } from '../../../engine/config';
 import type { Copy } from '../../../engine/copy';
-import type { Evaluator } from '../../../engine/sim/evaluator';
+import { heuristicEvaluator, type Evaluator } from '../../../engine/sim/evaluator';
 import type { NpcModel } from '../../../engine/sim/live';
 import { playSynthetic, type Probe } from '../../../engine/sim/synthetic';
 import type { SyntheticSpeaker } from '../../../engine/sim/syntheticSpeech';
+import type { Band } from '../../../engine/sim/types';
 import { aggregate } from './aggregate';
 import { configHash } from './hash';
 import { playthroughOf, runResultOf } from './extract';
@@ -40,6 +41,26 @@ export function isAbort(err: unknown, signal?: AbortSignal): boolean {
   return !!signal?.aborted || (typeof err === 'object' && err !== null && (err as { name?: unknown }).name === 'AbortError');
 }
 
+/** Actions that are rare by design: an unused one is no warning (D132). */
+export const RARE_RULES: ReadonlySet<string> = new Set(['hire', 'fire']);
+
+/** The bands conversation probes force, and the seeds they play (D132). */
+export const BAND_PROBES: readonly Band[] = ['strong', 'weak'];
+
+/**
+ * An evaluator that rates every conversation `band` (its dimensions too) and keeps the rest of the reading: a
+ * conversation probe compares the same play with every conversation Strong, then Weak.
+ */
+export function forcedBand(band: Band, base: Evaluator = heuristicEvaluator): Evaluator {
+  return {
+    async evaluate(input) {
+      const e = await base.evaluate(input);
+      return { ...e, band, redFlags: [], dimensions: e.dimensions.map(d => ({ ...d, band })) };
+    },
+    reply: base.reply ? input => base.reply!(input) : undefined
+  };
+}
+
 export interface CalibrationOutput { results: CalibrationResults; playthroughs: Playthrough[] }
 
 
@@ -52,6 +73,8 @@ export function parseDraft(draft: unknown): StorylineConfig {
 /**
  * The playthroughs a calibration will play, in order: each persona's, then the probes. Action probes
  * cover the first MAX_PROBE_ACTIONS actions, so a storyline with many actions cannot make a run unbounded.
+ * With the probes on, conversation probes (`bands`) play Proficient twice with every conversation Strong
+ * and twice with every conversation Weak, on the same seeds (D132).
  */
 export function plan(config: StorylineConfig, s: CalibrationSettings) {
   const runs: Array<{ persona: PersonaKey; index: number; seed: number }> = [];
@@ -61,13 +84,15 @@ export function plan(config: StorylineConfig, s: CalibrationSettings) {
     const all: Probe[] = [...config.lens.styles.map(x => ({ kind: 'style' as const, style: x.key })), ...config.actions.slice(0, MAX_PROBE_ACTIONS).map(a => ({ kind: 'action' as const, action: a.key }))];
     for (const probe of all) for (let i = 0; i < 2; i++) probes.push({ persona: probe.kind === 'style' ? 'proficient' : 'developing', index: i, seed: s.seed + 500 + i, probe });
   }
-  return { runs, probes };
+  const bands: Array<{ persona: PersonaKey; index: number; seed: number; band: Band }> = [];
+  if (s.probes) for (const band of BAND_PROBES) for (let i = 0; i < 2; i++) bands.push({ persona: 'proficient', index: i, seed: s.seed + 700 + i, band });
+  return { runs, probes, bands };
 }
 
 /** The plan, refused when it is over MAX_PLAYTHROUGHS playthroughs in all. */
 export function checkedPlan(config: StorylineConfig, s: CalibrationSettings): ReturnType<typeof plan> {
   const p = plan(config, s);
-  const total = p.runs.length + p.probes.length;
+  const total = p.runs.length + p.probes.length + p.bands.length;
   if (total > MAX_PLAYTHROUGHS) throw new CalibrationError('These settings cannot run.', 'badSettings', [`${total} playthroughs with the probes; at most ${MAX_PLAYTHROUGHS} in one run. Play fewer, or turn the probes off.`]);
   return p;
 }
@@ -80,8 +105,8 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
   if (!parsed.success) throw new CalibrationError('These settings cannot run.', 'badSettings', parsed.error.issues.map(i => i.message));
   const settings = parsed.data;
   const config = parseDraft(draft);
-  const { runs: todo, probes: probing } = checkedPlan(config, settings);
-  const total = todo.length + probing.length;
+  const { runs: todo, probes: probing, bands } = checkedPlan(config, settings);
+  const total = todo.length + probing.length + bands.length;
   const tick = deps.yieldEvery ?? nextTick;
   const opts = { speaker: deps.speaker, evaluator: deps.evaluator, npc: deps.npc, signal: deps.signal, word: deps.word };
   const runs: RunResult[] = [];
@@ -115,6 +140,14 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
     deps.onProgress?.(++done, total);
     await tick();
   }
+  for (const b of bands) {
+    check();
+    // Conversation probes too play offline, with every conversation rated one band: does a conversation change what happens?
+    const run = await guarded(() => playSynthetic(config, b.persona, b.seed, { evaluator: forcedBand(b.band), signal: deps.signal, word: deps.word }));
+    probes.push({ ...runResultOf(run, b.index, config), probe: { kind: 'band', key: b.band } });
+    deps.onProgress?.(++done, total);
+    await tick();
+  }
   const results = aggregate(runs, probes, {
     storyline: { id: config.id, name: config.name },
     configHash: configHash(draft),
@@ -124,7 +157,7 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
     scoreMax: config.gamification.scale,
     tiers: config.gamification.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
     targetTier: settings.targetTier,
-    actions: config.actions.map(a => ({ key: a.key, name: a.name })),
+    actions: config.actions.map(a => ({ key: a.key, name: a.name, ...(RARE_RULES.has(a.rule) ? { rare: true } : null) })),
     settings: { seed: settings.seed, probes: settings.probes, personas: Object.fromEntries(PERSONA_KEYS.map(k => [k, settings.personas[k] ?? 0])) },
     ranOn: deps.ranOn,
     players: deps.players ?? (deps.speaker ? 'ai' : 'templates'),

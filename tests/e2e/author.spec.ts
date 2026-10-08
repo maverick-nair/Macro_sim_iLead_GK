@@ -144,10 +144,14 @@ test('renamed and added styles flow into actions and the played storyline; edits
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await openTab(page, 'Scoring and report');
   await page.getByRole('button', { name: 'Agree with the rest' }).click();
-  await expect(page.getByRole('banner').getByText('Ready to publish')).toBeVisible();
+  // Only the synthetic test is left (D132): the badge counts it until it runs or the author skips it.
+  await expect(page.getByRole('banner')).toContainText('1 to fix');
 
   await page.getByRole('button', { name: 'Review and publish' }).click();
-  await expect(page.getByRole('heading', { level: 1, name: 'Ready to publish' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Review and publish' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Publish', exact: true })).toBeDisabled();
+  await page.getByRole('checkbox', { name: 'Publish without testing' }).check();
+  await expect(page.getByRole('banner').getByText('Ready to publish')).toBeVisible();
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(page.getByText('Version 1 published')).toBeVisible();
 

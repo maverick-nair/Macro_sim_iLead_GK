@@ -33,8 +33,10 @@ describe('a calibration run', () => {
     const { results, playthroughs } = await runCalibration(raw, { personas: { beginner: 2, developing: 2, proficient: 2, expert: 2 }, seed: 3 }, { ranOn: 'cli', onProgress: (d, t) => progress.push([d, t]), yieldEvery: async () => undefined });
     expect(CalibrationResults.parse(results)).toBeTruthy();
     expect(results.runs).toHaveLength(8);
-    // Two seeds for each style and each action.
-    expect(results.probes).toHaveLength(2 * (4 + raw.actions.length));
+    // Two seeds for each style and each action, and two each with every conversation Strong, then Weak (D132).
+    expect(results.probes).toHaveLength(2 * (4 + raw.actions.length) + 4);
+    expect(results.probes.filter(p => p.probe?.kind === 'band').map(p => p.probe!.key)).toEqual(['strong', 'strong', 'weak', 'weak']);
+    expect(results.checks.find(c => c.key === 'unused')).toMatchObject({ status: 'pass', detail: '"Hire member" and "Let go" are rare by design and not counted.' });
     expect(progress[0]).toEqual([0, 8 + results.probes.length]);
     expect(progress.at(-1)).toEqual([8 + results.probes.length, 8 + results.probes.length]);
     expect(results.checks.filter(c => c.status === 'fail')).toEqual([]);
@@ -98,6 +100,38 @@ describe('a calibration run', () => {
   });
 });
 
+/** Sales Elevator with its lens written out, to break on purpose. */
+function broken(change: (c: ReturnType<typeof parseDraft>) => void) {
+  const c = structuredClone(parseDraft(raw));
+  change(c);
+  return c;
+}
+const small = { personas: { beginner: 2, developing: 2, proficient: 2, expert: 2 }, seed: 1 };
+const statusOf = async (draft: unknown, probes = true) => {
+  const { results } = await runCalibration(draft, { ...small, probes }, { ranOn: 'cli', yieldEvery: async () => undefined });
+  return Object.fromEntries(results.checks.map(c => [c.key, c.status]));
+};
+
+describe('checks that catch broken configs (D132)', () => {
+  it('a flat fit table, or one where one style fits every need, fails: styles do not change the outcome', async () => {
+    const flat = broken(c => { for (const n of Object.keys(c.lens.fit) as Array<keyof typeof c.lens.fit>) for (const k of Object.keys(c.lens.fit[n])) c.lens.fit[n][k] = 0; });
+    expect((await statusOf(flat)).styleEffect).toBe('fail');
+    const scrambled = broken(c => { for (const n of Object.keys(c.lens.fit) as Array<keyof typeof c.lens.fit>) c.lens.fit[n] = { D: 0, G: 2, P: 1, E: 2 }; });
+    expect((await statusOf(scrambled)).styleEffect).toBe('fail');
+  }, 30_000);
+
+  it('conversations with zero effect fail: every one Strong does no more than every one Weak', async () => {
+    const zero = [0, 0, 0, 0] as [number, number, number, number];
+    const flatTalk = broken(c => { for (const a of c.actions) if (a.kind !== 'static') a.live = { ...a.live, consequences: { strong: { target: zero, sponsor: 0 }, adequate: { target: zero, sponsor: 0 }, weak: { target: zero, sponsor: 0 }, harmful: { target: zero, sponsor: 0 } } }; });
+    expect((await statusOf(flatTalk)).conversationEffect).toBe('fail');
+  }, 30_000);
+
+  it('a revenue target cut to a tenth, or set to 1e12, fails', async () => {
+    expect((await statusOf(broken(c => { c.money.target = c.money.target / 10; }), false)).target).toBe('fail');
+    expect((await statusOf(broken(c => { c.money.target = 1e12; }), false)).target).toBe('fail');
+  }, 30_000);
+});
+
 describe('the publish check', () => {
   const base = async () => (await runCalibration(raw, { personas: { beginner: 1, expert: 1 }, probes: false }, { ranOn: 'cli', yieldEvery: async () => undefined })).results;
 
@@ -109,11 +143,11 @@ describe('the publish check', () => {
       ...r, checks: r.checks.map(c => ({ ...c, status: 'pass' as const })), settings: { ...r.settings, probes: true },
       personas: [beginner, { ...beginner, persona: 'developing' as const }, { ...expert, persona: 'proficient' as const }, expert]
     };
-    expect(calibrationPublishCheck(pass)).toEqual({ key: 'syntheticPlayers', title: 'Synthetic players', status: 'passed', blocking: false, summary: '4 playthroughs at four levels: scores rise with proficiency, Experts reach the target, Beginners do not.', details: [], action: 'See results' });
+    expect(calibrationPublishCheck(pass)).toEqual({ key: 'syntheticPlayers', title: 'Synthetic players', status: 'passed', blocking: false, summary: '4 playthroughs at four levels: scores rise with proficiency, Experts reach the target, Beginners do not.', details: [], action: 'See results', full: true });
     // A run that left levels out, or had the probes off, is not a full test: advisory, whatever its checks say.
     const partial = { ...pass, personas: r.personas, settings: r.settings };
     expect(calibrationPublishCheck(partial)).toMatchObject({
-      status: 'advisory', blocking: false, action: 'Run the test again',
+      status: 'advisory', blocking: false, full: false, action: 'Run the test again',
       summary: '2 playthroughs at two levels: scores rise with proficiency, Experts reach the target, Beginners do not. Not a full test: run all four levels with the probes on before you publish.',
       details: ['Developing and Proficient players did not play', 'The strategy probes were off, so a single winning strategy was not checked']
     });

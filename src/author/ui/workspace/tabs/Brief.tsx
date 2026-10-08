@@ -27,9 +27,9 @@ export default function Brief() {
         <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="who">
           <CardHead id="who" title="Who and why"><MarkOf path="brief.participants" /></CardHead>
           <p className="m-0 text-13 text-author-body">Your brief for Kora. Kora drafted the other tabs from it; the simulation plays what those tabs say, so change them there.</p>
-          <Field label="Participants" required mark="brief.participants">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={toneOf(d.marks['brief.participants'])} value={b.participants} onChange={e => set('participants', e.target.value)} />}</Field>
+          <Field label="Participants" required need={!b.participants.trim()} mark="brief.participants">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={toneOf(d.marks['brief.participants'])} value={b.participants} onChange={e => set('participants', e.target.value)} />}</Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Industry" required>{id => <TextInput id={id} tone={toneOf(d.marks['brief.industry'])} value={b.industry} onChange={e => set('industry', e.target.value)} />}</Field>
+            <Field label="Industry" required need={!b.industry.trim()}>{id => <TextInput id={id} tone={toneOf(d.marks['brief.industry'])} value={b.industry} onChange={e => set('industry', e.target.value)} />}</Field>
             <Field label="Client" optional>{id => <TextInput id={id} tone={toneOf(d.marks['brief.client'])} value={b.client} placeholder="Fictional company" onChange={e => set('client', e.target.value)} />}</Field>
           </div>
           <Field label="Business challenge" required need={!b.challenge.trim()} mark="brief.challenge">{id => (

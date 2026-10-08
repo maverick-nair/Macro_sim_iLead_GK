@@ -60,7 +60,8 @@ describe('question policy', () => {
   });
 
   it('checks answers it cannot use', () => {
-    expect(applyAnswer(empty(), 'team_size', '30').error).toBe('Pick a team size from 6 to 12.');
+    expect(applyAnswer(empty(), 'team_size', '30').error).toBe('iLead teams have 6 to 12 people, so 30 is too many to play. Pick 12 for a large team.');
+    expect(applyAnswer(empty(), 'team_size', 'ten or so people, we think').brief.teamSize).toBe(10);
     expect(applyAnswer(empty(), 'team_size', 'twelve').brief.teamSize).toBe(12);
     expect(applyAnswer(empty(), 'team_size', '10 (default)').brief.teamSize).toBe(10);
     expect(applyAnswer(empty(), 'process', 'Just one stage').error).toBe('List 3 to 6 stage names, separated by commas.');

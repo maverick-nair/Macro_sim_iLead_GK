@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78), kept current since (D79 to D130). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D133). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
