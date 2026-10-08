@@ -244,3 +244,5 @@ export const DRAFT_KEY = 'ilead.author.draft';
 export const WORKSPACE_KEY = 'ilead.author.workspace';
 /** Where a stored draft that did not parse is kept, as it was, before it is repaired. */
 export const WORKSPACE_BACKUP_KEY = 'ilead.author.workspace.backup';
+/** Where the draft's named versions (restore points) are kept, apart from the draft (D122). */
+export const WORKSPACE_VERSIONS_KEY = 'ilead.author.workspace.versions';

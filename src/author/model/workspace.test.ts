@@ -58,7 +58,7 @@ describe('the author store (D105)', () => {
     const blocked = createAuthorStore(draft(), memoryStorage(true));
     blocked.getState().edit(d => { d.title = 'x'; });
     await vi.advanceTimersByTimeAsync(400);
-    expect(blocked.getState().saveFailed).toBe(true);
+    expect(blocked.getState().saveFailed).toBe('full');
     vi.useRealTimers();
   });
 

@@ -212,7 +212,9 @@ export function Avatar({ src, name, size = 40 }: { src?: string; name: string; s
 }
 
 /** "Saved just now", "Saved 2 minutes ago", or that the draft could not be saved here. */
-export function savedText(savedAt: number | null, failed: boolean, now = Date.now()): string {
+export function savedText(savedAt: number | null, failed: boolean | 'full' | 'blocked' | 'conflict', now = Date.now()): string {
+  if (failed === 'full') return 'Not saved: storage is full';
+  if (failed === 'conflict') return 'Not saved: changed in another tab';
   if (failed) return 'Not saved: this browser blocks storage';
   if (!savedAt) return 'Draft saved';
   const m = Math.floor((now - savedAt) / 60000);
