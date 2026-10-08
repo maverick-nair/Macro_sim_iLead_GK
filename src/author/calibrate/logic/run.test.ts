@@ -30,6 +30,12 @@ describe('why a conversation got its rating', () => {
   });
 });
 
+/**
+ * Every test here that plays the engine has a timeout above vitest's 5 seconds: alone each takes well under a second,
+ * but under the full suite's load (90 test files in parallel) a short calibration has passed 5 seconds.
+ */
+const SLOW = 30_000;
+
 describe('a calibration run', () => {
   it('plays every persona and the probes, and passes on Sales Elevator', async () => {
     const progress: Array<[number, number]> = [];
@@ -70,7 +76,7 @@ describe('a calibration run', () => {
     const b = await runCalibration(raw, s, { ranOn: 'cli', yieldEvery: async () => undefined });
     expect(b.results.runs).toEqual(a.results.runs);
     expect(b.playthroughs).toEqual(a.playthroughs);
-  });
+  }, SLOW);
 
   it('refuses a draft that does not play, and settings out of range', async () => {
     await expect(runCalibration({ ...raw, members: [] }, {}, { ranOn: 'cli' })).rejects.toMatchObject({ code: 'badStoryline' });
@@ -83,7 +89,7 @@ describe('a calibration run', () => {
     const ctl = new AbortController();
     const p = runCalibration(raw, { personas: { expert: 3 } }, { ranOn: 'browser', signal: ctl.signal, onProgress: d => { if (d === 1) ctl.abort(); } });
     await expect(p).rejects.toMatchObject({ code: 'cancelled' });
-  });
+  }, SLOW);
 
   it('reports a cancel mid playthrough as cancelled, not failed', async () => {
     const ctl = new AbortController();
@@ -92,7 +98,7 @@ describe('a calibration run', () => {
     const p = runCalibration(raw, { personas: { expert: 1 }, probes: false }, { ranOn: 'browser', signal: ctl.signal, word });
     await expect(p).rejects.toMatchObject({ name: 'CalibrationError', code: 'cancelled' });
     expect(calls).toBeGreaterThanOrEqual(1);
-  });
+  }, SLOW);
 
   it('probes at most MAX_PROBE_ACTIONS actions, so the run stays under MAX_PLAYTHROUGHS', () => {
     const extra = Array.from({ length: 60 }, (_, i) => ({ ...raw.actions[0], key: `extra_${i}` }));
@@ -209,5 +215,5 @@ describe('the publish check', () => {
     expect(calibrationPublishCheck(fail)).toMatchObject({ status: 'failed', blocking: true, summary: '4 playthroughs at four levels. One check failed.' });
     expect(calibrationPublishCheck(pass, { draft: { ...raw, name: 'Changed' } })).toMatchObject({ status: 'outOfDate', action: 'Run the test again' });
     expect(calibrationPublishCheck(pass, { draft: raw }).status).toBe('passed');
-  });
+  }, SLOW);
 });
