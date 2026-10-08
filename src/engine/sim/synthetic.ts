@@ -13,6 +13,7 @@ import { planFields, templateSpeaker, type Level, type SpeakerContext, type Synt
 import type { Evaluation } from './types';
 import type { EngineView } from './view';
 import type { RunSummary } from '../report/summary';
+import { STAKEHOLDER_TRAITS, StakeholderPlayer } from './stakeholderPlayers';
 
 /**
  * Synthetic players (D112, D149 to D151, docs/CALIBRATION-SYNTHETIC.md): four proficiency levels and four
@@ -151,6 +152,8 @@ class Player implements PlayerApi {
   private readonly failed = new Set<string>();
   /** Actions of its own taken this week (events and promises not counted), for a policy's budget. */
   private own = 0;
+  /** Stakeholders outside the team (D160, D165), played by the policy's traits in their own module, on their own seeded stream. */
+  private readonly stakeholderPlay: StakeholderPlayer | null;
 
   constructor(readonly config: StorylineConfig, private readonly engine: Engine, private readonly persona: PlayerKey, private readonly seed: number, private readonly opts: PlayOptions, private readonly evaluations: Evaluation[], private readonly meant: { style: string | null }) {
     const probe = opts.probe;
@@ -163,6 +166,26 @@ class Player implements PlayerApi {
     this.lens = { title: config.lens.title, styles: config.lens.styles.map(s => ({ key: s.key, name: s.name, short: s.short, description: s.description })) };
     this.speaker = opts.speaker ?? templateSpeaker;
     this.defaultStyle = probe && 'style' in probe ? probe.style : this.rng.pick(this.keys);
+    const sh = this.policy.stakeholders === false ? null : this.policy.stakeholders ?? STAKEHOLDER_TRAITS[LEVELS[this.level]];
+    this.stakeholderPlay = sh && config.stakeholders.length
+      ? new StakeholderPlayer({ config, traits: sh, level: this.level, rng: createRng((seed ^ seedFrom(`stakeholders:${persona}`)) >>> 0), send: i => this.send(i), view: () => this.engine.view(), evaluations: () => this.evaluations, english: c => this.english(c as Copy) })
+      : null;
+  }
+
+  /**
+   * Stakeholders (D165): the requests the player answers or lets pass, and engaging them before anyone asks, by the
+   * policy's `stakeholders` traits (the level's, a player type's own, or none for a probe, D152).
+   */
+  private async stakeholderStep(v: EngineView): Promise<EngineView> {
+    if (!this.stakeholderPlay) return v;
+    const r = await this.stakeholderPlay.step(v);
+    this.conversations.push(...r.conversations);
+    for (const q of this.stakeholderPlay.requests) {
+      const w = this.week(q.period);
+      const e = w.events.find(x => x.key === q.key);
+      if (e) e.handled = q.handled; else w.events.push({ key: q.key, title: q.title, expected: true, handled: q.handled });
+    }
+    return r.view;
   }
 
   private english(c: Copy | null | undefined): string {
@@ -242,6 +265,7 @@ class Player implements PlayerApi {
   private async board(v: EngineView): Promise<EngineView> {
     for (let steps = 0; steps < 40 && v.phase === 'board'; steps++) {
       v = await this.answer(v);
+      v = await this.stakeholderStep(v);
       if (v.phase !== 'board') break;
       const step = this.next(v);
       if (!step) break;
@@ -275,7 +299,8 @@ class Player implements PlayerApi {
       v = (await this.send({ type: 'dismissCard', cardId: card.id })).view;
     }
     for (const m of v.inbox) {
-      if (m.from === 'news' || m.kind === 'news' || m.state !== 'open') continue;
+      // A stakeholder's message is theirs to answer (stakeholderStep, D165).
+      if (m.from === 'news' || m.kind === 'news' || m.state !== 'open' || this.config.stakeholders.some(s => s.key === m.from)) continue;
       // An event delivered as a chat or an email has no card: its message is the event.
       const title = this.english(m.title);
       const ev = this.config.events.find(e => e.response && e.title === title && (e.delivery === 'chat' || e.delivery === 'email'));

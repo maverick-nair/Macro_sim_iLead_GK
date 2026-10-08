@@ -12,6 +12,7 @@ import { buildReportModel, type SectionModel } from './engine';
 import { IntentSection, PlanSection } from './IntentPlan';
 import { MomentsSection } from './MomentsSection';
 import { DecisionsSection } from './DecisionsSection';
+import { StakeholdersSection } from './StakeholdersSection';
 import { AnalyticsSection, MethodologySection } from './NotesSections';
 import { PeopleSection } from './PeopleSection';
 import { ProgressSection, TakeawaysSection, ThoughtSection } from './ReflectSections';
@@ -68,6 +69,7 @@ export function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUn
     case 'plan': return <PlanSection items={s.items} reflection={s.reflection} checkIn={s.checkIn} extras={s.extras} />;
     case 'progress': return <ProgressSection data={s.data} />;
     case 'methodology': return <MethodologySection data={s.data} />;
+    case 'stakeholders': return <StakeholdersSection stakeholders={s.stakeholders} />;
   }
 }
 

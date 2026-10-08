@@ -36,7 +36,7 @@ export function markCounts(d: AuthorDraft): { you: number; ai: number; need: num
 /** The status a tab shows in the nav: needs you first, then whether most of it is the author's. */
 export function tabStatus(d: AuthorDraft, tab: Tab): 'need' | 'yours' | 'ai' {
   if (needsOf(d).some(n => n.tab === tab)) return 'need';
-  const prefix: Partial<Record<Tab, string[]>> = { brief: ['brief.'], story: ['story.'], process: ['process.'], team: ['team.'], lens: ['lens.'], actions: ['actions.'], events: ['events.'] };
+  const prefix: Partial<Record<Tab, string[]>> = { brief: ['brief.'], story: ['story.'], process: ['process.'], team: ['team.', 'stakeholders.'], lens: ['lens.'], actions: ['actions.'], events: ['events.'] };
   const ps = prefix[tab];
   if (!ps) return 'yours';
   const marks = Object.entries(d.marks).filter(([k]) => ps.some(p => k.startsWith(p))).map(([, m]) => m);

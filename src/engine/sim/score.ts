@@ -27,7 +27,9 @@ export function capability(sim: Sim) {
 export function liveMean(sim: Sim, period?: number) {
   const recs = period === undefined ? sim.liveRecords : sim.liveRecords.filter(r => r.period === period);
   const reads = sim.choices.filter(c => c.by === 'you' && c.read.length && (period === undefined || c.period === period)).map(c => mean(c.read.map(x => bandScore(sim, x.band))));
-  const all = [...recs.map(r => bandScore(sim, r.band)), ...reads];
+  // Static stakeholder decisions with a leadership read count the same way (D164).
+  const shReads = (sim.stakeholderRecords ?? []).filter(r => r.read.length && (period === undefined || r.period === period)).map(r => mean(r.read.map(x => bandScore(sim, x.band))));
+  const all = [...recs.map(r => bandScore(sim, r.band)), ...reads, ...shReads];
   return all.length ? mean(all) : null;
 }
 

@@ -51,6 +51,31 @@ function personaOf(ctx: NpcTurnContext): string {
   return s;
 }
 
+/** Who a stakeholder is to the participant (D160), in the character sheet's words. */
+const STAKEHOLDER_KIND: Record<string, string> = {
+  manager: 'the participant\'s own manager', peer: 'a peer who leads another team', customer: 'a customer of the participant\'s company', executive: 'a senior executive',
+  board: 'a member of the board', union: 'a union representative', partner: 'a partner organisation\'s lead', other: 'a stakeholder outside the participant\'s team'
+};
+const STAKEHOLDER_SCENE: Record<string, string> = {
+  meet: 'a meeting the participant asked for', present: 'the participant presents or briefs you', negotiate: 'a negotiation', email: 'an email the participant writes to you', reply: 'the participant replies to the message you sent'
+};
+
+/** A stakeholder's sheet (D161): who they are to the participant, their persona and their private concern. */
+function stakeholderSheet(ctx: NpcTurnContext): string {
+  const st = ctx.speaker.stakeholder!;
+  let s = '';
+  s += line('Role', st.role);
+  s += line('Who you are to the participant', `${STAKEHOLDER_KIND[st.kind] ?? STAKEHOLDER_KIND.other}. You are not on the participant's team and they do not manage you.`);
+  s += line('Pronouns', st.pronoun);
+  s += line('About you', st.about);
+  s += personaOf({ ...ctx, speaker: { ...ctx.speaker, persona: { npc: st.npc } as NonNullable<NpcTurnContext['speaker']['persona']> } });
+  if (st.hiddenConcern) {
+    s += `\n## Hidden concern (private: never quote this description)\n${st.hiddenConcern}\n`;
+    s += line('What you say when it surfaces', st.concernLine);
+  }
+  return s;
+}
+
 /** The character sheet: who the NPC is. Stable for the conversation, so it is cached. */
 export function characterSheet(ctx: NpcTurnContext): string {
   const sp = ctx.speaker;
@@ -59,7 +84,9 @@ export function characterSheet(ctx: NpcTurnContext): string {
   let s = `# Character sheet\n`;
   s += line('Language', `${languageName(locale)} (${locale})`);
   s += line('Name', sp.name);
-  if (ctx.format === 'sponsor' || !p) {
+  if (sp.stakeholder) {
+    s += stakeholderSheet(ctx);
+  } else if (ctx.format === 'sponsor' || !p) {
     s += line('Role', ctx.story?.sponsor && ctx.story.sponsor.name === sp.name ? ctx.story.sponsor.title : ctx.format === 'sponsor' ? 'Sponsor, the senior leader the participant reports to' : 'Colleague');
   } else {
     s += line('Role', p.title);
@@ -92,7 +119,7 @@ export function characterSheet(ctx: NpcTurnContext): string {
       s += line('Selling points', w.product?.points?.join('; '));
       s += line('Customers', w.customers);
       s += line('Rivals', w.rivals?.map(r => (r.angle ? `${r.name} (${r.angle})` : r.name)).join('; '));
-      if (ctx.format === 'sponsor' || !p) s += line('How you sound', w.sponsorVoice);
+      if (!sp.stakeholder && (ctx.format === 'sponsor' || !p)) s += line('How you sound', w.sponsorVoice);
     }
   }
   if (ctx.role) s += line('Role being hired for', ctx.role);
@@ -107,8 +134,13 @@ export function sceneOf(ctx: NpcTurnContext): string {
   s += line('What the participant chose to do', ctx.actionName);
   s += line('Your mood', sp.mood);
   s += line('Your trust in the participant (0 to 100)', Math.round(sp.trust));
+  if (sp.stakeholder) {
+    s += line('Your satisfaction with the participant\'s team (0 to 100)', Math.round(sp.stakeholder.satisfaction));
+    s += line('This conversation', STAKEHOLDER_SCENE[sp.stakeholder.interaction]);
+    s += line('What the participant came to do', sp.stakeholder.goal);
+  }
   s += line('The participant has spoken', `${ctx.turnsSoFar} time(s); turns left: ${Math.max(0, ctx.turnsLeft)}`);
-  if (sp.persona?.hiddenConcern) s += line('Hidden concern already shared in this conversation', ctx.concernRevealed ? 'yes (do not share it again)' : 'no');
+  if (sp.persona?.hiddenConcern || sp.stakeholder?.hiddenConcern) s += line('Hidden concern already shared in this conversation', ctx.concernRevealed ? 'yes (do not share it again)' : 'no');
   if (ctx.guarded) s += 'The team feels unsafe right now: you are guarded and will not share your hidden concern.\n';
   if (ctx.meeting) {
     const names = new Map(ctx.meeting.attendees.map(a => [a.id, a.name]));

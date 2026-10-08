@@ -21,6 +21,10 @@ import type { EngineView } from './view';
  * moves business and people most), the conservative the default (else the one that moves least), people first
  * the option best for the people it lands on, business first the one best for business in the short term.
  * Ties go to the stronger leadership read, then to the earlier option.
+ *
+ * Stakeholders outside the team (D165, D152), by nature too: the risk taker goes to them every week and answers half
+ * their requests; the conservative answers every request and never goes first; people first puts the team first and
+ * answers half; business first answers every request and manages up and across most weeks.
  */
 export const ARCHETYPES = ['riskTaker', 'conservative', 'peopleFirst', 'businessFirst'] as const;
 export type ArchetypeKey = (typeof ARCHETYPES)[number];
@@ -60,6 +64,7 @@ const riskTaker: Policy = {
   level: 2,
   option: 'boldest',
   choose: (p, _e, options) => pickBy(o => choiceSize(p.config, o))(options),
+  stakeholders: { answer: 0.5, proactive: 1, turns: 2 },
   style: (p, m, need) => (need?.startsWith('highSkill') && p.rng.chance(0.8) ? bestStyle(p.config.lens, 'highSkill_highMorale') : null),
   first(p, v) {
     if (v.clock.period < 2) return null;
@@ -95,6 +100,7 @@ const conservative: Policy = {
   level: 2,
   option: 'safest',
   choose: (p, e, options) => options.find(o => o.key === e.default) ?? pickBy(o => -choiceSize(p.config, o))(options),
+  stakeholders: { answer: 1, proactive: 0, turns: 2 },
   meetings: false,
   budget: 2,
   first(p, v) {
@@ -115,6 +121,7 @@ const peopleFirst: Policy = {
   level: 3,
   email: 'congratulate',
   choose: (_p, _e, options) => pickBy(choicePeople)(options),
+  stakeholders: { answer: 0.5, proactive: 0.1, turns: 3 },
   weights: () => [0.5, 3, 0.5],
   respond: kind => (kind === 'sponsor' ? 0 : 1),
   neediest: (p, v) => [...present(v)].sort(by(m => p.stats(m).morale)),
@@ -135,6 +142,7 @@ const businessFirst: Policy = {
   level: 2,
   weights: () => [1, 0, 3],
   choose: (p, _e, options) => pickBy(o => choiceBusiness(p.config, o))(options),
+  stakeholders: { answer: 1, proactive: 0.8, turns: 2 },
   respond: kind => (kind === 'sponsor' ? 1 : kind === 'team' ? 0.9 : 0.3),
   style: (p, m) => (p.stats(m).result < 60 ? bestStyle(p.config.lens, 'lowSkill_lowMorale') : null),
   neediest: (p, v) => [...present(v)].sort(by(m => p.stats(m).result)),

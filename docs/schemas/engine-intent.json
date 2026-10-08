@@ -503,6 +503,32 @@
         "choiceId",
         "option"
       ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "engageStakeholder"
+        },
+        "stakeholder": {
+          "type": "string",
+          "minLength": 1
+        },
+        "interaction": {
+          "type": "string",
+          "minLength": 1
+        },
+        "option": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "type",
+        "stakeholder",
+        "interaction"
+      ]
     }
   ]
 }

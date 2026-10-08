@@ -9,6 +9,7 @@ import { remapReads } from './choices';
 import { createEngine } from '../../engine/sim/engine';
 import { neededStyles } from '../../engine/sim/policies';
 import { emptyChat, PORTRAITS, pronounsOf, seedDraft } from './seed';
+import { blankEffect, newStakeholder } from './stakeholders';
 
 /**
  * The principle (D128): every field the author sees reaches the simulation, or is an author note
@@ -29,6 +30,21 @@ function fixture(): AuthorDraft {
   c.hiddenConcern = 'Worried the role is a dead end.';
   c.concernLine = 'I am not sure where this job goes.';
   c.relationships = [{ with: d.team[2].id, kind: 'Works closely with' }];
+  // A stakeholder outside the team (D163): a meeting with business effects, a negotiation as a decision, a request, and a choice that moves them.
+  const s = newStakeholder(d, { name: 'Helen Brandt', role: 'CFO' });
+  Object.assign(s, { about: 'Owns the budget.', persona: 'Precise and brief.', motivatedBy: 'Clean numbers', noTopics: 'Salaries', hiddenConcern: 'The board wants cuts.', concernLine: 'The board is pushing me.', photo: PORTRAITS[3] });
+  const meet = s.interactions.find(i => i.type === 'meet')!;
+  Object.assign(meet, { enabled: true, good: blankEffect({ trust: 6, satisfaction: 6, variables: { budget: 1000 }, set: ['cfo_on_side'], outcome: 'Helen backs you.' }) });
+  const neg = s.interactions.find(i => i.type === 'negotiate')!;
+  Object.assign(neg, { plays: 'static', options: [
+    { key: 'ask', label: 'Ask for budget', detail: 'She says yes to teams she trusts.', effect: blankEffect({ satisfaction: -3, variables: { budget: 5000 }, people: [0, 2, 1] }), needsTrust: 55, refusal: 'Not this quarter.', read: [{ skill: d.scoring.skills.filter(k => !k.reportOnly)[0].name, band: 'strong' }] },
+    { key: 'wait', label: 'Wait for better numbers', detail: '', effect: blankEffect({ satisfaction: 2 }), needsTrust: 0, refusal: '', read: [] }
+  ] });
+  d.stakeholders.push(s);
+  d.events.push({ key: 'cfo_asks', title: 'Helen asks to meet', kind: 'sponsor', week: 2, day: 2, timing: 'fixed', who: 'team', arrives: 'email', body: 'Helen wants your plan by Thursday.', skill: 0, morale: 0, result: 0, leadFlow: 0,
+    respondWith: [], within: 2, onTime: [0, 2, 0], ifIgnored: { sponsor: true, followUp: null }, stakeholder: s.key,
+    request: { kind: 'meeting', interaction: 'meet', within: 2, onTime: { trust: 3, satisfaction: 3 }, ifIgnored: { trust: -6, satisfaction: -8 } }, moves: { [s.key]: { trust: 0, satisfaction: -2 } }, origin: 'yours' });
+  d.events.find(e => e.key === DISCOUNT)!.choice!.options[0].stakeholders = { [s.key]: { trust: -2, satisfaction: 3 } };
   return d;
 }
 
@@ -49,6 +65,21 @@ const DISCOUNT = 'discount_decision';
 const opt = (d: AuthorDraft, i = 0) => ev(d, DISCOUNT).choice!.options[i];
 const CH = `events.key=${DISCOUNT}.choice`;
 const M = 'members.1';
+const sh = (d: AuthorDraft) => d.stakeholders[0];
+const ix = (d: AuthorDraft, type: string) => sh(d).interactions.find(i => i.type === type)!;
+const SH = 'stakeholders.0';
+const MEET = `${SH}.interactions.key=meet`, NEG = `${SH}.interactions.key=negotiate`;
+const ASK = 'events.key=cfo_asks';
+const EFFECT_FIELDS = ['trust', 'satisfaction', 'sponsor', 'revenue', 'variables', 'set', 'people', 'who', 'outcome'] as const;
+/** Changes one field of a stakeholder effect as its control does. */
+function changeEffect(d: AuthorDraft, e: ReturnType<typeof blankEffect>, f: (typeof EFFECT_FIELDS)[number]) {
+  if (f === 'variables') e.variables = { budget: 2500 };
+  else if (f === 'set') e.set = ['changed_flag'];
+  else if (f === 'people') e.people = [1, -2, 3];
+  else if (f === 'who') e.who = `stage:${d.process.stages[0].key}`;
+  else if (f === 'outcome') e.outcome = 'Something happened.';
+  else e[f] = 9;
+}
 
 /** [draft field, change it as its control does, where the storyline changes]. */
 const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
@@ -200,7 +231,54 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['events[].choice.options[].followUp', d => { opt(d).followUp = { event: 'public_complaint', days: 2, weeks: 1 }; }, `${CH}.options.0.business.followUps`],
   ['events[].choice.options[].read[].skill', d => { opt(d).read[0].skill = d.scoring.skills.filter(k => !k.reportOnly).at(-1)!.name; }, `${CH}.options.0.read`],
   ['events[].choice.options[].read[].band', d => { opt(d).read[0].band = 'harmful'; }, `${CH}.options.0.read`],
-  ['scoring.reportSections', d => { d.scoring.reportSections = ['about', 'summary', 'skills']; }, 'report.sections']
+  ['scoring.reportSections', d => { d.scoring.reportSections = ['about', 'summary', 'skills']; }, 'report.sections'],
+  // Stakeholders outside the team (D160 to D163).
+  ['stakeholders[].name', d => { sh(d).name = 'Helen Price'; }, `${SH}.name`],
+  ['stakeholders[].role', d => { sh(d).role = 'Finance Director'; }, `${SH}.role`],
+  ['stakeholders[].kind', d => { sh(d).kind = 'manager'; }, `${SH}.kind`],
+  ['stakeholders[].gender', d => { sh(d).gender = 'man'; sh(d).pronouns = pronounsOf('man'); }, `${SH}.pronoun`],
+  ['stakeholders[].pronouns', d => { sh(d).pronouns = 'she, her'; }, `${SH}.pronoun`],
+  ['stakeholders[].photo', d => { sh(d).photo = PORTRAITS[4]; }, `${SH}.portrait`],
+  ['stakeholders[].about', d => { sh(d).about = 'Runs finance.'; }, `${SH}.about`],
+  ['stakeholders[].persona', d => { sh(d).persona = 'Warm once she trusts you.'; }, `${SH}.npc.notes`],
+  ['stakeholders[].motivatedBy', d => { sh(d).motivatedBy = 'A clean audit'; }, `${SH}.npc.motivatedBy`],
+  ['stakeholders[].noTopics', d => { sh(d).noTopics = 'Other budgets'; }, `${SH}.npc.avoid`],
+  ['stakeholders[].hiddenConcern', d => { sh(d).hiddenConcern = 'Her job is at risk.'; }, `${SH}.hiddenConcern`],
+  ['stakeholders[].concernLine', d => { sh(d).concernLine = 'Honestly, I might not be here next year.'; }, `${SH}.concernLine`],
+  ['stakeholders[].voice.pace', d => { sh(d).voice.pace = 90; }, `${SH}.npc.speech`],
+  ['stakeholders[].voice.warmth', d => { sh(d).voice.warmth = 90; }, `${SH}.npc.speech`],
+  ['stakeholders[].voice.formality', d => { sh(d).voice.formality = 5; }, `${SH}.npc.speech`],
+  ['stakeholders[].voice.replyLength', d => { sh(d).voice.replyLength = 'long'; }, `${SH}.npc.speech`],
+  ['stakeholders[].start.trust', d => { sh(d).start.trust = 70; }, `${SH}.start`],
+  ['stakeholders[].start.satisfaction', d => { sh(d).start.satisfaction = 20; }, `${SH}.start`],
+  ['stakeholders[].drift', d => { sh(d).drift = 6; }, `${SH}.drift`],
+  ['stakeholders[].interactions[].enabled', d => { ix(d, 'email').enabled = true; }, `${SH}.interactions`],
+  ['stakeholders[].interactions[].label', d => { ix(d, 'meet').label = 'Coffee with Helen'; }, `${MEET}.label`],
+  ['stakeholders[].interactions[].goal', d => { ix(d, 'meet').goal = 'Win her over.'; }, `${MEET}.goal`],
+  ['stakeholders[].interactions[].plays', d => { ix(d, 'negotiate').plays = 'live'; }, `${NEG}.kind`],
+  ['stakeholders[].interactions[].cost', d => { ix(d, 'meet').cost = 2; }, `${MEET}.cost`],
+  ['stakeholders[].interactions[].from', d => { ix(d, 'meet').from = 2; }, `${MEET}.from`],
+  ['stakeholders[].interactions[].scoredOn', d => { ix(d, 'meet').scoredOn = [d.scoring.skills.filter(k => !k.reportOnly).at(-1)!.name]; }, `${MEET}.skills`],
+  ...EFFECT_FIELDS.flatMap(f => (['good', 'bad'] as const).map((g): [string, (d: AuthorDraft) => void, string] => [
+    `stakeholders[].interactions[].${g}.${f}`, d => changeEffect(d, ix(d, 'meet')[g], f), `${MEET}.consequences.${g === 'good' ? 'strong' : 'weak'}`
+  ])),
+  ['stakeholders[].interactions[].options[].label', d => { ix(d, 'negotiate').options[0].label = 'Ask for more'; }, `${NEG}.options`],
+  ['stakeholders[].interactions[].options[].detail', d => { ix(d, 'negotiate').options[0].detail = 'Bold.'; }, `${NEG}.options`],
+  ['stakeholders[].interactions[].options[].needsTrust', d => { ix(d, 'negotiate').options[0].needsTrust = 70; }, `${NEG}.options`],
+  ['stakeholders[].interactions[].options[].refusal', d => { ix(d, 'negotiate').options[0].refusal = 'No.'; }, `${NEG}.options`],
+  ['stakeholders[].interactions[].options[].read[].skill', d => { ix(d, 'negotiate').options[0].read[0].skill = d.scoring.skills.filter(k => !k.reportOnly).at(-1)!.name; }, `${NEG}.options`],
+  ['stakeholders[].interactions[].options[].read[].band', d => { ix(d, 'negotiate').options[0].read[0].band = 'weak'; }, `${NEG}.options`],
+  ...EFFECT_FIELDS.map((f): [string, (d: AuthorDraft) => void, string] => [`stakeholders[].interactions[].options[].effect.${f}`, d => changeEffect(d, ix(d, 'negotiate').options[0].effect, f), `${NEG}.options`]),
+  ['events[].stakeholder', d => { const e = ev(d, 'cfo_asks'); Object.assign(e, { stakeholder: null, request: null, arrives: 'modal', ifIgnored: { sponsor: false, followUp: null } }); }, `${ASK}.stakeholder`],
+  ['events[].request.kind', d => { ev(d, 'cfo_asks').request!.kind = 'message'; }, `${ASK}.request`],
+  ['events[].request.interaction', d => { ev(d, 'cfo_asks').request!.interaction = 'present'; }, `${ASK}.request`],
+  ['events[].request.within', d => { ev(d, 'cfo_asks').request!.within = 4; }, `${ASK}.request`],
+  ['events[].request.onTime.trust', d => { ev(d, 'cfo_asks').request!.onTime.trust = 9; }, `${ASK}.request`],
+  ['events[].request.onTime.satisfaction', d => { ev(d, 'cfo_asks').request!.onTime.satisfaction = 9; }, `${ASK}.request`],
+  ['events[].request.ifIgnored.trust', d => { ev(d, 'cfo_asks').request!.ifIgnored.trust = -12; }, `${ASK}.request`],
+  ['events[].request.ifIgnored.satisfaction', d => { ev(d, 'cfo_asks').request!.ifIgnored.satisfaction = -12; }, `${ASK}.request`],
+  ['events[].moves', d => { ev(d, 'cfo_asks').moves = { [sh(d).key]: { trust: -4, satisfaction: -2 } }; }, `${ASK}.business`],
+  ['events[].choice.options[].stakeholders', d => { opt(d).stakeholders = { [sh(d).key]: { trust: 5, satisfaction: 5 } }; }, `${CH}.options.0.business.stakeholders`]
 ];
 
 /** Author notes (D128): shown to the author, read by Kora or Review and publish, never by the simulation; the screen says so. */
@@ -230,6 +308,7 @@ const INTERNAL = new Set([
   'lens.title', 'lens.needs', 'lens.styles[].key', 'lens.library[].key', 'lens.library[].letter', 'lens.library[].name', 'lens.library[].short', 'lens.library[].description',
   'actions[].key', 'actions[].template', 'actions[].group', 'actions[].core', 'actions[].canPlay', 'actions[].forWhom', 'actions[].format', 'actions[].decides', 'actions[].origin', 'actions[].options[].key',
   'events[].key', 'events[].origin',
+  'stakeholders[].key', 'stakeholders[].interactions[].type', 'stakeholders[].interactions[].options[].key',
   'scoring.skills[].key', 'scoring.skills[].name', 'scoring.skills[].reportOnly', 'scoring.samples[].id', 'scoring.samples[].with', 'scoring.samples[].answer', 'scoring.samples[].scored',
   'publish.version', 'publish.played'
 ]);
@@ -243,7 +322,8 @@ const KNOWN_GAPS = new Set([
   'story.company.office', 'story.company.logo', 'story.product.view', 'story.screens[].title'
 ]);
 
-const RECORDS = new Set(['chat', 'marks', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables']);
+const RECORDS = new Set(['chat', 'marks', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables',
+  'events[].moves', 'events[].choice.options[].stakeholders', 'stakeholders[].interactions[].good.variables', 'stakeholders[].interactions[].bad.variables', 'stakeholders[].interactions[].options[].effect.variables']);
 /** Every field path of a draft: arrays as `[]` over all their elements, records as one field. */
 function fieldsOf(v: unknown, path = '', out = new Set<string>()): Set<string> {
   if (RECORDS.has(path)) out.add(path);

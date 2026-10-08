@@ -25,6 +25,14 @@ export function remapReads(d: AuthorDraft) {
     o.read = o.read.map(r => (known.has(r.skill.trim().toLowerCase()) ? r : { ...r, skill: names[i++ % names.length] }));
     o.read = o.read.filter((r, k, arr) => arr.findIndex(x => x.skill === r.skill) === k);
   }
+  // Stakeholder interactions (D163): what a conversation is scored on, and a decision's reads, follow the same way.
+  for (const s of d.stakeholders ?? []) for (const x of s.interactions) {
+    x.scoredOn = [...new Set(x.scoredOn.map(n => (known.has(n.trim().toLowerCase()) ? n : names[i++ % names.length])))];
+    for (const o of x.options) {
+      o.read = o.read.map(r => (known.has(r.skill.trim().toLowerCase()) ? r : { ...r, skill: names[i++ % names.length] }));
+      o.read = o.read.filter((r, k, arr) => arr.findIndex(y => y.skill === r.skill) === k);
+    }
+  }
 }
 
 /** Every flag some choice option sets. */

@@ -10,7 +10,7 @@ const COMM = ['Direct', 'Guarded at first', 'Detailed', 'Warm', 'Data driven', '
 const AGES = ['18 to 24', '25 to 34', '35 to 44', '45 to 54', '55 and over'];
 const ACCENTS = ['US English', 'UK English', 'Indian English', 'Australian English', 'Singapore English', 'South African English'];
 
-function Slider({ label, value, onChange, low, high }: { label: string; value: number; onChange: (v: number) => void; low?: string; high?: string }) {
+export function Slider({ label, value, onChange, low, high }: { label: string; value: number; onChange: (v: number) => void; low?: string; high?: string }) {
   const id = `sl-${label.replace(/\s+/g, '-').toLowerCase()}`;
   return (
     <div className="grid grid-cols-[8.5rem_minmax(0,1fr)_3.5rem] items-center gap-3 text-14">

@@ -7,6 +7,7 @@ import { BUTTON, CARD, CardHead, Field, MarkOf, Select, TextArea, TextInput, ton
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate, useRegenerateItem } from './regenerate';
 import { ChoiceEditor, ConditionsEditor } from './ChoiceEditor';
+import { EventStakeholder } from './EventStakeholder';
 
 const KIND: Record<EventDraft['kind'], { label: string; bar: string; text: string }> = {
   impact: { label: 'Impact', bar: 'bg-author-event-impact', text: 'text-author-decline' },
@@ -176,7 +177,8 @@ export default function Events() {
             </div>
             <ChoiceEditor d={d} e={e} set={set} />
             <ConditionsEditor d={d} e={e} set={set} />
-            {!e.choice && <details className="rounded-12 border border-solid border-author-line p-3">
+            <EventStakeholder d={d} e={e} set={set} />
+            {!e.choice && !e.request && <details className="rounded-12 border border-solid border-author-line p-3">
               <summary className="cursor-pointer text-15 font-800">Response: {responds ? `${e.respondWith.map(k => answers.find(([v]) => v === k)?.[1] ?? k).join(' or ')}, within ${e.within} day${e.within === 1 ? '' : 's'}${e.ifIgnored.sponsor || e.ifIgnored.followUp ? '; if ignored, it escalates' : ''}` : 'none expected'}</summary>
               <div className="mt-3 grid grid-cols-2 gap-4 max-[1000px]:grid-cols-1">
                 <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">

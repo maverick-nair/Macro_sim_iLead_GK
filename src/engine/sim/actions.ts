@@ -7,6 +7,7 @@ import { mismatchType, trainingMismatch, type Mismatch, type Style, type Triple 
 import { respond } from './events';
 import { applyActionBusiness } from './business';
 import { checkBadges } from './score';
+import { finishStakeholder } from './stakeholders';
 import {
   addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, netChanges, nextId, person, record, spend, sponsorChange,
   styleName, stageName, trustChange, YOU
@@ -378,6 +379,8 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   if (sim.phase !== 'board') throw new IntentError('Conversations happen on the board', 'wrongPhase');
   const replyMsg = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
   if (it.replyTo && (!replyMsg || replyMsg.state !== 'open')) { delete sim.interactions[interactionId]; throw new IntentError('That message is closed', 'closedMessage'); }
+  // A conversation with a stakeholder (D161) resolves on their relationship, not a team member's.
+  if (it.stakeholder) return finishStakeholder(sim, rng, interactionId, ev, npcReply);
   delete sim.interactions[interactionId];
   for (const id of it.memberIds) sim.touched.push(id);
   if (it.format === 'meeting') sim.touchedTeam = true;

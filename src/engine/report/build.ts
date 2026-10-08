@@ -7,6 +7,7 @@ import { overallOf, rateSkills, shortName, when, type SkillRating } from './rati
 import { summarizeRun, type RunSummary } from './summary';
 import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
 import { narrativeOf, type BottleneckFact } from './narrative';
+import { stakeholdersOf, withStakeholders } from './stakeholders';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -131,7 +132,9 @@ export function buildReport(sim: Sim) {
     return {
       id: rec.id ?? `${rec.period}`, kind: rec.band === 'strong' ? 'best' as const : 'revisit' as const, period: rec.period, memberId: one ? rec.memberIds[0] : null,
       title: one ? msg('engine.live.with', { action: title, who: shortName(sim, rec.memberIds[0]), band: rec.band }) : msg('engine.live.done', { action: title, band: rec.band }),
-      situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team', name: one ? shortName(sim, rec.memberIds[0]) : shortName(sim, 'sponsor') }),
+      // A stakeholder conversation (D164) is a moment with one person outside the team.
+      situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one || rec.stakeholder ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team',
+        name: one ? shortName(sim, rec.memberIds[0]) : rec.stakeholder ? (sim.config.stakeholders.find(s => s.key === rec.stakeholder)?.name.split(' ')[0] ?? rec.stakeholder) : shortName(sim, 'sponsor') }),
       behaviour: rec.styleShown ? msg('engine.moment.chose.style', { title, style: styleName(sim, rec.styleShown) }) : msg('engine.moment.chose', { title }),
       quote: rec.quotes?.[0] ?? null,
       impact: impactOf(rec.changes ?? []),
@@ -203,7 +206,7 @@ export function buildReport(sim: Sim) {
     storyline: { name: c.name, organisation: c.organisation ?? null },
     lens: { ...lensView(c.lens), secondary: c.lens.secondary ? { id: c.lens.secondary.id, title: c.lens.secondary.title } : null },
     periods: sim.periods.length, periodUnit: unit,
-    sections: r.sections ?? withDecisions(DEFAULT_SECTIONS[purpose], sim),
+    sections: r.sections ?? withStakeholders(withDecisions(DEFAULT_SECTIONS[purpose], sim), sim),
     score: { total: score.total, max: score.max, tier: { key: tier.key, name: tier.name } },
     results: { revenue: Math.round(sim.funnel.value), target: c.money.target, share, conversions: Math.floor(sim.funnel.conversions), kpis },
     summary: {
@@ -226,6 +229,7 @@ export function buildReport(sim: Sim) {
     methodology: { lines: [...lensLines, ...r.methodology], reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
     ...decisionsOf(sim, impactOf),
+    ...stakeholdersOf(sim),
     ...v3.sections,
     // Food for thought and takeaways name what happened in this run, then the authored ones (D145).
     thought: story.thought, takeaways: story.takeaways

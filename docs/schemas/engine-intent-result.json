@@ -2047,6 +2047,10 @@
               "choiceId": {
                 "type": "string",
                 "minLength": 1
+              },
+              "stakeholder": {
+                "type": "string",
+                "minLength": 1
               }
             },
             "required": [
@@ -2903,6 +2907,57 @@
                     "kind"
                   ]
                 }
+              },
+              "stakeholders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "name": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "trust": {
+                      "type": "object",
+                      "properties": {
+                        "start": {
+                          "type": "number"
+                        },
+                        "end": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "start",
+                        "end"
+                      ]
+                    },
+                    "satisfaction": {
+                      "type": "object",
+                      "properties": {
+                        "start": {
+                          "type": "number"
+                        },
+                        "end": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "start",
+                        "end"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name",
+                    "trust",
+                    "satisfaction"
+                  ]
+                }
               }
             },
             "required": [
@@ -3708,6 +3763,44 @@
                 "practice": {
                   "default": false,
                   "type": "boolean"
+                },
+                "stakeholder": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "role": {
+                          "$ref": "#/$defs/Text"
+                        },
+                        "kind": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "meet",
+                            "present",
+                            "negotiate",
+                            "email",
+                            "reply"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "role",
+                        "kind",
+                        "type"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
                 }
               },
               "required": [
@@ -4177,6 +4270,513 @@
               "variables",
               "revenue",
               "triggered"
+            ]
+          }
+        },
+        "stakeholders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "$ref": "#/$defs/Text"
+              },
+              "role": {
+                "$ref": "#/$defs/Text"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "manager",
+                  "peer",
+                  "customer",
+                  "executive",
+                  "board",
+                  "union",
+                  "partner",
+                  "other"
+                ]
+              },
+              "pronoun": {
+                "type": "string",
+                "enum": [
+                  "he",
+                  "she",
+                  "they"
+                ]
+              },
+              "img": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "about": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Text"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "trust": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "satisfaction": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "start": {
+                "type": "object",
+                "properties": {
+                  "trust": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "satisfaction": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                },
+                "required": [
+                  "trust",
+                  "satisfaction"
+                ]
+              },
+              "level": {
+                "type": "string",
+                "enum": [
+                  "strained",
+                  "cool",
+                  "steady",
+                  "good",
+                  "strong"
+                ]
+              },
+              "mood": {
+                "type": "string",
+                "enum": [
+                  "happy",
+                  "neutral",
+                  "thinking",
+                  "concerned",
+                  "frustrated"
+                ]
+              },
+              "causes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "trust": {
+                      "type": "number"
+                    },
+                    "satisfaction": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "text",
+                    "trust",
+                    "satisfaction"
+                  ]
+                }
+              },
+              "engaged": {
+                "type": "boolean"
+              },
+              "concern": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Text"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "interactions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "meet",
+                        "present",
+                        "negotiate",
+                        "email"
+                      ]
+                    },
+                    "label": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "live",
+                        "static"
+                      ]
+                    },
+                    "cost": {
+                      "type": "number"
+                    },
+                    "goal": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/Text"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "options": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "key": {
+                                "type": "string",
+                                "minLength": 1
+                              },
+                              "label": {
+                                "$ref": "#/$defs/Text"
+                              },
+                              "detail": {
+                                "anyOf": [
+                                  {
+                                    "$ref": "#/$defs/Text"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "key",
+                              "label",
+                              "detail"
+                            ]
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "blocked": {
+                      "anyOf": [
+                        {
+                          "oneOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "locked"
+                                },
+                                "period": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "period"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "capacity"
+                                },
+                                "need": {
+                                  "type": "number"
+                                },
+                                "have": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "need",
+                                "have"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "cooldown"
+                                },
+                                "in": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "in"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "away"
+                                },
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "training",
+                                    "leave"
+                                  ]
+                                },
+                                "for": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "kind",
+                                "for"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "rewarded"
+                                },
+                                "in": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "in"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "gone"
+                                }
+                              },
+                              "required": [
+                                "reason"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "lastInStage"
+                                },
+                                "stage": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "stage"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "noCover"
+                                },
+                                "stage": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "stage"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "teamFull"
+                                }
+                              },
+                              "required": [
+                                "reason"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "liveCap"
+                                },
+                                "cap": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "cap"
+                              ]
+                            },
+                            {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "const": "stageFull"
+                                },
+                                "stage": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              },
+                              "required": [
+                                "reason",
+                                "stage"
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "type",
+                    "label",
+                    "kind",
+                    "cost",
+                    "goal",
+                    "options",
+                    "blocked"
+                  ]
+                }
+              },
+              "request": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "messageId": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "kind": {
+                        "type": "string",
+                        "enum": [
+                          "message",
+                          "meeting"
+                        ]
+                      },
+                      "title": {
+                        "$ref": "#/$defs/Text"
+                      },
+                      "interaction": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "dueInSubPeriods": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "messageId",
+                      "kind",
+                      "title",
+                      "interaction",
+                      "dueInSubPeriods"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "key",
+              "name",
+              "role",
+              "kind",
+              "pronoun",
+              "img",
+              "about",
+              "trust",
+              "satisfaction",
+              "start",
+              "level",
+              "mood",
+              "causes",
+              "engaged",
+              "concern",
+              "interactions",
+              "request"
             ]
           }
         },
@@ -4908,6 +5508,57 @@
               "memberId",
               "name",
               "kind"
+            ]
+          }
+        },
+        "stakeholders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "name": {
+                "$ref": "#/$defs/Text"
+              },
+              "trust": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "number"
+                  },
+                  "end": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "start",
+                  "end"
+                ]
+              },
+              "satisfaction": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "number"
+                  },
+                  "end": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "start",
+                  "end"
+                ]
+              }
+            },
+            "required": [
+              "key",
+              "name",
+              "trust",
+              "satisfaction"
             ]
           }
         }

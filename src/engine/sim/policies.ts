@@ -6,6 +6,7 @@ import type { Rng } from './rng';
 import { createRng } from './rng';
 import type { Style } from './rules';
 import type { EngineView } from './view';
+import { policyStakeholders } from './stakeholderPlayers';
 
 /**
  * Automated players for calibration and tests (docs/SIMULATION.md section 9).
@@ -73,6 +74,9 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
   const one = keys[seed % keys.length];
   let v = engine.view();
   const high = config.thresholds.high;
+  // Stakeholders (D165): what each player does with them, in its own module; nothing for a storyline without them.
+  const stakeholderDone = new Map<string, boolean>();
+  const withStakeholders = async (view: EngineView) => policyStakeholders(engine, config, view, policy, rng, stakeholderDone);
   while (v.phase !== 'ended') {
     if (opts.stopAfter !== undefined && v.clock.period > opts.stopAfter) break;
     if (v.phase === 'style') {
@@ -88,6 +92,7 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
     if (policy !== 'passive') {
       let guard = 20;
       v = await decide(engine, config, v, policy, rng);
+      v = await withStakeholders(v);
       while (v.clock.capacityLeft >= 1 && guard-- > 0) {
         const step = policy === 'good' ? goodStep(v, high, lens) : policy === 'oneStyle' ? goodStep(v, high, lens, one) : randomStep(v, rng, lens);
         if (!step) break;
@@ -95,8 +100,9 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
         v = r.view;
         if (r.interactionId) v = (await engine.dispatch({ type: 'submitInteraction', interactionId: r.interactionId, text: policy === 'careless' ? PLAIN : step.say })).view;
         v = await decide(engine, config, v, policy, rng);
+        v = await withStakeholders(v);
       }
-      for (const msg of v.inbox.filter(x => x.from !== 'news' && x.kind !== 'news')) {
+      for (const msg of v.inbox.filter(x => x.from !== 'news' && x.kind !== 'news' && !config.stakeholders.some(s => s.key === x.from))) {
         if (policy === 'careless') break;
         if (policy === 'random' && rng.chance(0.5)) continue;
         const o = await engine.dispatch({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: msg.id });

@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 
@@ -26,6 +26,8 @@ export interface BusinessBarProps {
   items: BusinessItem[];
   decisions: DecisionDue[];
   onDecide: (id: string) => void;
+  /** More of the business in the same row: the stakeholders (D162). */
+  aside?: ReactNode;
 }
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
@@ -36,11 +38,11 @@ const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visi
  * waiting, with its deadline and Decide. Shown only when the storyline has variables or a decision is open, so
  * storylines without them keep the board as it was. It wraps instead of scrolling at the tablet widths.
  */
-export function BusinessBar({ items, decisions, onDecide }: BusinessBarProps) {
+export function BusinessBar({ items, decisions, onDecide, aside }: BusinessBarProps) {
   const { t } = useI18n();
   const [open, setOpen] = useState<string | null>(null);
   const id = useId();
-  if (!items.length && !decisions.length) return null;
+  if (!items.length && !decisions.length && !aside) return null;
   return (
     <section aria-label={t('board.business.aria')} data-business-bar=""
       className="mx-6 mb-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 rounded-16 border border-line-default bg-surface-card px-3 py-1.5 text-13 backdrop-blur-12 short:mb-2 short:py-1 tablet-portrait:mt-3 tablet-portrait:mb-0">
@@ -70,6 +72,7 @@ export function BusinessBar({ items, decisions, onDecide }: BusinessBarProps) {
           </div>
         );
       })}
+      {aside}
       {decisions.map(d => (
         <span key={d.id} data-decision-due="" className="ms-auto flex items-center gap-2 rounded-pill bg-status-attention-soft py-0.5 ps-3 pe-1 text-13">
           <span><b>{t('board.business.decision')}</b> {d.title} <span className="text-fg-secondary">{d.due}</span></span>

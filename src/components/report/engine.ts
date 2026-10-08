@@ -2,7 +2,7 @@ import type { HistoryEntry, ReportView } from '../../engine/reportContract';
 import type { I18n } from '../../i18n';
 import { checkInDate, intentTone, multipleDomain, talkRatio, verdictTone } from './display';
 import type {
-  AboutData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, BusinessVariableData, ConsistencyData, DecisionData, DistributionData, FitRow, IntentCardData, MethodologyData,
+  AboutData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, BusinessVariableData, ConsistencyData, DecisionData, DistributionData, FitRow, IntentCardData, MethodologyData, StakeholderData,
   MomentData, ObjectivesData, PeriodUnit, PersonData, PlanExtras, PlanItemData, ProgressData, Purpose, ReportHeaderData, SkillRowData, StyleExtras,
   StyleKey, StylesData, SummaryExtras, TeamSeries, ThoughtData, VerdictData
 } from './types';
@@ -50,7 +50,8 @@ export type SectionModel =
   | { key: 'takeaways'; lines: string[] }
   | { key: 'plan'; items: PlanItemData[]; reflection: string | null; checkIn: string; extras: PlanExtras }
   | { key: 'progress'; data: ProgressData }
-  | { key: 'methodology'; data: MethodologyData };
+  | { key: 'methodology'; data: MethodologyData }
+  | { key: 'stakeholders'; stakeholders: StakeholderData[] };
 
 export interface ReportModel {
   purpose: Purpose;
@@ -327,6 +328,33 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       }
       case 'methodology':
         return { key, data: r.methodology };
+      case 'stakeholders': {
+        // "Stakeholders" (D164): only when the storyline has them.
+        if (!r.stakeholders.length) return null;
+        const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${number(Math.abs(n))}`;
+        const when = (n: number) => t('time.period', { unit, n });
+        const dir = (a: number, b: number) => (b > a ? 'up' as const : b < a ? 'down' as const : 'flat' as const);
+        return {
+          key,
+          stakeholders: r.stakeholders.map(s => ({
+            key: s.key, name: s.name, role: t('report.stakeholders.role', { role: s.role, kind: s.kind }),
+            relationship: t('report.stakeholders.relationship', { from: s.levelStart, to: s.levelEnd }),
+            measures: (['trust', 'satisfaction'] as const).map(m => ({ key: m, name: t('report.stakeholders.measure', { measure: m }), start: s.start[m], end: s.end[m], direction: dir(s.start[m], s.end[m]) })),
+            interactions: s.interactions.map(x => ({
+              key: x.id, when: when(x.period), title: x.title, how: x.option ?? t('report.stakeholders.how', { type: x.type, band: x.band ?? 'none' }), outcome: x.outcome,
+              changes: [
+                t('report.stakeholders.relation', { trust: signed(x.trust), satisfaction: signed(x.satisfaction) }),
+                ...(x.answered ? [t('report.stakeholders.answered')] : []),
+                ...x.variables.map(v => t('report.decisions.variable', { name: v.name, value: signed(v.delta) })),
+                ...(x.revenue ? [t('report.decisions.revenue', { value: `${x.revenue > 0 ? '+' : '−'}${money.compact(Math.abs(x.revenue))}` })] : []),
+                ...(x.sponsor ? [t('report.decisions.sponsor', { delta: x.sponsor })] : []),
+                ...x.read.map(y => t('report.decisions.read', { skill: y.skill, band: y.band }))
+              ]
+            })),
+            moves: s.moves.map(m => t('report.stakeholders.move', { when: when(m.period), cause: m.cause, trust: signed(m.trust), satisfaction: signed(m.satisfaction) }))
+          }))
+        };
+      }
     }
   };
 

@@ -23,7 +23,7 @@ export const SkillVerdictKey = z.enum(['strength', 'meets', 'development']);
 export const ReviewStatus = z.enum(['assessor', 'mixed', 'ai']);
 export const ReportSection = z.enum([
   'about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution',
-  'moments', 'decisions', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
+  'moments', 'decisions', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology', 'stakeholders'
 ]);
 const Kpi = z.object({ start: Num, end: Num });
 /** The run's profile (D143, `src/engine/report/evidence.ts`). */
@@ -150,6 +150,23 @@ export const ReportView = z.object({
   })).default([]),
   /** The shown business variables at the start and the end of the run (D136). */
   businessVariables: z.array(z.object({ key: Id, name: Text, format: z.enum(['money', 'percent', 'points']), start: Num, end: Num, higherIsBetter: z.boolean(), weight: Num })).default([]),
+  /**
+   * "Stakeholders" (D164): each relationship from the start of the run to the end and week by week, the interactions
+   * (`band` for a conversation, `option` for a decision, `type: 'ignored'` for a request left unanswered) and what
+   * moved it most. Empty without stakeholders.
+   */
+  stakeholders: z.array(z.object({
+    key: Id, name: Text, role: Text, kind: z.string(), img: z.string().nullable(),
+    start: z.object({ trust: Num, satisfaction: Num }), end: z.object({ trust: Num, satisfaction: Num }),
+    levelStart: z.enum(['strained', 'cool', 'steady', 'good', 'strong']), levelEnd: z.enum(['strained', 'cool', 'steady', 'good', 'strong']),
+    series: z.array(z.object({ period: Int, trust: Num, satisfaction: Num })),
+    interactions: z.array(z.object({
+      id: Id, period: Int, title: Text, type: z.enum(['meet', 'present', 'negotiate', 'email', 'ignored']), band: z.enum(['strong', 'adequate', 'weak', 'harmful']).nullable(),
+      option: Text.nullable(), outcome: Text.nullable(), answered: z.boolean(), trust: Num, satisfaction: Num,
+      variables: z.array(z.object({ key: Id, name: Text, delta: Num })), revenue: Num, sponsor: Num, read: z.array(z.object({ skill: Text, band: z.enum(['strong', 'adequate', 'weak', 'harmful']) }))
+    })),
+    moves: z.array(z.object({ period: Int, cause: Text, trust: Num, satisfaction: Num }))
+  })).default([]),
 
   // ---- Report 3.0 (D75, D76)
   /** Every number behind the 3.0 sections. */

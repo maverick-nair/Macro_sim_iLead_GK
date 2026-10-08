@@ -73,5 +73,11 @@
   "board.business.noCauses": "Nothing yet this run.",
   "board.business.decision": "Decision:",
   "board.business.decide": "Decide",
-  "board.business.due": "{n, plural, =0 {due today} one {# {unit, select, quarter {quarter} month {month} week {week} day {day} hour {hour} other {step}} left} other {# {unit, select, quarter {quarters} month {months} week {weeks} day {days} hour {hours} other {steps}} left}}"
+  "board.business.due": "{n, plural, =0 {due today} one {# {unit, select, quarter {quarter} month {month} week {week} day {day} hour {hour} other {step}} left} other {# {unit, select, quarter {quarters} month {months} week {weeks} day {days} hour {hours} other {steps}} left}}",
+  "board.stakeholders.title": "Stakeholders",
+  "board.stakeholders.person": "{name}, {level, select, strained {strained} cool {cool} steady {steady} good {good} other {strong}}",
+  "board.stakeholders.separator": "; ",
+  "board.stakeholders.openAria": "Stakeholders: {names}. Open",
+  "board.stakeholders.asks": "{name} asks:",
+  "board.stakeholders.answer": "Answer"
 }

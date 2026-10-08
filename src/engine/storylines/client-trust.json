@@ -15,7 +15,8 @@
     "targets": [
       "Reach $240,000 in new revenue over eight weeks.",
       "Watch the budget, customer trust and product quality on your board: your choices move them.",
-      "A burned out team will not hold the number next quarter."
+      "A burned out team will not hold the number next quarter.",
+      "Three people outside your team matter too: Priya at Halcyon Retail, Helen in finance and Elena in delivery."
     ]
   },
   "money": {
@@ -25,7 +26,7 @@
     "target": 240000,
     "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      21
+      18
     ]
   },
   "time": {
@@ -2101,7 +2102,13 @@
               },
               "set": [
                 "discounted"
-              ]
+              ],
+              "stakeholders": {
+                "client_lead": {
+                  "trust": -4,
+                  "satisfaction": 4
+                }
+              }
             },
             "read": [
               {
@@ -2134,7 +2141,13 @@
                   "event": "client_signs",
                   "weeks": 1
                 }
-              ]
+              ],
+              "stakeholders": {
+                "client_lead": {
+                  "trust": 5,
+                  "satisfaction": 2
+                }
+              }
             },
             "read": [
               {
@@ -2159,7 +2172,12 @@
             ],
             "trust": 0,
             "business": {
-              "sponsor": -5
+              "sponsor": -5,
+              "stakeholders": {
+                "client_lead": {
+                  "satisfaction": -6
+                }
+              }
             },
             "read": [
               {
@@ -2271,7 +2289,15 @@
               },
               "set": [
                 "weekend_push"
-              ]
+              ],
+              "stakeholders": {
+                "client_lead": {
+                  "satisfaction": 4
+                },
+                "delivery_lead": {
+                  "satisfaction": -4
+                }
+              }
             },
             "read": [
               {
@@ -2299,7 +2325,17 @@
               "variables": {
                 "customer_trust": -5
               },
-              "sponsor": -5
+              "sponsor": -5,
+              "stakeholders": {
+                "client_lead": {
+                  "trust": 3,
+                  "satisfaction": -5
+                },
+                "delivery_lead": {
+                  "trust": 4,
+                  "satisfaction": 5
+                }
+              }
             },
             "read": [
               {
@@ -2327,6 +2363,14 @@
               "variables": {
                 "budget": -20000,
                 "quality": 2
+              },
+              "stakeholders": {
+                "cfo": {
+                  "satisfaction": -4
+                },
+                "delivery_lead": {
+                  "satisfaction": 3
+                }
               }
             },
             "read": [
@@ -2411,7 +2455,13 @@
               },
               "set": [
                 "budget_cut"
-              ]
+              ],
+              "stakeholders": {
+                "cfo": {
+                  "trust": 3,
+                  "satisfaction": 6
+                }
+              }
             },
             "read": [
               {
@@ -2435,6 +2485,14 @@
               "variables": {
                 "customer_trust": -3,
                 "reputation": -2
+              },
+              "stakeholders": {
+                "cfo": {
+                  "satisfaction": 3
+                },
+                "client_lead": {
+                  "satisfaction": -2
+                }
               }
             },
             "read": [
@@ -2463,7 +2521,13 @@
               "variables": {
                 "budget": -10000
               },
-              "sponsor": -8
+              "sponsor": -8,
+              "stakeholders": {
+                "cfo": {
+                  "trust": -4,
+                  "satisfaction": -8
+                }
+              }
             },
             "read": [
               {
@@ -2876,6 +2940,183 @@
       "escalation": {
         "sponsor": true
       }
+    },
+    {
+      "key": "client_call",
+      "title": "Priya asks for a call about the review",
+      "stakeholder": "client_lead",
+      "delivery": "email",
+      "body": {
+        "he": "Priya has seen the review online and wants to talk before her CFO asks her about it. Can we speak this week?",
+        "she": "Priya has seen the review online and wants to talk before her CFO asks her about it. Can we speak this week?"
+      },
+      "card": "signal",
+      "period": 2,
+      "subPeriod": 2,
+      "target": "team",
+      "request": {
+        "kind": "meeting",
+        "interaction": "checkin",
+        "within": 2,
+        "onTime": {
+          "trust": 4,
+          "satisfaction": 4,
+          "business": {
+            "variables": {
+              "customer_trust": 2
+            }
+          }
+        },
+        "ifIgnored": {
+          "trust": -5,
+          "satisfaction": -8,
+          "business": {
+            "variables": {
+              "customer_trust": -4,
+              "reputation": -2
+            }
+          }
+        }
+      },
+      "escalation": {
+        "sponsor": true
+      }
+    },
+    {
+      "key": "delivery_ask",
+      "title": "Elena asks to agree priorities before the go live",
+      "stakeholder": "delivery_lead",
+      "delivery": "email",
+      "body": {
+        "he": "Elena's engineers are split across three launches. She wants to agree with you which work comes first before the go live.",
+        "she": "Elena's engineers are split across three launches. She wants to agree with you which work comes first before the go live."
+      },
+      "card": "signal",
+      "period": 3,
+      "subPeriod": 1,
+      "target": "team",
+      "request": {
+        "kind": "meeting",
+        "interaction": "priorities",
+        "within": 2,
+        "onTime": {
+          "trust": 3,
+          "satisfaction": 3,
+          "business": {
+            "variables": {
+              "quality": 2
+            }
+          }
+        },
+        "ifIgnored": {
+          "trust": -6,
+          "satisfaction": -8,
+          "business": {
+            "variables": {
+              "quality": -3
+            }
+          }
+        }
+      }
+    },
+    {
+      "key": "cost_plan",
+      "title": "Helen wants your cost plan by Thursday",
+      "stakeholder": "cfo",
+      "delivery": "email",
+      "body": {
+        "he": "Before finance decides the cuts, send me your cost plan for the quarter: what you spend, and what it buys.",
+        "she": "Before finance decides the cuts, send me your cost plan for the quarter: what you spend, and what it buys."
+      },
+      "card": "diagnostic",
+      "period": 4,
+      "subPeriod": 1,
+      "target": "team",
+      "request": {
+        "kind": "message",
+        "within": 3,
+        "onTime": {
+          "trust": 4,
+          "satisfaction": 4,
+          "business": {
+            "sponsor": 2
+          }
+        },
+        "ifIgnored": {
+          "trust": -6,
+          "satisfaction": -8,
+          "business": {
+            "sponsor": -5
+          }
+        }
+      }
+    },
+    {
+      "key": "client_escalates",
+      "title": "Priya escalates to Dana",
+      "stakeholder": "client_lead",
+      "body": {
+        "he": "Priya has written to Dana: she feels nobody on your team is listening. Dana forwards it to you without a word.",
+        "she": "Priya has written to Dana: she feels nobody on your team is listening. Dana forwards it to you without a word."
+      },
+      "card": "crisis",
+      "period": 6,
+      "subPeriod": 2,
+      "impact": [
+        0,
+        -3,
+        0
+      ],
+      "target": "team",
+      "if": [
+        {
+          "kind": "stakeholder",
+          "stakeholder": "client_lead",
+          "measure": "satisfaction",
+          "op": "below",
+          "value": 40
+        }
+      ],
+      "business": {
+        "sponsor": -6,
+        "variables": {
+          "customer_trust": -4
+        }
+      }
+    },
+    {
+      "key": "client_renews",
+      "title": "Halcyon renews early",
+      "stakeholder": "client_lead",
+      "body": {
+        "he": "Priya renews Halcyon's contract a quarter early and asks for two more modules. She says it is because your team kept its promises.",
+        "she": "Priya renews Halcyon's contract a quarter early and asks for two more modules. She says it is because your team kept its promises."
+      },
+      "card": "opportunity",
+      "period": 8,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        3,
+        0
+      ],
+      "target": "team",
+      "if": [
+        {
+          "kind": "stakeholder",
+          "stakeholder": "client_lead",
+          "measure": "trust",
+          "op": "atLeast",
+          "value": 65
+        }
+      ],
+      "business": {
+        "revenue": 12000,
+        "variables": {
+          "customer_trust": 3,
+          "reputation": 2
+        }
+      }
     }
   ],
   "triggers": [
@@ -3085,6 +3326,396 @@
     }
   ],
   "dynamics": {},
-  "performanceThreshold": 111,
+  "stakeholders": [
+    {
+      "key": "client_lead",
+      "name": "Priya Shah",
+      "role": "Head of Finance Operations, Halcyon Retail",
+      "kind": "customer",
+      "pronoun": "she",
+      "about": "Leads Halcyon Retail's account, Northwind's largest client. She chose the platform and her reputation rides on the go live.",
+      "hiddenConcern": "Her own CFO has asked her to look at Cirrus Systems if the go live slips again.",
+      "concernLine": "Honestly, my CFO has asked me to get a quote from Cirrus. I do not want to, but I need this go live to land.",
+      "npc": {
+        "motivatedBy": "A go live her finance team can rely on, and not being surprised.",
+        "avoid": "What Halcyon pays other vendors.",
+        "speech": {
+          "pace": 60,
+          "warmth": 45,
+          "formality": 70,
+          "replyLength": "short"
+        }
+      },
+      "start": {
+        "trust": 55,
+        "satisfaction": 55
+      },
+      "drift": {
+        "trust": 0,
+        "satisfaction": -3
+      },
+      "interactions": [
+        {
+          "key": "checkin",
+          "type": "meet",
+          "label": "Meet Priya",
+          "goal": "Hear what Priya needs from the account team, and agree what happens next.",
+          "consequences": {
+            "strong": {
+              "trust": 6,
+              "satisfaction": 6,
+              "business": {
+                "variables": {
+                  "customer_trust": 3
+                }
+              }
+            },
+            "adequate": {
+              "trust": 2,
+              "satisfaction": 3,
+              "business": {
+                "variables": {
+                  "customer_trust": 1
+                }
+              }
+            },
+            "weak": {
+              "trust": -3,
+              "satisfaction": -4,
+              "business": {
+                "variables": {
+                  "customer_trust": -1
+                }
+              }
+            },
+            "harmful": {
+              "trust": -8,
+              "satisfaction": -10,
+              "business": {
+                "variables": {
+                  "customer_trust": -4,
+                  "reputation": -2
+                }
+              }
+            }
+          }
+        },
+        {
+          "key": "update",
+          "type": "email",
+          "label": "Email Priya an update",
+          "goal": "Write Priya a clear update on the go live: where it stands, what is next and when.",
+          "consequences": {
+            "strong": {
+              "trust": 4,
+              "satisfaction": 4,
+              "business": {
+                "variables": {
+                  "customer_trust": 2
+                }
+              }
+            },
+            "weak": {
+              "trust": -2,
+              "satisfaction": -3
+            }
+          }
+        },
+        {
+          "key": "scope",
+          "type": "negotiate",
+          "label": "Negotiate the go live scope",
+          "from": 3,
+          "goal": "Agree with Priya what goes live first and what follows, so the date holds without burning the team.",
+          "consequences": {
+            "strong": {
+              "trust": 4,
+              "satisfaction": 6,
+              "business": {
+                "variables": {
+                  "customer_trust": 4,
+                  "quality": 3
+                },
+                "set": [
+                  "scope_agreed"
+                ]
+              },
+              "people": [
+                0,
+                2,
+                0
+              ],
+              "who": "team"
+            },
+            "adequate": {
+              "trust": 2,
+              "satisfaction": 2,
+              "business": {
+                "variables": {
+                  "customer_trust": 1,
+                  "quality": 1
+                }
+              }
+            },
+            "weak": {
+              "trust": -3,
+              "satisfaction": -4,
+              "business": {
+                "variables": {
+                  "customer_trust": -2
+                }
+              }
+            },
+            "harmful": {
+              "trust": -8,
+              "satisfaction": -10,
+              "business": {
+                "variables": {
+                  "customer_trust": -5
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "cfo",
+      "name": "Helen Brandt",
+      "role": "Chief Financial Officer, Northwind Cloud",
+      "kind": "executive",
+      "pronoun": "she",
+      "about": "Owns Northwind's budget. Generous with teams that show her the numbers early, hard on those that surprise her.",
+      "hiddenConcern": "The board wants a 10% cost cut next quarter and she has not told the business yet.",
+      "concernLine": "Between us, the board is pushing for cuts next quarter. I need to know where the money actually works.",
+      "npc": {
+        "motivatedBy": "Forecasts she can trust, and money that shows a return.",
+        "avoid": "Other teams' budgets.",
+        "speech": {
+          "pace": 45,
+          "warmth": 30,
+          "formality": 85,
+          "replyLength": "short"
+        }
+      },
+      "start": {
+        "trust": 45,
+        "satisfaction": 50
+      },
+      "drift": {
+        "trust": 0,
+        "satisfaction": -2
+      },
+      "interactions": [
+        {
+          "key": "forecast",
+          "type": "present",
+          "label": "Present the forecast",
+          "goal": "Brief Helen on the quarter: the numbers, the biggest risk and what you need.",
+          "consequences": {
+            "strong": {
+              "trust": 6,
+              "satisfaction": 6,
+              "business": {
+                "sponsor": 4
+              }
+            },
+            "adequate": {
+              "trust": 3,
+              "satisfaction": 3
+            },
+            "weak": {
+              "trust": -3,
+              "satisfaction": -4,
+              "business": {
+                "sponsor": -3
+              }
+            },
+            "harmful": {
+              "trust": -8,
+              "satisfaction": -10,
+              "business": {
+                "sponsor": -6
+              }
+            }
+          }
+        },
+        {
+          "key": "contractor",
+          "type": "negotiate",
+          "kind": "static",
+          "label": "Ask for contractor budget",
+          "from": 2,
+          "options": [
+            {
+              "key": "ask",
+              "label": "Ask for $20,000 for a contractor this quarter",
+              "detail": "She says yes to teams she trusts.",
+              "effect": {
+                "trust": 2,
+                "satisfaction": -3,
+                "business": {
+                  "variables": {
+                    "budget": 20000,
+                    "quality": 2
+                  }
+                },
+                "people": [
+                  0,
+                  3,
+                  1
+                ],
+                "who": "team",
+                "outcome": "Helen releases the money: a contractor joins for the go live.",
+                "needs": {
+                  "trust": 55
+                },
+                "otherwise": {
+                  "trust": 0,
+                  "satisfaction": -5,
+                  "outcome": "Helen says no: show her the numbers first."
+                }
+              },
+              "read": [
+                {
+                  "skill": "results_ownership",
+                  "band": "strong"
+                }
+              ]
+            },
+            {
+              "key": "wait",
+              "label": "Hold off until the numbers improve",
+              "effect": {
+                "trust": 0,
+                "satisfaction": 2,
+                "outcome": "You keep the ask for later."
+              },
+              "read": [
+                {
+                  "skill": "results_ownership",
+                  "band": "adequate"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "delivery_lead",
+      "name": "Elena Ruiz",
+      "role": "Head of Delivery, Northwind Cloud",
+      "kind": "peer",
+      "pronoun": "she",
+      "about": "Runs the engineers who integrate and launch what your team sells. Her team is stretched across every client.",
+      "npc": {
+        "motivatedBy": "Promises her engineers can keep.",
+        "speech": {
+          "pace": 55,
+          "warmth": 60,
+          "formality": 40,
+          "replyLength": "medium"
+        }
+      },
+      "start": {
+        "trust": 50,
+        "satisfaction": 50
+      },
+      "drift": {
+        "trust": 0,
+        "satisfaction": -2
+      },
+      "interactions": [
+        {
+          "key": "sync",
+          "type": "meet",
+          "label": "Meet Elena",
+          "goal": "Agree with Elena what your team sells and what hers can deliver.",
+          "consequences": {
+            "strong": {
+              "trust": 6,
+              "satisfaction": 6,
+              "business": {
+                "variables": {
+                  "quality": 2
+                }
+              }
+            },
+            "adequate": {
+              "trust": 2,
+              "satisfaction": 3
+            },
+            "weak": {
+              "trust": -3,
+              "satisfaction": -4
+            },
+            "harmful": {
+              "trust": -8,
+              "satisfaction": -10,
+              "business": {
+                "variables": {
+                  "quality": -2
+                }
+              }
+            }
+          }
+        },
+        {
+          "key": "priorities",
+          "type": "negotiate",
+          "label": "Negotiate priorities",
+          "from": 3,
+          "goal": "Agree with Elena which client work comes first, and what each team gives so the go live lands.",
+          "consequences": {
+            "strong": {
+              "trust": 5,
+              "satisfaction": 5,
+              "business": {
+                "variables": {
+                  "quality": 4,
+                  "customer_trust": 2
+                }
+              },
+              "people": [
+                0,
+                2,
+                1
+              ],
+              "who": "team"
+            },
+            "adequate": {
+              "trust": 2,
+              "satisfaction": 2,
+              "business": {
+                "variables": {
+                  "quality": 2
+                }
+              }
+            },
+            "weak": {
+              "trust": -3,
+              "satisfaction": -4,
+              "business": {
+                "variables": {
+                  "quality": -1
+                }
+              }
+            },
+            "harmful": {
+              "trust": -8,
+              "satisfaction": -10,
+              "business": {
+                "variables": {
+                  "quality": -3
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "performanceThreshold": 127,
   "calibrated": true
 }

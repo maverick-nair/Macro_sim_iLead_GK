@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ActionDraft, AuthorDraft, Character, ChoiceOptionDraft, ClauseDraft, DraftStyle, EventDraft, EventFields, MAX_DAYS, MAX_WEEKS, MIN_DAYS, MIN_WEEKS, SHORT_MAX, TEXT_MAX, type Tab } from './draft';
+import { ActionDraft, AuthorDraft, Character, ChoiceOptionDraft, ClauseDraft, DraftStyle, EventDraft, EventFields, MAX_DAYS, MAX_STAKEHOLDERS, MAX_WEEKS, MIN_DAYS, MIN_WEEKS, RelationDelta, RequestDraft, SHORT_MAX, StakeholderDraft, TEXT_MAX, type Tab } from './draft';
 import { flagsSet } from './choices';
 import { fitRun, type Moved } from './run';
 import { parseEffect } from './seed';
@@ -25,7 +25,9 @@ export type EditOp =
   | { op: 'addCharacter'; value: Character }
   | { op: 'removeCharacter'; id: string }
   /** A new event (the offline rules' "If ignored" follow up); the model cannot add one. */
-  | { op: 'addEvent'; value: EventDraft };
+  | { op: 'addEvent'; value: EventDraft }
+  /** A new stakeholder (D165, the offline rules' "add a stakeholder"); the model cannot add one. */
+  | { op: 'addStakeholder'; value: StakeholderDraft };
 
 /** One row of the structured diff the panel shows. */
 export interface Change { path: string; field: string; before: string; after: string }
@@ -51,6 +53,9 @@ interface Rule {
   mark(m: RegExpMatchArray): string;
 }
 
+const sh = StakeholderDraft.shape;
+const SH_MARK: Record<string, string> = { name: 'identity', role: 'identity', about: 'personality', persona: 'personality', motivatedBy: 'personality', noTopics: 'personality', hiddenConcern: 'personality', concernLine: 'personality', start: 'relationship', drift: 'relationship', voice: 'voice', interactions: 'interactions' };
+const TYPE = '(meet|present|negotiate|email)';
 const TEAM_MARK: Record<string, string> = { first: 'identity', last: 'identity', title: 'identity', persona: 'persona', hiddenConcern: 'hiddenConcern', concernLine: 'hiddenConcern', motivatedBy: 'personality', careerGoal: 'stats', stats: 'stats' };
 const same = (m: RegExpMatchArray) => m[0];
 
@@ -107,7 +112,19 @@ const RULES: Rule[] = [
   { re: new RegExp(`^actions\\.${KEY}\\.options\\.${OPT}\\.label$`), schema: Short, mark: m => `actions.${m[1]}` },
   { re: new RegExp(`^actions\\.${KEY}\\.options\\.${OPT}\\.away$`), schema: z.number().int().min(0).max(10), mark: m => `actions.${m[1]}` },
   { re: new RegExp(`^lens\\.styles\\.${STYLE}\\.(name|short)$`), schema: st.name, mark: m => `lens.styles.${m[1]}` },
-  { re: new RegExp(`^lens\\.styles\\.${STYLE}\\.description$`), schema: st.description, mark: m => `lens.styles.${m[1]}` }
+  { re: new RegExp(`^lens\\.styles\\.${STYLE}\\.description$`), schema: st.description, mark: m => `lens.styles.${m[1]}` },
+  // Stakeholders outside the team (D165): who they are, how they start and drift, what each interaction does, and the events from or about them.
+  { re: new RegExp(`^stakeholders\\.${KEY}\\.(name|role)$`), schema: sh.name, mark: m => `stakeholders.${m[1]}.${SH_MARK[m[2]]}` },
+  { re: new RegExp(`^stakeholders\\.${KEY}\\.(about|persona|motivatedBy|noTopics|hiddenConcern|concernLine)$`), schema: sh.about, mark: m => `stakeholders.${m[1]}.${SH_MARK[m[2]]}` },
+  { re: new RegExp(`^stakeholders\\.${KEY}\\.start\\.(trust|satisfaction)$`), schema: sh.start.shape.trust, mark: m => `stakeholders.${m[1]}.relationship` },
+  { re: new RegExp(`^stakeholders\\.${KEY}\\.drift$`), schema: z.number().int().min(0).max(10), mark: m => `stakeholders.${m[1]}.relationship` },
+  { re: new RegExp(`^stakeholders\\.${KEY}\\.voice\\.(pace|warmth|formality)$`), schema: sh.voice.shape.pace, mark: m => `stakeholders.${m[1]}.voice` },
+  { re: new RegExp(`^stakeholders\\.${KEY}\\.interactions\\.${TYPE}\\.enabled$`), schema: z.boolean(), mark: m => `stakeholders.${m[1]}.interactions` },
+  { re: new RegExp(`^stakeholders\\.${KEY}\\.interactions\\.${TYPE}\\.(good|bad)\\.(trust|satisfaction|sponsor)$`), schema: RelationDelta.shape.trust, mark: m => `stakeholders.${m[1]}.interactions` },
+  { re: new RegExp(`^events\\.${KEY}\\.stakeholder$`), schema: z.string().regex(/^[a-z][a-z0-9_]*$/).nullable(), mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.request$`), schema: RequestDraft.nullable(), mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.moves$`), schema: z.record(z.string().regex(/^[a-z][a-z0-9_]*$/), RelationDelta), mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.choice\\.options\\.${KEY}\\.stakeholders$`), schema: z.record(z.string().regex(/^[a-z][a-z0-9_]*$/), RelationDelta), mark: m => `events.${m[1]}` }
 ];
 
 /** The rule for a path, or null when Kora may not set it. Needs no draft, so the server checks paths too. */
@@ -173,6 +190,7 @@ export function locate(d: AuthorDraft, path: string): Loc | null {
       const f = parts[5], v = parts[6];
       if (!o || c !== 'options') return null;
       const head2 = `${x.title || x.key} · ${short(o.label)}`;
+      if (f === 'stakeholders') return { get: () => o.stakeholders ?? {}, set: val => { o.stakeholders = val as typeof o.stakeholders; }, label: `${head2} · stakeholders` };
       if (f === 'variables') {
         const vd = d.variables.find(y => y.key === v);
         return vd ? { get: () => o.variables[v] ?? 0, set: val => { o.variables[v] = val as number; }, label: `${head2} · ${vd.name}` } : null;
@@ -180,6 +198,10 @@ export function locate(d: AuthorDraft, path: string): Loc | null {
       return field(o as unknown as Record<string, unknown>, f, `${head2} · ${OPTION_FIELD[f] ?? f}`);
     }
     if (b === 'conditions') return { get: () => x.conditions ?? [], set: v => { x.conditions = v as EventDraft['conditions']; }, label: `${x.title || x.key} · ${EVENT_FIELD.conditions}` };
+    // From a stakeholder, what they ask for, and what it does to stakeholders (D162, D163): optional fields.
+    if (b === 'stakeholder') return { get: () => x.stakeholder ?? null, set: v => { x.stakeholder = v as string | null; }, label: `${x.title || x.key} · Comes from` };
+    if (b === 'request') return { get: () => x.request ?? null, set: v => { x.request = v as EventDraft['request']; }, label: `${x.title || x.key} · What they ask for` };
+    if (b === 'moves') return { get: () => x.moves ?? {}, set: v => { x.moves = v as EventDraft['moves']; }, label: `${x.title || x.key} · What it does to stakeholders` };
     if (b === 'ifIgnored' && c === 'afterDays') return { get: () => x.ifIgnored.afterDays ?? 0, set: v => { x.ifIgnored.afterDays = v as number; }, label: `${x.title || x.key} · ${EVENT_FIELD['ifIgnored.afterDays']}` };
     const label = `${x.title || x.key} · ${EVENT_FIELD[c ? `${b}.${c}` : b]}`;
     if (b === 'ifIgnored') return field(x.ifIgnored, c, label);
@@ -204,8 +226,27 @@ export function locate(d: AuthorDraft, path: string): Loc | null {
     const s = d.lens.styles.find(x => x.key === b);
     return s ? field(s, c, `${s.name} · ${c === 'name' ? 'Name' : c === 'short' ? 'One line' : 'Description'}`) : null;
   }
+  if (head === 'stakeholders') {
+    const s = d.stakeholders.find(x => x.key === a);
+    if (!s) return null;
+    const who = s.name || s.key;
+    if (b === 'start' || b === 'voice') return field(s[b] as unknown as Record<string, unknown>, c, `${who} · ${SH_FIELD[`${b}.${c}`] ?? c}`);
+    if (b === 'interactions') {
+      const x = s.interactions.find(i => i.type === c);
+      if (!x) return null;
+      const f = parts[4], g = parts[5];
+      if (f === 'good' || f === 'bad') return field(x[f] as unknown as Record<string, unknown>, g, `${who} · ${x.label || x.type} · ${f === 'good' ? 'when it goes well' : 'when it goes badly'}, ${g}`);
+      return field(x as unknown as Record<string, unknown>, f, `${who} · ${x.label || x.type} · ${f === 'enabled' ? 'Switched on' : f}`);
+    }
+    return field(s as unknown as Record<string, unknown>, b, `${who} · ${SH_FIELD[b] ?? b}`);
+  }
   return null;
 }
+
+const SH_FIELD: Record<string, string> = {
+  name: 'Name', role: 'Role', about: 'What participants know', persona: 'Persona', motivatedBy: 'Motivated by', noTopics: 'Topics they will not discuss', hiddenConcern: 'Hidden concern', concernLine: 'What they say when it comes out',
+  drift: 'Satisfaction lost each week nobody engages them', 'start.trust': 'Starting trust in you', 'start.satisfaction': 'Starting satisfaction', 'voice.pace': 'Speaking pace', 'voice.warmth': 'Warmth', 'voice.formality': 'Formality'
+};
 
 const short = (s: string, n = 40) => (s.length > n ? `${s.slice(0, n - 1).trimEnd()}…` : s);
 
@@ -216,7 +257,7 @@ export function shown(path: string, v: unknown, d?: AuthorDraft): string {
   if (/\.respondWith$/.test(path) && Array.isArray(v)) return v.map(k => (k === 'reply' ? 'Reply to the message' : d?.actions.find(a => a.key === k)?.name ?? k)).join(' or ') || 'None expected';
   if (/\.ifIgnored\.followUp$/.test(path) && typeof v === 'string') return d?.events.find(e => e.key === v)?.title || v;
   if (/\.followUp$/.test(path) && v && typeof v === 'object') { const f = v as { event: string; days: number; weeks: number }; return `${d?.events.find(e => e.key === f.event)?.title || f.event}, ${f.weeks ? `${f.weeks} week${f.weeks === 1 ? '' : 's'}` : ''}${f.weeks && f.days ? ' and ' : ''}${f.days ? `${f.days} day${f.days === 1 ? '' : 's'}` : ''} later`.replace(', later', ', at once'); }
-  if (/\.conditions$/.test(path) && Array.isArray(v)) return v.length ? (v as EventDraft['conditions'] & object).map(c => (c.kind === 'flag' ? `${c.is ? '' : 'not '}${c.flag.replace(/_/g, ' ')}` : c.kind === 'variable' ? `${d?.variables.find(x => x.key === c.variable)?.name ?? c.variable} ${c.op === 'below' ? 'below' : 'at least'} ${c.value}` : `${c.metric} ${c.op === 'below' ? 'below' : 'at least'} ${c.value}`)).join(' and ') : 'Always';
+  if (/\.conditions$/.test(path) && Array.isArray(v)) return v.length ? (v as EventDraft['conditions'] & object).map(c => (c.kind === 'flag' ? `${c.is ? '' : 'not '}${c.flag.replace(/_/g, ' ')}` : c.kind === 'variable' ? `${d?.variables.find(x => x.key === c.variable)?.name ?? c.variable} ${c.op === 'below' ? 'below' : 'at least'} ${c.value}` : c.kind === 'stakeholder' ? `${d?.stakeholders.find(x => x.key === c.stakeholder)?.name ?? c.stakeholder}'s ${c.measure} ${c.op === 'below' ? 'below' : 'at least'} ${c.value}` : `${c.metric} ${c.op === 'below' ? 'below' : 'at least'} ${c.value}`)).join(' and ') : 'Always';
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'number') {
     if (/\.(skill|morale|result|trust|sponsor|revenue)$/.test(path) && path.startsWith('events.')) return v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0';
@@ -246,7 +287,9 @@ export function describeOps(d: AuthorDraft, ops: EditOp[], after: AuthorDraft = 
     } else if (o.op === 'addCharacter') {
       out.push({ path: `team.${o.value.id}`, field: 'New character', before: '', after: characterLine(o.value) });
     } else if (o.op === 'addEvent') {
-      out.push({ path: `events.${o.value.key}`, field: 'New event, only when another is ignored', before: '', after: `${o.value.title}. ${o.value.body}`.trim() });
+      out.push({ path: `events.${o.value.key}`, field: o.value.stakeholder ? 'New event from a stakeholder' : 'New event, only when another is ignored', before: '', after: `${o.value.title}. ${o.value.body}`.trim() });
+    } else if (o.op === 'addStakeholder') {
+      out.push({ path: `stakeholders.${o.value.key}`, field: 'New stakeholder', before: '', after: `${o.value.name}, ${o.value.role}. ${o.value.about}`.trim() });
     } else {
       const c = d.team.find(x => x.id === o.id);
       if (!c) continue;
@@ -285,6 +328,10 @@ export function applyOps(d: AuthorDraft, ops: EditOp[], moved?: Moved[]): string
       if (d.events.some(e => e.key === o.value.key)) continue;
       d.events.push(structuredClone(o.value));
       marks.add(`events.${o.value.key}`);
+    } else if (o.op === 'addStakeholder') {
+      if (d.stakeholders.length >= MAX_STAKEHOLDERS || d.stakeholders.some(s => s.key === o.value.key)) continue;
+      d.stakeholders.push(structuredClone(o.value));
+      for (const m of ['identity', 'voice', 'personality', 'relationship', 'interactions']) marks.add(`stakeholders.${o.value.key}.${m}`);
     } else {
       if (d.team.length <= 1 || !d.team.some(c => c.id === o.id)) continue;
       d.team = d.team.filter(c => c.id !== o.id);
@@ -312,7 +359,19 @@ function referenceIssues(next: AuthorDraft, ops: EditOp[]): string[] {
     if (/\.conditions$/.test(o.path)) for (const c of o.value as NonNullable<EventDraft['conditions']>) {
       if (c.kind === 'flag' && c.is && !flags.has(c.flag)) issues.push(`${o.path}: no decision sets ${c.flag}`);
       if (c.kind === 'variable' && !next.variables.some(v => v.key === c.variable)) issues.push(`${o.path}: no variable called ${c.variable}`);
+      if (c.kind === 'stakeholder' && !next.stakeholders.some(s => s.key === c.stakeholder)) issues.push(`${o.path}: no stakeholder called ${c.stakeholder}`);
     }
+    // Stakeholders (D165): an event comes from one that exists, and a meeting it asks for is one of theirs that is on.
+    const from = o.path.match(/^events\.([a-z][a-z0-9_]*)\.(stakeholder|request)$/);
+    if (from) {
+      const e = next.events.find(x => x.key === from[1]);
+      const s = e?.stakeholder ? next.stakeholders.find(x => x.key === e.stakeholder) : undefined;
+      if (from[2] === 'stakeholder' && o.value && !s) issues.push(`${o.path}: no stakeholder called ${String(o.value)}`);
+      const r = e?.request;
+      if (r && !s) issues.push(`${o.path}: a request needs a stakeholder it comes from`);
+      if (r && s && r.kind === 'meeting' && !s.interactions.some(i => i.type === r.interaction && i.enabled)) issues.push(`${o.path}: ${s.name} has no ${r.interaction ?? 'meeting'} switched on`);
+    }
+    if (/\.(moves|stakeholders)$/.test(o.path) && o.value && typeof o.value === 'object') for (const k of Object.keys(o.value)) if (!next.stakeholders.some(s => s.key === k)) issues.push(`${o.path}: no stakeholder called ${k}`);
     const m = o.path.match(/^events\.([a-z][a-z0-9_]*)\.(ifIgnored\.followUp|respondWith)$/);
     if (!m) continue;
     if (m[2] === 'respondWith') {
@@ -340,6 +399,13 @@ export function checkOps(d: AuthorDraft, ops: EditOp[], allowed?: ReadonlySet<st
       const r = EventDraft.safeParse(o.value);
       if (!r.success) { issues.push(`events: ${r.error.issues[0]?.message ?? 'invalid event'}`); continue; }
       if (!d.events.some(e => e.key === r.data.key)) kept.push({ op: 'addEvent', value: r.data });
+      continue;
+    }
+    if (o.op === 'addStakeholder') {
+      const r = StakeholderDraft.safeParse(o.value);
+      if (!r.success) { issues.push(`stakeholders: ${r.error.issues[0]?.message ?? 'invalid stakeholder'}`); continue; }
+      if (d.stakeholders.length >= MAX_STAKEHOLDERS) { issues.push(`stakeholders: ${MAX_STAKEHOLDERS} is the most`); continue; }
+      if (!d.stakeholders.some(s => s.key === r.data.key)) kept.push({ op: 'addStakeholder', value: r.data });
       continue;
     }
     if (o.op !== 'set') { kept.push(o); continue; }
@@ -415,6 +481,12 @@ function eventFields(out: Record<string, EditView['fields'][string]>, e: EventDr
     for (const [k, v] of Object.entries(o.variables)) put(out, `events.${e.key}.choice.options.${o.key}.variables.${k}`, v);
   }
 }
+function stakeholderFields(out: Record<string, EditView['fields'][string]>, s: StakeholderDraft) {
+  for (const f of ['name', 'role', 'about', 'persona', 'motivatedBy', 'noTopics', 'hiddenConcern', 'concernLine', 'drift'] as const) put(out, `stakeholders.${s.key}.${f}`, s[f]);
+  for (const f of ['trust', 'satisfaction'] as const) put(out, `stakeholders.${s.key}.start.${f}`, s.start[f]);
+  for (const f of ['pace', 'warmth', 'formality'] as const) put(out, `stakeholders.${s.key}.voice.${f}`, s.voice[f]);
+  for (const x of s.interactions.filter(i => i.enabled)) for (const g of ['good', 'bad'] as const) for (const f of ['trust', 'satisfaction', 'sponsor'] as const) put(out, `stakeholders.${s.key}.interactions.${x.type}.${g}.${f}`, x[g][f]);
+}
 function actionFields(out: Record<string, EditView['fields'][string]>, a: ActionDraft) {
   put(out, `actions.${a.key}.description`, a.description);
   put(out, `actions.${a.key}.goal`, a.goal);
@@ -445,6 +517,8 @@ export function editView(d: AuthorDraft, tab: Tab, named: { characters?: string[
     for (const s of d.process.stages) for (const k of ['perWeek', 'passesOn', 'people'] as const) put(f, `process.stages.${s.key}.${k}`, s[k]);
   }
   if (all || tab === 'team') for (const c of d.team) characterFields(f, c);
+  if (all || tab === 'team') for (const s of d.stakeholders) stakeholderFields(f, s);
+  if (all || tab === 'events') for (const e of d.events) if (e.stakeholder) put(f, `events.${e.key}.stakeholder`, e.stakeholder);
   if (tab === 'lens') for (const s of d.lens.styles) for (const k of ['name', 'short', 'description'] as const) put(f, `lens.styles.${s.key}.${k}`, s[k]);
   if (tab === 'actions') for (const a of d.actions.filter(x => x.core || x.enabled)) actionFields(f, a);
   if (all || tab === 'events') for (const e of d.events) eventFields(f, e);

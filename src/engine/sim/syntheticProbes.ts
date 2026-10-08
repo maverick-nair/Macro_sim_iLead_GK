@@ -65,8 +65,9 @@ function oneAction(p: PlayerApi, v: EngineView, key: string, who: 'random' | 'ne
 }
 
 export function probePolicy(probe: Probe, config: StorylineConfig): Policy {
-  // A probe tests the actions: every choice event is left to its default (D140), so no decision moves its score.
-  const base: Policy = { ...levelPolicy(probePersona(probe)), choose: () => false };
+  // A probe tests the actions: every choice event is left to its default (D140) and stakeholders are left alone (D165),
+  // so no decision and no relationship moves its score.
+  const base: Policy = { ...levelPolicy(probePersona(probe)), choose: () => false, stakeholders: false };
   switch (probe.kind) {
     case 'style':
       return { ...base, style: () => probe.style, meetingStyle: () => probe.style };

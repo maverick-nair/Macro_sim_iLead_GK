@@ -6,6 +6,7 @@ import { addMessage, effectChanges, firstName, fit, gendered, log, member, misre
 import type { Change, EventCard, MemberSim, NewsItem, Reason, Sim } from './types';
 import { msg } from '../copy';
 import { applyBusiness, conditionsHold, noteTriggered, openChoice } from './business';
+import { stakeholderEvent } from './stakeholders';
 
 /**
  * Events (Configuration Spec, Events and NPC initiated moments): fixed, random or conditional timing;
@@ -52,6 +53,12 @@ function followUpTargets(config: Sim['config']): Set<string> {
       add(ev.choice?.ignored?.business);
     }
     for (const a of config.actions) for (const o of a.options) for (const b of Object.values(o.business ?? {})) add(b);
+    // What stakeholders do can lead to an event too (D161, D162).
+    for (const s of config.stakeholders ?? []) for (const x of s.interactions) {
+      for (const e of Object.values(x.consequences ?? {})) { add(e?.business); add(e?.otherwise?.business); }
+      for (const o of x.options ?? []) { add(o.effect.business); add(o.effect.otherwise?.business); }
+    }
+    for (const ev of config.events) for (const e of [ev.request?.onTime, ev.request?.ifIgnored]) { add(e?.business); add(e?.otherwise?.business); }
     followed.set(config, out);
   }
   return out;
@@ -144,6 +151,13 @@ export function fireEvent(sim: Sim, rng: Rng, ev: EventConfig, cause: string | n
   if (ev.choice) {
     const choiceId = openChoice(sim, ev, focus);
     sim.cards.push({ id: nextId(sim, 'ev'), key: ev.key, card: ev.card, delivery: 'modal', title: ev.title, body, memberId: focus, changes, label: ev.label ?? null, messageId: null, choiceId });
+    log(sim, { kind: 'event', title: ev.title, memberIds: members.map(m => m.id), changes });
+    return;
+  }
+
+  // An event from a stakeholder (D162): their message, its card, and what they ask for by when.
+  if (ev.stakeholder) {
+    stakeholderEvent(sim, ev, body, changes, focus);
     log(sim, { kind: 'event', title: ev.title, memberIds: members.map(m => m.id), changes });
     return;
   }

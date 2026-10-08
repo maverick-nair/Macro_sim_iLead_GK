@@ -1,6 +1,7 @@
 import type { ChoiceOption, StorylineConfig } from '../config';
 import type { NeedKey } from '../lens';
 import type { Rng } from './rng';
+import type { StakeholderTraits } from './stakeholderPlayers';
 import type { Level } from './syntheticSpeech';
 import type { EngineView } from './view';
 
@@ -120,6 +121,11 @@ export interface Policy {
    * the level does (`levelChoice` in `./syntheticChoices`).
    */
   choose?(p: PlayerApi, event: { key: string; default?: string }, options: ChoiceOption[]): ChoiceOption | false | null;
+  /**
+   * Stakeholders outside the team (D165, D152): how often it answers their requests, engages them before anyone
+   * asks, and how many lines it says; left out, the level's (`STAKEHOLDER_TRAITS`); false leaves them alone (probes).
+   */
+  stakeholders?: StakeholderTraits | false;
 }
 
 export const levelOf = (k: LevelKey): Level => LEVELS.indexOf(k) as Level;

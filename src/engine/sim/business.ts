@@ -5,6 +5,7 @@ import { addEffects, clampTo, effectChanges, fill, gendered, log, member, nextId
 import type { ActionRecord, Change, ChoiceRecord, MemberSim, Reason, Sim } from './types';
 import { IntentError } from './errors';
 import { msg, type Copy } from '../copy';
+import { moveRelation, relationOf } from './stakeholderState';
 
 /**
  * The business state (D136 to D138, docs/SIMULATION.md 6.6 to 6.8): named business variables, flags and
@@ -34,7 +35,11 @@ export function moveVar(sim: Sim, key: string, delta: number, cause: Copy): numb
   return d;
 }
 
-export interface Applied { changes: Change[]; variables: Array<{ key: string; delta: number }>; revenue: number; set: string[]; clear: string[]; scheduled: string[] }
+export interface Applied {
+  changes: Change[]; variables: Array<{ key: string; delta: number }>; revenue: number; set: string[]; clear: string[]; scheduled: string[];
+  /** Stakeholder relationships moved (D161), only when the effect names any. */
+  stakeholders?: Array<{ key: string; trust: number; satisfaction: number }>;
+}
 
 /**
  * Applies a business effect: variables, revenue (added to the run's revenue, never below 0), sponsor confidence,
@@ -62,6 +67,11 @@ export function applyBusiness(sim: Sim, b: Business | undefined, cause: Copy, fr
   for (const f of b.followUps) {
     sim.events.delayed.push({ key: f.event, at: sim.absSub + f.days + f.weeks * perPeriod(sim), cause: from });
     out.scheduled.push(f.event);
+  }
+  // Stakeholder relationships (D161): a decision, an event or an action can move them too.
+  for (const [key, d] of Object.entries(b.stakeholders ?? {})) {
+    const moved = moveRelation(sim, key, d, cause);
+    if (moved.trust || moved.satisfaction) (out.stakeholders ??= []).push({ key, ...moved });
   }
   return out;
 }
@@ -101,6 +111,7 @@ export function clauseHolds(sim: Sim, c: Clause): boolean {
     case 'counter': return cmp(sim.counters[c.counter] ?? 0, c.op, c.value);
     case 'variable': return cmp(sim.vars[c.variable] ?? 0, c.op, c.value);
     case 'metric': return cmp(metricOf(sim, c.metric), c.op, c.value);
+    case 'stakeholder': return cmp(relationOf(sim, c.stakeholder, c.measure), c.op, c.value);
   }
 }
 

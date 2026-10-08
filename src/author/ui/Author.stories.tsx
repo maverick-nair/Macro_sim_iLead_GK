@@ -8,6 +8,8 @@ import { Composer } from './journey/Composer';
 import { LibraryAdmin } from './library/LibraryAdmin';
 import { ActionAdd } from './workspace/ActionAdd';
 import { CharacterEditor } from './workspace/CharacterEditor';
+import { StakeholderEditor } from './workspace/StakeholderEditor';
+import { blankStakeholderOption, newStakeholder } from '../model/stakeholders';
 
 /**
  * /author, GenieKreator's authoring tool (docs/design/genie, D105 to D111): the journey (co-creator chat,
@@ -71,6 +73,32 @@ export const CharacterEditorIdentity: StoryObj = {
     return (
       <AuthorStoreContext.Provider value={store}>
         <AuthorRoot><CharacterEditor draft={draft} character={draft.team[0]} open={open} onOpenChange={setOpen} onSave={() => setOpen(false)} /></AuthorRoot>
+      </AuthorStoreContext.Provider>
+    );
+  }
+};
+
+/** A draft with two stakeholders outside the team (D163): the CFO and a client, the client with a decision. */
+function stakeholderDraft(): AuthorDraft {
+  const d = workspaceDraft();
+  d.stakeholders.push(newStakeholder(d, { role: 'cfo' }));
+  const client = newStakeholder(d, { role: 'client' });
+  const negotiate = client.interactions.find(x => x.type === 'negotiate')!;
+  Object.assign(negotiate, { enabled: true, plays: 'static', options: [blankStakeholderOption('hold', 'Hold the scope'), { ...blankStakeholderOption('trade', 'Trade a date for a feature'), needsTrust: 55, refusal: 'Not until you have shown me the plan.' }] });
+  d.stakeholders.push(client);
+  return d;
+}
+/** Team with stakeholders outside the team, under the characters. */
+export const TeamWithStakeholders: StoryObj = { render: app(stakeholderDraft, { page: 'workspace', tab: 'team' }) };
+/** The stakeholder editor on Interactions: a conversation's consequences and a decision's options. */
+export const StakeholderEditorInteractions: StoryObj = {
+  render: function Story() {
+    const draft = useMemo(stakeholderDraft, []);
+    const store = useMemo(() => createAuthorStore(draft, null), [draft]);
+    const [open, setOpen] = useState(true);
+    return (
+      <AuthorStoreContext.Provider value={store}>
+        <AuthorRoot><StakeholderEditor draft={draft} stakeholder={draft.stakeholders[1]} open={open} onOpenChange={setOpen} onSave={() => setOpen(false)} initialTab="interactions" /></AuthorRoot>
       </AuthorStoreContext.Provider>
     );
   }

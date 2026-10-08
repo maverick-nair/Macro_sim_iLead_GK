@@ -8,6 +8,7 @@ import { regenerateItem } from './regenerate';
 import { fitRun, movedNote } from './run';
 import { effectText, freshKey, parseEffect, PORTRAITS, pronounsOf } from './seed';
 import { flagsSet } from './choices';
+import { stakeholderIntent } from './stakeholderIntents';
 
 /**
  * Ask Kora without a model (D125): a small rule based reading of plain instructions. Each recognised
@@ -22,7 +23,7 @@ export type KoraAnswer =
   | { kind: 'reply'; reply: string; options?: string[]; source: 'rules' | 'model' };
 
 /** What the rules understand, for the panel's help line and the "can't do that yet" reply. */
-export const CAN_DO = 'make it harder or easier, make decisions less obvious, add trade-offs, make consequences carry forward, make an event more tense, shorten or lengthen the run, add, remove or rename a character, rename the company, product or sponsor, regenerate one event or person, change the tone, or make the sponsor more demanding or supportive';
+export const CAN_DO = 'make it harder or easier, make decisions less obvious, add trade-offs, make consequences carry forward, make an event more tense, shorten or lengthen the run, add, remove or rename a character, add a stakeholder by role, make a stakeholder more demanding, add a request from a stakeholder, rename the company, product or sponsor, regenerate one event or person, change the tone, or make the sponsor more demanding or supportive';
 
 /* ------------------------------------------------------------------------------------------------
  * Names: whole names only, escaped, never empty, and first names that are also common words only
@@ -566,6 +567,16 @@ export function understand(d: AuthorDraft, tab: Tab, instruction: string, varian
   if (rn) {
     const [target, to] = rn[1] ? [rn[1], rn[2]] : rn[3] ? [rn[3], rn[4]] : [rn[5], rn[6]];
     return finish(d, [{ id: 'rename', target: target.replace(/^(?:please\s+)?(?:change\s+)?/i, ''), to }], text, variant, reply, undefined, tab);
+  }
+
+  // Stakeholders outside the team (D165): their own rules, read first so "add the CFO" never reads as a team member.
+  const sh = stakeholderIntent(d, text);
+  if (sh) {
+    if ('reply' in sh) return reply(sh.reply, sh.options);
+    const checked = checkOps(d, sh.ops);
+    if (!checked.ok) return reply('I worked out a change but it did not pass the draft\'s checks, so I left everything as it is.');
+    if (!checked.ops.length) return reply('Nothing to change: it is already that way.');
+    return { kind: 'change', reply: sh.said, ops: checked.ops, changes: checked.changes, marks: checked.marks, source: 'rules' };
   }
 
   const characters = charactersIn(d, text);

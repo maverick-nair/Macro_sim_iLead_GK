@@ -295,6 +295,8 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     },
     process: { stages, pressure, revenue: sl.money.target, weeks: sl.time.period.count, daysPerWeek: 5, pacing: 'balanced', dynamics: true },
     variables,
+    // Stakeholders outside the team (D160): none until the author adds them, or creates the brief's.
+    stakeholders: [],
     team,
     lens: { id: lens.id, title: lens.title, secondary: lens.secondary?.id ?? null, styles, library: structuredClone(styles), needs: structuredClone(lens.needs), fit: structuredClone(lens.fit) as AuthorDraft['lens']['fit'] },
     actions: actions.filter(a => used.has(a.key)),
