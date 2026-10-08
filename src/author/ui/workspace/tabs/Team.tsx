@@ -1,13 +1,26 @@
 import { useState } from 'react';
 import { needOf } from '../../../../engine/lens';
-import type { Character } from '../../../model/draft';
+import { MAX_TEAM, MIN_TEAM, type AuthorDraft, type Character } from '../../../model/draft';
 import { applySuggestion } from '../../../model/kora';
 import { freshKey, PORTRAITS } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
-import { Avatar, Badge, BUTTON, CARD, Field, Icon, MarkOf, Scroll, TextArea, toneOf } from '../../kit';
+import { Avatar, Badge, BUTTON, CARD, Field, Icon, MarkOf, Scroll, Select, TextArea, toneOf } from '../../kit';
 import { CharacterEditor } from '../CharacterEditor';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate } from './regenerate';
+
+/** Removes a character; their events go where the author picked (`to`), or are removed with them (D128). */
+function removeCharacter(x: AuthorDraft, id: string, to: string) {
+  x.team = x.team.filter(m => m.id !== id);
+  for (const m of x.team) m.relationships = m.relationships.filter(r => r.with !== id);
+  if (to === 'remove') {
+    const gone = new Set(x.events.filter(e => e.who === id).map(e => e.key));
+    x.events = x.events.filter(e => !gone.has(e.key));
+    for (const e of x.events) if (e.ifIgnored.followUp && gone.has(e.ifIgnored.followUp)) e.ifIgnored = { ...e.ifIgnored, followUp: null };
+  } else {
+    for (const e of x.events) if (e.who === id) { e.who = to; if ((e.arrives === 'chat' || e.arrives === 'email') && (to === 'team' || to.startsWith('stage:'))) e.arrives = 'modal'; }
+  }
+}
 
 const MOOD = (c: Character) => (c.stats.morale >= 70 ? 'upbeat' : c.stats.morale >= 50 ? 'steady' : c.stats.morale >= 35 ? 'concerned' : 'frustrated');
 
@@ -22,6 +35,7 @@ export default function Team() {
   const regen = useRegenerate('team', 'Regenerate the whole team');
   const [selected, setSelected] = useState(d.team[0]?.id ?? '');
   const [editing, setEditing] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<{ id: string; to: string } | null>(null);
   const c = d.team.find(x => x.id === selected) ?? d.team[0];
   const markOf = (id: string) => {
     const ms = Object.entries(d.marks).filter(([k]) => k.startsWith(`team.${id}.`)).map(([, m]) => m);
@@ -36,13 +50,13 @@ export default function Team() {
     <TabBody label="Team" head={
       <TabHead title="Team" actions={<>
         {regen.button}
-        <button type="button" className={BUTTON.secondary} disabled={d.team.length >= 12} onClick={() => {
+        <button type="button" className={BUTTON.secondary} disabled={d.team.length >= MAX_TEAM} onClick={() => {
           const id = freshKey('new_member', d.team.map(m => m.id));
           edit(x => { x.team.push({ ...structuredClone(x.team[0]), id, first: 'New', last: 'Character', persona: '', hiddenConcern: '', concernLine: '', relationships: [], custom: [], photo: PORTRAITS[x.team.length % PORTRAITS.length] }); }, `team.${id}.identity`);
           setSelected(id); setEditing(id);
         }}>Add a character</button>
       </>}>
-        {d.team.length} characters across {d.process.stages.length} stages &middot; {edited} edited by you
+        {d.team.length} characters across {d.process.stages.length} stages &middot; {edited} edited by you &middot; a team has {MIN_TEAM} to {MAX_TEAM} people{d.team.length >= MAX_TEAM ? ', so this one is full' : d.team.length <= MIN_TEAM ? `, so none can be removed until you add one` : ''}
       </TabHead>
     }>
       {regen.note}
@@ -70,8 +84,26 @@ export default function Team() {
                 <span className="text-13 text-author-body">{c.title} &middot; {markOf(c.id) === 'ai' ? 'generated from your challenge' : 'edited by you'}</span>
               </div>
               <button type="button" className={BUTTON.secondary} onClick={() => setEditing(c.id)}>{Icon.pencil(14)} Edit profile</button>
-              {d.team.length > 6 && <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { x.team = x.team.filter(m => m.id !== c.id); for (const m of x.team) m.relationships = m.relationships.filter(r => r.with !== c.id); setSelected(x.team[0].id); })}>Remove<span className="sr-only"> {c.first}</span></button>}
+              {d.team.length > MIN_TEAM && <button type="button" className={BUTTON.secondary} onClick={() => {
+                if (d.events.some(e => e.who === c.id)) setRemoving({ id: c.id, to: 'team' });
+                else { edit(x => removeCharacter(x, c.id, 'team')); setSelected(d.team.find(m => m.id !== c.id)?.id ?? ''); }
+              }}>Remove<span className="sr-only"> {c.first}</span></button>}
             </div>
+            {removing?.id === c.id && (
+              <div role="alert" className="flex flex-wrap items-end gap-3 rounded-12 border border-solid border-author-need-line bg-author-need-field p-3 text-14">
+                <span className="min-w-60 flex-1">{d.events.filter(e => e.who === c.id).map(e => e.title).join(', ')} {d.events.filter(e => e.who === c.id).length === 1 ? 'is' : 'are'} about {c.first}. Where should {d.events.filter(e => e.who === c.id).length === 1 ? 'it' : 'they'} go?</span>
+                <Field label="Their events">{id => (
+                  <Select id={id} value={removing.to} onChange={e => setRemoving({ id: c.id, to: e.target.value })}>
+                    <option value="team">The whole team</option>
+                    <option value="member">One person, the engine picks</option>
+                    {d.team.filter(m => m.id !== c.id).map(m => <option key={m.id} value={m.id}>{m.first} {m.last}</option>)}
+                    <option value="remove">Remove them too</option>
+                  </Select>
+                )}</Field>
+                <button type="button" className={BUTTON.secondary} onClick={() => { edit(x => removeCharacter(x, c.id, removing.to)); setRemoving(null); setSelected(d.team.find(m => m.id !== c.id)?.id ?? ''); }}>Remove {c.first}</button>
+                <button type="button" className={BUTTON.link} onClick={() => setRemoving(null)}>Keep {c.first}</button>
+              </div>
+            )}
             <dl className="m-0 grid grid-cols-3 gap-3">
               <div className="flex flex-col gap-1"><dt className="text-13 font-700 text-author-label">Stage</dt><dd className="m-0 rounded-10 border border-solid border-author-line-control px-3 py-2 text-14">{stageName(c.stage)}</dd></div>
               <div className="flex flex-col gap-1"><dt className="text-13 font-700 text-author-label">Starting skill</dt><dd className={`m-0 rounded-10 border border-solid px-3 py-2 text-14 ${toneOf(d.marks[`team.${c.id}.stats`])}`}>{c.stats.skill} &middot; {c.stats.skill >= 70 ? 'strong' : c.stats.skill >= 40 ? 'steady' : 'low'}</dd></div>
@@ -88,7 +120,7 @@ export default function Team() {
               </div>
             )}
             <details className="rounded-12 border border-solid border-author-line p-3">
-              <summary className="cursor-pointer text-15 font-800">Advanced: voice, reply length, relationships</summary>
+              <summary className="cursor-pointer text-15 font-800">How the AI character plays {c.first}: voice, reply length, relationships</summary>
               <Scroll label="Advanced details" className="mt-2 max-h-48">
                 <dl className="m-0 grid grid-cols-[9rem_minmax(0,1fr)] gap-x-3 gap-y-1 text-14">
                   <dt className="font-700 text-author-label">Voice</dt><dd className="m-0">{c.voice.accent}, pace {c.voice.pace}, warmth {c.voice.warmth}</dd>
