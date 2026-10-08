@@ -6,6 +6,7 @@ import { useAuthor } from '../../../model/store';
 import { BUTTON, CARD, CardHead, Field, MarkOf, Select, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate, useRegenerateItem } from './regenerate';
+import { ChoiceEditor, ConditionsEditor } from './ChoiceEditor';
 
 const KIND: Record<EventDraft['kind'], { label: string; bar: string; text: string }> = {
   impact: { label: 'Impact', bar: 'bg-author-event-impact', text: 'text-author-decline' },
@@ -25,7 +26,9 @@ const FLOATING: Array<[Exclude<EventDraft['timing'], 'fixed'>, string]> = [['ran
  * by kind. Drag a card to another week, or set its timing in the editor (the keyboard way). Every field
  * here reaches the simulation: the timing (a fixed day, a range of weeks, a condition the engine checks,
  * or only as a follow up), who it hits and how it arrives, its effects and the week's lead flow, and the
- * response it expects, with what happens when that response does not come.
+ * response it expects, with what happens when that response does not come (and how many days later). An event can
+ * be a decision with 2 to 4 options (D137), and any event can play only if earlier decisions, business variables or
+ * team measures allow it (D138).
  */
 export default function Events() {
   const d = useAuthor(s => s.draft);
@@ -91,7 +94,7 @@ export default function Events() {
                         className={`flex w-full cursor-grab flex-col gap-0.5 rounded-10 border-2 border-solid bg-author-surface p-2 text-start focus-visible:outline-2 focus-visible:outline-author-primary ${x.key === selected ? 'border-author-primary' : 'border-author-line'}`}>
                         <span aria-hidden="true" className={`h-1 w-full rounded-pill ${KIND[x.kind].bar}`} />
                         <b className="text-12 leading-[1.25] break-words">{x.title}</b>
-                        <span className="text-11 text-author-body">{KIND[x.kind].label} &middot; {x.who === 'team' ? 'all' : x.who === 'member' ? 'one' : x.who.startsWith('stage:') ? 'stage' : x.who === 'sponsor' ? 'sponsor' : d.team.find(c => c.id === x.who)?.first ?? 'missing'}</span>
+                        <span className="text-11 text-author-body">{KIND[x.kind].label}{x.choice ? ' · decision' : ''}{x.conditions?.length ? ' · only if' : ''} &middot; {x.who === 'team' ? 'all' : x.who === 'member' ? 'one' : x.who.startsWith('stage:') ? 'stage' : x.who === 'sponsor' ? 'sponsor' : d.team.find(c => c.id === x.who)?.first ?? 'missing'}</span>
                       </button>
                     </li>
                   ))}
@@ -136,7 +139,7 @@ export default function Events() {
                   {whoOptions.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </Select>
               )}</Field>
-              <Field label="Arrives as" hint={e.who === 'team' || e.who.startsWith('stage:') ? 'A chat or email comes from one person.' : undefined}>{id => <Select id={id} value={e.arrives} onChange={ev => set({ arrives: ev.target.value as EventDraft['arrives'], ...(MESSAGES.has(ev.target.value as EventDraft['arrives']) ? null : { respondWith: e.respondWith.filter(k => k !== 'reply') }) })}>{(Object.keys(ARRIVES) as Array<EventDraft['arrives']>).map(k => <option key={k} value={k} disabled={(k === 'chat' || k === 'email') && (e.who === 'team' || e.who.startsWith('stage:'))}>{ARRIVES[k]}</option>)}</Select>}</Field>
+              <Field label="Arrives as" hint={e.who === 'team' || e.who.startsWith('stage:') ? 'A chat or email comes from one person.' : undefined}>{id => <Select id={id} value={e.arrives} onChange={ev => set({ arrives: ev.target.value as EventDraft['arrives'], ...(MESSAGES.has(ev.target.value as EventDraft['arrives']) ? null : { respondWith: e.respondWith.filter(k => k !== 'reply') }) })}>{(Object.keys(ARRIVES) as Array<EventDraft['arrives']>).map(k => <option key={k} value={k} disabled={((k === 'chat' || k === 'email') && (e.who === 'team' || e.who.startsWith('stage:'))) || (!!e.choice && k !== 'modal')}>{ARRIVES[k]}</option>)}</Select>}</Field>
             </div>
             {e.timing === 'random' && (() => {
               const w = e.window ?? { from: 1, to: d.process.weeks, chance: 100 };
@@ -152,11 +155,16 @@ export default function Events() {
             {e.timing === 'condition' && (() => {
               const c = e.condition ?? { kind: 'teamMoraleBelow' as const, value: 40, weeks: 1 };
               const setC = (patch: Partial<typeof c>) => set({ condition: { ...c, ...patch } });
+              // "Only Plays only if" (D138): no weekly condition; the clauses below are checked every day.
+              const only = !e.condition && !!e.conditions?.length;
               return (
                 <div className="grid grid-cols-3 gap-3 max-[1180px]:grid-cols-1">
-                  <Field label="Condition" hint="Checked at the start of each week">{id => <Select id={id} value={c.kind} onChange={ev => setC({ kind: ev.target.value as typeof c.kind })}>{EVENT_CONDITIONS.map(k => <option key={k} value={k}>{CONDITION_LABELS[k]}</option>)}</Select>}</Field>
-                  <Field label="Value, 0 to 100">{id => <TextInput id={id} type="number" min={0} max={100} value={c.value} onChange={ev => setC({ value: Math.max(0, Math.min(100, Math.round(Number(ev.target.value) || 0))) })} />}</Field>
-                  <Field label="Weeks in a row">{id => <Select id={id} value={c.weeks} onChange={ev => setC({ weeks: Number(ev.target.value) })}>{[1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}</Select>}</Field>
+                  <Field label="Condition" hint={only ? 'Checked every day' : 'Checked at the start of each week'}>{id => <Select id={id} value={only ? '' : c.kind} onChange={ev => (ev.target.value ? setC({ kind: ev.target.value as typeof c.kind }) : set({ condition: undefined, conditions: e.conditions?.length ? e.conditions : [{ kind: 'metric', metric: 'teamMorale', op: 'below', value: 60 }] }))}>
+                    {EVENT_CONDITIONS.map(k => <option key={k} value={k}>{CONDITION_LABELS[k]}</option>)}
+                    <option value="">Only what Plays only if says, below</option>
+                  </Select>}</Field>
+                  {!only && <Field label="Value, 0 to 100">{id => <TextInput id={id} type="number" min={0} max={100} value={c.value} onChange={ev => setC({ value: Math.max(0, Math.min(100, Math.round(Number(ev.target.value) || 0))) })} />}</Field>}
+                  {!only && <Field label="Weeks in a row">{id => <Select id={id} value={c.weeks} onChange={ev => setC({ weeks: Number(ev.target.value) })}>{[1, 2, 3, 4].map(n => <option key={n} value={n}>{n}</option>)}</Select>}</Field>}
                 </div>
               );
             })()}
@@ -166,7 +174,9 @@ export default function Events() {
               {(['skill', 'morale', 'result'] as const).map(k => <Field key={k} label={k[0].toUpperCase() + k.slice(1)}>{id => <TextInput id={id} inputMode="numeric" tone={toneOf(d.marks[`events.${e.key}`])} value={signed(e[k])} onChange={ev => set({ [k]: delta(ev.target.value) })} />}</Field>)}
               <Field label="Lead flow" hint={e.timing === 'fixed' ? 'Percent change in new leads that week' : 'Needs a fixed week'}>{id => <TextInput id={id} inputMode="numeric" disabled={e.timing !== 'fixed'} value={`${e.leadFlow < 0 ? '−' : ''}${Math.abs(e.leadFlow)}%`} onChange={ev => set({ leadFlow: Math.max(-100, Math.min(100, Math.round(Number(ev.target.value.replace('−', '-').replace('%', '')) || 0))) })} />}</Field>
             </div>
-            <details className="rounded-12 border border-solid border-author-line p-3">
+            <ChoiceEditor d={d} e={e} set={set} />
+            <ConditionsEditor d={d} e={e} set={set} />
+            {!e.choice && <details className="rounded-12 border border-solid border-author-line p-3">
               <summary className="cursor-pointer text-15 font-800">Response: {responds ? `${e.respondWith.map(k => answers.find(([v]) => v === k)?.[1] ?? k).join(' or ')}, within ${e.within} day${e.within === 1 ? '' : 's'}${e.ifIgnored.sponsor || e.ifIgnored.followUp ? '; if ignored, it escalates' : ''}` : 'none expected'}</summary>
               <div className="mt-3 grid grid-cols-2 gap-4 max-[1000px]:grid-cols-1">
                 <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
@@ -194,11 +204,12 @@ export default function Events() {
                         {d.events.filter(x => x.key !== e.key).map(x => <option key={x.key} value={x.key}>{x.title}</option>)}
                       </Select>
                     )}</Field>
+                    <Field label="How long after the deadline">{id => <Select id={id} disabled={!e.ifIgnored.followUp} value={e.ifIgnored.afterDays ?? 0} onChange={ev => set({ ifIgnored: { ...e.ifIgnored, afterDays: Number(ev.target.value) } })}>{[0, 1, 2, 3, 4, 5, 10].map(n => <option key={n} value={n}>{n === 0 ? 'At once' : `${n} day${n === 1 ? '' : 's'} later`}</option>)}</Select>}</Field>
                     <p className="m-0 text-12 text-author-muted">The follow up plays its own effects and message. Set it to &ldquo;Only when another event is ignored&rdquo; so it happens only then.</p>
                   </fieldset>
                 </div>
               </div>
-            </details>
+            </details>}
           </section>
         )}
       </div>

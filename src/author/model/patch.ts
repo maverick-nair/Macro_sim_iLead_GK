@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ActionDraft, AuthorDraft, Character, DraftStyle, EventDraft, EventFields, MAX_DAYS, MAX_WEEKS, MIN_DAYS, MIN_WEEKS, SHORT_MAX, TEXT_MAX, type Tab } from './draft';
+import { ActionDraft, AuthorDraft, Character, ChoiceOptionDraft, ClauseDraft, DraftStyle, EventDraft, EventFields, MAX_DAYS, MAX_WEEKS, MIN_DAYS, MIN_WEEKS, SHORT_MAX, TEXT_MAX, type Tab } from './draft';
+import { flagsSet } from './choices';
 import { fitRun, type Moved } from './run';
 import { parseEffect } from './seed';
 
@@ -34,6 +35,7 @@ const Text = z.string().max(TEXT_MAX);
 /** An impact cell or an option's effect: words the export reads back to numbers ("Skill +4, result −2"). */
 const Effect = Short.refine(v => parseEffect(v) !== null, 'An effect names skill, morale or result with a number, or says No change');
 
+const co = ChoiceOptionDraft.shape;
 const ev = EventFields.shape, ch = Character.shape, ac = ActionDraft.shape, st = DraftStyle.shape, br = AuthorDraft.shape.brief.shape, pr = AuthorDraft.shape.process.shape;
 const stage = pr.stages.element.shape;
 const story = AuthorDraft.shape.story.shape;
@@ -87,6 +89,15 @@ const RULES: Rule[] = [
   { re: new RegExp(`^events\\.${KEY}\\.day$`), schema: ev.day, mark: m => `events.${m[1]}` },
   { re: new RegExp(`^events\\.${KEY}\\.window\\.(from|to)$`), schema: z.number().int().min(1).max(MAX_WEEKS), mark: m => `events.${m[1]}` },
   { re: new RegExp(`^events\\.${KEY}\\.window\\.chance$`), schema: z.number().int().min(0).max(100), mark: m => `events.${m[1]}` },
+  // Choices and conditions on earlier choices (D137, D138).
+  { re: new RegExp(`^events\\.${KEY}\\.ifIgnored\\.afterDays$`), schema: z.number().int().min(0).max(20), mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.conditions$`), schema: z.array(ClauseDraft).max(3), mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.choice\\.options\\.${KEY}\\.(skill|morale|result|trust|sponsor)$`), schema: co.skill, mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.choice\\.options\\.${KEY}\\.revenue$`), schema: co.revenue, mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.choice\\.options\\.${KEY}\\.variables\\.${KEY}$`), schema: z.number().min(-1e9).max(1e9), mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.choice\\.options\\.${KEY}\\.(set|clear)$`), schema: co.set, mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.choice\\.options\\.${KEY}\\.followUp$`), schema: co.followUp, mark: m => `events.${m[1]}` },
+  { re: new RegExp(`^events\\.${KEY}\\.choice\\.options\\.${KEY}\\.(label|outcome)$`), schema: co.outcome, mark: m => `events.${m[1]}` },
   { re: new RegExp(`^actions\\.${KEY}\\.(description|goal)$`), schema: ac.description, mark: m => `actions.${m[1]}` },
   { re: new RegExp(`^actions\\.${KEY}\\.cost$`), schema: ac.cost, mark: m => `actions.${m[1]}` },
   { re: new RegExp(`^actions\\.${KEY}\\.againAfter$`), schema: ac.againAfter, mark: m => `actions.${m[1]}` },
@@ -112,8 +123,10 @@ export function ruleOf(path: string): { schema: z.ZodType; mark: string } | null
 const EVENT_FIELD: Record<string, string> = {
   title: 'Title', body: 'What participants read', skill: 'Skill impact', morale: 'Morale impact', result: 'Result impact', within: 'Days to respond',
   respondWith: 'What counts as a response', 'ifIgnored.sponsor': 'If ignored, the sponsor hears of it', 'ifIgnored.followUp': 'If ignored, then this event follows',
-  week: 'Week', day: 'Day', 'window.from': 'From week', 'window.to': 'To week', 'window.chance': 'Happens in, of 100 runs'
+  week: 'Week', day: 'Day', 'window.from': 'From week', 'window.to': 'To week', 'window.chance': 'Happens in, of 100 runs',
+  'ifIgnored.afterDays': 'If ignored, days before the follow up', conditions: 'Plays only if'
 };
+const OPTION_FIELD: Record<string, string> = { skill: 'skill', morale: 'morale', result: 'result', trust: 'trust', sponsor: 'sponsor confidence', revenue: 'revenue', set: 'sets flags', clear: 'clears flags', followUp: 'then this event follows', label: 'label', outcome: 'what happened' };
 const TEAM_FIELD: Record<string, string> = { first: 'First name', last: 'Last name', title: 'Job title', persona: 'Persona', hiddenConcern: 'Hidden concern', concernLine: 'What they say when it comes out', motivatedBy: 'Motivated by', careerGoal: 'Career goal', skill: 'Starting skill', morale: 'Starting morale', result: 'Starting result', trust: 'Starting trust' };
 const PLAIN: Record<string, string> = {
   title: 'Simulation title', 'brief.participants': 'Participants', 'brief.challenge': 'Business challenge', 'brief.run': 'Run length', 'brief.tones': 'Tone',
@@ -154,6 +167,20 @@ export function locate(d: AuthorDraft, path: string): Loc | null {
   if (head === 'events') {
     const x = d.events.find(y => y.key === a);
     if (!x) return null;
+    if (b === 'choice') {
+      // events.<key>.choice.options.<option>.<field>[.<variable>]
+      const o = x.choice?.options.find(y => y.key === e);
+      const f = parts[5], v = parts[6];
+      if (!o || c !== 'options') return null;
+      const head2 = `${x.title || x.key} · ${short(o.label)}`;
+      if (f === 'variables') {
+        const vd = d.variables.find(y => y.key === v);
+        return vd ? { get: () => o.variables[v] ?? 0, set: val => { o.variables[v] = val as number; }, label: `${head2} · ${vd.name}` } : null;
+      }
+      return field(o as unknown as Record<string, unknown>, f, `${head2} · ${OPTION_FIELD[f] ?? f}`);
+    }
+    if (b === 'conditions') return { get: () => x.conditions ?? [], set: v => { x.conditions = v as EventDraft['conditions']; }, label: `${x.title || x.key} · ${EVENT_FIELD.conditions}` };
+    if (b === 'ifIgnored' && c === 'afterDays') return { get: () => x.ifIgnored.afterDays ?? 0, set: v => { x.ifIgnored.afterDays = v as number; }, label: `${x.title || x.key} · ${EVENT_FIELD['ifIgnored.afterDays']}` };
     const label = `${x.title || x.key} · ${EVENT_FIELD[c ? `${b}.${c}` : b]}`;
     if (b === 'ifIgnored') return field(x.ifIgnored, c, label);
     if (b === 'window') return x.window ? field(x.window, c, label) : null;
@@ -188,9 +215,12 @@ export function shown(path: string, v: unknown, d?: AuthorDraft): string {
   if (typeof v === 'boolean') return v ? 'Yes' : 'No';
   if (/\.respondWith$/.test(path) && Array.isArray(v)) return v.map(k => (k === 'reply' ? 'Reply to the message' : d?.actions.find(a => a.key === k)?.name ?? k)).join(' or ') || 'None expected';
   if (/\.ifIgnored\.followUp$/.test(path) && typeof v === 'string') return d?.events.find(e => e.key === v)?.title || v;
+  if (/\.followUp$/.test(path) && v && typeof v === 'object') { const f = v as { event: string; days: number; weeks: number }; return `${d?.events.find(e => e.key === f.event)?.title || f.event}, ${f.weeks ? `${f.weeks} week${f.weeks === 1 ? '' : 's'}` : ''}${f.weeks && f.days ? ' and ' : ''}${f.days ? `${f.days} day${f.days === 1 ? '' : 's'}` : ''} later`.replace(', later', ', at once'); }
+  if (/\.conditions$/.test(path) && Array.isArray(v)) return v.length ? (v as EventDraft['conditions'] & object).map(c => (c.kind === 'flag' ? `${c.is ? '' : 'not '}${c.flag.replace(/_/g, ' ')}` : c.kind === 'variable' ? `${d?.variables.find(x => x.key === c.variable)?.name ?? c.variable} ${c.op === 'below' ? 'below' : 'at least'} ${c.value}` : `${c.metric} ${c.op === 'below' ? 'below' : 'at least'} ${c.value}`)).join(' and ') : 'Always';
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'number') {
-    if (/\.(skill|morale|result)$/.test(path) && path.startsWith('events.')) return v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0';
+    if (/\.(skill|morale|result|trust|sponsor|revenue)$/.test(path) && path.startsWith('events.')) return v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0';
+    if (/\.variables\.[a-z0-9_]+$/.test(path)) return v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0';
     return path === 'process.revenue' ? v.toLocaleString('en-US') : String(v);
   }
   if (path === 'process.pacing' || path === 'brief.run') return String(v).charAt(0).toUpperCase() + String(v).slice(1);
@@ -273,8 +303,16 @@ function referenceIssues(next: AuthorDraft, ops: EditOp[]): string[] {
   const issues: string[] = [];
   const events = new Set(next.events.map(e => e.key));
   const actions = new Set(next.actions.map(a => a.key));
+  const flags = flagsSet(next);
   for (const o of ops) {
     if (o.op !== 'set') continue;
+    // A follow up from a choice names an event; a condition tests a flag some decision sets, or a variable that exists (D138).
+    const fu = o.path.match(/^events\.([a-z][a-z0-9_]*)\.choice\.options\.[a-z][a-z0-9_]*\.followUp$/);
+    if (fu && o.value && !events.has((o.value as { event: string }).event)) issues.push(`${o.path}: no event called ${(o.value as { event: string }).event}`);
+    if (/\.conditions$/.test(o.path)) for (const c of o.value as NonNullable<EventDraft['conditions']>) {
+      if (c.kind === 'flag' && c.is && !flags.has(c.flag)) issues.push(`${o.path}: no decision sets ${c.flag}`);
+      if (c.kind === 'variable' && !next.variables.some(v => v.key === c.variable)) issues.push(`${o.path}: no variable called ${c.variable}`);
+    }
     const m = o.path.match(/^events\.([a-z][a-z0-9_]*)\.(ifIgnored\.followUp|respondWith)$/);
     if (!m) continue;
     if (m[2] === 'respondWith') {
@@ -371,6 +409,11 @@ function eventFields(out: Record<string, EditView['fields'][string]>, e: EventDr
   // The model answers in text, numbers and lists: it may name a follow up, not switch the sponsor on or off.
   put(out, `events.${e.key}.ifIgnored.followUp`, e.ifIgnored.followUp);
   if (e.window) for (const f of ['from', 'to', 'chance'] as const) put(out, `events.${e.key}.window.${f}`, e.window[f]);
+  // A choice's options (D137): their effects on people, revenue, the sponsor and each variable, and the flags they set.
+  for (const o of e.choice?.options ?? []) {
+    for (const f of ['label', 'outcome', 'skill', 'morale', 'result', 'trust', 'sponsor', 'revenue', 'set'] as const) put(out, `events.${e.key}.choice.options.${o.key}.${f}`, o[f]);
+    for (const [k, v] of Object.entries(o.variables)) put(out, `events.${e.key}.choice.options.${o.key}.variables.${k}`, v);
+  }
 }
 function actionFields(out: Record<string, EditView['fields'][string]>, a: ActionDraft) {
   put(out, `actions.${a.key}.description`, a.description);

@@ -12,7 +12,9 @@ import { play, type Policy } from './policies';
  * Engine copy is message codes since D83: the hash reads it worded in English, which must be the very
  * text the engine wrote before, so the codes and the English catalog are checked here too.
  */
-const parsed = parseStoryline(salesElevator);
+// Recorded before people dynamics (D135): Sales Elevator as it was then, without dynamics and with the funnel
+// numbers calibrated for it (buffer 79, 24 leads a day). The guard is the lens's maths, which dynamics leave alone.
+const parsed = parseStoryline({ ...salesElevator, dynamics: undefined, performanceThreshold: 79, money: { ...salesElevator.money, inputPerSubPeriod: [24] } });
 if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
 const config = parsed.config;
 

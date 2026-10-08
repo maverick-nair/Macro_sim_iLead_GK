@@ -37,6 +37,10 @@ Each persona is a policy over the participant's view and intents (never hidden e
 | turns: lines in a conversation (count) | 1 | 2 | 2 to 3 | 3 to 4 |
 | polish: speaks at its full level (else one level lower) | 1 | 0.75 | 0.6 | 0.95 |
 | slip: says something that blames | 0.04 | 0 | 0 | 0 |
+| decide: makes a choice event's decision at all, else its default applies (D140) | 0.5 | 0.8 | 0.95 | 1 |
+| weigh: weighs people and leadership beside business in a decision, else takes the best short term business | 0.05 | 0.5 | 0.8 | 0.97 |
+
+**Choice events** (D137, D140) are decided at the start of each answer, on a stream of their own (`choiceRng`), so storylines without choices play exactly as before. A player who weighs ranks options by their leadership read, plus three times their effect on people (skill, morale, half the result, and trust) and half their business value (`choiceBusiness`: revenue against a week's share of the target, each variable's move against its range, sponsor confidence and result); one who does not takes the best business value. Probes leave every choice to its default. When the option they chose costs people something, Experts follow through: a conversation with the person it was about, or a team meeting.
 
 How a week goes: every profile is opened (as a participant reading the cards would; what the persona does with it is its level), then a style for each person (default style, last week's, a diagnosis, or a near miss). On the board, in order: answer event cards and messages it chose to answer (replies and briefings cost no time); the action an event calls for; a follow up on a promise coming due; a conversation with the person who needs it, in the member action whose authored effects do most for that need in the chosen style (a team meeting when one style fits 70% of the team, for Proficient and Expert); then spare days used well (energize when most styles fit, training for low skill, assess the person struggling most once, reassign when another stage clearly suits them, hire when someone has left) or used on whatever is at hand.
 
@@ -69,6 +73,7 @@ The target tier is the author's (`targetTier`), else the second tier from the to
 | Styles change the outcome (`styleEffect`, D132) | Proficient play beats the best one style probe by 5% of the scale or more | fail: a flat fit table, or one where one style fits every need |
 | Conversations change what happens (`conversationEffect`, D132) | the same Proficient play with every conversation rated Strong reaches 5 points of the revenue target more than with every one rated Weak | fail: conversations with zero effect |
 | The revenue target suits the levels (`target`, D132) | Beginners average under the target and Experts at least half of it | fail: a target trivially reachable or out of reach; warn when Experts reach under 80% |
+| Players at different levels choose differently (`choices`, D140; only with choice events) | Beginner and Expert option shares per choice event, the total variation distance averaged over events, are 20% apart or more (a default counts as its own outcome) | fail: options without real trade-offs |
 
 Every check that needs a look carries a suggested fix in plain words. The CLI and CI fail only on `fail`.
 
@@ -120,18 +125,29 @@ const line = calibrationPublishCheck(kept, { draft });
 
 `CalibrateSlot` is light: the screen is a lazy chunk loaded on first render, and the engine loads only with a run, in the worker. Nothing in the participant app imports it: the only addition to the first load is the `/author/calibrate` route (initial JS 214.4 KB of 250, 214.3 before; vitals within budget). `calibrationPublishCheck` imports no engine and no schema library. Until /author mounts the slot, `/author/calibrate` shows it on the bundled Sales Elevator draft (`?theme=light`, `?api=/genie`).
 
-## 8. Results on Sales Elevator
+## 8. Results on Sales Elevator and Client Trust
 
-`npm run synthetic` (seed 1, 5 playthroughs a persona, 38 probes, 2.4 s):
+`npm run synthetic` (seed 1, 5 playthroughs a persona, 38 probes, about 2.5 s each). Sales Elevator plays with people dynamics and its recalibrated funnel (D135):
 
 | Player | Score range | Average | Tier | Revenue | Skills rated | Fits level | Strong conversations |
 |---|---|---|---|---|---|---|---|
-| Beginner | 380 to 429 | 400 | Bronze | 65% | Novice | 100% | 0% |
-| Developing | 449 to 576 | 495 | Bronze | 74% | Proficient | 100% | 12% |
-| Proficient | 843 to 912 | 863 | Platinum | 141% | Advanced | 100% | 65% |
-| Expert | 914 to 966 | 937 | Platinum | 147% | Role Model | 100% | 97% |
+| Beginner | 368 to 460 | 428 | Bronze | 72% | Novice | 100% | 0% |
+| Developing | 441 to 575 | 539 | Silver | 80% | Proficient | 100% | 12% |
+| Proficient | 825 to 914 | 871 | Platinum | 164% | Advanced | 100% | 65% |
+| Expert | 912 to 957 | 930 | Platinum | 167% | Role Model | 100% | 97% |
 
-Every check passes. "Hire member" and "Let go" were not used; they are rare by design and not counted (D132). The best probe, Directing for everyone, averages 618, under Gold (700) and 245 points under Proficient play (styles change the outcome); the best one action probe, a team meeting every day, 488. Every conversation Strong reaches 132% of the revenue target, every one Weak 78% (conversations change what happens). Beginners reach 65% of the target, Experts 147%. The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them.
+Every check passes. "Hire member" and "Let go" were not used; they are rare by design and not counted (D132). The best probe, Directing for everyone, averages 617, under Gold (700) and 254 points under Proficient play (styles change the outcome). Every conversation Strong reaches 134% of the revenue target, every one Weak 108% (conversations change what happens). Beginners reach 72% of the target, Experts 167%. The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them; with dynamics, a team kept in good spirits also delivers in full.
+
+Client Trust (D141: dynamics, four business variables, four choice events):
+
+| Player | Score range | Average | Tier | Revenue | Skills rated | Fits level | Strong conversations |
+|---|---|---|---|---|---|---|---|
+| Beginner | 360 to 464 | 402 | Bronze | 61% | Novice | 100% | 0% |
+| Developing | 455 to 560 | 525 | Silver | 78% | Proficient | 80% | 11% |
+| Proficient | 841 to 872 | 862 | Platinum | 138% | Advanced | 100% | 61% |
+| Expert | 916 to 940 | 933 | Platinum | 140% | Role Model | 100% | 97% |
+
+Every check passes. Beginner and Expert choices are 95% apart (players at different levels choose differently); Directing for everyone averages 601; every conversation Strong reaches 121% of the target, every one Weak 106%.
 
 ## 9. Not done
 

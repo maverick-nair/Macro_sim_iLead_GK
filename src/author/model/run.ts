@@ -69,12 +69,12 @@ export const CONDITION_LABELS: Record<NonNullable<EventDraft['condition']>['kind
 /** The event's timing in words, from its fields. */
 export function timingText(e: EventDraft, weeks: number): string {
   if (e.timing === 'fixed') return `Week ${e.week ?? 1}, day ${e.day}`;
-  if (e.timing === 'followup') return 'Only when another event is ignored';
+  if (e.timing === 'followup') return 'Only when another event is ignored, or a decision leads to it';
   if (e.timing === 'random') {
     const w = e.window ?? { from: 1, to: weeks, chance: 100 };
     return `Some time in weeks ${w.from} to ${w.to}${w.chance < 100 ? `, ${w.chance} in 100 runs` : ''}`;
   }
   const c = e.condition;
-  if (!c) return 'When something happens';
+  if (!c) return e.conditions?.length ? 'As soon as Plays only if holds' : 'When something happens';
   return `When ${CONDITION_WORDS[c.kind]} ${c.value}${c.kind === 'behindPace' ? '%' : ''}${c.weeks > 1 ? ` for ${c.weeks} weeks in a row` : ''}`;
 }

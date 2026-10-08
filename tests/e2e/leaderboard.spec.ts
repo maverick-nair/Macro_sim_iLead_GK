@@ -1,6 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * The cohort leaderboard (scoring-and-report.md 6) on the mock engine and the mock cohort API: one line
  * in the HUD score breakdown during play, and the "Your cohort" table on the end screen. Selection use
@@ -25,7 +29,7 @@ async function axe(page: Page) {
 
 /** Sets the same style for everyone and confirms, then clears the team's reaction and any event cards. */
 async function setStyles(page: Page) {
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page), { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();

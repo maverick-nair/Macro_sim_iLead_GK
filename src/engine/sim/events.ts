@@ -5,6 +5,7 @@ import { mismatchType, type Mismatch } from './rules';
 import { addMessage, effectChanges, firstName, fit, gendered, log, member, misread, nextId, sponsorChange } from './sim';
 import type { Change, EventCard, MemberSim, NewsItem, Reason, Sim } from './types';
 import { msg } from '../copy';
+import { applyBusiness, conditionsHold, noteTriggered, openChoice } from './business';
 
 /**
  * Events (Configuration Spec, Events and NPC initiated moments): fixed, random or conditional timing;
@@ -37,13 +38,54 @@ export function scheduleEvents(sim: Sim): Sim['events']['schedule'] {
   return out;
 }
 
-/** Fires the events due in this sub-period. Conditional events are checked at the first sub-period. */
+/** Event keys some other event or effect leads to (an escalation or a follow up): they play only then (D138). */
+const followed = new WeakMap<Sim['config'], Set<string>>();
+function followUpTargets(config: Sim['config']): Set<string> {
+  let out = followed.get(config);
+  if (!out) {
+    out = new Set<string>();
+    const add = (b: { followUps: Array<{ event: string }> } | undefined) => { for (const f of b?.followUps ?? []) out!.add(f.event); };
+    for (const ev of config.events) {
+      if (ev.escalation?.event) out.add(ev.escalation.event);
+      add(ev.business);
+      for (const o of ev.choice?.options ?? []) add(o.business);
+      add(ev.choice?.ignored?.business);
+    }
+    for (const a of config.actions) for (const o of a.options) for (const b of Object.values(o.business ?? {})) add(b);
+    followed.set(config, out);
+  }
+  return out;
+}
+
+const done = (sim: Sim, key: string) => sim.events.fired.includes(key) || sim.events.skipped.includes(key);
+
+/**
+ * Plays an event that is due, when its conditions on earlier choices hold (D138); otherwise it is skipped
+ * and never plays. `cause` is the choice that scheduled it, if one did.
+ */
+function playIfHolds(sim: Sim, rng: Rng, ev: EventConfig, cause: string | null = null) {
+  if (!conditionsHold(sim, ev.if)) { sim.events.skipped.push(ev.key); return; }
+  fireEvent(sim, rng, ev, cause);
+}
+
+/**
+ * Fires the events due in this sub-period. Conditional events are checked at the first sub-period; an event
+ * whose only timing is a condition on earlier choices (`if`) at every sub-period (D138). Follow ups scheduled
+ * after a delay play when their sub-period comes.
+ */
 export function runEvents(sim: Sim, rng: Rng) {
+  for (const d of [...sim.events.delayed]) {
+    if (d.at > sim.absSub) continue;
+    sim.events.delayed = sim.events.delayed.filter(x => x !== d);
+    const ev = sim.config.events.find(e => e.key === d.key);
+    if (ev && !done(sim, ev.key)) playIfHolds(sim, rng, ev, d.cause);
+  }
   for (const ev of sim.config.events) {
-    if (sim.events.fired.includes(ev.key)) continue;
+    if (done(sim, ev.key)) continue;
     const at = sim.events.schedule[ev.key];
-    const due = at ? at.period === sim.period && at.sub === sim.sub : sim.sub === 1 && !!ev.when && conditionHolds(sim, ev);
-    if (due) fireEvent(sim, rng, ev);
+    if (at) { if (at.period === sim.period && at.sub === sim.sub) playIfHolds(sim, rng, ev); continue; }
+    if (ev.when) { if (sim.sub === 1 && conditionHolds(sim, ev) && conditionsHold(sim, ev.if)) fireEvent(sim, rng, ev); continue; }
+    if (ev.if && ev.period === undefined && !ev.window && !followUpTargets(sim.config).has(ev.key) && conditionsHold(sim, ev.if)) fireEvent(sim, rng, ev);
   }
   checkResponses(sim, rng);
 }
@@ -76,8 +118,9 @@ function targetsOf(sim: Sim, ev: EventConfig): { members: MemberSim[]; focus: st
   return { members: m ? [m] : [], focus: m?.id ?? null };
 }
 
-export function fireEvent(sim: Sim, rng: Rng, ev: EventConfig) {
+export function fireEvent(sim: Sim, rng: Rng, ev: EventConfig, cause: string | null = null) {
   sim.events.fired.push(ev.key);
+  noteTriggered(sim, ev, cause);
   const { members, focus } = targetsOf(sim, ev);
   // A named person who has left the team: the event no longer applies.
   if (ev.target !== 'team' && ev.target !== 'sponsor' && !ev.target.startsWith('stage:') && !members.length) return;
@@ -93,6 +136,16 @@ export function fireEvent(sim: Sim, rng: Rng, ev: EventConfig) {
     };
     changes.push(...effectChanges(sim, rng, m, ev.impact, reason, { scale: EVENT_SHARE[mt], useTrust: false }));
     if (ev.away > 0) { m.away = Math.max(m.away, ev.away); m.awayReason = 'leave'; m.awaySetAt = sim.absSub; }
+  }
+
+  // Business variables, flags and follow ups the event moves (D136, D138).
+  if (ev.business) changes.push(...applyBusiness(sim, ev.business, ev.title).changes);
+  // A choice (D137) opens a decision, on a card of its own.
+  if (ev.choice) {
+    const choiceId = openChoice(sim, ev, focus);
+    sim.cards.push({ id: nextId(sim, 'ev'), key: ev.key, card: ev.card, delivery: 'modal', title: ev.title, body, memberId: focus, changes, label: ev.label ?? null, messageId: null, choiceId });
+    log(sim, { kind: 'event', title: ev.title, memberIds: members.map(m => m.id), changes });
+    return;
   }
 
   // Delivery. A bulletin was read at the last week end; in the first period there was none, so it shows as a card.
@@ -153,7 +206,10 @@ function checkResponses(sim: Sim, rng: Rng) {
       log(sim, { kind: 'trigger', title: msg('engine.escalated', { title: ev.title }), memberIds: p.memberId ? [p.memberId] : [], changes: sponsorChange(sim, sim.config.gamification.sponsor.escalation, msg('engine.escalated.sponsor', { title: ev.title, name: first })) });
     }
     const next = ev.escalation.event ? sim.config.events.find(e => e.key === ev.escalation!.event) : undefined;
-    if (next && !sim.events.fired.includes(next.key)) fireEvent(sim, rng, next);
+    // A follow up may wait (D138): it plays after its delay, if its own conditions hold then.
+    const wait = ev.escalation.delay ? ev.escalation.delay.days + ev.escalation.delay.weeks * sim.config.time.subPeriod.perPeriod : 0;
+    if (next && wait > 0) sim.events.delayed.push({ key: next.key, at: sim.absSub + wait, cause: null });
+    else if (next && !done(sim, next.key)) playIfHolds(sim, rng, next);
   }
 }
 

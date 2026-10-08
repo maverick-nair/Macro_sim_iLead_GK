@@ -6,6 +6,8 @@ import { advanceStreak, checkBadges, leadershipScore, nextStreakBonus, pulse, ro
 import { addMessage, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
 import type { Change, PeriodSummary, Sim } from './types';
 import { msg, type Copy } from '../copy';
+import { attrition } from './dynamics';
+import { moveVar } from './business';
 
 /** Period end, gamification and the move to the next period (docs/SIMULATION.md section 7). */
 
@@ -18,6 +20,14 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   }
   runRemaining(sim, rng);
   drift(sim);
+  // Business variables drift (D136); sustained low morale keeps people off sick or makes them leave (D135).
+  for (const v of sim.config.variables) if (v.drift) moveVar(sim, v.key, v.drift, msg('engine.var.drift', { unit: sim.config.time.period.unit }));
+  sim.attrition = attrition(sim,
+    m => { sim.members = sim.members.filter(x => x !== m); sim.departed.push(m); },
+    (m, kind, reason) => {
+      addMessage(sim, { from: m.id, kind: 'chat', title: reason.label, body: reason.cause, dueIn: 2, urgent: kind === 'resigned' });
+      log(sim, { kind: 'trigger', title: reason.label, memberIds: [m.id], changes: [] });
+    });
   const g = sim.config.gamification;
   const count = sim.config.time.period.count;
   const target = sim.config.money.target;
@@ -73,7 +83,11 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
     streak: { count: sim.streak, bonus: streakBonus, total: sim.streakBonus, next: nextStreakBonus(sim) },
     newBadges, sponsor: { from: sFrom, to: sim.sponsor.value, fromLevel: sponsorLevel(sim, sFrom), toLevel: sponsorLevel(sim) },
     pulse: { from: roundHalfUp(sim.pulseAtStart), to: roundHalfUp(pulse(sim)) },
-    funnel, bottleneck, unlockOffer, checkIn, news: sim.period < count ? upcomingNews(sim) : []
+    funnel, bottleneck, unlockOffer, checkIn, news: sim.period < count ? upcomingNews(sim) : [],
+    // Business variables, choices and attrition (D135 to D137), only when the storyline uses them, so older runs read as before.
+    ...(sim.config.variables.some(v => v.shown) ? { variables: sim.config.variables.filter(v => v.shown).map(v => ({ key: v.key, start: sim.varsAtStart[v.key] ?? v.start, end: sim.vars[v.key] ?? v.start })) } : null),
+    ...(sim.config.events.some(e => e.choice) ? { choices: sim.choices.filter(c => c.period === sim.period).map(c => ({ id: c.id, title: c.title, label: c.label, by: c.by })) } : null),
+    ...(sim.config.dynamics ? { attrition: [...sim.attrition] } : null)
   };
   sim.periods.push(summary);
   log(sim, { kind: 'periodEnd', title: msg('engine.periodEnd', { unit, n: sim.period }), memberIds: [], changes: [] });

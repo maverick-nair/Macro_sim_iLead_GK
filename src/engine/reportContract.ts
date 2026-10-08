@@ -23,7 +23,7 @@ export const SkillVerdictKey = z.enum(['strength', 'meets', 'development']);
 export const ReviewStatus = z.enum(['assessor', 'mixed', 'ai']);
 export const ReportSection = z.enum([
   'about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution',
-  'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
+  'moments', 'decisions', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
 ]);
 const Kpi = z.object({ start: Num, end: Num });
 
@@ -120,6 +120,18 @@ export const ReportView = z.object({
   reflection: z.object({ answers: z.array(z.string()), rating: Int.nullable() }).nullable(), questions: z.array(Text),
   methodology: z.object({ lines: z.array(Text), reviewed: z.boolean(), reviewedCount: Int.default(0), conversations: Int, observations: Int }),
   badges: Int, gamificationTiers: z.array(z.object({ key: Id, name: Text, min: Num })),
+  /**
+   * "Decisions and consequences" (D137): each choice, the option taken (`option` null when nothing applied), whether
+   * the participant chose it or it was left to its default, what it changed, the events it led to and the
+   * leadership it showed (`band` is the author's read, worded on the client, never shown as a band name).
+   */
+  decisions: z.array(z.object({
+    id: Id, period: Int, title: Text, option: Text.nullable(), by: z.enum(['you', 'default']), outcome: Text.nullable(), impact: Text,
+    variables: z.array(z.object({ key: Id, name: Text, format: z.enum(['money', 'percent', 'points']), delta: Num })), revenue: Num, sponsor: Num,
+    triggered: z.array(z.object({ key: Id, title: Text, period: Int })), read: z.array(z.object({ skill: Text, band: z.enum(['strong', 'adequate', 'weak', 'harmful']) }))
+  })).default([]),
+  /** The shown business variables at the start and the end of the run (D136). */
+  businessVariables: z.array(z.object({ key: Id, name: Text, format: z.enum(['money', 'percent', 'points']), start: Num, end: Num, higherIsBetter: z.boolean(), weight: Num })).default([]),
 
   // ---- Report 3.0 (D75, D76)
   /** Every number behind the 3.0 sections. */

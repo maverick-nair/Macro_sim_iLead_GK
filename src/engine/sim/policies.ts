@@ -87,12 +87,14 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
     }
     if (policy !== 'passive') {
       let guard = 20;
+      v = await decide(engine, config, v, policy, rng);
       while (v.clock.capacityLeft >= 1 && guard-- > 0) {
         const step = policy === 'good' ? goodStep(v, high, lens) : policy === 'oneStyle' ? goodStep(v, high, lens, one) : randomStep(v, rng, lens);
         if (!step) break;
         const r = await engine.dispatch({ type: 'planAction', ...step.intent });
         v = r.view;
         if (r.interactionId) v = (await engine.dispatch({ type: 'submitInteraction', interactionId: r.interactionId, text: policy === 'careless' ? PLAIN : step.say })).view;
+        v = await decide(engine, config, v, policy, rng);
       }
       for (const msg of v.inbox.filter(x => x.from !== 'news' && x.kind !== 'news')) {
         if (policy === 'careless') break;
@@ -111,6 +113,26 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
 }
 
 type Step = { intent: { action: string; option?: string; memberIds: string[] }; say: string };
+
+const BAND_SCORE = { strong: 100, adequate: 70, weak: 35, harmful: 0 } as const;
+
+/**
+ * Choice events (D137), as each player meets them: passive leaves them to their default (it never acts), careless
+ * too; random picks any option; good and one style pick the option whose leadership read is best (the author's
+ * read of the skills it shows), then the one kindest to people. Reads the authored options, as calibration may.
+ */
+async function decide(engine: Engine, config: StorylineConfig, v: EngineView, policy: Player, rng: Rng): Promise<EngineView> {
+  if (policy === 'careless') return v;
+  for (const open of v.openChoices) {
+    const options = config.events.find(e => e.key === open.eventKey)?.choice?.options ?? [];
+    if (!options.length) continue;
+    const read = (o: (typeof options)[number]) => (o.read.length ? o.read.reduce((a, r) => a + BAND_SCORE[r.band], 0) / o.read.length : 50);
+    const people = (o: (typeof options)[number]) => o.people[1] + o.people[2] + o.trust;
+    const pick = policy === 'random' ? rng.pick(options) : [...options].sort((a, b) => read(b) - read(a) || people(b) - people(a))[0];
+    v = (await engine.dispatch({ type: 'decide', choiceId: open.id, option: pick.key })).view;
+  }
+  return v;
+}
 
 /** The team meeting line: Partnering in Readiness Based Leadership, otherwise the style that fits capable but cautious people. */
 const teamSay = (lens: LensLike) => (lens.styles.some(s => s.key === 'P') ? SAY.P : say(lens, bestStyle(lens, 'highSkill_lowMorale')));

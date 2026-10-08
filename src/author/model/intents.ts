@@ -7,6 +7,7 @@ import { applyOps, checkOps, type Change, type EditOp } from './patch';
 import { regenerateItem } from './regenerate';
 import { fitRun, movedNote } from './run';
 import { effectText, freshKey, parseEffect, PORTRAITS, pronounsOf } from './seed';
+import { flagsSet } from './choices';
 
 /**
  * Ask Kora without a model (D125): a small rule based reading of plain instructions. Each recognised
@@ -213,12 +214,68 @@ function tradeOffs(d: AuthorDraft, s: Scope): Step {
     });
     if (touched) decisions++;
   }
+  let choices = 0;
   if (!s.actions.length && s.tab !== 'actions') for (const e of s.events.length ? s.events : d.events) {
+    if (e.choice) { const n = choiceTradeOffs(d, e, ops); if (n) choices++; continue; }
     if (e.result > 0 && e.morale >= 0) { ops.push(set(`events.${e.key}.morale`, -Math.max(2, Math.round(e.result / 2)))); events++; }
     else if (e.morale > 0 && e.result >= 0) { ops.push(set(`events.${e.key}.result`, -Math.max(2, Math.round(e.morale / 2)))); events++; }
   }
-  const said = [decisions ? `in ${decisions} decision${decisions === 1 ? '' : 's'} each option now helps one of morale or result and costs the other` : '', events ? `${events} opportunit${events === 1 ? 'y' : 'ies'} now cost${events === 1 ? 's' : ''} something too` : ''].filter(Boolean);
+  const said = [decisions ? `in ${decisions} decision${decisions === 1 ? '' : 's'} each option now helps one of morale or result and costs the other` : '', events ? `${events} opportunit${events === 1 ? 'y' : 'ies'} now cost${events === 1 ? 's' : ''} something too` : '',
+    choices ? `in ${choices} choice event${choices === 1 ? '' : 's'} the option that helps the business now costs people, and the one that helps people costs the business` : ''].filter(Boolean);
   return { ops, said: said.length ? `Stronger trade-offs: ${list(said)}.` : '', none: 'I found no options or opportunities that only help, so there is no trade-off to add.' };
+}
+
+/**
+ * Opposing effects for a choice event's options (D137): an option that helps the business (revenue, or a variable up)
+ * without costing people now costs them morale; one that helps people (morale, trust or skill) without costing the
+ * business now costs a business variable (or revenue, with none). Each option ends with a gain and a cost.
+ */
+function choiceTradeOffs(d: AuthorDraft, e: EventDraft, ops: EditOp[]): number {
+  let n = 0;
+  const v = d.variables.find(x => x.shown) ?? d.variables[0];
+  const step = v ? Math.max(1, Math.round((v.max - v.min) / 20)) * (v.higherIsBetter ? 1 : -1) : 0;
+  for (const o of e.choice!.options) {
+    const vars = Object.entries(o.variables).map(([k, x]) => { const def = d.variables.find(y => y.key === k); return def ? x * (def.higherIsBetter ? 1 : -1) : 0; });
+    const business = o.revenue > 0 || vars.some(x => x > 0) || o.sponsor > 0;
+    const businessCost = o.revenue < 0 || vars.some(x => x < 0) || o.sponsor < 0;
+    const people = o.skill + o.morale + o.trust > 0;
+    const peopleCost = o.morale < 0 || o.trust < 0 || o.skill < 0;
+    const at = `events.${e.key}.choice.options.${o.key}`;
+    if (business && !peopleCost) { ops.push(set(`${at}.morale`, -Math.max(2, Math.abs(o.morale) || 3))); n++; }
+    else if (people && !businessCost) {
+      if (v) ops.push(set(`${at}.variables.${v.key}`, (o.variables[v.key] ?? 0) - step));
+      else ops.push(set(`${at}.revenue`, o.revenue - Math.round(d.process.revenue ? d.process.revenue / 40 : 1000)));
+      n++;
+    } else if (!business && !people) {
+      // Neither: it helps people a little and costs the business a little, so it is a real option.
+      ops.push(set(`${at}.morale`, 2));
+      if (v) ops.push(set(`${at}.variables.${v.key}`, (o.variables[v.key] ?? 0) - step));
+      n++;
+    }
+  }
+  return n;
+}
+
+/**
+ * Carrying a choice forward (D138): an option with no flag sets one, and a later event plays only if it is set, two weeks
+ * on (a decision without a fixed week waits on the flag alone). The default option is the one carried: what happens
+ * when nobody decides comes back too.
+ */
+function choiceCarry(d: AuthorDraft, e: EventDraft, keys: Set<string>, ops: EditOp[]): boolean {
+  const ch = e.choice!;
+  if (ch.options.some(o => o.set.length && d.events.some(x => (x.conditions ?? []).some(c => c.kind === 'flag' && o.set.includes(c.flag))))) return false;
+  const o = ch.options.find(x => x.key === ch.default) ?? ch.options[0];
+  const flag = o.set[0] ?? freshKey(`${e.key}_${o.key}`, [...flagsSet(d)]);
+  if (!o.set.includes(flag)) ops.push(set(`events.${e.key}.choice.options.${o.key}.set`, [...o.set, flag]));
+  const key = freshKey(`${e.key}_comes_back`, [...keys]);
+  keys.add(key);
+  const week = e.timing === 'fixed' && e.week ? Math.min(d.process.weeks, e.week + 2) : null;
+  ops.push({ op: 'addEvent', value: {
+    key, title: `${e.title || 'A decision'}: it comes back`, kind: e.kind === 'opportunity' ? 'impact' : e.kind, week, day: 1, timing: week ? 'fixed' : 'condition', who: e.who === 'sponsor' ? 'team' : e.who, arrives: 'modal',
+    body: `"${o.label}" in "${e.title || 'the decision'}" has consequences now.`, skill: 0, morale: -3, result: -2, leadFlow: 0, respondWith: [], within: 2, onTime: [0, 2, 0],
+    ifIgnored: { sponsor: false, followUp: null }, conditions: [{ kind: 'flag', flag, is: true }], origin: 'yours'
+  } });
+  return true;
 }
 
 /** The follow up Kora writes for an event nobody answered: it plays only then, and costs the person more. */
@@ -243,7 +300,8 @@ function carryForward(d: AuthorDraft, s: Scope): Step {
   const keys = new Set(d.events.map(e => e.key));
   const led = new Set(d.events.flatMap(e => (e.ifIgnored.followUp ? [e.ifIgnored.followUp] : [])));
   const spare = d.events.filter(e => e.timing === 'followup' && !led.has(e.key));
-  let added = 0, linked = 0;
+  let added = 0, linked = 0, carried = 0;
+  for (const e of (s.events.length ? s.events : d.events).filter(x => x.choice)) if (choiceCarry(d, e, keys, ops)) carried++;
   for (const e of (s.events.length ? s.events : d.events).filter(needsAnswer)) {
     let follow = e.ifIgnored.followUp && keys.has(e.ifIgnored.followUp) && e.ifIgnored.followUp !== e.key ? e.ifIgnored.followUp : null;
     if (!follow) {
@@ -260,8 +318,9 @@ function carryForward(d: AuthorDraft, s: Scope): Step {
     }
     if (!e.ifIgnored.sponsor) { ops.push(set(`events.${e.key}.ifIgnored.sponsor`, true)); if (e.ifIgnored.followUp === follow) linked++; }
   }
-  const said = linked ? `Consequences carry forward: ${linked} event${linked === 1 ? '' : 's'} that need an answer now come back when ignored, after the days to respond run out, and the sponsor hears of it${added ? `; ${added} new follow up event${added === 1 ? '' : 's'} play only then` : ''}.` : '';
-  return { ops, said, none: s.events.length ? (s.events.some(needsAnswer) ? 'That event already comes back when ignored.' : 'That event does not ask for an answer, so ignoring it has no follow up to set.') : 'No event asks for an answer, so there is no follow up to set.' };
+  const said = [linked ? `Consequences carry forward: ${linked} event${linked === 1 ? '' : 's'} that need an answer now come back when ignored, after the days to respond run out, and the sponsor hears of it${added ? `; ${added} new follow up event${added === 1 ? '' : 's'} play only then` : ''}.` : '',
+    carried ? `${carried} decision${carried === 1 ? '' : 's'} now set${carried === 1 ? 's' : ''} a flag, and a new event plays later only if that choice was made.` : ''].filter(Boolean).join(' ');
+  return { ops, said, none: s.events.length ? (s.events.some(needsAnswer) || s.events.some(x => x.choice) ? 'That event already comes back.' : 'That event does not ask for an answer, so ignoring it has no follow up to set.') : 'No event asks for an answer, so there is no follow up to set.' };
 }
 
 function eventTension(s: Scope): Step {

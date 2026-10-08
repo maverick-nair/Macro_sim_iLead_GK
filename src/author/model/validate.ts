@@ -7,6 +7,7 @@ import { toStoryline, type Exported } from './export';
 import { ENGINE_TEMPLATES } from './library';
 import { needsOf } from './needs';
 import { parseEffect } from './seed';
+import { consequenceKey, flagsSet } from './choices';
 
 /**
  * The publish gate (D131): every reason a draft cannot be published yet, and the advice that does not block,
@@ -217,6 +218,16 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
     const shared = styleKeys.filter(k => libStyles.some(s => s.key === k));
     const moved = NEEDS.filter(n => fitting(ref, n, shared).join() !== fitting(d.lens.fit, n, shared).join());
     if (shared.length >= 3 && moved.length >= 2) advise({ id: 'mechanics.fit.moved', area: 'mechanics', title: `The fit table no longer follows ${lib.title}`, detail: `For ${moved.length} of ${NEEDS.length} needs the style that fits is not the one the lens describes. Check the styles' descriptions still match what fits.`, tab: 'lens' });
+  }
+
+  // Choices (D137) and conditions on earlier choices (D138): options that differ, flags something sets.
+  const flags = flagsSet(d);
+  for (const e of d.events) {
+    const ch = e.choice;
+    if (ch && ch.options.length >= 2 && new Set(ch.options.map(consequenceKey)).size === 1) block({ id: `mechanics.choice.same.${e.key}`, area: 'mechanics', title: `Every option of ${quote(e.title || e.key)} has the same consequences`, detail: 'Whatever the participant picks, the same thing happens, so it is no choice. Give each option its own trade-off: what it helps and what it costs.', tab: 'events', target: `events.${e.key}` });
+    for (const c of e.conditions ?? []) {
+      if (c.kind === 'flag' && c.is && !flags.has(c.flag)) block({ id: `links.flag.${e.key}.${c.flag}`, area: 'links', title: `The event ${quote(e.title || e.key)} waits for "${c.flag.replace(/_/g, ' ')}", which no decision sets`, detail: 'It would never play. Set that flag in an option of a decision, or change the condition.', tab: 'events', target: `events.${e.key}` });
+    }
   }
 
   // Names and keys that must be unique.

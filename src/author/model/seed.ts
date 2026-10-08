@@ -8,6 +8,8 @@ import { buildModule } from '../module';
 import { draftContext, draftStoryline } from '../storyline';
 import { AuthorDraft, type ActionDraft, type Chat, type Character, type DraftStyle, type EventDraft, type Mark } from './draft';
 import { ACTION_TEMPLATES, canPlay, ENGINE_TEMPLATES } from './library';
+import { mapWeek } from './run';
+import type { ChoiceOptionDraft, VariableDraft } from './draft';
 
 /**
  * The offline drafter for the workspace (D105): the chat's brief and lens become a full draft with no
@@ -173,10 +175,54 @@ export function eventFrom(e: NonNullable<SL['events']>[number], followUps: Reado
     ...(e.window ? { window: { from: e.window.from, to: e.window.to, chance: e.window.probability ?? 100 } } : null),
     ...(e.when ? { condition: { kind: e.when.condition, value: e.when.value ?? 30, weeks: e.when.periods ?? 1 } } : null),
     who: e.target ?? 'team', arrives: e.delivery ?? 'modal', body: e.body.he,
-    skill: e.impact[0], morale: e.impact[1], result: e.impact[2], leadFlow: 0,
+    skill: e.impact?.[0] ?? 0, morale: e.impact?.[1] ?? 0, result: e.impact?.[2] ?? 0, leadFlow: 0,
     respondWith: e.response?.actions ?? [], within: e.response?.within ?? 2, onTime: e.response?.onTime ?? [0, 2, 0],
-    ifIgnored: { sponsor: e.response ? (e.escalation?.sponsor ?? false) : false, followUp: e.escalation?.event ?? null }, origin: 'library'
+    ifIgnored: { sponsor: e.response ? (e.escalation?.sponsor ?? false) : false, followUp: e.escalation?.event ?? null, afterDays: 0 }, conditions: [], origin: 'library'
   };
+}
+
+/** A round number near `n` for a budget: two significant figures. */
+const roundish = (n: number) => { const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(1, n))) - 1); return Math.round(n / p) * p; };
+
+/**
+ * The business variables a new draft starts with (D136): a budget a quarter of the revenue target, and customer trust,
+ * which counts for a fifth of the Business pillar. Authors rename, add up to six, or remove them in Work process.
+ */
+export function defaultVariables(target: number): VariableDraft[] {
+  return [
+    { key: 'budget', name: 'Budget', format: 'money', start: roundish(target / 4), min: 0, max: roundish(target / 2), drift: 0, shown: true, weight: 0, higherIsBetter: true, about: 'What you can spend this quarter beyond salaries: training, team events and extra help.' },
+    { key: 'customer_trust', name: 'Customer trust', format: 'percent', start: 70, min: 0, max: 100, drift: 0, shown: true, weight: 20, higherIsBetter: true, about: 'How much your customers trust the team to keep its promises. It counts in the Business score.' }
+  ];
+}
+
+/** An option of a drafted choice: nothing changes until the author says what does. */
+export function blankOption(key: string, label: string): ChoiceOptionDraft {
+  return { key, label, detail: '', outcome: '', who: 'target', skill: 0, morale: 0, result: 0, trust: 0, revenue: 0, sponsor: 0, variables: {}, set: [], clear: [], followUp: null, read: [] };
+}
+
+/**
+ * The two choice events a new draft starts with (D137): short term revenue against customer trust, and cost against
+ * capability. No option is right on every count, and each has a leadership read in the draft's own skills.
+ */
+export function defaultChoices(weeks: number, target: number, skills: string[], work: string, pressure: string): EventDraft[] {
+  const [a, b] = [skills[0] ?? '', skills[1] ?? skills[0] ?? ''];
+  const read = (...xs: Array<[string, ChoiceOptionDraft['read'][number]['band']]>) => xs.filter(([k]) => k).map(([skill, band]) => ({ skill, band }));
+  const deal = roundish(target / 16);
+  const base = { skill: 0, morale: 0, result: 0, leadFlow: 0, respondWith: [], within: 2, onTime: [0, 2, 0] as [number, number, number], ifIgnored: { sponsor: false, followUp: null }, conditions: [], origin: 'library' as const, arrives: 'modal' as const, timing: 'fixed' as const };
+  return [
+    { ...base, key: 'discount_decision', title: 'A discount to close this week', kind: 'opportunity', week: mapWeek(2, 8, weeks), day: 2, who: 'member',
+      body: `{name} can close a large ${work} this week, but only with a deep discount the customer did not ask for.`,
+      choice: { known: 'The customer\'s budget closes on Friday.\nYour sponsor wants this quarter\'s number.', within: 2, default: 'discount', options: [
+        { ...blankOption('discount', 'Approve the discount and close this week'), outcome: 'The deal closes. The customer now expects a discount every time.', morale: 3, result: 3, revenue: deal, variables: { customer_trust: -6 }, set: ['discounted'], read: read([a, 'adequate'], [b, 'weak']) },
+        { ...blankOption('value', 'Hold the price and help them build the case'), outcome: 'The customer asks for a week to decide, and trusts you more.', morale: -2, trust: 2, variables: { customer_trust: 4 }, read: read([a, 'strong'], [b, 'strong']) }
+      ] } },
+    { ...base, key: 'budget_decision', title: 'Finance wants a cut', kind: 'impact', week: mapWeek(5, 8, weeks), day: 2, who: 'team',
+      body: `Finance asks every team for a cut this quarter. The biggest line you control is the ${pressure} team's training.`,
+      choice: { known: 'Two people are booked on a course next month.', within: 2, default: 'cut', options: [
+        { ...blankOption('cut', 'Cut the training budget'), outcome: 'Finance is pleased. The two people hear their course is off.', who: 'team', morale: -2, variables: { budget: roundish(target / 20) }, set: ['budget_cut'], read: read([b, 'weak']) },
+        { ...blankOption('keep', 'Keep the training and cut elsewhere'), outcome: 'The course goes ahead. Your sponsor has to defend the budget upstairs.', who: 'team', skill: 2, morale: 2, sponsor: -5, read: read([b, 'strong'], [a, 'adequate']) }
+      ] } }
+  ];
 }
 
 /** A blank chat, before the first question. */
@@ -236,11 +282,13 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
         { key: 'team', title: 'Meet your team', body: `You lead ${team.length} people across ${stages.length} stages. Open each profile to see what they need from you.` }
       ]
     },
-    process: { stages, pressure, revenue: sl.money.target, weeks: sl.time.period.count, daysPerWeek: 5, pacing: 'balanced' },
+    process: { stages, pressure, revenue: sl.money.target, weeks: sl.time.period.count, daysPerWeek: 5, pacing: 'balanced', dynamics: true },
+    variables: defaultVariables(sl.money.target),
     team,
     lens: { id: lens.id, title: lens.title, secondary: lens.secondary?.id ?? null, styles, library: structuredClone(styles), needs: structuredClone(lens.needs), fit: structuredClone(lens.fit) as AuthorDraft['lens']['fit'] },
     actions: actions.filter(a => used.has(a.key)),
-    events: (sl.events ?? []).map(e => eventFrom(e, new Set((sl.events ?? []).flatMap(x => (x.escalation?.event ? [x.escalation.event] : []))))),
+    events: [...(sl.events ?? []).map(e => eventFrom(e, new Set((sl.events ?? []).flatMap(x => (x.escalation?.event ? [x.escalation.event] : []))))),
+      ...defaultChoices(sl.time.period.count, sl.money.target, skills.filter(x => !x.reportOnly).map(x => x.name), ind.work, pressureName)],
     scoring: {
       skills,
       samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null })),

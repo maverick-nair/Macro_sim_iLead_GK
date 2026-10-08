@@ -26,7 +26,8 @@ export function runResultOf(run: SyntheticRun, index: number, config: StorylineC
     bands,
     concerns: [...new Set(run.conversations.filter(c => c.concernSurfaced).flatMap(c => c.memberIds))],
     actions: Object.fromEntries(s.actions.map(a => [a.key, a.frequency])),
-    events: { expected: weeks.length, handled: weeks.filter(e => e.handled).length }
+    events: { expected: weeks.length, handled: weeks.filter(e => e.handled).length },
+    choices: run.view.choices.map(c => ({ event: c.eventKey, option: c.option, by: c.by }))
   };
 }
 

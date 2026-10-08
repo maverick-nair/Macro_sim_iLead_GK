@@ -190,5 +190,18 @@
   "report.progress.item": "{attempt}: score {score}, adaptability {adaptability}%, {target}% of target",
   "report.progress.skillsTitle": "Skill scores by attempt",
   "report.progress.none": "Not rated",
-  "report.progress.attemptColumn": "Attempt"
+  "report.progress.attemptColumn": "Attempt",
+  "report.decisions.title": "Decisions and consequences",
+  "report.decisions.none": "No decision came up in this run.",
+  "report.decisions.variablesTitle": "The business, start to end",
+  "report.decisions.column": "{column, select, name {Measure} start {Start} other {End}}",
+  "report.decisions.direction": "{dir, select, up {, up} down {, down} other {, unchanged}}{better, select, true {, better} false {, worse} other {}}",
+  "report.decisions.by": "{by, select, you {Your decision} other {Left to the default}}",
+  "report.decisions.term": "{term, select, option {What was chosen} outcome {What happened} changed {What it changed} led {What it led to} other {The leadership it showed}}",
+  "report.decisions.nothing": "Nothing was chosen.",
+  "report.decisions.variable": "{name} {value}",
+  "report.decisions.revenue": "Revenue {value}",
+  "report.decisions.sponsor": "Sponsor confidence {delta, number, ::sign-except-zero}",
+  "report.decisions.led": "{title}, {when}",
+  "report.decisions.read": "{band, select, strong {Showed {skill} well} adequate {Showed some {skill}} weak {Fell short on {skill}} other {Worked against {skill}}}"
 }

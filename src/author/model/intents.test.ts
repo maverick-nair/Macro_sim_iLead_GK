@@ -258,7 +258,7 @@ describe('names in instructions', () => {
     expect(charactersIn(d, 'make it harder')).toEqual([]);
     // "Make it harder" no longer rewrites a character because of an empty name.
     expect(change(d, 'Make it harder').ops.some(o => o.op === 'set' && o.path.startsWith('team.'))).toBe(false);
-    expect(eventsIn(d, 'make the week 2 events tougher').map(e => e.key)).toEqual(['competitor_moves', 'lens_moment']);
+    expect(eventsIn(d, 'make the week 2 events tougher').map(e => e.key)).toEqual(['competitor_moves', 'lens_moment', 'discount_decision']);
   });
 });
 
@@ -305,5 +305,46 @@ describe('Kora\'s edits as data (the whitelist)', () => {
     fitRun(ref, 4);
     expect(next.events).toEqual(ref.events);
     expect(next.process.weeks).toBe(4);
+  });
+});
+
+describe('Kora on choice events (D137, D138)', () => {
+  it('"stronger trade-offs" gives every option of a choice a gain and a cost: business against people', () => {
+    const d = draft();
+    const { next } = applied(d, 'Introduce stronger trade-offs', 'events');
+    for (const e of next.events.filter(x => x.choice)) for (const o of e.choice!.options) {
+      const parts = [o.revenue, o.sponsor, ...Object.values(o.variables), o.skill, o.morale, o.trust];
+      expect(parts.some(x => x > 0) && parts.some(x => x < 0), `${e.key}.${o.key}`).toBe(true);
+    }
+    expect(toStoryline(next).issues).toEqual([]);
+  });
+
+  it('"make consequences carry forward" sets a flag on a decision and adds a later event that plays only if it was chosen', () => {
+    const d = draft();
+    const { a, next } = applied(d, 'Make "A discount to close this week" carry forward');
+    expect(a.reply).toMatch(/1 decision now sets a flag, and a new event plays later only if that choice was made/);
+    const choice = next.events.find(e => e.key === 'discount_decision')!;
+    const flag = choice.choice!.options.find(o => o.key === 'discount')!.set[0];
+    expect(flag).toBe('discounted');
+    const later = next.events.find(e => e.key === 'discount_decision_comes_back')!;
+    expect(later).toMatchObject({ timing: 'fixed', week: (choice.week ?? 0) + 2, conditions: [{ kind: 'flag', flag: 'discounted', is: true }] });
+    const out = toStoryline(next);
+    expect(out.issues).toEqual([]);
+    expect(out.storyline.events!.find(e => e.key === later.key)!.if).toEqual([{ kind: 'flag', flag: 'discounted', is: true }]);
+  });
+
+  it('refuses a condition on a flag no decision sets, and a follow up to an event that does not exist', () => {
+    const d = draft();
+    expect(checkOps(d, [{ op: 'set', path: 'events.public_complaint.conditions', value: [{ kind: 'flag', flag: 'nobody_sets', is: true }] }])).toMatchObject({ ok: false, issues: [expect.stringMatching(/no decision sets nobody_sets/)] });
+    expect(checkOps(d, [{ op: 'set', path: 'events.discount_decision.choice.options.value.followUp', value: { event: 'nope', days: 0, weeks: 1 } }])).toMatchObject({ ok: false });
+    const ok = checkOps(d, [{ op: 'set', path: 'events.discount_decision.choice.options.value.variables.budget', value: -2000 }]);
+    expect(ok).toMatchObject({ ok: true, changes: [{ field: 'A discount to close this week · Hold the price and help them build the… · Budget', before: '0', after: '−2000' }] });
+  });
+
+  it('shows the model a choice\'s option effects as fields it may change', () => {
+    const v = editView(draft(), 'events');
+    expect(v.fields['events.discount_decision.choice.options.discount.revenue']).toBeGreaterThan(0);
+    expect(v.fields['events.discount_decision.choice.options.discount.variables.customer_trust']).toBe(-6);
+    expect(checkViewOps(v, [{ path: 'events.discount_decision.choice.options.discount.morale', value: -4 }])).toEqual([]);
   });
 });

@@ -184,5 +184,17 @@
   "engine.hire.joined": "{name} aceptó la oferta y se incorpora a {stage}.",
   "engine.hire.turnedDown": "{name} rechazó la oferta tras la entrevista.",
   "engine.example.person": "{need} ({needShort})",
-  "engine.example.why": "{style} es lo que mejor encaja aquí. {styleShort}"
+  "engine.example.why": "{style} es lo que mejor encaja aquí. {styleShort}",
+  "engine.dyn.sick.label": "De baja",
+  "engine.dyn.sick.cause": "{name} lleva un tiempo desanimado (moral cerca de {morale}) y está de baja.",
+  "engine.dyn.resigned.label": "Renuncia",
+  "engine.dyn.resigned.cause": "{name} lleva demasiado tiempo desanimado (moral cerca de {morale}) y ha renunciado.",
+  "engine.dyn.attrition.rule": "Cuando la moral de alguien se queda por debajo de {below} en los últimos {window} días, puede darse de baja, y si se repite, renuncia.",
+  "engine.var.drift": "{unit, select, year {Pasó un año} month {Pasó un mes} week {Pasó una semana} day {Pasó un día} other {Pasó un periodo}}",
+  "engine.choice.cause": "{by, select, you {Elegiste «{option}» en {title}.} other {Nadie eligió a tiempo, así que se aplicó «{option}» en {title}.}}",
+  "engine.choice.none": "Nadie decidió sobre {title} a tiempo.",
+  "engine.choice.defaultLabel": "Sin decisión",
+  "engine.choice.rule": "{by, select, you {Lo que elegiste tiene el efecto que la simulación le da.} other {Una decisión sin tomar a tiempo aplica su opción por defecto.}}",
+  "engine.choice.nobody": "Nadie",
+  "engine.choice.log": "{title}: {option}{by, select, you {} other { (por defecto)}}"
 }

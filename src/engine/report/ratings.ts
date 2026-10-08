@@ -40,10 +40,22 @@ export interface SkillRating {
   review: 'assessor' | 'mixed' | 'ai';
 }
 
+/**
+ * The leadership reads of the choices the participant made (D137), as records the ratings read beside the
+ * conversations: one observation per skill read, no quotes (a choice has no words).
+ */
+export function choiceRecords(sim: Sim): LiveRecord[] {
+  return sim.choices.filter(c => c.by === 'you' && c.read.length).map(c => ({
+    id: c.id, period: c.period, sub: c.sub, actionKey: `choice:${c.eventKey}`, format: 'choice', band: c.read[0].band, memberIds: c.memberId ? [c.memberId] : [],
+    title: c.title, quotes: [], skills: c.read.map(x => ({ key: x.skill, band: x.band, evidence: [] }))
+  }));
+}
+
 export function rateSkills(sim: Sim): SkillRating[] {
   const r = sim.config.report;
+  const records = [...sim.liveRecords, ...choiceRecords(sim)];
   return r.skills.map((sk, order) => {
-    const obs = sim.liveRecords.flatMap(rec => (rec.skills ?? []).filter(o => o.key === sk.key).map(o => ({ ...o, rec })));
+    const obs = records.flatMap(rec => (rec.skills ?? []).filter(o => o.key === sk.key).map(o => ({ ...o, rec })));
     const interactions = new Set(obs.map(o => o.rec.id ?? o.rec));
     // Report only skills (a secondary lens, D70) always need 2 observations from 2 interactions.
     const minObs = sk.reportOnly ? Math.max(2, r.minObservations) : r.minObservations;

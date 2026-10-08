@@ -61,6 +61,11 @@ import type { OutcomeReply } from '../outcome/OutcomePanel';
 import { actionSub } from '../action/ActionTile';
 // The in play panels (D89) and the guided tour (D94) load when first opened, with their copy.
 const PlayPanels = lazy(() => import('../panels/PlayPanels'));
+// A choice event's decision (D137) loads on demand, with its copy.
+const DecisionDialog = lazy(() => import('../business/DecisionDialog'));
+import { BusinessBar, type BusinessItem } from '../business/BusinessBar';
+import { formatVariable, variableTrend } from '../business/format';
+import { moneyFormatter } from '../../engine/money';
 const Tour = lazy(() => import('../tour/Tour'));
 
 /**
@@ -219,7 +224,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // The participant's name from the launch, for the report header.
   const [profileName, setProfileName] = useState<string | null>(null);
   useEffect(() => { let live = true; void api.getProfile().then(p => { if (live) setProfileName(p.name); }, () => undefined); return () => { live = false; }; }, [api]);
-  const { t } = useI18n();
+  const { t, number, delta: signed } = useI18n();
+  /** A choice opened from the business bar, and a choice just decided whose outcome the dialog is showing (D137). */
+  const [deciding, setDeciding] = useState<string | null>(null);
+  const [decided, setDecided] = useState<EngineView['openChoices'][number] | null>(null);
   const ui = useUi();
   const intent = useIntent();
   const unit = v.clock.subPeriodUnit, periodUnit = v.clock.periodUnit;
@@ -680,6 +688,23 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       meter: { value: v.sponsor.value, unlockAt: v.sponsor.unlockAt, checkInBelow: v.sponsor.checkInBelow, sponsorName: first(v.sponsor.name), subPeriodUnit: unit } }
   };
 
+  // ---- the business (D136, D137): variables on the board, decisions still waiting ----
+  const fmts = { money: moneyFormatter(v.money), number };
+  const business: BusinessItem[] = v.variables.map(x => {
+    const tr = variableTrend(x.value, x.start, x.higherIsBetter);
+    return { key: x.key, name: x.name, value: formatVariable(fmts, x.format, x.value), dir: tr.dir, better: tr.better, about: x.about,
+      causes: x.causes.map(c => ({ text: c.text, change: formatVariable(fmts, x.format, c.delta, true), dir: c.delta > 0 ? 'up' as const : 'down' as const })) };
+  });
+  const decisionsDue = v.phase === 'board' ? v.openChoices.filter(c => !v.cards.some(k => k.choiceId === c.id)).map(c => ({ id: c.id, title: c.title, due: t('board.business.due', { n: c.dueInSubPeriods, unit }) })) : [];
+  /** What a choice changed, a line each: people (as the team when it reached everyone), business variables, revenue, the sponsor. */
+  const choiceLines = (r: EngineView['choices'][number]) => [
+    ...teamChips(r.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence' && !!member(c.subject)), v.members.length)
+      .map(c => t(c.subject === 'team' ? 'decision.team' : 'decision.person', { name: chipName(c), metric: c.metric, delta: signed(c.delta) })),
+    ...r.variables.map(x => t('decision.variable', { name: x.name, value: formatVariable(fmts, v.variables.find(y => y.key === x.key)?.format ?? 'points', x.delta, true) })),
+    ...(r.revenue ? [t('decision.revenue', { value: `${r.revenue > 0 ? '+' : '−'}${fmts.money.compact(Math.abs(r.revenue))}` })] : []),
+    ...r.changes.filter(c => c.metric === 'confidence').map(c => t('decision.sponsor', { delta: signed(c.delta) }))
+  ];
+
   // ---- outcome ----
   const oc = v.outcome;
   const person = (id: string): OutcomePerson | null => {
@@ -746,7 +771,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   // One modal at a time: an event card first (after the outcome has been read), then the period end.
   // A sponsor call is not a modal: it rings over the board until it is answered or put off.
+  // A choice event's card is a decision (D137): the decision dialog, or its outcome right after deciding.
   const card = !oc ? v.cards.find(c => c.delivery === 'modal') : undefined;
+  const decisionOpen = decided ?? v.openChoices.find(c => c.id === (card?.choiceId ?? deciding)) ?? null;
   const callCard = v.phase === 'board' ? v.cards.find(c => c.delivery === 'sponsorCall' && (c.messageId === null || v.inbox.some(m => m.id === c.messageId))) : undefined;
   // The week end replaces the board at a period end, and once more at the end of the run before the end screen.
   const weekEnd = !card && !v.live && !reacting && (v.phase === 'periodEnd' || (ended && !lastWeekSeen));
@@ -972,6 +999,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         <Hud {...hud} />
         {call}
         <MetricsStrip {...strip} />
+        <BusinessBar items={business} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)} />
         <BoardNotices notices={notices} view={v} onDismiss={key => setDismissed(d => new Set([...d, key]))}
           onLeaderboard={() => openPanel({ kind: 'leaderboard' })} />
         {ended && lastWeekSeen && endView === 'board' && (
@@ -1044,7 +1072,24 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           </>
         )}
         {tablet && inboxDrawer}
-        {card && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
+        {decisionOpen && (
+          <Suspense fallback={null}>
+            <DecisionDialog key={decisionOpen.id} choice={decisionOpen} result={decided ? v.choices.find(c => c.id === decided.id) ?? null : null} busy={busy}
+              img={decisionOpen.memberId ? member(decisionOpen.memberId)?.img ?? null : null}
+              due={t('board.business.due', { n: decisionOpen.dueInSubPeriods, unit })}
+              changes={choiceLines}
+              onDecide={async option => { if (await send({ type: 'decide', choiceId: decisionOpen.id, option })) { setDecided(decisionOpen); setDeciding(null); } }}
+              onLater={async () => {
+                const c = v.cards.find(x => x.choiceId === decisionOpen.id);
+                focusHint.current = () => h1Ref.current;
+                if (c && !(await send({ type: 'dismissCard', cardId: c.id }))) return;
+                setDeciding(null);
+              }}
+              onDone={() => { focusHint.current = () => h1Ref.current; setDecided(null); }}
+              onCloseFocus={() => rescue(true)} />
+          </Suspense>
+        )}
+        {card && !card.choiceId && !decided && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
         <Suspense fallback={null}>
           {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
             returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header [data-hud-score]')} />}

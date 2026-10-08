@@ -1,3 +1,4 @@
+import { remapReads } from '../../../model/choices';
 import { useState } from 'react';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS, type LensId } from '../../../../engine/lens';
 import { LENS_BY_ID } from '../../../lenses';
@@ -22,6 +23,8 @@ export function changeLens(d: AuthorDraft, id: LensId) {
     return f ? { ...a, impact: f.impact, options: a.options.map((o, i) => ({ ...o, style: f.options[i]?.style ?? null })), scoredOn: f.scoredOn } : a;
   });
   d.scoring.skills = fresh.scoring.skills;
+  // Choice events' leadership reads follow the new skills (D137).
+  remapReads(d);
   for (const [k, m] of Object.entries(fresh.marks)) if (/^(lens|team|events)\./.test(k)) d.marks[k] = m;
   d.marks['lens.id'] = 'you';
 }

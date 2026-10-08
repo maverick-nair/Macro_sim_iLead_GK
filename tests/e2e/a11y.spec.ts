@@ -3,6 +3,10 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * Accessibility, consolidated (M8, D78): axe (WCAG 2.2 AA) on every route and major state of the
  * participant app, the reports, the group report and /author (light only, walked once per width), in the dark, light and client
@@ -55,7 +59,7 @@ const viewport = (w: Width) => ({ width: w, height: tablet(w) ? 1194 : 1000 });
 
 async function styles(page: Page, where = 'style setting') {
   const groups = page.getByRole('radiogroup', { name: /^Leadership style for/ });
-  await expect(groups).toHaveCount(10, { timeout: 30_000 });
+  await expect(groups).toHaveCount(team(page), { timeout: 30_000 });
   await scan(page, where);
   for (const g of await groups.all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
@@ -180,7 +184,7 @@ async function weekEnd(page: Page, last: RegExp, after?: Locator) {
 async function finishRun(page: Page, q: string, extra = '') {
   await page.goto(url('/?start=board&period=8', extra, q));
   const groups = page.getByRole('radiogroup', { name: /^Leadership style for/ });
-  await expect(groups).toHaveCount(10, { timeout: 30_000 });
+  await expect(groups).toHaveCount(team(page), { timeout: 30_000 });
   for (const g of await groups.all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();

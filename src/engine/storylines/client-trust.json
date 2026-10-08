@@ -1,0 +1,3090 @@
+{
+  "id": "client_trust",
+  "name": "Client Trust, Northwind Cloud",
+  "organisation": "Northwind Cloud",
+  "intro": {
+    "welcome": [
+      "Welcome to Northwind Cloud. I am glad you are here.",
+      "You lead the account team of ten that takes every client from first call to signed contract.",
+      "This quarter I need the number, and I need clients who still trust us when it is in. You will not always be able to have both."
+    ],
+    "product": [
+      "We sell a data platform that finance teams use to close their books faster.",
+      "Every deal moves through five stages: Prospect, Discover, Demo, Propose and Close."
+    ],
+    "targets": [
+      "Reach $240,000 in new revenue over eight weeks.",
+      "Watch the budget, customer trust and product quality on your board: your choices move them.",
+      "A burned out team will not hold the number next quarter."
+    ]
+  },
+  "money": {
+    "currency": "USD",
+    "locale": "en-US",
+    "display": "symbol",
+    "target": 240000,
+    "valuePerConversion": 30000,
+    "inputPerSubPeriod": [
+      21
+    ]
+  },
+  "time": {
+    "period": {
+      "unit": "week",
+      "count": 8
+    },
+    "costStep": 1
+  },
+  "stages": [
+    {
+      "key": "prospect",
+      "name": "Prospect",
+      "conversionRatio": 0.62,
+      "ideal": 2,
+      "about": "Finds companies that fit and books first calls, so the pipeline never runs dry.",
+      "suits": "Research, energy for outreach and resilience after a no."
+    },
+    {
+      "key": "discover",
+      "name": "Discover",
+      "conversionRatio": 0.5,
+      "ideal": 2,
+      "about": "Learns what each client is trying to fix and whether the platform can fix it.",
+      "suits": "Good questions, careful listening and sound judgment."
+    },
+    {
+      "key": "demo",
+      "name": "Demo",
+      "conversionRatio": 0.3,
+      "ideal": 2,
+      "about": "Shows the platform working on the client's own problem.",
+      "suits": "Product knowledge, clear storytelling and attention to detail."
+    },
+    {
+      "key": "propose",
+      "name": "Propose",
+      "conversionRatio": 0.5,
+      "ideal": 2,
+      "about": "Works through price, terms and the client's objections.",
+      "suits": "Composure, persuasion and knowing where the limits are."
+    },
+    {
+      "key": "close",
+      "name": "Close",
+      "conversionRatio": 0.5,
+      "ideal": 2,
+      "about": "Signs the contract and hands the client to onboarding with a clean promise.",
+      "suits": "Follow through, relationships and keeping promises."
+    }
+  ],
+  "sponsor": {
+    "name": "Dana Okafor",
+    "title": "VP, Client Success",
+    "styleLine": "Each of your people needs something different from you this week."
+  },
+  "members": [
+    {
+      "id": "arjun",
+      "name": "Arjun Mehta",
+      "title": "Prospecting Specialist",
+      "pronoun": "he",
+      "homeStage": "prospect",
+      "start": {
+        "skill": 30,
+        "morale": 22,
+        "result": 49
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 30,
+          "morale": 22,
+          "result": 49
+        },
+        "discover": {
+          "skill": 14,
+          "morale": 15,
+          "result": 14
+        },
+        "demo": {
+          "skill": 22,
+          "morale": 24,
+          "result": 24
+        },
+        "propose": {
+          "skill": 43,
+          "morale": 38,
+          "result": 40
+        },
+        "close": {
+          "skill": 29,
+          "morale": 28,
+          "result": 21
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "1 month ago",
+        "experience": "3 years",
+        "skills": "Lead Generation, Negotiation",
+        "remarks": "He expected a lot more from his current job and has already started complaining to others about his job.",
+        "relations": ""
+      },
+      "hiddenConcern": "He expected a lot more from this job, and feels it is not what he was promised.",
+      "portrait": "/assets/npc/kent.webp",
+      "concernLine": "Honestly? This job is not what I was promised. I expected a lot more when I joined, and nobody seems to remember that."
+    },
+    {
+      "id": "claire",
+      "name": "Claire Dunn",
+      "title": "Prospecting Specialist",
+      "pronoun": "she",
+      "homeStage": "prospect",
+      "start": {
+        "skill": 25,
+        "morale": 73,
+        "result": 45
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 25,
+          "morale": 73,
+          "result": 45
+        },
+        "discover": {
+          "skill": 40,
+          "morale": 41,
+          "result": 40
+        },
+        "demo": {
+          "skill": 34,
+          "morale": 35,
+          "result": 35
+        },
+        "propose": {
+          "skill": 28,
+          "morale": 29,
+          "result": 28
+        },
+        "close": {
+          "skill": 25,
+          "morale": 27,
+          "result": 25
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "6 months ago",
+        "experience": "3 years",
+        "skills": "Lead Generation, Lead Qualification",
+        "remarks": "Cirrus Systems is Northwind's closest rival. She decided to switch companies mainly due to her unhappiness with the management of Cirrus Systems.",
+        "relations": ""
+      },
+      "hiddenConcern": "She left Cirrus Systems over how she was managed, and watches closely how you lead.",
+      "portrait": "/assets/npc/beth.webp",
+      "concernLine": "I left Cirrus Systems because of how I was managed there. So yes, I watch closely how things are run here."
+    },
+    {
+      "id": "marcus",
+      "name": "Marcus Lee",
+      "title": "Discovery Analyst",
+      "pronoun": "he",
+      "homeStage": "discover",
+      "start": {
+        "skill": 22,
+        "morale": 40,
+        "result": 52
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 18,
+          "morale": 17,
+          "result": 17
+        },
+        "discover": {
+          "skill": 22,
+          "morale": 40,
+          "result": 52
+        },
+        "demo": {
+          "skill": 32,
+          "morale": 39,
+          "result": 25
+        },
+        "propose": {
+          "skill": 10,
+          "morale": 40,
+          "result": 20
+        },
+        "close": {
+          "skill": 20,
+          "morale": 88,
+          "result": 40
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "5 years ago",
+        "experience": "5 years",
+        "skills": "Lead Qualification, Sales Conversion",
+        "remarks": "Marcus is a Finance Major and is looking for a shift to the Sales Conversion role. He has been in the Lead Qualification role for the past 3 years and wants a change.",
+        "relations": ""
+      },
+      "hiddenConcern": "He has been in Lead Qualification for 3 years and wants to move to Sales Conversion.",
+      "portrait": "/assets/npc/justin.webp",
+      "concernLine": "I have been in Lead Qualification for three years. I really want a shot at Sales Conversion."
+    },
+    {
+      "id": "tomas",
+      "name": "Tomas Novak",
+      "title": "Discovery Analyst",
+      "pronoun": "he",
+      "homeStage": "discover",
+      "start": {
+        "skill": 70,
+        "morale": 71,
+        "result": 62
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 65,
+          "morale": 66,
+          "result": 61
+        },
+        "discover": {
+          "skill": 70,
+          "morale": 71,
+          "result": 62
+        },
+        "demo": {
+          "skill": 22,
+          "morale": 25,
+          "result": 25
+        },
+        "propose": {
+          "skill": 28,
+          "morale": 29,
+          "result": 31
+        },
+        "close": {
+          "skill": 47,
+          "morale": 49,
+          "result": 35
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "3 years",
+        "experience": "6 years",
+        "skills": "Lead Qualification, Lead Generation",
+        "remarks": "",
+        "relations": ""
+      },
+      "portrait": "/assets/npc/derick.webp"
+    },
+    {
+      "id": "femi",
+      "name": "Femi Adeyemi",
+      "title": "Solutions Consultant",
+      "pronoun": "he",
+      "homeStage": "demo",
+      "start": {
+        "skill": 89,
+        "morale": 56,
+        "result": 69
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 65,
+          "morale": 56,
+          "result": 57
+        },
+        "discover": {
+          "skill": 24,
+          "morale": 22,
+          "result": 23
+        },
+        "demo": {
+          "skill": 89,
+          "morale": 56,
+          "result": 69
+        },
+        "propose": {
+          "skill": 91,
+          "morale": 81,
+          "result": 80
+        },
+        "close": {
+          "skill": 12,
+          "morale": 13,
+          "result": 12
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "3 years",
+        "experience": "10 years",
+        "skills": "Proposal Design, Negotiation",
+        "remarks": "Femi Bell has influential contacts to make his proposals work and is the go-to guy in the team for anything proposal related.",
+        "relations": ""
+      },
+      "portrait": "/assets/npc/green.webp"
+    },
+    {
+      "id": "ravi",
+      "name": "Ravi Iyer",
+      "title": "Solutions Consultant",
+      "pronoun": "he",
+      "homeStage": "demo",
+      "start": {
+        "skill": 80,
+        "morale": 45,
+        "result": 67
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 46,
+          "morale": 48,
+          "result": 49
+        },
+        "discover": {
+          "skill": 78,
+          "morale": 72,
+          "result": 71
+        },
+        "demo": {
+          "skill": 80,
+          "morale": 45,
+          "result": 67
+        },
+        "propose": {
+          "skill": 72,
+          "morale": 35,
+          "result": 57
+        },
+        "close": {
+          "skill": 62,
+          "morale": 25,
+          "result": 47
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "3 years ago",
+        "experience": "3 years",
+        "skills": "Proposal Design, Lead Qualification, Negotiation",
+        "remarks": "",
+        "relations": ""
+      },
+      "hiddenConcern": "He feels his technical depth goes unnoticed.",
+      "portrait": "/assets/npc/lowe.webp",
+      "concernLine": "I put a lot of technical depth into my proposals, and it never seems to get noticed."
+    },
+    {
+      "id": "owen",
+      "name": "Owen Brooks",
+      "title": "Proposal Lead",
+      "pronoun": "he",
+      "homeStage": "propose",
+      "start": {
+        "skill": 92,
+        "morale": 85,
+        "result": 95
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 40,
+          "morale": 45,
+          "result": 43
+        },
+        "discover": {
+          "skill": 19,
+          "morale": 31,
+          "result": 20
+        },
+        "demo": {
+          "skill": 20,
+          "morale": 22,
+          "result": 21
+        },
+        "propose": {
+          "skill": 92,
+          "morale": 85,
+          "result": 95
+        },
+        "close": {
+          "skill": 71,
+          "morale": 78,
+          "result": 72
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "2 years ago",
+        "experience": "15 years",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Owen Holt is a top performer at Northwind and has received a multitude of positive appraisals from his superiors.",
+        "relations": ""
+      },
+      "portrait": "/assets/npc/jack.webp"
+    },
+    {
+      "id": "hugo",
+      "name": "Hugo Martin",
+      "title": "Proposal Lead",
+      "pronoun": "he",
+      "homeStage": "propose",
+      "start": {
+        "skill": 10,
+        "morale": 15,
+        "result": 16
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 22,
+          "morale": 23,
+          "result": 20
+        },
+        "discover": {
+          "skill": 41,
+          "morale": 43,
+          "result": 44
+        },
+        "demo": {
+          "skill": 30,
+          "morale": 31,
+          "result": 31
+        },
+        "propose": {
+          "skill": 10,
+          "morale": 15,
+          "result": 16
+        },
+        "close": {
+          "skill": 63,
+          "morale": 30,
+          "result": 41
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "6 years ago",
+        "experience": "6 years",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Hugo Higgins is a lawyer by education and switched careers to work for Northwind in the sales team. His appraisals for the past 2 years have gone down hill. He has been loyal to his job and his managers, but has not added any value and needs encouragement often.",
+        "relations": ""
+      },
+      "hiddenConcern": "His appraisals have gone downhill and he needs encouragement, but he will not ask for it.",
+      "portrait": "/assets/npc/peter.webp",
+      "concernLine": "My last appraisals have not gone well. I am trying, but some encouragement would go a long way."
+    },
+    {
+      "id": "nadia",
+      "name": "Nadia Rahman",
+      "title": "Account Executive",
+      "pronoun": "she",
+      "homeStage": "close",
+      "start": {
+        "skill": 80,
+        "morale": 50,
+        "result": 65
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 24,
+          "morale": 28,
+          "result": 32
+        },
+        "discover": {
+          "skill": 29,
+          "morale": 29,
+          "result": 31
+        },
+        "demo": {
+          "skill": 33,
+          "morale": 31,
+          "result": 35
+        },
+        "propose": {
+          "skill": 11,
+          "morale": 12,
+          "result": 12
+        },
+        "close": {
+          "skill": 80,
+          "morale": 50,
+          "result": 65
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "2 years ago",
+        "experience": "2 years",
+        "skills": "Sales Conversion",
+        "remarks": "Nadia is a perfectionist and highly skilled in conversion and order processing.",
+        "relations": ""
+      },
+      "portrait": "/assets/npc/ruth.webp"
+    },
+    {
+      "id": "lena",
+      "name": "Lena Fischer",
+      "title": "Account Executive",
+      "pronoun": "she",
+      "homeStage": "close",
+      "start": {
+        "skill": 60,
+        "morale": 80,
+        "result": 71
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 46,
+          "morale": 35,
+          "result": 42
+        },
+        "discover": {
+          "skill": 40,
+          "morale": 60,
+          "result": 45
+        },
+        "demo": {
+          "skill": 65,
+          "morale": 50,
+          "result": 70
+        },
+        "propose": {
+          "skill": 55,
+          "morale": 75,
+          "result": 66
+        },
+        "close": {
+          "skill": 60,
+          "morale": 80,
+          "result": 71
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "6 years",
+        "skills": "Sales Conversion, Negotiation",
+        "remarks": "Lena Lobert is popular among her ex-employees to have closed tough deals with clients who had opted for competitor's products.",
+        "relations": ""
+      },
+      "portrait": "/assets/npc/mandy.webp"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "ron",
+      "name": "Ron Hackman",
+      "title": "Lead Generation Executive",
+      "pronoun": "he",
+      "homeStage": "prospect",
+      "start": {
+        "skill": 90,
+        "morale": 69,
+        "result": 82
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 90,
+          "morale": 69,
+          "result": 82
+        },
+        "discover": {
+          "skill": 30,
+          "morale": 42,
+          "result": 20
+        },
+        "demo": {
+          "skill": 34,
+          "morale": 45,
+          "result": 40
+        },
+        "propose": {
+          "skill": 40,
+          "morale": 32,
+          "result": 35
+        },
+        "close": {
+          "skill": 10,
+          "morale": 12,
+          "result": 20
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "1 month",
+        "skills": "Lead Generation, Proposal Design",
+        "remarks": "Ron is new to Northwind Cloud Previously, he was working with a telemarketing agency and has 7 years in collecting sales leads.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "sheila",
+      "name": "Sheila Frederick",
+      "title": "Lead Generation Executive",
+      "pronoun": "she",
+      "homeStage": "prospect",
+      "start": {
+        "skill": 57,
+        "morale": 27,
+        "result": 30
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 57,
+          "morale": 27,
+          "result": 30
+        },
+        "discover": {
+          "skill": 11,
+          "morale": 12,
+          "result": 11
+        },
+        "demo": {
+          "skill": 16,
+          "morale": 18,
+          "result": 15
+        },
+        "propose": {
+          "skill": 13,
+          "morale": 14,
+          "result": 11
+        },
+        "close": {
+          "skill": 22,
+          "morale": 24,
+          "result": 25
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "5 years",
+        "skills": "Lead Generation",
+        "remarks": "Sheila's previous manager felt she needed to perform better and spend less time chatting in the common area.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "ajit",
+      "name": "Ajit Ram",
+      "title": "Lead Qualifier",
+      "pronoun": "he",
+      "homeStage": "discover",
+      "start": {
+        "skill": 82,
+        "morale": 99,
+        "result": 95
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 43,
+          "morale": 56,
+          "result": 40
+        },
+        "discover": {
+          "skill": 82,
+          "morale": 99,
+          "result": 95
+        },
+        "demo": {
+          "skill": 25,
+          "morale": 27,
+          "result": 30
+        },
+        "propose": {
+          "skill": 14,
+          "morale": 15,
+          "result": 15
+        },
+        "close": {
+          "skill": 10,
+          "morale": 12,
+          "result": 11
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "8 years",
+        "skills": "Lead Qualification, Lead Generation",
+        "remarks": "Ajit Ram has recommendations from the top management of his previous company and is said to have started the Energize club and is extremely motivated to perform.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "nate",
+      "name": "Nate Benjamin",
+      "title": "Lead Qualifier",
+      "pronoun": "he",
+      "homeStage": "discover",
+      "start": {
+        "skill": 54,
+        "morale": 40,
+        "result": 42
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 49,
+          "morale": 47,
+          "result": 45
+        },
+        "discover": {
+          "skill": 54,
+          "morale": 40,
+          "result": 42
+        },
+        "demo": {
+          "skill": 21,
+          "morale": 10,
+          "result": 10
+        },
+        "propose": {
+          "skill": 14,
+          "morale": 19,
+          "result": 19
+        },
+        "close": {
+          "skill": 60,
+          "morale": 70,
+          "result": 70
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "8 years",
+        "skills": "Lead Qualification, Negotiation",
+        "remarks": "Nate has strong negotiation skills, but wants to try out a new career in qualifying sales leads.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "desmond",
+      "name": "Desmond Mart",
+      "title": "Proposal Specialist",
+      "pronoun": "he",
+      "homeStage": "demo",
+      "start": {
+        "skill": 40,
+        "morale": 45,
+        "result": 40
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 60,
+          "morale": 60,
+          "result": 71
+        },
+        "discover": {
+          "skill": 22,
+          "morale": 21,
+          "result": 22
+        },
+        "demo": {
+          "skill": 40,
+          "morale": 45,
+          "result": 40
+        },
+        "propose": {
+          "skill": 10,
+          "morale": 11,
+          "result": 19
+        },
+        "close": {
+          "skill": 19,
+          "morale": 19,
+          "result": 21
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "5 years",
+        "skills": "Proposal Design, Lead Generation",
+        "remarks": "Desmond Mart is sought after for his proposal drafting skills and is known for striking a chord with clients. He has worked with Northwind's competitors previously and can get the job done.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "rita",
+      "name": "Rita Sandersky",
+      "title": "Proposal Specialist",
+      "pronoun": "she",
+      "homeStage": "demo",
+      "start": {
+        "skill": 34,
+        "morale": 32,
+        "result": 35
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 19,
+          "morale": 18,
+          "result": 15
+        },
+        "discover": {
+          "skill": 16,
+          "morale": 20,
+          "result": 21
+        },
+        "demo": {
+          "skill": 34,
+          "morale": 32,
+          "result": 35
+        },
+        "propose": {
+          "skill": 38,
+          "morale": 50,
+          "result": 40
+        },
+        "close": {
+          "skill": 35,
+          "morale": 32,
+          "result": 33
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "None (5 years of work experience with China Bank)",
+        "skills": "Proposal Design, Negotiation",
+        "remarks": "Rita Sandersky has been working as an assistant to the Vice President at an MNC for the past 5 years and has received medium-to-high scores in her appraisals.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "ben",
+      "name": "Ben Lowinsky",
+      "title": "Negotiation Specialist",
+      "pronoun": "he",
+      "homeStage": "propose",
+      "start": {
+        "skill": 78,
+        "morale": 58,
+        "result": 72
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 39,
+          "morale": 30,
+          "result": 27
+        },
+        "discover": {
+          "skill": 28,
+          "morale": 30,
+          "result": 31
+        },
+        "demo": {
+          "skill": 33,
+          "morale": 33,
+          "result": 31
+        },
+        "propose": {
+          "skill": 78,
+          "morale": 58,
+          "result": 72
+        },
+        "close": {
+          "skill": 21,
+          "morale": 22,
+          "result": 22
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "7 years",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Ben Lowinsky has had 7 years' experience in negotiations and client transactions and has worked with three of Northwind's competitors.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "nico",
+      "name": "Nico Arnas",
+      "title": "Negotiation Specialist",
+      "pronoun": "he",
+      "homeStage": "propose",
+      "start": {
+        "skill": 45,
+        "morale": 90,
+        "result": 60
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 23,
+          "morale": 22,
+          "result": 21
+        },
+        "discover": {
+          "skill": 33,
+          "morale": 39,
+          "result": 39
+        },
+        "demo": {
+          "skill": 30,
+          "morale": 32,
+          "result": 32
+        },
+        "propose": {
+          "skill": 45,
+          "morale": 90,
+          "result": 60
+        },
+        "close": {
+          "skill": 43,
+          "morale": 82,
+          "result": 70
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "MBA Freshman",
+        "skills": "Negotiation, Sales Conversion",
+        "remarks": "Nico Arnas is a freshman out of business school. He was part of the debate and negotiation clubs and is looking for a role in the Negotiation department.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "patrick",
+      "name": "Patrick Arjun",
+      "title": "Conversion Specialist",
+      "pronoun": "he",
+      "homeStage": "close",
+      "start": {
+        "skill": 40,
+        "morale": 83,
+        "result": 63
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 30,
+          "morale": 31,
+          "result": 30
+        },
+        "discover": {
+          "skill": 70,
+          "morale": 79,
+          "result": 81
+        },
+        "demo": {
+          "skill": 70,
+          "morale": 78,
+          "result": 70
+        },
+        "propose": {
+          "skill": 31,
+          "morale": 39,
+          "result": 30
+        },
+        "close": {
+          "skill": 40,
+          "morale": 83,
+          "result": 63
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "Graduate (Freshman)",
+        "skills": "Sales Conversion, Lead Qualification, Negotiation",
+        "remarks": "Patrick Arjun is a freshman having just completed his Bachelors in Commerce. He is talented in closing deals and following up with order management processes. He has technical skills and has experience in Tally accounting software.",
+        "relations": ""
+      }
+    },
+    {
+      "id": "terrence",
+      "name": "Terrence Paddington",
+      "title": "Conversion Specialist",
+      "pronoun": "he",
+      "homeStage": "close",
+      "start": {
+        "skill": 80,
+        "morale": 65,
+        "result": 72
+      },
+      "byStage": {
+        "prospect": {
+          "skill": 41,
+          "morale": 45,
+          "result": 45
+        },
+        "discover": {
+          "skill": 55,
+          "morale": 56,
+          "result": 59
+        },
+        "demo": {
+          "skill": 79,
+          "morale": 71,
+          "result": 71
+        },
+        "propose": {
+          "skill": 62,
+          "morale": 58,
+          "result": 59
+        },
+        "close": {
+          "skill": 80,
+          "morale": 65,
+          "result": 72
+        }
+      },
+      "profile": {
+        "previous": "",
+        "tenure": "New joiner",
+        "experience": "None (10 years of work experience with Manchester Business School)",
+        "skills": "Sales Conversion, Proposal Design",
+        "remarks": "Terrence Paddington is currently working as a professor of leadership at a business school. He now wants to switch to sales and is expecting a role in the conversion team.",
+        "relations": ""
+      }
+    }
+  ],
+  "actions": [
+    {
+      "key": "meet",
+      "name": "Meet the team",
+      "description": "Team meeting enables you to meet the team in person and outline your goals for the weeks ahead. You could use the opportunity to gauge feedback from the team members as well. This action will take 1 day to complete.",
+      "scope": "team",
+      "kind": "live",
+      "format": "meeting",
+      "rule": "styleOption",
+      "cost": 1,
+      "cooldownDays": 10,
+      "options": [
+        {
+          "key": "directing",
+          "label": "Present the overall strategy, get into details of the execution plan and explain the responsibilities of the teams.",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Energize the team by giving a pep talk. At the same time, you try to get a buy-in for your strategy and execution plan.",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Present the overall strategy and ask for feedback.",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask the team to brainstorm on the strategy and the execution plan",
+          "effects": {
+            "m0": [
+              2,
+              8,
+              10
+            ],
+            "m1": [
+              -1,
+              -5,
+              -6
+            ],
+            "m2": [
+              -1,
+              -8,
+              -10
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "energize",
+      "name": "Energize the team",
+      "description": "Energize your team by either taking them out for a team lunch or organize a 2-day team building activity.",
+      "scope": "team",
+      "kind": "static",
+      "rule": "weeklyStyle",
+      "cost": 1,
+      "options": [
+        {
+          "key": "team_lunch",
+          "label": "Team Lunch",
+          "effects": {
+            "m0": [
+              0,
+              3,
+              4
+            ],
+            "m1": [
+              0,
+              -3,
+              -2
+            ],
+            "m2": [
+              0,
+              -5,
+              -4
+            ]
+          },
+          "cooldownDays": 10,
+          "business": {
+            "always": {
+              "variables": {
+                "budget": -1500
+              }
+            }
+          }
+        },
+        {
+          "key": "team_building",
+          "label": "Team building activity",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "cooldownDays": 10,
+          "cost": 2,
+          "business": {
+            "always": {
+              "variables": {
+                "budget": -5000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "email",
+      "name": "Send email",
+      "description": "Write to up to 3 people. Congratulate or warn; replies arrive in your inbox.",
+      "scope": "member",
+      "kind": "live",
+      "format": "email",
+      "rule": "trend",
+      "cost": 1,
+      "targets": [
+        1,
+        3
+      ],
+      "options": [
+        {
+          "key": "warning",
+          "label": "Send warning mail",
+          "effects": {
+            "m0": [
+              1,
+              3,
+              3
+            ],
+            "m1": [
+              -1,
+              -6,
+              -7
+            ],
+            "m2": [
+              -7,
+              -5,
+              -3
+            ]
+          },
+          "intent": "warn"
+        },
+        {
+          "key": "congratulatory",
+          "label": "Send congratulatory mail",
+          "effects": {
+            "m0": [
+              1,
+              8,
+              8
+            ],
+            "m1": [
+              0,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -2,
+              -4
+            ]
+          },
+          "intent": "congratulate"
+        }
+      ]
+    },
+    {
+      "key": "training",
+      "name": "Send for training",
+      "description": "Build skill away from the desk. Up to 3 people.",
+      "scope": "member",
+      "kind": "static",
+      "rule": "training",
+      "cost": 1,
+      "targets": [
+        1,
+        3
+      ],
+      "options": [
+        {
+          "key": "three_day",
+          "label": "Send for 3-day training",
+          "effects": {
+            "m0": [
+              9,
+              6,
+              8
+            ],
+            "m1": [
+              5,
+              3,
+              2
+            ],
+            "m2": [
+              -4,
+              -8,
+              -3
+            ]
+          },
+          "away": 3,
+          "business": {
+            "always": {
+              "variables": {
+                "budget": -4000
+              }
+            },
+            "m0": {
+              "variables": {
+                "quality": 2
+              }
+            }
+          }
+        },
+        {
+          "key": "one_week",
+          "label": "Send for 1 week workshop",
+          "effects": {
+            "m0": [
+              8,
+              7,
+              6
+            ],
+            "m1": [
+              5,
+              6,
+              4
+            ],
+            "m2": [
+              -3,
+              -5,
+              -7
+            ]
+          },
+          "away": 5,
+          "cost": 2,
+          "business": {
+            "always": {
+              "variables": {
+                "budget": -7000
+              }
+            },
+            "m0": {
+              "variables": {
+                "quality": 2
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "swap",
+      "name": "Swap roles",
+      "description": "Move people between stages, then explain the decision to them.",
+      "scope": "member",
+      "kind": "hybrid",
+      "format": "roleplay",
+      "rule": "swap",
+      "cost": 1,
+      "targets": [
+        1,
+        2
+      ],
+      "prerequisite": "assess",
+      "options": [
+        {
+          "key": "reassign",
+          "label": "Reassign role",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          },
+          "targets": [
+            1,
+            1
+          ],
+          "pickStage": true
+        },
+        {
+          "key": "swap",
+          "label": "Swap role",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          },
+          "targets": [
+            2,
+            2
+          ],
+          "distinctStages": true
+        }
+      ]
+    },
+    {
+      "key": "hire",
+      "name": "Hire member",
+      "description": "Interview candidates for an open seat.",
+      "scope": "team",
+      "kind": "live",
+      "format": "interview",
+      "rule": "hire",
+      "cost": 2,
+      "cooldownDays": 8,
+      "unlockPeriod": 3,
+      "options": [
+        {
+          "key": "interview",
+          "label": "You decide to hire fresh talent into the team. We have provided you with the following options. Choose wisely.",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          },
+          "business": {
+            "always": {
+              "variables": {
+                "budget": -12000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "fire",
+      "name": "Let go",
+      "description": "Remove someone from the team, then have the exit conversation.",
+      "scope": "member",
+      "kind": "hybrid",
+      "format": "roleplay",
+      "rule": "fire",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "let_go",
+          "label": "Use this action to fire a member from a role. Please note that you are required to have atleast one member in the role after the Fire action is taken.",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "f2f",
+      "name": "Meet face to face",
+      "description": "A one to one conversation.",
+      "scope": "member",
+      "kind": "live",
+      "format": "roleplay",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Get into details of the execution plan and explain the tasks in detail.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Energize the person by providing emotional support and try to seek an agreement on your execution plan.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Discuss the role and performance of the person and ask for feedback.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Encourage the person to follow own processes.",
+          "effects": {
+            "m0": [
+              1,
+              6,
+              9
+            ],
+            "m1": [
+              -1,
+              -4,
+              -5
+            ],
+            "m2": [
+              -1,
+              -6,
+              -8
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "assess",
+      "name": "Assess member",
+      "description": "See how this person would do in another stage. No effect on them.",
+      "scope": "member",
+      "kind": "static",
+      "rule": "assess",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "assess",
+          "label": "Assess action helps you to evaluate a team member's expertise and motivation levels with respect to a new role. Prior to reassigning a member, you may use the Assess action to determine the most suited role for him / her.",
+          "effects": {
+            "m0": [
+              0,
+              0,
+              0
+            ],
+            "m1": [
+              0,
+              0,
+              0
+            ],
+            "m2": [
+              0,
+              0,
+              0
+            ]
+          },
+          "pickStage": true
+        }
+      ]
+    },
+    {
+      "key": "reward",
+      "name": "Reward member",
+      "description": "Recognize someone, then tell them why.",
+      "scope": "member",
+      "kind": "hybrid",
+      "format": "roleplay",
+      "rule": "reward",
+      "cost": 1,
+      "cooldownDays": 20,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "reward",
+          "label": "Awarding bonus to your team members may boost their morale and enhance their performance.",
+          "effects": {
+            "m0": [
+              0,
+              6,
+              9
+            ],
+            "m1": [
+              0,
+              -12,
+              -18
+            ]
+          },
+          "business": {
+            "always": {
+              "variables": {
+                "budget": -2000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "key": "goals",
+      "name": "Set goals",
+      "description": "Agree goals, measures and support for the week.",
+      "scope": "member",
+      "kind": "live",
+      "format": "plan",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Send team member's tasks and the milestones for the upcoming week.",
+          "effects": {
+            "m0": [
+              3,
+              6,
+              7
+            ],
+            "m1": [
+              -1,
+              -2,
+              -4
+            ],
+            "m2": [
+              -2,
+              -3,
+              -3
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Seek buy-in from team member for the current week's plan and be available for any help required.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              6
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Send the plan for the week and seek inputs on it.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              5
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask team member what he / she is focusing on this week.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              5
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "coach",
+      "name": "Coach member",
+      "description": "Work through the job with them.",
+      "scope": "member",
+      "kind": "live",
+      "format": "roleplay",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Handhold the person with the execution plan and provide detailed instructions to deal with the task at hand.",
+          "effects": {
+            "m0": [
+              6,
+              3,
+              7
+            ],
+            "m1": [
+              -2,
+              -1,
+              -4
+            ],
+            "m2": [
+              -5,
+              -2,
+              -3
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Provide detailed guidance on execution and help the person see the importance of your instructions.",
+          "effects": {
+            "m0": [
+              5,
+              3,
+              6
+            ],
+            "m1": [
+              -2,
+              -1,
+              -3
+            ],
+            "m2": [
+              -5,
+              -2,
+              -2
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Work closely with the person to solve problems collaboratively.",
+          "effects": {
+            "m0": [
+              3,
+              2,
+              5
+            ],
+            "m1": [
+              -1,
+              -1,
+              -3
+            ],
+            "m2": [
+              -4,
+              -2,
+              -2
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask questions to provide clarity to the person.",
+          "effects": {
+            "m0": [
+              2,
+              2,
+              4
+            ],
+            "m1": [
+              -1,
+              -1,
+              -2
+            ],
+            "m2": [
+              -2,
+              -2,
+              -1
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    },
+    {
+      "key": "feedback",
+      "name": "Give feedback",
+      "description": "Tell them how it is going and agree what changes.",
+      "scope": "member",
+      "kind": "live",
+      "format": "chat",
+      "rule": "styleOption",
+      "cost": 1,
+      "targets": [
+        1,
+        1
+      ],
+      "options": [
+        {
+          "key": "directing",
+          "label": "Provide step-by-step feedback on things that have gone well and things that haven't.",
+          "effects": {
+            "m0": [
+              3,
+              6,
+              7
+            ],
+            "m1": [
+              -1,
+              -2,
+              -4
+            ],
+            "m2": [
+              -2,
+              -3,
+              -3
+            ]
+          },
+          "style": "D"
+        },
+        {
+          "key": "guiding",
+          "label": "Provide detailed feedback on performance and encourage the person to stick to your action plan.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              6
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "G"
+        },
+        {
+          "key": "partnering",
+          "label": "Collaboratively assess the performance and come up with an action plan.",
+          "effects": {
+            "m0": [
+              2,
+              5,
+              5
+            ],
+            "m1": [
+              -1,
+              -2,
+              -3
+            ],
+            "m2": [
+              -2,
+              -3,
+              -2
+            ]
+          },
+          "style": "P"
+        },
+        {
+          "key": "entrusting",
+          "label": "Ask the person to do self assessment and validate it.",
+          "effects": {
+            "m0": [
+              1,
+              3,
+              4
+            ],
+            "m1": [
+              -1,
+              -1,
+              -2
+            ],
+            "m2": [
+              -1,
+              -2,
+              -1
+            ]
+          },
+          "style": "E"
+        }
+      ]
+    }
+  ],
+  "weeklyStyle": {
+    "m0": [
+      0,
+      3,
+      3
+    ],
+    "m1": [
+      0,
+      -1,
+      -1
+    ],
+    "m2": [
+      0,
+      -2,
+      -2
+    ]
+  },
+  "events": [
+    {
+      "key": "pricing_change",
+      "title": "A new pricing model",
+      "body": {
+        "he": "Northwind moves every plan to usage pricing. Clients have questions, and so does the team.",
+        "she": "Northwind moves every plan to usage pricing. Clients have questions, and so does the team."
+      },
+      "card": "impact",
+      "period": 1,
+      "subPeriod": 1,
+      "impact": [
+        -1,
+        -4,
+        -6
+      ],
+      "target": "team"
+    },
+    {
+      "key": "review_site",
+      "title": "A harsh review online",
+      "body": {
+        "he": "A client posts a harsh review of the onboarding. Prospects mention it on calls.",
+        "she": "A client posts a harsh review of the onboarding. Prospects mention it on calls."
+      },
+      "card": "signal",
+      "period": 2,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -4,
+        -4
+      ],
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "Morale and result dip across the team unless you help them answer it.",
+      "business": {
+        "variables": {
+          "reputation": -3
+        }
+      }
+    },
+    {
+      "key": "discount_deal",
+      "title": "A deep discount to close this week",
+      "card": "opportunity",
+      "period": 2,
+      "subPeriod": 2,
+      "target": "member",
+      "body": {
+        "he": "{name} can close a large client this week, but only with a 25% discount the client did not ask for until {name} offered it.",
+        "she": "{name} can close a large client this week, but only with a 25% discount the client did not ask for until {name} offered it."
+      },
+      "choice": {
+        "known": [
+          "The client's budget year ends on Friday.",
+          "Your sponsor wants this quarter's number."
+        ],
+        "within": 2,
+        "default": "discount",
+        "options": [
+          {
+            "key": "discount",
+            "label": "Approve the discount and close this week",
+            "outcome": "The deal closes. The client now expects a discount every time.",
+            "who": "target",
+            "people": [
+              0,
+              3,
+              4
+            ],
+            "trust": 0,
+            "business": {
+              "revenue": 15000,
+              "variables": {
+                "customer_trust": -6,
+                "reputation": -4
+              },
+              "set": [
+                "discounted"
+              ]
+            },
+            "read": [
+              {
+                "skill": "results_ownership",
+                "band": "adequate"
+              },
+              {
+                "skill": "difficult_conversations",
+                "band": "weak"
+              }
+            ]
+          },
+          {
+            "key": "value",
+            "label": "Hold the price and help them build the business case",
+            "outcome": "{name} goes back with a business case instead of a discount. The client asks for a week.",
+            "who": "target",
+            "people": [
+              0,
+              -2,
+              0
+            ],
+            "trust": 2,
+            "business": {
+              "variables": {
+                "customer_trust": 4
+              },
+              "followUps": [
+                {
+                  "event": "client_signs",
+                  "weeks": 1
+                }
+              ]
+            },
+            "read": [
+              {
+                "skill": "coaching_for_growth",
+                "band": "strong"
+              },
+              {
+                "skill": "results_ownership",
+                "band": "strong"
+              }
+            ]
+          },
+          {
+            "key": "walk",
+            "label": "Let it go and focus on the next deal",
+            "outcome": "No deal this quarter. Your sponsor asks why.",
+            "who": "target",
+            "people": [
+              0,
+              0,
+              0
+            ],
+            "trust": 0,
+            "business": {
+              "sponsor": -5
+            },
+            "read": [
+              {
+                "skill": "results_ownership",
+                "band": "weak"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "client_signs",
+      "title": "The client signs at full price",
+      "body": {
+        "he": "The business case worked: the client signs at full price, and says why.",
+        "she": "The business case worked: the client signs at full price, and says why."
+      },
+      "card": "opportunity",
+      "impact": [
+        0,
+        3,
+        2
+      ],
+      "target": "stage:close",
+      "if": [
+        {
+          "kind": "variable",
+          "variable": "customer_trust",
+          "op": "atLeast",
+          "value": 60
+        }
+      ],
+      "business": {
+        "revenue": 15000,
+        "variables": {
+          "customer_trust": 3,
+          "reputation": 2
+        }
+      }
+    },
+    {
+      "key": "performance_declines",
+      "title": "Results are slipping",
+      "body": {
+        "he": "{name}'s numbers have dropped two weeks in a row. {name} has gone quiet in team calls.",
+        "she": "{name}'s numbers have dropped two weeks in a row. {name} has gone quiet in team calls."
+      },
+      "card": "diagnostic",
+      "period": 2,
+      "subPeriod": 3,
+      "impact": [
+        0,
+        -6,
+        -10
+      ],
+      "target": "member",
+      "response": {
+        "actions": [
+          "f2f",
+          "coach",
+          "feedback"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          3,
+          2
+        ]
+      },
+      "escalation": {
+        "sponsor": true
+      }
+    },
+    {
+      "key": "release_crunch",
+      "title": "The go live is at risk",
+      "card": "crisis",
+      "period": 3,
+      "subPeriod": 2,
+      "target": "team",
+      "body": {
+        "he": "A big client goes live in nine days. The integration is behind, and the team is already tired.",
+        "she": "A big client goes live in nine days. The integration is behind, and the team is already tired."
+      },
+      "choice": {
+        "known": [
+          "Three people worked late every night last week.",
+          "The client has told their board the date."
+        ],
+        "within": 2,
+        "default": "weekend",
+        "options": [
+          {
+            "key": "weekend",
+            "label": "Ask everyone to work the weekend",
+            "outcome": "The date holds. The team is exhausted, and some of the work was rushed.",
+            "who": "team",
+            "people": [
+              0,
+              -4,
+              3
+            ],
+            "trust": 0,
+            "business": {
+              "variables": {
+                "quality": 3,
+                "customer_trust": 3
+              },
+              "set": [
+                "weekend_push"
+              ]
+            },
+            "read": [
+              {
+                "skill": "results_ownership",
+                "band": "adequate"
+              },
+              {
+                "skill": "situational_flexibility",
+                "band": "weak"
+              }
+            ]
+          },
+          {
+            "key": "move",
+            "label": "Move the date and tell the client why",
+            "outcome": "The client is unhappy for a day, then thanks you for the honesty. The team breathes.",
+            "who": "team",
+            "people": [
+              0,
+              3,
+              0
+            ],
+            "trust": 2,
+            "business": {
+              "variables": {
+                "customer_trust": -5
+              },
+              "sponsor": -5
+            },
+            "read": [
+              {
+                "skill": "communicating_change",
+                "band": "strong"
+              },
+              {
+                "skill": "difficult_conversations",
+                "band": "strong"
+              }
+            ]
+          },
+          {
+            "key": "contractor",
+            "label": "Bring in a contractor for two weeks",
+            "outcome": "The contractor closes the gap. It costs, and the team is relieved.",
+            "who": "team",
+            "people": [
+              0,
+              2,
+              1
+            ],
+            "trust": 0,
+            "business": {
+              "variables": {
+                "budget": -20000,
+                "quality": 2
+              }
+            },
+            "read": [
+              {
+                "skill": "results_ownership",
+                "band": "strong"
+              },
+              {
+                "skill": "coaching_for_growth",
+                "band": "adequate"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "recession",
+      "title": "Clients freeze their budgets",
+      "body": {
+        "he": "Clients across the region freeze new spending. Your sponsor calls: she wants to know your plan.",
+        "she": "Clients across the region freeze new spending. Your sponsor calls: she wants to know your plan."
+      },
+      "card": "crisis",
+      "period": 3,
+      "subPeriod": 3,
+      "impact": [
+        0,
+        -5,
+        -5
+      ],
+      "target": "team",
+      "delivery": "sponsorCall",
+      "response": {
+        "actions": [
+          "meet"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          2,
+          0
+        ]
+      },
+      "escalation": {
+        "sponsor": true
+      }
+    },
+    {
+      "key": "training_or_hire",
+      "title": "Finance wants a cut",
+      "card": "diagnostic",
+      "period": 4,
+      "subPeriod": 2,
+      "target": "team",
+      "body": {
+        "he": "Finance asks every team for a 15% cut this quarter. The biggest line you control is training.",
+        "she": "Finance asks every team for a 15% cut this quarter. The biggest line you control is training."
+      },
+      "choice": {
+        "known": [
+          "Two people are booked on the negotiation course.",
+          "Travel is the other line you control."
+        ],
+        "within": 2,
+        "default": "cut",
+        "options": [
+          {
+            "key": "cut",
+            "label": "Cut the training budget",
+            "outcome": "Finance is pleased. The two people hear their course is off.",
+            "who": "team",
+            "people": [
+              0,
+              -2,
+              0
+            ],
+            "trust": 0,
+            "business": {
+              "variables": {
+                "budget": 15000
+              },
+              "set": [
+                "budget_cut"
+              ]
+            },
+            "read": [
+              {
+                "skill": "coaching_for_growth",
+                "band": "weak"
+              }
+            ]
+          },
+          {
+            "key": "travel",
+            "label": "Keep the training and cut travel instead",
+            "outcome": "The course goes ahead. Fewer client visits this quarter.",
+            "who": "team",
+            "people": [
+              2,
+              2,
+              0
+            ],
+            "trust": 0,
+            "business": {
+              "variables": {
+                "customer_trust": -3,
+                "reputation": -2
+              }
+            },
+            "read": [
+              {
+                "skill": "coaching_for_growth",
+                "band": "strong"
+              },
+              {
+                "skill": "situational_flexibility",
+                "band": "adequate"
+              }
+            ]
+          },
+          {
+            "key": "fund",
+            "label": "Push back on finance and keep both",
+            "outcome": "You keep both lines. Your sponsor has to defend it upstairs and is not happy.",
+            "who": "team",
+            "people": [
+              3,
+              3,
+              0
+            ],
+            "trust": 0,
+            "business": {
+              "variables": {
+                "budget": -10000
+              },
+              "sponsor": -8
+            },
+            "read": [
+              {
+                "skill": "coaching_for_growth",
+                "band": "strong"
+              },
+              {
+                "skill": "results_ownership",
+                "band": "weak"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "discount_comes_back",
+      "title": "The discounted client wants more",
+      "body": {
+        "he": "The client you discounted asks for the same discount on the renewal, and mentions it to two other clients.",
+        "she": "The client you discounted asks for the same discount on the renewal, and mentions it to two other clients."
+      },
+      "card": "impact",
+      "period": 4,
+      "subPeriod": 4,
+      "impact": [
+        0,
+        -3,
+        -2
+      ],
+      "target": "team",
+      "if": [
+        {
+          "kind": "flag",
+          "flag": "discounted"
+        }
+      ],
+      "business": {
+        "revenue": -10000,
+        "variables": {
+          "customer_trust": -4,
+          "reputation": -3
+        }
+      }
+    },
+    {
+      "key": "reorg_rumour",
+      "title": "Rumors of a merger",
+      "card": "signal",
+      "period": 5,
+      "subPeriod": 2,
+      "target": "team",
+      "body": {
+        "he": "Your sponsor told you in confidence that two teams will merge next quarter. People are asking you directly.",
+        "she": "Your sponsor told you in confidence that two teams will merge next quarter. People are asking you directly."
+      },
+      "choice": {
+        "known": [
+          "Nothing is official for three weeks.",
+          "Your sponsor asked you to keep it to yourself."
+        ],
+        "within": 2,
+        "default": "silent",
+        "options": [
+          {
+            "key": "tell",
+            "label": "Tell the team what you know",
+            "outcome": "The team trusts you more. Your sponsor hears you shared it, and trusts you less.",
+            "who": "team",
+            "people": [
+              0,
+              2,
+              0
+            ],
+            "trust": 5,
+            "business": {
+              "sponsor": -12,
+              "variables": {
+                "reputation": -2
+              }
+            },
+            "read": [
+              {
+                "skill": "communicating_change",
+                "band": "adequate"
+              },
+              {
+                "skill": "difficult_conversations",
+                "band": "weak"
+              }
+            ]
+          },
+          {
+            "key": "silent",
+            "label": "Say nothing until it is official",
+            "outcome": "You say nothing. The questions stop, for now.",
+            "who": "target",
+            "people": [
+              0,
+              0,
+              0
+            ],
+            "trust": 0,
+            "business": {
+              "followUps": [
+                {
+                  "event": "news_leaks",
+                  "weeks": 1
+                }
+              ]
+            },
+            "read": [
+              {
+                "skill": "communicating_change",
+                "band": "weak"
+              }
+            ]
+          },
+          {
+            "key": "limits",
+            "label": "Say a change is coming and you will share details when you can",
+            "outcome": "The team knows what you can and cannot say, and that you will say more soon.",
+            "who": "team",
+            "people": [
+              0,
+              1,
+              0
+            ],
+            "trust": 2,
+            "business": {},
+            "read": [
+              {
+                "skill": "communicating_change",
+                "band": "strong"
+              },
+              {
+                "skill": "difficult_conversations",
+                "band": "strong"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "key": "news_leaks",
+      "title": "The merger news leaks",
+      "body": {
+        "he": "The team hears about the merger from another department before they hear it from you.",
+        "she": "The team hears about the merger from another department before they hear it from you."
+      },
+      "card": "impact",
+      "impact": [
+        0,
+        -6,
+        -3
+      ],
+      "target": "team",
+      "business": {
+        "variables": {
+          "reputation": -2
+        }
+      }
+    },
+    {
+      "key": "job_offer",
+      "title": "An offer from Cirrus Systems",
+      "body": {
+        "he": "{name} has an offer from Cirrus Systems and is tempted to take it.",
+        "she": "{name} has an offer from Cirrus Systems and is tempted to take it."
+      },
+      "card": "capacity",
+      "period": 5,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -5,
+        -5
+      ],
+      "target": "member",
+      "delivery": "chat",
+      "response": {
+        "actions": [
+          "f2f",
+          "reward",
+          "coach"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          4,
+          0
+        ]
+      },
+      "escalation": {
+        "sponsor": false
+      }
+    },
+    {
+      "key": "weekend_bites",
+      "title": "Off sick after the crunch",
+      "body": {
+        "he": "{name} is off sick after the weekend push. The rushed work needs fixing too.",
+        "she": "{name} is off sick after the weekend push. The rushed work needs fixing too."
+      },
+      "card": "capacity",
+      "period": 5,
+      "subPeriod": 4,
+      "impact": [
+        0,
+        -5,
+        -4
+      ],
+      "target": "member",
+      "away": 2,
+      "if": [
+        {
+          "kind": "flag",
+          "flag": "weekend_push"
+        },
+        {
+          "kind": "metric",
+          "metric": "teamMorale",
+          "op": "below",
+          "value": 55
+        }
+      ],
+      "business": {
+        "variables": {
+          "quality": -5
+        }
+      }
+    },
+    {
+      "key": "training_ask",
+      "title": "Two people ask for the training you cut",
+      "body": {
+        "he": "Two of your team ask when the negotiation course will be back. They had planned their quarter around it.",
+        "she": "Two of your team ask when the negotiation course will be back. They had planned their quarter around it."
+      },
+      "card": "signal",
+      "period": 6,
+      "subPeriod": 3,
+      "impact": [
+        0,
+        -4,
+        0
+      ],
+      "target": "team",
+      "if": [
+        {
+          "kind": "flag",
+          "flag": "budget_cut"
+        },
+        {
+          "kind": "metric",
+          "metric": "teamMorale",
+          "op": "below",
+          "value": 60
+        }
+      ],
+      "response": {
+        "actions": [
+          "meet",
+          "training",
+          "coach"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          3,
+          0
+        ]
+      },
+      "escalation": {
+        "sponsor": false
+      }
+    },
+    {
+      "key": "reference_call",
+      "title": "A reference call goes badly",
+      "body": {
+        "he": "A prospect calls one of your clients for a reference. It does not go well.",
+        "she": "A prospect calls one of your clients for a reference. It does not go well."
+      },
+      "card": "impact",
+      "period": 7,
+      "subPeriod": 2,
+      "impact": [
+        0,
+        -3,
+        -3
+      ],
+      "target": "team",
+      "if": [
+        {
+          "kind": "variable",
+          "variable": "reputation",
+          "op": "below",
+          "value": 45
+        }
+      ],
+      "business": {
+        "revenue": -10000,
+        "variables": {
+          "customer_trust": -3
+        }
+      }
+    },
+    {
+      "key": "process_change",
+      "title": "More approvals",
+      "body": {
+        "he": "Northwind adds a legal review to every contract. Deals slow down.",
+        "she": "Northwind adds a legal review to every contract. Deals slow down."
+      },
+      "card": "impact",
+      "period": 7,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -9,
+        -10
+      ],
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "More approvals slow every stage. Morale and result fall unless you help the team adjust."
+    },
+    {
+      "key": "outage",
+      "title": "A cloud outage",
+      "body": {
+        "he": "The platform is down for six hours. Every client call this week starts with it.",
+        "she": "The platform is down for six hours. Every client call this week starts with it."
+      },
+      "card": "impact",
+      "period": 8,
+      "subPeriod": 1,
+      "impact": [
+        0,
+        -2,
+        -3
+      ],
+      "target": "team",
+      "delivery": "bulletin",
+      "impactText": "A small dip in morale and result.",
+      "business": {
+        "variables": {
+          "customer_trust": -2,
+          "quality": -2
+        }
+      }
+    },
+    {
+      "key": "big_referral",
+      "title": "A big referral",
+      "body": {
+        "he": "A happy client refers a large new account to the team.",
+        "she": "A happy client refers a large new account to the team."
+      },
+      "card": "opportunity",
+      "window": {
+        "from": 3,
+        "to": 6,
+        "probability": 60
+      },
+      "impact": [
+        0,
+        3,
+        4
+      ],
+      "target": "stage:demo",
+      "business": {
+        "variables": {
+          "reputation": 2
+        }
+      }
+    },
+    {
+      "key": "team_morale_alarm",
+      "title": "Dana has heard the team is struggling",
+      "body": {
+        "he": "Dana calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it.",
+        "she": "Dana calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it."
+      },
+      "card": "crisis",
+      "when": {
+        "condition": "teamMoraleBelow",
+        "value": 40,
+        "periods": 2
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "target": "sponsor",
+      "delivery": "sponsorCall",
+      "response": {
+        "actions": [
+          "reply"
+        ],
+        "within": 2,
+        "onTime": [
+          0,
+          0,
+          0
+        ]
+      },
+      "escalation": {
+        "sponsor": true
+      }
+    }
+  ],
+  "triggers": [
+    {
+      "kind": "casualLeave",
+      "message": {
+        "he": "{name}: As informed earlier to the HR department, I will be on leave for the whole of this week.",
+        "she": "{name}: As informed earlier to the HR department, I will be on leave for the whole of this week."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {
+        "resultAbove": 70,
+        "away": 5
+      }
+    },
+    {
+      "kind": "clueless",
+      "message": {
+        "he": "You've reassigned {name} to {stage} but he's totally clueless on how to perform tasks in his current role.",
+        "she": "You've reassigned {name} to {stage} but she's totally clueless on how to perform tasks in her current role."
+      },
+      "impact": [
+        -10,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {}
+    },
+    {
+      "kind": "demoralized",
+      "message": {
+        "he": "{name}: I cannot work with my team mate anymore. I feel betrayed and coming to work everyday is demoralizing. Please reassign me to a different role or I would have no choice but to leave the company.",
+        "she": "{name}: I cannot work with my team mate anymore. I feel betrayed and coming to work everyday is demoralizing. Please reassign me to a different role or I would have no choice but to leave the company."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {
+        "resultBelow": 20,
+        "fromFraction": 0.3
+      }
+    },
+    {
+      "kind": "lackOfTraining",
+      "message": {
+        "he": "{name}'s performance has been on the decline for the past 6 weeks. He blames lack of training in Sales as the primary reason. Northwind's HR Head is at the meeting and recommends that you should send him for a training and give him another chance, before firing him.",
+        "she": "{name}'s performance has been on the decline for the past 6 weeks. She blames lack of training in Sales as the primary reason. Northwind's HR Head is at the meeting and recommends that you should send her for a training and give her another chance, before firing her."
+      },
+      "impact": [
+        -2,
+        -6,
+        -8
+      ],
+      "maxTimes": 2,
+      "params": {
+        "decliningFraction": 0.5
+      }
+    },
+    {
+      "kind": "medicalLeave",
+      "message": {
+        "he": "{name}: I am writing to you to let you know that I am down with flu and would like to take a 2-day medical break.",
+        "she": "{name}: I am writing to you to let you know that I am down with flu and would like to take a 2-day medical break."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 1,
+      "params": {
+        "resultAbove": 70,
+        "away": 2
+      }
+    },
+    {
+      "kind": "moraleDrops",
+      "message": {
+        "he": "{name}'s morale suddenly drops due to lack of recognition / awards. You find that his performance had been tremendous, but you realize that you hadn't congratulated him and he is feeling left out.",
+        "she": "{name}'s morale suddenly drops due to lack of recognition / awards. You find that her performance had been tremendous, but you realize that you hadn't congratulated her and she is feeling left out."
+      },
+      "impact": [
+        0,
+        -5,
+        0
+      ],
+      "maxTimes": 3,
+      "params": {
+        "resultAbove": 60,
+        "sustainedFraction": 0.25
+      }
+    },
+    {
+      "kind": "resignation",
+      "message": {
+        "he": "{name}: I have lost faith in your leadership and am tendering my resignation effective immediately. I wish you and the team the best of luck in achieving your targets.",
+        "she": "{name}: I have lost faith in your leadership and am tendering my resignation effective immediately. I wish you and the team the best of luck in achieving your targets."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 2,
+      "params": {
+        "resultBelow": 10,
+        "trustBelow": 15,
+        "moraleBelow": 20,
+        "fromFraction": 0.2
+      }
+    },
+    {
+      "kind": "roleChangeRequest",
+      "message": {
+        "he": "{name} has been in the same role of {stage} for the past 4 weeks and wants a change.",
+        "she": "{name} has been in the same role of {stage} for the past 4 weeks and wants a change."
+      },
+      "impact": [
+        0,
+        -2,
+        2
+      ],
+      "maxTimes": 3,
+      "params": {
+        "sameStageFraction": 0.33,
+        "ignoredTrust": -4
+      }
+    },
+    {
+      "kind": "complains",
+      "message": {
+        "he": "Your leadership style with {name} needs to change. He has not been performing well and has been complaining about you to others. You probably need to supervise, set role and goals better.",
+        "she": "Your leadership style with {name} needs to change. She has not been performing well and has been complaining about you to others. You probably need to supervise, set role and goals better."
+      },
+      "impact": [
+        0,
+        0,
+        0
+      ],
+      "maxTimes": 2,
+      "params": {
+        "decliningFraction": 0.25,
+        "trustBelow": 25
+      }
+    },
+    {
+      "kind": "trainingRequest",
+      "message": {
+        "he": "With new advances in technology, {name} approaches you and has expressed interest in being trained in these skills so as to perform better in {stage}.",
+        "she": "With new advances in technology, {name} approaches you and has expressed interest in being trained in these skills so as to perform better in {stage}."
+      },
+      "maxTimes": 2,
+      "params": {
+        "trust": 4
+      }
+    }
+  ],
+  "variables": [
+    {
+      "key": "budget",
+      "name": "Budget",
+      "format": "money",
+      "start": 60000,
+      "min": 0,
+      "max": 150000,
+      "about": "What you can spend this quarter beyond salaries: training, team events, contractors and hires."
+    },
+    {
+      "key": "customer_trust",
+      "name": "Customer trust",
+      "format": "percent",
+      "start": 70,
+      "min": 0,
+      "max": 100,
+      "weight": 0.2,
+      "about": "How much your clients trust Northwind to keep its promises. It counts in your Business score."
+    },
+    {
+      "key": "quality",
+      "name": "Product quality",
+      "format": "points",
+      "start": 60,
+      "min": 0,
+      "max": 100,
+      "drift": -1,
+      "weight": 0.1,
+      "about": "How well what the team delivers works for clients. It slips a little each week without care."
+    },
+    {
+      "key": "reputation",
+      "name": "Reputation",
+      "format": "points",
+      "start": 50,
+      "min": 0,
+      "max": 100,
+      "shown": false,
+      "about": "What the market says about Northwind. You do not see it, but prospects do."
+    }
+  ],
+  "dynamics": {},
+  "performanceThreshold": 111,
+  "calibrated": true
+}

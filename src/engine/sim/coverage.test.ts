@@ -22,7 +22,8 @@ describe('funnel (Model doc, normalized per D36)', () => {
   it('a stage at result 100 converts exactly its ratio, and never more, whatever the buffer', () => {
     for (const buffer of [0, 50, 200]) {
       const sim = createSim({ ...config, performanceThreshold: buffer }, 1);
-      for (const m of sim.members) { m.result = 100; m.away = 0; }
+      // Morale at 100 too: with people dynamics (D135) a low rolling morale would take a share of the result.
+      for (const m of sim.members) { m.result = 100; m.morale = 100; m.away = 0; }
       runFunnel(sim);
       let input = config.money.inputPerSubPeriod[0];
       config.stages.forEach((st, i) => {

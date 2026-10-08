@@ -10,6 +10,7 @@ import * as live from './live';
 import { buildView, type EngineView } from './view';
 import { summarizeRun, type RunSummary } from '../report/summary';
 import { msg, type Copy } from '../copy';
+import { resolveChoice } from './business';
 
 /**
  * The iLead engine. Authoritative: the UI sends intents and renders the returned view.
@@ -36,7 +37,8 @@ export type Intent =
   | { type: 'startNextPeriod' }
   | { type: 'submitPlan'; interactionId: string; plan: PlanFields; text: string; usedVoice?: boolean }
   | { type: 'startPractice' }
-  | { type: 'skipPractice' };
+  | { type: 'skipPractice' }
+  | { type: 'decide'; choiceId: string; option: string };
 
 export interface Result {
   view: EngineView;
@@ -195,6 +197,12 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
       case 'startNextPeriod':
         startNextPeriod(sim);
         return { view: buildView(sim), changes: [] };
+      case 'decide': {
+        // A choice event (D137): the option applies now and costs no time; the view's `choices` says what happened.
+        if (sim.phase !== 'board') throw new IntentError('Choices are made on the board', 'wrongPhase');
+        const rec = resolveChoice(sim, rng, intent.choiceId, intent.option, 'you');
+        return { view: buildView(sim), changes: rec.changes };
+      }
     }
   }
 

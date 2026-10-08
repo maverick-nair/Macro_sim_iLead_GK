@@ -7,6 +7,7 @@ import { useAuthor } from '../../../model/store';
 import { Badge, BUTTON, CARD, CardHead, Field, MarkOf, Segmented, Select, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate } from './regenerate';
+import { DynamicsCard, VariablesCard } from './Variables';
 
 const num = (v: string, min: number, max: number) => Math.max(min, Math.min(max, Math.round(Number(v) || 0)));
 const PACING_TEXT: Record<AuthorDraft['process']['pacing'], string> = {
@@ -28,7 +29,8 @@ function stageUses(d: AuthorDraft, key: string) {
 
 /**
  * Workspace: Work process (docs/design/genie/Process): the stages the team turns leads into revenue
- * through, people and passing rates per stage, the pressure point, the targets and the pacing.
+ * through, people and passing rates per stage, the pressure point, the targets and the pacing, the business
+ * variables decisions move (D136) and people dynamics (D135).
  */
 export default function Process() {
   const d = useAuthor(s => s.draft);
@@ -127,6 +129,8 @@ export default function Process() {
             </details>
           </section>
         </div>
+        <VariablesCard />
+        <DynamicsCard />
       </div>
     </TabBody>
   );

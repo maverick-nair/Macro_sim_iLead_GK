@@ -5,6 +5,9 @@ import { changeLens } from '../ui/workspace/tabs/Lens';
 import type { AuthorDraft } from './draft';
 import { toStoryline } from './export';
 import { fitRun, mapWeek } from './run';
+import { remapReads } from './choices';
+import { createEngine } from '../../engine/sim/engine';
+import { neededStyles } from '../../engine/sim/policies';
 import { emptyChat, PORTRAITS, pronounsOf, seedDraft } from './seed';
 
 /**
@@ -42,6 +45,9 @@ function at(v: unknown, path: string): unknown {
 const ev = (d: AuthorDraft, key: string) => d.events.find(e => e.key === key)!;
 const act = (d: AuthorDraft, key: string) => d.actions.find(a => a.key === key)!;
 const member = (d: AuthorDraft) => d.team[1];
+const DISCOUNT = 'discount_decision';
+const opt = (d: AuthorDraft, i = 0) => ev(d, DISCOUNT).choice!.options[i];
+const CH = `events.key=${DISCOUNT}.choice`;
 const M = 'members.1';
 
 /** [draft field, change it as its control does, where the storyline changes]. */
@@ -156,8 +162,44 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['events[].onTime', d => { ev(d, 'lens_moment').onTime = [1, 5, 1]; }, 'events.key=lens_moment.response'],
   ['events[].ifIgnored.sponsor', d => { ev(d, 'lens_moment').ifIgnored.sponsor = false; }, 'events.key=lens_moment.escalation'],
   ['events[].ifIgnored.followUp', d => { ev(d, 'lens_moment').ifIgnored.followUp = 'public_complaint'; }, 'events.key=lens_moment.escalation'],
-  ['scoring.framework', d => { d.scoring.framework = { file: 'ours.md', pages: 1, step: 3, confirmed: true, rows: [{ skill: 'Listening', behaviors: 'Asks open questions', levels: 5, page: 1, include: true }, { skill: 'Clarity', behaviors: 'Sets one next step', levels: 5, page: 1, include: true }] }; d.scoring.skills = [{ key: 'listening', name: 'Listening', reportOnly: false }, { key: 'clarity', name: 'Clarity', reportOnly: false }]; d.actions.forEach(a => { a.scoredOn = ['Listening', 'Clarity']; }); }, 'report.skills'],
+  ['scoring.framework', d => { d.scoring.framework = { file: 'ours.md', pages: 1, step: 3, confirmed: true, rows: [{ skill: 'Listening', behaviors: 'Asks open questions', levels: 5, page: 1, include: true }, { skill: 'Clarity', behaviors: 'Sets one next step', levels: 5, page: 1, include: true }] }; d.scoring.skills = [{ key: 'listening', name: 'Listening', reportOnly: false }, { key: 'clarity', name: 'Clarity', reportOnly: false }]; d.actions.forEach(a => { a.scoredOn = ['Listening', 'Clarity']; }); remapReads(d); }, 'report.skills'],
   ['scoring.levels', d => { d.scoring.levels = ['Starting', 'Growing', 'Strong']; }, 'report.scale'],
+  // People dynamics and business variables (D135, D136).
+  ['process.dynamics', d => { d.process.dynamics = false; }, 'dynamics'],
+  ['variables[].key', d => { d.variables[1].key = 'trust_index'; for (const e of d.events) for (const o of e.choice?.options ?? []) { if (o.variables.customer_trust !== undefined) { o.variables.trust_index = o.variables.customer_trust; delete o.variables.customer_trust; } } }, 'variables.1.key'],
+  ['variables[].name', d => { d.variables[0].name = 'Spend'; }, 'variables.0.name'],
+  ['variables[].format', d => { d.variables[0].format = 'points'; }, 'variables.0.format'],
+  ['variables[].start', d => { d.variables[1].start = 55; }, 'variables.1.start'],
+  ['variables[].min', d => { d.variables[1].min = 10; }, 'variables.1.min'],
+  ['variables[].max', d => { d.variables[1].max = 90; }, 'variables.1.max'],
+  ['variables[].drift', d => { d.variables[1].drift = -2; }, 'variables.1.drift'],
+  ['variables[].shown', d => { d.variables[1].shown = false; }, 'variables.1.shown'],
+  ['variables[].weight', d => { d.variables[1].weight = 40; }, 'variables.1.weight'],
+  ['variables[].higherIsBetter', d => { d.variables[1].higherIsBetter = false; }, 'variables.1.higherIsBetter'],
+  ['variables[].about', d => { d.variables[1].about = 'What customers say.'; }, 'variables.1.about'],
+  // Conditions, choices and delayed follow ups (D137, D138).
+  ['events[].conditions', d => { ev(d, 'public_complaint').conditions = [{ kind: 'flag', flag: 'discounted', is: true }]; }, 'events.key=public_complaint.if'],
+  ['events[].ifIgnored.afterDays', d => { ev(d, 'lens_moment').ifIgnored = { sponsor: true, followUp: 'public_complaint', afterDays: 3 }; }, 'events.key=lens_moment.escalation'],
+  ['events[].choice.known', d => { ev(d, DISCOUNT).choice!.known = 'Only this.'; }, `${CH}.known`],
+  ['events[].choice.within', d => { ev(d, DISCOUNT).choice!.within = 4; }, `${CH}.within`],
+  ['events[].choice.default', d => { ev(d, DISCOUNT).choice!.default = 'value'; }, `${CH}.default`],
+  ['events[].choice.options[].key', d => { opt(d).key = 'take'; ev(d, DISCOUNT).choice!.default = 'take'; }, `${CH}.options.0.key`],
+  ['events[].choice.options[].label', d => { opt(d).label = 'Say yes'; }, `${CH}.options.0.label`],
+  ['events[].choice.options[].detail', d => { opt(d).detail = 'Fast money.'; }, `${CH}.options.0.detail`],
+  ['events[].choice.options[].outcome', d => { opt(d).outcome = 'It closes.'; }, `${CH}.options.0.outcome`],
+  ['events[].choice.options[].who', d => { opt(d).who = 'team'; }, `${CH}.options.0.who`],
+  ['events[].choice.options[].skill', d => { opt(d).skill = 2; }, `${CH}.options.0.people`],
+  ['events[].choice.options[].morale', d => { opt(d).morale = -5; }, `${CH}.options.0.people`],
+  ['events[].choice.options[].result', d => { opt(d).result = 9; }, `${CH}.options.0.people`],
+  ['events[].choice.options[].trust', d => { opt(d).trust = -4; }, `${CH}.options.0.trust`],
+  ['events[].choice.options[].revenue', d => { opt(d).revenue = 5000; }, `${CH}.options.0.business.revenue`],
+  ['events[].choice.options[].sponsor', d => { opt(d).sponsor = 6; }, `${CH}.options.0.business.sponsor`],
+  ['events[].choice.options[].variables', d => { opt(d).variables.budget = 1000; }, `${CH}.options.0.business.variables`],
+  ['events[].choice.options[].set', d => { opt(d).set = ['rushed']; }, `${CH}.options.0.business.set`],
+  ['events[].choice.options[].clear', d => { opt(d).clear = ['rushed']; }, `${CH}.options.0.business.clear`],
+  ['events[].choice.options[].followUp', d => { opt(d).followUp = { event: 'public_complaint', days: 2, weeks: 1 }; }, `${CH}.options.0.business.followUps`],
+  ['events[].choice.options[].read[].skill', d => { opt(d).read[0].skill = d.scoring.skills.filter(k => !k.reportOnly).at(-1)!.name; }, `${CH}.options.0.read`],
+  ['events[].choice.options[].read[].band', d => { opt(d).read[0].band = 'harmful'; }, `${CH}.options.0.read`],
   ['scoring.reportSections', d => { d.scoring.reportSections = ['about', 'summary', 'skills']; }, 'report.sections']
 ];
 
@@ -198,7 +240,7 @@ const KNOWN_GAPS = new Set([
   'story.company.office', 'story.company.logo', 'story.product.view', 'story.screens[].title'
 ]);
 
-const RECORDS = new Set(['chat', 'marks', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime']);
+const RECORDS = new Set(['chat', 'marks', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables']);
 /** Every field path of a draft: arrays as `[]` over all their elements, records as one field. */
 function fieldsOf(v: unknown, path = '', out = new Set<string>()): Set<string> {
   if (RECORDS.has(path)) out.add(path);
@@ -361,5 +403,82 @@ describe('the run stays inside its length (D128)', () => {
     const back = AuthorDraft.parse(d).events.find(x => x.key === 'lens_moment')!;
     expect(back.respondWith).toEqual(['f2f', 'coach', 'feedback']);
     expect(back.ifIgnored).toEqual({ sponsor: true, followUp: null });
+  });
+});
+
+describe('choices, conditions and business variables export as authored (D135 to D138)', () => {
+  it('a new draft plays with dynamics, two business variables and two choice events whose reads are the report\'s skill keys', () => {
+    const out = toStoryline(fixture());
+    expect(out.issues).toEqual([]);
+    const p = parseStoryline(out.storyline);
+    if (!p.ok) throw new Error(p.issues.join('\n'));
+    expect(p.config.dynamics).toBeDefined();
+    expect(p.config.variables.map(v => [v.key, v.format, v.weight])).toEqual([['budget', 'money', 0], ['customer_trust', 'percent', 0.2]]);
+    const choices = p.config.events.filter(e => e.choice);
+    expect(choices.map(e => e.key)).toEqual(['discount_decision', 'budget_decision']);
+    const keys = new Set(p.config.report.skills.map(k => k.key));
+    expect(choices.flatMap(e => e.choice!.options.flatMap(o => o.read.map(r => r.skill))).every(k => keys.has(k))).toBe(true);
+    expect(choices[0].choice!.known).toEqual(['The customer\'s budget closes on Friday.', 'Your sponsor wants this quarter\'s number.']);
+  });
+
+  it('cutting the training budget in week 2 brings "Two people ask for the training you cut" in week 4, when morale is low, through the export', async () => {
+    const d = fixture();
+    const cut = ev(d, 'budget_decision');
+    cut.week = 2;
+    d.events.push({ key: 'training_ask', title: 'Two people ask for the training you cut', kind: 'people', week: 4, day: 1, timing: 'fixed', who: 'team', arrives: 'modal',
+      body: 'Two of your team ask when the training will be back.', skill: 0, morale: -3, result: 0, leadFlow: 0, respondWith: [], within: 2, onTime: [0, 2, 0],
+      ifIgnored: { sponsor: false, followUp: null }, conditions: [{ kind: 'flag', flag: 'budget_cut', is: true }, { kind: 'metric', metric: 'teamMorale', op: 'below', value: 60 }], origin: 'yours' });
+    const out = toStoryline(d);
+    expect(out.issues).toEqual([]);
+    const p = parseStoryline(out.storyline);
+    if (!p.ok) throw new Error(p.issues.join('\n'));
+    for (const option of ['cut', 'keep']) {
+      const e = createEngine(p.config, { seed: 3 });
+      let played = false;
+      while (e.view().clock.period <= 4 && e.view().phase !== 'ended') {
+        if (e.view().phase === 'style') await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e, p.config.thresholds.high, p.config.lens) });
+        // Spend the week a day at a time (assess costs a day and changes nobody), deciding as soon as the choice is open.
+        while (e.view().clock.capacityLeft >= 1) {
+          const v = e.view();
+          const open = v.openChoices.find(c => c.eventKey === 'budget_decision');
+          if (open) await e.dispatch({ type: 'decide', choiceId: open.id, option });
+          for (const c of e.view().openChoices) if (c.eventKey !== 'budget_decision') await e.dispatch({ type: 'decide', choiceId: c.id, option: p.config.events.find(x => x.key === c.eventKey)!.choice!.options[1].key });
+          const m = v.members.find(x => !v.actions.find(a => a.key === 'assess')!.blockedFor[x.id]);
+          if (!m) break;
+          await e.dispatch({ type: 'planAction', action: 'assess', memberIds: [m.id], stage: v.funnel.find(st => st.key !== m.stage)!.key });
+        }
+        played ||= e.view().history.some(l => l.title === 'Two people ask for the training you cut');
+        await e.dispatch({ type: 'endPeriod' });
+        if (e.view().pendingReward) await e.dispatch({ type: 'chooseReward', reward: e.view().pendingReward![0] });
+        if (e.view().phase === 'periodEnd') await e.dispatch({ type: 'startNextPeriod' });
+      }
+      expect(played, option).toBe(option === 'cut');
+    }
+  });
+
+  it('names a variable, follow up or skill a choice refers to that is not there, and a choice set to expect a response', () => {
+    const d = fixture();
+    const o = opt(d);
+    o.variables.nps = 3;
+    o.followUp = { event: 'nope', days: 0, weeks: 1 };
+    o.read = [{ skill: 'Juggling', band: 'strong' }];
+    ev(d, DISCOUNT).respondWith = ['meet'];
+    const text = toStoryline(d).issues.join('\n');
+    expect(text).toMatch(/changes nps, which is not one of the business variables/);
+    expect(text).toMatch(/leads to an event that no longer exists \(nope\)/);
+    expect(text).toMatch(/shows Juggling, which is not one of the skills/);
+    expect(text).toMatch(/it is a decision, so it is answered by choosing/);
+  });
+
+  it('an event timed only by "Plays only if" exports with no other timing; a follow up after the deadline waits its days', () => {
+    const d = fixture();
+    const e = ev(d, 'public_complaint');
+    Object.assign(e, { timing: 'condition', week: null, condition: undefined, conditions: [{ kind: 'variable', variable: 'customer_trust', op: 'below', value: 60 }] });
+    ev(d, 'lens_moment').ifIgnored = { sponsor: true, followUp: 'public_complaint', afterDays: 3 };
+    const out = toStoryline(d);
+    expect(out.issues).toEqual([]);
+    const x = out.storyline.events!.find(y => y.key === 'public_complaint')!;
+    expect([x.period, x.window, x.when, x.if]).toEqual([undefined, undefined, undefined, [{ kind: 'variable', variable: 'customer_trust', op: 'below', value: 60 }]]);
+    expect(out.storyline.events!.find(y => y.key === 'lens_moment')!.escalation).toEqual({ sponsor: true, event: 'public_complaint', delay: { days: 3, weeks: 0 } });
   });
 });

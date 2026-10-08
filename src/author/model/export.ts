@@ -98,7 +98,27 @@ interface EventCtx {
   actionNames: Map<string, string>;
   eventKeys: Set<string>;
   followed: Set<string>;
+  /** Business variable keys (D136), for choices and conditions. */
+  variables: Map<string, string>;
   issues: string[];
+}
+
+/** A choice option's people, business and flags as the engine's option (D137); its leadership read is mapped later, by skill name. */
+function exportOption(o: NonNullable<EventDraft['choice']>['options'][number], c: EventCtx, say: (s: string) => void) {
+  let who = o.who || 'target';
+  if (who.startsWith('stage:')) {
+    const k = c.stageKey.get(who.slice(6));
+    if (k) who = `stage:${k}`; else say(`its option "${o.label || o.key}" lands on a stage that is no longer in the work process. Pick who it lands on.`);
+  } else if (!['target', 'team'].includes(who) && !c.memberIds.has(who)) say(`its option "${o.label || o.key}" lands on someone who is no longer on the team. Pick who it lands on.`);
+  for (const k of Object.keys(o.variables)) if (!c.variables.has(k)) say(`its option "${o.label || o.key}" changes ${k}, which is not one of the business variables. Add it in Work process, or pick another.`);
+  const f = o.followUp;
+  if (f && !c.eventKeys.has(f.event)) say(`its option "${o.label || o.key}" leads to an event that no longer exists (${f.event}). Pick another, or none.`);
+  return {
+    key: o.key, label: o.label || o.key, ...(o.detail.trim() ? { detail: o.detail.trim() } : null), outcome: o.outcome.trim() || o.label || o.key, who,
+    people: [o.skill, o.morale, o.result] as [number, number, number], trust: o.trust,
+    business: { variables: Object.fromEntries(Object.entries(o.variables).filter(([k, v]) => c.variables.has(k) && v)), revenue: o.revenue, sponsor: o.sponsor, set: [...o.set], clear: [...o.clear], ...(f && c.eventKeys.has(f.event) ? { followUps: [{ event: f.event, days: f.days, weeks: f.weeks }] } : null) },
+    read: o.read
+  };
 }
 
 /** One authored event as the engine's event. Every reference it cannot resolve is an issue naming it. */
@@ -133,8 +153,9 @@ function exportEvent(base: GeneralEvent | undefined, e: EventDraft, c: EventCtx)
     timing = { period: undefined, subPeriod: 1, window: { from: w.from, to: w.to, probability: w.chance }, when: undefined };
   } else if (e.timing === 'condition') {
     const when = e.condition ? { condition: e.condition.kind, value: e.condition.value, periods: e.condition.weeks } : base?.when;
-    if (!when) say('it happens when something happens, but no condition is set. Pick one.');
-    timing = { period: undefined, subPeriod: 1, window: undefined, when: when ?? { condition: 'teamMoraleBelow', value: 30, periods: 1 } };
+    // "Plays only if" alone is a timing of its own (D138): checked every day, it plays the first time all of it holds.
+    if (!when && !e.conditions?.length) say('it happens when something happens, but no condition is set. Pick one.');
+    timing = { period: undefined, subPeriod: 1, window: undefined, when: when ?? (e.conditions?.length ? undefined : { condition: 'teamMoraleBelow', value: 30, periods: 1 }) };
   } else {
     if (!c.followed.has(e.key)) say('it only happens when another event is ignored, but no event leads to it. Pick it as a follow up in another event, or give it a week.');
     timing = { period: undefined, subPeriod: 1, window: undefined, when: undefined };
@@ -152,14 +173,29 @@ function exportEvent(base: GeneralEvent | undefined, e: EventDraft, c: EventCtx)
   if ((e.ifIgnored.sponsor || follow) && !response) say('it says what happens if it is ignored, but no response is expected. Pick the actions that answer it.');
   if (follow && !c.eventKeys.has(follow)) say(`if ignored it leads to an event that no longer exists (${follow}). Pick another, or none.`);
   if (follow === e.key) say('if ignored it leads to itself. Pick another event.');
-  const escalation = response && (e.ifIgnored.sponsor || follow) ? { sponsor: e.ifIgnored.sponsor, ...(follow ? { event: follow } : null) } : undefined;
+  const wait = e.ifIgnored.afterDays ?? 0;
+  const escalation = response && (e.ifIgnored.sponsor || follow) ? { sponsor: e.ifIgnored.sponsor, ...(follow ? { event: follow } : null), ...(follow && wait ? { delay: { days: wait, weeks: 0 } } : null) } : undefined;
+
+  // Conditions on earlier choices (D138): flags, business variables and team metrics.
+  const conditions = e.conditions ?? [];
+  for (const cl of conditions) if (cl.kind === 'variable' && !c.variables.has(cl.variable)) say(`it plays only if ${cl.variable} is ${cl.op === 'below' ? 'below' : 'at least'} ${cl.value}, but there is no such business variable. Add it in Work process, or change the condition.`);
+  const iff = conditions.filter(cl => cl.kind !== 'variable' || c.variables.has(cl.variable));
+  // A choice (D137): answered by choosing, on a card.
+  const ch = e.choice;
+  if (ch) {
+    if (e.respondWith.length) say('it is a decision, so it is answered by choosing: clear "What counts as a response".');
+    if (e.arrives !== 'modal') say('it is a decision, which arrives as a card on the board. Set it to arrive as a card.');
+    if (ch.default && !ch.options.some(o => o.key === ch.default)) say('its default is an option that no longer exists. Pick the default again.');
+  }
+  const choice = ch ? { known: ch.known.split('\n').map(l => l.trim()).filter(Boolean).slice(0, 4), within: ch.within, ...(ch.default && ch.options.some(o => o.key === ch.default) ? { default: ch.default } : null), options: ch.options.map(o => exportOption(o, c, say)) } : undefined;
 
   const harm = (v: number) => (v < 0 ? Math.round(v * c.harm) : v);
   const card = base && kindOf(base) === e.kind ? base.card : CARD[e.kind];
   const event = {
     ...(base ?? {}), key: e.key, title: e.title || base?.title || 'Event', body: { he: e.body, she: e.body }, card,
     ...timing, impact: [harm(e.skill), harm(e.morale), harm(e.result)], target, delivery: e.arrives,
-    response, escalation
+    response: choice ? undefined : response, escalation: choice ? undefined : escalation,
+    if: iff.length ? iff : undefined, choice
   } as GeneralEvent;
   return { event, dangling };
 }
@@ -273,7 +309,8 @@ export function toStoryline(d: AuthorDraft): Exported {
   const ctx: EventCtx = {
     weeks, days, baseWeeks: base.time.period.count, harm: pace.harm, memberIds, stageKey,
     actionKeys, actionNames: new Map(d.actions.map(a => [a.key, a.name])), eventKeys: new Set(d.events.map(e => e.key)),
-    followed: new Set(d.events.flatMap(e => (e.ifIgnored.followUp ? [e.ifIgnored.followUp] : []))), issues
+    followed: new Set(d.events.flatMap(e => [...(e.ifIgnored.followUp ? [e.ifIgnored.followUp] : []), ...(e.choice?.options ?? []).flatMap(o => (o.followUp ? [o.followUp.event] : []))])),
+    variables: new Map(d.variables.map(v => [v.key, v.name])), issues
   };
   const exported = d.events.map(e => exportEvent(baseEvents.get(e.key), e, ctx));
   const events = exported.map(x => x.event);
@@ -327,6 +364,15 @@ export function toStoryline(d: AuthorDraft): Exported {
   }
   report.linkage = linkage;
 
+  // Each choice option's leadership read (D137), by skill name as Scored on names them.
+  for (const e of events) for (const o of e.choice?.options ?? []) {
+    o.read = (o.read ?? []).flatMap(r => {
+      const k = skillKey.get(r.skill.trim().toLowerCase());
+      if (!k) { issues.push(`Event "${e.title}": its option "${o.label}" shows ${r.skill}, which is not one of the skills in Scoring and report. Pick its skills again.`); return []; }
+      return [{ skill: k, band: r.band }];
+    });
+  }
+
   const hasStatic = actions.some(a => a.kind === 'static' && a.scope === 'member');
   const region = regionOf(d.brief.language);
   const balanced = d.process.pacing === 'balanced';
@@ -349,6 +395,9 @@ export function toStoryline(d: AuthorDraft): Exported {
     purpose: d.brief.purpose,
     maxPerStage: Math.max(2, ...perStage.values()),
     ...(balanced ? null : { drift: { morale: pace.drift, result: 0 }, gamification: { ...(base.gamification ?? {}), sponsor: { ...(base.gamification?.sponsor ?? {}), escalation: pace.escalation } } }),
+    // People dynamics (D135) at the engine's defaults, and the business variables (D136), with weights as shares.
+    ...(d.process.dynamics ? { dynamics: {} } : null),
+    variables: d.variables.map(v => ({ key: v.key, name: v.name || v.key, format: v.format, start: v.start, min: v.min, max: v.max, drift: v.drift, shown: v.shown, weight: v.weight / 100, higherIsBetter: v.higherIsBetter, ...(v.about.trim() ? { about: v.about.trim() } : null) })),
     ...(hasStatic ? null : { demo: { enabled: false } }),
     calibrated: false
   };

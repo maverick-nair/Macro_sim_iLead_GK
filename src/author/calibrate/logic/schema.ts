@@ -70,14 +70,16 @@ export const RunResult = z.object({
   concerns: z.array(z.string()),
   /** Times each action was taken. */
   actions: z.record(z.string(), Int),
-  events: z.object({ expected: Int, handled: Int })
+  events: z.object({ expected: Int, handled: Int }),
+  /** Choice events (D137): each choice, the option it ended on and whether the player chose it or it was left to its default. */
+  choices: z.array(z.object({ event: z.string(), option: z.string().nullable(), by: z.enum(['you', 'default']) })).optional()
 });
 export type RunResult = z.infer<typeof RunResult>;
 
 export const CheckStatus = z.enum(['pass', 'warn', 'fail']);
 export type CheckStatus = z.infer<typeof CheckStatus>;
 export const Check = z.object({
-  key: z.enum(['ordered', 'expertTier', 'beginnerTier', 'skills', 'conversations', 'separation', 'dominant', 'unused', 'events', 'styleEffect', 'conversationEffect', 'target']),
+  key: z.enum(['ordered', 'expertTier', 'beginnerTier', 'skills', 'conversations', 'separation', 'dominant', 'unused', 'events', 'styleEffect', 'conversationEffect', 'target', 'choices']),
   status: CheckStatus,
   /** One plain sentence, what the author reads in the list. */
   title: z.string(),

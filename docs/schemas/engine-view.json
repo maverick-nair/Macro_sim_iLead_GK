@@ -2040,6 +2040,10 @@
                 "type": "null"
               }
             ]
+          },
+          "choiceId": {
+            "type": "string",
+            "minLength": 1
           }
         },
         "required": [
@@ -2806,6 +2810,94 @@
                 "title",
                 "body",
                 "impact"
+              ]
+            }
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "start": {
+                  "type": "number"
+                },
+                "end": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "key",
+                "start",
+                "end"
+              ]
+            }
+          },
+          "choices": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "$ref": "#/$defs/Text"
+                },
+                "label": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "by": {
+                  "type": "string",
+                  "enum": [
+                    "you",
+                    "default"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "label",
+                "by"
+              ]
+            }
+          },
+          "attrition": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "memberId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "$ref": "#/$defs/Text"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "sick",
+                    "resigned"
+                  ]
+                }
+              },
+              "required": [
+                "memberId",
+                "name",
+                "kind"
               ]
             }
           }
@@ -3687,6 +3779,403 @@
         "cap",
         "used"
       ]
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "$ref": "#/$defs/Text"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "money",
+              "percent",
+              "points"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "start": {
+            "type": "number"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "higherIsBetter": {
+            "type": "boolean"
+          },
+          "about": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "causes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "$ref": "#/$defs/Text"
+                },
+                "delta": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "text",
+                "delta"
+              ]
+            }
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "format",
+          "value",
+          "start",
+          "min",
+          "max",
+          "higherIsBetter",
+          "about",
+          "causes"
+        ]
+      }
+    },
+    "openChoices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "eventKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "card": {
+            "type": "string",
+            "enum": [
+              "impact",
+              "signal",
+              "capacity",
+              "diagnostic",
+              "opportunity",
+              "crisis"
+            ]
+          },
+          "title": {
+            "$ref": "#/$defs/Text"
+          },
+          "body": {
+            "$ref": "#/$defs/Text"
+          },
+          "memberId": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "known": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Text"
+            }
+          },
+          "options": {
+            "minItems": 2,
+            "maxItems": 4,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "label": {
+                  "$ref": "#/$defs/Text"
+                },
+                "detail": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "key",
+                "label",
+                "detail"
+              ]
+            }
+          },
+          "dueInSubPeriods": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "id",
+          "eventKey",
+          "card",
+          "title",
+          "body",
+          "memberId",
+          "known",
+          "options",
+          "dueInSubPeriods"
+        ]
+      }
+    },
+    "choices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "eventKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "$ref": "#/$defs/Text"
+          },
+          "option": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "by": {
+            "type": "string",
+            "enum": [
+              "you",
+              "default"
+            ]
+          },
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "sub": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "subject": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "metric": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "skill",
+                        "morale",
+                        "result",
+                        "trust"
+                      ]
+                    },
+                    {
+                      "type": "string",
+                      "const": "confidence"
+                    }
+                  ]
+                },
+                "from": {
+                  "type": "number"
+                },
+                "to": {
+                  "type": "number"
+                },
+                "delta": {
+                  "type": "number"
+                },
+                "reason": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "cause": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "rule": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "evidence": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "quote": {
+                            "$ref": "#/$defs/Text"
+                          },
+                          "by": {
+                            "$ref": "#/$defs/Text"
+                          },
+                          "judgedByAI": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "quote",
+                          "by",
+                          "judgedByAI"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "cause",
+                    "rule",
+                    "evidence"
+                  ]
+                }
+              },
+              "required": [
+                "subject",
+                "metric",
+                "from",
+                "to",
+                "delta",
+                "reason"
+              ]
+            }
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "$ref": "#/$defs/Text"
+                },
+                "delta": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "key",
+                "name",
+                "delta"
+              ]
+            }
+          },
+          "revenue": {
+            "type": "number"
+          },
+          "triggered": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "$ref": "#/$defs/Text"
+                },
+                "period": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "key",
+                "title",
+                "period"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "eventKey",
+          "title",
+          "option",
+          "label",
+          "outcome",
+          "by",
+          "period",
+          "sub",
+          "changes",
+          "variables",
+          "revenue",
+          "triggered"
+        ]
+      }
     },
     "report": {
       "anyOf": [

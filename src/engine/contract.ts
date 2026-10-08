@@ -218,7 +218,32 @@ export const PeriodSummary = z.object({
   /** Sponsor confidence fell below the check in line: next period has a day less. */
   checkIn: z.boolean(),
   /** Bulletins for the next period. `impact` is what See impact says. */
-  news: z.array(z.object({ key: Id, card: CardKind, title: Text, body: Text, impact: Text.nullable() }))
+  news: z.array(z.object({ key: Id, card: CardKind, title: Text, body: Text, impact: Text.nullable() })),
+  /** Shown business variables at the period's start and end (D136); left out when the storyline has none. */
+  variables: z.array(z.object({ key: Id, start: Num, end: Num })).optional(),
+  /** Choices made, or left to their default, this period (D137). */
+  choices: z.array(z.object({ id: Id, title: Text, label: Text.nullable(), by: z.enum(['you', 'default']) })).optional(),
+  /** People off sick or gone because their morale stayed low (D135). */
+  attrition: z.array(z.object({ memberId: Id, name: Text, kind: z.enum(['sick', 'resigned']) })).optional()
+});
+
+/** How a business variable reads (D136): money in the storyline's currency, a percentage or points. */
+export const VariableFormat = z.enum(['money', 'percent', 'points']);
+/** A business variable the participant is shown (D136). */
+export const VariableView = z.object({
+  key: Id, name: Text, format: VariableFormat, value: Num, start: Num, min: Num, max: Num, higherIsBetter: z.boolean(), about: Text.nullable(),
+  causes: z.array(z.object({ text: Text, delta: Num }))
+});
+/** A choice waiting for the participant (D137): what is known and the options, never their consequences. */
+export const OpenChoice = z.object({
+  id: Id, eventKey: Id, card: z.enum(['impact', 'signal', 'capacity', 'diagnostic', 'opportunity', 'crisis']), title: Text, body: Text, memberId: Id.nullable(), known: z.array(Text),
+  options: z.array(z.object({ key: Id, label: Text, detail: Text.nullable() })).min(2).max(4), dueInSubPeriods: z.number().int().min(0)
+});
+/** A choice made, or left to its default (D137), and what it changed. */
+export const ChoiceView = z.object({
+  id: Id, eventKey: Id, title: Text, option: Id.nullable(), label: Text.nullable(), outcome: Text.nullable(), by: z.enum(['you', 'default']), period: z.number().int(), sub: z.number().int(),
+  changes: z.array(MetricChange), variables: z.array(z.object({ key: Id, name: Text, delta: Num })), revenue: Num,
+  triggered: z.array(z.object({ key: Id, title: Text, period: z.number().int() }))
 });
 
 /** Everything the participant may see. Never includes a member's needed style. */
@@ -245,7 +270,9 @@ export const EngineView = z.object({
   /** `briefing`: a scheduled sponsor briefing, opened with `openConversation` kind `sponsor`; other messages are replies. News needs no answer. */
   inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() })),
   /** Event cards. `sponsorCall` rings before it shows; `messageId` is the message to answer, if any. */
-  cards: z.array(z.object({ id: Id, key: Id, card: CardKind, delivery: z.enum(['modal', 'sponsorCall']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange), label: Text.nullable(), messageId: Id.nullable() })),
+  cards: z.array(z.object({ id: Id, key: Id, card: CardKind, delivery: z.enum(['modal', 'sponsorCall']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange), label: Text.nullable(), messageId: Id.nullable(),
+    /** The choice the card opens, when the event is a choice (D137). */
+    choiceId: Id.optional() })),
   /** `from` resolves the speaker for display: a member, a departed member, a candidate or the sponsor. */
   outcome: Outcome.extend({ from: z.object({ id: Id, name: Text, img: z.string().nullable() }) }).nullable(),
   /**
@@ -290,6 +317,11 @@ export const EngineView = z.object({
   /** The Week 0 practice conversation (D16, D84): on offer before week 1 begins, with this team member. */
   practice: z.object({ available: z.boolean(), partner: Id.nullable() }).default({ available: false, partner: null }),
   liveCap: z.object({ cap: z.number().int(), used: z.number().int() }),
+  /** Business variables the participant is shown (D136). */
+  variables: z.array(VariableView).default([]),
+  /** Choices waiting for the participant, and choices made (D137). */
+  openChoices: z.array(OpenChoice).default([]),
+  choices: z.array(ChoiceView).default([]),
   /**
    * The report, once the run has ended. Its schema is `ReportView` in `./reportContract`, which the end
    * screen and the report (both loaded on demand) parse with `parseReport`; the first load only checks
@@ -324,7 +356,9 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('startNextPeriod') }),
   /** The Week 0 practice (D84): open it, or skip it. `endInteraction` and `abandonInteraction` close it. */
   z.object({ type: z.literal('startPractice') }),
-  z.object({ type: z.literal('skipPractice') })
+  z.object({ type: z.literal('skipPractice') }),
+  /** A choice event's option (D137). Costs no time. */
+  z.object({ type: z.literal('decide'), choiceId: Id, option: Id })
 ]);
 
 export const IntentResult = z.object({
@@ -359,3 +393,6 @@ export type MetricKey = z.output<typeof MetricKey>;
 export type StyleKey = z.output<typeof StyleKey>;
 export type LensView = z.output<typeof LensView>;
 export type Mood = z.output<typeof Mood>;
+export type VariableView = z.output<typeof VariableView>;
+export type OpenChoice = z.output<typeof OpenChoice>;
+export type ChoiceView = z.output<typeof ChoiceView>;

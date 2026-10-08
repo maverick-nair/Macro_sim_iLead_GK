@@ -1,5 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * Visual regression for the screens the engine renders (the design frames are held by `npm run parity`).
  * Every screen at 1440 and 1024, in dark, light and the sample client theme. Phones do not play
@@ -26,7 +30,7 @@ async function shot(page: Page, name: string, fullPage = false) {
 }
 
 async function confirmStyles(page: Page) {
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10);
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page));
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
@@ -38,7 +42,7 @@ async function confirmStyles(page: Page) {
 
 /** Plays the last week on the mock engine (opened at week 8) and walks its week end to the end screen. */
 async function finishRun(page: Page) {
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10);
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page));
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
