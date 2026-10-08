@@ -166,7 +166,7 @@ The level checks all pass: scores rise (303, 423, 872, 943), Experts reach Gold 
 
 The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them. Developing fell from 495 (D132) to 423 with the decoupled phrasings (72% read as meant, was about 94%) and with waste that no longer lands on team energy.
 
-Timings in Node, on an idle machine: 20 playthroughs and the 70 probes about 2.5 s, 40 playthroughs (the default) and the probes about 3.5 s; under a heavily loaded machine they double.
+Timings in Node: 20 playthroughs and the 70 probes about 2.7 s on an idle machine, 40 playthroughs (the default) and the probes about 3.5 s; measured on a loaded machine (5.9 s and 7.7 s) against the D132 code on the same machine (5.2 s for 20 playthroughs and 38 probes, 2.4 s idle). The player builds fewer views per playthrough, so it is faster than before for the same work.
 
 ## 9. Not done
 
