@@ -81,6 +81,34 @@ export const MAX_STAGES = 6;
 
 const Stats = z.object({ skill: Score, morale: Score, result: Score });
 
+/** How long an NPC's replies run (D130). */
+export const REPLY_LENGTHS = ['short', 'medium', 'long'] as const;
+const NpcText = z.string().min(1).max(4000);
+
+/**
+ * How the person plays in conversation (D130), authored in GenieKreator's character editor. Never shown to
+ * participants: the AI character reads it (ai/src/npc/prompt.ts) and the engine ignores it, so a storyline
+ * without it plays exactly as before. `reactions` is keyed by lens style key; `speech` sliders run 0 to 100.
+ */
+export const NpcPersona = z.object({
+  age: NpcText.optional(),
+  motivatedBy: NpcText.optional(),
+  /** Topics the person will not discuss; they deflect in role. */
+  avoid: NpcText.optional(),
+  /** How the person reacts when led in each style, by lens style key. */
+  reactions: z.record(z.string(), NpcText).optional(),
+  speech: z.object({
+    language: z.string().max(400).optional(),
+    accent: z.string().max(400).optional(),
+    pace: Score.default(50),
+    warmth: Score.default(50),
+    formality: Score.default(50),
+    replyLength: z.enum(REPLY_LENGTHS).default('medium')
+  }).optional(),
+  /** The author's own facts about the person (custom fields). */
+  notes: z.array(z.object({ label: z.string().min(1).max(400), value: NpcText })).max(12).optional()
+});
+
 export const Person = z.object({
   id: z.string().regex(/^[a-z][a-z0-9_]*$/),
   name: z.string().min(1),
@@ -107,7 +135,9 @@ export const Person = z.object({
   /** Default portrait. `portraits` may override it per mood. */
   portrait: z.string().optional(),
   portraits: z.record(z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']), z.string()).optional(),
-  voice: z.string().optional()
+  voice: z.string().optional(),
+  /** How the AI character plays this person (D130). Optional; the engine never reads it. */
+  npc: NpcPersona.optional()
 });
 
 export const Thresholds = z.object({
@@ -651,7 +681,18 @@ export const StorylineConfig = z.object({
     if (a.unlockPeriod > c.time.period.count) ctx.addIssue({ code: 'custom', path: ['actions', i, 'unlockPeriod'], message: 'Unlocks after the last period' });
   });
   c.actions.forEach((a, i) => { if (a.prerequisite && !actionKeys.has(a.prerequisite)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'prerequisite'], message: `Unknown action ${a.prerequisite}` }); });
-  const eventKeys = new Set(c.events.map(e => e.key));
+  c.actions.forEach((a, i) => {
+    const seen = new Set<string>();
+    a.options.forEach((o, j) => {
+      if (seen.has(o.key)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'key'], message: `Duplicate option ${o.key}` });
+      seen.add(o.key);
+    });
+  });
+  const eventKeys = new Set<string>();
+  c.events.forEach((e, i) => {
+    if (eventKeys.has(e.key)) ctx.addIssue({ code: 'custom', path: ['events', i, 'key'], message: `Duplicate event ${e.key}` });
+    eventKeys.add(e.key);
+  });
   const memberIds = new Set(c.members.map(m => m.id));
   c.events.forEach((e, i) => {
     const last = c.time.period.count;
@@ -668,6 +709,11 @@ export const StorylineConfig = z.object({
   c.actions.forEach((a, i) => a.options.forEach((o, j) => {
     if (o.style !== undefined && !styleKeys.has(o.style)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'style'], message: `No style called ${o.style} in the lens` });
   }));
+  for (const [list, people] of [['members', c.members], ['candidates', c.candidates]] as const) {
+    people.forEach((p, i) => {
+      for (const k of Object.keys(p.npc?.reactions ?? {})) if (!styleKeys.has(k)) ctx.addIssue({ code: 'custom', path: [list, i, 'npc', 'reactions', k], message: `No style called ${k} in the lens` });
+    });
+  }
   if (c.demo.with && !memberIds.has(c.demo.with)) ctx.addIssue({ code: 'custom', path: ['demo', 'with'], message: `No team member called ${c.demo.with}` });
   if (c.demo.action) {
     const a = c.actions.find(x => x.key === c.demo.action);

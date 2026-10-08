@@ -737,6 +737,100 @@
           },
           "voice": {
             "type": "string"
+          },
+          "npc": {
+            "type": "object",
+            "properties": {
+              "age": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "motivatedBy": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "avoid": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "reactions": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                }
+              },
+              "speech": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "maxLength": 400
+                  },
+                  "accent": {
+                    "type": "string",
+                    "maxLength": 400
+                  },
+                  "pace": {
+                    "default": 50,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "warmth": {
+                    "default": 50,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "formality": {
+                    "default": 50,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "replyLength": {
+                    "default": "medium",
+                    "type": "string",
+                    "enum": [
+                      "short",
+                      "medium",
+                      "long"
+                    ]
+                  }
+                }
+              },
+              "notes": {
+                "maxItems": 12,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 400
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "value"
+                  ]
+                }
+              }
+            }
           }
         },
         "required": [
@@ -923,6 +1017,100 @@
           },
           "voice": {
             "type": "string"
+          },
+          "npc": {
+            "type": "object",
+            "properties": {
+              "age": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "motivatedBy": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "avoid": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "reactions": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 4000
+                }
+              },
+              "speech": {
+                "type": "object",
+                "properties": {
+                  "language": {
+                    "type": "string",
+                    "maxLength": 400
+                  },
+                  "accent": {
+                    "type": "string",
+                    "maxLength": 400
+                  },
+                  "pace": {
+                    "default": 50,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "warmth": {
+                    "default": 50,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "formality": {
+                    "default": 50,
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "replyLength": {
+                    "default": "medium",
+                    "type": "string",
+                    "enum": [
+                      "short",
+                      "medium",
+                      "long"
+                    ]
+                  }
+                }
+              },
+              "notes": {
+                "maxItems": 12,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 400
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 4000
+                    }
+                  },
+                  "required": [
+                    "label",
+                    "value"
+                  ]
+                }
+              }
+            }
           }
         },
         "required": [
