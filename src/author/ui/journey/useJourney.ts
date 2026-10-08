@@ -131,9 +131,13 @@ export function useJourney(drafters?: Drafter[]) {
   }, [advance, chat]);
 
   const drafting = offline ? [new MockDrafter()] : undefined;
-  const question = chat.current ? { ...questionFor(chat.current.id, chat.brief), confirm: chat.current.confirm } : null;
+  // The turn after an answer failed (D148, D166): the answer stands in the chat, and the question it answered is not
+  // asked again while Retry and Continue offline wait. The current question only moves when a turn answers.
+  const lastQa = [...chat.log].reverse().find(x => x.kind === 'qa');
+  const awaiting = !!failure && !busy && !editing && !chat.clarify && !!chat.current && lastQa?.kind === 'qa' && lastQa.id === chat.current.id && chat.asked.includes(chat.current.id);
+  const question = chat.current && !awaiting ? { ...questionFor(chat.current.id, chat.brief), confirm: chat.current.confirm } : null;
   const clarify = chat.clarify ?? null;
-  const askId = editing?.id ?? clarify?.id ?? chat.current?.id ?? null;
+  const askId = editing?.id ?? clarify?.id ?? (awaiting ? null : chat.current?.id ?? null);
 
   async function answer(raw: string, voice = false): Promise<boolean> {
     if (!askId || busy) return false;
@@ -254,15 +258,15 @@ export function useJourney(drafters?: Drafter[]) {
   }
 
   return {
-    chat, question, clarify, askId, busy, error, setError, editing: editing?.id ?? null, pending, failure, offline,
+    chat, question, clarify, askId, busy, error, setError, editing: editing?.id ?? null, pending, failure, offline, awaiting,
     startEdit: (id: QuestionId, preview = true) => { setEditing({ id, preview }); setPending(null); setError(null); },
     cancelEdit: () => setEditing(null),
     answer, upload, chooseLens, draftNow, continueFit, changeBrief, applyPending, keepPendingAsNote,
     /** Stops the turn the server is working on; the chat then offers Retry and Continue offline. */
     cancel: () => running.current?.abort(),
-    retry: () => { if (failure) void advance(...failure.turn); },
+    retry: () => { setError(null); if (failure) void advance(...failure.turn); },
     /** The templates from here on, starting with the turn that failed (D148). */
-    continueOffline: () => { setOffline(true); setFailure(null); void advance(chat.brief, chat.asked, chat.answers, chat.taken ?? [], [new MockDrafter()]); },
+    continueOffline: () => { setOffline(true); setFailure(null); setError(null); void advance(chat.brief, chat.asked, chat.answers, chat.taken ?? [], [new MockDrafter()]); },
     fitOpen: chat.fit?.status === 'open',
     chooseLensDims: (dims: Chat['clientDimensions']) => setChat(c => { c.clientDimensions = dims; }),
     lensTitle: (id: LensId) => LENS_BY_ID[id].title

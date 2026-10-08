@@ -46,7 +46,8 @@ function Section({ title, status, children, highlight = false }: { title: string
 
 export function SoFar({ chat, onChange }: { chat: Chat; onChange?: (id: QuestionId) => void }) {
   const b = chat.brief;
-  const asked = new Set(chat.asked);
+  // Answered: asked in the chat, or taken from a long answer or an upload (D146); both count here, as for skipping.
+  const asked = new Set([...chat.asked, ...(chat.taken ?? [])]);
   const hasStory = !!(b.industry || b.client !== undefined);
   const primary: LensId = chat.primary ?? chat.recommendation?.id ?? 'readiness_based';
   const preview = useMemo(() => {
@@ -54,10 +55,10 @@ export function SoFar({ chat, onChange }: { chat: Chat; onChange?: (id: Question
     const s = draftStoryline(b, buildModule(b, { primary, secondary: null, clientDimensions: chat.clientDimensions }, false));
     return { company: s.organisation ?? draftContext(b).company, about: draftContext(b).industry.productLine, sponsor: `${s.sponsor.name}, ${s.sponsor.title}`, members: s.members, styles: s.lens!.styles };
   }, [b, hasStory, primary, chat.clientDimensions]);
-  const stages = b.process ?? (asked.has('challenge') ? DEFAULT_PROCESS.stages : null);
+  const stages = b.process ?? (asked.has('challenge') || b.challenge ? DEFAULT_PROCESS.stages : null);
   const pressure = stages ? pressureOf(b.challenge, stages.map(n => ({ key: n, name: n }))) : null;
   const teamDone = b.teamSize !== undefined && preview;
-  const fromYou = chat.asked.length + b.documents.length;
+  const fromYou = asked.size + b.documents.length;
   const generated = (preview ? 2 : 0) + (stages?.length ?? 0) + (teamDone ? preview!.members.length * 4 : 0) + (chat.recommendation && preview ? preview.styles.length : 0);
   const need = hasStory ? 1 : 0;
   const briefDone = !!(b.roleLevel && b.industry && b.challenge);

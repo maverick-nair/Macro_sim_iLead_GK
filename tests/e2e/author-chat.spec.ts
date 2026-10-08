@@ -65,8 +65,11 @@ test('a detailed brief in one answer: "I took these", the questions it answered 
   const soFar = page.getByRole('region', { name: 'Your simulation so far' });
   await expect(soFar.getByText('VPs of Customer Operations', { exact: true })).toBeVisible();
 
-  // The brief names people outside the team: the fit check still says so first (D133).
-  await page.getByRole('group', { name: 'Does iLead fit this brief?' }).getByRole('button', { name: 'Continue with a team leadership version' }).click();
+  // The challenge taken from the brief counts as answered: the work process is drafted already (D166).
+  await expect(soFar.getByRole('region', { name: 'Work process' })).not.toContainText('After the challenge');
+  // Its stakeholders play now (D166), so nothing in it stops the chat: one note for senior participants, no fit choice.
+  await expect(page.getByRole('log')).toContainText('A note on fit: iLead puts a senior leader in front of their own team');
+  await expect(page.getByRole('group', { name: 'Does iLead fit this brief?' })).toHaveCount(0);
   // Only the work process is left; nothing the brief answered is asked again.
   await expect(progress(page)).toHaveText('Question 2 of about 2');
   await expect(page.getByRole('log')).toContainText('What work process does the team run?');
@@ -92,7 +95,7 @@ test('an uploaded .txt brief keeps the client it names, and says what it took', 
   await expect(page.getByRole('log')).toContainText('I read brief.txt.');
   const took = page.getByRole('region', { name: 'I took these from your brief' });
   await expect(took).toContainText('Client: Northstar Health Partners');
-  await page.getByRole('group', { name: 'Does iLead fit this brief?' }).getByRole('button', { name: 'Continue with a team leadership version' }).click();
+  await expect(page.getByRole('group', { name: 'Does iLead fit this brief?' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Skip to the workspace' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
   await expect.poll(async () => (await stored(page))?.story.company.name).toBe('Northstar Health Partners');
@@ -212,6 +215,34 @@ test('a server that does not answer in time: Retry and Continue offline, and the
   await expect(progress(page)).toHaveText('Question 2 of about 10');
   // Offline from here on: the server is not asked again.
   expect(calls).toBe(1);
+});
+
+test('an answer whose next turn fails stays in the chat, and its question is not asked again', async ({ page }) => {
+  test.skip(!SERVER, 'Needs the dev server built with VITE_GENIE_URL=/genie');
+  let calls = 0;
+  await page.unroute('**/genie/**');
+  // The first question comes from the rules (the server does not offer the turn); the turn after the answer fails.
+  await page.route('**/genie/author/turn', async route => {
+    if (++calls === 2) return route.fulfill({ status: 500, json: { message: 'Boom', code: 'internal' } });
+    await route.fulfill({ status: 501, json: { message: 'Not offered', code: 'notImplemented' } });
+  });
+  await page.goto('/author');
+  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await chip(page, 'First time managers').click();
+  const failed = page.getByRole('alert').filter({ has: page.getByRole('button', { name: 'Retry' }) });
+  await expect(failed).toBeVisible();
+  const log = page.getByRole('log');
+  // The answer stands; the question it answered is not shown again, nor its suggestions.
+  await expect(log).toContainText('You: First time managers');
+  await expect(log.getByText('Who are your participants?')).toHaveCount(1);
+  await expect(page.getByRole('group', { name: 'Suggested answers' })).toHaveCount(0);
+  // Typing waits for the author's choice and keeps the words.
+  await send(page, 'Mid level managers');
+  await expect(page.getByText('I have your answer. Choose Retry, or Continue offline, and I will go on from there.')).toBeVisible();
+  await expect(answerBox(page)).toHaveValue('Mid level managers');
+  await failed.getByRole('button', { name: 'Continue offline' }).click();
+  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(log).toContainText('Which industry is the simulation set in?');
 });
 
 test('Cancel stops Kora, and Retry asks again', async ({ page }) => {

@@ -236,10 +236,12 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
             </div>
           )}
           <Composer question={j.askId} busy={j.busy} error={j.error} multiline={j.askId === 'framework'}
-            placeholder={j.askId ? (question?.placeholder ?? 'Your answer') : 'Pick a lens above, or tell me what matters most'}
+            placeholder={j.askId ? (question?.placeholder ?? 'Your answer') : j.awaiting ? 'Retry, or continue offline, and I will go on from your answer' : 'Pick a lens above, or tell me what matters most'}
             onUpload={f => void j.upload(f)}
             onSend={async (text, voice) => {
               if (j.askId) return j.answer(text, voice);
+              // Your answer is in; Kora's next turn failed. What you type stays in the box until you choose.
+              if (j.awaiting) { j.setError('I have your answer. Choose Retry, or Continue offline, and I will go on from there.'); return false; }
               const id = LENS_IDS.find(l => text.toLowerCase().includes(LENS_BY_ID[l].title.toLowerCase().split(' ')[0].toLowerCase()));
               if (id) { j.draftNow(id); return true; }
               j.setError('Pick one of the lenses above, or name one: for example Servant Leadership.');
