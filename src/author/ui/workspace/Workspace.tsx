@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useMediaQuery } from '../../../lib/useMediaQuery';
 import type { Tab } from '../../model/draft';
-import { needsOf, tabStatus } from '../../model/needs';
+import { tabStatus } from '../../model/needs';
 import { useAuthor } from '../../model/store';
+import { readiness } from '../../model/validate';
 import { Badge, BUTTON, FOCUS, Icon, savedText, Scroll } from '../kit';
 import { playDraft } from '../play';
 import { navigate } from '../route';
@@ -54,7 +55,7 @@ export function TabBody({ head, children, label }: { head: ReactNode; children: 
 
 function NavMark({ tab }: { tab: Tab }) {
   const draft = useAuthor(s => s.draft);
-  const st = tab === 'publish' ? (needsOf(draft).length ? 'need' : 'yours') : tabStatus(draft, tab);
+  const st = tab === 'publish' ? (readiness(draft).kind === 'ready' ? 'yours' : 'need') : tabStatus(draft, tab);
   const n = NAV.find(x => x.tab === tab)!.n;
   if (st === 'need') return <span className="flex size-6 shrink-0 items-center justify-center rounded-round bg-author-need-badge text-12 font-800 text-author-need" aria-label="needs you">!</span>;
   if (st === 'yours' && tab !== 'calibrate') return <span className="flex size-6 shrink-0 items-center justify-center rounded-round bg-author-gain-soft text-author-gain" aria-label="mostly yours">{Icon.check(12)}</span>;
@@ -76,7 +77,8 @@ export function Workspace({ tab }: { tab: Tab }) {
   const tablet = !useMediaQuery('(min-width: 1024px)');
   const [kora, setKora] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const needs = needsOf(draft).length;
+  // The badge reads the whole publish gate (D131): needs first, then anything else that blocks publishing.
+  const ready = readiness(draft);
   const Page = Tabs[tab];
   const showKora = WITH_KORA.includes(tab);
   useEffect(() => { if (draft.stage !== 'workspace') edit(d => { d.stage = 'workspace'; }); }, [draft.stage, edit]);
@@ -121,7 +123,7 @@ export function Workspace({ tab }: { tab: Tab }) {
         <span className="shrink-0 text-20 font-800 max-[1100px]:text-18">Genie<span className="text-author-kora">Kreator</span></span>
         <span aria-hidden="true" className="h-6 w-px shrink-0 bg-author-line max-[1100px]:hidden" />
         <span className="min-w-0 shrink truncate text-16 font-800" title={draft.title}>{draft.title}</span>
-        {needs > 0 ? <Badge kind="need"><span className="max-[1100px]:sr-only">Draft &middot; </span>{needs} need{needs === 1 ? 's' : ''} you</Badge> : <Badge kind="done">Ready to publish</Badge>}
+        {ready.kind === 'ready' ? <Badge kind="done">Ready to publish</Badge> : <Badge kind="need"><span className="max-[1100px]:sr-only">Draft &middot; </span>{ready.text}</Badge>}
         <span className="flex-1" />
         <span className="shrink-0 text-13 text-author-muted max-[1180px]:sr-only" role="status">{saved}</span>
         {!wide && showKora && <button type="button" className={BUTTON.koraOutline} aria-expanded={kora} onClick={() => setKora(!kora)}>{Icon.chat(14)} Ask Kora</button>}

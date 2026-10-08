@@ -3,6 +3,7 @@ import { CalibrateSlot, calibrationPublishCheck, type CalibrationResults } from 
 import { configHash } from '../../../calibrate/logic/hash';
 import { toStoryline } from '../../../model/export';
 import { useAuthor } from '../../../model/store';
+import { recordCalibration } from '../../../model/validate';
 import { TabBody, TabHead } from '../Workspace';
 
 /** The last results, kept for this browser session so leaving the tab and coming back keeps them (the draft stores only the summary). */
@@ -30,7 +31,8 @@ export default function Calibrate() {
           kept = r;
           setResults(r);
           const check = calibrationPublishCheck(r, { draft: storyline });
-          edit(d => { d.calibration = { ranAt: Date.now(), passed: !check.blocking, summary: check.summary, advisory: check.status === 'advisory', configHash: configHash(storyline) }; });
+          // A failure stays on the draft until a full run passes (D132).
+          edit(d => { d.calibration = recordCalibration(d.calibration, check, configHash(storyline)); });
         }}
       />
     </TabBody>

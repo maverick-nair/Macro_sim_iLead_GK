@@ -55,7 +55,7 @@ export default function Story() {
             <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="product">
               <CardHead id="product" title="Product"><MarkOf path="story.product.name" /></CardHead>
               <div className="grid grid-cols-2 gap-3">
-                <Field label="Product name" required>{id => <TextInput id={id} tone={tone('story.product.name')} value={p.name} onChange={e => edit(x => { x.story.product.name = e.target.value; }, 'story.product.name')} />}</Field>
+                <Field label="Product name" required need={!p.name.trim()}>{id => <TextInput id={id} tone={tone('story.product.name')} value={p.name} onChange={e => edit(x => { x.story.product.name = e.target.value; }, 'story.product.name')} />}</Field>
                 <Field label="Average deal value" need={!p.dealValue} mark="story.product.dealValue">{id => (
                   <TextInput id={id} inputMode="decimal" tone={tone('story.product.dealValue', !p.dealValue)} placeholder="For example 30,000" value={p.dealValue ?? ''}
                     onChange={e => { const v = Number(e.target.value.replace(/[^\d.]/g, '')); edit(x => { x.story.product.dealValue = v > 0 ? v : null; }, 'story.product.dealValue'); }} />
