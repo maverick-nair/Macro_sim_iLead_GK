@@ -12,6 +12,7 @@ This is a different tool from `npm run calibrate` (`scripts/calibrate.ts`, SIMUL
 | Traits, the policy hooks and the four levels | `src/engine/sim/syntheticPolicy.ts` (`PERSONA_TRAITS`, `SKILL_TRAITS`, `Policy`, `PlayerApi`) |
 | The four player types | `src/engine/sim/syntheticArchetypes.ts` (`ARCHETYPES`, `ARCHETYPE_POLICIES`) |
 | The probes | `src/engine/sim/syntheticProbes.ts` (`Probe`, `probePolicy`, `topPairs`) |
+| Stakeholders outside the team (D165, D166) | `src/engine/sim/stakeholderPlayers.ts` (`StakeholderPlayer`, `STAKEHOLDER_TRAITS`, `policyStakeholders` for the calibration players); each policy's `stakeholders` traits |
 | How a choice event's options are weighed (D140, D152) | `src/engine/sim/syntheticChoices.ts` (`levelChoice`, `choiceBusiness`, `choicePeople`, `choiceLead`, `choiceSize`); each policy's `choose` hook |
 | What they say offline, and the speaker interface | `src/engine/sim/syntheticSpeech.ts` (`templateSpeaker`, `SyntheticSpeaker`, `SpeakerContext`), the phrasings in `syntheticPhrases.ts`, what they hear in `syntheticListen.ts` |
 | What they say with AI | `ai/src/synthetic/player.ts`, `createSyntheticPlayer(config)` from `ai/`; prompt `ai/prompts/synthetic-player.md` |
@@ -153,7 +154,7 @@ const line = calibrationPublishCheck(kept, { draft });
 
 ## 8. Results on Sales Elevator and Client Trust
 
-`npm run synthetic -- --types` (seed 1, 10 playthroughs a player, 70 probes, about 3.5 to 4.5 s a storyline), measured on the integrated P1 work (D152): Sales Elevator plays with people dynamics and its recalibrated funnel (D135), the players listen and speak apart from the evaluator (D151), and every player decides Client Trust's choice events by its level or its nature (D140, D152). Points are each pillar's weighted share and the streak bonus, which add up to the score; "read as meant" is the evaluator agreement.
+`npm run synthetic -- --types` (seed 1, 10 playthroughs a player, 70 probes, about 3.5 to 4.5 s a storyline), measured on the integrated P1 work (D152, D166): Sales Elevator plays with people dynamics and its recalibrated funnel (D135), the players listen and speak apart from the evaluator (D151), and every player decides Client Trust's choice events and treats its stakeholders by its level or its nature (D140, D152, D165, D166). Points are each pillar's weighted share and the streak bonus, which add up to the score; "read as meant" is the evaluator agreement.
 
 Sales Elevator:
 
@@ -170,42 +171,33 @@ Sales Elevator:
 
 Best probes: Directing for everyone 612, a team meeting every day 431, team energy every week with Partnering for everyone 657, as many actions as possible 384, reading people without acting 799, and the pairs with an Expert's reading: team meeting and team energy 984, team meeting and feedback 972, goals and team energy 966, team meeting and goals 964, feedback and team energy 956, goals and feedback 838.
 
-Client Trust:
+Client Trust, with its four choice events and its three stakeholders (D141, D165: Priya Shah at the client, Helen Brandt in finance, Elena Ruiz in delivery; threshold 127, 18 leads a day). Each player decides the choices by its level or nature and treats the stakeholders by its policy's `stakeholders` traits (D152, D166): the levels as D165 set them, a Beginner answering 30% of requests and an Expert all of them; Risk taker goes to a stakeholder every week and answers half their requests, Conservative answers every request and never goes first, People first answers half and rarely goes first, Business first answers all and goes first most weeks. Probes leave choices and stakeholders alone.
 
 | Player | Score range | SD | Average | Tier | Revenue | Skills rated | Strong conversations | Read as meant | Business | People | Leadership | Streak |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Beginner | 206 to 375 | 48 | 329 | Bronze | 50% | Developing | 0% | 49% | 140 | 57 | 133 | 0 |
-| Developing | 400 to 523 | 37 | 456 | Bronze | 68% | Developing | 3% | 68% | 175 | 98 | 185 | 0 |
-| Proficient | 818 to 892 | 21 | 856 | Platinum | 136% | Advanced | 70% | 91% | 241 | 213 | 303 | 100 |
-| Expert | 908 to 962 | 17 | 934 | Platinum | 147% | Role Model | 94% | 88% | 240 | 252 | 342 | 100 |
-| Risk taker | 558 to 873 | 99 | 696 | Silver | 99% | Proficient | 60% | 97% | 217 | 178 | 259 | 43 |
-| Conservative | 507 to 774 | 103 | 645 | Silver | 78% | Advanced | 69% | 96% | 191 | 143 | 261 | 50 |
-| People first | 916 to 936 | 7 | 926 | Platinum | 173% | Advanced | 95% | 95% | 230 | 270 | 326 | 100 |
-| Business first | 744 to 856 | 34 | 804 | Gold | 109% | Advanced | 73% | 93% | 231 | 183 | 296 | 95 |
+| Beginner | 195 to 376 | 50 | 326 | Bronze | 47% | Developing | 0% | 57% | 134 | 56 | 136 | 0 |
+| Developing | 394 to 556 | 43 | 459 | Bronze | 67% | Developing | 4% | 79% | 174 | 96 | 190 | 0 |
+| Proficient | 848 to 912 | 16 | 885 | Platinum | 130% | Advanced | 75% | 95% | 248 | 231 | 307 | 100 |
+| Expert | 959 to 972 | 3 | 965 | Platinum | 148% | Advanced | 94% | 96% | 251 | 270 | 345 | 100 |
+| Risk taker | 543 to 870 | 99 | 725 | Gold | 92% | Proficient | 66% | 94% | 218 | 189 | 264 | 55 |
+| Conservative | 534 to 775 | 71 | 675 | Silver | 77% | Advanced | 66% | 96% | 196 | 150 | 260 | 70 |
+| People first | 917 to 944 | 8 | 930 | Platinum | 154% | Advanced | 95% | 97% | 233 | 270 | 328 | 100 |
+| Business first | 771 to 888 | 35 | 826 | Gold | 98% | Advanced | 76% | 96% | 234 | 201 | 295 | 98 |
 
-Best probes: Directing for everyone 603, goals every day 411, team energy every week with Directing for everyone 610, as many actions as possible 364, reading people without acting 728, and the pairs: team meeting and team energy 948, goals and team energy 942, feedback and team energy 934, team meeting and feedback 932, goals and team meeting 924, goals and feedback 786. Choices (ten runs each): Beginners leave about half to the default and otherwise take the short term option; Experts hold the price, move the deadline, fund travel training and set limits on the rumour in nearly every run; Risk taker takes the discount, moves the deadline, funds the training and tells the team; Conservative takes every default; People first takes the discount (its people effects are the best: morale and result up for the person who closes), moves the deadline, funds the training and tells the team; Business first takes the discount, the weekend, the cut and limits. Beginner and Expert choices are 95% apart.
+Stakeholders over ten runs each (relationship at the end, the mean of trust and satisfaction across the three; stakeholder conversations a run; requests answered): Beginner 39, 1.0, 9 of 30; Developing 45, 3.4, 20 of 30; Proficient 56, 4.2, 24 of 29; Expert 60, 4.1, 30 of 30; Risk taker 55, 6.6, 15 of 29; Conservative 52, 2.0, 30 of 30; People first 47, 1.8, 19 of 30; Business first 58, 4.7, 30 of 30.
 
-On both storylines every level check passes: scores rise, Experts reach Gold in 10 of 10 and Beginners never, skill ratings fit every level, styles and conversations change the outcome, the target suits the levels, and the levels' ranges do not overlap. What to look at, all storyline findings, none a failure (D152 keeps them as found; rebalancing is the storylines' owner's):
+Best probes: Directing for everyone 582, hiring every day 393, team energy every week with Directing for everyone 611, as many actions as possible 381, reading people without acting 718, and the pairs: team meeting and team energy 946, team meeting and goals 939, goals and team energy 939, team meeting and feedback 930, feedback and team energy 928, goals and feedback 771. Choices (ten runs each): Beginners leave about half to the default and otherwise take the short term option; Experts hold the price, move the deadline, fund travel training and set limits on the rumour in nearly every run; Risk taker takes the discount, moves the deadline, funds the training and tells the team; Conservative takes every default; People first takes the discount (its people effects are the best: morale and result up for the person who closes), moves the deadline, funds the training and tells the team; Business first takes the discount, the weekend, the cut and limits. Beginner and Expert choices are 93% apart.
 
-- **A routine beats the Expert** (`combined`, advice on the bundled actions): on Sales Elevator five of the six pairs (984 against 946); on Client Trust three, narrowly (948, 942 and 934 against 934), its budget costs on team energy do not change it.
-- **Reading people without acting reaches Gold** (`idle`, a warning): 799 on Sales Elevator (735 before dynamics and the recalibrated funnel), 728 on Client Trust.
-- **People first beats the Expert on score and revenue** (`tradeOff`): on Sales Elevator, 976 and 256% against 946 and 187%. On Client Trust it does not (926 and 173% against 934 and 147%): it wins on revenue, not on score.
+On both storylines every level check passes: scores rise, Experts reach Gold in 10 of 10 and Beginners never, skill ratings fit every level, styles and conversations change the outcome, the target suits the levels, and the levels' ranges do not overlap. What to look at, all storyline findings, none a failure (rebalancing is the storylines' owner's):
+
+- **A routine beats the Expert** (`combined`, advice on the bundled actions): on Sales Elevator five of the six pairs (984 against 946). Not on Client Trust once the stakeholders play: the best pair reaches 946 against the Expert's 965 (without stakeholders, D152, three pairs beat it narrowly, 948 against 934): a routine leaves the stakeholders alone, and the Expert's relationships are worth the difference.
+- **Reading people without acting reaches Gold** (`idle`, a warning): 799 on Sales Elevator (735 before dynamics and the recalibrated funnel), 718 on Client Trust.
+- **People first beats the Expert on score and revenue** (`tradeOff`): on Sales Elevator, 976 and 256% against 946 and 187%. On Client Trust it does not (930 and 154% against 965 and 148%): it wins a little on revenue, not on score.
 - **Business is capped** for Proficient and Expert on Sales Elevator (`mechanics`), so only People and Leadership separate them. Client Trust's variables give Business room above the target.
 
 The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them; with dynamics, a team kept in good spirits also delivers in full.
 
-Timings in Node: 40 playthroughs and the 70 probes about 3.4 s on Sales Elevator and 3.9 s on Client Trust, 80 playthroughs with the player types 4.6 s (this machine, loaded). Before the merge, on the synthetic players' branch: 20 playthroughs and the 70 probes about 2.7 s idle, 40 about 3.5 s.
-
-Client Trust with its three stakeholders (D165: the client lead, the CFO and the delivery lead, recalibrated to threshold 127 and 18 leads a day). The personas engage stakeholders by level (`src/engine/sim/stakeholderPlayers.ts`): a Beginner answers 30% of their requests, rarely engages anyone unasked and says little; an Expert answers every request in time and engages the weakest relationship nearly every week, in the words the rubric rewards.
-
-| Player | Score range | Average | Tier | Revenue | Skills rated | Fits level | Strong conversations |
-|---|---|---|---|---|---|---|---|
-| Beginner | 306 to 404 | 373 | Bronze | 58% | Novice | 100% | 0% |
-| Developing | 457 to 574 | 501 | Bronze | 73% | Proficient | 100% | 13% |
-| Proficient | 852 to 907 | 882 | Platinum | 132% | Advanced | 100% | 70% |
-| Expert | 962 to 977 | 971 | Platinum | 142% | Role Model | 100% | 97% |
-
-Every check passes; Expert players answered 25 of the 30 events that call for an answer, stakeholder requests included. Sales Elevator has no stakeholders and plays exactly as above.
+Timings in Node: 40 playthroughs and the 70 probes about 3.8 s on Sales Elevator and 4.9 s on Client Trust with its stakeholders, 80 playthroughs with the player types 5.4 s and 7.0 s (this machine, loaded). Before the merge, on the synthetic players' branch: 20 playthroughs and the 70 probes about 2.7 s idle, 40 about 3.5 s.
 
 ## 9. Not done
 
