@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Who wrote what</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.f{display:flex;flex-direction:column;gap:6px}
+.lbl{font-size:12px;font-weight:700;color:#3E4763;display:flex;gap:6px;align-items:center}
+.in{height:44px;box-sizing:border-box;border-radius:10px;border:1px solid #D9DEEA;background:#FFFFFF;padding:0 12px;display:flex;align-items:center;font-size:14px;color:#141A2E}
+.in.ai{background:#EEF8F9;border-color:#9BD3D9}
+.in.sug{background:#FFFFFF;border:1.5px dashed #0D7F8B}
+.in.need{background:#FFF8EB;border-color:#E7B65A;color:#7A5300}
+.badge{height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.b-ai{background:#DDF1F3;color:#0B6670}
+.b-you{background:#EAEDF5;color:#3E4763}
+.b-need{background:#FCEBC8;color:#7A5300}
+.b-req{background:transparent;color:#B42318;padding:0}
+.b-opt{background:transparent;color:#6B7390;padding:0;font-weight:600}
+.card{background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; padding: 56px 64px; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column; gap: 28px">
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 32px">
+    <div style="display: flex; flex-direction: column; gap: 10px; max-width: 760px">
+      <span style="font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #0D7F8B">GenieKreator · Authoring</span>
+      <h1 style="margin: 0; font-size: 44px; line-height: 1.08; letter-spacing: -0.02em">AI creates. You review and refine.</h1>
+      <p style="margin: 0; font-size: 17px; line-height: 1.55; color: #4B5470">Every field shows who wrote it and what it still needs. A first time author can publish with a few answers; an expert can open any section and set every detail.</p>
+    </div>
+    <div style="display: flex; gap: 10px">
+      <span class="badge b-you" style="height: 32px; padding: 0 12px; font-size: 13px">8 questions</span>
+      <span class="badge b-ai" style="height: 32px; padding: 0 12px; font-size: 13px">About 12 minutes to a playable draft</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px">
+    <div class="card">
+      <span class="badge b-you" style="align-self: flex-start"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>You wrote this</span>
+      <div class="f"><span class="lbl">Client</span><div class="in">Halden Group</div></div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #4B5470">Plain white field, dark text, a person mark. GenieKreator never overwrites it without asking.</p>
+    </div>
+    <div class="card">
+      <span class="badge b-ai" style="align-self: flex-start"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3L20.5 10l-6.3 2.2L12 18.5l-2.2-6.3L3.5 10l6.3-1.7z"/></svg>Generated</span>
+      <div class="f"><span class="lbl">Sponsor</span><div class="in ai">Paula Jacob, Regional Sales Director</div></div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #4B5470">Teal tint and a spark. Editing it turns it into yours. "Regenerate" is always one click away.</p>
+    </div>
+    <div class="card">
+      <span class="badge b-ai" style="align-self: flex-start; background: #FFFFFF; border: 1.5px dashed #0D7F8B">Suggestion</span>
+      <div class="f"><span class="lbl">Secondary lens</span><div class="in sug" style="justify-content: space-between">Six Leadership Styles<span style="display: flex; gap: 6px"><button type="button" style="height: 28px; padding: 0 10px; border-radius: 8px; border: 0; background: #0D7F8B; color: #FFFFFF; font: 700 12px Manrope, sans-serif">Use</button><button type="button" aria-label="Dismiss suggestion" style="height: 28px; width: 28px; border-radius: 8px; border: 1px solid #D9DEEA; background: #FFFFFF; color: #4B5470; font: 700 12px Manrope, sans-serif">✕</button></span></div></div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #4B5470">Dashed outline: an idea, not a decision. Nothing changes until the author accepts it.</p>
+    </div>
+    <div class="card">
+      <span class="badge b-need" style="align-self: flex-start"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 7v6M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg>Needs you</span>
+      <div class="f"><span class="lbl">Deal value <span class="badge b-req">Required</span></span><div class="in need">Add the average deal value</div></div>
+      <p style="margin: 0; font-size: 13px; line-height: 1.5; color: #4B5470">Amber: GenieKreator could not infer it. Counted in the "Needs you" list until filled.</p>
+    </div>
+    <div class="card">
+      <span class="badge b-you" style="align-self: flex-start; background: transparent; border: 1px solid #D9DEEA">Required or optional</span>
+      <div class="f"><span class="lbl">Run length <span class="badge b-req">Required</span></span><div class="in ai">Standard, about 60 minutes</div></div>
+      <div class="f"><span class="lbl">Welcome video <span class="badge b-opt">Optional</span></span><div class="in" style="color: #6B7390">None</div></div>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; flex: 1; min-height: 0">
+    <div class="card">
+      <h2 style="margin: 0; font-size: 20px">The journey</h2>
+      <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+        <div style="padding: 14px; border-radius: 12px; background: #EEF2FD; display: flex; flex-direction: column; gap: 6px"><b style="font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #1F4FD1">Converse</b><span style="font-size: 14px; line-height: 1.45">5 to 10 questions. Upload a brief or a framework at any time.</span></div>
+        <div style="padding: 14px; border-radius: 12px; background: #EEF8F9; display: flex; flex-direction: column; gap: 6px"><b style="font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #0B6670">Watch it build</b><span style="font-size: 14px; line-height: 1.45">Each answer fills the workspace live, section by section.</span></div>
+        <div style="padding: 14px; border-radius: 12px; background: #FFF8EB; display: flex; flex-direction: column; gap: 6px"><b style="font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #7A5300">Review</b><span style="font-size: 14px; line-height: 1.45">Nine tabs, each with a status. Fix what needs you first.</span></div>
+        <div style="padding: 14px; border-radius: 12px; background: #EAF7EF; display: flex; flex-direction: column; gap: 6px"><b style="font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: #1E6B3E">Play and publish</b><span style="font-size: 14px; line-height: 1.45">Play a week, run the quality checks, publish.</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="margin: 0; font-size: 20px">Rules the interface keeps</h2>
+      <ul style="margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; line-height: 1.45; color: #3E4763">
+        <li>Show the essentials; advanced settings open on request.</li>
+        <li>Regenerate one section, never the whole product, unless asked.</li>
+        <li>The copilot is always beside you: "make Peter more defensive" works on any tab.</li>
+        <li>Status is shown by words and marks as well as color.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

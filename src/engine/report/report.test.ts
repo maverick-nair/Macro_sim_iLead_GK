@@ -62,6 +62,9 @@ describe('skill ratings', () => {
     expect(en(buildReport(sim)).summary.level).toBeNull();
     rec(sim, [[keys[3], 'adequate']]); rec(sim, [[keys[3], 'adequate']]);
     expect(en(buildReport(sim)).summary.level).toEqual({ index: 2, name: 'Proficient' });
+    // The level line praises the whole run (D143): with no revenue at all, the data contradicts it.
+    expect(en(buildReport(sim)).summary.narrative).toBeNull();
+    sim.funnel.value = config.money.target;
     expect(en(buildReport(sim)).summary.narrative).toBe(config.report.narratives.overall[2]);
   });
 
@@ -111,7 +114,7 @@ describe('the whole report from a run', () => {
     expect(rep.people.every(p => p.series.length > 0)).toBe(true);
     expect(rep.analytics.conversations).toBeGreaterThan(0);
     // Every sentence the engine wrote keeps to the copy rules (participant quotes are their own words).
-    const engineText = [rep.summary.business, rep.summary.narrative ?? '', ...rep.style.narrative, ...rep.moments.flatMap(m => [m.title, m.situation, m.behaviour, m.impact]), rep.business.bottleneck?.why ?? '', ...rep.plan.flatMap(p => [p.practice, p.onTheJob]), ...rep.methodology.lines, ...rep.skills.map(s => s.anchor ?? '')];
+    const engineText = [rep.summary.business, rep.summary.narrative ?? '', rep.summary.headline ?? '', ...rep.summary.lines, ...rep.summary.drivers.map(d => d.text), ...rep.style.narrative, ...rep.moments.flatMap(m => [m.title, m.situation, m.behaviour, m.impact]), rep.business.bottleneck?.why ?? '', ...rep.plan.flatMap(p => [p.practice, p.onTheJob]), ...rep.methodology.lines, ...rep.skills.map(s => s.anchor ?? '')];
     expect(engineText.flatMap(t => copyViolations(t).map(v => `${v}: ${t}`))).toEqual([]);
   });
 
@@ -128,7 +131,8 @@ describe('the whole report from a run', () => {
         ...rep.styleSummary.perStyle.flatMap(s => s.narrative), rep.styleSummary.preferred ?? '', ...Object.values(rep.consistency.narrative).map(x => x ?? ''),
         ...rep.actionSummary.flatMap(a => [a.description ?? '', a.narrative]), ...rep.thought.flatMap(q => [q.question, q.guide]), ...rep.takeaways,
         ...Object.values(rep.path ?? {}), ...rep.skills.flatMap(s => [s.narrative, s.description ?? '']), rep.verdict?.overall.label ?? '', rep.verdict?.overall.bar ?? '',
-        ...rep.needs.flatMap(n => [n.anchor ?? '']), rep.summary.business];
+        ...rep.needs.flatMap(n => [n.anchor ?? '']), rep.summary.business, rep.summary.headline ?? '', ...rep.summary.lines, ...rep.summary.drivers.map(d => d.text),
+        ...rep.skills.map(s => s.reconciliation ?? '')];
       expect(text.flatMap(t => copyViolations(t).map(v => `${v}: ${t}`))).toEqual([]);
       expect(text.join(' ')).not.toMatch(/\{\w+\}/);
     }

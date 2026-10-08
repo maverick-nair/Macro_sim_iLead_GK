@@ -52,6 +52,48 @@ describe('NPC prompt assembly', () => {
     expect(meeting.messages[0].content).toMatch(/This is the opening line: you speak first/);
   });
 
+  it('writes a stakeholder\'s sheet: who they are to the participant, their persona and concern, and the relationship in the scene (D161)', () => {
+    const st = { key: 'cfo', role: 'Chief Financial Officer', kind: 'executive' as const, pronoun: 'she' as const, about: 'Watches every cost line.', hiddenConcern: 'The board wants cuts.', concernLine: 'The board is pushing me.',
+      npc: { motivatedBy: 'A clean audit', speech: { pace: 50, warmth: 20, formality: 90, replyLength: 'short' as const } }, trust: 35, satisfaction: 62, interaction: 'negotiate' as const, goal: 'Agree the headcount.' };
+    const ctx = kentTurn({ format: 'negotiate', speaker: { id: 'cfo', name: 'Grace Okoro', persona: null, mood: 'concerned', trust: 35, stakeholder: st } });
+    const sheet = characterSheet(ctx);
+    expect(sheet).toMatch(/Role: Chief Financial Officer/);
+    expect(sheet).toMatch(/Who you are to the participant: a senior executive\. You are not on the participant's team/);
+    expect(sheet).toMatch(/What motivates you: A clean audit/);
+    expect(sheet).toMatch(/Hidden concern \(private/);
+    expect(sheet).not.toMatch(/Previous role/);
+    const user = buildNpcRequest(ctx, settingsFor('npc')).messages[0].content as string;
+    expect(user).toMatch(/Your satisfaction with the participant's team \(0 to 100\): 62/);
+    expect(user).toMatch(/This conversation: a negotiation/);
+    expect(npcPromptVersion()).toMatch(/^npc@3#/);
+  });
+
+  it('writes the author\'s persona into the sheet: age, motivation, topics, how they talk, notes and reactions by style name (D130)', () => {
+    const base = kentTurn();
+    const persona = { ...base.speaker.persona!, npc: { age: '45 to 54', motivatedBy: 'Being trusted with big accounts', avoid: 'His divorce', reactions: { D: 'Bristles and goes quiet.', S: 'Relaxes and talks.' }, speech: { pace: 20, warmth: 80, formality: 90, replyLength: 'short' as const }, notes: [{ label: 'Hobby', value: 'Marathons' }] } };
+    const sheet = characterSheet(kentTurn({ speaker: { ...base.speaker, persona }, styles: [{ key: 'D', name: 'Directing', short: 'Tell and check' }, { key: 'S', name: 'Supporting' }] }));
+    expect(sheet).toMatch(/Age: 45 to 54/);
+    expect(sheet).toMatch(/What motivates you: Being trusted with big accounts/);
+    expect(sheet).toMatch(/Topics you will not discuss \(deflect politely, in role\): His divorce/);
+    expect(sheet).toMatch(/How you talk: unhurried, warmly, formally/);
+    expect(sheet).toMatch(/Reply length: short/);
+    expect(sheet).toMatch(/Hobby: Marathons/);
+    expect(sheet).toMatch(/- Directing \(Tell and check\): Bristles and goes quiet\./);
+    expect(sheet).toMatch(/- Supporting: Relaxes and talks\./);
+    expect(characterSheet(base)).not.toMatch(/How you react/);
+  });
+
+  it('writes the storyline\'s world into the workplace, and the sponsor\'s voice only for the sponsor (D130)', () => {
+    const world = { about: 'Lifts for hospitals', headquarters: 'Pune', product: { name: 'Ascent', line: 'Quiet lifts', points: ['Fast installs'] }, customers: 'Hospital groups', rivals: [{ name: 'Beta', angle: 'cheaper' }], sponsorVoice: 'Brisk and dry' };
+    const kent = characterSheet(kentTurn({ story: { organisation: 'Innov8', world } }));
+    expect(kent).toMatch(/What the company does: Lifts for hospitals/);
+    expect(kent).toMatch(/Selling points: Fast installs/);
+    expect(kent).toMatch(/Rivals: Beta \(cheaper\)/);
+    expect(kent).not.toMatch(/Brisk and dry/);
+    const sponsor = kentTurn({ format: 'sponsor', speaker: { id: 'sponsor', name: 'Paula Jacob', persona: null, mood: 'neutral', trust: 50 }, story: { organisation: 'Innov8', world } });
+    expect(characterSheet(sponsor)).toMatch(/How you sound: Brisk and dry/);
+  });
+
   it('records a prompt version', () => {
     expect(npcPromptVersion()).toMatch(/^npc@\d+#[0-9a-f]{8}$/);
   });

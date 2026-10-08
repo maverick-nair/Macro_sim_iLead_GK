@@ -80,7 +80,7 @@ The variables are listed in `.env.example`; copy it to `.env.local` to set them.
 
 ## Author chat prototype
 
-`/author` is GenieKreator's author chat for iLead (D70, D74), for L&D authors rather than participants. It asks 5 to 10 questions, recommends a leadership lens, previews the build, then locks the lens and drafts a storyline. "Play this draft" opens the participant app on it (`/?storyline=draft&start=onboarding`); "Download config" saves the storyline JSON. `?theme=light` and `?client=halden` theme it.
+`/author` is GenieKreator's authoring tool for iLead (D105 to D111), for L&D authors rather than participants: a co-creator chat of 5 to 10 questions (typed or by voice) with the draft filling in beside it, a lens recommendation, First draft ready, then the workspace (`/author/workspace/<tab>`: brief, story, process, team, lens, actions, events, scoring, brand, synthetic players, review and publish) with Ask Kora, and the library admin page (`/author/library`). "Play a week" opens the participant app on the draft (`/?storyline=draft`). It is light only and saves the draft in the browser.
 
 - Code: `src/author` (question policy, recommendation, lens library, mock drafter, copy guard) and `src/author/ui` (components, with stories under "Author chat"). API shapes: `src/api/author.ts`. Server prompts: `docs/genie/prompts/author-chat.md` and `docs/genie/prompts/leadership-lens.md`.
 - `VITE_GENIE_URL` points the chat at the server (`POST /author/turn`, `POST /author/draft`). Unset, or when the server answers 404 or 501, the chat drafts from templates and says so.

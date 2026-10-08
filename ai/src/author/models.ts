@@ -1,8 +1,8 @@
-import { AuthorDraftResponse, Brief, type AuthorDraftRequest, type AuthorTurnRequest, type AuthorTurnResponse, type FrameworkDimension } from '../../../src/api/author';
+import { AuthorDraftResponse, Brief, type AuthorDraftRequest, type AuthorTurnRequest, type AuthorTurnResponse, type Clarify, type FrameworkDimension } from '../../../src/api/author';
 import { guardDraft } from '../../../src/author/copyGuard';
 import { MockDrafter } from '../../../src/author/drafter';
-import { extractFramework } from '../../../src/author/extract';
-import { planQuestions, questionFor } from '../../../src/author/questions';
+import { covered, planQuestions, questionFor } from '../../../src/author/questions';
+import { frameworkOf, makeDilemma } from '../../../src/author/read';
 import { recommendLens } from '../../../src/author/recommend';
 import { previewOf } from '../../../src/author/storyline';
 import { StorylineConfig, type StorylineInput } from '../../../src/engine/config';
@@ -21,6 +21,11 @@ import { BriefReading, briefReadingJsonSchema, DraftCopy, draftCopyJsonSchema, F
  */
 
 const mock = new MockDrafter();
+
+/** How long the model may read a turn's answers; the app gives the whole turn 30 seconds (D148). */
+export const TURN_READ_MS = 20_000;
+/** The whole reading of a turn, a repair included. */
+export const TURN_DEADLINE_MS = 25_000;
 
 export function createMockAuthorDrafter(): AuthorDrafter {
   return { provider: 'mock', source: 'templates', turn: req => mock.turn(req), draft: req => mock.draft(req) };
@@ -44,16 +49,21 @@ export function groundFramework(text: string, dims: FrameworkDimension[]): { kep
   return { kept, dropped };
 }
 
-/** Fills brief fields the model read, never overwriting what the brief has. */
+/** Everything the author wrote: a name the model reads must be in it, never invented (D146). */
+const sourceOf = (brief: Brief, req: AuthorTurnRequest) => norm([...Object.values(req.answers), ...brief.documents.map(d => d.text ?? '')].join('\n'));
+
+/** Fills brief fields the model read, never overwriting what the brief has. A client or a person not in the text is dropped. */
 export function mergeReading(brief: Brief, r: BriefReading, req: AuthorTurnRequest): Brief {
   const next: Brief = { ...brief, documents: [...brief.documents] };
   const text = (v: string | null) => (v && v.trim() ? v.trim().slice(0, 200) : undefined);
+  const src = sourceOf(brief, req);
+  const inText = (v: string) => src.includes(norm(v));
   if (!next.roleLevel) next.roleLevel = text(r.roleLevel);
   if (!next.industry) next.industry = text(r.industry);
   if (!next.challenge) next.challenge = text(r.challenge);
   if (next.client === undefined) {
     if (r.client.kind === 'fictional') next.client = null;
-    else if (r.client.kind === 'named' && text(r.client.name)) next.client = text(r.client.name)!.slice(0, 60);
+    else if (r.client.kind === 'named' && text(r.client.name) && inText(r.client.name!)) next.client = text(r.client.name)!.slice(0, 60);
   }
   if (next.teamSize === undefined && r.teamSize !== null && r.teamSize >= 6 && r.teamSize <= 12) next.teamSize = r.teamSize;
   if (!next.process && r.process) { const s = r.process.map(x => x.trim()).filter(Boolean); if (s.length >= 3 && s.length <= 6) next.process = s; }
@@ -61,6 +71,15 @@ export function mergeReading(brief: Brief, r: BriefReading, req: AuthorTurnReque
   if (!next.region && r.region) { next.region = r.region; next.language = text(r.language) ?? next.language; }
   if (!next.language && r.language) next.language = text(r.language);
   if (!next.tone && r.tone) next.tone = r.tone;
+  if (!next.stakeholders?.length && r.stakeholders?.length) {
+    const people = r.stakeholders.filter(p => (p.name.trim() ? inText(p.name) : p.role.trim())).map(p => ({ name: p.name.trim().slice(0, 120), role: p.role.trim().slice(0, 200), relation: p.relation.trim().slice(0, 120) || 'stakeholder' }));
+    if (people.length) next.stakeholders = people.slice(0, 20);
+  }
+  if (!next.objectives?.length && r.objectives?.length) { const o = r.objectives.map(x => x.trim().slice(0, 400)).filter(Boolean); if (o.length) next.objectives = o.slice(0, 12); }
+  if (!next.dilemmas?.length && r.dilemmas?.length) {
+    const ds = r.dilemmas.map(x => makeDilemma(x.a, x.b, x.stake ?? '')).filter((x): x is NonNullable<typeof x> => x !== null);
+    if (ds.length) next.dilemmas = ds.slice(0, 12);
+  }
   if (next.framework === undefined && r.frameworkDocument) {
     const doc = r.frameworkDocument === 'answers' ? req.answers.framework : next.documents.find(d => d.name === r.frameworkDocument)?.text;
     if (doc && doc.trim()) next.framework = doc;
@@ -68,6 +87,16 @@ export function mergeReading(brief: Brief, r: BriefReading, req: AuthorTurnReque
   // Drop keys left undefined so the brief stays minimal.
   for (const k of Object.keys(next) as Array<keyof Brief>) if (next[k] === undefined) delete next[k];
   return Brief.parse(next);
+}
+
+/** The model's clarifying question, kept only for a field the brief does not have and with 2 to 8 choices. */
+export function clarifyOf(r: BriefReading, brief: Brief): Clarify | null {
+  const c = r.clarify;
+  if (!c || covered(brief, c.question)) return null;
+  const choices = [...new Set(c.choices.map(x => sanitizeCopy(x.trim()).slice(0, 120)).filter(Boolean))].slice(0, 8);
+  const prompt = sanitizeCopy(c.prompt.trim()).slice(0, 400);
+  if (choices.length < 2 || !prompt) return null;
+  return { id: c.question, prompt, choices: choices.map(x => ({ label: x, value: x })) };
 }
 
 function readingMessage(brief: Brief, req: AuthorTurnRequest): string {
@@ -89,7 +118,9 @@ function templateView(s: StorylineInput, req: AuthorDraftRequest) {
       styles: (s.lens?.styles ?? []).map(st => ({ key: st.key, name: st.name, short: st.short, description: st.description })),
       stages: s.stages.map(st => ({ key: st.key, name: st.name })),
       members: s.members.map((m: Member) => ({ id: m.id, pronoun: m.pronoun, stage: m.homeStage, name: m.name, title: m.title, remarks: m.profile.remarks, hiddenConcern: m.hiddenConcern ?? null, concernLine: m.concernLine ?? null })),
-      events: (s.events ?? []).map(e => ({ key: e.key, title: e.title, he: e.body.he, she: e.body.she, card: e.card }))
+      events: (s.events ?? []).map(e => ({ key: e.key, title: e.title, he: e.body.he, she: e.body.she, card: e.card,
+        // A decision (D153): what is known and each option's words; its effects stay as they are.
+        ...(e.choice ? { choice: { known: e.choice.known, options: e.choice.options.map(o => ({ key: o.key, label: o.label, outcome: o.outcome })) } } : null) }))
     }
   };
 }
@@ -129,7 +160,14 @@ export function mergeCopy(template: StorylineInput, c: DraftCopy): StorylineInpu
   s.events = (s.events ?? []).map(e => {
     const n = c.events.find(x => x.key === e.key);
     if (!n) return e;
-    return { ...e, title: clean(n.title), body: { he: clean(n.he), she: clean(n.she), ...(n.they ? { they: clean(n.they) } : {}) } };
+    const choice = e.choice && {
+      ...e.choice,
+      options: e.choice.options.map(o => {
+        const w = c.options?.find(x => x.event === e.key && x.key === o.key);
+        return w ? { ...o, label: clean(w.label), outcome: clean(w.outcome) } : o;
+      })
+    };
+    return { ...e, title: clean(n.title), body: { he: clean(n.he), she: clean(n.she), ...(n.they ? { they: clean(n.they) } : {}) }, ...(choice ? { choice } : null) };
   });
   return s;
 }
@@ -151,6 +189,8 @@ export interface AnthropicAuthorOptions {
   settings: ModelSettings;
   logger?: AiLogger;
   repairRetries?: number;
+  /** The whole reading of a turn; default TURN_DEADLINE_MS. */
+  turnDeadlineMs?: number;
 }
 
 export function createAnthropicAuthorDrafter(o: AnthropicAuthorOptions): AuthorDrafter {
@@ -166,11 +206,11 @@ export function createAnthropicAuthorDrafter(o: AnthropicAuthorOptions): AuthorD
       }, FrameworkReading, { repairs, repairPrompt: loadPrompt('repair').text, signal, logger: log });
       const g = groundFramework(text, out.value.dimensions);
       if (g.dropped.length) log.warn('author: framework items not found in the text were dropped', { dropped: g.dropped.slice(0, 10) });
-      return g.kept.length ? g.kept : extractFramework(text);
+      return g.kept.length ? g.kept : frameworkOf(text);
     } catch (e) {
       if (isAbort(e, signal)) throw e;
       log.error('author: framework reading failed; the rules read it', { error: String(e) });
-      return extractFramework(text);
+      return frameworkOf(text);
     }
   }
 
@@ -178,19 +218,26 @@ export function createAnthropicAuthorDrafter(o: AnthropicAuthorOptions): AuthorD
     let brief = Brief.parse(req.brief);
     const hasText = Object.values(req.answers).some(v => v.trim()) || brief.documents.some(d => d.text);
     if (hasText) {
+      // The whole reading, repair included, ends in time for the rules to answer before the app's 30 seconds (D148).
+      const deadline = AbortSignal.timeout(o.turnDeadlineMs ?? TURN_DEADLINE_MS);
+      const signal = opts?.signal ? AbortSignal.any([opts.signal, deadline]) : deadline;
       try {
         const out = await structuredCall(o.transport, {
-          label: 'author turn', settings: o.settings, system: system('author-turn'), jsonSchema: briefReadingJsonSchema,
+          // The app waits 30 seconds for a turn (D148): the reading gets less, so the rules answer in time when it is slow.
+          label: 'author turn', settings: { ...o.settings, timeoutMs: Math.min(o.settings.timeoutMs, TURN_READ_MS), maxRetries: 0 }, system: system('author-turn'), jsonSchema: briefReadingJsonSchema,
           messages: [{ role: 'user', content: readingMessage(brief, req) }]
-        }, BriefReading, { repairs, repairPrompt: loadPrompt('repair').text, signal: opts?.signal, logger: log });
+        }, BriefReading, { repairs, repairPrompt: loadPrompt('repair').text, signal, logger: log });
         brief = mergeReading(brief, out.value, req);
+        // One short question when the model reads the text as ambiguous about a field still open (D147).
+        const ask = clarifyOf(out.value, brief);
+        if (ask) return { kind: 'clarify', brief, clarify: ask };
       } catch (e) {
-        if (isAbort(e, opts?.signal)) throw e;
+        if (opts?.signal?.aborted || (!deadline.aborted && isAbort(e, opts?.signal))) throw e;
         log.error('author: reading failed; the templates answer this turn', { error: String(e) });
         return mock.turn(req);
       }
     }
-    const plan = planQuestions(brief, req.asked);
+    const plan = planQuestions(brief, req.asked, req.taken ?? []);
     if (plan.next) return { kind: 'question', brief, question: { ...questionFor(plan.next, brief), ...(plan.confirm ? { confirm: plan.confirm } : null) }, progress: { n: plan.n, about: plan.about } };
     return { kind: 'lens', brief, recommendation: recommendLens(brief), framework: brief.framework ? await readFramework(brief.framework, opts?.signal) : null };
   }
@@ -203,7 +250,10 @@ export function createAnthropicAuthorDrafter(o: AnthropicAuthorOptions): AuthorD
     try {
       const out = await structuredCall(o.transport, {
         label: 'author draft', settings: o.settings, system: system('author-draft'),
-        jsonSchema: draftCopyJsonSchema({ members: base.members.map(m => m.id), styles: (base.lens?.styles ?? []).map(s => s.key), events: (base.events ?? []).map(e => e.key) }),
+        jsonSchema: draftCopyJsonSchema({
+          members: base.members.map(m => m.id), styles: (base.lens?.styles ?? []).map(s => s.key), events: (base.events ?? []).map(e => e.key),
+          choices: (base.events ?? []).filter(e => e.choice).map(e => e.key), options: [...new Set((base.events ?? []).flatMap(e => e.choice?.options.map(o => o.key) ?? []))]
+        }),
         messages: [{ role: 'user', content: `<draft_input>\n${quoteInput(JSON.stringify(view, null, 2))}\n</draft_input>` }]
       }, DraftCopy, {
         repairs, repairPrompt: loadPrompt('repair').text, signal: opts?.signal, logger: log,

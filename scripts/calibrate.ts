@@ -2,7 +2,9 @@
  * Calibrates a storyline so it is playable (docs/SIMULATION.md section 9).
  *
  *   npm run calibrate -- sales-elevator          tune, write the storyline and calibration/<id>.md
- *   npm run calibrate -- sales-elevator --check  only measure and report
+ *   npm run calibrate -- sales-elevator --check  only measure and report; exit 1 when a band fails
+ *   npm run calibrate -- sales-elevator --check --lens six_styles   measure it played with the Six
+ *                                                    Leadership Styles test lens (D104); check only
  *
  * The authored target stays as it is (it is the client's number). Calibration tunes:
  *   1. performanceThreshold, the Model doc's funnel buffer, until passive play earns about half of
@@ -15,14 +17,26 @@ import path from 'node:path';
 import { parseStoryline, type StorylineConfig } from '../src/engine/config';
 import { play, type Policy } from '../src/engine/sim/policies';
 import { bestStyle, needOf } from '../src/engine/lens';
+import { withSixStyles } from '../src/engine/storylines/sixStyles';
 
 const root = path.resolve(import.meta.dirname, '..');
 const id = process.argv[2] ?? 'sales-elevator';
 const checkOnly = process.argv.includes('--check');
 const file = path.join(root, 'src/engine/storylines', `${id}.json`);
-const raw = JSON.parse(fs.readFileSync(file, 'utf8'));
+const lensArg = process.argv.includes('--lens') ? process.argv[process.argv.indexOf('--lens') + 1] : undefined;
+if (lensArg && lensArg !== 'six_styles') throw new Error(`Unknown --lens ${lensArg}: only six_styles has a test lens`);
+if (lensArg && !checkOnly) throw new Error('--lens only measures: add --check');
+const authored = JSON.parse(fs.readFileSync(file, 'utf8'));
+const raw = lensArg ? withSixStyles(authored) as typeof authored : authored;
 
-const BANDS: Record<Policy, [number, number]> = { passive: [0.4, 0.65], random: [0.35, 0.65], good: [1.0, 1.25] };
+const DEFAULT_BANDS: Record<Policy, [number, number]> = { passive: [0.4, 0.65], random: [0.35, 0.65], good: [1.0, 1.25] };
+/**
+ * Bands a storyline defines for itself (D141). Client Trust has choice events: random play decides every one
+ * (half the time well), while passive play leaves each to its default and meets every later event those defaults
+ * bring. So random play sits higher above passive than in a storyline without choices: its band runs to 75%.
+ */
+const STORYLINE_BANDS: Record<string, Partial<Record<Policy, [number, number]>>> = { 'client-trust': { random: [0.35, 0.75] } };
+const BANDS: Record<Policy, [number, number]> = { ...DEFAULT_BANDS, ...STORYLINE_BANDS[id] };
 const GOOD_AIM = 1.1;
 const RATIO_AIM = 0.5;
 const RUNS = 120;
@@ -136,8 +150,10 @@ ${gameRows.map(r => `| ${r.p} | ${r.total} | ${r.stars.toFixed(1)} | ${r.spread}
 - ${mixOk ? 'Mix is playable as authored; no member values were nudged.' : 'Mix needs attention.'}
 `;
   console.log(report);
+  const allOk = rows.every(r => r.ok) && gameRows.every(r => r.ok) && mixOk;
+  // `--check` is a gate (D141): it fails when a band or the member mix does.
+  if (checkOnly && !allOk) { console.error('A calibration band failed. See the report.'); process.exit(1); }
   if (!checkOnly) {
-    const allOk = rows.every(r => r.ok) && gameRows.every(r => r.ok) && mixOk;
     fs.writeFileSync(file, JSON.stringify({ ...raw, performanceThreshold: threshold, money: { ...raw.money, inputPerSubPeriod: input }, calibrated: allOk }, null, 2) + '\n');
     fs.mkdirSync(path.join(root, 'calibration'), { recursive: true });
     fs.writeFileSync(path.join(root, 'calibration', `${id}.md`), report);

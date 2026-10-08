@@ -94,6 +94,72 @@
               "text"
             ]
           }
+        },
+        "stakeholders": {
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "role": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "relation": {
+                "type": "string",
+                "maxLength": 120
+              }
+            },
+            "required": [
+              "name",
+              "role",
+              "relation"
+            ]
+          }
+        },
+        "objectives": {
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 400
+          }
+        },
+        "dilemmas": {
+          "maxItems": 12,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "a": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "b": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "stake": {
+                "type": "string",
+                "maxLength": 400
+              }
+            },
+            "required": [
+              "title",
+              "a",
+              "b",
+              "stake"
+            ]
+          }
         }
       }
     },

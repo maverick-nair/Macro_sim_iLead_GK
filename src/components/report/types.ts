@@ -67,6 +67,8 @@ export interface SkillRowData {
   more?: {
     anchor: string | null; observations: number; capped: boolean; quotes: ReportQuote[];
     outOf10?: string | null; description?: string | null; narrative?: string | null; verdict?: { label: string; tone: Tone; review: string } | null;
+    /** Why the rating is capped by what the participant did, not only what they said (D144). */
+    reconciliation?: string | null;
   };
 }
 
@@ -128,6 +130,41 @@ export interface PlanItemData {
   enoughEvidence?: boolean;
 }
 
+/** One choice in "Decisions and consequences" (D137), worded for display. */
+export interface DecisionData {
+  key: string;
+  /** "Week 2". */
+  when: string;
+  title: string;
+  /** The option taken, or null when nothing applied. */
+  option: string | null;
+  by: 'you' | 'default';
+  outcome: string | null;
+  /** What it changed: people, then business variables and revenue, as display lines. */
+  changes: string[];
+  /** Later events it led to, with their week. */
+  led: string[];
+  /** The leadership it showed, in words. */
+  read: string[];
+}
+
+/** One stakeholder in "Stakeholders" (D164), worded for display. */
+export interface StakeholderData {
+  key: string;
+  name: string;
+  /** "Chief Financial Officer, an executive". */
+  role: string;
+  /** "Steady to Good". */
+  relationship: string;
+  measures: Array<{ key: 'trust' | 'satisfaction'; name: string; start: number; end: number; direction: 'up' | 'down' | 'flat' }>;
+  interactions: Array<{ key: string; when: string; title: string; how: string; outcome: string | null; changes: string[] }>;
+  /** What moved the relationship most, a line each. */
+  moves: string[];
+}
+
+/** A business variable over the run (D136): start and end, formatted. */
+export interface BusinessVariableData { key: string; name: string; start: string; end: string; direction: 'up' | 'down' | 'flat'; better: boolean | null }
+
 export interface MomentData {
   key: string;
   kind: 'best' | 'revisit';
@@ -188,6 +225,11 @@ export interface SummaryExtras {
   business: string;
   /** Assessment only: the overall verdict, shown first (D75). */
   verdict?: VerdictData | null;
+  /** The headline the run's evidence gives, and its factual lines (D143). */
+  headline?: string | null;
+  lines?: string[];
+  /** "What drove your results" (D145): the decisions and patterns that moved the outcomes most. */
+  drivers?: Array<{ key: string; tone: 'positive' | 'negative'; text: string }>;
 }
 
 // ---------------------------------------------------------------- Report 3.0 (D75, D76)

@@ -9,6 +9,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
 import { AuthorDraftRequest, AuthorDraftResponse, AuthorTurnRequest, AuthorTurnResponse } from '../src/api/author';
+import { AuthorEditRequest, AuthorEditResponse } from '../src/api/authorEdit';
+import { CalibrationJob, CalibrationRequest, Playthrough } from '../src/author/calibrate/logic/schema';
 import { StorylineConfig } from '../src/engine/config';
 import { EngineView, Intent, IntentResult, StreamChunk } from '../src/engine/contract';
 import { BenchmarkSummary, GroupReport, GroupReportRequest } from '../src/engine/groupContract';
@@ -32,7 +34,12 @@ export const SCHEMAS: Array<[string, z.ZodType, 'input' | 'output']> = [
   ['author-turn-request', AuthorTurnRequest, 'input'],
   ['author-turn-response', AuthorTurnResponse, 'input'],
   ['author-draft-request', AuthorDraftRequest, 'input'],
-  ['author-draft-response', AuthorDraftResponse, 'input']
+  ['author-draft-response', AuthorDraftResponse, 'input'],
+  ['author-edit-request', AuthorEditRequest, 'input'],
+  ['author-edit-response', AuthorEditResponse, 'input'],
+  ['calibration-request', CalibrationRequest, 'input'],
+  ['calibration-job', CalibrationJob, 'input'],
+  ['calibration-playthrough', Playthrough, 'input']
 ];
 
 /** The schema files as text, keyed by file name. Transforms and refinements become plain types and notes. */

@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Edit a character</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:3px 7px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}
+.btn{height:38px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lab{font-size:12.5px;font-weight:700;color:#3E4763;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lab em{font-style:normal;font-weight:600;color:#6B7390}
+.inp{height:42px;box-sizing:border-box;border-radius:10px;border:1px solid #D9DEEA;padding:0 12px;font:500 14px Manrope,sans-serif;color:#141A2E;background:#FFFFFF;width:100%}
+.inp.ai{background:#EEF8F9;border-color:#CDE9EC}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{height:38px;padding:0 12px;border-radius:999px;border:1px solid #D9DEEA;background:#FFFFFF;font:600 13px Manrope,sans-serif;color:#3E4763}
+.seg button[aria-pressed="true"]{border-color:#1F4FD1;background:#EEF2FD;color:#1F4FD1}
+.ph{width:64px;height:64px;border-radius:12px;border:2px solid transparent}
+.ph.on{border-color:#1F4FD1}
+.voice{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;border:1px solid #E3E7F0}
+.voice.on{border-color:#1F4FD1;background:#F5F8FF}
+.play{width:40px;height:40px;border-radius:50%;border:1px solid #D9DEEA;background:#FFFFFF;display:flex;align-items:center;justify-content:center;color:#141A2E}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #E3E7F0}
+.tabs button{height:42px;padding:0 14px;border:0;background:transparent;font:700 14px Manrope,sans-serif;color:#6B7390;border-bottom:2px solid transparent}
+.tabs button[aria-selected="true"]{color:#141A2E;border-bottom-color:#1F4FD1}
+.sl{display:grid;grid-template-columns:120px minmax(0,1fr) 48px;gap:12px;align-items:center;font-size:13.5px}
+.track{height:8px;border-radius:4px;background:#E3E7F0;position:relative}
+.track span{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:#1F4FD1}
+.txt{border-radius:10px;border:1px solid #D9DEEA;padding:10px 12px;font-size:14px;line-height:1.5;background:#FFFFFF}
+.txt.ai{background:#EEF8F9;border-color:#CDE9EC}
+.rx{display:grid;grid-template-columns:120px minmax(0,1fr);gap:10px;align-items:center;font-size:13.5px;padding:7px 0;border-bottom:1px solid #EEF0F6}
+.rx:last-child{border-bottom:0}
+.tag{height:32px;padding:0 12px;border-radius:999px;border:1px solid #D9DEEA;background:#FFFFFF;font:600 13px Manrope,sans-serif;color:#3E4763;display:inline-flex;align-items:center}
+.tag.on{border-color:#0D7F8B;background:#EEF8F9;color:#0B6670}
+input[type=range]{width:100%;accent-color:#1F4FD1;height:24px}
+.num{width:56px;height:34px;box-sizing:border-box;border-radius:8px;border:1px solid #D9DEEA;padding:0 6px;font:700 13px Manrope,sans-serif;text-align:center}
+textarea.txt{width:100%;box-sizing:border-box;resize:vertical;font:500 14px/1.5 Manrope,sans-serif;color:#141A2E;min-height:64px}
+.tagb{height:32px;padding:0 12px;border-radius:999px;border:1px solid #D9DEEA;background:#FFFFFF;font:600 13px Manrope,sans-serif;color:#3E4763}
+.tagb[aria-pressed="true"]{border-color:#0D7F8B;background:#EEF8F9;color:#0B6670}
+.rx select,.rx input{height:34px;box-sizing:border-box;border-radius:8px;border:1px solid #D9DEEA;padding:0 8px;font:500 13px Manrope,sans-serif;color:#141A2E;background:#FFFFFF;width:100%}
+.rx{grid-template-columns:150px minmax(0,1fr) 30px}
+.x{width:30px;height:30px;border-radius:8px;border:1px solid #E3E7F0;background:#FFFFFF;color:#6B7390;font:700 12px Manrope,sans-serif}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; position: relative; overflow: hidden">
+  <div aria-hidden="true" style="position: absolute; inset: 0; display: flex; flex-direction: column; opacity: .5">
+    <div style="height: 64px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0"></div>
+    <div style="flex: 1; display: grid; grid-template-columns: 248px minmax(0, 1fr) 340px"><div style="background: #FFFFFF"></div><div></div><div style="background: #FFFFFF"></div></div>
+  </div>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(20,26,46,.32)"></div>
+  <section role="dialog" aria-modal="true" aria-label="Edit Kent Goldberg" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 920px; height: 780px; box-sizing: border-box; background: #FFFFFF; border-radius: 20px; box-shadow: 0 30px 90px rgba(20,26,46,.3); display: flex; flex-direction: column; overflow: hidden">
+    <div style="padding: 20px 24px 0; display: flex; align-items: center; gap: 14px">
+      <span style="width: 56px; height: 56px; border-radius: 50%; background: #F3D6C2"></span>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 2px"><h2 style="margin: 0; font-size: 22px">Edit Kent Goldberg</h2><span style="font-size: 13px; color: #4B5470">Leads · Lead Generation Executive · changes save to this draft only</span></div>
+      <button type="button" class="btn" aria-label="Close" style="width: 38px; padding: 0; justify-content: center">✕</button>
+    </div>
+    <div class="tabs" role="tablist" aria-label="Character details" style="padding: 12px 24px 0">
+      <button type="button" role="tab" aria-selected="{{t.identity}}" onClick="{{go.identity}}">Identity</button>
+      <button type="button" role="tab" aria-selected="{{t.voice}}" onClick="{{go.voice}}">Voice</button>
+      <button type="button" role="tab" aria-selected="{{t.personality}}" onClick="{{go.personality}}">Personality</button>
+      <button type="button" role="tab" aria-selected="{{t.stats}}" onClick="{{go.stats}}">Starting stats</button>
+    </div>
+    <sc-if value="{{t.identity}}" hint-placeholder-val="{{ true }}">
+    <div style="flex: 1; min-height: 0; padding: 20px 24px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; overflow: hidden">
+      <div class="fld" style="gap: 10px">
+        <span class="lab">Photo <span class="mark m-ai">Generated</span></span>
+        <div style="height: 260px; border-radius: 16px; background: linear-gradient(180deg, #F7E3D4, #E9C7AF); display: flex; align-items: flex-end; justify-content: center"><span style="width: 150px; height: 190px; border-radius: 75px 75px 18px 18px; background: #D9AE8F"></span></div>
+        <span style="font-size: 12px; font-weight: 700; color: #3E4763">Choose from the library</span>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+          <button type="button" class="ph on" aria-label="Portrait 1, selected" style="background: #F3D6C2"></button>
+          <button type="button" class="ph" aria-label="Portrait 2" style="background: #E6CDB8"></button>
+          <button type="button" class="ph" aria-label="Portrait 3" style="background: #D8C2AE"></button>
+          <button type="button" class="ph" aria-label="Portrait 4" style="background: #C9B09A"></button>
+        </div>
+        <div style="display: flex; gap: 8px"><button type="button" class="btn" style="flex: 1; justify-content: center">Upload a photo</button><button type="button" class="btn" style="flex: 1; justify-content: center; border-color: #0D7F8B; color: #0B6670">Create with Kora</button></div>
+        <span style="font-size: 12px; color: #6B7390; line-height: 1.45">Each photo comes with four moods (upbeat, steady, concerned, frustrated) so the face matches how the person feels in play.</span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 16px; min-width: 0">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+          <div class="fld"><label class="lab" for="fn">First name <em>Required</em></label><input id="fn" class="inp" value="Kent"></div>
+          <div class="fld"><label class="lab" for="ln">Last name <em>Required</em></label><input id="ln" class="inp" value="Goldberg"></div>
+        </div>
+        <div class="fld"><span class="lab">Gender <em>Required</em></span>
+          <div class="seg" role="group" aria-label="Gender"><button type="button" aria-pressed="false">Woman</button><button type="button" aria-pressed="true">Man</button><button type="button" aria-pressed="false">Non binary</button><button type="button" aria-pressed="false">Not stated</button></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+          <div class="fld"><label class="lab" for="pr">Pronouns <em>Optional</em></label><input id="pr" class="inp" value="he, him"></div>
+          <div class="fld"><label class="lab" for="age">Age range <span class="mark m-ai">AI</span></label><input id="age" class="inp ai" value="35 to 44"></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+          <div class="fld"><label class="lab" for="title">Job title <span class="mark m-ai">AI</span></label><input id="title" class="inp ai" value="Lead Generation Executive"></div>
+          <div class="fld"><label class="lab" for="stage">Stage <em>Required</em></label><input id="stage" class="inp" value="Leads"></div>
+        </div>
+        <div class="fld"><span class="lab">Voice <span class="mark m-ai">Matched by Kora</span></span>
+          <div class="voice on"><button type="button" class="play" aria-label="Play a sample of Warm, measured"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></button><span style="font-size: 14px"><b>Warm, measured</b> · male · US English · medium pace</span><span class="mark m-ai">Selected</span></div>
+          <div class="voice"><button type="button" class="play" aria-label="Play a sample of Brisk, direct"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></button><span style="font-size: 14px"><b>Brisk, direct</b> · male · UK English · fast pace</span><span></span></div>
+          <a href="#" style="font-size: 13px; font-weight: 700">See all voices, accents and languages</a>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{t.voice}}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; min-height: 0; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; overflow: hidden">
+      <div class="fld"><span class="lab">Voice <span class="mark m-ai">Matched by Kora to age, role and persona</span></span>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+          <div class="voice on"><button type="button" class="play" aria-label="Play Warm, measured"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></button><span style="font-size: 14px"><b>Warm, measured</b><br><span style="color: #6B7390; font-size: 12.5px">Male · US English · medium pace</span></span><span class="mark m-ai">Selected</span></div>
+          <div class="voice"><button type="button" class="play" aria-label="Play Brisk, direct"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></button><span style="font-size: 14px"><b>Brisk, direct</b><br><span style="color: #6B7390; font-size: 12.5px">Male · UK English · fast pace</span></span><span></span></div>
+          <div class="voice"><button type="button" class="play" aria-label="Play Calm, low"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></button><span style="font-size: 14px"><b>Calm, low</b><br><span style="color: #6B7390; font-size: 12.5px">Male · Indian English · slow pace</span></span><span></span></div>
+          <div class="voice"><button type="button" class="play" aria-label="Play Upbeat, quick"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg></button><span style="font-size: 14px"><b>Upbeat, quick</b><br><span style="color: #6B7390; font-size: 12.5px">Male · Australian English · fast pace</span></span><span></span></div>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+        <div class="fld"><label class="lab" for="lang">Language <em>From the brief</em></label><input id="lang" class="inp" value="English (United States)"></div>
+        <div class="fld"><label class="lab" for="acc">Accent <em>Optional</em></label><input id="acc" class="inp ai" value="General American"></div>
+      </div>
+      <div class="fld" style="gap: 10px"><span class="lab">How he sounds <span class="mark m-ai">Generated</span></span>
+        <div class="sl"><label for="r4">Speaking pace</label><input id="r4" type="range" min="0" max="100" value="50"><input class="num" aria-label="Speaking pace value" value="Medium"></div>
+        <div class="sl"><label for="r5">Warmth</label><input id="r5" type="range" min="0" max="100" value="40"><input class="num" aria-label="Warmth value" value="Cool"></div>
+        <div class="sl"><label for="r6">Formality</label><input id="r6" type="range" min="0" max="100" value="30"><input class="num" aria-label="Formality value" value="Casual"></div>
+        <div class="sl"><label for="r7">Reply length</label><input id="r7" type="range" min="0" max="100" value="35"><input class="num" aria-label="Reply length value" value="Short"></div>
+      </div>
+      <div class="fld"><label class="lab" for="test">Hear a line in this voice</label>
+        <div style="display: flex; gap: 8px"><input id="test" class="inp" value="Honestly? Since the territory split my best leads go to Beth."><button type="button" class="btn" style="height: 42px"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 5v14l12-7z"/></svg>Play</button></div>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{t.personality}}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; min-height: 0; padding: 20px 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; overflow: hidden">
+      <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+        <div class="fld"><span class="lab">Persona <span class="mark m-ai">Generated</span></span><label for="ta1" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Edit text</label><textarea id="ta1" class="txt ai" rows="3">Five years in lead generation, the most experienced on the team. Expected a promotion that went to someone else and has started complaining to colleagues. Speaks bluntly and tests new managers early.</textarea></div>
+        <div class="fld"><span class="lab">Hidden concern <span class="mark m-ai">Generated</span></span><label for="ta2" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Edit text</label><textarea id="ta2" class="txt ai" rows="3">Since the territory split his best leads go to Beth, and he thinks the manager chose her.</textarea><span style="font-size: 12px; color: #6B7390">Kept secret until a good conversation brings it out.</span></div>
+        <div class="fld"><span class="lab">Communication style <em>Pick any, or add your own</em></span>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px"><button type="button" class="tagb" aria-pressed="true">Direct</button><button type="button" class="tagb" aria-pressed="true">Guarded at first</button><button type="button" class="tagb" aria-pressed="false">Detailed</button><button type="button" class="tagb" aria-pressed="false">Warm</button><button type="button" class="tagb" aria-pressed="false">Data driven</button><button type="button" class="tagb" aria-pressed="true">Competitive</button><button type="button" class="tagb" aria-pressed="false">+ Add</button></div>
+        </div>
+        <div class="fld"><span class="lab">Motivated by <span class="mark m-ai">Generated</span></span><label for="ta3" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Edit text</label><textarea id="ta3" class="txt ai" rows="3">Recognition in front of the team, a clear path to senior roles.</textarea></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+        <div class="fld"><span class="lab">How he reacts to each style <span class="mark m-ai">Your lens styles</span></span>
+          <div style="border: 1px solid #E3E7F0; border-radius: 12px; padding: 4px 12px">
+            <div class="rx"><b>Instruct</b><input aria-label="How he reacts to Instruct" value="Feels micromanaged and pushes back"><span></span></div>
+            <div class="rx"><b>Guide</b><input aria-label="How he reacts to Guide" value="Engages if he hears the why"><span></span></div>
+            <div class="rx"><b>Partner</b><input aria-label="How he reacts to Partner" value="Responds best while morale is low"><span></span></div>
+            <div class="rx"><b>Empower</b><input aria-label="How he reacts to Empower" value="Takes it as being ignored"><span></span></div>
+          </div>
+        </div>
+        <div class="fld"><span class="lab">Relationships <em>Optional</em></span>
+          <div style="border: 1px solid #E3E7F0; border-radius: 12px; padding: 4px 12px">
+            <div class="rx"><select aria-label="Person"><option>Beth Killiney</option><option>Beth Killiney</option><option>Jack Holt</option><option>Ruth Ether</option></select><input aria-label="Relationship with Beth Killiney" value="Tension over the territory split"><button type="button" class="x" aria-label="Remove Beth Killiney">✕</button></div>
+            <div class="rx"><select aria-label="Person"><option>Jack Holt</option><option>Beth Killiney</option><option>Jack Holt</option><option>Ruth Ether</option></select><input aria-label="Relationship with Jack Holt" value="Old friend; listens to him"><button type="button" class="x" aria-label="Remove Jack Holt">✕</button></div>
+          </div>
+          <button type="button" class="btn" style="align-self: flex-start">Add a relationship</button>
+        </div>
+        <div class="fld"><label class="lab" for="avoid">Topics he will not discuss <em>Optional</em></label><input id="avoid" class="inp" value="His salary"></div>
+      </div>
+    </div>
+    </sc-if>
+    <sc-if value="{{t.stats}}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; min-height: 0; padding: 20px 24px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; overflow: hidden">
+      <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+        <div class="fld" style="gap: 12px"><span class="lab">Starting values, 0 to 100 <span class="mark m-ai">Generated</span></span>
+          <div class="sl"><label for="r8">Skill</label><input id="r8" type="range" min="0" max="100" value="30"><input class="num" aria-label="Skill value" value="30"></div>
+          <div class="sl"><label for="r9">Morale</label><input id="r9" type="range" min="0" max="100" value="24"><input class="num" aria-label="Morale value" value="24"></div>
+          <div class="sl"><label for="r10">Result</label><input id="r10" type="range" min="0" max="100" value="52"><input class="num" aria-label="Result value" value="52"></div>
+          <div class="sl"><label for="r11">Trust in you</label><input id="r11" type="range" min="0" max="100" value="52"><input class="num" aria-label="Trust in you value" value="52"></div>
+        </div>
+        <div style="padding: 12px 14px; border-radius: 12px; background: #F4FBFC; border: 1px solid #CDE9EC; display: flex; flex-direction: column; gap: 4px">
+          <b style="font-size: 13px; color: #0B6670">What this means in play · updates as you move the sliders</b>
+          <span style="font-size: 13.5px; line-height: 1.5">Low skill and low morale: Kent starts needing <b>Instruct</b>. The need changes as his numbers change.</span>
+        </div>
+        <div class="fld"><label class="lab" for="fit">Best stage for him <em>Optional</em></label><input id="fit" class="inp ai" value="Leads, then Qualify once his skill passes 50"></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+          <div class="fld"><label class="lab" for="exp">Experience <span class="mark m-ai">AI</span></label><input id="exp" class="inp ai" value="5 years"></div>
+          <div class="fld"><label class="lab" for="ten">Time on this team <span class="mark m-ai">AI</span></label><input id="ten" class="inp ai" value="1 month"></div>
+        </div>
+        <div class="fld"><label class="lab" for="prev">Previous company <em>Optional</em></label><input id="prev" class="inp" value="Not known yet"></div>
+        <div class="fld"><label class="lab" for="goal">Career goal <span class="mark m-ai">AI</span></label><input id="goal" class="inp ai" value="Senior Lead Generation Executive within a year"></div>
+        <div class="fld"><span class="lab">Shown to the participant</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px"><button type="button" class="tagb" aria-pressed="true">Experience</button><button type="button" class="tagb" aria-pressed="true">Time on team</button><button type="button" class="tagb" aria-pressed="false">Previous company</button><button type="button" class="tagb" aria-pressed="false">Career goal, after a good 1:1</button></div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+    <div style="padding: 14px 24px; border-top: 1px solid #E3E7F0; display: flex; align-items: center; gap: 10px">
+      <button type="button" class="btn">Add a custom field</button><span style="font-size: 13px; color: #4B5470; flex: 1">Every field is editable. Fields you change are marked as yours, and Kora will not overwrite them.</span>
+      <button type="button" class="btn">Cancel</button>
+      <button type="button" style="height: 42px; padding: 0 20px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Save changes</button>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"tab":{"editor":"enum","options":["identity","voice","personality","stats"],"default":"identity"},"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cur = (this.state && this.state.tab) || this.props.tab || 'identity';
+    const keys = ['identity', 'voice', 'personality', 'stats'];
+    const t = {}, go = {};
+    keys.forEach((k) => { t[k] = cur === k; go[k] = () => this.setState({ tab: k }); });
+    return { t, go };
+  }
+}
+</script>
+</body>
+</html>

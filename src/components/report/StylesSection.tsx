@@ -11,7 +11,7 @@ const CARD = 'flex flex-col gap-1.5 rounded-16 border border-line-default px-3.5
 /**
  * "Leadership styles summary" (the 1.0 report's styles page, lens aware, D70): proportion and accuracy per
  * style as bars, where each style was used against what people needed (rows: the lens's needs, columns:
- * its styles, 2 to 6), a card per style with its narrative, and the preferred style.
+ * its styles, 4 or 5), a card per style with its narrative, and the preferred style.
  */
 export function StylesSection({ data }: { data: StylesData }) {
   const { t, number } = useI18n();

@@ -55,7 +55,7 @@ export interface StyleControlProps {
 }
 
 /**
- * Columns for the lens's 2 to 6 letters, all in one row as designed. Five or six letters shrink with a
+ * Columns for the lens's 4 or 5 letters (D104), all in one row as designed. Five letters shrink with a
  * mouse or trackpad, and wrap to rows of three on a touch screen, where each keeps its 44px target (D69).
  */
 const COLUMNS: Record<number, string> = {

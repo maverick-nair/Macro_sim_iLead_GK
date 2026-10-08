@@ -166,7 +166,7 @@ describe('the engine on the server', () => {
     const cookie = await s.launch({ sub: 'p-1', storyline: 'sales_elevator_six_styles', purpose: 'assessment' });
     const v = await view(cookie);
     expect(v.lens.id).toBe('six_styles');
-    expect(v.lens.styles).toHaveLength(6);
+    expect(v.lens.styles).toHaveLength(5);
     const run = (await s.ctx.repo.listRuns('p-1'))[0];
     expect(run).toMatchObject({ storylineId: 'sales_elevator_six_styles', purpose: 'assessment', lensId: 'six_styles' });
     const bad = await s.launch({ sub: 'p-2', storyline: 'no_such_storyline' });

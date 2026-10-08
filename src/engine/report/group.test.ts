@@ -287,17 +287,17 @@ describe('buildGroupReport, assessment', () => {
   });
 });
 
-describe('six style lens', () => {
+describe('Six Leadership Styles lens (five styles)', () => {
   const six = config({}, true);
   const keys = SIX_STYLES_LENS.styles.map(s => s.key);
-  const runs = Array.from({ length: 5 }, (_, i) => run({ styles: keys, preferred: [keys[i % 2 ? 5 : 1]], perStyle: { command: [4, 3, 4], coach: [6, 3, 2] }, total: 10 }));
+  const runs = Array.from({ length: 5 }, (_, i) => run({ styles: keys, preferred: [keys[i % 2 ? 4 : 1]], perStyle: { drive: [4, 3, 4], coach: [6, 3, 2] }, total: 10 }));
 
-  it('names six styles from the lens, with their narratives and needs', () => {
+  it('names the five styles from the lens, with their narratives and needs', () => {
     const g = buildGroupReport({ runs, cohort: cohort('development', six) });
     expect(g.cohort.lens).toEqual({ id: 'six_styles', title: 'Six Leadership Styles' });
-    expect(g.styles!.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Pace Setter', 'Commander']);
-    expect(g.styles!.preferred.map(p => p.share)).toEqual([0, 60, 0, 0, 0, 40]);
-    expect(g.styles!.perStyle.find(s => s.key === 'command')!.narrative[0]).toBe('When the group used Commander, it mostly fit what people needed.');
+    expect(g.styles!.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Drive']);
+    expect(g.styles!.preferred.map(p => p.share)).toEqual([0, 60, 0, 0, 40]);
+    expect(g.styles!.perStyle.find(s => s.key === 'drive')!.narrative[0]).toBe('When the group used Drive, it mostly fit what people needed.');
     expect(g.styles!.perStyle.find(s => s.key === 'harmony')!.narrative[0]).toBe('The group did not use Harmonizer. It suits people who are capable but drained.');
   });
 

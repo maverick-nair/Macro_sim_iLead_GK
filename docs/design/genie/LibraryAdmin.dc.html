@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Action library admin</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.m-live{background:#E2F3E8;color:#1E6B3E}.m-beta{background:#FCEBC8;color:#7A5300}.m-draft{background:#EAEDF5;color:#3E4763}
+.btn{height:36px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.card{background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6B7390;text-align:left;padding:8px 10px;border-bottom:1px solid #E3E7F0}
+td{padding:9px 10px;border-bottom:1px solid #EEF0F6;vertical-align:middle}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label,.fld .l{font-size:12.5px;font-weight:700;color:#3E4763}
+.fld input,.fld select{height:40px;box-sizing:border-box;border-radius:10px;border:1px solid #D9DEEA;padding:0 10px;font:500 14px Manrope,sans-serif;color:#141A2E;background:#FFFFFF}
+.ck{display:flex;flex-wrap:wrap;gap:6px}
+.ck span{height:32px;padding:0 10px;border-radius:999px;border:1px solid #D9DEEA;font-size:12.5px;font-weight:600;display:inline-flex;align-items:center}
+.ck span.on{border-color:#1F4FD1;background:#EEF2FD;color:#1F4FD1}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <span style="font-size: 15px; font-weight: 700">Action library</span>
+    <span class="mark m-draft">Library admin</span>
+    <span style="flex: 1"></span>
+    <span style="font-size: 13px; color: #6B7390">Changes reach authors in new drafts; published simulations keep their version</span>
+  </header>
+  <div style="flex: 1; min-height: 0; padding: 22px 28px; display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 14px; min-width: 0">
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 16px">Interaction types</b><button type="button" class="btn">Register a new type</button></div>
+        <span style="font-size: 13px; color: #4B5470">The building blocks the platform can run. Each new product feature adds a type here; actions are built on top of them.</span>
+        <table>
+          <thead><tr><th scope="col">Type</th><th scope="col">How it plays</th><th scope="col">Scored by</th><th scope="col">Actions using it</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+            <tr><td><b>Live 1:1</b></td><td>Voice or text conversation</td><td>AI evaluator</td><td>5</td><td><span class="mark m-live">Live</span></td></tr>
+            <tr><td><b>Team meeting</b></td><td>Several AI characters, raised hands</td><td>AI evaluator</td><td>2</td><td><span class="mark m-live">Live</span></td></tr>
+            <tr><td><b>Written message</b></td><td>Email or chat</td><td>AI evaluator</td><td>3</td><td><span class="mark m-live">Live</span></td></tr>
+            <tr><td><b>Written plan</b></td><td>Structured fields</td><td>AI evaluator</td><td>1</td><td><span class="mark m-live">Live</span></td></tr>
+            <tr><td><b>Interview</b></td><td>Candidate conversation</td><td>AI evaluator</td><td>1</td><td><span class="mark m-live">Live</span></td></tr>
+            <tr><td><b>Static decision</b></td><td>Pick an option</td><td>Style fit rules</td><td>9</td><td><span class="mark m-live">Live</span></td></tr>
+            <tr><td><b>Decision, then a conversation</b></td><td>Pick, then explain live</td><td>Rules and AI</td><td>6</td><td><span class="mark m-live">Live</span></td></tr>
+            <tr><td><b>Video role play</b></td><td>Camera on, face to face</td><td>AI evaluator</td><td>0</td><td><span class="mark m-beta">Beta</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 16px">Action templates · 38</b><span style="display: flex; gap: 8px"><input aria-label="Search templates" placeholder="Search" style="height: 36px; border-radius: 9px; border: 1px solid #D9DEEA; padding: 0 10px; font: 500 13px Manrope, sans-serif"><button type="button" class="btn" style="background: #1F4FD1; border-color: #1F4FD1; color: #FFFFFF">New action template</button></span></div>
+        <table>
+          <thead><tr><th scope="col">Action</th><th scope="col">Type</th><th scope="col">In new simulations</th><th scope="col">Version</th></tr></thead>
+          <tbody>
+            <tr><td><b>Meet face to face</b></td><td>Live 1:1</td><td>Core, always included</td><td>v4</td></tr>
+            <tr><td><b>Send for training</b></td><td>Static decision</td><td>Optional, on by default</td><td>v3</td></tr>
+            <tr><td><b>Discount approval</b></td><td>Decision, then a conversation</td><td>Optional, off by default</td><td>v1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <section aria-label="Register a new type" style="background: #FFFFFF; border: 1.5px solid #1F4FD1; border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+      <b style="font-size: 17px">Register a new interaction type</b>
+      <div class="fld"><label for="tn">Name</label><input id="tn" value="Video role play"></div>
+      <div class="fld"><label for="tc">Player component</label><select id="tc"><option>video-roleplay (v0.3)</option></select></div>
+      <div class="fld"><span class="l">What authors can configure</span><div class="ck"><span class="on">Goal</span><span class="on">Time limit</span><span class="on">Characters present</span><span class="on">Opening line</span><span>Camera required</span><span class="on">Hints</span></div></div>
+      <div class="fld"><span class="l">How it is scored</span><div class="ck"><span class="on">AI evaluator on words</span><span>Rules</span><span>Both</span></div></div>
+      <div class="fld"><span class="l">Impact model</span><div class="ck"><span class="on">Style fit from the lens</span><span>Fixed effects</span><span>Custom formula</span></div></div>
+      <div class="fld"><span class="l">Available to</span><div class="ck"><span class="on">Library admins</span><span>All authors</span><span>Selected clients</span></div></div>
+      <span style="flex: 1"></span>
+      <div style="display: flex; gap: 8px"><button type="button" style="height: 42px; padding: 0 16px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Save as beta</button><button type="button" class="btn" style="height: 42px">Test in a sandbox</button></div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { draftStoryline as storedDraft, DRAFT_KEY } from '../engine/mock';
-import { DRAFT_KEY as AUTHOR_KEY } from './ui/AuthorApp';
+import { DRAFT_KEY as AUTHOR_KEY } from './model/draft';
 import { Brief, LeadershipLensModule } from '../api/author';
 import { parseStoryline } from '../engine/config';
 import { LENS_IDS, type LensId } from '../engine/lens';

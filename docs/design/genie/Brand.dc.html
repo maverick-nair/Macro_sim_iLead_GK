@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Brand and theme tab</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.nav a{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;border-radius:10px;color:#3E4763;text-decoration:none;font-size:14px;font-weight:600}
+.nav a.on{background:#EEF2FD;color:#1F4FD1}
+.nav i{font-style:normal;width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.i-you{background:#EAEDF5;color:#3E4763}.i-ai{background:#DDF1F3;color:#0B6670}.i-need{background:#FCEBC8;color:#7A5300}.i-ok{background:#E2F3E8;color:#1E6B3E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}.m-need{background:#FCEBC8;color:#7A5300}.m-ok{background:#E2F3E8;color:#1E6B3E}
+.btn{height:36px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.card{background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ch{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ch b{font-size:15px}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.lab{font-size:12.5px;font-weight:700;color:#3E4763;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lab em{font-style:normal;font-weight:600;color:#6B7390}
+.in{height:40px;box-sizing:border-box;border-radius:10px;border:1px solid #D9DEEA;padding:0 12px;font:500 14px Manrope,sans-serif;color:#141A2E;background:#FFFFFF;width:100%}
+.in.ai{background:#EEF8F9;border-color:#CDE9EC}
+.in.need{background:#FFF8EB;border-color:#E7B65A}
+textarea.in{height:auto;padding:9px 12px;line-height:1.5;resize:vertical}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:#F0F2F8;gap:4px;flex-wrap:wrap}
+.seg button{height:34px;padding:0 12px;border-radius:9px;border:0;background:transparent;font:600 13px Manrope,sans-serif;color:#3E4763}
+.seg button[aria-pressed="true"]{background:#FFFFFF;color:#141A2E;box-shadow:0 1px 3px rgba(20,26,46,.15)}
+.tg{height:32px;padding:0 12px;border-radius:999px;border:1px solid #D9DEEA;background:#FFFFFF;font:600 13px Manrope,sans-serif;color:#3E4763}
+.tg[aria-pressed="true"]{border-color:#1F4FD1;background:#EEF2FD;color:#1F4FD1}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+details summary{font-size:14px;font-weight:700;cursor:pointer}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <span style="font-size: 15px; font-weight: 700">Leading the Negotiation Team</span>
+    <span class="mark m-need">Draft · 2 need you</span>
+    <span style="flex: 1"></span>
+    <button type="button" class="btn" style="height: 40px">Play a week</button>
+    <a href="Publish.dc.html" style="height: 40px; padding: 0 16px; border-radius: 10px; background: #1F4FD1; color: #FFFFFF; font-size: 14px; font-weight: 700; display: flex; align-items: center; text-decoration: none">Review and publish</a>
+  </header>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 248px minmax(0, 1fr) 320px">
+    <nav class="nav" aria-label="Sections" style="background: #FFFFFF; border-right: 1px solid #E3E7F0; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px">
+      <a href="Overview.dc.html"><i class="i-ok">✓</i>Overview</a>
+      <a href="Brief.dc.html"><i class="i-you">1</i>Brief</a>
+      <a href="Story.dc.html"><i class="i-need">!</i>Story and world</a>
+      <a href="Process.dc.html"><i class="i-ai">3</i>Work process</a>
+      <a href="Team.dc.html"><i class="i-ai">4</i>Team</a>
+      <a href="Lens.dc.html"><i class="i-you">5</i>Leadership lens</a>
+      <a href="Actions.dc.html"><i class="i-ai">6</i>Actions and conversations</a>
+      <a href="Events.dc.html"><i class="i-ai">7</i>Events</a>
+      <a href="Scoring.dc.html"><i class="i-need">!</i>Scoring and report</a>
+      <a href="Brand.dc.html" class="on" aria-current="page"><i class="i-ok">✓</i>Brand and theme</a>
+      <a href="Calibrate.dc.html"><i class="i-need">!</i>Test with synthetic players</a>
+    </nav>
+    <main style="padding: 22px 28px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow: hidden">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 26px">Brand and theme</h1><span style="font-size: 14px; color: #4B5470">How the simulation looks for this client. Everything falls back to the KNOLSKAPE look if left empty.</span></div>
+        <div style="display: flex; gap: 8px"></div>
+      </div>
+      <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px">
+        <div class="card">
+          <div class="ch"><b>Theme</b><span class="mark m-you">Client theme</span></div>
+          <div class="fld"><span class="lab">Start from</span><div class="seg" role="group" aria-label="Start from"><button type="button" aria-pressed="false">KNOLSKAPE default</button><button type="button" aria-pressed="true">Client brand</button></div></div>
+          <div class="g2"><div class="fld"><label class="lab" for="bn">Brand name</label><input id="bn" class="in" value="Ascent Lifts"></div><div class="fld"><span class="lab">Logo</span><button type="button" class="btn" style="height: 40px">ascent-logo.svg · replace</button></div></div>
+          <div class="g2"><div class="fld"><span class="lab">Main color</span><div style="display: flex; gap: 8px; align-items: center"><span style="width: 40px; height: 40px; border-radius: 10px; background: #FF8A3D; border: 1px solid #E3E7F0"></span><input class="in" aria-label="Main color" value="#FF8A3D"></div><span style="font-size: 12px; color: #1E6B3E; font-weight: 600">Readable on every surface</span></div><div class="fld"><span class="lab">Second color</span><div style="display: flex; gap: 8px; align-items: center"><span style="width: 40px; height: 40px; border-radius: 10px; background: #2E6BE6; border: 1px solid #E3E7F0"></span><input class="in" aria-label="Second color" value="#2E6BE6"></div><span style="font-size: 12px; color: #7A5300; font-weight: 600">Darkened slightly so text stays readable</span></div></div>
+          <div class="g2"><div class="fld"><span class="lab">Font</span><select class="in" aria-label="Font"><option>Manrope</option><option>Inter Tight</option><option>Source Sans 3</option></select></div><div class="fld"><span class="lab">Look</span><div class="seg" role="group" aria-label="Look"><button type="button" aria-pressed="true">Dark</button><button type="button" aria-pressed="false">Light</button><button type="button" aria-pressed="false">Participant chooses</button></div></div></div>
+          <details><summary>Advanced: corner style, surfaces, report cover</summary></details>
+        </div>
+        <div class="card">
+          <div class="ch"><b>Preview</b><span style="display: flex; gap: 6px"><button type="button" class="btn" style="height: 30px">Board</button><button type="button" class="btn" style="height: 30px">Report</button></span></div>
+          <div style="flex: 1; min-height: 0; border-radius: 14px; background: #0B1220; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+            <div style="display: flex; align-items: center; gap: 10px"><span style="width: 28px; height: 28px; border-radius: 8px; background: #EEF2FD; color: #1F4FD1; font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center">AL</span><b style="color: #F1F4FF; font-size: 13px">Ascent Lifts</b><span style="flex: 1"></span><span style="height: 26px; padding: 0 10px; border-radius: 8px; background: #FF8A3D; color: #1A0B02; font-size: 11px; font-weight: 800; display: flex; align-items: center">End week 1</span></div>
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px"><span style="height: 40px; border-radius: 8px; background: #16203A"></span><span style="height: 40px; border-radius: 8px; background: #16203A"></span><span style="height: 40px; border-radius: 8px; background: #16203A"></span></div>
+            <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; flex: 1"><span style="border-radius: 8px; background: #16203A"></span><span style="border-radius: 8px; background: #16203A"></span><span style="border-radius: 8px; background: #16203A"></span><span style="border-radius: 8px; background: #16203A"></span><span style="border-radius: 8px; background: #16203A"></span></div>
+          </div>
+          <span style="font-size: 12.5px; color: #4B5470">Colors are checked for readability automatically. Status colors for gains and warnings stay fixed so they keep their meaning.</span>
+        </div>
+      </div>
+    </main>
+    <aside aria-label="Ask Kora" style="border-left: 1px solid #E3E7F0; background: #FFFFFF; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0">
+      <b style="font-size: 16px">Ask Kora</b>
+      <div style="padding: 12px; border-radius: 14px; border: 1.5px dashed #0D7F8B; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 13px; font-weight: 700; color: #0B6670">Suggestion</span>
+        <span style="font-size: 13px; line-height: 1.5">Your logo uses orange and navy. Use navy for the report cover too?</span>
+        <div style="display: flex; gap: 8px"><button type="button" style="height: 34px; padding: 0 12px; border-radius: 9px; border: 0; background: #0D7F8B; color: #FFFFFF; font: 700 13px Manrope, sans-serif">Use navy</button><button type="button" class="btn" style="height: 34px">Not now</button></div>
+      </div>
+      <span style="flex: 1"></span>
+      <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; border: 1px solid #D9DEEA">
+        <label for="ask" style="font-size: 12px; font-weight: 700; color: #3E4763">Your instruction for this tab</label>
+        <textarea id="ask" rows="2" placeholder="Describe a change in plain words" style="border: 0; resize: none; outline: none; font: 500 14px/1.5 Manrope, sans-serif; color: #141A2E"></textarea>
+        <button type="button" style="align-self: flex-end; height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Ask</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

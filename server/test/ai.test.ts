@@ -57,11 +57,16 @@ describe('AI provider wiring', () => {
     expect(typeof (ai.npc as unknown as { stream: unknown }).stream).toBe('function');
     expect((ai.evaluator as unknown as { provider: string }).provider).toBe('anthropic');
     expect((ai.author as unknown as { provider: string }).provider).toBe('anthropic');
+    expect((ai.editor as unknown as { provider: string }).provider).toBe('anthropic');
   });
 
   it('plays a conversation through the real ai/ module\'s objects (per role mock providers, no network)', async () => {
-    const ai = await load({ AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'k', AI_PROVIDER_NPC: 'mock', AI_PROVIDER_EVALUATOR: 'mock', AI_PROVIDER_AUTHOR: 'mock' });
+    const ai = await load({ AI_PROVIDER: 'anthropic', ANTHROPIC_API_KEY: 'k', AI_PROVIDER_NPC: 'mock', AI_PROVIDER_EVALUATOR: 'mock', AI_PROVIDER_AUTHOR: 'mock', AI_PROVIDER_SYNTHETIC: 'mock' });
     expect((ai.npc as unknown as { provider: string }).provider).toBe('mock');
+    // Synthetic players on the mock provider: the calibration keeps the engine's templates.
+    expect(ai.synthetic).toBeUndefined();
+    // Ask Kora on the mock author role: no editor, so /genie/author/edit answers 501 and the app's rules answer.
+    expect(ai.editor).toBeUndefined();
     s = await testServer({ ai });
     const { turn, end } = await oneTurn(s);
     expect(turn.text.length).toBeGreaterThan(0);
@@ -73,8 +78,9 @@ describe('AI provider wiring', () => {
   it('passes the module\'s env mapping and the server\'s logger to the factories', async () => {
     const ai = await load({ AI_PROVIDER: 'anthropic', AI_MODULE: FIXTURE, AI_MODEL_NPC: 'npc-model-id' });
     expect(await ai.npc.reply({} as never)).toEqual({ text: 'Fixture model line.' });
+    expect(await ai.synthetic?.say({} as never)).toBe('Fixture player line.');
     const mod = await import('./fixtures/ai-module');
-    expect(mod.seen.at(-1)).toMatchObject({ provider: 'anthropic', model: { model: 'npc-model-id' }, logger: expect.anything() });
+    expect(mod.seen).toContainEqual(expect.objectContaining({ provider: 'anthropic', model: { model: 'npc-model-id' }, logger: expect.anything() }));
     // A drafter that offers nothing: the routes say so (501) and the app uses its templates.
     s = await testServer({ ai });
     const author = await s.launch({ sub: 'au', roles: ['author'] });

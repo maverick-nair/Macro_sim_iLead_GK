@@ -65,5 +65,19 @@
   "board.demo.live": "Not in the demo: practice conversations before week 1",
   "board.fullscreen.failed": "Full screen is not available in this window.",
   "board.available.now": "Available now",
-  "board.available.people": "{n, plural, one {Open for # person} other {Open for # people}}"
+  "board.available.people": "{n, plural, one {Open for # person} other {Open for # people}}",
+  "board.business.aria": "The business",
+  "board.business.title": "Business",
+  "board.business.itemAria": "{name} {value}{dir, select, up {, up this period} down {, down this period} other {}}{better, select, true {, good news} false {, bad news} other {}}. Show what moved it",
+  "board.business.causes": "What moved it",
+  "board.business.noCauses": "Nothing yet this run.",
+  "board.business.decision": "Decision:",
+  "board.business.decide": "Decide",
+  "board.business.due": "{n, plural, =0 {due today} one {# {unit, select, quarter {quarter} month {month} week {week} day {day} hour {hour} other {step}} left} other {# {unit, select, quarter {quarters} month {months} week {weeks} day {days} hour {hours} other {steps}} left}}",
+  "board.stakeholders.title": "Stakeholders",
+  "board.stakeholders.person": "{name}, {level, select, strained {strained} cool {cool} steady {steady} good {good} other {strong}}",
+  "board.stakeholders.separator": "; ",
+  "board.stakeholders.openAria": "Stakeholders: {names}. Open",
+  "board.stakeholders.asks": "{name} asks:",
+  "board.stakeholders.answer": "Answer"
 }

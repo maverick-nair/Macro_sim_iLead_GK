@@ -4,9 +4,10 @@ import { DEFAULT_DEVELOPMENT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARR
 
 /**
  * A test lens that proves the engine and the UI follow the storyline's lens (D70): Six Leadership
- * Styles, with KNOLSKAPE names, six styles over the four needs, and Inspire and Deliver as the secondary
- * lens, whose two skills are report only. `withSixStyles` turns any storyline (Sales Elevator in the tests,
- * the mock's `?lens=six_styles`) into one that plays with it.
+ * Styles, with KNOLSKAPE names. The source model's Pacesetting and Commanding are merged into one style,
+ * Drive (D104: every lens has 4 or 5 styles), so it plays five styles over the four needs, with Inspire
+ * and Deliver as the secondary lens, whose two skills are report only. `withSixStyles` turns any
+ * storyline (Sales Elevator in the tests, the mock's `?lens=six_styles`) into one that plays with it.
  */
 export const SIX_STYLES_LENS: Lens = {
   id: 'six_styles',
@@ -18,8 +19,7 @@ export const SIX_STYLES_LENS: Lens = {
     { key: 'coach', letter: 'CO', name: 'Coach', short: 'You build their strengths for the long run.', description: 'You link their goals to the work and help them grow, one conversation at a time.' },
     { key: 'harmony', letter: 'HA', name: 'Harmonizer', short: 'You put feelings first and mend relationships.', description: 'You build harmony and heal rifts, so people feel valued and safe.' },
     { key: 'collab', letter: 'CL', name: 'Collaborator', short: 'You ask for ideas and decide together.', description: 'You invite views and build agreement before you commit.' },
-    { key: 'pace', letter: 'PS', name: 'Pace Setter', short: 'You set a high bar and model it yourself.', description: 'You set demanding standards, lead by example and expect people to keep up.' },
-    { key: 'command', letter: 'CM', name: 'Commander', short: 'You give clear orders and expect them followed.', description: 'You take charge and give firm direction. It helps most in a crisis.' }
+    { key: 'drive', letter: 'DR', name: 'Drive', short: 'You set a high bar and take charge when speed matters.', description: 'You set a high bar and take charge when speed matters. It steadies a crisis and wears people down when there is none.' }
   ],
   needs: {
     lowSkill_lowMorale: { label: 'New and unsure', short: 'Low skill, low morale' },
@@ -28,19 +28,22 @@ export const SIX_STYLES_LENS: Lens = {
     highSkill_highMorale: { label: 'Ready to stretch', short: 'High skill, high morale' }
   },
   fit: {
-    lowSkill_lowMorale: { vision: 1, coach: 1, harmony: 1, collab: 2, pace: 2, command: 0 },
-    lowSkill_highMorale: { vision: 1, coach: 0, harmony: 2, collab: 1, pace: 2, command: 1 },
-    highSkill_lowMorale: { vision: 1, coach: 1, harmony: 0, collab: 0, pace: 2, command: 2 },
-    highSkill_highMorale: { vision: 0, coach: 1, harmony: 1, collab: 1, pace: 0, command: 2 }
+    // Drive keeps Commanding's fit where people are new and unsure (clear direction helps), a partial
+    // miss for the eager and the ready (a high bar stretches them, orders do not), and a clear miss for
+    // the capable but drained, who need relief rather than more pressure.
+    lowSkill_lowMorale: { vision: 1, coach: 1, harmony: 1, collab: 2, drive: 0 },
+    lowSkill_highMorale: { vision: 1, coach: 0, harmony: 2, collab: 1, drive: 1 },
+    highSkill_lowMorale: { vision: 1, coach: 1, harmony: 0, collab: 0, drive: 2 },
+    highSkill_highMorale: { vision: 0, coach: 1, harmony: 1, collab: 1, drive: 1 }
   },
   secondary: { id: 'inspire_deliver', title: 'Inspire and Deliver' }
 };
 
-/** The participant facing six style lens, for stories. */
+/** The participant facing Six Leadership Styles lens (five styles), for stories. */
 export const SIX_STYLES_VIEW = lensView(SIX_STYLES_LENS);
 
-/** Readiness Based option tags mapped to the six styles. */
-const TAG: Record<string, string> = { D: 'command', G: 'coach', P: 'collab', E: 'vision' };
+/** Readiness Based option tags mapped to the lens's styles. */
+const TAG: Record<string, string> = { D: 'drive', G: 'coach', P: 'collab', E: 'vision' };
 
 /** The secondary lens's dimensions: report only (D70). */
 const REPORT_ONLY = [
@@ -75,7 +78,7 @@ export function withSixStyles(input: StorylineInput): StorylineInput {
         capability: DEFAULT_NARRATIVES.capability,
         dominant: {
           vision: 'You lean on setting the vision. People know where they are going; check that the newest know how.',
-          command: 'You lean on commanding. It steadies a crisis, and wears people down when there is none.'
+          drive: 'You lean on {style}. It steadies a crisis and speeds the work, and wears people down when there is none.'
         }
       },
       development: DEFAULT_DEVELOPMENT,

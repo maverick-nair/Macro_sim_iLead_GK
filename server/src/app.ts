@@ -21,6 +21,7 @@ import { Reports } from './reports';
 import { purge, registerAdmin } from './routes/admin';
 import { registerApi } from './routes/api';
 import { registerAuthor } from './routes/author';
+import { registerCalibrate } from './routes/calibrate';
 import { registerEngine } from './routes/engine';
 import { registerLaunch } from './routes/launch';
 import { registerOps, serveStatic } from './routes/ops';
@@ -119,6 +120,7 @@ export function createApp(deps: AppDeps) {
   registerEngine(ctx);
   registerApi(ctx);
   registerAuthor(ctx);
+  const calibrations = registerCalibrate(ctx);
   const stopSpeech = registerSpeech(ctx);
   registerAdmin(ctx);
   if (config.STATIC_DIR) serveStatic(app, config.STATIC_DIR);
@@ -133,7 +135,7 @@ export function createApp(deps: AppDeps) {
   };
 
   return {
-    app, ctx,
+    app, ctx, calibrations,
     /** Starts the schedules: benchmarks every BENCHMARK_REFRESH_HOURS, retention daily, both once soon after start. */
     schedule() {
       every(config.BENCHMARK_REFRESH_HOURS, () => reports.refreshBenchmarks(), 'benchmark refresh');
@@ -147,6 +149,7 @@ export function createApp(deps: AppDeps) {
     },
     async close() {
       for (const t of timers) clearInterval(t);
+      calibrations.close();
       stopSpeech();
       await deps.pdf?.close();
       deps.mailer?.close();
