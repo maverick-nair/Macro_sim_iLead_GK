@@ -18,7 +18,8 @@ const noDash = (s: string) => { expect(s).not.toMatch(/\u2014|\u2013/); expect(c
 describe('the template fit check (D133)', () => {
   it('names everything the merger brief asks for that iLead cannot play, and the nearest fit', () => {
     const f = fitCheck(MERGER);
-    expect(f.concerns.map(c => c.kind)).toEqual(['stakeholders', 'merger', 'negotiation', 'budget']);
+    // The budget cut is a decision the engine plays now (D152): no longer a concern.
+    expect(f.concerns.map(c => c.kind)).toEqual(['stakeholders', 'merger', 'negotiation']);
     expect(f.senior).toBe(true);
     const say = fitMessage(f.concerns);
     expect(say).toMatch(/^Before I go on, a plain word on fit\. An iLead simulation is one leader with a team of 6 to 12 direct reports\. It cannot play /);
@@ -36,6 +37,14 @@ describe('the template fit check (D133)', () => {
     for (const t of [...ROLE_LEVELS.map(r => r.label), ...CHALLENGES.map(c => c.label), ...Object.values(MOCK_ANSWERS)]) expect(fitCheck(t).concerns, t).toEqual([]);
     expect(fitCheck('Deals stall at negotiation and new reps burn out in the first quarter.').concerns).toEqual([]);
     expect(fitCheck('Our team is going through a merger and people worry about their jobs').concerns).toEqual([]);
+    // Budget and customer decisions play as business variables and choice events (D136, D137).
+    expect(fitCheck('The manager must decide where to cut the training budget and whether to discount to keep a key customer.').concerns).toEqual([]);
+  });
+
+  it('the intro says what the engine plays now and what is still missing', () => {
+    expect(INTRO.goodFor).toMatch(/decisions with trade offs/);
+    expect(INTRO.notYet).not.toMatch(/budget/i);
+    expect(INTRO.notYet).toMatch(/stakeholders outside the team .*coming next.*negotiations between several parties/);
   });
 
   it('says once that senior leaders get their own leadership team', () => {

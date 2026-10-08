@@ -3,9 +3,9 @@ import { CARD, FOCUS } from '../kit';
 /** The words, kept apart so tests and the server's prompt can read the same promise. */
 export const INTRO = {
   title: 'What you are building: an iLead simulation',
-  what: 'The participant leads a team of 6 to 12 direct reports through a staged work process, over up to 10 weeks. Each week they choose a leadership style and actions for each person: conversations, coaching, feedback, goals, team meetings. Events land, a sponsor watches, and the team works toward a revenue or output target.',
-  goodFor: 'Good for: leading people with different skill and morale, coaching and feedback conversations, and leading one team through pressure or change.',
-  notYet: 'Not covered yet: stakeholders outside the team (a board, customers, peers), negotiations between several parties, and budget or customer decisions as things the participant controls. If your brief needs them, I will say so.',
+  what: 'The participant leads a team of 6 to 12 direct reports through a staged work process, over up to 10 weeks. Each week they choose a leadership style and actions for each person: conversations, coaching, feedback, goals, team meetings. Events land, a sponsor watches, and the team works toward a revenue or output target, with business measures such as a budget or customer trust beside it.',
+  goodFor: 'Good for: leading people with different skill and morale, coaching and feedback conversations, leading one team through pressure or change, and decisions with trade offs, such as a budget cut or a discount to a customer, whose consequences carry forward.',
+  notYet: 'Not covered yet: stakeholders outside the team (a board, customers, peers) as characters to lead or manage, which are coming next, and negotiations between several parties. If your brief needs them, I will say so.',
   kora: 'I am Kora. A few short questions, typed or recorded, and I will draft it.',
   glossary: [
     ['Leadership lens', 'the model of leadership styles the simulation scores against, for example Readiness Based Leadership.'],

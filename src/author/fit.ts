@@ -7,9 +7,14 @@
  *
  * Plain keyword rules, like the rest of the offline chat (extract.ts); a server reads the same brief with the
  * model and should raise the same kinds.
+ *
+ * Budget and customer decisions are no longer raised (D152): the engine plays business variables, such as a
+ * budget or customer satisfaction, and decisions with trade-offs that carry forward (D136 to D138), and the
+ * drafter seeds them from the brief's objectives and dilemmas. Still missing: stakeholders outside the team as
+ * characters (coming next), a merger across functions, and negotiations between several parties.
  */
 
-export const FIT_KINDS = ['no_team', 'stakeholders', 'merger', 'negotiation', 'budget'] as const;
+export const FIT_KINDS = ['no_team', 'stakeholders', 'merger', 'negotiation'] as const;
 export type FitKind = (typeof FIT_KINDS)[number];
 
 export interface FitConcern {
@@ -33,8 +38,8 @@ const TEXT: Record<FitKind, Omit<FitConcern, 'kind'>> = {
     nearest: 'the participant leads a small team of direct reports, as in a first leadership role'
   },
   stakeholders: {
-    cannot: 'people outside the team, such as a board, customers or peers, as characters the participant leads or manages',
-    nearest: 'the participant leads their own team; the sponsor is the one voice from above, and a board, customers or peers appear only in events'
+    cannot: 'people outside the team, such as a board, customers or peers, as characters the participant leads or manages (they are coming next)',
+    nearest: 'the participant leads their own team; the sponsor is the one voice from above, and a board, customers or peers appear in events, in decisions and in business measures such as customer trust'
   },
   merger: {
     cannot: 'a merger or an integration across several functions',
@@ -43,10 +48,6 @@ const TEXT: Record<FitKind, Omit<FitConcern, 'kind'>> = {
   negotiation: {
     cannot: 'negotiations between several parties',
     nearest: 'pressure from a negotiation arrives as events the team must handle'
-  },
-  budget: {
-    cannot: 'budget and spending decisions the participant controls',
-    nearest: 'budget pressure arrives as events, such as a cut or a freeze, that the team must absorb'
   }
 };
 
@@ -56,8 +57,7 @@ const RULES: Record<FitKind, (t: string) => boolean> = {
     || /\bindividual contributors?\b(?![^.]*\b(?:moving|becom\w*|promot\w*|into leadership|first (?:team|leadership))\b)/i.test(t),
   stakeholders: t => /\bstakeholders?\b|\bthe board\b|\bboard (?:members?|of directors)\b|\bpeers?\b|\bcross[- ]functional\b|\bmatrix(?:ed)? (?:organi[sz]ation|teams?|structure)\b|\binvestors?\b|\bregulators?\b/i.test(t),
   merger: t => /\b(?:mergers?|merged|merging|acquisitions?|acquired)\b/i.test(t) && /\bintegrat\w*|\bacross (?:the |both |two )?(?:functions|departments|organi[sz]ations?|business units|sites|hospitals|companies)\b|\bcross[- ]functional\b|\bfunctions\b/i.test(t),
-  negotiation: t => /\bnegotiat\w*/i.test(t) && /\b(?:unions?|multi[- ]?party|several parties|multiple parties|between (?:the )?parties|stakeholders|payers?|suppliers and)\b/i.test(t),
-  budget: t => /\b(?:budgets?|p&l|p and l|capex|opex|spending)\b/i.test(t) && /\b(?:decid\w*|decisions?|allocat\w*|cut\w*|own\w*|set(?:s|ting)?|balanc\w*|prioriti[sz]\w*|trade[- ]?offs?)\b/i.test(t)
+  negotiation: t => /\bnegotiat\w*/i.test(t) && /\b(?:unions?|multi[- ]?party|several parties|multiple parties|between (?:the )?parties|stakeholders|payers?|suppliers and)\b/i.test(t)
 };
 
 const SENIOR = /\b(?:senior (?:managers?|leaders?|leadership|executives?)|executives?|vps?|vice presidents?|directors?|c[- ]?suite|cxos?|heads? of)\b/i;
