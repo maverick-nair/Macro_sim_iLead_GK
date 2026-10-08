@@ -184,7 +184,11 @@ function migrateEvent(v: unknown): unknown {
   return e;
 }
 
-export const EventDraft = z.preprocess(migrateEvent, z.object({
+/**
+ * The event's fields as an object schema, without the migration in front of it. Code that needs one field's
+ * schema (Kora's whitelist in patch.ts) reads `EventFields.shape`; parsing a stored event goes through `EventDraft`.
+ */
+export const EventFields = z.object({
   key: z.string().regex(/^[a-z][a-z0-9_]*$/),
   title: Short,
   kind: z.enum(EVENT_KINDS),
@@ -213,7 +217,8 @@ export const EventDraft = z.preprocess(migrateEvent, z.object({
   /** When the response does not come in time: the sponsor hears of it, and an event that follows. */
   ifIgnored: z.object({ sponsor: z.boolean(), followUp: z.string().nullable() }).default({ sponsor: false, followUp: null }),
   origin: z.enum(['library', 'yours'])
-}));
+});
+export const EventDraft = z.preprocess(migrateEvent, EventFields);
 export type EventDraft = z.infer<typeof EventDraft>;
 
 export const BANDS = ['strong', 'adequate', 'weak', 'harmful'] as const;
