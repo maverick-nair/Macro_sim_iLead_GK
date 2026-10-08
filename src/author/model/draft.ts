@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { Brief, FrameworkDimension, QUESTION_IDS } from '../../api/author';
+import { EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
+import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
 /**
  * The author's draft (D105): one typed model for the whole of /author, the co-creator chat and every
@@ -26,6 +28,19 @@ export const TEXT_MAX = 4000;
 const Text = z.string().max(TEXT_MAX);
 const Short = z.string().max(SHORT_MAX);
 const Pct = z.number().int().min(0).max(100);
+/**
+ * A whole number kept inside the engine's range (D128): a stored draft from before a bound tightened (12
+ * weeks, say) reads back at the nearest value the engine plays, instead of failing and losing its section.
+ */
+const IntIn = (min: number, max: number) => z.preprocess(v => (typeof v === 'number' && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : v), z.number().int().min(min).max(max));
+
+/** The run's limits, the engine's own (D128): the authoring inputs show them and the draft keeps to them. */
+export const MIN_WEEKS = 2;
+export const MAX_WEEKS = MAX_PERIODS;
+export const MIN_TEAM = MIN_MEMBERS;
+export const MAX_TEAM = MAX_MEMBERS;
+export const MIN_DAYS = 3;
+export const MAX_DAYS = 7;
 
 /** The chat's transcript: a question with the author's answer, or a note from Kora. */
 export const ChatEntry = z.discriminatedUnion('kind', [
@@ -72,7 +87,7 @@ export const DraftLens = z.object({
 export type DraftLens = z.infer<typeof DraftLens>;
 
 export const GENDERS = ['woman', 'man', 'nonbinary', 'unstated'] as const;
-export const REPLY_LENGTHS = ['short', 'medium', 'long'] as const;
+export { REPLY_LENGTHS };
 
 export const Character = z.object({
   id: z.string().regex(/^[a-z][a-z0-9_]*$/),
@@ -129,7 +144,7 @@ export const ActionDraft = z.object({
   forWhom: Short,
   cost: z.number().min(0.5).max(5),
   againAfter: z.number().int().min(0).max(20),
-  availableFrom: z.number().int().min(1).max(12),
+  availableFrom: IntIn(1, MAX_WEEKS),
   format: Short,
   starts: z.enum(['npc', 'participant']),
   goal: Text,
@@ -144,28 +159,56 @@ export type ActionDraft = z.infer<typeof ActionDraft>;
 
 export const EVENT_KINDS = ['impact', 'opportunity', 'people', 'sponsor'] as const;
 export const ARRIVALS = ['modal', 'bulletin', 'chat', 'email', 'sponsorCall'] as const;
+/**
+ * When an event happens (D128): on a fixed week and day, some time in a range of weeks, when a condition the
+ * engine checks holds, or only as the follow up of another event that was ignored.
+ */
+export const TIMINGS = ['fixed', 'random', 'condition', 'followup'] as const;
+export { EVENT_CONDITIONS };
+const Delta = z.number().int().min(-30).max(30);
 
-export const EventDraft = z.object({
+/**
+ * Drafts saved before D128 kept the expected response and what happens if ignored as free text. They read
+ * back as structure: the action keys named in the text, and whether the sponsor hears of it.
+ */
+function migrateEvent(v: unknown): unknown {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return v;
+  const e = { ...(v as Record<string, unknown>) };
+  if (!('respondWith' in e)) e.respondWith = (typeof e.response === 'string' ? e.response : '').split(/[\s,]+/).filter(k => /^[a-z][a-z0-9_]*$/.test(k));
+  if (!('ifIgnored' in e)) e.ifIgnored = { sponsor: typeof e.ignored === 'string' && /sponsor/i.test(e.ignored), followUp: null };
+  return e;
+}
+
+export const EventDraft = z.preprocess(migrateEvent, z.object({
   key: z.string().regex(/^[a-z][a-z0-9_]*$/),
   title: Short,
   kind: z.enum(EVENT_KINDS),
-  /** Fixed week and day; null for a random or conditional event (`timing` says which). */
-  week: z.number().int().min(1).max(12).nullable(),
-  day: z.number().int().min(1).max(7),
-  timing: z.enum(['fixed', 'random', 'condition']),
-  timingNote: Short,
+  /** Fixed week and day; null for any other timing (`timing` says which). */
+  week: IntIn(1, MAX_WEEKS).nullable(),
+  day: z.number().int().min(1).max(MAX_DAYS),
+  timing: z.enum(TIMINGS),
+  /** Random timing: some day in these weeks, with this chance in 100. Left out, the whole run. */
+  window: z.object({ from: IntIn(1, MAX_WEEKS), to: IntIn(1, MAX_WEEKS), chance: Pct }).optional(),
+  /** Conditional timing: one of the conditions the engine checks at the start of each week. */
+  condition: z.object({ kind: z.enum(EVENT_CONDITIONS), value: Pct, weeks: z.number().int().min(1).max(4) }).optional(),
   who: Short,
   arrives: z.enum(ARRIVALS),
   body: Text,
-  skill: z.number().int().min(-30).max(30),
-  morale: z.number().int().min(-30).max(30),
-  result: z.number().int().min(-30).max(30),
+  skill: Delta,
+  morale: Delta,
+  result: Delta,
+  /** Percent change in new leads in the event's week (fixed timing only). */
   leadFlow: z.number().int().min(-100).max(100),
-  response: Short,
+  /** Action keys that count as answering it (`reply` answers its message). Empty: no response expected. */
+  respondWith: z.array(z.string().regex(/^[a-z][a-z0-9_]*$/)).default([]),
+  /** Days the participant has to respond, 1 to 5. */
   within: z.number().int().min(1).max(5),
-  ignored: Short,
+  /** Skill, morale and result for the person when the response comes in time. */
+  onTime: z.tuple([Delta, Delta, Delta]).default([0, 2, 0]),
+  /** When the response does not come in time: the sponsor hears of it, and an event that follows. */
+  ifIgnored: z.object({ sponsor: z.boolean(), followUp: z.string().nullable() }).default({ sponsor: false, followUp: null }),
   origin: z.enum(['library', 'yours'])
-});
+}));
 export type EventDraft = z.infer<typeof EventDraft>;
 
 export const BANDS = ['strong', 'adequate', 'weak', 'harmful'] as const;
@@ -205,11 +248,11 @@ export const AuthorDraft = z.object({
     stages: z.array(z.object({ key: z.string().regex(/^[a-z][a-z0-9_]*$/), name: Short, people: z.number().int().min(0).max(6), perWeek: z.number().min(0), passesOn: Pct })).min(3).max(6),
     pressure: z.string().nullable(),
     revenue: z.number().positive().nullable(),
-    weeks: z.number().int().min(2).max(12),
-    daysPerWeek: z.number().int().min(3).max(7),
+    weeks: IntIn(MIN_WEEKS, MAX_WEEKS),
+    daysPerWeek: IntIn(MIN_DAYS, MAX_DAYS),
     pacing: z.enum(['forgiving', 'balanced', 'demanding'])
   }),
-  team: z.array(Character).min(1).max(12),
+  team: z.array(Character).min(MIN_TEAM).max(MAX_TEAM),
   lens: DraftLens,
   actions: z.array(ActionDraft),
   events: z.array(EventDraft),
@@ -217,8 +260,10 @@ export const AuthorDraft = z.object({
     skills: z.array(z.object({ key: z.string(), name: Short, reportOnly: z.boolean() })),
     samples: z.array(z.object({ id: z.string(), with: Short, answer: Text, scored: z.enum(BANDS), call: z.enum(BANDS).nullable() })),
     framework: z.object({ file: Short, pages: z.number().int().min(0), step: z.union([z.literal(1), z.literal(2), z.literal(3)]), rows: z.array(FrameworkRow), confirmed: z.boolean() }).nullable(),
-    scale: Short,
-    sections: z.number().int().min(1).max(20)
+    /** The rating scale's level names, lowest first: 3 to 7 (the report's scale, D128). */
+    levels: z.array(Short).min(3).max(7).default(() => DEFAULT_SCALE.map(l => l.name)),
+    /** The report's sections in the engine's order; null is the purpose's default set. */
+    reportSections: z.array(z.enum(REPORT_SECTIONS)).min(1).nullable().default(null)
   }),
   brand: z.object({
     from: z.enum(['knolskape', 'client']),

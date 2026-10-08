@@ -3,6 +3,10 @@ import type { AuthorEditRequest, AuthorEditResponse } from '../../src/api/author
 import type { EvaluationInput, Evaluator as EngineEvaluator } from '../../src/engine/sim/evaluator';
 import type { NpcContext, NpcModel as EngineNpcModel, NpcReply } from '../../src/engine/sim/live';
 import type { Band, Evaluation } from '../../src/engine/sim/types';
+import type { StorylineConfig } from '../../src/engine/config';
+
+/** The storyline's world (D130): company, product, market and the sponsor's voice. */
+export type StorylineWorld = NonNullable<StorylineConfig['world']>;
 
 /**
  * The AI layer's public contracts (docs/AI.md). Every interface here is satisfied by a mock (no model,
@@ -49,13 +53,15 @@ export interface NpcScene {
   /** The conversation so far, oldest first, not counting `said`. */
   history?: HistoryTurn[];
   /** The organisation, product and sponsor, for small talk that stays in the story. */
-  story?: { name?: string; organisation?: string; sponsor?: { name: string; title: string }; product?: string };
+  story?: { name?: string; organisation?: string; sponsor?: { name: string; title: string }; product?: string; world?: StorylineWorld };
   /** Team meeting: who is in the room, who has the floor (the speaker) and who has a hand up. */
   meeting?: { attendees: Array<{ id: string; name: string; title?: string }>; hands: string[] };
   /** The team feels unsafe (Safety below 40, scoring-and-report.md 2.3): concerns are harder to surface. */
   guarded?: boolean;
   /** Interview: the role being hired for. */
   role?: string;
+  /** The lens's styles, so the character sheet names the styles a persona reacts to (D130). */
+  styles?: Array<{ key: string; name: string; short?: string }>;
 }
 
 /** The engine's context plus the scene. The engine's `NpcContext` alone is enough; the scene makes replies better. */

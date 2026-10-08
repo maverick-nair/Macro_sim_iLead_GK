@@ -1,6 +1,7 @@
 import { Brief, type QuestionId } from '../../api/author';
 import type { StorylineInput } from '../../engine/config';
 import { needOf, NEEDS, type NeedKey } from '../../engine/lens';
+import { DEFAULT_SCALE } from '../../engine/report/defaults';
 import { DURATION_MODES, industryOf, REGIONS, TONE_LABELS } from '../context';
 import { LENS_BY_ID } from '../lenses';
 import { buildModule } from '../module';
@@ -153,25 +154,28 @@ export function actionFrom(a: SL['actions'][number], t: { key: string; name: str
     impact: impactOf(a, styles),
     options: a.options.map(o => ({ key: o.key, label: o.label, style: o.style ?? null, away: o.away ?? 0, fits: effectText(o.effects.m0), misses: effectText(o.effects.m2 ?? o.effects.m1) })),
     decides: a.rule === 'styleOption' ? 'Each option carries one of your lens styles; it is compared with what this person needs this week.' : a.rule === 'training' ? 'Each course carries a style; it is compared with what this person needs this week.' : 'The engine\'s tested rule for this action.',
-    scoredOn: skills.slice(0, 2), origin: t.origin
+    scoredOn: skills.slice(0, 4), origin: t.origin
   };
 }
 
-function kindOf(e: NonNullable<SL['events']>[number]): EventDraft['kind'] {
+/** The author's kind for an engine event: what its card, delivery and target read as. */
+export function kindOf(e: Pick<NonNullable<SL['events']>[number], 'card' | 'delivery' | 'target'>): EventDraft['kind'] {
   if (e.delivery === 'sponsorCall' || e.target === 'sponsor') return 'sponsor';
   if (e.card === 'opportunity') return 'opportunity';
   if (e.target === 'team' || e.target?.startsWith('stage:')) return 'impact';
   return 'people';
 }
 
-function eventFrom(e: NonNullable<SL['events']>[number]): EventDraft {
-  const timing: EventDraft['timing'] = e.period !== undefined ? 'fixed' : e.when ? 'condition' : 'random';
-  const note = e.when ? `When ${e.when.condition === 'teamMoraleBelow' ? 'team morale' : e.when.condition === 'teamTrustBelow' ? 'team trust' : e.when.condition === 'memberMoraleBelow' ? 'someone\'s morale' : 'the team falls behind'} stays below ${e.when.value ?? 30}` : e.window ? `Some time in weeks ${e.window.from} to ${e.window.to}` : '';
+export function eventFrom(e: NonNullable<SL['events']>[number], followUps: ReadonlySet<string> = new Set()): EventDraft {
+  const timing: EventDraft['timing'] = e.period !== undefined ? 'fixed' : e.when ? 'condition' : e.window ? 'random' : followUps.has(e.key) ? 'followup' : 'random';
   return {
-    key: e.key, title: e.title, kind: kindOf(e), week: e.period ?? null, day: e.subPeriod ?? 1, timing, timingNote: note,
+    key: e.key, title: e.title, kind: kindOf(e), week: e.period ?? null, day: e.subPeriod ?? 1, timing,
+    ...(e.window ? { window: { from: e.window.from, to: e.window.to, chance: e.window.probability ?? 100 } } : null),
+    ...(e.when ? { condition: { kind: e.when.condition, value: e.when.value ?? 30, weeks: e.when.periods ?? 1 } } : null),
     who: e.target ?? 'team', arrives: e.delivery ?? 'modal', body: e.body.he,
     skill: e.impact[0], morale: e.impact[1], result: e.impact[2], leadFlow: 0,
-    response: e.response ? e.response.actions.join(', ') : '', within: e.response?.within ?? 2, ignored: e.escalation ? (e.escalation.sponsor ? 'The sponsor hears about it' : 'It gets harder to fix') : '', origin: 'library'
+    respondWith: e.response?.actions ?? [], within: e.response?.within ?? 2, onTime: e.response?.onTime ?? [0, 2, 0],
+    ifIgnored: { sponsor: e.response ? (e.escalation?.sponsor ?? false) : false, followUp: e.escalation?.event ?? null }, origin: 'library'
   };
 }
 
@@ -204,7 +208,9 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
   const used = new Set(sl.actions.map(a => a.key));
   const actions = sl.actions.map(a => {
     const t = ENGINE_TEMPLATES.find(x => x.key === a.key) ?? ACTION_TEMPLATES[0];
-    return actionFrom(a, { key: a.key, name: t.name, description: t.description, group: t.group, core: t.inNew === 'core', enabled: t.inNew !== 'off', template: a.key, origin: 'library' }, styles, skills.filter(s => !s.reportOnly).map(s => s.name));
+    // Scored on: the skills the drafted report's linkage rates in this action (D128), else the first two.
+    const linked = (sl.report?.linkage?.[a.key] ?? []).map(k => skills.find(s => s.key === k)?.name).filter((n): n is string => !!n);
+    return actionFrom(a, { key: a.key, name: t.name, description: t.description, group: t.group, core: t.inNew === 'core', enabled: t.inNew !== 'off', template: a.key, origin: 'library' }, styles, linked.length ? linked : skills.filter(s => !s.reportOnly).map(s => s.name).slice(0, 2));
   });
   const team = sl.members.map((m, i) => character(m, i, sl, seed));
   const intro = sl.intro!;
@@ -234,11 +240,11 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     team,
     lens: { id: lens.id, title: lens.title, secondary: lens.secondary?.id ?? null, styles, library: structuredClone(styles), needs: structuredClone(lens.needs), fit: structuredClone(lens.fit) as AuthorDraft['lens']['fit'] },
     actions: actions.filter(a => used.has(a.key)),
-    events: (sl.events ?? []).map(eventFrom),
+    events: (sl.events ?? []).map(e => eventFrom(e, new Set((sl.events ?? []).flatMap(x => (x.escalation?.event ? [x.escalation.event] : []))))),
     scoring: {
       skills,
       samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null })),
-      framework: null, scale: '5 levels, Novice to Role Model', sections: 12
+      framework: null, levels: (sl.report?.scale ?? DEFAULT_SCALE).map(l => l.name), reportSections: null
     },
     brand: { from: 'knolskape', name: ctx.company, logo: '', main: '#249DFF', second: '#43D6E8', font: 'Manrope', look: 'dark', preview: 'board' },
     publish: { cohort: '', notes: '', version: 0, played: false },

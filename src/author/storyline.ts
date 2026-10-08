@@ -349,7 +349,7 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
   return sanitizeDeep(storyline);
 }
 
-const SECTION_NAMES: Record<(typeof REPORT_SECTIONS)[number], string> = {
+export const SECTION_NAMES: Record<(typeof REPORT_SECTIONS)[number], string> = {
   about: 'About the simulation', summary: 'Summary', skills: 'Skills', objectives: 'Objectives', adaptability: 'Leadership adaptability',
   styles: 'Leadership styles summary', style: 'Leadership style', consistency: 'Consistency in styles', intent: 'Intent and action',
   actions: 'Summary of actions', distribution: 'Actions across the team', moments: 'Key moments', people: 'People',

@@ -70,6 +70,8 @@ Sales Elevator default [M][W]:
 | `candidates` | Hire pool, same shape. |
 | `hiddenConcern` | Optional per member: text that only surfaces in conversation (section 3.4). |
 | `attitude`, `awareness`, `responsibilities` | Optional profile rows (1.0's profile fields, D97); the profile shows the ones set. |
+| `npc` | Optional per person (D130): age, what motivates them, topics they will not discuss, reactions by lens style, how they talk (language, accent, pace, warmth, formality, reply length) and the author's own notes. Only the AI character reads it; the engine never does. |
+| `world` | Optional, on the storyline (D130): the company, product, market and the sponsor's voice, for the AI characters' small talk. The engine never reads it. |
 
 Sales Elevator default: the 10 active actors and 10 candidates from the workbook, after calibration (section 9).
 
@@ -385,6 +387,8 @@ Every event setting is *config* (Configuration Spec, Events and NPC initiated mo
 | Label | Optional text on the card | Hidden unless authored (labels can mislead) |
 | Expected response | Actions that count, the window in sub-periods, a bonus when on time | Replying to the event's message, or taking a listed action with the target, answers it. In time, the bonus applies to the target |
 | Escalation | A follow up event, and whether the sponsor hears of it | Past the window, the sponsor loses confidence (escalation, −10) and the follow up event fires |
+
+Event keys are unique in a storyline, and option keys are unique within an action (D128): the schema refuses duplicates.
 
 Sales Elevator: the 12 workbook events, mapped from 12 weeks to 8 as `round(period × 8 / 12)` with up to two a period (first and third sub-period), plus two that GenieKreator would generate from the context:
 

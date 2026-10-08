@@ -18,6 +18,39 @@ export const npcPromptVersion = () => versionOf(npcPrompt());
 
 const line = (label: string, value: string | number | null | undefined) => (value === undefined || value === null || value === '' ? '' : `${label}: ${value}\n`);
 
+const band = (v: number, low: string, mid: string, high: string) => (v < 35 ? low : v > 65 ? high : mid);
+const REPLY: Record<string, string> = { short: 'short: one sentence, rarely two', medium: 'one or two sentences', long: 'the long end: up to three sentences when you have something to say' };
+
+/**
+ * The author's persona details (D130): age, motivation, topics to avoid, how the person talks, their own
+ * facts, and how they react to each way of leading, named by the lens's styles. Empty when none are set.
+ */
+function personaOf(ctx: NpcTurnContext): string {
+  const npc = ctx.speaker.persona?.npc;
+  if (!npc) return '';
+  let s = '';
+  s += line('Age', npc.age);
+  s += line('What motivates you', npc.motivatedBy);
+  s += line('Topics you will not discuss (deflect politely, in role)', npc.avoid);
+  for (const n of npc.notes ?? []) s += line(n.label, n.value);
+  const sp = npc.speech;
+  if (sp) {
+    s += line('How you talk', [band(sp.pace, 'unhurried', 'at an even pace', 'quickly'), band(sp.warmth, 'coolly', 'with some warmth', 'warmly'), band(sp.formality, 'casually', 'in a neutral register', 'formally')].join(', '));
+    s += line('Reply length', REPLY[sp.replyLength] ?? sp.replyLength);
+    s += line('Accent', sp.accent);
+  }
+  const reactions = Object.entries(npc.reactions ?? {});
+  if (reactions.length) {
+    const names = new Map((ctx.styles ?? []).map(st => [st.key, st]));
+    s += `\n## How you react to each way of being led\nRead which of these the participant's words show, and react that way.\n`;
+    for (const [key, how] of reactions) {
+      const st = names.get(key);
+      s += `- ${st ? `${st.name}${st.short ? ` (${st.short})` : ''}` : key}: ${how}\n`;
+    }
+  }
+  return s;
+}
+
 /** The character sheet: who the NPC is. Stable for the conversation, so it is cached. */
 export function characterSheet(ctx: NpcTurnContext): string {
   const sp = ctx.speaker;
@@ -36,7 +69,9 @@ export function characterSheet(ctx: NpcTurnContext): string {
     s += line('Experience', p.profile.experience);
     s += line('Skills', p.profile.skills);
     s += line('Personality and background', p.profile.remarks);
+    s += line('Communication style', p.profile.attitude);
     s += line('Relationships at work', p.profile.relations);
+    s += personaOf(ctx);
     if (p.hiddenConcern) {
       s += `\n## Hidden concern (private: never quote this description)\n${p.hiddenConcern}\n`;
       s += line('What you say when it surfaces', p.concernLine);
@@ -48,6 +83,17 @@ export function characterSheet(ctx: NpcTurnContext): string {
     s += line('Organisation', ctx.story.organisation);
     s += line('Product', ctx.story.product);
     s += line('Sponsor', ctx.story.sponsor ? `${ctx.story.sponsor.name}, ${ctx.story.sponsor.title}` : undefined);
+    const w = ctx.story.world;
+    if (w) {
+      s += line('What the company does', w.about);
+      s += line('Headquarters', w.headquarters);
+      s += line('Your team', w.team);
+      s += line('The product in one line', w.product?.line);
+      s += line('Selling points', w.product?.points?.join('; '));
+      s += line('Customers', w.customers);
+      s += line('Rivals', w.rivals?.map(r => (r.angle ? `${r.name} (${r.angle})` : r.name)).join('; '));
+      if (ctx.format === 'sponsor' || !p) s += line('How you sound', w.sponsorVoice);
+    }
   }
   if (ctx.role) s += line('Role being hired for', ctx.role);
   return s.trim();

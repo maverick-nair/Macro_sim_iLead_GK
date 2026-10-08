@@ -54,8 +54,8 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
       description={`${stage} · ${c.title} · changes save to this draft only`}
       head={<Avatar src={c.photo} name={c.first} size={56} />}
       footer={<>
-        <button type="button" className={BUTTON.secondary} onClick={() => { setC(x => ({ ...x, custom: [...x.custom, { label: 'New field', value: '' }] })); setTab('stats'); }}>Add a custom field</button>
-        <span className="min-w-40 flex-1 text-13 text-author-body">Every field is editable. Fields you change are marked as yours, and Kora will not overwrite them.</span>
+        <button type="button" className={BUTTON.secondary} disabled={c.custom.length >= 12} onClick={() => { setC(x => ({ ...x, custom: [...x.custom, { label: 'New field', value: '' }] })); setTab('stats'); }}>Add a custom field</button>
+        <span className="min-w-40 flex-1 text-13 text-author-body">Every field reaches the simulation or the AI character. Fields you change are marked as yours, and Kora will not overwrite them.</span>
         <button type="button" className={BUTTON.secondary} onClick={() => onOpenChange(false)}>Cancel</button>
         <button type="button" className={BUTTON.primary} onClick={() => onSave(c, changedFields())}>Save changes</button>
       </>}>
@@ -78,9 +78,9 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
                 </div>
               </fieldset>
               <div className="flex flex-wrap gap-2">
-                <label className={`${BUTTON.secondary} flex-1 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary`}>Upload a photo<input type="file" accept="image/*" className="sr-only" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) set('photo', f.name); }} /></label>
                 <button type="button" className={`${BUTTON.koraOutline} flex-1`} onClick={() => set('photo', PORTRAITS[(PORTRAITS.indexOf(c.photo) + 1) % PORTRAITS.length])}>Create with Kora</button>
               </div>
+              {!c.photo.startsWith('/') && <p className="m-0 text-12 text-author-need">This photo is not in the library, so participants see the first library portrait. Pick one above.</p>}
               <p className="m-0 text-12 text-author-muted">Each photo comes with four moods (upbeat, steady, concerned, frustrated) so the face matches how the person feels in play.</p>
             </div>
             <div className="flex flex-col gap-4">
@@ -124,7 +124,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
               <Slider label="Formality" value={c.voice.formality} low="casual" high="formal" onChange={v => set('voice', { ...c.voice, formality: v })} />
               <Field label="Reply length">{() => <Segmented label="Reply length" value={c.voice.replyLength} onChange={v => set('voice', { ...c.voice, replyLength: v })} options={[{ value: 'short', label: 'Short' }, { value: 'medium', label: 'Medium' }, { value: 'long', label: 'Long' }]} />}</Field>
             </div>
-            <p className="m-0 text-13 text-author-muted">Hear a line in this voice when a speech service is configured; the browser preview reads the line as text.</p>
+            <p className="m-0 text-13 text-author-muted">The AI character reads the language, accent, pace, warmth, formality and reply length when it speaks as {c.first}. Hear a line in this voice when a speech service is configured.</p>
           </div>
         )}
         {tab === 'personality' && (
@@ -147,7 +147,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
             </div>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <div className="flex justify-between"><span className="text-13 font-700 text-author-label">How {p} reacts to each style</span><span className="text-12 text-author-muted">Your lens styles</span></div>
+                <div className="flex justify-between"><span className="text-13 font-700 text-author-label">How {p} reacts to each style</span><span className="text-12 text-author-muted">The AI character reacts this way</span></div>
                 {draft.lens.styles.map(s => (
                   <Field key={s.key} label={s.name}>{id => <TextInput id={id} maxLength={TEXT_MAX} tone={mark('personality')} value={c.reactions[s.key] ?? ''} onChange={e => set('reactions', { ...c.reactions, [s.key]: e.target.value })} />}</Field>
                 ))}
@@ -179,7 +179,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
                 <b className="block text-13 text-author-ai">What this means in play &middot; updates as you move the sliders</b>
                 {needLabel}: {c.first} starts needing <b>{needed}</b>. The need changes as {p === 'they' ? 'their' : p === 'she' ? 'her' : 'his'} numbers change.
               </div>
-              <Field label="Best stage" optional>{id => <Select id={id} value={c.bestStage} onChange={e => set('bestStage', e.target.value)}><option value="">The stage they are in</option>{draft.process.stages.map(s => <option key={s.key} value={s.key}>{s.name}</option>)}</Select>}</Field>
+              <Field label="Best stage" optional hint="Swap roles and Assess show them strongest here">{id => <Select id={id} value={c.bestStage} onChange={e => set('bestStage', e.target.value)}><option value="">The stage they are in</option>{draft.process.stages.map(s => <option key={s.key} value={s.key}>{s.name}</option>)}</Select>}</Field>
             </div>
             <div className="flex flex-col gap-3">
               <div className="grid grid-cols-2 gap-3">
@@ -196,7 +196,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
               </fieldset>
               {c.custom.map((f, i) => (
                 <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto] items-end gap-2">
-                  <Field label="Custom field">{id => <TextInput id={id} value={f.label} onChange={e => set('custom', c.custom.map((x, k) => (k === i ? { ...x, label: e.target.value } : x)))} />}</Field>
+                  <Field label="Custom field" hint="The AI character knows it">{id => <TextInput id={id} value={f.label} onChange={e => set('custom', c.custom.map((x, k) => (k === i ? { ...x, label: e.target.value } : x)))} />}</Field>
                   <Field label="Value">{id => <TextInput id={id} maxLength={TEXT_MAX} value={f.value} onChange={e => set('custom', c.custom.map((x, k) => (k === i ? { ...x, value: e.target.value } : x)))} />}</Field>
                   <button type="button" className={`${BUTTON.secondary} size-10 px-0`} aria-label={`Remove ${f.label}`} onClick={() => set('custom', c.custom.filter((_, k) => k !== i))}>{Icon.close(14)}</button>
                 </div>
