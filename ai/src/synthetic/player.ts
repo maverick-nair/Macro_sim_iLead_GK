@@ -1,4 +1,5 @@
 import { copyViolations, sanitizeCopy } from '../../../src/i18n/copy';
+import { hear, isNegative, lastHeard, type Heard } from '../../../src/engine/sim/syntheticListen';
 import { templateSpeaker, type SpeakerContext, type SyntheticSpeaker } from '../../../src/engine/sim/syntheticSpeech';
 import { silentLogger, type AnthropicSettings, type ModelSettings } from '../config';
 import type { LlmRequest, LlmTransport } from '../llm/transport';
@@ -34,6 +35,17 @@ const FORMAT: Record<string, string> = {
 };
 const LEVEL = ['Beginner (low performer)', 'Developing (average performer)', 'Proficient (high performer)', 'Expert (exceptional performer)'];
 
+/** What the other person's last line was, in words for the model (D151): the line is in the conversation too. */
+const HEARD: Record<Exclude<Heard, 'none' | 'emotional'>, string> = {
+  concern: 'a worry they raised', pushback: 'doubt or pushback', question: 'a question to you', agreement: 'agreement: they said yes or committed', update: 'an update on the work'
+};
+export function heardLine(transcript: SpeakerContext['transcript']): string {
+  const last = lastHeard(transcript);
+  const kind = hear(last);
+  if (kind === 'none') return '';
+  return `What they just said reads as: ${kind === 'emotional' ? (isNegative(last) ? 'a hard feeling' : 'a good feeling') : HEARD[kind]}. Answer it first.`;
+}
+
 /**
  * The request: rules (cached), then the level and lens (stable for a run), then this turn. Everything an
  * author or a player wrote (the persona description, the lens's and people's names, the transcript) goes
@@ -53,6 +65,7 @@ export function buildSyntheticRequest(ctx: SpeakerContext, settings: ModelSettin
     p && p.skill !== null ? `Their skill ${p.skill}, morale ${p.morale}, result ${p.result} (of 100)` : '',
     p?.needLabel ? `What you read as their need: ${q(p.needLabel)}` : '',
     p?.concern ? `What they have shared about what is bothering them: ${q(p.concern)}` : '',
+    heardLine(ctx.transcript),
     intent ? `Style you mean to show: ${q(intent.name)} (${q(intent.short)})` : '',
     ctx.format === 'email' ? `What the email does: ${ctx.emailIntent === 'warn' ? 'raise a concern about their results' : 'recognize their results'}` : '',
     ctx.format === 'sponsor' && ctx.business ? `Where the business stands: ${Math.round(ctx.business.share * 100)}% of the target with ${Math.round(ctx.business.runShare * 100)}% of the run gone; ${ctx.business.behind} stages behind their ideal${ctx.business.risk ? `; the biggest risk is the ${q(ctx.business.risk)} stage` : ''}` : '',

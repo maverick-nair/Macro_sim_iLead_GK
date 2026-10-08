@@ -1,13 +1,19 @@
-import { styleCues } from './evaluator';
+import { hear, isNegative, lastHeard, type Heard } from './syntheticListen';
+import * as P from './syntheticPhrases';
 import type { PlanFields } from './types';
 
 /**
- * What a synthetic player says (D112, docs/CALIBRATION-SYNTHETIC.md). The policies in `./synthetic`
- * decide what to do; a `SyntheticSpeaker` decides the words. Offline the words come from the
- * deterministic templates below, one script per proficiency level, format and style intent. With AI
- * configured, the server passes the `ai/` module's `createSyntheticPlayer`, which writes the line from the
- * same context. Either way the words go through the engine's evaluator like a participant's, so the
- * scoring pipeline is what is under test.
+ * What a synthetic player says (D112, D151, docs/CALIBRATION-SYNTHETIC.md). The policies in `./synthetic`
+ * decide what to do; a `SyntheticSpeaker` decides the words. Offline the words come from the templates
+ * below: banks of phrasings per level, style and format (`./syntheticPhrases`), picked by a seeded choice
+ * that never repeats a phrasing in one conversation, and conditioned on what the other person just said
+ * (`./syntheticListen`), their mood and any worry they shared. With AI configured, the server passes the
+ * `ai/` module's `createSyntheticPlayer`, which writes the line from the same context. Either way the words
+ * go through the engine's evaluator like a participant's, so the scoring pipeline is what is under test.
+ *
+ * The phrasings are written apart from the evaluator's cue lists, so how often the evaluator reads a line as
+ * the style meant is measured (evaluator agreement), not built in. This module imports nothing from the
+ * evaluator (a test checks it).
  */
 
 /** 0 Beginner, 1 Developing, 2 Proficient, 3 Expert. */
@@ -51,6 +57,8 @@ export interface SpeakerContext {
   variant: number;
   /** A Beginner's bad moment: says something that blames. */
   slip: boolean;
+  /** What the player already said in this conversation: no phrasing is used twice. */
+  said?: string[];
 }
 
 export interface SyntheticSpeaker {
@@ -58,16 +66,43 @@ export interface SyntheticSpeaker {
   say(ctx: SpeakerContext): string | Promise<string>;
 }
 
-// ---------------------------------------------------------------------------------------------- lens kit
+// ---------------------------------------------------------------------------------------------- choosing words
 
-/** Readiness Based Leadership's styles, written to read clearly as each style. */
-const RBL: Record<string, { lines: [string, string]; crude: string }> = {
-  D: { lines: ['Here is the plan, step by step: first the call list, then the follow ups.', 'I need you to send me the update by tomorrow, and I will check in daily.'], crude: 'I need you to do better this week.' },
-  G: { lines: ['Let me explain why this matters for the funnel, and the reason behind each step.', 'I will coach you on the next two calls. Does that make sense?'], crude: 'Let me explain how it works, just follow it.' },
-  P: { lines: ["Let's work this out together. What do you think we should change?", 'How can I help this week? Your ideas matter here.'], crude: "Let's just get on with it." },
-  E: { lines: ['I trust you with this, and it is your call how you run the account.', 'You decide the next step, and I will step back.'], crude: 'It is up to you, sort it out.' }
-};
-const RBL_NAMES: Record<string, string> = { D: 'Directing', G: 'Guiding', P: 'Partnering', E: 'Entrusting' };
+function hash(...parts: Array<string | number>): number {
+  let h = 2166136261;
+  for (const ch of parts.join('|')) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  return h >>> 0;
+}
+
+/** Picks phrasings for one line: seeded by the conversation's variant, never one already said or picked. */
+class Words {
+  private readonly used: string;
+  private readonly picked: string[] = [];
+  constructor(private readonly ctx: SpeakerContext) { this.used = (ctx.said ?? []).join(' \n '); }
+  pick(bank: readonly string[], slot: string): string {
+    const pool = bank.filter(Boolean);
+    if (!pool.length) return '';
+    const start = hash(this.ctx.variant, this.ctx.persona, slot) % pool.length;
+    const fresh = (s: string) => !this.used.includes(this.fill(s)) && !this.picked.includes(s);
+    for (let i = 0; i < pool.length; i++) {
+      const c = pool[(start + i) % pool.length];
+      if (fresh(c)) { this.picked.push(c); return this.fill(c); }
+    }
+    return this.fill(pool[start]);
+  }
+  fill(s: string): string {
+    const b = this.ctx.business;
+    return s.replace(/\{name\}/g, this.ctx.person?.first ?? 'there')
+      .replace(/\{share\}/g, String(Math.round((b?.share ?? 0) * 100)))
+      .replace(/\{run\}/g, String(Math.round((b?.runShare ?? 0) * 100)))
+      .replace(/\{behind\}/g, String(b?.behind ?? 0))
+      .replace(/\{risk\}/g, b?.risk ? `the ${b.risk} stage` : 'the pipeline');
+  }
+}
+
+const join = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
+
+// ---------------------------------------------------------------------------------------------- the lens
 
 /** A lens style's line in the first person: "You set the task" reads "I will set the task". */
 export function firstPerson(line: string): string {
@@ -75,189 +110,212 @@ export function firstPerson(line: string): string {
   return /[.?!]$/.test(t) ? t : `${t}.`;
 }
 
-interface Kit {
-  cues: Array<[string, RegExp[]]>;
-  /** Cue hits per style for a piece of text. */
-  hits(text: string): Map<string, number>;
-  /** Two sentences that read as the style, and a short blunt one. */
-  style(key: string | null): { lines: [string, string]; crude: string };
-}
+const kits = new WeakMap<object, Map<string, { full: string[]; blunt: string[] }>>();
 
-const kits = new WeakMap<object, Kit>();
-
-/** Built once per lens: the style cues the offline evaluator reads, and each style's sentences. */
-function kitFor(lens: SpeakerContext['lens']): Kit {
+/**
+ * Each style's lines, once per lens: the written lines when the style is one of Readiness Based Leadership's
+ * (by name), else the style's own short line and description from the lens, in the first person and in a
+ * few frames. Never the evaluator's cues.
+ */
+function styleLines(lens: SpeakerContext['lens']): Map<string, { full: string[]; blunt: string[] }> {
   const cached = kits.get(lens);
   if (cached) return cached;
-  const cues = styleCues(lens.styles);
-  const hits = (text: string) => new Map(cues.map(([k, rxs]) => [k, rxs.filter(rx => rx.test(text)).length]));
-  const wins = (key: string, text: string) => {
-    const h = hits(text);
-    const mine = h.get(key) ?? 0;
-    return mine > 0 && [...h].every(([k, n]) => k === key || n < mine);
-  };
-  const styles = new Map<string, { lines: [string, string]; crude: string }>();
+  const out = new Map<string, { full: string[]; blunt: string[] }>();
   for (const s of lens.styles) {
-    // A key of Readiness Based Leadership keeps its own sentences when it means the same style.
-    const rbl = RBL[s.key] && RBL_NAMES[s.key] === s.name ? RBL[s.key] : null;
-    if (rbl) { styles.set(s.key, rbl); continue; }
-    const candidates = [firstPerson(s.short), firstPerson(s.description), `I will lead this as a ${s.name.toLowerCase()} would.`];
-    const good = candidates.filter(c => wins(s.key, c));
-    const lines = (good.length >= 2 ? good : [...good, ...candidates.filter(c => !good.includes(c))]).slice(0, 2) as [string, string];
-    styles.set(s.key, { lines, crude: lines[0] });
+    const written = P.STYLE_LINES[s.name];
+    if (written) { out.set(s.key, written); continue; }
+    const own = [firstPerson(s.short), firstPerson(s.description)];
+    const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);
+    const full = [...new Set(P.STYLE_FRAMES.flatMap(f => own.map(line => f.replace('{line}', line).replace('{lower}', lower(line)))))];
+    out.set(s.key, { full, blunt: [own[0]] });
   }
-  const none = { lines: ['Here is what I think we should do this week.', 'Keep me posted.'] as [string, string], crude: 'Just get on with it.' };
-  const kit: Kit = { cues, hits, style: key => (key && styles.get(key)) || none };
-  kits.set(lens, kit);
-  return kit;
+  kits.set(lens, out);
+  return out;
+}
+
+const NONE = { full: ['Here is what I think we should do this week.', 'This is the plan as I see it.', 'Here is where I would like us to go.'], blunt: ['Just get on with it.', 'Do what needs doing.'] };
+
+// ---------------------------------------------------------------------------------------------- what to say
+
+/** What the player heard last, and how the person seems. */
+function listening(ctx: SpeakerContext) {
+  const last = lastHeard(ctx.transcript);
+  const heard: Heard = hear(last);
+  const mood = ctx.person?.mood ?? null;
+  const uneasy = mood === 'concerned' || mood === 'frustrated';
+  return { last, heard, negative: isNegative(last), uneasy, opening: ctx.transcript.filter(t => t.by === 'player').length === 0 };
+}
+
+/** The reply to what was just said, at this level ('' when nothing was said). */
+function react(w: Words, l: ReturnType<typeof listening>, level: Level): string {
+  if (l.heard === 'none') return '';
+  if (l.heard === 'emotional' && !l.negative) return level >= 2 ? w.pick(level === 3 ? ['I mean it.', 'You have earned it.', 'Glad to hear it.'] : ['Glad to hear it.', 'Good.'], 'react') : w.pick(P.REACT.agreement[level], 'react');
+  return w.pick(P.REACT[l.heard][level], 'react');
+}
+
+/** The opening move: a greeting that answers how the person opened. */
+function opening(w: Words, l: ReturnType<typeof listening>, level: Level): string {
+  const answer = l.heard === 'question' ? w.pick(P.ANSWER_OPENING[level], 'answer') : l.heard === 'concern' || (l.heard === 'emotional' && l.negative) ? w.pick(P.MEET_FEELING[level], 'feeling') : '';
+  return join(level >= 1 && w.pick(P.GREET[level], 'greet'), answer);
 }
 
 /**
- * The alternative with the fewest style cues, so the plain parts of a line never tip the style the
- * evaluator reads. Ties go by the seeded variant.
+ * Every line the player means to say in this conversation, one per turn, at the most turns its level takes.
+ * Lines already said are not repeated; the line for this turn answers what was just said.
  */
-function plain(kit: Kit, variant: number, ...alternatives: string[]): string {
-  const scored = alternatives.map(a => [a, [...kit.hits(a).values()].reduce((x, y) => x + y, 0)] as const);
-  const least = Math.min(...scored.map(([, n]) => n));
-  const best = scored.filter(([, n]) => n === least).map(([a]) => a);
-  return best[variant % best.length];
-}
-
-const join = (...parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(' ').replace(/\s+/g, ' ').trim();
-
-// ---------------------------------------------------------------------------------------------- scripts
-
-/** Every line the player means to say in this conversation, one per turn, at the most turns its level takes. */
 export function script(ctx: SpeakerContext): string[] {
-  const kit = kitFor(ctx.lens);
-  const v = ctx.variant;
-  const st = kit.style(ctx.intent);
-  const name = ctx.person?.first ?? '';
-  const promise = ctx.promise ? plain(kit, v, 'I will check in with you by Friday.', 'I will follow up with you by Friday.') : null;
-  const thanks = plain(kit, v, 'Thanks for your time.', 'Thanks for your time today.');
-
-  if (ctx.slip) return ['Honestly, this is your fault. Fix it.'];
-
+  const w = new Words(ctx);
+  if (ctx.slip) return [w.pick(P.SLIP, 'slip')];
   switch (ctx.format) {
-    case 'sponsor': return sponsor(ctx, kit);
-    case 'interview': return interview(ctx);
-    case 'email': return [email(ctx, kit, st)];
-    case 'meeting': return meeting(ctx, kit, st, promise);
-    case 'plan': return planLines(ctx, kit, st);
+    case 'sponsor': return sponsor(w, ctx);
+    case 'interview': return interview(w, ctx);
+    case 'email': return [email(w, ctx)];
+    case 'meeting': return meeting(w, ctx);
+    case 'plan': return planLines(w, ctx);
     default: break;
   }
   // A reply to the sponsor's call has no person: brief, owning the number.
-  if (!ctx.person) return sponsor(ctx, kit);
+  if (!ctx.person) return sponsor(w, ctx);
+  return oneToOne(w, ctx);
+}
 
-  switch (ctx.level) {
-    case 0: return [join(st.crude, ctx.promise && 'I will look into it this week.')];
-    case 1: return [
-      join(plain(kit, v, `Thanks for the update, ${name}.`, `Thanks, ${name}.`), st.lines[0]),
-      join(plain(kit, v, 'Okay, keep going and let me know how it goes this week.', 'Okay, keep me posted this week.'), promise)
-    ];
-    case 2: return [
-      join(plain(kit, v, `Thanks for making time, ${name}.`, `Thanks for coming in, ${name}.`), plain(kit, v, 'How are things going with your work this week?', 'How is your week going so far?')),
-      join('I understand.', st.lines[0], st.lines[1]),
-      join(plain(kit, v, 'What would help you most?', 'What would make the biggest difference for you?'), 'Can we agree the next step by Friday?', promise)
-    ];
-    default: return [
-      join(plain(kit, v, `Thanks for making time, ${name}, I appreciate it.`, `Thank you for coming in, ${name}, I appreciate it.`), 'What is on your mind this week?'),
-      join('Thank you for telling me, that sounds hard.', plain(kit, v, 'Given where you are right now, here is my approach.', 'From where you are right now, here is my approach.', 'For now, here is my approach.'), st.lines[0]),
-      join(st.lines[1], plain(kit, v, 'I noticed the follow ups slipped last week, because the calls ran long.', 'I noticed two calls slipped last week, because the day ran long.'), plain(kit, v, 'What would you change so that you can learn from it?', 'What would you change next time, so that it gets easier?')),
-      join(plain(kit, v, 'How would you like to start?', 'How would you like to begin?'), 'Can we agree the next step by Friday?', promise, thanks)
-    ];
+/** Puts what was just heard in front of the line said now (turn 1 on), once. */
+function answering(lines: string[], ctx: SpeakerContext, reply: string): string[] {
+  if (ctx.turn === 0 || !reply || !lines.length) return lines;
+  const at = Math.min(ctx.turn, lines.length - 1);
+  return lines.map((line, i) => (i === at ? join(reply, line) : line));
+}
+
+/** Lines in the order they will be said from this turn on, aligned to turns: earlier slots stay empty. */
+function from(ctx: SpeakerContext, n: number, rest: string[]): string[] {
+  const out = Array.from({ length: n }, () => '');
+  const at = Math.min(ctx.turn, n - 1);
+  rest.filter(Boolean).forEach((line, k) => { const i = Math.min(at + k, n - 1); out[i] = join(out[i], line); });
+  return out;
+}
+
+function oneToOne(w: Words, ctx: SpeakerContext): string[] {
+  const l = listening(ctx);
+  const level = ctx.level;
+  const st = styleLines(ctx.lens).get(ctx.intent ?? '') ?? NONE;
+  const promise = ctx.promise ? w.pick(P.PROMISE[level], 'promise') : null;
+  const reply = react(w, l, level);
+  switch (level) {
+    case 0: return [join(l.opening ? opening(w, l, 0) : reply, w.pick(st.blunt, 'style'), promise)];
+    case 1: return answering([
+      join(opening(w, l, 1), w.pick(st.full, 'style')),
+      join(w.pick(P.NEXT_STEP[1], 'close'), promise)
+    ], ctx, reply);
+    case 2: return answering([
+      join(opening(w, l, 2), w.pick(P.OPEN_QUESTION, 'ask')),
+      join(w.pick(st.full, 'style'), w.pick(st.full, 'style2')),
+      join(w.pick(P.INVITE, 'invite'), w.pick(P.NEXT_STEP[2], 'step'), promise)
+    ], ctx, reply);
+    default: {
+      const p = ctx.person;
+      const said = (ctx.said ?? []).join(' ');
+      // Someone who seems uneasy and has only given an update gets one gentle question more, before the plan.
+      const deeperNow = ctx.turn === 1 && !p?.concern && l.uneasy && (l.heard === 'update' || l.heard === 'agreement');
+      const deeper = deeperNow || P.DEEPER.some(q => said.includes(q));
+      const ask = p?.concern ? w.pick(P.FOLLOW_CONCERN, 'ask') : w.pick(P.CONCERN_QUESTION, 'ask');
+      const observe = w.pick(p && (p.result ?? 50) < 45 ? P.OBSERVE.result : p && (p.morale ?? 50) < 45 ? P.OBSERVE.morale : P.OBSERVE.strong, 'observe');
+      const plan = join(w.pick(P.ADAPT, 'adapt'), w.pick(st.full, 'style'));
+      return answering([
+        join(opening(w, l, 3), ask),
+        deeper ? w.pick(P.DEEPER, 'deeper') : plan,
+        join(deeper && plan, w.pick(st.full, 'style2'), observe, w.pick(P.REFLECT, 'reflect')),
+        join(w.pick(P.START, 'start'), w.pick(P.NEXT_STEP[3], 'step'), promise, w.pick(P.THANKS, 'thanks'))
+      ], ctx, reply);
+    }
   }
 }
 
-function sponsor(ctx: SpeakerContext, kit: Kit): string[] {
-  const b = ctx.business ?? { share: 0, runShare: 0, behind: 0, risk: null };
-  const share = Math.round(b.share * 100);
-  const risk = b.risk ? `the ${b.risk} stage` : 'the pipeline';
-  switch (ctx.level) {
-    case 0: return ['Things are fine. The team just needs to work harder.'];
-    case 1: return ['We are a bit behind, but I will push the team this week.', 'I think we will get there.'];
-    case 2: return [
-      `Honestly, we are at ${share}% of target and behind on ${b.behind} stages.`,
-      `The biggest risk is ${risk}. I will coach the team, and here is the plan: first the call lists, then the demos by Friday.`,
-      'What I need from you is support with two key accounts.'
-    ];
-    default: return [
-      `Honestly, we are at ${share}% of target with ${Math.round(b.runShare * 100)}% of the run gone, and I own that.`,
-      `The biggest risk is ${risk}. Here is the plan: first the call lists, then the demos by Friday, and I will track it daily.`,
-      join('What I need from you is support with two key accounts.', plain(kit, ctx.variant, 'I will update you by Friday.', 'I will send you an update by Friday.'))
-    ];
-  }
+type Topic = 'state' | 'risk' | 'need' | 'people';
+const SPONSOR_TOPICS: Record<Topic, readonly [string[], string[], string[], string[]]> = { state: P.SPONSOR, risk: P.SPONSOR_RISK, need: P.SPONSOR_NEED, people: P.SPONSOR_PEOPLE };
+
+/** What the sponsor just asked about, if anything. */
+function askedAbout(line: string | null): Topic | null {
+  if (!line || !/\?/.test(line)) return null;
+  if (/\brisk\b/i.test(line)) return 'risk';
+  if (/\bworried\b|\bwho on the team\b/i.test(line)) return 'people';
+  if (/\bneed\b/i.test(line)) return 'need';
+  return null;
 }
 
-function interview(ctx: SpeakerContext): string[] {
-  switch (ctx.level) {
-    case 0: return ['So, why do you want this job?'];
-    case 1: return ['Tell me about your experience.', 'What are you good at?'];
-    case 2: return ['Thanks for coming in. Tell me about your background.', 'Tell me about a time you won a difficult deal. What happened next?', 'Why do you want to join this team?'];
-    default: return [
-      'Thanks for coming in, I appreciate it. Walk me through your background.',
-      'Tell me about a time you won back a lost client. What happened next, and what did you learn?',
-      'Give me an example of a time you missed a target. How did you respond?',
-      'Next question: what do you need from a manager to do your best work?'
-    ];
-  }
+function sponsor(w: Words, ctx: SpeakerContext): string[] {
+  const level = ctx.level;
+  if (level === 0) return [w.pick(P.SPONSOR[0], 'state')];
+  if (level === 1) return [w.pick(P.SPONSOR[1], 'state'), w.pick(P.SPONSOR_CLOSE[1], 'close')];
+  // Answer what the sponsor asked first, then what has not been covered yet, then close.
+  const said = (ctx.said ?? []).join(' ');
+  const covered = (t: Topic) => SPONSOR_TOPICS[t][level].some(x => said.includes(w.fill(x)));
+  const asked = askedAbout(lastHeard(ctx.transcript));
+  const order: Topic[] = [...(asked && !covered(asked) ? [asked] : []), ...(['state', 'risk', 'need'] as Topic[]).filter(t => t !== asked && !covered(t))];
+  return from(ctx, 3, [...order.map(t => w.pick(SPONSOR_TOPICS[t][level], t)), w.pick(P.SPONSOR_CLOSE[level], 'close')]);
 }
 
-function email(ctx: SpeakerContext, kit: Kit, st: { lines: [string, string] }): string {
-  const name = ctx.person?.first ?? 'there';
+function interview(w: Words, ctx: SpeakerContext): string[] {
+  const level = ctx.level;
+  const n = level + 1;
+  const questions = Array.from({ length: n }, (_, i) => w.pick(P.INTERVIEW[level], `q${i}`));
+  // The stronger interviewers thank the candidate for the last answer before the next question.
+  return level >= 2 ? answering(questions, ctx, w.pick(P.INTERVIEW_REACT, 'react')) : questions;
+}
+
+function email(w: Words, ctx: SpeakerContext): string {
+  const level = ctx.level;
+  const st = styleLines(ctx.lens).get(ctx.intent ?? '') ?? NONE;
   const warn = ctx.emailIntent === 'warn';
-  switch (ctx.level) {
-    case 0: return warn ? 'Your numbers are not acceptable. You need to improve.' : 'Well done. Keep it up.';
-    case 1: return warn
-      ? join(`Hi ${name}, I am concerned about your results this week.`, st.lines[0], 'You need to improve by Friday.')
-      : join(`Hi ${name}, thank you for your work this week. Well done, keep it up.`, st.lines[0]);
-    case 2: return warn
-      ? join(`Hi ${name}, thank you for your effort. I am concerned that your results fell this week, because two deals slipped.`, st.lines[0], 'Can we agree the next step by Friday?')
-      : join(`Hi ${name}, thank you for your work this week. Well done on the progress in your stage, because the pipeline moved.`, st.lines[0], 'Let me know what would help by Friday.');
-    default: return warn
-      ? join(`Hi ${name}, thank you for your effort this week, I appreciate it. I am concerned that your results fell, because 2 deals slipped at the proposal stage.`, 'For example, the follow ups waited three days.', st.lines[0], st.lines[1], plain(kit, ctx.variant, 'Can we agree the next step by Friday? I will check in with you by Friday.'))
-      : join(`Hi ${name}, thank you for your work this week. Well done: specifically, the 3 follow ups you closed moved the whole team forward, because the proposal stage was stuck.`, st.lines[0], 'Let me know what would help by Friday.');
+  const body = w.pick(warn ? P.EMAIL_WARN[level] : P.EMAIL_WELL[level], 'body');
+  if (level === 0) return body;
+  return join(body, w.pick(st.full, 'style'), level === 3 && warn && w.pick(st.full, 'style2'), w.pick(P.EMAIL_CLOSE[level].filter(c => warn || !/improve/.test(c)), 'close'));
+}
+
+function meeting(w: Words, ctx: SpeakerContext): string[] {
+  const level = ctx.level;
+  const l = listening(ctx);
+  const st = styleLines(ctx.lens).get(ctx.intent ?? '') ?? NONE;
+  const promise = ctx.promise ? w.pick(P.PROMISE[level], 'promise') : null;
+  const someone = ctx.team.length ? ctx.team[ctx.variant % ctx.team.length] : null;
+  const reply = react(w, l, level);
+  switch (level) {
+    case 0: return [join(w.pick(P.MEETING_OPEN[0], 'open'), w.pick(st.blunt, 'style'))];
+    case 1: return answering([join(w.pick(P.MEETING_OPEN[1], 'open'), w.pick(st.full, 'style')), w.pick(P.MEETING_CLOSE[1], 'close')], ctx, reply);
+    case 2: return answering([
+      w.pick(P.MEETING_OPEN[2], 'open'),
+      join(w.pick(st.full, 'style'), w.pick(st.full, 'style2')),
+      join(w.pick(P.MEETING_CLOSE[2], 'close'), promise)
+    ], ctx, reply);
+    default: return answering([
+      w.pick(P.MEETING_OPEN[3], 'open'),
+      someone ? w.pick(P.MEETING_FLOOR, 'floor').replace('{name}', someone) : w.pick(P.MEETING_INVITE, 'floor'),
+      join(w.pick(st.full, 'style'), w.pick(st.full, 'style2'), w.pick(P.MEETING_INVITE, 'invite')),
+      join(w.pick(P.MEETING_CLOSE[3], 'close'), promise)
+    ], ctx, reply);
   }
 }
 
-function meeting(ctx: SpeakerContext, kit: Kit, st: { lines: [string, string]; crude: string }, promise: string | null): string[] {
-  const v = ctx.variant;
-  const someone = ctx.team.length ? ctx.team[v % ctx.team.length] : null;
-  switch (ctx.level) {
-    case 0: return [join('Team, we need better numbers this week. That is all.', st.crude)];
-    case 1: return [join('Thanks for coming, everyone.', st.lines[0]), 'Let me know how it goes this week.'];
-    case 2: return [
-      'Thanks for coming, everyone. Today we have three things: the pipeline, the risks and the next steps.',
-      join(st.lines[0], st.lines[1]),
-      join('What do you all think? Can we agree the next steps by Friday?', promise)
-    ];
-    default: return [
-      'Thanks for coming, everyone, I appreciate it. Today we have three things: the pipeline, the risks and the next steps. The goal is to protect the target.',
-      someone ? `${someone}, what is the pipeline looking like from where you sit?` : 'What is the pipeline looking like from where you sit?',
-      join(st.lines[0], st.lines[1], plain(kit, v, 'What do you all think?', 'Does anyone see it differently?')),
-      join('Can we agree the next steps by Friday? Thanks, everyone, for your time.', promise)
-    ];
-  }
-}
-
-function planLines(ctx: SpeakerContext, kit: Kit, st: { lines: [string, string] }): string[] {
-  switch (ctx.level) {
-    case 0: return ['Here are your goals.'];
-    case 1: return ['Here is the plan for this week.', 'Let me know how it goes.'];
-    default: return [join('Here is the plan we talked about.', st.lines[0]), plain(kit, ctx.variant, 'What would you change in this plan?', 'Is anything missing from this plan?')];
-  }
+function planLines(w: Words, ctx: SpeakerContext): string[] {
+  const level = ctx.level;
+  const l = listening(ctx);
+  const st = styleLines(ctx.lens).get(ctx.intent ?? '') ?? NONE;
+  const first = level >= 2 ? join(w.pick(P.PLAN_LINES[level], 'plan'), w.pick(st.full, 'style')) : w.pick(P.PLAN_LINES[level], 'plan');
+  if (level === 0) return [first];
+  // The check in answers the person: a request to make the plan clearer gets a specific fix.
+  const fix = level >= 2 && (l.heard === 'question' || l.heard === 'concern' || l.heard === 'pushback') ? w.pick(P.PLAN_FIX, 'fix') : '';
+  return [first, join(fix || react(w, l, level), w.pick(P.PLAN_CHECK[level], 'check'))];
 }
 
 /** A written plan's fields as each level writes them (D85): vague at first, specific and measurable at the top. */
 export function planFields(ctx: SpeakerContext): PlanFields {
-  const kit = kitFor(ctx.lens);
-  const st = kit.style(ctx.intent);
+  const w = new Words(ctx);
+  const st = styleLines(ctx.lens).get(ctx.intent ?? '') ?? NONE;
   const owner = ctx.person?.first ?? 'You';
   switch (ctx.level) {
-    case 0: return { goals: 'Do better', measures: 'More sales', owner: 'You', due: null, support: '' };
-    case 1: return { goals: 'Close more deals this week', measures: 'More deals than last week', owner, due: null, support: '' };
-    case 2: return { goals: 'Move three qualified leads to the next stage this week', measures: '3 proposals sent and 2 follow up calls', owner, due: 3, support: st.lines[0] };
-    default: return { goals: 'Move three qualified leads to the next stage and close one deal this week', measures: '3 proposals sent, 2 follow up calls and 1 deal closed, tracked daily', owner, due: 3, support: join(st.lines[0], st.lines[1]) };
+    case 0: return { goals: w.pick(['Do better', 'Sell more', 'Improve'], 'goals'), measures: w.pick(['More sales', 'Better numbers'], 'measures'), owner: 'You', due: null, support: '' };
+    case 1: return { goals: w.pick(['Close more deals this week', 'Move more leads forward this week'], 'goals'), measures: w.pick(['More deals than last week', 'More proposals than last week'], 'measures'), owner, due: null, support: '' };
+    case 2: return { goals: 'Move three qualified leads to the next stage this week', measures: w.pick(['3 proposals sent and 2 follow up calls', '3 proposals out and 2 follow up calls made'], 'measures'), owner, due: 3, support: w.pick(st.full, 'support') };
+    default: return { goals: 'Move three qualified leads to the next stage and close one deal this week', measures: w.pick(['3 proposals sent, 2 follow up calls and 1 deal closed, tracked daily', '3 proposals, 2 follow up calls and 1 closed deal, tracked each day'], 'measures'), owner, due: 3, support: join(w.pick(st.full, 'support'), w.pick(st.full, 'support2')) };
   }
 }
 
