@@ -100,6 +100,72 @@
                   "text"
                 ]
               }
+            },
+            "stakeholders": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "role": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "relation": {
+                    "type": "string",
+                    "maxLength": 120
+                  }
+                },
+                "required": [
+                  "name",
+                  "role",
+                  "relation"
+                ]
+              }
+            },
+            "objectives": {
+              "maxItems": 12,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 400
+              }
+            },
+            "dilemmas": {
+              "maxItems": 12,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "a": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "b": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "stake": {
+                    "type": "string",
+                    "maxLength": 400
+                  }
+                },
+                "required": [
+                  "title",
+                  "a",
+                  "b",
+                  "stake"
+                ]
+              }
             }
           }
         },
@@ -184,7 +250,7 @@
             },
             "about": {
               "type": "integer",
-              "minimum": 5,
+              "minimum": 1,
               "maximum": 10
             }
           },
@@ -199,6 +265,235 @@
         "brief",
         "question",
         "progress"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "clarify"
+        },
+        "brief": {
+          "type": "object",
+          "properties": {
+            "roleLevel": {
+              "type": "string"
+            },
+            "industry": {
+              "type": "string"
+            },
+            "challenge": {
+              "type": "string"
+            },
+            "client": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "teamSize": {
+              "type": "integer",
+              "minimum": 6,
+              "maximum": 12
+            },
+            "process": {
+              "minItems": 3,
+              "maxItems": 6,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "duration": {
+              "type": "string",
+              "enum": [
+                "full",
+                "standard",
+                "lite"
+              ]
+            },
+            "region": {
+              "type": "string",
+              "enum": [
+                "global",
+                "us",
+                "uk",
+                "india",
+                "singapore",
+                "uae",
+                "australia"
+              ]
+            },
+            "language": {
+              "type": "string"
+            },
+            "framework": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "tone": {
+              "type": "string",
+              "enum": [
+                "professional",
+                "warm",
+                "direct"
+              ]
+            },
+            "documents": {
+              "default": [],
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "text"
+                ]
+              }
+            },
+            "stakeholders": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "role": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "relation": {
+                    "type": "string",
+                    "maxLength": 120
+                  }
+                },
+                "required": [
+                  "name",
+                  "role",
+                  "relation"
+                ]
+              }
+            },
+            "objectives": {
+              "maxItems": 12,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 400
+              }
+            },
+            "dilemmas": {
+              "maxItems": 12,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "a": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "b": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "stake": {
+                    "type": "string",
+                    "maxLength": 400
+                  }
+                },
+                "required": [
+                  "title",
+                  "a",
+                  "b",
+                  "stake"
+                ]
+              }
+            }
+          }
+        },
+        "clarify": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "enum": [
+                "role_level",
+                "industry",
+                "challenge",
+                "client",
+                "team_size",
+                "process",
+                "duration",
+                "language",
+                "framework",
+                "tone"
+              ]
+            },
+            "prompt": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 400
+            },
+            "choices": {
+              "minItems": 2,
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "label": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "detail": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "label",
+                  "value"
+                ]
+              }
+            }
+          },
+          "required": [
+            "id",
+            "prompt",
+            "choices"
+          ]
+        }
+      },
+      "required": [
+        "kind",
+        "brief",
+        "clarify"
       ]
     },
     {
@@ -297,6 +592,72 @@
                 "required": [
                   "name",
                   "text"
+                ]
+              }
+            },
+            "stakeholders": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "role": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "relation": {
+                    "type": "string",
+                    "maxLength": 120
+                  }
+                },
+                "required": [
+                  "name",
+                  "role",
+                  "relation"
+                ]
+              }
+            },
+            "objectives": {
+              "maxItems": 12,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 400
+              }
+            },
+            "dilemmas": {
+              "maxItems": 12,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "a": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "b": {
+                    "type": "string",
+                    "maxLength": 200
+                  },
+                  "stake": {
+                    "type": "string",
+                    "maxLength": 400
+                  }
+                },
+                "required": [
+                  "title",
+                  "a",
+                  "b",
+                  "stake"
                 ]
               }
             }

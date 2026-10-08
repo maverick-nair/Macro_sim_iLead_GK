@@ -78,7 +78,10 @@ describe('answers the chat does not take (D133)', () => {
 
   it('offers team sizes for "a few" instead of asking the same thing again', () => {
     const r = applyAnswer(blank(), 'team_size', 'a few');
-    expect(r.error).toBe('How many people? iLead teams have 6 to 12. Pick 6 for a small team, 8 or 10 for a typical one, or 12 for a large one.');
+    // A clarifying question with the sizes as choices (D147), not a guess.
+    expect(r.error).toBeUndefined();
+    expect(r.clarify).toEqual({ id: 'team_size', prompt: 'How many people? iLead teams have 6 to 12. Pick 6 for a small team, 8 or 10 for a typical one, or 12 for a large one.', choices: ['6', '8', '10', '12'].map(n => ({ label: n, value: n })) });
+    expect(r.brief.teamSize).toBeUndefined();
     expect(applyAnswer(blank(), 'team_size', '4').error).toBe('iLead teams have 6 to 12 people, so 4 is too few to play. Pick 6 for a small team.');
     expect(applyAnswer(blank(), 'team_size', '20 people').error).toMatch(/so 20 is too many to play\. Pick 12/);
     expect(applyAnswer(blank(), 'team_size', 'a few, about eight').brief.teamSize).toBe(8);

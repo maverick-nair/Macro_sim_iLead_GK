@@ -1,7 +1,8 @@
-import type { Brief, Question, QuestionId } from '../api/author';
+import type { Brief, Clarify, Question, QuestionId } from '../api/author';
 import { QUESTION_IDS } from '../api/author';
 import { CHALLENGES, DEFAULT_PROCESS, DURATION_MODES, INDUSTRIES, OTHER_CHALLENGES, parseStages, PROCESSES, regionOf, REGIONS, ROLE_LEVELS, TONE_LABELS } from './context';
 import { inferBrief, parseTeamSize } from './extract';
+import { fillBrief, frameworkOf, industryClarify, industryOfText, inlineFramework, isLong, levelOnly, readBrief, SIZE_PROMPT, sizeClarify, tookFrom, type TookItem } from './read';
 
 /**
  * The author chat's question policy (docs/genie/prompts/author-chat.md), as rules: ten core questions
@@ -40,7 +41,13 @@ export function describe(brief: Brief, id: QuestionId): string {
     case 'process': return brief.process?.join(', ') ?? '';
     case 'duration': return brief.duration ? `${DURATION_MODES[brief.duration].label}, ${DURATION_MODES[brief.duration].detail}` : '';
     case 'language': return brief.language ?? '';
-    case 'framework': return brief.framework === null ? 'No framework' : brief.framework ? 'Framework shared' : '';
+    case 'framework': {
+      if (brief.framework === null) return 'No framework';
+      if (!brief.framework) return '';
+      const inline = inlineFramework(brief.framework);
+      const dims = frameworkOf(brief.framework);
+      return inline ? `${inline.name}: ${inline.skills.join(', ')}` : dims.length ? `Framework shared: ${dims.map(d => d.name).join(', ')}` : 'Framework shared';
+    }
     case 'tone': return brief.tone ? TONE_LABELS[brief.tone] : '';
   }
 }
@@ -74,16 +81,21 @@ export interface Plan {
   about: number;
 }
 
-/** The next question, and "Question n of about m". */
-export function planQuestions(brief: Brief, asked: readonly QuestionId[]): Plan {
-  const remaining = QUESTION_ORDER.filter(id => !asked.includes(id) && !covered(brief, id));
-  const about = Math.min(MAX_QUESTIONS, Math.max(MIN_QUESTIONS, asked.length + remaining.length));
+/**
+ * The next question, and "Question n of about m". `taken` are questions a long answer or an upload answered and the
+ * chat said back with a way to change each (D146): they count toward the minimum, so they are not asked again.
+ */
+export function planQuestions(brief: Brief, asked: readonly QuestionId[], taken: readonly QuestionId[] = []): Plan {
+  const done = [...asked, ...taken.filter(t => !asked.includes(t))];
+  const remaining = QUESTION_ORDER.filter(id => !done.includes(id) && !covered(brief, id));
+  const extra = Math.max(0, MIN_QUESTIONS - done.length - remaining.length);
   const n = asked.length + 1;
+  const about = Math.min(MAX_QUESTIONS, Math.max(n, asked.length + remaining.length + extra));
   if (asked.length >= MAX_QUESTIONS) return { next: null, n: asked.length, about: asked.length };
   if (remaining.length) return { next: remaining[0], n, about };
-  if (asked.length < MIN_QUESTIONS) {
+  if (done.length < MIN_QUESTIONS) {
     // Covered by an upload or an earlier answer, but too few questions asked: confirm the next one.
-    const next = QUESTION_ORDER.find(id => !asked.includes(id))!;
+    const next = QUESTION_ORDER.find(id => !done.includes(id))!;
     return { next, confirm: describe(brief, next), n, about };
   }
   return { next: null, n: asked.length, about: asked.length };
@@ -100,6 +112,8 @@ const DELEGATE = /^\s*(?:decide for me|you decide|you choose|you pick|pick (?:on
 const TONE_WORDS = /^(?:warm|warmly|brisk|direct|professional|friendly|formal|informal|casual|encouraging|supportive|serious|light|lighthearted|fun|playful|calm|upbeat|firm|kind|positive|tough|strict|gentle|crisp|clear|honest|energetic|relaxed|motivating|inspiring|urgent|punchy|neutral|human|empathetic|confident|bold|realistic|challenging)$/i;
 /** A team size in words that is not a number. */
 const VAGUE_SIZE = /\b(?:a few|few|several|some|small|a handful|handful|many|lots|a lot|big|large|medium|average|normal|typical)\b/i;
+/** An answer that reads as a request or as who the participants are, not as an industry ("create a simulation for senior managers"). */
+const NOT_AN_INDUSTRY = /\b(?:simulations?|create|build|make|participants?|managers?|leaders?|directors?|vps?|executives?|supervisors?|team leads?)\b/i;
 
 /** Why an "I do not know" answer cannot be used, and what to do instead, per question. */
 const UNSURE_HELP: Record<QuestionId, string> = {
@@ -107,7 +121,7 @@ const UNSURE_HELP: Record<QuestionId, string> = {
   industry: `No problem. Pick an industry below, or choose ${DECIDE} and I will pick one you can change later.`,
   challenge: 'Pick one of the challenges below, or describe the pressure your participants face in one line.',
   client: 'That is fine. Choose Fictional company and I will make one up, or type the client\'s name.',
-  team_size: 'How many people? iLead teams have 6 to 12. Pick 6 for a small team, 8 or 10 for a typical one, or 12 for a large one.',
+  team_size: SIZE_PROMPT,
   process: 'Pick one of the processes below. The Sales Elevator funnel is a good place to start.',
   duration: 'Choose Full, Standard or Lite. Standard, about an hour, suits most programmes.',
   language: 'Pick a language and region below. If you are not sure yet, English, global is a safe start.',
@@ -126,23 +140,83 @@ function participantsOf(text: string): string {
 const pick = <T extends string>(text: string, table: Record<T, string>): T | undefined =>
   (Object.keys(table) as T[]).find(k => text.toLowerCase().includes(table[k].toLowerCase().split(' ')[0].toLowerCase()));
 
+/** What an answer did: the brief after it, and what to say. */
+export interface Applied {
+  brief: Brief;
+  /** Shown under the answer box; the same question is asked again. */
+  error?: string;
+  /** Kora decided something for the author: said back in the chat. */
+  note?: string;
+  /** One short question with choices before going on (D147). */
+  clarify?: Clarify;
+  /** What a long answer gave, said back as "I took these from your brief" (D146). */
+  took?: TookItem[];
+  /** False when a long answer did not answer the question asked: it is asked again. */
+  answered?: boolean;
+}
+
+/** Who the participants lead, when the answer names a level only ("Senior managers"). */
+function levelClarify(level: string): Clarify {
+  return {
+    id: 'role_level', prompt: `${level} leading which kind of team? It decides the work the team does and the people in it.`,
+    choices: [
+      { label: 'Sales teams', value: `${level} leading sales teams` },
+      { label: 'Service or operations teams', value: `${level} leading service or operations teams` },
+      { label: 'Product or engineering teams', value: `${level} leading product or engineering teams` },
+      { label: `Keep it as ${level.toLowerCase()}`, value: level }
+    ]
+  };
+}
+
+/** An answer to the industry question that is not an industry: ask which, with the industries as choices. */
+const industryAgain = (): Clarify => ({
+  id: 'industry', prompt: 'That sounds like who the participants are, not an industry. Which industry is the simulation set in?',
+  choices: [...INDUSTRIES.slice(0, 7).map(i => ({ label: i.label, value: i.label })), { label: DECIDE, value: DECIDE }]
+});
+
+/**
+ * A long answer (a pasted brief) read whole (D146): every field it states fills the brief, the question asked takes
+ * its own field from it, and what was taken is said back. Ambiguity becomes one clarifying question (D147).
+ */
+function applyLong(brief: Brief, id: QuestionId, text: string): Applied {
+  const r = readBrief(text, brief);
+  let next = fillBrief(brief, r.fields);
+  // The question asked takes the part of the answer that is its own; a challenge may be the whole answer.
+  if (id === 'challenge' && !next.challenge) next = { ...next, challenge: text.slice(0, 4000) };
+  if (id === 'tone' && !next.tone) next = { ...next, tone: pick(text, { professional: 'Professional', warm: 'Warm', direct: 'Direct' }) ?? 'professional' };
+  if (id === 'process' && !next.process) { const s = parseStages(text); if (s) next = { ...next, process: s }; }
+  const clarify = r.clarify && !covered(next, r.clarify.id) ? r.clarify : undefined;
+  return { brief: next, took: tookFrom(brief, next), answered: covered(next, id), ...(clarify ? { clarify } : null) };
+}
+
+/** The chips' own words: a chip says exactly what it means, so it is never a reason to ask again. */
+const chipValues = () => new Set(QUESTION_IDS.flatMap(id => questionFor(id).chips.map(c => c.value.toLowerCase())));
+
 /**
  * Applies an answer to the brief. Returns an error to show when the answer cannot be used (the question is
- * asked again with what would work), and a `note` when Kora decided something for the author, to say so.
+ * asked again with what would work), a `note` when Kora decided something for the author, and a clarifying
+ * question when the answer is ambiguous or contradicts itself (D147). A long answer is read whole (D146).
  * "I do not know" is never taken as an answer (D133): not as a name, an industry or a language.
+ * `clarified`: the answer is a choice of a clarifying question, so it is taken as it is.
  */
-export function applyAnswer(brief: Brief, id: QuestionId, raw: string): { brief: Brief; error?: string; note?: string } {
+export function applyAnswer(brief: Brief, id: QuestionId, raw: string, opts: { clarified?: boolean } = {}): Applied {
   const text = raw.trim();
   if (!text) return { brief, error: 'Type an answer or pick one of the suggestions.' };
   const next: Brief = { ...brief, documents: [...brief.documents] };
   let note: string | undefined;
+  let clarify: Clarify | undefined;
   const unsure = UNSURE.test(text);
   const delegated = DELEGATE.test(text);
   if (unsure && id !== 'framework' && id !== 'tone') return { brief, error: UNSURE_HELP[id] };
+  if (id !== 'framework' && !opts.clarified && isLong(text)) return applyLong(brief, id, text);
+  const chip = opts.clarified || chipValues().has(text.toLowerCase());
   switch (id) {
     case 'role_level':
       if (delegated) return { brief, error: UNSURE_HELP.role_level };
-      next.roleLevel = participantsOf(text); break;
+      next.roleLevel = participantsOf(text);
+      // "Senior managers" says the level, not what they lead: kept, and one question asks (D147).
+      if (!chip && levelOnly(next.roleLevel)) clarify = levelClarify(next.roleLevel);
+      break;
     case 'industry': {
       if (delegated) {
         const guess = INDUSTRIES.find(i => i.keywords.test(`${brief.roleLevel ?? ''} ${brief.challenge ?? ''}`)) ?? INDUSTRIES[0];
@@ -150,7 +224,15 @@ export function applyAnswer(brief: Brief, id: QuestionId, raw: string): { brief:
         note = `I picked ${guess.label} for now. Change it any time in the Brief.`;
         break;
       }
-      next.industry = INDUSTRIES.find(i => i.label.toLowerCase() === text.toLowerCase() || i.keywords.test(text))?.label ?? text; break;
+      const exact = INDUSTRIES.find(i => i.label.toLowerCase() === text.toLowerCase());
+      if (exact) { next.industry = exact.label; break; }
+      const read = industryOfText(text);
+      if (read.ambiguous && !opts.clarified) return { brief, clarify: industryClarify(read.ambiguous) };
+      if (!read.industry && !opts.clarified && NOT_AN_INDUSTRY.test(text)) {
+        // Who the participants are, typed where the industry goes: kept as the participants when there are none yet.
+        return { brief: brief.roleLevel ? brief : { ...brief, roleLevel: participantsOf(text) }, clarify: industryAgain() };
+      }
+      next.industry = read.industry?.label ?? text; break;
     }
     case 'challenge':
       if (delegated) return { brief, error: UNSURE_HELP.challenge };
@@ -163,7 +245,8 @@ export function applyAnswer(brief: Brief, id: QuestionId, raw: string): { brief:
       if (n === null) {
         const number = text.match(/\b(\d{1,3})\b/);
         if (number) return { brief, error: Number(number[1]) < 6 ? `iLead teams have 6 to 12 people, so ${number[1]} is too few to play. Pick 6 for a small team.` : `iLead teams have 6 to 12 people, so ${number[1]} is too many to play. Pick 12 for a large team.` };
-        return { brief, error: VAGUE_SIZE.test(text) || delegated ? UNSURE_HELP.team_size : 'Pick a team size from 6 to 12.' };
+        if (VAGUE_SIZE.test(text) || delegated) return { brief, clarify: sizeClarify([]) };
+        return { brief, error: 'Pick a team size from 6 to 12.' };
       }
       next.teamSize = n; break;
     }
@@ -189,11 +272,21 @@ export function applyAnswer(brief: Brief, id: QuestionId, raw: string): { brief:
   }
   // An answer can cover later questions too ("first time managers at a bank in India").
   if (id !== 'framework') Object.assign(next, inferBrief(text, next, { upload: false }));
-  return note ? { brief: next, note } : { brief: next };
+  return { brief: next, ...(note ? { note } : null), ...(clarify ? { clarify } : null) };
+}
+
+/** Adds an uploaded or pasted document and reads what it covers: labelled lines first, then the whole text (D146). */
+export function readDocument(brief: Brief, doc: { name: string; text: string | null }): { brief: Brief; took: TookItem[]; clarify?: Clarify } {
+  const withDoc: Brief = { ...brief, documents: [...brief.documents, doc] };
+  if (!doc.text) return { brief: withDoc, took: [] };
+  const labelled: Brief = { ...withDoc, ...inferBrief(doc.text, withDoc, { upload: true }) };
+  const r = readBrief(doc.text, labelled);
+  const next = fillBrief(labelled, r.fields);
+  const clarify = r.clarify && !covered(next, r.clarify.id) ? r.clarify : undefined;
+  return { brief: next, took: tookFrom(brief, next), ...(clarify ? { clarify } : null) };
 }
 
 /** Adds an uploaded or pasted document and reads what it covers. */
 export function addDocument(brief: Brief, doc: { name: string; text: string | null }): Brief {
-  const next: Brief = { ...brief, documents: [...brief.documents, doc] };
-  return doc.text ? { ...next, ...inferBrief(doc.text, next, { upload: true }) } : next;
+  return readDocument(brief, doc).brief;
 }
