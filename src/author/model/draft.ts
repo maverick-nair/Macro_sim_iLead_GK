@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Brief, FrameworkDimension, QUESTION_IDS } from '../../api/author';
-import { CONDITION_METRICS, EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, VARIABLE_FORMATS } from '../../engine/config';
+import { CONDITION_METRICS, EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
@@ -198,7 +198,9 @@ export { MAX_VARIABLES };
 export const ClauseDraft = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('flag'), flag: DraftKey, is: z.boolean() }),
   z.object({ kind: z.literal('variable'), variable: DraftKey, op: z.enum(['below', 'atLeast']), value: z.number() }),
-  z.object({ kind: z.literal('metric'), metric: z.enum(CONDITION_METRICS), op: z.enum(['below', 'atLeast']), value: z.number() })
+  z.object({ kind: z.literal('metric'), metric: z.enum(CONDITION_METRICS), op: z.enum(['below', 'atLeast']), value: z.number() }),
+  /** A stakeholder's trust in the participant or their satisfaction (D163). */
+  z.object({ kind: z.literal('stakeholder'), stakeholder: DraftKey, measure: z.enum(['trust', 'satisfaction']), op: z.enum(['below', 'atLeast']), value: z.number() })
 ]);
 export type ClauseDraft = z.infer<typeof ClauseDraft>;
 export const BANDS_READ = ['strong', 'adequate', 'weak', 'harmful'] as const;
@@ -221,9 +223,98 @@ export const ChoiceOptionDraft = z.object({
   set: z.array(DraftKey).max(6),
   clear: z.array(DraftKey).max(6),
   followUp: z.object({ event: z.string(), days: z.number().int().min(0).max(20), weeks: z.number().int().min(0).max(10) }).nullable(),
-  read: z.array(z.object({ skill: Short, band: z.enum(BANDS_READ) })).max(4)
+  read: z.array(z.object({ skill: Short, band: z.enum(BANDS_READ) })).max(4),
+  /** What the option does to stakeholders' relationships (D163), by stakeholder key. */
+  stakeholders: z.record(z.string(), z.object({ trust: Delta, satisfaction: Delta })).optional()
 });
 export type ChoiceOptionDraft = z.infer<typeof ChoiceOptionDraft>;
+
+// ---------------------------------------------------------------- stakeholders (D160 to D165)
+
+export { MAX_STAKEHOLDERS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS };
+/** A stakeholder's trust and satisfaction moved by a choice or an event (D163). */
+export const RelationDelta = z.object({ trust: Delta, satisfaction: Delta });
+
+/**
+ * What a stakeholder interaction does (D163), in the author's terms: their trust and satisfaction, sponsor confidence,
+ * revenue once, the business variables, flags set, skill, morale and result for team members (`who`), and what happened.
+ */
+export const StakeholderEffectDraft = z.object({
+  trust: Delta, satisfaction: Delta, sponsor: Delta,
+  revenue: z.number().min(-1e9).max(1e9),
+  variables: z.record(z.string(), z.number()),
+  set: z.array(DraftKey).max(6),
+  people: z.tuple([Delta, Delta, Delta]),
+  who: z.string(),
+  outcome: Text
+});
+export type StakeholderEffectDraft = z.infer<typeof StakeholderEffectDraft>;
+
+/** One option of a static stakeholder decision (a negotiation as a choice): what it does, the trust it needs, and its read. */
+export const StakeholderOptionDraft = z.object({
+  key: DraftKey, label: Short, detail: Short, effect: StakeholderEffectDraft,
+  /** The trust it needs to land, 0 for none; below it the stakeholder says no (`refusal`) and is a little less satisfied. */
+  needsTrust: Pct, refusal: Text,
+  read: z.array(z.object({ skill: Short, band: z.enum(BANDS_READ) })).max(4)
+});
+export type StakeholderOptionDraft = z.infer<typeof StakeholderOptionDraft>;
+
+/**
+ * One way to engage a stakeholder (D163): meet, present, negotiate or email, on or off. A conversation's consequences
+ * are when it goes well (`good`: Strong, and half of it for Adequate) and when it goes badly (`bad`: Weak, and half
+ * as much again for Harmful). A static decision has 2 to 4 options instead.
+ */
+export const StakeholderInteractionDraft = z.object({
+  type: z.enum(STAKEHOLDER_INTERACTIONS),
+  enabled: z.boolean(),
+  label: Short,
+  goal: Text,
+  plays: z.enum(['live', 'static']),
+  cost: z.number().min(0).max(5),
+  from: IntIn(1, MAX_WEEKS),
+  good: StakeholderEffectDraft,
+  bad: StakeholderEffectDraft,
+  options: z.array(StakeholderOptionDraft).max(4),
+  /** The skills a conversation rates, by name as Scored on names them. */
+  scoredOn: z.array(Short).max(4)
+});
+export type StakeholderInteractionDraft = z.infer<typeof StakeholderInteractionDraft>;
+
+/** A stakeholder outside the team (D160), edited in Team, in the character editor's pattern. */
+export const StakeholderDraft = z.object({
+  key: DraftKey,
+  name: Short,
+  role: Short,
+  kind: z.enum(STAKEHOLDER_KINDS),
+  gender: z.enum(GENDERS),
+  pronouns: Short,
+  /** A library portrait, or empty for their initials. */
+  photo: z.string().max(300),
+  /** What the participant knows about them. */
+  about: Text,
+  persona: Text,
+  motivatedBy: Text,
+  noTopics: Text,
+  hiddenConcern: Text,
+  concernLine: Text,
+  voice: z.object({ pace: Pct, warmth: Pct, formality: Pct, replyLength: z.enum(REPLY_LENGTHS) }),
+  start: z.object({ trust: Pct, satisfaction: Pct }),
+  /** Satisfaction they lose each week nobody engages them. */
+  drift: IntIn(0, 10),
+  interactions: z.array(StakeholderInteractionDraft).max(4)
+});
+export type StakeholderDraft = z.infer<typeof StakeholderDraft>;
+
+/** A request a stakeholder makes by a deadline (D162): a message to answer, or a meeting they ask for (one of their interactions). */
+export const RequestDraft = z.object({
+  kind: z.enum(['message', 'meeting']),
+  /** The interaction (by type) that answers a meeting request. */
+  interaction: z.enum(STAKEHOLDER_INTERACTIONS).nullable(),
+  within: IntIn(1, 10),
+  onTime: RelationDelta,
+  ifIgnored: RelationDelta
+});
+export type RequestDraft = z.infer<typeof RequestDraft>;
 
 /** A choice event (D137): what the participant knows (a line each), 2 to 4 options, the days to decide and the default. */
 export const ChoiceDraft = z.object({
@@ -284,6 +375,12 @@ export const EventFields = z.object({
   conditions: z.array(ClauseDraft).max(3).optional(),
   /** A choice the participant makes (D137), or null for an event that just happens. */
   choice: ChoiceDraft.nullable().optional(),
+  /** The stakeholder it comes from (D162): their message, their card. Null or left out: not from a stakeholder. */
+  stakeholder: z.string().nullable().optional(),
+  /** What the stakeholder asks for by when (D162). */
+  request: RequestDraft.nullable().optional(),
+  /** What the event does to stakeholders' relationships when it plays (D163), by stakeholder key. */
+  moves: z.record(z.string(), RelationDelta).optional(),
   origin: z.enum(['library', 'yours'])
 });
 export const EventDraft = z.preprocess(migrateEvent, EventFields);
@@ -334,6 +431,8 @@ export const AuthorDraft = z.object({
   }),
   /** Business variables (D136), 0 to 6, edited in Work process. */
   variables: z.array(VariableDraft).max(MAX_VARIABLES).default([]),
+  /** Stakeholders outside the team (D160), 0 to 8, edited in Team. */
+  stakeholders: z.array(StakeholderDraft).max(MAX_STAKEHOLDERS).default([]),
   team: z.array(Character).min(MIN_TEAM).max(MAX_TEAM),
   lens: DraftLens,
   actions: z.array(ActionDraft),

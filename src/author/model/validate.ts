@@ -8,6 +8,7 @@ import { ENGINE_TEMPLATES } from './library';
 import { needsOf } from './needs';
 import { parseEffect } from './seed';
 import { consequenceKey, flagsSet } from './choices';
+import { hasInteraction } from './stakeholders';
 
 /**
  * The publish gate (D131): every reason a draft cannot be published yet, and the advice that does not block,
@@ -178,6 +179,14 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
       block({ id: `links.export.${e?.key ?? k}.${k}`, area: 'links', title, ...(todo.length ? { detail: todo.join(' ') } : null), tab: 'events', ...(e ? { target: `events.${e.key}` } : null) });
       return;
     }
+    // A stakeholder's issue (D163) is fixed on Team, on that stakeholder.
+    const sh = text.match(/^Stakeholder "(.*?)": (.*)$/s);
+    if (sh) {
+      const s = d.stakeholders.find(x => (x.name.trim() || x.key) === sh[1]);
+      const [what, ...todo] = sh[2].split(/(?<=\.)\s+/);
+      block({ id: `links.stakeholder.${s?.key ?? k}.${k}`, area: 'links', title: `${quote(sh[1])}: ${what.replace(/\.$/, '')}`, ...(todo.length ? { detail: todo.join(' ') } : null), tab: 'team', ...(s ? { target: `stakeholders.${s.key}` } : null) });
+      return;
+    }
     const stray = text.match(/^(.+) is in a stage that is no longer in the work process/);
     if (stray && strayMembers.has(stray[1])) return;
     const action = text.match(/^Action "(.+?)" is scored on/);
@@ -233,6 +242,10 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   // Names and keys that must be unique.
   const fullNames = d.team.map(c => [c.first, c.last].filter(s => s.trim()).join(' '));
   for (const n of duplicates(fullNames)) block({ id: `names.character.${norm(n)}`, area: 'names', title: `Two characters are called ${quote(n)}`, detail: 'Participants tell people apart by name. Give each character their own.', tab: 'team' });
+  // Stakeholders (D160): their own names, apart from the team's; and something to do with each (advice).
+  const shNames = d.stakeholders.map(s => s.name);
+  for (const n of new Set([...duplicates(shNames), ...shNames.filter(n => n.trim() && fullNames.some(f => norm(f) === norm(n)))])) block({ id: `names.stakeholder.${norm(n)}`, area: 'names', title: `Two people are called ${quote(n)}`, detail: 'A stakeholder shares a name with another stakeholder or a character. Give each their own.', tab: 'team' });
+  for (const s of d.stakeholders) if (!hasInteraction(s)) advise({ id: `mechanics.stakeholder.${s.key}`, area: 'mechanics', title: `Participants cannot do anything with ${quote(s.name || s.key)}`, detail: 'No way to engage them is switched on: they can still write and be moved by decisions, but never be met. Switch on a meeting, a presentation, a negotiation or an email in Team.', tab: 'team', target: `stakeholders.${s.key}` });
   for (const n of duplicates(d.lens.styles.map(s => s.name))) block({ id: `names.style.${norm(n)}`, area: 'names', title: `Two styles are called ${quote(n)}`, detail: 'Each style needs its own name.', tab: 'lens' });
   for (const n of duplicates(d.lens.styles.map(s => (s.letter || s.name.charAt(0)).toUpperCase()))) block({ id: `names.tag.${norm(n)}`, area: 'names', title: `Two styles share the tag ${quote(n)}`, detail: 'Tags label styles on the board and in actions. Give each style its own.', tab: 'lens' });
   const skillNames = d.scoring.framework?.confirmed ? d.scoring.framework.rows.filter(r => r.include && r.behaviors.trim()).map(r => r.skill) : d.scoring.skills.map(s => s.name);

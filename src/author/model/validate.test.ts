@@ -4,6 +4,7 @@ import { configHash } from '../calibrate/logic/hash';
 import type { AuthorDraft } from './draft';
 import { toStoryline } from './export';
 import { effectText, emptyChat, seedDraft } from './seed';
+import { newStakeholder } from './stakeholders';
 import { MIN_ACTIONS, readiness, recordCalibration, syntheticGate, validateDraft, validationOf } from './validate';
 
 const chat = (): AuthorDraft['chat'] => ({
@@ -263,5 +264,60 @@ describe('choices, conditions and business variables (D136 to D138)', () => {
     const d = ready();
     d.variables[0].weight = 50; d.variables[1].weight = 40;
     expect(validateDraft(d).blocking.some(i => /80% is the most/.test(i.detail ?? ''))).toBe(true);
+  });
+});
+
+describe('stakeholders outside the team (D160 to D165)', () => {
+  const withHelen = () => {
+    const d = ready();
+    d.stakeholders.push(newStakeholder(d, { role: 'cfo' }));
+    return d;
+  };
+
+  it('a stakeholder added by role passes, exports, and blocks nothing of their own', () => {
+    const d = withHelen();
+    expect(blockedBy(d, /stakeholder/)).toEqual([]);
+    expect(validateDraft(d).advisories.filter(i => /stakeholder/.test(i.id))).toEqual([]);
+    const out = toStoryline(d);
+    expect(out.issues).toEqual([]);
+    expect(out.storyline.stakeholders!.map(s => [s.key, s.kind, (s.interactions ?? []).map(x => x.type)])).toEqual([['helen', 'executive', ['present', 'negotiate']]]);
+  });
+
+  it('blocks an event from a stakeholder who is gone, on the Events tab', () => {
+    const d = withHelen();
+    d.events[0].stakeholder = 'ghost';
+    const b = validateDraft(d).blocking.filter(i => i.target === `events.${d.events[0].key}`);
+    expect(b.map(i => `${i.title} ${i.detail ?? ''}`).join(' ')).toMatch(/stakeholder who is no longer in the simulation/);
+    expect(b.every(i => i.tab === 'events')).toBe(true);
+  });
+
+  it('blocks a condition on a stakeholder who does not exist, and a decision that moves one', () => {
+    const d = withHelen();
+    const later = d.events.find(x => x.key === 'public_complaint')!;
+    later.conditions = [{ kind: 'stakeholder', stakeholder: 'nobody', measure: 'trust', op: 'below', value: 40 }];
+    const choice = d.events.find(x => x.choice)!;
+    choice.choice!.options[0].stakeholders = { nobody: { trust: 4, satisfaction: 0 } };
+    const text = validateDraft(d).blocking.map(i => `${i.title} ${i.detail ?? ''}`).join(' ');
+    expect(text).toMatch(/nobody's trust is below 40, but there is no such stakeholder/);
+    expect(text).toMatch(/moves nobody, who is no longer a stakeholder/);
+  });
+
+  it('blocks an interaction scored on a skill that is not there, on Team at that stakeholder', () => {
+    const d = withHelen();
+    d.stakeholders[0].interactions.find(x => x.enabled)!.scoredOn = ['Juggling'];
+    expect(blockedBy(d, /^links\.stakeholder\.helen/).map(i => [i.tab, i.target])).toEqual([['team', 'stakeholders.helen']]);
+  });
+
+  it('blocks two people with the same name, team or not', () => {
+    const d = withHelen();
+    d.stakeholders[0].name = `${d.team[0].first} ${d.team[0].last}`;
+    expect(blockedBy(d, /^names\.stakeholder/).length).toBe(1);
+  });
+
+  it('advises, without blocking, when nothing can be done with a stakeholder', () => {
+    const d = withHelen();
+    for (const x of d.stakeholders[0].interactions) x.enabled = false;
+    expect(blockedBy(d, /stakeholder/)).toEqual([]);
+    expect(validateDraft(d).advisories.map(i => [i.id, i.tab, i.target])).toContainEqual(['mechanics.stakeholder.helen', 'team', 'stakeholders.helen']);
   });
 });

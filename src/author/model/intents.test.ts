@@ -6,6 +6,7 @@ import { charactersIn, eventsIn, understand, type KoraAnswer } from './intents';
 import { applyOps, checkOps, checkViewOps, editView } from './patch';
 import { fitRun } from './run';
 import { emptyChat, seedDraft } from './seed';
+import { briefStakeholders } from './stakeholders';
 
 const draft = () => seedDraft({
   ...emptyChat(),
@@ -346,5 +347,79 @@ describe('Kora on choice events (D137, D138)', () => {
     expect(v.fields['events.discount_decision.choice.options.discount.revenue']).toBeGreaterThan(0);
     expect(v.fields['events.discount_decision.choice.options.discount.variables.customer_trust']).toBe(-6);
     expect(checkViewOps(v, [{ path: 'events.discount_decision.choice.options.discount.morale', value: -4 }])).toEqual([]);
+  });
+});
+
+describe('Kora on stakeholders outside the team (D165)', () => {
+  it('"add the CFO as a stakeholder" adds a stakeholder by role, never a team member', () => {
+    const d = draft();
+    const { a, next } = applied(d, 'Add the CFO as a stakeholder', 'team');
+    expect(a.reply).toMatch(/Adds Helen Brandt, Chief Financial Officer, as a stakeholder outside the team/);
+    expect(next.team.length).toBe(d.team.length);
+    expect(next.stakeholders.map(s => [s.key, s.kind, s.role])).toEqual([['helen', 'executive', 'Chief Financial Officer']]);
+    expect(a.marks).toEqual(expect.arrayContaining(['stakeholders.helen.identity', 'stakeholders.helen.interactions']));
+    expect(toStoryline(next).issues).toEqual([]);
+    // A second one by another role.
+    const { next: two } = applied(next, 'Add a client stakeholder', 'team');
+    expect(two.stakeholders.map(s => s.kind)).toEqual(['executive', 'customer']);
+  });
+
+  it('"make Helen more demanding" lowers where the relationship starts, speeds its drift and cools the voice', () => {
+    const d = draft();
+    const { next } = applied(d, 'Add the CFO as a stakeholder', 'team');
+    const before = next.stakeholders[0];
+    const { a, next: after } = applied(next, 'Make Helen more demanding', 'team');
+    const s = after.stakeholders[0];
+    expect(a.reply).toMatch(/^Helen is more demanding/);
+    expect(s.start.satisfaction).toBeLessThan(before.start.satisfaction);
+    expect(s.start.trust).toBeLessThan(before.start.trust);
+    expect(s.drift).toBeGreaterThan(before.drift);
+    expect(s.voice.warmth).toBeLessThan(before.voice.warmth);
+    // With no stakeholder named and several there, Kora asks which.
+    const { next: two } = applied(after, 'Add a client stakeholder', 'team');
+    expect(ask(two, 'Make the stakeholder more demanding', 'team')).toMatchObject({ kind: 'reply', reply: expect.stringMatching(/^Which stakeholder/) });
+  });
+
+  it('"add a stakeholder triggered event" adds a meeting request with a deadline that exports as one', () => {
+    const d = draft();
+    expect(ask(d, 'Add a stakeholder triggered event', 'events')).toMatchObject({ kind: 'reply', reply: expect.stringMatching(/no stakeholders yet/) });
+    const { next } = applied(d, 'Add the CFO as a stakeholder', 'team');
+    const { a, next: after } = applied(next, 'Add a stakeholder triggered event', 'events');
+    expect(a.reply).toMatch(/Helen now asks for a meeting in week \d, by a deadline/);
+    const e = after.events.find(x => x.stakeholder === 'helen')!;
+    expect(e).toMatchObject({ key: 'helen_asks', request: { kind: 'meeting', interaction: 'present' }, ifIgnored: { sponsor: true } });
+    const out = toStoryline(after);
+    expect(out.issues).toEqual([]);
+    expect(out.storyline.events!.find(x => x.key === 'helen_asks')).toMatchObject({ stakeholder: 'helen', request: { kind: 'meeting', interaction: 'present' } });
+  });
+
+  it('creates the brief\'s stakeholders when the chat found some, and only those not there yet', () => {
+    const d = draft();
+    (d.chat.brief as unknown as Record<string, unknown>).stakeholders = [
+      { name: 'Ana Costa', role: 'Head of Procurement', relation: 'client' },
+      { name: 'Ray Mills', role: 'Finance Director', relation: 'executive' }
+    ];
+    expect(briefStakeholders(d).map(s => [s.name, s.kind])).toEqual([['Ana Costa', 'customer'], ['Ray Mills', 'executive']]);
+    const { a, next } = applied(d, 'Create the stakeholders from the brief', 'team');
+    expect(a.reply).toMatch(/Adds 2 stakeholders from your brief: Ana Costa, Head of Procurement; Ray Mills, Finance Director/);
+    expect(next.stakeholders.map(s => [s.name, s.role, s.kind])).toEqual([['Ana Costa', 'Head of Procurement', 'customer'], ['Ray Mills', 'Finance Director', 'executive']]);
+    expect(briefStakeholders(next)).toEqual([]);
+    // A brief saved before the field, or with something else there, offers none.
+    (d.chat.brief as unknown as Record<string, unknown>).stakeholders = 'nobody';
+    expect(briefStakeholders(d)).toEqual([]);
+  });
+
+  it('keeps Kora\'s stakeholder edits to the whitelist, and shows the model their fields', () => {
+    const d = draft();
+    const { next } = applied(d, 'Add the CFO as a stakeholder', 'team');
+    expect(checkOps(next, [{ op: 'set', path: 'stakeholders.helen.start.trust', value: 30 }])).toMatchObject({ ok: true });
+    expect(checkOps(next, [{ op: 'set', path: 'stakeholders.helen.start.trust', value: 300 }])).toMatchObject({ ok: false });
+    expect(checkOps(next, [{ op: 'set', path: 'stakeholders.helen.key', value: 'x' }])).toMatchObject({ ok: false });
+    expect(checkOps(next, [{ op: 'set', path: 'stakeholders.nobody.name', value: 'X' }])).toMatchObject({ ok: false });
+    expect(checkOps(next, [{ op: 'set', path: 'events.public_complaint.conditions', value: [{ kind: 'stakeholder', stakeholder: 'nobody', measure: 'trust', op: 'below', value: 40 }] }])).toMatchObject({ ok: false, issues: [expect.stringMatching(/no stakeholder called nobody/)] });
+    const v = editView(next, 'team');
+    expect(v.fields['stakeholders.helen.start.trust']).toBe(45);
+    expect(v.fields['stakeholders.helen.interactions.present.good.trust']).toBe(6);
+    expect(checkViewOps(v, [{ path: 'stakeholders.helen.voice.warmth', value: 10 }])).toEqual([]);
   });
 });

@@ -80,6 +80,19 @@ export function ChoiceEditor({ d, e, set }: Props) {
                   <Field label="Sponsor confidence">{fid => <TextInput id={fid} inputMode="numeric" value={signed(o.sponsor)} onChange={ev => setOption(o.key, { sponsor: delta(ev.target.value) })} />}</Field>
                   {d.variables.map(v => <Field key={v.key} label={v.name || v.key}>{fid => <TextInput id={fid} inputMode="decimal" value={signed(o.variables[v.key] ?? 0)} onChange={ev => { const n = amount(ev.target.value); const vars = { ...o.variables }; if (n) vars[v.key] = n; else delete vars[v.key]; setOption(o.key, { variables: vars }); }} />}</Field>)}
                 </div>
+                {d.stakeholders.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 max-[1180px]:grid-cols-2">
+                    {d.stakeholders.flatMap(s => (['trust', 'satisfaction'] as const).map(m => (
+                      <Field key={`${s.key}.${m}`} label={`${s.name.split(' ')[0] || s.key}: ${m === 'trust' ? 'trust' : 'satisfaction'}`}>{fid => <TextInput id={fid} inputMode="numeric" value={signed(o.stakeholders?.[s.key]?.[m] ?? 0)} onChange={ev => {
+                        const n = delta(ev.target.value);
+                        const all = { ...(o.stakeholders ?? {}) };
+                        const cur = { trust: all[s.key]?.trust ?? 0, satisfaction: all[s.key]?.satisfaction ?? 0, [m]: n };
+                        if (cur.trust || cur.satisfaction) all[s.key] = cur; else delete all[s.key];
+                        setOption(o.key, { stakeholders: all });
+                      }} />}</Field>
+                    )))}
+                  </div>
+                )}
                 <div className="grid grid-cols-2 gap-2 max-[1180px]:grid-cols-1">
                   <Field label="Sets these flags" hint="Names, separated by commas; later events can wait on them">{fid => <TextInput id={fid} defaultValue={flagText(o.set)} onBlur={ev => setOption(o.key, { set: flagKeys(ev.target.value) })} />}</Field>
                   <Field label="Clears these flags" optional>{fid => <TextInput id={fid} defaultValue={flagText(o.clear)} onBlur={ev => setOption(o.key, { clear: flagKeys(ev.target.value) })} />}</Field>
@@ -124,14 +137,15 @@ export function ChoiceEditor({ d, e, set }: Props) {
   );
 }
 
-const CLAUSES: Array<[ClauseDraft['kind'], string]> = [['flag', 'A decision was made (a flag)'], ['variable', 'A business variable'], ['metric', 'A team measure']];
+const CLAUSES: Array<[ClauseDraft['kind'], string]> = [['flag', 'A decision was made (a flag)'], ['variable', 'A business variable'], ['metric', 'A team measure'], ['stakeholder', 'A stakeholder relationship']];
 
 /** "Plays only if": up to three clauses, all of which must hold (D138). */
 export function ConditionsEditor({ d, e, set }: Props) {
   const list = e.conditions ?? [];
   const flags = [...new Set(d.events.flatMap(x => (x.choice?.options ?? []).flatMap(o => o.set)))];
   const put = (i: number, c: ClauseDraft) => set({ conditions: list.map((x, j) => (j === i ? c : x)) });
-  const fresh = (kind: ClauseDraft['kind']): ClauseDraft => (kind === 'flag' ? { kind, flag: flags[0] ?? 'flag', is: true } : kind === 'variable' ? { kind, variable: d.variables[0]?.key ?? 'budget', op: 'below', value: 50 } : { kind, metric: 'teamMorale', op: 'below', value: 60 });
+  const fresh = (kind: ClauseDraft['kind']): ClauseDraft => (kind === 'flag' ? { kind, flag: flags[0] ?? 'flag', is: true } : kind === 'variable' ? { kind, variable: d.variables[0]?.key ?? 'budget', op: 'below', value: 50 }
+    : kind === 'stakeholder' ? { kind, stakeholder: d.stakeholders[0]?.key ?? 'stakeholder', measure: 'satisfaction', op: 'below', value: 40 } : { kind: 'metric', metric: 'teamMorale', op: 'below', value: 60 });
   return (
     <fieldset className="m-0 flex flex-col gap-2 rounded-12 border border-solid border-author-line p-3">
       <legend className="px-1 text-15 font-800">Plays only if</legend>
@@ -139,7 +153,7 @@ export function ConditionsEditor({ d, e, set }: Props) {
       <ol className="m-0 flex list-none flex-col gap-2 p-0" aria-label="Conditions">
         {list.map((c, i) => (
           <li key={i} className="grid grid-cols-[2fr_2fr_1fr_1fr_auto] items-end gap-2 max-[1180px]:grid-cols-2">
-            <Field label={`Condition ${i + 1}`}>{fid => <Select id={fid} value={c.kind} onChange={ev => put(i, fresh(ev.target.value as ClauseDraft['kind']))}>{CLAUSES.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</Select>}</Field>
+            <Field label={`Condition ${i + 1}`}>{fid => <Select id={fid} value={c.kind} onChange={ev => put(i, fresh(ev.target.value as ClauseDraft['kind']))}>{CLAUSES.filter(([k]) => k !== 'stakeholder' || d.stakeholders.length || c.kind === 'stakeholder').map(([k, l]) => <option key={k} value={k}>{l}</option>)}</Select>}</Field>
             {c.kind === 'flag' && <>
               <Field label="Flag">{fid => <Select id={fid} value={c.flag} onChange={ev => put(i, { ...c, flag: ev.target.value })}>
                 {!flags.includes(c.flag) && <option value={c.flag}>{c.flag.replace(/_/g, ' ')}: no decision sets it</option>}
@@ -155,6 +169,14 @@ export function ConditionsEditor({ d, e, set }: Props) {
               </Select>}</Field>
               <Field label="Is">{fid => <Select id={fid} value={c.op} onChange={ev => put(i, { ...c, op: ev.target.value as typeof c.op })}><option value="below">Below</option><option value="atLeast">At least</option></Select>}</Field>
               <Field label="Value">{fid => <TextInput id={fid} inputMode="decimal" value={c.value} onChange={ev => put(i, { ...c, value: amount(ev.target.value) })} />}</Field>
+            </>}
+            {c.kind === 'stakeholder' && <>
+              <Field label="Stakeholder">{fid => <Select id={fid} value={`${c.stakeholder}.${c.measure}`} onChange={ev => { const [stakeholder, measure] = ev.target.value.split('.'); put(i, { ...c, stakeholder, measure: measure as typeof c.measure }); }}>
+                {!d.stakeholders.some(s => s.key === c.stakeholder) && <option value={`${c.stakeholder}.${c.measure}`}>Missing: pick a stakeholder</option>}
+                {d.stakeholders.flatMap(s => (['trust', 'satisfaction'] as const).map(m => <option key={`${s.key}.${m}`} value={`${s.key}.${m}`}>{s.name || s.key}: {m === 'trust' ? 'trust in you' : 'satisfaction'}</option>))}
+              </Select>}</Field>
+              <Field label="Is">{fid => <Select id={fid} value={c.op} onChange={ev => put(i, { ...c, op: ev.target.value as typeof c.op })}><option value="below">Below</option><option value="atLeast">At least</option></Select>}</Field>
+              <Field label="Value, 0 to 100">{fid => <TextInput id={fid} inputMode="decimal" value={c.value} onChange={ev => put(i, { ...c, value: amount(ev.target.value) })} />}</Field>
             </>}
             {c.kind === 'metric' && <>
               <Field label="Measure">{fid => <Select id={fid} value={c.metric} onChange={ev => put(i, { ...c, metric: ev.target.value as typeof c.metric })}>{CONDITION_METRICS.map(m => <option key={m} value={m}>{METRIC[m]}</option>)}</Select>}</Field>

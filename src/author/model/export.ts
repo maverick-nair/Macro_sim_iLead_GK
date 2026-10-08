@@ -9,6 +9,7 @@ import { capabilityLow, draftStoryline } from '../storyline';
 import type { AuthorDraft, EventDraft } from './draft';
 import { mapWeek } from './run';
 import { kindOf, parseEffect } from './seed';
+import { clauseHolds, eventStakeholder, exportStakeholders, optionStakeholders, type StakeholderCtx } from './exportStakeholders';
 
 /**
  * The draft as the engine plays it (D105, D128 to D130). The mechanics are drafted again from the brief and
@@ -101,6 +102,8 @@ interface EventCtx {
   /** Business variable keys (D136), for choices and conditions. */
   variables: Map<string, string>;
   issues: string[];
+  /** Stakeholders (D163), for who an event comes from, what it moves and conditions on them. */
+  stakeholders: StakeholderCtx;
 }
 
 /** A choice option's people, business and flags as the engine's option (D137); its leadership read is mapped later, by skill name. */
@@ -113,10 +116,11 @@ function exportOption(o: NonNullable<EventDraft['choice']>['options'][number], c
   for (const k of Object.keys(o.variables)) if (!c.variables.has(k)) say(`its option "${o.label || o.key}" changes ${k}, which is not one of the business variables. Add it in Work process, or pick another.`);
   const f = o.followUp;
   if (f && !c.eventKeys.has(f.event)) say(`its option "${o.label || o.key}" leads to an event that no longer exists (${f.event}). Pick another, or none.`);
+  const stakeholders = optionStakeholders(o, c.stakeholders, say);
   return {
     key: o.key, label: o.label || o.key, ...(o.detail.trim() ? { detail: o.detail.trim() } : null), outcome: o.outcome.trim() || o.label || o.key, who,
     people: [o.skill, o.morale, o.result] as [number, number, number], trust: o.trust,
-    business: { variables: Object.fromEntries(Object.entries(o.variables).filter(([k, v]) => c.variables.has(k) && v)), revenue: o.revenue, sponsor: o.sponsor, set: [...o.set], clear: [...o.clear], ...(f && c.eventKeys.has(f.event) ? { followUps: [{ event: f.event, days: f.days, weeks: f.weeks }] } : null) },
+    business: { variables: Object.fromEntries(Object.entries(o.variables).filter(([k, v]) => c.variables.has(k) && v)), revenue: o.revenue, sponsor: o.sponsor, set: [...o.set], clear: [...o.clear], ...(f && c.eventKeys.has(f.event) ? { followUps: [{ event: f.event, days: f.days, weeks: f.weeks }] } : null), ...(stakeholders ? { stakeholders } : null) },
     read: o.read
   };
 }
@@ -134,7 +138,8 @@ function exportEvent(base: GeneralEvent | undefined, e: EventDraft, c: EventCtx)
     say('it is about a person who is no longer on the team. Pick who it hits, or remove the event.');
     dangling = true;
   }
-  if ((e.arrives === 'chat' || e.arrives === 'email') && (e.who === 'team' || e.who.startsWith('stage:'))) {
+  // A stakeholder's message comes from them, whoever the event's people part lands on (D162).
+  if ((e.arrives === 'chat' || e.arrives === 'email') && (e.who === 'team' || e.who.startsWith('stage:')) && !e.stakeholder) {
     say(`it arrives as ${e.arrives === 'chat' ? 'a chat message' : 'an email'}, which comes from one person, but it hits ${e.who === 'team' ? 'the whole team' : 'a whole stage'}. Pick one person, or another way it arrives.`);
     dangling = true;
   }
@@ -170,16 +175,21 @@ function exportEvent(base: GeneralEvent | undefined, e: EventDraft, c: EventCtx)
   }
   const response = e.respondWith.length ? { actions: e.respondWith, within: e.within, onTime: e.onTime } : undefined;
   const follow = e.ifIgnored.followUp;
-  if ((e.ifIgnored.sponsor || follow) && !response) say('it says what happens if it is ignored, but no response is expected. Pick the actions that answer it.');
+  // A stakeholder's request (D162) is answered by answering them: what happens if it is ignored needs no response actions.
+  const asks = !!e.request && !!e.stakeholder;
+  if ((e.ifIgnored.sponsor || follow) && !response && !asks) say('it says what happens if it is ignored, but no response is expected. Pick the actions that answer it.');
   if (follow && !c.eventKeys.has(follow)) say(`if ignored it leads to an event that no longer exists (${follow}). Pick another, or none.`);
   if (follow === e.key) say('if ignored it leads to itself. Pick another event.');
   const wait = e.ifIgnored.afterDays ?? 0;
-  const escalation = response && (e.ifIgnored.sponsor || follow) ? { sponsor: e.ifIgnored.sponsor, ...(follow ? { event: follow } : null), ...(follow && wait ? { delay: { days: wait, weeks: 0 } } : null) } : undefined;
+  const escalation = (response || asks) && (e.ifIgnored.sponsor || follow) ? { sponsor: e.ifIgnored.sponsor, ...(follow ? { event: follow } : null), ...(follow && wait ? { delay: { days: wait, weeks: 0 } } : null) } : undefined;
 
   // Conditions on earlier choices (D138): flags, business variables and team metrics.
   const conditions = e.conditions ?? [];
   for (const cl of conditions) if (cl.kind === 'variable' && !c.variables.has(cl.variable)) say(`it plays only if ${cl.variable} is ${cl.op === 'below' ? 'below' : 'at least'} ${cl.value}, but there is no such business variable. Add it in Work process, or change the condition.`);
-  const iff = conditions.filter(cl => cl.kind !== 'variable' || c.variables.has(cl.variable));
+  const iff = conditions.filter(cl => (cl.kind !== 'variable' || c.variables.has(cl.variable)) && clauseHolds(cl, c.stakeholders, say));
+  // From a stakeholder, what they ask for, and what the event does to stakeholders (D162, D163).
+  const sh = eventStakeholder(e, c.stakeholders, say);
+  const shBusiness = sh.moves ? { business: { ...(base?.business ?? {}), stakeholders: sh.moves } } : null;
   // A choice (D137): answered by choosing, on a card.
   const ch = e.choice;
   if (ch) {
@@ -194,8 +204,9 @@ function exportEvent(base: GeneralEvent | undefined, e: EventDraft, c: EventCtx)
   const event = {
     ...(base ?? {}), key: e.key, title: e.title || base?.title || 'Event', body: { he: e.body, she: e.body }, card,
     ...timing, impact: [harm(e.skill), harm(e.morale), harm(e.result)], target, delivery: e.arrives,
-    response: choice ? undefined : response, escalation: choice ? undefined : escalation,
-    if: iff.length ? iff : undefined, choice
+    response: choice || sh.request ? undefined : response, escalation: choice ? undefined : escalation,
+    if: iff.length ? iff : undefined, choice,
+    ...(sh.stakeholder ? { stakeholder: sh.stakeholder } : null), ...(sh.request ? { request: sh.request } : null), ...shBusiness
   } as GeneralEvent;
   return { event, dangling };
 }
@@ -310,7 +321,8 @@ export function toStoryline(d: AuthorDraft): Exported {
     weeks, days, baseWeeks: base.time.period.count, harm: pace.harm, memberIds, stageKey,
     actionKeys, actionNames: new Map(d.actions.map(a => [a.key, a.name])), eventKeys: new Set(d.events.map(e => e.key)),
     followed: new Set(d.events.flatMap(e => [...(e.ifIgnored.followUp ? [e.ifIgnored.followUp] : []), ...(e.choice?.options ?? []).flatMap(o => (o.followUp ? [o.followUp.event] : []))])),
-    variables: new Map(d.variables.map(v => [v.key, v.name])), issues
+    variables: new Map(d.variables.map(v => [v.key, v.name])), issues,
+    stakeholders: { stakeholders: d.stakeholders, stageKey, memberIds, variables: new Map(d.variables.map(v => [v.key, v.name])), weeks, issues }
   };
   const exported = d.events.map(e => exportEvent(baseEvents.get(e.key), e, ctx));
   const events = exported.map(x => x.event);
@@ -373,6 +385,9 @@ export function toStoryline(d: AuthorDraft): Exported {
     });
   }
 
+  // Stakeholders outside the team (D160 to D163), with their skills by name as Scored on names them.
+  const stakeholders = exportStakeholders(d, ctx.stakeholders, skillKey);
+
   const hasStatic = actions.some(a => a.kind === 'static' && a.scope === 'member');
   const region = regionOf(d.brief.language);
   const balanced = d.process.pacing === 'balanced';
@@ -398,6 +413,7 @@ export function toStoryline(d: AuthorDraft): Exported {
     // People dynamics (D135) at the engine's defaults, and the business variables (D136), with weights as shares.
     ...(d.process.dynamics ? { dynamics: {} } : null),
     variables: d.variables.map(v => ({ key: v.key, name: v.name || v.key, format: v.format, start: v.start, min: v.min, max: v.max, drift: v.drift, shown: v.shown, weight: v.weight / 100, higherIsBetter: v.higherIsBetter, ...(v.about.trim() ? { about: v.about.trim() } : null) })),
+    ...(stakeholders.length ? { stakeholders } : null),
     ...(hasStatic ? null : { demo: { enabled: false } }),
     calibrated: false
   };
