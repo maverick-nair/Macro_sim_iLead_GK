@@ -8,6 +8,7 @@ import { pairCount, probePersona, topPairs } from '../../../engine/sim/synthetic
 import type { SyntheticSpeaker } from '../../../engine/sim/syntheticSpeech';
 import type { Band } from '../../../engine/sim/types';
 import { aggregate } from './aggregate';
+import { playsBundledActions } from './bundled';
 import { configHash } from './hash';
 import { playthroughOf, runResultOf } from './extract';
 import { CalibrationSettings, MAX_PLAYTHROUGHS, MAX_PROBE_ACTIONS, PERSONA_KEYS, type CalibrationResults, type CalibrationSettingsInput, type PersonaKey, type Playthrough, type RunResult } from './schema';
@@ -191,7 +192,8 @@ export async function runCalibration(draft: unknown, settingsIn: CalibrationSett
     ranOn: deps.ranOn,
     players: deps.players ?? (deps.speaker ? 'ai' : 'templates'),
     createdAt: new Date(started).toISOString(),
-    durationMs: Date.now() - started
+    durationMs: Date.now() - started,
+    bundled: playsBundledActions(config)
   });
   return { results, playthroughs };
 }

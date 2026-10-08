@@ -292,6 +292,8 @@ export interface AggregateFacts {
   players: CalibrationResults['players'];
   createdAt: string;
   durationMs: number;
+  /** The storyline plays the bundled Sales Elevator's calibrated actions: its known findings are advice (./findings). */
+  bundled?: boolean;
 }
 
 /** Every persona's numbers and the checks, from the playthroughs and probes. */
@@ -303,7 +305,7 @@ export function aggregate(runs: RunResult[], probes: RunResult[], f: AggregateFa
   return {
     version: 1, storyline: f.storyline, configHash: f.configHash, lens: f.lens, scale: f.scale, money: f.money, scoreMax: f.scoreMax, tiers: f.tiers, targetTier: target,
     personas,
-    checks: checks({ personas, runs, probes, probesRan: f.settings.probes, target, scale: f.scale, scoreMax: f.scoreMax, actions: f.actions, styles: f.lens.styles }).map(ch => knownFinding(f.storyline.id, ch)),
+    checks: checks({ personas, runs, probes, probesRan: f.settings.probes, target, scale: f.scale, scoreMax: f.scoreMax, actions: f.actions, styles: f.lens.styles }).map(ch => knownFinding(!!f.bundled, ch)),
     runs, probes, concernsByPerson, actions: f.actions, settings: f.settings, ranOn: f.ranOn, players: f.players, createdAt: f.createdAt, durationMs: f.durationMs
   };
 }

@@ -77,13 +77,13 @@ describe('combined strategy probes (D149)', () => {
 });
 
 describe('the bundled storyline\'s known findings (D149)', () => {
-  it('report a known failure as advice on that storyline only, with the finding', () => {
+  it('report a known failure as advice on a storyline that plays the bundled actions, with the finding', () => {
     const fail: Check = { key: 'combined', status: 'fail', title: 't', detail: 'd', fix: 'f' };
-    expect(knownFinding('sales_elevator', fail)).toMatchObject({ status: 'warn', title: 't', fix: 'f' });
-    expect(knownFinding('sales_elevator', fail).detail).toMatch(/^A storyline finding on the bundled Sales Elevator.* d$/);
-    expect(knownFinding('draft_acme', fail)).toBe(fail);
-    expect(knownFinding('sales_elevator', { ...fail, key: 'dominant' })).toMatchObject({ status: 'fail' });
-    expect(knownFinding('sales_elevator', { ...fail, status: 'pass' }).status).toBe('pass');
+    expect(knownFinding(true, fail)).toMatchObject({ status: 'warn', title: 't', fix: 'f' });
+    expect(knownFinding(true, fail).detail).toMatch(/^A finding in the bundled Sales Elevator's calibrated actions.* d$/);
+    expect(knownFinding(false, fail)).toBe(fail);
+    expect(knownFinding(true, { ...fail, key: 'dominant' })).toMatchObject({ status: 'fail' });
+    expect(knownFinding(true, { ...fail, status: 'pass' }).status).toBe('pass');
   });
 });
 

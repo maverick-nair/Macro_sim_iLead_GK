@@ -3,6 +3,9 @@ import raw from '../../../engine/storylines/sales-elevator.json';
 import type { Copy } from '../../../engine/copy';
 import type { Evaluation } from '../../../engine/sim/types';
 import { copyViolations } from '../../../i18n/copy';
+import { toStoryline } from '../../model/export';
+import { freshDraft } from '../../model/store';
+import { changedActions, playsBundledActions } from './bundled';
 import { explain } from './explain';
 import { configHash } from './hash';
 import { calibrationPublishCheck } from './publish';
@@ -159,13 +162,21 @@ describe('checks that catch broken configs (D149, D150)', () => {
     expect(check(await run(light), 'idle')).toMatchObject({ status: 'pass' });
   }, 60_000);
 
-  it('Sales Elevator: the combined finding is advice on the bundled storyline, and a failure on a copy of it', async () => {
+  it('Sales Elevator: the combined finding is advice on the bundled actions, and a failure once an author changes what they do', async () => {
     const r = await run(raw, { expert: 3, peopleFirst: 2 });
-    expect(check(r, 'combined')).toMatchObject({ status: 'warn', detail: expect.stringMatching(/^A storyline finding on the bundled Sales Elevator/) });
+    expect(check(r, 'combined')).toMatchObject({ status: 'warn', detail: expect.stringMatching(/^A finding in the bundled Sales Elevator's calibrated actions/) });
     // People first beats the Expert on score and revenue: no trade-off between people and results.
     expect(check(r, 'tradeOff')).toMatchObject({ status: 'warn' });
-    const copy = await run({ ...raw, id: 'draft_sales_copy' }, { expert: 3 });
-    expect(check(copy, 'combined')).toMatchObject({ status: 'fail' });
+    // A draft keeps the bundled actions under its own id and wording: still advice.
+    expect(playsBundledActions(parseDraft({ ...raw, id: 'draft_acme', actions: raw.actions.map(a => ({ ...a, name: `${a.name} now` })) }))).toBe(true);
+    // A fresh /author draft plays them too (its actions switched off do not count), until the author changes one.
+    const fresh = parseDraft(toStoryline(freshDraft()).storyline);
+    expect(changedActions(fresh)).toEqual([]);
+    expect(playsBundledActions(fresh)).toBe(true);
+    const changed = broken(c => { c.id = 'draft_sales_copy'; c.actions.find(a => a.key === 'reward')!.cost = 2; });
+    expect(changedActions(changed)).toEqual(['reward']);
+    expect(playsBundledActions(changed)).toBe(false);
+    expect(check(await run(changed, { expert: 3 }), 'combined')).toMatchObject({ status: 'fail' });
   }, 60_000);
 });
 
