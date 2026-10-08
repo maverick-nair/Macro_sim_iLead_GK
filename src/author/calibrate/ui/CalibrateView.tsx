@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { checkSummary } from '../logic/aggregate';
 import { CalibrateClientError, createRunner, type CalibrationRun } from '../logic/client';
 import { configHash } from '../logic/hash';
-import { PERSONA_KEYS, type CalibrationResults, type PersonaKey } from '../logic/schema';
+import { DEFAULT_RUNS, isLevelKey, PERSONA_KEYS, type CalibrationResults, type PersonaKey } from '../logic/schema';
 import type { CalibrateSlotProps } from '../types';
 import { ago, BUTTON, plural } from './parts';
 import { PersonaCards, PLAYS, type PersonaSetup } from './Setup';
-import { ChecksList, ResultsTable } from './Results';
+import { ChecksList, PillarsTable, ResultsTable } from './Results';
 import { PlaythroughView } from './PlaythroughView';
 
 /**
@@ -15,9 +15,10 @@ import { PlaythroughView } from './PlaythroughView';
  * and checks, and one playthrough at a time. Rendered by `<CalibrateSlot>` (../index.ts), lazily.
  */
 export default function CalibrateView({ config, apiBase = null, results: kept = null, onResults, onAsk, defaultRuns, headingLevel = 2, heading = true, runner: injected }: CalibrateSlotProps) {
+  // The four levels play by default; the player types are off until the author turns them on (D150).
   const [setup, setSetup] = useState<Record<PersonaKey, PersonaSetup>>(() => Object.fromEntries(PERSONA_KEYS.map(p => {
-    const n = defaultRuns?.[p] ?? 5;
-    return [p, { on: n > 0, runs: Math.max(1, n), plays: PLAYS[p] }];
+    const n = defaultRuns?.[p] ?? (isLevelKey(p) ? DEFAULT_RUNS : 0);
+    return [p, { on: n > 0, runs: Math.max(1, n || DEFAULT_RUNS), plays: PLAYS[p] }];
   })) as Record<PersonaKey, PersonaSetup>);
   const [probes, setProbes] = useState(true);
   const [run, setRun] = useState<CalibrationRun | null>(null);
@@ -38,7 +39,9 @@ export default function CalibrateView({ config, apiBase = null, results: kept = 
 
   const total = PERSONA_KEYS.reduce((n, p) => n + (setup[p].on ? setup[p].runs : 0), 0);
   const draft = config as { lens?: { styles?: unknown[] }; actions?: unknown[] } | null;
-  const probeCount = probes ? 2 * ((draft?.lens?.styles?.length ?? 4) + (draft?.actions?.length ?? 10)) + 4 : 0;
+  // Roughly the probes' count (D149): three seeds of each style alone and with team energy, two of each action,
+  // of six pairs, of busy and idle play, and the four conversation probes.
+  const probeCount = probes ? 6 * (draft?.lens?.styles?.length ?? 4) + 2 * (draft?.actions?.length ?? 10) + 12 + 4 + 4 : 0;
   const seconds = Math.max(2, Math.round(total * 0.12 + probeCount * 0.06));
   const estimate = apiBase ? 'On the server: a few seconds, or a few minutes with AI players' : `About ${seconds < 60 ? plural(seconds, 'second') : plural(Math.round(seconds / 60), 'minute')}`;
 
@@ -115,7 +118,7 @@ export default function CalibrateView({ config, apiBase = null, results: kept = 
                 <span className="flex-1" />
                 <label className="flex items-center gap-2 text-13">
                   <input type="checkbox" checked={probes} onChange={e => setProbes(e.target.checked)} className="size-4 accent-accent-default" />
-                  Also try one style for everyone and one action every day
+                  Also try strategies that skip good leadership: one style for everyone, one action every day, routines
                 </label>
               </>
             )}
@@ -128,8 +131,9 @@ export default function CalibrateView({ config, apiBase = null, results: kept = 
           )}
           {results && (
             <div className="grid min-w-0 grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] gap-3 tablet:grid-cols-1">
-              <div ref={watchButton} className="min-w-0">
+              <div ref={watchButton} className="flex min-w-0 flex-col gap-3">
                 <ResultsTable results={results} canWatch={!!run} onWatch={() => setWatch(firstWatchable())} />
+                <PillarsTable results={results} />
               </div>
               <ChecksList results={results} onAsk={onAsk ? c => onAsk(c, results) : undefined} />
             </div>

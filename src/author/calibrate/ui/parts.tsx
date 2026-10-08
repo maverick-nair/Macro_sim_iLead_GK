@@ -14,7 +14,10 @@ export const INPUT = `rounded-10 border border-solid border-line-control bg-surf
 export const SR = 'sr-only';
 
 /** Each level's colour, as in the design (Calibrate.dc.html): marks and bars only, never text. */
-export const PERSONA_COLOR: Record<PersonaKey, string> = { beginner: '#E26A5A', developing: '#E7A23B', proficient: '#5B8DEF', expert: '#3BAA6A' };
+export const PERSONA_COLOR: Record<PersonaKey, string> = {
+  beginner: '#E26A5A', developing: '#E7A23B', proficient: '#5B8DEF', expert: '#3BAA6A',
+  riskTaker: '#C2508A', conservative: '#7C8794', peopleFirst: '#2BA3A3', businessFirst: '#8A63D2'
+};
 
 export function Mark({ tone, children }: { tone: 'good' | 'look' | 'bad' | 'muted'; children: ReactNode }) {
   const cls = tone === 'good' ? 'bg-status-gain-soft' : tone === 'look' ? 'bg-status-attention-soft' : tone === 'bad' ? 'bg-status-decline-soft' : 'border border-solid border-line-default';
