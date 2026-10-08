@@ -190,6 +190,11 @@ export interface SummaryExtras {
   business: string;
   /** Assessment only: the overall verdict, shown first (D75). */
   verdict?: VerdictData | null;
+  /** The headline the run's evidence gives, and its factual lines (D143). */
+  headline?: string | null;
+  lines?: string[];
+  /** "What drove your results" (D145): the decisions and patterns that moved the outcomes most. */
+  drivers?: Array<{ key: string; tone: 'positive' | 'negative'; text: string }>;
 }
 
 // ---------------------------------------------------------------- Report 3.0 (D75, D76)

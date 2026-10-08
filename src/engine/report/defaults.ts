@@ -369,3 +369,25 @@ export const DEFAULT_RECONCILE: { skills: Record<string, Array<'styleFit' | 'dia
   caps: [{ below: 40, level: 1 }, { below: 70, level: 2 }]
 };
 
+/**
+ * The thresholds the report reads the run with (D143), to pick its headline and keep every claim true to
+ * the numbers. Each dimension is strong, weak or in between; a claim that praises a weak dimension, or
+ * faults a strong one, is never shown.
+ * - business: share of target, %: strong from `strong`, weak under `weak`.
+ * - people: team average changes over the run: weak when morale fell by `moraleDrop` or more, trust by
+ *   `trustDrop` or more, or anyone resigned; otherwise strong when two of skill, morale, result and trust
+ *   rose by `rise` or more.
+ * - styleFit: share of style choices that fit, %. words: the mean band score of the conversations (at
+ *   least two). activity: actions per period, weak under `weak`, strong from `strong`. sponsor: the
+ *   confidence change, strong from `strong`, weak at `weak` or below. events: messages, briefings and
+ *   events left unanswered, weak from `weak`, strong at none with at least one answered.
+ */
+export const DEFAULT_EVIDENCE = {
+  business: { strong: 100, weak: 80 },
+  people: { moraleDrop: 10, trustDrop: 5, rise: 5 },
+  styleFit: { strong: 70, weak: 40 },
+  words: { strong: 75, weak: 60 },
+  activity: { strong: 2, weak: 1 },
+  sponsor: { strong: 10, weak: -10 },
+  events: { weak: 2 }
+};

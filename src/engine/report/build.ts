@@ -6,6 +6,7 @@ import type { Sim, Style } from '../sim/types';
 import { overallOf, rateSkills, shortName, when, type SkillRating } from './ratings';
 import { summarizeRun, type RunSummary } from './summary';
 import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
+import { narrativeOf, type BottleneckFact } from './narrative';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -61,14 +62,15 @@ export function buildReport(sim: Sim) {
   const counts = new Map<string, number>();
   for (const p of sim.periods) if (p.bottleneck) counts.set(p.bottleneck, (counts.get(p.bottleneck) ?? 0) + 1);
   const worst = [...counts].sort((a, b) => b[1] - a[1])[0];
-  const bottleneck = worst ? (() => {
-    const owners = sim.members.filter(m => m.stage === worst[0]);
-    const low = [...owners].sort((a, b) => a.result - b.result)[0];
-    const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
-    return { stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
-      // The catalog selects on the person's pronoun itself (he, she, they), never a possessive.
-      why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: person(sim, low.id).pronoun }) : null };
-  })() : null;
+  const owners = worst ? sim.members.filter(m => m.stage === worst[0]) : [];
+  const low = [...owners].sort((a, b) => a.result - b.result)[0];
+  const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
+  const bottleneck = worst ? {
+    stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
+    // The catalog selects on the person's pronoun itself (he, she, they), never a possessive.
+    why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: person(sim, low.id).pronoun }) : null
+  } : null;
+  const bottleneckFact: BottleneckFact | null = bottleneck ? { name: bottleneck.name, periods: bottleneck.periods, owner: low && stat ? { id: low.id, stat, value: low[stat] } : null } : null;
   const share = sim.funnel.value / c.money.target;
   const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions) };
   const businessLine = bottleneck
@@ -190,7 +192,11 @@ export function buildReport(sim: Sim) {
   // Methodology names the lens in participant language; the source ("based on") is author only (D70).
   const lensLines: Copy[] = [msg('engine.report.lens', { title: c.lens.title }),
     ...(c.lens.secondary ? [msg('engine.report.lensSecondary', { title: c.lens.secondary.title })] : [])];
-  const v3 = report3(sim, purpose, skills, plan.map(p => p.name));
+  const run: RunSummary = summarizeRun(sim);
+  const v3 = report3(sim, purpose, skills, plan.map(p => p.name), run);
+  // The headline, summary, drivers and reflections from the evidence, not the level alone (D143, D145).
+  const levelLine = overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null;
+  const story = narrativeOf(sim, purpose, run, overall, levelLine, bottleneckFact);
   return {
     available: sim.phase === 'ended',
     purpose,
@@ -203,7 +209,8 @@ export function buildReport(sim: Sim) {
     summary: {
       level: overall === null ? null : { index: overall, name: r.scale[overall].name },
       strengths, priorities, business: businessLine,
-      narrative: overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null
+      narrative: story.levelLine,
+      profile: story.profile, headline: story.headline, lines: story.lines, drivers: story.drivers
     },
     style: { shares, total: choices.length, dominant: dom, capability: roundHalfUp(cap), grid, fit: fitGrid, matched, weeklyTotal: weekly.length, weeks,
       narrative: [capNarrative, ...(domLine ? [domLine] : [])] },
@@ -218,7 +225,9 @@ export function buildReport(sim: Sim) {
     reflection: sim.reflection, questions: r.reflection,
     methodology: { lines: [...lensLines, ...r.methodology], reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
-    ...v3.sections
+    ...v3.sections,
+    // Food for thought and takeaways name what happened in this run, then the authored ones (D145).
+    thought: story.thought, takeaways: story.takeaways
   };
 }
 
@@ -226,9 +235,8 @@ export function buildReport(sim: Sim) {
  * Report 3.0's sections (D75): the run summary's numbers with the narratives the purpose's bank gives
  * them, the assessment verdicts with their evidence, food for thought, takeaways and the plan's path.
  */
-function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[]) {
+function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[], run: RunSummary) {
   const c = sim.config, r = c.report, P = r.purposeCopy[purpose];
-  const run: RunSummary = summarizeRun(sim);
   const levels = r.scale.length;
   const bar = r.assessment.bar;
   const barWords = msg('engine.report.bar', { overall: r.scale[bar.overall].name, floor: r.scale[bar.floor].name });
@@ -319,7 +327,6 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
       about: { lines: P.about.map(l => fillWith(l, { unit, bar: barWords })), howToRead: P.howToRead.map(l => fillWith(l, { unit, bar: barWords })), confidentiality: P.confidentiality },
       verdict,
       objectives, adaptability, styleSummary, consistency, actionSummary,
-      thought: r.thought, takeaways: r.takeaways,
       path, checkIns, needs
     }
   };

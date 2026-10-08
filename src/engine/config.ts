@@ -3,7 +3,7 @@ import { sanitizeCopy } from '../i18n/copy';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
 import { DEFAULT_LENS } from './lensLibrary';
 import {
-  DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_PATH,
+  DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_EVIDENCE, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_PATH,
   DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_RECONCILE, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
 } from './report/defaults';
 
@@ -374,6 +374,16 @@ export const Report = z.object({
     skills: z.record(Key, z.array(z.enum(['styleFit', 'diagnosis'])).min(1)),
     caps: z.array(z.object({ below: Score, level: z.number().int().min(0) })).max(6)
   }).default(DEFAULT_RECONCILE),
+  /** How the report reads the run for its headline and claims (D143); thresholds in report/defaults.ts. */
+  evidence: z.object({
+    business: z.object({ strong: z.number().min(0), weak: z.number().min(0) }),
+    people: z.object({ moraleDrop: z.number().min(0), trustDrop: z.number().min(0), rise: z.number().min(0) }),
+    styleFit: z.object({ strong: Score, weak: Score }),
+    words: z.object({ strong: Score, weak: Score }),
+    activity: z.object({ strong: z.number().min(0), weak: z.number().min(0) }),
+    sponsor: z.object({ strong: z.number(), weak: z.number() }),
+    events: z.object({ weak: z.number().int().min(1) })
+  }).default(DEFAULT_EVIDENCE),
   /** Assessment purpose: the bar (positions on the rating scale) and the verdict labels (D75). */
   assessment: z.object({
     bar: z.object({ overall: z.number().int().min(0), floor: z.number().int().min(0) }),
@@ -394,6 +404,7 @@ export const Report = z.object({
   if (r.skills.some(s => s.anchors.length !== r.scale.length)) ctx.addIssue({ code: 'custom', path: ['skills'], message: `Give one anchor per level (${r.scale.length})` });
   if (r.scale[0].min !== 0 || r.scale.some((l, i) => i > 0 && l.min <= r.scale[i - 1].min)) ctx.addIssue({ code: 'custom', path: ['scale'], message: 'Levels start at 0 and rise' });
   if (!(r.impact.low < r.impact.moderate && r.impact.moderate < r.impact.high)) ctx.addIssue({ code: 'custom', path: ['impact'], message: 'Impact bands must rise: low < moderate < high' });
+  for (const k of ['business', 'styleFit', 'words', 'activity', 'sponsor'] as const) if (r.evidence[k].weak > r.evidence[k].strong) ctx.addIssue({ code: 'custom', path: ['evidence', k], message: 'The weak threshold must be at or below the strong one' });
   const { overall, floor } = r.assessment.bar;
   if (overall >= r.scale.length || floor > overall) ctx.addIssue({ code: 'custom', path: ['assessment', 'bar'], message: `The bar is a level from 0 to ${r.scale.length - 1}, with the floor at or below it` });
 });

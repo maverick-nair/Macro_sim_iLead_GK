@@ -26,6 +26,8 @@ export const ReportSection = z.enum([
   'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
 ]);
 const Kpi = z.object({ start: Num, end: Num });
+/** The run's profile (D143, `src/engine/report/evidence.ts`). */
+export const ReportProfile = z.enum(['readNoAction', 'absent', 'wordsNotChoices', 'allRound', 'numbersAtCost', 'peopleFirst', 'bothSlipped', 'mixed']);
 
 /**
  * One run, as numbers (src/engine/report/summary.ts, `summarizeRun`). Stable and serialisable: the server
@@ -89,7 +91,20 @@ export const ReportView = z.object({
   sections: z.array(ReportSection),
   score: z.object({ total: Num, max: Num, tier: z.object({ key: Id, name: Text }) }),
   results: z.object({ revenue: Num, target: Num, share: Num, conversions: Int, kpis: z.array(z.object({ metric: MetricKey, start: Num, end: Num, series: z.array(Num) })) }),
-  summary: z.object({ level: Level.nullable(), strengths: z.array(Id), priorities: z.array(Id), business: Text, narrative: Text.nullable() }),
+  /**
+   * `narrative` is the authored line for the overall level, kept only when the run's data does not
+   * contradict it. `profile`, `headline` and `lines` read the run as evidence (D143): the shape of what
+   * happened, the headline it gives, and factual sentences with the run's numbers. `drivers` is "What
+   * drove your results" (D145): the decisions and patterns that moved the outcomes most. Defaults keep
+   * reports stored before D143 parsing.
+   */
+  summary: z.object({
+    level: Level.nullable(), strengths: z.array(Id), priorities: z.array(Id), business: Text, narrative: Text.nullable(),
+    profile: ReportProfile.nullable().default(null),
+    headline: Text.nullable().default(null),
+    lines: z.array(Text).default([]),
+    drivers: z.array(z.object({ key: Id, tone: z.enum(['positive', 'negative']), text: Text })).default([])
+  }),
   style: z.object({
     shares: z.record(StyleKey, Int), total: Int, dominant: z.array(StyleKey), capability: Num,
     /** Rows: the four needs, in `lens.needs` order; columns: the style used, in `lens.styles` order. */
