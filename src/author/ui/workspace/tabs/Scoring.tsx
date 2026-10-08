@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { extractFramework } from '../../../extract';
-import { LENS_BY_ID } from '../../../lenses';
 import { BANDS, type AuthorDraft, type Band } from '../../../model/draft';
+import { seedDraft } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
+import { DEFAULT_SECTIONS, REPORT_SECTIONS } from '../../../../engine/config';
+import { SECTION_NAMES } from '../../../storyline';
 import { Badge, BUTTON, CARD, CardHead, Icon, MarkOf, Modal, Segmented, Select, SHORT_MAX, TEXT_MAX, TextInput } from '../../kit';
 import { navigate } from '../../route';
 import { TabBody, TabHead } from '../Workspace';
@@ -32,10 +34,22 @@ function FrameworkSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (
   return (
     <Modal open={open} onOpenChange={onOpenChange} side title="Use your own skills framework" description="Your skills replace the lens skills in scoring and the report. The lens still drives the team and style fit."
       footer={<>
-        <button type="button" className={BUTTON.big} disabled={!f || found < 2} onClick={() => { edit(x => { if (x.scoring.framework) { x.scoring.framework.confirmed = true; x.scoring.framework.step = 3; x.scoring.skills = x.scoring.framework.rows.filter(r => r.include && r.behaviors.trim()).map(r => ({ key: r.skill.toLowerCase().replace(/[^a-z0-9]+/g, '_'), name: r.skill, reportOnly: false })); for (const s of x.scoring.samples) s.call = null; } }, 'scoring.framework'); onOpenChange(false); }}>Confirm {found} skills</button>
+        <button type="button" className={BUTTON.big} disabled={!f || found < 2} onClick={() => { edit(x => {
+          if (!x.scoring.framework) return;
+          x.scoring.framework.confirmed = true; x.scoring.framework.step = 3;
+          x.scoring.skills = x.scoring.framework.rows.filter(r => r.include && r.behaviors.trim()).map(r => ({ key: r.skill.toLowerCase().replace(/[^a-z0-9]+/g, '_'), name: r.skill, reportOnly: false }));
+          for (const s of x.scoring.samples) s.call = null;
+          // Each action observes two of the new skills, in turn, so every skill is observed (D128); edit them per action.
+          const names = x.scoring.skills.map(k => k.name);
+          x.actions.forEach((a, i) => { a.scoredOn = [...new Set([names[i % names.length], names[(i + 1) % names.length]])]; });
+        }, 'scoring.framework'); onOpenChange(false); }}>Confirm {found} skills</button>
         <button type="button" className={BUTTON.secondary} onClick={() => { onOpenChange(false); navigate({ page: 'workspace', tab: 'scoring' }); }}>Ask Kora about this framework</button>
         <span className="flex-1" />
-        <button type="button" className={BUTTON.link} onClick={() => { edit(x => { x.scoring.framework = null; x.scoring.skills = LENS_BY_ID[x.lens.id].dimensions.map(dm => ({ key: dm.key, name: dm.name, reportOnly: false })); }); onOpenChange(false); }}>Keep the lens skills</button>
+        <button type="button" className={BUTTON.link} onClick={() => { edit(x => {
+          const fresh = seedDraft({ ...x.chat, primary: x.lens.id, secondary: x.lens.secondary }, 'workspace');
+          x.scoring.framework = null; x.scoring.skills = fresh.scoring.skills;
+          for (const a of x.actions) a.scoredOn = fresh.actions.find(y => y.key === a.template)?.scoredOn ?? fresh.scoring.skills.filter(k => !k.reportOnly).slice(0, 2).map(k => k.name);
+        }); onOpenChange(false); }}>Keep the lens skills</button>
       </>}>
       <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-6 py-4">
         <ol className="m-0 flex list-none flex-wrap gap-6 p-0 text-14 font-700" aria-label="Steps">
@@ -110,6 +124,7 @@ export default function Scoring() {
   const answered = s.samples.filter(x => x.call !== null);
   const agreed = s.samples.filter(x => x.call === x.scored).length;
   const who = s.samples[0]?.with ?? '';
+  const sections = s.reportSections ?? DEFAULT_SECTIONS[d.brief.purpose];
   return (
     <TabBody label="Scoring and report" head={<TabHead title="Scoring and report">How conversations are scored and what participants receive at the end.</TabHead>}>
       <div className="flex flex-col gap-4">
@@ -156,9 +171,9 @@ export default function Scoring() {
           <CardHead id="advanced" title="Advanced settings"><span className="text-13 text-author-body">Sensible defaults are set. Open only what you want to change.</span></CardHead>
           <ul className="m-0 flex list-none flex-col p-0">
             {[
-              ['scale', 'Rating scale', s.scale, 'default'],
-              ['linkage', 'Which conversations observe which skill', 'Every skill observed at least twice', 'ai'],
-              ['sections', 'Report sections and order', `${s.sections} sections for ${d.brief.purpose}`, 'default'],
+              ['scale', 'Rating scale', `${s.levels.length} levels, ${s.levels[0]} to ${s.levels[s.levels.length - 1]}`, 'default'],
+              ['linkage', 'Which conversations observe which skill', 'Set per action, under Scored on', 'ai'],
+              ['sections', 'Report sections', `${sections.length} sections for ${d.brief.purpose}${s.reportSections ? '' : ', the default set'}`, 'default'],
               ['narratives', 'Narratives and development plan copy', `Written for your team, naming your ${d.lens.styles.length} styles`, 'ai']
             ].map(([k, title, sub, kind]) => (
               <li key={k} className="flex flex-col gap-2 border-b border-solid border-author-rule py-3 last:border-b-0">
@@ -167,9 +182,31 @@ export default function Scoring() {
                   <Badge kind={kind === 'ai' ? 'generated' : 'default'} />
                   <button type="button" className={BUTTON.secondary} aria-expanded={open === k} onClick={() => setOpen(open === k ? null : k)}>Edit<span className="sr-only"> {title}</span></button>
                 </div>
-                {open === k && k === 'scale' && <TextInput aria-label="Rating scale" value={s.scale} onChange={e => edit(x => { x.scoring.scale = e.target.value; }, 'scoring.scale')} />}
-                {open === k && k === 'sections' && <TextInput aria-label="Number of report sections" type="number" min={1} max={20} value={s.sections} onChange={e => edit(x => { x.scoring.sections = Math.max(1, Math.min(20, Number(e.target.value) || 1)); }, 'scoring.sections')} />}
-                {open === k && (k === 'linkage' || k === 'narratives') && <p className="m-0 text-13 text-author-body">{k === 'linkage' ? `Each conversation observes two of: ${s.skills.filter(x => !x.reportOnly).map(x => x.name).join(', ')}.` : 'Report lines name each style by its current name, so a rename in the Leadership lens tab reaches the report.'}</p>}
+                {open === k && k === 'scale' && (
+                  <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+                    <legend className="mb-1 text-13 text-author-body">Level names, lowest first: 3 to 7 levels. Each skill&rsquo;s descriptions follow the number of levels.</legend>
+                    {s.levels.map((l, i) => (
+                      <div key={i} className="flex gap-2">
+                        <TextInput aria-label={`Level ${i + 1}`} value={l} onChange={e => edit(x => { x.scoring.levels[i] = e.target.value; }, 'scoring.levels')} />
+                        {s.levels.length > 3 && <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { x.scoring.levels.splice(i, 1); }, 'scoring.levels')}>Remove<span className="sr-only"> level {i + 1}</span></button>}
+                      </div>
+                    ))}
+                    <button type="button" className={`${BUTTON.secondary} self-start`} disabled={s.levels.length >= 7} onClick={() => edit(x => { x.scoring.levels.push('New level'); }, 'scoring.levels')}>Add a level</button>
+                  </fieldset>
+                )}
+                {open === k && k === 'sections' && (
+                  <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
+                    <legend className="mb-1 text-13 text-author-body">The report shows these, in this order.</legend>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 max-[900px]:grid-cols-1">
+                      {REPORT_SECTIONS.map(r => (
+                        <label key={r} className="flex items-center gap-2 text-14"><input type="checkbox" checked={sections.includes(r)} disabled={sections.length === 1 && sections.includes(r)}
+                          onChange={e => edit(x => { const next = REPORT_SECTIONS.filter(v => (v === r ? e.target.checked : sections.includes(v))); x.scoring.reportSections = next; }, 'scoring.reportSections')} /> {SECTION_NAMES[r]}</label>
+                      ))}
+                    </div>
+                    {s.reportSections && <button type="button" className={`${BUTTON.link} self-start`} onClick={() => edit(x => { x.scoring.reportSections = null; }, 'scoring.reportSections')}>Use the default set for {d.brief.purpose}</button>}
+                  </fieldset>
+                )}
+                {open === k && (k === 'linkage' || k === 'narratives') && <p className="m-0 text-13 text-author-body">{k === 'linkage' ? 'Each conversation lists the skills it observes under Scored on, in Actions and conversations. Pick at most 4 per action.' : 'Report lines name each style by its current name, so a rename in the Leadership lens tab reaches the report.'}</p>}
               </li>
             ))}
           </ul>

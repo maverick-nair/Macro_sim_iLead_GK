@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { LENS_BY_ID } from '../../../lenses';
 import type { ActionDraft, Plays } from '../../../model/draft';
 import { ENGINE_TEMPLATES, PLAYS_LABEL } from '../../../model/library';
-import { effectText, seedDraft } from '../../../model/seed';
+import { effectText, freshKey, seedDraft } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
 import { Badge, BUTTON, CARD, Field, Icon, Segmented, Select, SHORT_MAX, TEXT_MAX, TextArea, TextInput, Toggle, toneOf } from '../../kit';
 import { ActionAdd } from '../ActionAdd';
@@ -34,7 +34,9 @@ export default function Actions() {
   const core = d.actions.filter(x => x.core).length;
   const path = (k: string) => `actions.${k}`;
   const set = (patch: Partial<ActionDraft>) => edit(x => { const t = x.actions.find(y => y.key === a.key); if (t) Object.assign(t, patch); }, path(a.key));
-  const skills = d.scoring.skills.filter(s => !s.reportOnly).map(s => s.name);
+  const skills = d.scoring.skills.map(s => s.name);
+  const reportOnly = new Set(d.scoring.skills.filter(s => s.reportOnly).map(s => s.name));
+  const optionKey = (t: ActionDraft) => freshKey(`${t.key}_opt${t.options.length + 1}`, t.options.map(o => o.key));
   const lensTitle = LENS_BY_ID[d.lens.id].title.replace(' Leadership', '');
 
   return (
@@ -106,7 +108,7 @@ export default function Actions() {
             {a.plays !== 'static' ? (
               <>
                 <div className="grid grid-cols-2 gap-3">
-                  <Field label="Format">{id => <TextInput id={id} value={a.format} onChange={e => set({ format: e.target.value })} />}</Field>
+                  <Field label="Format" hint="Set by the action's tested rules">{id => <TextInput id={id} readOnly value={a.format} />}</Field>
                   <Field label="Who starts">{id => <Select id={id} value={a.starts} onChange={e => set({ starts: e.target.value as ActionDraft['starts'] })}><option value="npc">{a.group === 'team' ? 'The team' : 'The team member'}</option><option value="participant">The participant</option></Select>}</Field>
                 </div>
                 <div className="flex flex-col gap-2">
@@ -133,7 +135,7 @@ export default function Actions() {
               </>
             ) : (
               <>
-                <Field label="How the result is decided">{id => <TextInput id={id} maxLength={TEXT_MAX} value={a.decides} onChange={e => set({ decides: e.target.value })} />}</Field>
+                <Field label="How the result is decided" hint="Set by the action's tested rules">{id => <TextInput id={id} readOnly maxLength={TEXT_MAX} value={a.decides} />}</Field>
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between"><span className="text-13 font-700 text-author-label">Options the participant chooses from</span><Badge kind="ai">Generated</Badge></div>
                   <div className="overflow-x-auto rounded-12 border border-solid border-author-line">
@@ -159,27 +161,35 @@ export default function Actions() {
                     </table>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" className={BUTTON.secondary} onClick={() => set({ options: [...a.options, { key: `${a.key}_opt${a.options.length + 1}`, label: '', style: null, away: 0, fits: effectText([3, 2, 2]), misses: effectText([0, -2, 0]) }] })}>Add an option</button>
+                    <button type="button" className={BUTTON.secondary} onClick={() => set({ options: [...a.options, { key: optionKey(a), label: '', style: null, away: 0, fits: effectText([3, 2, 2]), misses: effectText([0, -2, 0]) }] })}>Add an option</button>
                     <button type="button" className={BUTTON.koraOutline} onClick={() => edit(x => {
                       const t = x.actions.find(y => y.key === a.key);
                       const s = x.lens.styles[t ? t.options.length % x.lens.styles.length : 0];
-                      t?.options.push({ key: `${a.key}_opt${(t?.options.length ?? 0) + 1}`, label: `${a.name}, the ${s.name.toLowerCase()} way`, style: s.key, away: 1, fits: effectText([4, 3, 2]), misses: effectText([0, -2, -1]) });
+                      if (t) t.options.push({ key: optionKey(t), label: `${a.name}, the ${s.name.toLowerCase()} way`, style: s.key, away: 1, fits: effectText([4, 3, 2]), misses: effectText([0, -2, -1]) });
                     }, path(a.key), 'ai')}>Suggest options with Kora</button>
                   </div>
                 </div>
               </>
             )}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between"><span className="text-13 font-700 text-author-label">Scored on</span><Badge kind="ai">From your lens</Badge></div>
-              <div className="flex flex-wrap gap-2">
-                {a.scoredOn.map(s => <span key={s} className="inline-flex min-h-9 items-center gap-2 rounded-pill bg-author-ai-field px-3 text-14 font-700">{s}<button type="button" aria-label={`Remove ${s}`} className="cursor-pointer border-0 bg-transparent p-0 text-author-label focus-visible:outline-2 focus-visible:outline-author-primary" onClick={() => set({ scoredOn: a.scoredOn.filter(x => x !== s) })}>{Icon.close(12)}</button></span>)}
-                {skills.filter(s => !a.scoredOn.includes(s)).length > 0 && (
-                  <Select aria-label="Add a dimension" className="w-auto" value="" onChange={e => { if (e.target.value) set({ scoredOn: [...a.scoredOn, e.target.value] }); }}>
-                    <option value="">Add a dimension</option>{skills.filter(s => !a.scoredOn.includes(s)).map(s => <option key={s}>{s}</option>)}
-                  </Select>
-                )}
+            {a.plays !== 'static' && (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between"><span className="text-13 font-700 text-author-label">Scored on</span><Badge kind={d.scoring.framework?.confirmed ? 'you' : 'ai'}>{d.scoring.framework?.confirmed ? 'Your framework' : 'From your lens'}</Badge></div>
+                <div className="flex flex-wrap gap-2">
+                  {a.scoredOn.map(s => (
+                    <span key={s} className={`inline-flex min-h-9 items-center gap-2 rounded-pill px-3 text-14 font-700 ${skills.includes(s) ? 'bg-author-ai-field' : 'bg-author-need-field text-author-need'}`}>
+                      {s}{!skills.includes(s) && ', not one of your skills'}{reportOnly.has(s) && ', report only'}
+                      <button type="button" aria-label={`Remove ${s}`} className="cursor-pointer border-0 bg-transparent p-0 text-author-label focus-visible:outline-2 focus-visible:outline-author-primary" onClick={() => set({ scoredOn: a.scoredOn.filter(x => x !== s) })}>{Icon.close(12)}</button>
+                    </span>
+                  ))}
+                  {a.scoredOn.length < 4 && skills.filter(s => !a.scoredOn.includes(s)).length > 0 && (
+                    <Select aria-label="Add a skill" className="w-auto" value="" onChange={e => { if (e.target.value) set({ scoredOn: [...a.scoredOn, e.target.value] }); }}>
+                      <option value="">Add a skill</option>{skills.filter(s => !a.scoredOn.includes(s)).map(s => <option key={s}>{s}</option>)}
+                    </Select>
+                  )}
+                </div>
+                <p className="m-0 text-12 text-author-muted">The conversation is rated on these skills, at most 4. None: it counts toward no skill in the report.</p>
               </div>
-            </div>
+            )}
             {a.template !== a.key && <p className="m-0 text-12 text-author-muted">Plays with the tested rules of {ENGINE_TEMPLATES.find(t => t.key === a.template)?.name ?? a.template}.</p>}
           </section>
         )}

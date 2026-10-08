@@ -1,6 +1,7 @@
 import { industryOf } from '../context';
 import { LENS_BY_ID } from '../lenses';
 import type { AuthorDraft, Character, Tab } from './draft';
+import { fitRun } from './run';
 import { freshKey, PORTRAITS, pronounsOf } from './seed';
 
 /**
@@ -66,7 +67,7 @@ export function propose(d: AuthorDraft, tab: Tab, instruction: string, variant =
     return { label: 'Welcome letter', path: 'story.screens.welcome', before, after, apply: x => { const t = x.story.screens.find(y => y.key === 'welcome'); if (t) t.body = after; } };
   }
   if (/\b(shorten|shorter|lite|30 minute|thirty minute)\b/i.test(text)) {
-    return { label: 'Run length', path: 'brief.run', before: d.brief.run === 'full' ? 'Full' : d.brief.run === 'standard' ? 'Standard' : 'Lite', after: 'Lite, 4 weeks, about 30 minutes', apply: x => { x.brief.run = 'lite'; x.process.weeks = 4; for (const e of x.events) if (e.week && e.week > 4) e.week = Math.ceil(e.week / 2); } };
+    return { label: 'Run length', path: 'brief.run', before: d.brief.run === 'full' ? 'Full' : d.brief.run === 'standard' ? 'Standard' : 'Lite', after: 'Lite, 4 weeks, about 30 minutes', apply: x => { x.brief.run = 'lite'; fitRun(x, 4); } };
   }
   if (/\b(add|new)\b.*\b(member|character|person|remote)\b/i.test(text)) {
     const remote = /remote/i.test(text);
