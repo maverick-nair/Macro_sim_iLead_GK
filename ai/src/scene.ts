@@ -14,7 +14,7 @@ export const localeOf = (config: Pick<StorylineConfig, 'money'>) => config.money
 export function sceneFromStoryline(config: StorylineConfig): Pick<NpcScene, 'locale' | 'story' | 'styles'> {
   return {
     locale: localeOf(config),
-    story: { name: config.name, organisation: config.organisation, sponsor: { name: config.sponsor.name, title: config.sponsor.title }, product: config.name.split(',')[0]?.trim() },
+    story: { name: config.name, organisation: config.organisation, sponsor: { name: config.sponsor.name, title: config.sponsor.title }, product: config.world?.product?.name ?? config.name.split(',')[0]?.trim(), ...(config.world ? { world: config.world } : null) },
     styles: config.lens.styles.map(s => ({ key: s.key, name: s.name, short: s.short }))
   };
 }

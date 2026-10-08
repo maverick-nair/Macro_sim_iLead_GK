@@ -55,6 +55,82 @@
         "targets"
       ]
     },
+    "world": {
+      "type": "object",
+      "properties": {
+        "about": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "headquarters": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "team": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "product": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "line": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            },
+            "points": {
+              "maxItems": 8,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            }
+          }
+        },
+        "customers": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "rivals": {
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              },
+              "angle": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4000
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
+        },
+        "sponsorVoice": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        }
+      }
+    },
     "lens": {
       "type": "object",
       "properties": {
@@ -808,7 +884,7 @@
                 }
               },
               "notes": {
-                "maxItems": 12,
+                "maxItems": 16,
                 "type": "array",
                 "items": {
                   "type": "object",
@@ -1088,7 +1164,7 @@
                 }
               },
               "notes": {
-                "maxItems": 12,
+                "maxItems": 16,
                 "type": "array",
                 "items": {
                   "type": "object",

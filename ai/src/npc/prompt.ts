@@ -83,6 +83,17 @@ export function characterSheet(ctx: NpcTurnContext): string {
     s += line('Organisation', ctx.story.organisation);
     s += line('Product', ctx.story.product);
     s += line('Sponsor', ctx.story.sponsor ? `${ctx.story.sponsor.name}, ${ctx.story.sponsor.title}` : undefined);
+    const w = ctx.story.world;
+    if (w) {
+      s += line('What the company does', w.about);
+      s += line('Headquarters', w.headquarters);
+      s += line('Your team', w.team);
+      s += line('The product in one line', w.product?.line);
+      s += line('Selling points', w.product?.points?.join('; '));
+      s += line('Customers', w.customers);
+      s += line('Rivals', w.rivals?.map(r => (r.angle ? `${r.name} (${r.angle})` : r.name)).join('; '));
+      if (ctx.format === 'sponsor' || !p) s += line('How you sound', w.sponsorVoice);
+    }
   }
   if (ctx.role) s += line('Role being hired for', ctx.role);
   return s.trim();

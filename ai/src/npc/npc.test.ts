@@ -67,6 +67,17 @@ describe('NPC prompt assembly', () => {
     expect(characterSheet(base)).not.toMatch(/How you react/);
   });
 
+  it('writes the storyline\'s world into the workplace, and the sponsor\'s voice only for the sponsor (D130)', () => {
+    const world = { about: 'Lifts for hospitals', headquarters: 'Pune', product: { name: 'Ascent', line: 'Quiet lifts', points: ['Fast installs'] }, customers: 'Hospital groups', rivals: [{ name: 'Beta', angle: 'cheaper' }], sponsorVoice: 'Brisk and dry' };
+    const kent = characterSheet(kentTurn({ story: { organisation: 'Innov8', world } }));
+    expect(kent).toMatch(/What the company does: Lifts for hospitals/);
+    expect(kent).toMatch(/Selling points: Fast installs/);
+    expect(kent).toMatch(/Rivals: Beta \(cheaper\)/);
+    expect(kent).not.toMatch(/Brisk and dry/);
+    const sponsor = kentTurn({ format: 'sponsor', speaker: { id: 'sponsor', name: 'Paula Jacob', persona: null, mood: 'neutral', trust: 50 }, story: { organisation: 'Innov8', world } });
+    expect(characterSheet(sponsor)).toMatch(/How you sound: Brisk and dry/);
+  });
+
   it('records a prompt version', () => {
     expect(npcPromptVersion()).toMatch(/^npc@\d+#[0-9a-f]{8}$/);
   });

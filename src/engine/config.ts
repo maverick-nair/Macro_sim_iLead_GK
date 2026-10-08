@@ -76,6 +76,10 @@ export const Stage = z.object({
   suits: Copy.optional()
 });
 
+/** A team plays with 6 to 12 people. */
+export const MIN_MEMBERS = 6;
+export const MAX_MEMBERS = 12;
+
 export const MIN_STAGES = 3;
 export const MAX_STAGES = 6;
 
@@ -106,7 +110,7 @@ export const NpcPersona = z.object({
     replyLength: z.enum(REPLY_LENGTHS).default('medium')
   }).optional(),
   /** The author's own facts about the person (custom fields). */
-  notes: z.array(z.object({ label: z.string().min(1).max(400), value: NpcText })).max(12).optional()
+  notes: z.array(z.object({ label: z.string().min(1).max(400), value: NpcText })).max(16).optional()
 });
 
 export const Person = z.object({
@@ -138,6 +142,23 @@ export const Person = z.object({
   voice: z.string().optional(),
   /** How the AI character plays this person (D130). Optional; the engine never reads it. */
   npc: NpcPersona.optional()
+});
+
+/**
+ * The world around the team (D130), authored in GenieKreator's Story and world tab. The AI characters
+ * read it so small talk stays in the story (ai/src/npc/prompt.ts); the engine never reads it, and a
+ * storyline without it plays as before.
+ */
+export const World = z.object({
+  about: NpcText.optional(),
+  headquarters: NpcText.optional(),
+  /** The team the participant leads, in the company's words. */
+  team: NpcText.optional(),
+  product: z.object({ name: NpcText.optional(), line: NpcText.optional(), points: z.array(NpcText).max(8).optional() }).optional(),
+  customers: NpcText.optional(),
+  rivals: z.array(z.object({ name: NpcText, angle: NpcText.optional() })).max(6).optional(),
+  /** How the sponsor sounds, for the sponsor's own lines. */
+  sponsorVoice: NpcText.optional()
 });
 
 export const Thresholds = z.object({
@@ -568,6 +589,8 @@ export const StorylineConfig = z.object({
   locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/).default('en'),
   /** The sponsor's authored welcome letter (onboarding), drafted by the author chat (D74). Left out, onboarding words one from the storyline's facts. */
   intro: z.object({ welcome: z.array(Copy).min(1).max(4), product: z.array(Copy).min(1).max(4), targets: z.array(Copy).min(1).max(4) }).optional(),
+  /** The company, product, market and sponsor's voice, for the AI characters (D130). */
+  world: World.optional(),
   /** The leadership lens: styles, needs and fit (D70). Readiness Based Leadership when left out. */
   lens: Lens.default(() => structuredClone(DEFAULT_LENS)),
   money: Money,
@@ -581,7 +604,7 @@ export const StorylineConfig = z.object({
     /** The one line prompt over weekly style setting (spec). */
     styleLine: Copy.default('To each their own. Your people need different things from you this week.')
   }),
-  members: z.array(Person).min(6).max(12),
+  members: z.array(Person).min(MIN_MEMBERS).max(MAX_MEMBERS),
   candidates: z.array(Person).default([]),
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),
   gamification: Gamification.default(() => Gamification.parse({})),
