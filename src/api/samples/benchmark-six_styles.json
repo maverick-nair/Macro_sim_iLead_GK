@@ -47,11 +47,11 @@
       "key": "situational_flexibility",
       "reportOnly": false,
       "rated": 234,
-      "score": 58.79,
+      "score": 57.79,
       "levels": [
         36,
-        97,
-        35,
+        119,
+        13,
         66
       ],
       "unrated": 33
@@ -176,7 +176,7 @@
   ],
   "overall": {
     "rated": 234,
-    "score": 67.65,
+    "score": 67.45,
     "levels": [
       0,
       124,
@@ -623,8 +623,8 @@
   "verdicts": {
     "assessed": 150,
     "counts": {
-      "exceeds": 37,
-      "meets": 3,
+      "exceeds": 14,
+      "meets": 26,
       "approaching": 25,
       "below": 45,
       "none": 40
