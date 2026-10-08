@@ -135,7 +135,7 @@ export default function Publish() {
           <div className="flex flex-wrap gap-2">
             <button type="button" className={`${BUTTON.big} flex-1`} disabled={blocking.length > 0} aria-describedby={blocking.length ? blockedId : undefined}
               onClick={() => { edit(x => { x.publish.version = version; x.publish.skipTest = false; }); setDone(version); }}>
-              {blocking.length ? `Publish: ${plural(blocking.length, 'issue')} to fix` : 'Publish'}
+              Publish
             </button>
             <button type="button" className={`${BUTTON.secondary} min-h-12`} onClick={() => download(`${d.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.json`, v.exported.storyline)}>Download config</button>
           </div>
