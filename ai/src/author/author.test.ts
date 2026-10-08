@@ -6,7 +6,8 @@ import { buildModule } from '../../../src/author/module';
 import { StorylineConfig, type StorylineInput } from '../../../src/engine/config';
 import { settingsFor, silentLogger } from '../config';
 import { createFakeTransport, type FakeReply } from '../llm/fake';
-import { createAnthropicAuthorDrafter, createMockAuthorDrafter, groundFramework } from './models';
+import type { LlmTransport } from '../llm/transport';
+import { createAnthropicAuthorDrafter, createMockAuthorDrafter, groundFramework, TURN_DEADLINE_MS } from './models';
 import type { BriefReading, DraftCopy } from './schema';
 
 function drafter(script: FakeReply[]) {
@@ -70,6 +71,24 @@ describe('the author turn', () => {
     expect(r).toMatchObject({ kind: 'clarify', clarify: { id: 'industry', prompt: 'Banking or healthcare?', choices: [{ label: 'Banking and financial services', value: 'Banking and financial services' }, { label: 'Healthcare', value: 'Healthcare' }] } });
     const { d: d2 } = drafter([reading({ clarify: ask })]);
     expect((await d2.turn({ brief: { industry: 'Healthcare' }, asked: ['industry'], answers: { industry: 'Healthcare' } })).kind).toBe('question');
+  });
+
+  it('a reading that takes too long ends before the app gives up, and the rules answer the turn (D148)', async () => {
+    const slow: LlmTransport = {
+      complete: (_req, signal) => new Promise((_, reject) => signal?.addEventListener('abort', () => reject(Object.assign(new Error('aborted'), { name: 'AbortError' })))),
+      stream: () => { throw new Error('not used'); }
+    };
+    const logger = { ...silentLogger, warn: vi.fn(), error: vi.fn() };
+    const d = createAnthropicAuthorDrafter({ transport: slow, settings: settingsFor('author'), logger, turnDeadlineMs: 30 });
+    const r = await d.turn({ brief: {}, asked: ['role_level'], answers: { role_level: 'First time managers' } });
+    expect(r).toMatchObject({ kind: 'question', question: { id: 'industry' } });
+    expect(logger.error).toHaveBeenCalledOnce();
+    expect(TURN_DEADLINE_MS).toBeLessThan(30_000);
+    // The author's own cancel still cancels.
+    const ctl = new AbortController();
+    const cancelled = d.turn({ brief: {}, asked: ['role_level'], answers: { role_level: 'x' } }, { signal: ctl.signal });
+    ctl.abort();
+    await expect(cancelled).rejects.toThrow();
   });
 
   it('falls back to the templates for the turn when the reading fails', async () => {

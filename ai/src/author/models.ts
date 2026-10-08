@@ -22,6 +22,11 @@ import { BriefReading, briefReadingJsonSchema, DraftCopy, draftCopyJsonSchema, F
 
 const mock = new MockDrafter();
 
+/** How long the model may read a turn's answers; the app gives the whole turn 30 seconds (D148). */
+export const TURN_READ_MS = 20_000;
+/** The whole reading of a turn, a repair included. */
+export const TURN_DEADLINE_MS = 25_000;
+
 export function createMockAuthorDrafter(): AuthorDrafter {
   return { provider: 'mock', source: 'templates', turn: req => mock.turn(req), draft: req => mock.draft(req) };
 }
@@ -175,6 +180,8 @@ export interface AnthropicAuthorOptions {
   settings: ModelSettings;
   logger?: AiLogger;
   repairRetries?: number;
+  /** The whole reading of a turn; default TURN_DEADLINE_MS. */
+  turnDeadlineMs?: number;
 }
 
 export function createAnthropicAuthorDrafter(o: AnthropicAuthorOptions): AuthorDrafter {
@@ -202,17 +209,21 @@ export function createAnthropicAuthorDrafter(o: AnthropicAuthorOptions): AuthorD
     let brief = Brief.parse(req.brief);
     const hasText = Object.values(req.answers).some(v => v.trim()) || brief.documents.some(d => d.text);
     if (hasText) {
+      // The whole reading, repair included, ends in time for the rules to answer before the app's 30 seconds (D148).
+      const deadline = AbortSignal.timeout(o.turnDeadlineMs ?? TURN_DEADLINE_MS);
+      const signal = opts?.signal ? AbortSignal.any([opts.signal, deadline]) : deadline;
       try {
         const out = await structuredCall(o.transport, {
-          label: 'author turn', settings: o.settings, system: system('author-turn'), jsonSchema: briefReadingJsonSchema,
+          // The app waits 30 seconds for a turn (D148): the reading gets less, so the rules answer in time when it is slow.
+          label: 'author turn', settings: { ...o.settings, timeoutMs: Math.min(o.settings.timeoutMs, TURN_READ_MS), maxRetries: 0 }, system: system('author-turn'), jsonSchema: briefReadingJsonSchema,
           messages: [{ role: 'user', content: readingMessage(brief, req) }]
-        }, BriefReading, { repairs, repairPrompt: loadPrompt('repair').text, signal: opts?.signal, logger: log });
+        }, BriefReading, { repairs, repairPrompt: loadPrompt('repair').text, signal, logger: log });
         brief = mergeReading(brief, out.value, req);
         // One short question when the model reads the text as ambiguous about a field still open (D147).
         const ask = clarifyOf(out.value, brief);
         if (ask) return { kind: 'clarify', brief, clarify: ask };
       } catch (e) {
-        if (isAbort(e, opts?.signal)) throw e;
+        if (opts?.signal?.aborted || (!deadline.aborted && isAbort(e, opts?.signal))) throw e;
         log.error('author: reading failed; the templates answer this turn', { error: String(e) });
         return mock.turn(req);
       }
