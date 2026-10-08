@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78), kept current since (D79 to D133). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D142). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
@@ -58,6 +58,7 @@ Schema: `src/engine/contract.ts`. JSON Schemas: `docs/schemas/engine-view.json`,
 - **Retries and idempotency** (D86): the client keeps intents in order and, while offline or after a network failure, holds them (in local storage, for a server run) and sends them again on reconnect, each with the same `Idempotency-Key` header. The server answers a repeated key with the stored result instead of applying the intent twice (D100; a key is 1 to 200 characters, otherwise 400 `badIdempotencyKey`). 5xx answers are retried three times (1, 3 and 8 seconds), then reported.
 - **The first view early** (D87): `index.html` asks for `GET {engine}/sessions/{session}/view` in an inline script before the app's code arrives; a strict CSP needs that script's hash.
 - **View additions for the original flow gaps** (D89 to D99): `storyline.video` (welcome video and transcript), `lens.examples` (worked examples), each stage's `about` and `suits`, each action's `cooldown` and `unlockPeriod`, `trends` (each revealed person's result by period), `milestones` (progress milestones reached, D93), `guide` (`tour.enabled`, `demo: { enabled, with, action }`), optional profile `attitude`, `awareness` and `responsibilities`, and the history log's `action` key. All have defaults in the contract, so an older server's view still parses.
+- **Consequences that carry forward** (D135 to D142): a new intent, `decide` (`{ type: 'decide', choiceId, option }`, board phase only; an unknown or closed choice is refused). The view adds `variables` (the shown business variables: key, name, format, value, the period's start, range, whether more is better, what it means, the last three causes), `openChoices` (decisions waiting: what is known and the options' labels, never their consequences, with the days left) and `choices` (decisions made or left to their default, with what they changed); an event card that opens a decision carries its `choiceId`. The week end's summary adds `variables`, `choices` and `attrition` (who went off sick or resigned) when the storyline uses them. The report adds `decisions` and `businessVariables` and the `decisions` section. All have defaults, so an older server's payload still parses. The mock plays the Client Trust demo with `?storyline=client-trust`; the server lists `client_trust` as a built in storyline.
 - **The view never includes a member's needed style**, the fit table, raw model scores or the lens's source. Members' stats are `null` until the profile is opened (D39).
 - **Streaming:** abort the request to stop a line, then send `interruptTurn`. A body that ends without `done` or `error` is read as a retryable error. Details: `src/ai/sse.ts`, `docs/SPEECH.md`.
 - **The report** (`EngineView.report`) is null until the run ends, then a `ReportView` (`src/engine/reportContract.ts`, `docs/schemas/report-view.json`). The first load checks only that it is an object; the end screen and the report (both lazy) parse it.
@@ -118,7 +119,7 @@ The server implementation is `createAuthorDrafter(config)` in `ai/` (D82, `docs/
 
 | Config | Schema | JSON Schema | Docs |
 |---|---|---|---|
-| Storyline (GenieKreator's simulation config): money, time, stages, people, thresholds, lens, actions, live settings, events, triggers, gamification, report | `StorylineConfig` in `src/engine/config.ts`; `parseStoryline()` | `docs/schemas/storyline-config.json` | SIMULATION 1 to 8, `docs/genie/GenieKreator Configuration Spec iLead Simulation.md`. The sample is `src/engine/storylines/sales-elevator.json`. |
+| Storyline (GenieKreator's simulation config): money, time, stages, people, thresholds, lens, actions, live settings, events, triggers, gamification, report; optional people dynamics (`dynamics`), business variables (`variables`), and on events conditions (`if`), business effects (`business`) and decisions (`choice`) (D135 to D138) | `StorylineConfig` in `src/engine/config.ts`; `parseStoryline()` | `docs/schemas/storyline-config.json` | SIMULATION 1 to 8 (3.5, 6.6 to 6.8 for the new blocks), `docs/genie/GenieKreator Configuration Spec iLead Simulation.md`. The samples are `src/engine/storylines/sales-elevator.json` and `client-trust.json` (every new block). |
 | Leadership lens (inside the storyline) | `Lens` in `src/engine/config.ts`; the library in `src/engine/lensLibrary.ts` | (part of the storyline schema) | D70, D71, `docs/genie/leadership-lens-module.md` |
 | Client theme | `ThemeConfigSchema` in `src/theme/schema.ts`; `resolveTheme()` | `docs/schemas/theme-config.json` | README "Themes", D72. Samples: `src/theme/samples/halden.json`, `brightwater.json`. |
 
@@ -147,7 +148,8 @@ npm run storybook:smoke     # every story in four themes, fails on render or con
 npm run parity              # every design frame against the Claude Design prototype (60 frames)
 npm run e2e                 # Playwright on the mock engine, axe on every route (tests/e2e/a11y.spec.ts) and visual baselines
 npm run vitals              # Web Vitals budgets on a production build, throttled (section 9)
-npm run calibrate -- sales-elevator --check   # a storyline still plays well
+npm run calibrate -- sales-elevator --check   # a storyline still plays well (exits 1 when a band fails)
+npm run calibrate -- client-trust --check     # the consequences demo (D141)
 npm run calibrate -- sales-elevator --check --lens six_styles   # the same on the five style test lens (D104)
 npm run synthetic -- --check                  # synthetic players at four levels on every bundled storyline (docs/CALIBRATION-SYNTHETIC.md)
 npm run benchmark -- --check                  # the cached group report benchmark matches the engine
@@ -173,7 +175,7 @@ docker compose up --build   # the production image
 
 | Budget | Value | Enforced by |
 |---|---|---|
-| Initial JS (gzipped) | 250 KB (214.6 KB with the new /author, D105) | `npm run build` (`scripts/budget.ts`) |
+| Initial JS (gzipped) | 250 KB (214.6 KB with the new /author, D105; 217.6 KB with the business bar, D136; the decision dialog is lazy) | `npm run build` (`scripts/budget.ts`) |
 | LCP | 2.5 s (board and group report 3 s) | `npm run vitals` |
 | CLS | 0.1 | `npm run vitals` |
 | TBT (stands in for INP) | 300 ms (board 400 ms, D87) | `npm run vitals` |
@@ -208,6 +210,7 @@ The board and group report keep LCP 3 s: at this network the first load's bytes 
 - **Not built:** a design for the interview, the written plan and the Week 0 practice (functional in the shared shell, D52, D84, D85, awaiting the canvas, D80); phones (D69); playing offline (the client holds actions while offline and sends them on reconnect, D86, but the mock engine is the only offline engine).
 - **The design prototype** (`?engine=off`, `/screens`, `/states`) stays for parity only; it is not a product surface.
 - **Lens styles** (D104): every lens has 4 or 5 styles; Six Leadership Styles plays five (Drive merges Pacesetting and Commanding) and keeps its library title, which the product owner may rename. Authors rename styles per lens; report lines name a style with `{style}`.
+- **Consequences** (D135 to D142): the run summary and the group report do not carry choices or business variables yet; /author does not edit business effects on actions, counters, or an ignored decision's consequence without a default (the engine plays all three).
 - **/author** (D105 to D111, D128 to D130): offline it drafts with rules and templates; the model drafter, Kora on the model, PDF reading, the persona check on publish and publishing itself are the server's. What the export does not carry yet (the theme, the Story tab's visuals) is in section 5. The calibration tab's feature lands separately (`src/author/calibrate`).
 
 ## 11. What the engineer configures (server)

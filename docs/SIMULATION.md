@@ -169,6 +169,21 @@ Trust is how much a member believes in you as their leader. It is the 2.0 metric
 - The profile then shows "Shared: ...", and Trust rises +4.
 - The member's unanswered request then stops lowering morale.
 
+### 3.5 People dynamics (D135)
+*Config* `dynamics`, optional; left out, none of this applies and a storyline plays exactly as before (the same numbers and random draws). Sales Elevator and Client Trust enable it with the defaults (`"dynamics": {}`). Code: `src/engine/sim/dynamics.ts`.
+
+| Rule | Default | What it does |
+|---|---|---|
+| Rolling morale (`window`) | 5 days | Each person's morale at the end of each of the last 5 days, averaged (the current morale while there is less history). How people feel reaches their work with a lag, and so does a recovery. |
+| Output (`output.full`, `output.floor`) | 50, 0.5 | A person's result counts in the funnel in full at rolling morale 50 or more; below it the share falls in a line to half at 0. |
+| Growth (`growth.full`, `growth.floor`) | 50, 0.3 | Result gains from actions scale the same way, down to 30%: pushing a worn out team for result buys little. |
+| Trust (`trust.full`, `trust.floor`) | 50, 0.5 | Below trust 50 the positive skill, morale and result changes your actions make land at a share that falls to half at trust 0 (on top of 3.3's multiplier). Events and setbacks are not softened. |
+| Attrition (`attrition.below`, `chance`, `sickDays`, `resignAfter`) | 20, 0.2, 2, 2 | At each period end, someone whose rolling morale is under 20 goes off sick for 2 days with probability 0.2 plus 0.01 for each point under 20 (at most 0.95). The second time, they resign, unless they are the last person in their stage (then they go off sick again). A message and a history entry say why; the week end lists them. |
+
+Attrition draws on its own stream (`dynamicsSeed(seed)`), so it never moves another draw and replays exactly.
+
+**The burnout experiment** (`src/engine/sim/burnout.ts`, `dynamics.test.ts`): Sales Elevator with every fitting effect set to morale −8 and result +14, played by the good policy over 20 seeds. Without dynamics (the pre D135 values), burnout reached 223% of target against balanced play's 113% (scores 755 and 891), with team morale 0 and nobody leaving. With dynamics and the recalibrated values, burnout reaches 88% against balanced play's 111% (scores 729 and 890), morale 2, and 4.5 people leave on average. The test fails if burnout beats balanced play on revenue or score again.
+
 ---
 
 ## 4. Actions [M][W]
@@ -430,6 +445,22 @@ Every event and trigger pauses the clock while its card is open [S].
 ### 6.5 Progress milestones (D93)
 After each funnel run the engine records a milestone, once each, when revenue first reaches each share of the run's target in `milestones.target` (default 25, 50, 75 and 100%) and when a stage's output so far first reaches each share in `milestones.stages` (default 50 and 100%) of its ideal output for the whole run (the sum of every period's ideal throughput). The view lists them (`milestones`: key, kind, stage, percent, period, sub-period). Nothing reads them back: no rule, draw or score changes, so replays and calibration are unchanged.
 
+### 6.6 Business variables (D136)
+*Config* `variables`, 0 to 6 (default none). Each: `key`, `name`, `format` (money in the storyline's currency, percent, points), `start`, `min`, `max`, `drift` (added at each period end), `shown` (on the participant's board), `weight` (share of the Business pillar, 7.1; all weights 0.8 at most), `higherIsBetter`, `about`. A value never leaves its range.
+
+A **business effect** (`Business`) can sit on an action's option (`business.always`, or `m0`, `m1`, `m2` by how well the approach fitted; a static or hybrid action applies the typical fit of the people it reached, a live one the conversation's), on an event (applied when it plays) or on a choice option (7 below). It holds variable deltas by key, a one off `revenue` change (added to the run's revenue, never below 0), `sponsor` confidence, flags to `set` and `clear`, counters to `count`, and `followUps` (an event after `days` and `weeks`). Each variable keeps its last three causes, which the board shows on its pill. The view sends `variables` (shown ones only: key, name, format, value, start of the period, range, causes) and the week end's summary their start and end.
+
+### 6.7 Choice events (D137)
+*Config* `event.choice`: `known` (up to 4 lines), `options` (2 to 4), `within` (days to decide, default 2), `default` (the option that applies if nobody decides) and `ignored` (what happens with no default). A choice is a board card (`delivery: 'modal'`) with no expected response. Each option: `label`, `detail`, `outcome` (shown after it is chosen, and in the report), `who` (the event's target, `team`, `stage:<key>` or a member id), `people` (skill, morale, result, through the usual effect rules), `trust`, `business` (6.6) and `read` (up to 4 skills, each with a band: what the decision shows about leading, apart from its business outcome).
+
+When the event plays, its card opens the decision (`openChoices` in the view, the card's `choiceId`). The participant decides with the `decide` intent (`choiceId`, `option`), in the board phase, or leaves it: past the deadline the default applies (`by: 'default'`), checked every day. Every resolution is a `ChoiceRecord`: the option, who decided, the changes to people, variables and revenue, flags, the follow ups it scheduled and the later events its flags made possible.
+
+### 6.8 Flags, counters, conditions and delays (D138)
+- **Flags and counters** are set, cleared and counted by business effects and live for the run.
+- **Conditions** (`event.if`): 1 to 3 clauses that must all hold. A clause tests a flag (set or not), a counter, a business variable or a metric (`teamMorale`, `teamTrust`, `teamSkill`, `teamResult` over the available team, `revenuePace` in percent of the pace so far, `sponsor`) against a value, `below` or `atLeast`. On a fixed, random or follow up event the condition is checked when it is due, and the event is skipped (recorded, never played later) when it fails. An event with a condition and no other timing is checked every day and plays the first time it holds.
+- **Delays.** `followUps` schedule an event after days and weeks; `escalation.delay` holds an ignored event's follow up. A follow up plays on the people its source event named.
+- **The worked example** (`business.test.ts`): week 2's "cut the training budget" sets `budget_cut` and lowers Budget; week 4's "Two people ask for the training you cut" has `if: [{ kind: 'flag', flag: 'budget_cut' }, { kind: 'metric', metric: 'teamMorale', op: 'below', value: 60 }]` and plays only when both hold.
+
 ---
 
 ## 7. 2.0 gamification [G]
@@ -441,9 +472,9 @@ The GenieKreator rules (`docs/genie/scoring-and-report.md` section 6, D62). Form
 
 | Pillar | 0 to 100 |
 |---|---|
-| Business (B) | min(100, revenue ÷ target × 100) |
+| Business (B) | min(100, revenue ÷ target × 100); with weighted business variables (6.6, D139), (1 − Σ weights) × that + Σ weight × the variable's position in its range (0 at the bottom, 100 at the top; inverted when less is better) |
 | People (P) | 50 + change in team morale + 0.5 × change in team trust, since the start of the run, kept in 0 to 100 |
-| Leadership (L) | 0.5 × contextual capability % + 0.5 × the mean band score of all live interactions; with no live interaction, the capability % |
+| Leadership (L) | 0.5 × contextual capability % + 0.5 × the mean band score of all live interactions and of every choice the participant decided that has a read (each at its read's mean band score, D139); with neither, the capability % |
 
 - **Contextual capability %** = style tagged choices that matched what the person needed ÷ all style tagged choices, whole run. Style tagged: weekly style setting, and live conversations with one person (meetings, briefings, interviews and multi person emails carry no style).
 - **Band scores:** Strong 100, Adequate 70, Weak 35, Harmful 0.
@@ -547,6 +578,8 @@ Report 2.0 (`docs/genie/scoring-and-report.md` sections 5 and 7). The engine bui
 | 9 | Development plan | The 3 lowest rated skills (then skills without enough evidence), each with an authored practice activity and on the job action, and a check in date |
 | 10 | Methodology | First the lens, in participant language: "This simulation looks at leadership through the {title} lens.", and with a secondary lens a line naming it and saying its skills are Report only. Then the authored copy, and the facts: conversations, observations, review status. The lens's source is never printed. |
 
+**Decisions and consequences** (`decisions`, D137, D139): each choice in order, the option taken or left to its default, its outcome, what it changed for people, the business variables and revenue, the later events it led to and the leadership it showed; and each shown variable at the start and end of the run (`decisions`, `businessVariables` in the report). It follows Key moments in the default sections whenever the storyline has choices or shown variables. A decided choice's read is also a skill observation (one interaction), so it counts toward a skill's evidence.
+
 The end screen collects up to 3 reflection answers (authored questions, by voice or text) and a 1 to 5 experience rating (`submitReflection`). The plan quotes the first answer.
 
 ### 8.4 Report 3.0: purpose, the run summary and the 1.0 sections (D75, D76)
@@ -587,7 +620,14 @@ The funnel numbers are tuned per storyline by `npm run calibrate -- <storyline>`
 
 The authored `target` is the client's number and stays as it is. Starting member values are never changed: the script only reports the starting mix, which passes when all four needs are present (the report names each by the first style that fits it) and at least two members start under the low threshold in some metric, so there is someone to help.
 
-It then plays 200 runs per policy and checks every band. The output is a report (`calibration/<storyline>.md`) with the before and after values. The tuned values are written back to the storyline with `calibrated` set to whether every band and the member mix pass; when one fails, the script also exits with an error. `--check` only measures and reports. The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
+It then plays 200 runs per policy and checks every band. The output is a report (`calibration/<storyline>.md`) with the before and after values. The tuned values are written back to the storyline with `calibrated` set to whether every band and the member mix pass; when one fails, the script also exits with an error. `--check` only measures and reports, and exits with an error when a band fails (D140).
+
+**Choice events** (D140): good play picks the option with the best leadership read, then the best for people; random play any option; passive play leaves each to its default. A storyline can widen a band for itself (`STORYLINE_BANDS`): Client Trust's random band runs to 75%, because random play decides every choice (half the time well) while passive play leaves each to its default and meets every later event the defaults bring (D141).
+
+| Storyline | Threshold, leads a day | Passive | Random | Good | Scores (passive, random, good) |
+|---|---|---|---|---|---|
+| Sales Elevator (dynamics on, D135) | 73, 33 | 54% | 63% | 110% | 310, 382, 889 |
+| Client Trust (D141) | 111, 21 | 56% | 66% | 113% | 307, 435, 904 | The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
 
 For the Sales Elevator default, calibration starts from the workbook's starting values; the prototype's on-screen numbers are only design fixtures for the `/screens` gallery.
 
