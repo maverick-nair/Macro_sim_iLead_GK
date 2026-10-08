@@ -155,6 +155,19 @@ describe('the publish gate (D131)', () => {
     expect(blockedBy(f, /^scoring/)[0].title).toBe('You agree with only 5 of 6 scoring samples');
   });
 
+  it('puts the export\'s event issues on the Events tab, each named, and says a gone person once', () => {
+    const d = ready();
+    const e = d.events.find(x => x.respondWith.length)!;
+    e.ifIgnored = { sponsor: true, followUp: 'gone_event' };
+    const b = validateDraft(d).blocking.filter(i => i.target === `events.${e.key}`);
+    expect(b).toEqual([expect.objectContaining({ area: 'links', tab: 'events', title: `The event "${e.title}": if ignored it leads to an event that no longer exists (gone_event)`, detail: 'Pick another, or none.' })]);
+    const f = ready();
+    const gone = f.team.pop()!;
+    f.events[0].who = gone.id;
+    const g = validateDraft(f).blocking.filter(i => i.target === `events.${f.events[0].key}`);
+    expect(g.map(i => i.title)).toEqual([`The event "${f.events[0].title}" is for someone no longer in the team`]);
+  });
+
   it('blocks on every issue the export or the engine reports, whatever its shape', () => {
     const d = ready();
     const out = toStoryline(d);

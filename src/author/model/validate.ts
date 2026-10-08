@@ -171,7 +171,10 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
     if (ev) {
       const e = d.events.find(x => (x.title || x.key) === ev[1]);
       if (e && linkedEvents.has(e.key) && /no longer on the team|no longer in the work process/.test(ev[2])) return;
-      block({ id: `links.export.${e?.key ?? k}.${k}`, area: 'links', title: `The event ${quote(ev[1])} does not line up`, detail: ev[2].charAt(0).toUpperCase() + ev[2].slice(1), tab: 'events', ...(e ? { target: `events.${e.key}` } : null) });
+      // "it counts X as the response, but ... Switch it on, or pick another." reads as a title and what to do.
+      const [what, ...todo] = ev[2].split(/(?<=\.)\s+/);
+      const title = /^it /.test(what) ? `The event ${quote(ev[1])} ${what.slice(3).replace(/\.$/, '')}` : `The event ${quote(ev[1])}: ${what.replace(/\.$/, '')}`;
+      block({ id: `links.export.${e?.key ?? k}.${k}`, area: 'links', title, ...(todo.length ? { detail: todo.join(' ') } : null), tab: 'events', ...(e ? { target: `events.${e.key}` } : null) });
       return;
     }
     const stray = text.match(/^(.+) is in a stage that is no longer in the work process/);
