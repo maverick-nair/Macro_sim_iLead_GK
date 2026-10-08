@@ -64,6 +64,13 @@ export default function Publish() {
   const edit = useAuthor(s => s.edit);
   const [ran, setRan] = useState(0);
   const [done, setDone] = useState<number | null>(null);
+  /** Why Play week 1 did not open (D123): full or blocked storage, or a draft that does not play yet. */
+  const [playProblem, setPlayProblem] = useState<string | null>(null);
+  const playWeek = () => {
+    const r = playDraft(d);
+    if (r.ok) edit(x => { x.publish.played = true; }, { history: false });
+    setPlayProblem(r.ok ? null : r.reason === 'storage' ? r.issues[0] : `This draft does not play yet. ${r.issues[0]}`);
+  };
   const blockedId = useId();
   const v = useMemo(() => (ran ? validateDraft(d) : validationOf(d)), [d, ran]);
   const checks = useMemo(() => checksOf(d, v), [d, v]);
@@ -86,9 +93,10 @@ export default function Publish() {
                 <span className="flex min-w-0 flex-1 flex-col">
                   <b className="text-16">{c.title}</b>
                   <span className="text-13 text-author-body">{c.detail}</span>
+                  {c.id === 'play' && playProblem && <span role="alert" className="mt-1 rounded-10 bg-author-need-field p-2 text-13 text-author-need">{playProblem}</span>}
                 </span>
                 {c.id === 'play' && c.state !== 'passed'
-                  ? <button type="button" className={BUTTON.secondary} onClick={() => { const r = playDraft(d); if (r.ok) edit(x => { x.publish.played = true; }); }}>Play week 1</button>
+                  ? <button type="button" className={BUTTON.secondary} onClick={playWeek}>Play week 1</button>
                   : c.state !== 'passed' && c.go
                     ? <button type="button" className={BUTTON.link} onClick={() => open(c.go!)}>{c.state === 'advisory' ? 'Open' : 'Fix'}<span className="sr-only"> {c.title}</span></button>
                     : <span className={`text-14 font-800 ${c.state === 'passed' ? 'text-author-gain' : c.state === 'failed' ? 'text-author-decline' : 'text-author-need'}`}>{c.state === 'passed' ? 'Passed' : c.state === 'failed' ? 'To fix' : 'Advisory'}</span>}
