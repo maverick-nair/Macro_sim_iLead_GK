@@ -1,5 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * Every screen fits the window (D101, D102). Each state is reached once, then the window is resized
  * through every target size: laptops from 1280 by 720 to 2560 by 1440 (the owner's 1513 by 745 among
@@ -77,7 +81,7 @@ const styles = (page: Page) => page.getByRole('radiogroup', { name: /^Leadership
 const gotIt = (page: Page) => page.getByRole('button', { name: 'Got it' });
 
 async function confirmStyles(page: Page) {
-  await expect(styles(page)).toHaveCount(10, { timeout: 20_000 });
+  await expect(styles(page)).toHaveCount(team(page), { timeout: 20_000 });
   for (const g of await styles(page).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();

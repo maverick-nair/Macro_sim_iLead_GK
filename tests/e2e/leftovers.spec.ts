@@ -1,6 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * Desktop leftovers from M0 to M6: Pause on the engine board (nothing in the run moves while paused),
  * the welcome back recap from the engine, and the Actions panel that folds on a 1024 wide board.
@@ -23,7 +27,7 @@ async function axe(page: Page) {
 
 async function toBoard(page: Page, q = '') {
   await page.goto(`/?start=board${q}`);
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page), { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
