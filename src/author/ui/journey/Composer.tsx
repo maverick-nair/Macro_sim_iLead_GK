@@ -11,7 +11,7 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2,
  * The answer box (docs/design/genie/ChatStart and ChatVoice, D106): type, or record. Recording shows the
  * live transcript under a waveform with Cancel and Stop and review; when it stops, the words land in
  * the answer box, marked as transcribed, to edit before Send. Nothing is sent until the author presses
- * Send. Upload sits beside the microphone. Focus follows the recording: to Stop and review once it
+ * Send. Upload sits beside the microphone. The box stays usable while Kora is thinking; only Send waits (D148). Focus follows the recording: to Stop and review once it
  * listens, back to the microphone after Cancel, and to the answer box after it stops.
  */
 export function Composer({ question, placeholder, multiline, busy, error, onSend, onUpload, hint }: {

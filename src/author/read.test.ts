@@ -9,7 +9,7 @@ import { recommendLens } from './recommend';
 import { draftContext } from './storyline';
 
 const blank = () => Brief.parse({});
-const plain = (s: string) => { expect(s).not.toMatch(/—|–/); expect(copyViolations(s), s).toEqual([]); };
+const plain = (s: string) => { expect(s).not.toMatch(/\u2014|\u2013/); expect(copyViolations(s), s).toEqual([]); };
 
 describe('reading a detailed brief (D146)', () => {
   it('takes every field the chat asks, and the stakeholders, objectives and dilemmas', () => {

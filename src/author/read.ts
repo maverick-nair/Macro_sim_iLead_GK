@@ -278,7 +278,7 @@ function stakeholderFrom(item: string): Stakeholder | null {
   const t = tidy(item.trim().replace(/^(?:and|plus|also)\s+/i, ''));
   if (!t) return null;
   let name = '', role = '';
-  let m = t.match(new RegExp(`^${NAME}\\s*(?:,|\\(|\\s+[-–]\\s+|\\s+who\\s+is|\\s+is)\\s*(.+)$`));
+  let m = t.match(new RegExp(`^${NAME}\\s*(?:,|\\(|\\s+[-\u2013]\\s+|\\s+who\\s+is|\\s+is)\\s*(.+)$`));
   if (m) { name = m[1]; role = m[2]; } else if ((m = t.match(new RegExp(`^(.+?),?\\s+${NAME}$`))) && STAKE_ROLE.test(m[1])) { role = m[1]; name = m[2]; } else if (STAKE_ROLE.test(t) && t.split(/\s+/).length <= 8) { role = t; } else return null;
   if (!STAKE_ROLE.test(role) && !RELATIONS.some(([re]) => re.test(role))) return null;
   const explicit = role.match(/(?:,|\s+and)\s+(?:their|the\s+participants?'?s?|his|her|your|a|an|the)\s+(boss|line\s+manager|manager|sponsor|peer|counterpart|colleague|mentor)\b/i);
