@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78), kept current since (D79 to D118). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D124). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
@@ -92,7 +92,7 @@ On the server, `createTranscriber(config)` from `ai/` (D82, `docs/AI.md` 7) forw
 
 Built to the approved canvas in `docs/design/genie` (D105 to D111): the co-creator chat (typed or voice answers, a live "Your simulation so far", the lens recommendation), First draft ready, the workspace with twelve tabs and Ask Kora, and the library admin page. Routes `/author`, `/author/workspace/<tab>`, `/author/library`; all lazy, light only, laptops and tablets to 834 wide.
 
-- **The draft** is one Zod model (`src/author/model/draft.ts`) kept in local storage (`ilead.author.workspace`) and parsed back on load. `seedDraft` fills it offline from the chat; `toStoryline` turns it into the engine's StorylineConfig (checked with the schema and the copy guard). Provenance marks: AI, You, Edited, Needs you (computed), Suggestion (Kora's dashed ideas).
+- **The draft** is one Zod model (`src/author/model/draft.ts`) kept in local storage (`ilead.author.workspace`) and parsed back on load; a stored draft that does not parse is repaired field by field and the author is told what changed (D124). Every change is a step of undo with a name, and changes that replace or remove work save a named version first (`ilead.author.workspace.versions`, History in the header, D122). Saves happen when the page is hidden or closed too, another tab's change pauses saving until the author picks a version, and full or blocked storage is said in view (D123). `seedDraft` fills it offline from the chat; `toStoryline` turns it into the engine's StorylineConfig (checked with the schema and the copy guard). Provenance marks: AI, You, Edited, Needs you (computed), Suggestion (Kora's dashed ideas).
 - **Voice answers** use the participant app's speech client (MediaRecorder and the chunked transcription endpoints served with `createTranscriber` from `ai/`), at `VITE_GENIE_SPEECH_URL` or else `VITE_ILEAD_SPEECH_URL`; without either, an offline mock voice (`src/author/voice.ts`).
 - **Ask Kora** runs on rules offline (`src/author/model/kora.ts`); a server would answer the same proposals with the model.
 - **Test with synthetic players** renders `CalibrateSlot` from `src/author/calibrate/index.ts` when it exists (props in `src/author/ui/workspace/tabs/Calibrate.tsx`), else a coming soon panel.
