@@ -149,6 +149,17 @@ Client Trust (D141: dynamics, four business variables, four choice events):
 
 Every check passes. Beginner and Expert choices are 95% apart (players at different levels choose differently); Directing for everyone averages 601; every conversation Strong reaches 121% of the target, every one Weak 106%.
 
+Client Trust with its three stakeholders (D165: the client lead, the CFO and the delivery lead, recalibrated to threshold 127 and 18 leads a day). The personas engage stakeholders by level (`src/engine/sim/stakeholderPlayers.ts`): a Beginner answers 30% of their requests, rarely engages anyone unasked and says little; an Expert answers every request in time and engages the weakest relationship nearly every week, in the words the rubric rewards.
+
+| Player | Score range | Average | Tier | Revenue | Skills rated | Fits level | Strong conversations |
+|---|---|---|---|---|---|---|---|
+| Beginner | 306 to 404 | 373 | Bronze | 58% | Novice | 100% | 0% |
+| Developing | 457 to 574 | 501 | Bronze | 73% | Proficient | 100% | 13% |
+| Proficient | 852 to 907 | 882 | Platinum | 132% | Advanced | 100% | 70% |
+| Expert | 962 to 977 | 971 | Platinum | 142% | Role Model | 100% | 97% |
+
+Every check passes; Expert players answered 25 of the 30 events that call for an answer, stakeholder requests included. Sales Elevator has no stakeholders and plays exactly as above.
+
 ## 9. Not done
 
 - **AI players have not met a real model here** (no key in this repository); `ai/src/synthetic/player.test.ts` covers the request, the cleaning and the fallbacks on a scripted transport. Run a calibration on the server with AI before the first pilot and compare it with the offline one.
