@@ -8,6 +8,7 @@ import { Avatar, Badge, BUTTON, CARD, Field, Icon, MarkOf, Scroll, Select, TextA
 import { CharacterEditor } from '../CharacterEditor';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate, useRegenerateItem } from './regenerate';
+import TeamStakeholders from './TeamStakeholders';
 
 /** Removes a character; their events go where the author picked (`to`), or are removed with them (D128). */
 function removeCharacter(x: AuthorDraft, id: string, to: string) {
@@ -147,6 +148,7 @@ export default function Team() {
           </section>
         )}
       </div>
+      <TeamStakeholders />
       {editingChar && (
         <CharacterEditor key={editingChar.id} draft={d} character={editingChar} open onOpenChange={o => { if (!o) setEditing(null); }}
           onSave={(next, changed) => { edit(x => { const i = x.team.findIndex(m => m.id === next.id); if (i >= 0) x.team[i] = next; }, changed); setEditing(null); }} />

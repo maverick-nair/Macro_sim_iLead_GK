@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { MAX_STAKEHOLDERS, STAKEHOLDER_INTERACTIONS, type AuthorDraft, type RequestDraft, type StakeholderDraft, type StakeholderEffectDraft, type StakeholderInteractionDraft } from './draft';
+import { MAX_STAKEHOLDERS, STAKEHOLDER_INTERACTIONS, type AuthorDraft, type RequestDraft, type StakeholderDraft, type StakeholderEffectDraft, type StakeholderInteractionDraft, type StakeholderOptionDraft } from './draft';
 import { freshKey, slugKey } from './seed';
 
 /**
@@ -18,6 +18,10 @@ export const TYPE_LABEL: Record<Type, string> = { meet: 'Meet', present: 'Presen
 
 export const blankEffect = (over: Partial<StakeholderEffectDraft> = {}): StakeholderEffectDraft =>
   ({ trust: 0, satisfaction: 0, sponsor: 0, revenue: 0, variables: {}, set: [], people: [0, 0, 0], who: 'team', outcome: '', ...over });
+
+/** A new option of a stakeholder decision: changes nothing yet, needs no trust. */
+export const blankStakeholderOption = (key: string, label: string): StakeholderOptionDraft =>
+  ({ key, label, detail: '', effect: blankEffect(), needsTrust: 0, refusal: '', read: [] });
 
 /** The interactions a stakeholder starts with: all four types, those that suit their kind switched on. */
 export function defaultInteractions(kind: Kind, name: string, scoredOn: string[] = []): StakeholderInteractionDraft[] {
@@ -55,7 +59,8 @@ export const ROLES: Array<{ re: RegExp; role: string; kind: Kind; name: [string,
 
 /** A new stakeholder, from a role and optionally a name and kind (the Team tab's Add, Kora, and the brief). */
 export function newStakeholder(d: Pick<AuthorDraft, 'stakeholders' | 'team' | 'scoring'>, opts: { name?: string; role?: string; kind?: Kind; about?: string } = {}): StakeholderDraft {
-  const preset = ROLES.find(r => r.re.test(`${opts.role ?? ''} ${opts.kind ?? ''}`));
+  // The role's words name a preset; failing that, the kind's first preset (an executive starts as the CFO).
+  const preset = ROLES.find(r => r.re.test(`${opts.role ?? ''} ${opts.kind ?? ''}`)) ?? (opts.kind ? ROLES.find(r => r.kind === opts.kind) : undefined);
   const kind = opts.kind ?? preset?.kind ?? 'other';
   const taken = new Set([...d.stakeholders.map(s => s.name.toLowerCase()), ...d.team.map(c => `${c.first} ${c.last}`.toLowerCase())]);
   const name = opts.name?.trim() || (preset && !taken.has(preset.name.join(' ').toLowerCase()) ? preset.name.join(' ') : `New stakeholder ${d.stakeholders.length + 1}`);
