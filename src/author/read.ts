@@ -321,11 +321,18 @@ function dilemmaFrom(item: string, stake = ''): Dilemma | null {
   const t = tidy(item.trim().replace(/^(?:and|or)\s+/i, ''));
   const m = t.match(/^(?:between\s+)?(.+?)\s+(?:vs\.?|versus|against)\s+(.+)$/i) ?? t.match(/^between\s+(.+?)\s+and\s+(.+)$/i) ?? t.match(/^(.+?)\s+or\s+(.+)$/i);
   if (!m) return null;
-  // Participant ready words (a choice event may show them): "short-term" reads "short term".
+  return makeDilemma(m[1], m[2], stake);
+}
+
+/**
+ * A dilemma from its two options, in participant ready words (a choice event may show them later): "short-term"
+ * reads "short term", and the title is "A or b". Null when an option is empty or longer than ten words.
+ */
+export function makeDilemma(rawA: string, rawB: string, stake = ''): Dilemma | null {
   const words = (x: string) => tidy(x).replace(/(\p{L})-(?=\p{L})/gu, '$1 ');
-  const a = words(m[1]), b = words(m[2]);
+  const a = words(rawA), b = words(rawB);
   if (!a || !b || a.split(/\s+/).length > 10 || b.split(/\s+/).length > 10) return null;
-  return { title: `${cap(a)} or ${b.charAt(0).toLowerCase() + b.slice(1)}`.slice(0, 200), a: cap(a).slice(0, 200), b: cap(b).slice(0, 200), stake: stake.slice(0, 400) };
+  return { title: `${cap(a)} or ${b.charAt(0).toLowerCase() + b.slice(1)}`.slice(0, 200), a: cap(a).slice(0, 200), b: cap(b).slice(0, 200), stake: tidy(stake).slice(0, 400) };
 }
 
 /** The dilemmas a brief names, as choices: "X vs Y", "between X and Y", or a "dilemmas:" list with "or". */
