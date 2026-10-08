@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import type { Config } from './config';
 import type { Logger } from './log';
 import type { SyntheticSpeaker } from '../../src/engine/sim/syntheticSpeech';
-import { mockPorts, type AiModule, type AiPorts, type AiRoleConfigs, type AuthorDrafter, type Evaluator, type NpcModel, type Transcriber, type TranscriptionSession } from './ports';
+import { mockPorts, type AiModule, type AiPorts, type AiRoleConfigs, type AuthorDrafter, type AuthorEditor, type Evaluator, type NpcModel, type Transcriber, type TranscriptionSession } from './ports';
 
 /** The repository root (server/src/ai.ts is two folders down). */
 export const REPO_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -92,6 +92,7 @@ export async function loadAi(config: Config, log: Logger, importer: (spec: strin
   const roles = roleConfigs(mod, config, env, log);
   let { npc, evaluator, author } = mock as { npc: NpcModel; evaluator: Evaluator; author: AuthorDrafter };
   let synthetic: SyntheticSpeaker | undefined;
+  let editor: AuthorEditor | undefined;
   if (config.AI_PROVIDER === 'anthropic') {
     for (const f of ['createNpcModel', 'createEvaluator', 'createAuthorDrafter'] as const) {
       if (!isFn(mod[f])) throw new AiConfigError(`The ai module at ${found} does not export ${f}(config).`);
@@ -100,6 +101,8 @@ export async function loadAi(config: Config, log: Logger, importer: (spec: strin
     npc = check<NpcModel>('createNpcModel', await mod.createNpcModel!(roles.npc), ['reply']);
     evaluator = check<Evaluator>('createEvaluator', await mod.createEvaluator!(roles.evaluator), ['evaluate']);
     author = check<AuthorDrafter>('createAuthorDrafter', await mod.createAuthorDrafter!(roles.author), ['turn', 'draft']);
+    // Ask Kora with a model is optional: a module without the factory leaves the app's rules to answer.
+    if (isFn(mod.createAuthorEditor) && roles.author.provider === 'anthropic') editor = check<AuthorEditor>('createAuthorEditor', await mod.createAuthorEditor(roles.author), ['edit']);
     // Synthetic players with AI are optional: a module without the factory keeps the offline templates.
     if (isFn(mod.createSyntheticPlayer) && roles.synthetic.provider === 'anthropic') synthetic = check<SyntheticSpeaker>('createSyntheticPlayer', await mod.createSyntheticPlayer(roles.synthetic), ['say']);
   }
@@ -112,5 +115,5 @@ export async function loadAi(config: Config, log: Logger, importer: (spec: strin
   }
   log.info('ai: provider loaded', { provider: config.AI_PROVIDER, module: path.relative(REPO_ROOT, found), speech });
   const scene = config.AI_PROVIDER === 'anthropic' && isFn(mod.sceneFromStoryline) ? (st: Parameters<NonNullable<AiModule['sceneFromStoryline']>>[0]) => mod.sceneFromStoryline!(st) : undefined;
-  return { provider: config.AI_PROVIDER, npc, evaluator, author, transcriber, scene, ...(synthetic ? { synthetic } : {}) };
+  return { provider: config.AI_PROVIDER, npc, evaluator, author, transcriber, scene, ...(synthetic ? { synthetic } : {}), ...(editor ? { editor } : {}) };
 }
