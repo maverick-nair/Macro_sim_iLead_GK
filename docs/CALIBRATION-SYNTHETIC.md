@@ -1,6 +1,6 @@
 # Calibration with synthetic players
 
-GenieKreator's "Test with synthetic players" step: before a draft is published, synthetic players at four proficiency levels play the whole simulation, conversations included, and the author sees whether it rewards good leadership. Decisions: D112 to D118 (`docs/DECISIONS.md`). Design: `docs/design/genie/Calibrate.dc.html` (setup and results), `CalibrateRun.dc.html` (one playthrough), `Publish.dc.html` (the "Synthetic players" check).
+GenieKreator's "Test with synthetic players" step: before a draft is published, synthetic players at four proficiency levels play the whole simulation, conversations included, and the author sees whether it rewards good leadership. Decisions: D112 to D120 and D132 (`docs/DECISIONS.md`). Design: `docs/design/genie/Calibrate.dc.html` (setup and results), `CalibrateRun.dc.html` (one playthrough), `Publish.dc.html` (the "Synthetic players" check).
 
 This is a different tool from `npm run calibrate` (`scripts/calibrate.ts`, SIMULATION 9), which tunes a storyline's funnel numbers with three simple policies. The synthetic players test a draft as authored, through the same engine, evaluator and NPC the participants meet.
 
@@ -64,12 +64,17 @@ The target tier is the author's (`targetTier`), else the second tier from the to
 | Conversation ratings rise with proficiency | the mean band rises (the scoring pipeline) | warn |
 | Each level scores clearly apart | neighbours more than 5% of the scale apart | warn |
 | No single strategy wins without good leadership | no probe averages the target tier | fail; warn when a probe matches the Proficient average |
-| Every action was used | some persona used each action | warn |
+| Every action was used | some persona used each action; hiring and letting go are rare by design and not counted (D132) | warn |
 | Events that call for an answer can be answered | Experts answered 80% or more | warn |
+| Styles change the outcome (`styleEffect`, D132) | Proficient play beats the best one style probe by 5% of the scale or more | fail: a flat fit table, or one where one style fits every need |
+| Conversations change what happens (`conversationEffect`, D132) | the same Proficient play with every conversation rated Strong reaches 5 points of the revenue target more than with every one rated Weak | fail: conversations with zero effect |
+| The revenue target suits the levels (`target`, D132) | Beginners average under the target and Experts at least half of it | fail: a target trivially reachable or out of reach; warn when Experts reach under 80% |
 
 Every check that needs a look carries a suggested fix in plain words. The CLI and CI fail only on `fail`.
 
 **Probes for dominant strategies (D114).** Two seeds each: one style for everyone all run with otherwise sound play (the Proficient's), and one action every day it can be taken (with random styles). Probes always play on the offline templates and evaluator: they test mechanics, cost no model calls, and the threshold is absolute (the target tier).
+
+**Conversation probes (D132).** With the probes on, Proficient plays two more seeds with every conversation rated Strong and two with every conversation rated Weak (`forcedBand` in `logic/run.ts` wraps the offline evaluator and keeps everything but the band). They are kept in `results.probes` with `probe.kind` `band`, never count as a strategy, and feed `conversationEffect`. The style probes feed `styleEffect` as well as `dominant`.
 
 ## 5. Playthroughs
 
@@ -108,14 +113,16 @@ import { CalibrateSlot, calibrationPublishCheck } from '../calibrate';
 
 const line = calibrationPublishCheck(kept, { draft });
 // { key: 'syntheticPlayers', title: 'Synthetic players', status: 'passed' | 'advisory' | 'failed' | 'notRun' | 'outOfDate',
-//   blocking, summary, details, action: 'See results' | 'Run the test' | 'Run the test again' }
+//   blocking, full, summary, details, action: 'See results' | 'Run the test' | 'Run the test again' }
 ```
+
+`full` is true when all four levels played and the probes were on. **The /author workspace's gate (D132, `syntheticGate` in `src/author/model/validate.ts`)** is stricter than `blocking`: a full run on this version that passed passes, one with warnings is advice; a failed run blocks, and the failure stays on the draft (`calibration.failed`, written by `recordCalibration`) until a new full run passes, whatever is edited or run partially in between; no run, a run on an earlier version or a partial run blocks unless the author ticks "Publish without testing", which never covers a failure.
 
 `CalibrateSlot` is light: the screen is a lazy chunk loaded on first render, and the engine loads only with a run, in the worker. Nothing in the participant app imports it: the only addition to the first load is the `/author/calibrate` route (initial JS 214.4 KB of 250, 214.3 before; vitals within budget). `calibrationPublishCheck` imports no engine and no schema library. Until /author mounts the slot, `/author/calibrate` shows it on the bundled Sales Elevator draft (`?theme=light`, `?api=/genie`).
 
 ## 8. Results on Sales Elevator
 
-`npm run synthetic` (seed 1, 5 playthroughs a persona, 34 probes, 3.5 s):
+`npm run synthetic` (seed 1, 5 playthroughs a persona, 38 probes, 2.4 s):
 
 | Player | Score range | Average | Tier | Revenue | Skills rated | Fits level | Strong conversations |
 |---|---|---|---|---|---|---|---|
@@ -124,7 +131,7 @@ const line = calibrationPublishCheck(kept, { draft });
 | Proficient | 843 to 912 | 863 | Platinum | 141% | Advanced | 100% | 65% |
 | Expert | 914 to 966 | 937 | Platinum | 147% | Role Model | 100% | 97% |
 
-Every check passes but one advisory: nobody used "Hire member" or "Let go" (fine if they are meant to be rare). The best probe, Directing for everyone, averages 618, under Gold (700); the best one action probe, a team meeting every day, 488. The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them.
+Every check passes. "Hire member" and "Let go" were not used; they are rare by design and not counted (D132). The best probe, Directing for everyone, averages 618, under Gold (700) and 245 points under Proficient play (styles change the outcome); the best one action probe, a team meeting every day, 488. Every conversation Strong reaches 132% of the revenue target, every one Weak 78% (conversations change what happens). Beginners reach 65% of the target, Experts 147%. The jump from Developing to Proficient is the storyline's: style fit compounds through the funnel (SIMULATION 9), so reading most people right is worth far more than reading half of them.
 
 ## 9. Not done
 

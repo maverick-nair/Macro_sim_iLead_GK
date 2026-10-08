@@ -13,7 +13,7 @@ const MERGER = 'Our participants are newly appointed VPs at a regional healthcar
   + 'negotiate with the nurses\' unions and decide where to cut a 12 million budget while patient satisfaction holds up.';
 
 const blank = () => Brief.parse({});
-const noDash = (s: string) => { expect(s).not.toMatch(/—|–/); expect(copyViolations(s), s).toEqual([]); };
+const noDash = (s: string) => { expect(s).not.toMatch(/\u2014|\u2013/); expect(copyViolations(s), s).toEqual([]); };
 
 describe('the template fit check (D133)', () => {
   it('names everything the merger brief asks for that iLead cannot play, and the nearest fit', () => {
