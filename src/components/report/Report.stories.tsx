@@ -4,6 +4,7 @@ import type { EngineView } from '../../engine/contract';
 import { DEFAULT_LENS_VIEW, NEEDS } from '../../engine/lens';
 import { DEFAULT_LENS } from '../../engine/lensLibrary';
 import { playToEnd } from '../../engine/mock';
+import { playStrategy, type Strategy } from '../../engine/sim/strategies';
 import { REPORT_FIXTURE as FX } from '../../data/reportFixture';
 import { BusinessSection } from './BusinessSection';
 import { ReportProvider, type ReportSettings } from './context';
@@ -49,7 +50,13 @@ export const Summary: StoryObj = {
   render: () => (
     <Card>
       <SummarySection narrative={FX.lede} />
-      <SummarySection narrative="You lead people well and adapt to what they need." extras={{ level: 'Advanced', strengths: ['Handling difficult conversations', 'Results ownership', 'Situational flexibility'], priorities: ['Coaching for growth', 'Goal setting and accountability'], business: 'You reached 112% of the $240,000 target with 8 deals; Conversion was the bottleneck in 2 of 8 weeks.' }} />
+      <SummarySection narrative="You lead people well and adapt to what they need." extras={{ level: 'Advanced', strengths: ['Handling difficult conversations', 'Results ownership', 'Situational flexibility'], priorities: ['Coaching for growth', 'Goal setting and accountability'], business: 'You reached 112% of the $240,000 target with 8 deals; Conversion was the bottleneck in 2 of 8 weeks.',
+        headline: 'Your team grew and the numbers followed.',
+        lines: ['Over the run your team\'s averages moved: trust +28, result +21 and skill +9.', '92% of your style choices fit what people needed.', 'Next step: notice what you did that worked, and do it on purpose with your real team.'],
+        drivers: [
+          { key: 'a', tone: 'positive', text: 'Coach member with Peter in weeks 2 and 4 lifted Peter\'s result by 18 (skill +12).' },
+          { key: 'b', tone: 'negative', text: 'Conversion was the bottleneck in 2 of 8 weeks: Mandy, who owns it, ended with morale at 52.' }
+        ] }} />
     </Card>
   )
 };
@@ -233,6 +240,34 @@ export const [Takeaways, TakeawaysAssessment] = both('takeaways');
 export const [Plan3, Plan3Assessment] = both('plan');
 /** With one earlier attempt (`getHistory`). */
 export const [Progress, ProgressAssessment] = both('progress', { history: true });
+
+/**
+ * The four contrasting runs of the report audit (D143 to D145), scripted: each gets the headline and
+ * summary its evidence gives, and its own "What drove your results".
+ */
+function FromStrategy({ strategy, section, purpose = 'development' }: { strategy: Strategy; section: SectionModel['key']; purpose?: Purpose }) {
+  const i18n = useI18n();
+  const [view, setView] = useState<EngineView | null>(null);
+  useEffect(() => { void playStrategy(storyline(purpose), strategy, 1).then(r => setView(r.view as EngineView)); }, [strategy, purpose]);
+  if (!view) return null;
+  const report = parseReport(view.report);
+  const model = buildReportModel(i18n, moneyFormatter(view.money), report, { participantName: 'Jordan Lee', date: new Date(2026, 9, 5), subPeriodUnit: 'day' });
+  const s = model.sections.find(x => x.key === section);
+  return <LensProvider lens={report.lens}><Card settings={{ purpose }}>{s ? sectionNode(s, model.unit, model.periods) : null}</Card></LensProvider>;
+}
+/** People first: fitting styles, coaching the weakest, every message answered. */
+export const SummaryPeopleFirstCoach: StoryObj = { render: () => <FromStrategy strategy="coach" section="summary" /> };
+/** Results first: everyone directed, goals and blunt words. */
+export const SummaryResultsDriver: StoryObj = { render: () => <FromStrategy strategy="driver" section="summary" /> };
+/** Reads every person correctly, then takes no action. */
+export const SummaryReadsThenWaits: StoryObj = { render: () => <FromStrategy strategy="bystander" section="summary" /> };
+/** Warm words with the style that fits least. */
+export const SummaryWarmWordsWrongStyles: StoryObj = { render: () => <FromStrategy strategy="warmMismatch" section="summary" /> };
+export const SummaryWarmWordsWrongStylesAssessment: StoryObj = { render: () => <FromStrategy strategy="warmMismatch" section="summary" purpose="assessment" /> };
+/** Situational flexibility capped by the style choices, with the line that says why (D144). */
+export const SkillsReconciled: StoryObj = { render: () => <FromStrategy strategy="warmMismatch" section="skills" /> };
+/** Food for thought naming the people and weeks of the run (D145). */
+export const FoodForThoughtReadsThenWaits: StoryObj = { render: () => <FromStrategy strategy="bystander" section="thought" /> };
 
 export const FromRunGood: StoryObj = { render: () => <FromRun policy="good" seed={3} /> };
 export const FromRunRandom: StoryObj = { render: () => <FromRun policy="random" seed={5} /> };
