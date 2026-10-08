@@ -1,3 +1,4 @@
+import { createAnthropicAuthorEditor, createMockAuthorEditor } from './author/editor';
 import { createAnthropicAuthorDrafter, createMockAuthorDrafter } from './author/models';
 import { consoleLogger, settingsFor, type AnthropicSettings, type AuthorDrafterConfig, type EvaluatorConfig, type NpcModelConfig, type TranscriberConfig } from './config';
 import { createAnthropicEvaluator, createMockEvaluator } from './evaluator/models';
@@ -6,7 +7,7 @@ import type { LlmTransport } from './llm/transport';
 import { createAnthropicNpcModel, createMockNpcModel } from './npc/models';
 import { createHttpTranscriber, createMockTranscriber } from './speech/transcriber';
 import { createAnthropicSyntheticPlayer, createMockSyntheticPlayer, type SyntheticPlayer, type SyntheticPlayerConfig } from './synthetic/player';
-import type { AuthorDrafter, Evaluator, NpcModel, Transcriber } from './types';
+import type { AuthorDrafter, AuthorEditor, Evaluator, NpcModel, Transcriber } from './types';
 
 /**
  * The factories the server loads. Each takes a config object (docs/AI.md lists every field and the
@@ -37,6 +38,16 @@ export function createEvaluator(config: EvaluatorConfig): Evaluator {
 export function createAuthorDrafter(config: AuthorDrafterConfig): AuthorDrafter {
   if (config.provider === 'mock') return createMockAuthorDrafter();
   return createAnthropicAuthorDrafter({ transport: transportFor(config.anthropic), settings: settingsFor('author', config.model), logger: config.logger ?? consoleLogger, repairRetries: config.repairRetries });
+}
+
+/**
+ * Ask Kora with a model (D127). The author role's model and connection, with settings for a quick edit:
+ * a shorter output, medium effort and 25 seconds per request (the app gives up at 30 and uses its rules).
+ */
+export function createAuthorEditor(config: AuthorDrafterConfig): AuthorEditor {
+  if (config.provider === 'mock') return createMockAuthorEditor();
+  const settings = settingsFor('author', { ...config.model, maxTokens: 8000, effort: 'medium', timeoutMs: 25_000, maxRetries: 0 });
+  return createAnthropicAuthorEditor({ transport: transportFor(config.anthropic), settings, logger: config.logger ?? consoleLogger, repairRetries: config.repairRetries ?? 1 });
 }
 
 export function createTranscriber(config: TranscriberConfig): Transcriber {

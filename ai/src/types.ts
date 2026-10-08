@@ -1,4 +1,5 @@
 import type { AuthorDraftRequest, AuthorDraftResponse, AuthorTurnRequest, AuthorTurnResponse } from '../../src/api/author';
+import type { AuthorEditRequest, AuthorEditResponse } from '../../src/api/authorEdit';
 import type { EvaluationInput, Evaluator as EngineEvaluator } from '../../src/engine/sim/evaluator';
 import type { NpcContext, NpcModel as EngineNpcModel, NpcReply } from '../../src/engine/sim/live';
 import type { Band, Evaluation } from '../../src/engine/sim/types';
@@ -168,6 +169,17 @@ export interface AuthorDrafter {
   readonly source: 'server' | 'templates';
   turn(req: AuthorTurnRequest, opts?: CallOptions): Promise<AuthorTurnResponse>;
   draft(req: AuthorDraftRequest, opts?: CallOptions): Promise<AuthorDraftResponse>;
+}
+
+/**
+ * Ask Kora on the server (`POST /author/edit`, D127): an instruction and a compact view of the fields
+ * Kora may change become set operations on those fields, or a reply. Null means "not offered" (the mock),
+ * and the app reads the instruction with its own rules. Throws when the model's answer stays unusable.
+ */
+export interface AuthorEditor {
+  readonly provider: Provider;
+  readonly source: 'server' | 'rules';
+  edit(req: AuthorEditRequest, opts?: CallOptions): Promise<AuthorEditResponse | null>;
 }
 
 /* ------------------------------------------------------------------------------------------------
