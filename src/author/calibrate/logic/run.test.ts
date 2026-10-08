@@ -109,11 +109,11 @@ describe('the publish check', () => {
       ...r, checks: r.checks.map(c => ({ ...c, status: 'pass' as const })), settings: { ...r.settings, probes: true },
       personas: [beginner, { ...beginner, persona: 'developing' as const }, { ...expert, persona: 'proficient' as const }, expert]
     };
-    expect(calibrationPublishCheck(pass)).toEqual({ key: 'syntheticPlayers', title: 'Synthetic players', status: 'passed', blocking: false, summary: '4 playthroughs at four levels: scores rise with proficiency, Experts reach the target, Beginners do not.', details: [], action: 'See results' });
+    expect(calibrationPublishCheck(pass)).toEqual({ key: 'syntheticPlayers', title: 'Synthetic players', status: 'passed', blocking: false, summary: '4 playthroughs at four levels: scores rise with proficiency, Experts reach the target, Beginners do not.', details: [], action: 'See results', full: true });
     // A run that left levels out, or had the probes off, is not a full test: advisory, whatever its checks say.
     const partial = { ...pass, personas: r.personas, settings: r.settings };
     expect(calibrationPublishCheck(partial)).toMatchObject({
-      status: 'advisory', blocking: false, action: 'Run the test again',
+      status: 'advisory', blocking: false, full: false, action: 'Run the test again',
       summary: '2 playthroughs at two levels: scores rise with proficiency, Experts reach the target, Beginners do not. Not a full test: run all four levels with the probes on before you publish.',
       details: ['Developing and Proficient players did not play', 'The strategy probes were off, so a single winning strategy was not checked']
     });

@@ -11,8 +11,13 @@ export function needsOf(d: AuthorDraft): Need[] {
   const out: Need[] = [];
   const add = (id: string, tab: Tab, label: string, where: string, path = id) => out.push({ id, tab, label, where, path });
   if (!d.story.product.dealValue) add('story.product.dealValue', 'story', 'Average deal value', 'Story and world');
+  // Every field the workspace labels Required (D131): an empty one is a need, so the badge, the nav and publishing agree.
+  if (!d.brief.participants.trim()) add('brief.participants', 'brief', 'Participants', 'Brief');
+  if (!d.brief.industry.trim()) add('brief.industry', 'brief', 'Industry', 'Brief');
   if (!d.brief.challenge.trim()) add('brief.challenge', 'brief', 'Business challenge', 'Brief');
+  if (!d.brief.language.trim()) add('brief.language', 'brief', 'Language', 'Brief');
   if (!d.story.company.name.trim()) add('story.company.name', 'story', 'Company name', 'Story and world');
+  if (!d.story.product.name.trim()) add('story.product.name', 'story', 'Product name', 'Story and world');
   if (!d.story.sponsor.name.trim()) add('story.sponsor.name', 'story', 'Sponsor', 'Story and world');
   if (!d.process.revenue) add('process.revenue', 'process', 'Revenue target', 'Work process');
   for (const c of d.team) if (!c.first.trim()) add(`team.${c.id}.identity`, 'team', 'A character\'s first name', 'Team');

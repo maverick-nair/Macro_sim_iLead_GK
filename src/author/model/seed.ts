@@ -241,7 +241,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       framework: null, scale: '5 levels, Novice to Role Model', sections: 12
     },
     brand: { from: 'knolskape', name: ctx.company, logo: '', main: '#249DFF', second: '#43D6E8', font: 'Manrope', look: 'dark', preview: 'board' },
-    publish: { cohort: '', notes: '', version: 0, played: false },
+    publish: { cohort: '', notes: '', version: 0, played: false, skipTest: false },
     marks: {},
     suggestions: [],
     calibration: null
