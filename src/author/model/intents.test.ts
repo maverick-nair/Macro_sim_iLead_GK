@@ -258,7 +258,7 @@ describe('names in instructions', () => {
     expect(charactersIn(d, 'make it harder')).toEqual([]);
     // "Make it harder" no longer rewrites a character because of an empty name.
     expect(change(d, 'Make it harder').ops.some(o => o.op === 'set' && o.path.startsWith('team.'))).toBe(false);
-    expect(eventsIn(d, 'make the week 2 events tougher').map(e => e.key)).toEqual(['competitor_moves', 'lens_moment']);
+    expect(eventsIn(d, 'make the week 2 events tougher').map(e => e.key)).toEqual(['competitor_moves', 'lens_moment', 'discount_decision']);
   });
 });
 

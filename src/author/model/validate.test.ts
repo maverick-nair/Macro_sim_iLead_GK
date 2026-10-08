@@ -224,3 +224,44 @@ describe('the synthetic players gate (D132)', () => {
     expect(syntheticGate({ ranAt: 1, passed: true, advisory: true, summary: 'x', configHash: 'a' }, 'a', false)).toMatchObject({ state: 'advisory' });
   });
 });
+
+describe('choices, conditions and business variables (D136 to D138)', () => {
+  it('the drafted choices and variables pass as they are', () => {
+    const d = ready();
+    expect(d.events.filter(e => e.choice).length).toBe(2);
+    expect(blockedBy(d, /choice|flag|variable/)).toEqual([]);
+  });
+
+  it('blocks a choice whose options all have the same consequences, whatever their labels', () => {
+    const d = ready();
+    const e = d.events.find(x => x.choice)!;
+    const [a] = e.choice!.options;
+    e.choice!.options = e.choice!.options.map((o, i) => ({ ...a, key: o.key, label: `Option ${i}`, outcome: `Outcome ${i}`, read: o.read }));
+    expect(blockedBy(d, /^mechanics\.choice/).map(i => i.title)).toEqual([`Every option of "${e.title}" has the same consequences`]);
+  });
+
+  it('blocks a condition testing a flag nothing sets, and passes once an option sets it', () => {
+    const d = ready();
+    const later = d.events.find(x => x.key === 'public_complaint')!;
+    later.conditions = [{ kind: 'flag', flag: 'oversold', is: true }];
+    expect(blockedBy(d, /^links\.flag/).map(i => [i.title, i.tab, i.target])).toEqual([[`The event "${later.title}" waits for "oversold", which no decision sets`, 'events', 'events.public_complaint']]);
+    d.events.find(x => x.choice)!.choice!.options[0].set.push('oversold');
+    expect(blockedBy(d, /^links\.flag/)).toEqual([]);
+  });
+
+  it('blocks a variable referenced but missing, on the Events tab', () => {
+    const d = ready();
+    d.variables = d.variables.filter(v => v.key !== 'customer_trust');
+    const b = validateDraft(d).blocking.filter(i => i.tab === 'events' && /not one of the business variables/.test(i.title));
+    expect(b.length).toBeGreaterThan(0);
+    const e = ready();
+    e.events.find(x => x.key === 'public_complaint')!.conditions = [{ kind: 'variable', variable: 'nps', op: 'below', value: 30 }];
+    expect(validateDraft(e).blocking.some(i => i.target === 'events.public_complaint' && /no such business variable/.test(`${i.title} ${i.detail}`))).toBe(true);
+  });
+
+  it('blocks weights that leave revenue under a fifth of the Business pillar', () => {
+    const d = ready();
+    d.variables[0].weight = 50; d.variables[1].weight = 40;
+    expect(validateDraft(d).blocking.some(i => /80% is the most/.test(i.detail ?? ''))).toBe(true);
+  });
+});

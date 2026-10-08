@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Brief, FrameworkDimension, QUESTION_IDS } from '../../api/author';
-import { EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS } from '../../engine/config';
+import { CONDITION_METRICS, EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
@@ -171,6 +171,69 @@ export const ARRIVALS = ['modal', 'bulletin', 'chat', 'email', 'sponsorCall'] as
 export const TIMINGS = ['fixed', 'random', 'condition', 'followup'] as const;
 export { EVENT_CONDITIONS };
 const Delta = z.number().int().min(-30).max(30);
+const DraftKey = z.string().regex(/^[a-z][a-z0-9_]*$/);
+export { CONDITION_METRICS, VARIABLE_FORMATS };
+
+/**
+ * A business variable (D136), edited in Work process: Budget, Customer satisfaction, Quality, Reputation. `weight` is
+ * its share of the Business pillar in percent (0 to 80 across all of them).
+ */
+export const VariableDraft = z.object({
+  key: DraftKey,
+  name: Short,
+  format: z.enum(VARIABLE_FORMATS),
+  start: z.number(),
+  min: z.number(),
+  max: z.number(),
+  drift: z.number(),
+  shown: z.boolean(),
+  weight: z.number().int().min(0).max(80),
+  higherIsBetter: z.boolean(),
+  about: Text
+});
+export type VariableDraft = z.infer<typeof VariableDraft>;
+export { MAX_VARIABLES };
+
+/** One clause of "Plays only if" (D138): a flag set or not, a business variable, or a team metric, against a value. */
+export const ClauseDraft = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('flag'), flag: DraftKey, is: z.boolean() }),
+  z.object({ kind: z.literal('variable'), variable: DraftKey, op: z.enum(['below', 'atLeast']), value: z.number() }),
+  z.object({ kind: z.literal('metric'), metric: z.enum(CONDITION_METRICS), op: z.enum(['below', 'atLeast']), value: z.number() })
+]);
+export type ClauseDraft = z.infer<typeof ClauseDraft>;
+export const BANDS_READ = ['strong', 'adequate', 'weak', 'harmful'] as const;
+
+/**
+ * One option of a choice event (D137): who its people part lands on, its effects on people, revenue, the sponsor and
+ * the business variables, the flags it sets or clears, a later event after a delay, and its leadership read (skills by
+ * name, as Scored on names them).
+ */
+export const ChoiceOptionDraft = z.object({
+  key: DraftKey,
+  label: Short,
+  detail: Short,
+  outcome: Text,
+  who: z.string(),
+  skill: Delta, morale: Delta, result: Delta, trust: Delta,
+  revenue: z.number().min(-1e9).max(1e9),
+  sponsor: Delta,
+  variables: z.record(z.string(), z.number()),
+  set: z.array(DraftKey).max(6),
+  clear: z.array(DraftKey).max(6),
+  followUp: z.object({ event: z.string(), days: z.number().int().min(0).max(20), weeks: z.number().int().min(0).max(10) }).nullable(),
+  read: z.array(z.object({ skill: Short, band: z.enum(BANDS_READ) })).max(4)
+});
+export type ChoiceOptionDraft = z.infer<typeof ChoiceOptionDraft>;
+
+/** A choice event (D137): what the participant knows (a line each), 2 to 4 options, the days to decide and the default. */
+export const ChoiceDraft = z.object({
+  known: Text,
+  within: z.number().int().min(1).max(5),
+  /** The option that applies when nobody decides in time; null: nothing happens. */
+  default: z.string().nullable(),
+  options: z.array(ChoiceOptionDraft).min(2).max(4)
+});
+export type ChoiceDraft = z.infer<typeof ChoiceDraft>;
 
 /**
  * Drafts saved before D128 kept the expected response and what happens if ignored as free text. They read
@@ -215,7 +278,12 @@ export const EventFields = z.object({
   /** Skill, morale and result for the person when the response comes in time. */
   onTime: z.tuple([Delta, Delta, Delta]).default([0, 2, 0]),
   /** When the response does not come in time: the sponsor hears of it, and an event that follows. */
-  ifIgnored: z.object({ sponsor: z.boolean(), followUp: z.string().nullable() }).default({ sponsor: false, followUp: null }),
+  /** `afterDays`: the follow up waits this many days after the deadline passes (D138); left out, it plays at once. */
+  ifIgnored: z.object({ sponsor: z.boolean(), followUp: z.string().nullable(), afterDays: z.number().int().min(0).max(20).optional() }).default({ sponsor: false, followUp: null }),
+  /** Plays only if all of these hold (D138): checked when it is due; with no other timing, at every day. */
+  conditions: z.array(ClauseDraft).max(3).optional(),
+  /** A choice the participant makes (D137), or null for an event that just happens. */
+  choice: ChoiceDraft.nullable().optional(),
   origin: z.enum(['library', 'yours'])
 });
 export const EventDraft = z.preprocess(migrateEvent, EventFields);
@@ -260,8 +328,12 @@ export const AuthorDraft = z.object({
     revenue: z.number().positive().nullable(),
     weeks: IntIn(MIN_WEEKS, MAX_WEEKS),
     daysPerWeek: IntIn(MIN_DAYS, MAX_DAYS),
-    pacing: z.enum(['forgiving', 'balanced', 'demanding'])
+    pacing: z.enum(['forgiving', 'balanced', 'demanding']),
+    /** People dynamics (D135): morale and trust reach output and attrition. New drafts switch it on; drafts saved before read back off. */
+    dynamics: z.boolean().optional()
   }),
+  /** Business variables (D136), 0 to 6, edited in Work process. */
+  variables: z.array(VariableDraft).max(MAX_VARIABLES).default([]),
   team: z.array(Character).min(MIN_TEAM).max(MAX_TEAM),
   lens: DraftLens,
   actions: z.array(ActionDraft),
