@@ -20,17 +20,42 @@ export function capability(sim: Sim) {
   return all.length ? (100 * all.filter(d => d.mismatch === 0).length) / all.length : 0;
 }
 
-/** Mean band score of the run's live interactions, or null when there were none. */
+/**
+ * Mean band score of the run's live interactions, or null when there were none. Choices the participant made
+ * count as well, each at the mean of its leadership read (D137); a choice with no read, or left to its default, does not.
+ */
 export function liveMean(sim: Sim, period?: number) {
   const recs = period === undefined ? sim.liveRecords : sim.liveRecords.filter(r => r.period === period);
-  return recs.length ? mean(recs.map(r => bandScore(sim, r.band))) : null;
+  const reads = sim.choices.filter(c => c.by === 'you' && c.read.length && (period === undefined || c.period === period)).map(c => mean(c.read.map(x => bandScore(sim, x.band))));
+  const all = [...recs.map(r => bandScore(sim, r.band)), ...reads];
+  return all.length ? mean(all) : null;
+}
+
+/**
+ * A business variable's score, 0 to 100 (D136): where it sits in its range, the top of the range best (or the
+ * bottom, for a variable where less is better).
+ */
+export function variableScore(sim: Sim, key: string) {
+  const v = sim.config.variables.find(x => x.key === key);
+  if (!v) return 0;
+  const pos = 100 * ((sim.vars[key] ?? v.start) - v.min) / (v.max - v.min);
+  return clamp(v.higherIsBetter ? pos : 100 - pos);
+}
+
+/** The Business pillar (D136): revenue against the target, with each weighted variable taking its share. */
+export function businessPillar(sim: Sim) {
+  const revenue = clamp((100 * sim.funnel.value) / sim.config.money.target);
+  const weighted = sim.config.variables.filter(v => v.weight > 0);
+  if (!weighted.length) return revenue;
+  const w = weighted.reduce((a, v) => a + v.weight, 0);
+  return clamp((1 - w) * revenue + weighted.reduce((a, v) => a + v.weight * variableScore(sim, v.key), 0));
 }
 
 export const pulse = (sim: Sim) => (teamAverage(sim, 'morale') + teamAverage(sim, 'trust')) / 2;
 
 /** The three pillars, 0 to 100 each. */
 export function pillars(sim: Sim) {
-  const business = clamp((100 * sim.funnel.value) / sim.config.money.target);
+  const business = businessPillar(sim);
   const people = clamp(50 + (teamAverage(sim, 'morale') - sim.runStart.morale) + 0.5 * (teamAverage(sim, 'trust') - sim.runStart.trust));
   const cap = capability(sim);
   const live = liveMean(sim);

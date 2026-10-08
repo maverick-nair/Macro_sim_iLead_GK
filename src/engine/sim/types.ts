@@ -103,6 +103,41 @@ export interface MemberSim {
   lowestResult: number;
   /** Lowest morale seen, for the Turnaround badge. */
   lowestMorale: number;
+  /** Morale at each completed sub-period, for the dynamics' rolling average (D135). */
+  moraleHistory: number[];
+  /** Times sustained low morale has kept this person off sick (D135). */
+  strikes: number;
+}
+
+/** A choice waiting for the participant (D137). */
+export interface PendingChoice {
+  id: string;
+  eventKey: string;
+  /** The person the event is about, when it is about one. */
+  memberId: string | null;
+  firedAbsSub: number;
+  dueAbsSub: number;
+}
+
+/** A choice made, or left to its default, with what it changed and what it led to (D137, D138). */
+export interface ChoiceRecord {
+  id: string;
+  eventKey: string;
+  title: Copy;
+  memberId: string | null;
+  option: string | null;
+  label: Copy | null;
+  outcome: Copy | null;
+  by: 'you' | 'default';
+  period: number;
+  sub: number;
+  changes: Change[];
+  variables: Array<{ key: string; delta: number }>;
+  revenue: number;
+  flags: { set: string[]; clear: string[] };
+  /** Events this choice scheduled or made possible, with when they played (filled in as they do). */
+  triggered: Array<{ key: string; title: Copy; period: number; sub: number }>;
+  read: Array<{ skill: string; band: Band }>;
 }
 
 export interface Turn {
@@ -176,6 +211,8 @@ export interface EventCard {
   label: string | null;
   /** The message to answer, when the event expects a reply. */
   messageId: string | null;
+  /** The choice to make, when the event is a choice (D137). Only set on a choice's card. */
+  choiceId?: string;
 }
 
 /** An event waiting for its expected response (Configuration Spec, Expected response and Response window). */
@@ -306,6 +343,12 @@ export interface PeriodSummary {
   checkIn: boolean;
   /** Bulletins for the next period. */
   news: NewsItem[];
+  /** Business variables at the start and end of the period, the shown ones only (D136). Left out when the storyline has none. */
+  variables?: Array<{ key: string; start: number; end: number }>;
+  /** Choices made or defaulted this period (D137). Left out when the storyline has none. */
+  choices?: Array<{ id: string; title: Copy; label: Copy | null; by: 'you' | 'default' }>;
+  /** People off sick or gone because morale stayed low (D135). Left out without dynamics. */
+  attrition?: Array<{ memberId: string; kind: 'sick' | 'resigned' }>;
 }
 
 export interface Sim {
@@ -356,7 +399,31 @@ export interface Sim {
     schedule: Record<string, { period: number; sub: number } | null>;
     fired: string[];
     pending: PendingResponse[];
+    /** Follow ups waiting for their absolute sub-period (D138), with the choice that scheduled them, if any. */
+    delayed: Array<{ key: string; at: number; cause: string | null }>;
+    /** Events whose conditions did not hold when they were due (D138): they never play. */
+    skipped: string[];
   };
+  /** Business variables by key (D136). */
+  vars: Record<string, number>;
+  /** The last three causes of each variable's moves, newest first (the board's tooltip, D136). */
+  varCauses: Record<string, Array<{ text: Copy; delta: number }>>;
+  /** Flags set by choices, actions and events (D138). */
+  flags: string[];
+  /** Counters by key (D138). */
+  counters: Record<string, number>;
+  /** Choices waiting for the participant (D137). */
+  openChoices: PendingChoice[];
+  /** Choices made or defaulted, in order (D137). */
+  choices: ChoiceRecord[];
+  /** Business variables at the start of the period (D136). */
+  varsAtStart: Record<string, number>;
+  /** Revenue added or taken by choices and events, beyond the funnel (D136). */
+  extraRevenue: number;
+  /** The dynamics' own random stream's state (D135), so attrition never moves the run's other draws. */
+  dynState: number;
+  /** Attrition this period (D135), for the week end. */
+  attrition: Array<{ memberId: string; kind: 'sick' | 'resigned' }>;
   pendingReward: string[] | null;
   promises: PromiseRecord[];
   inbox: InboxMessage[];

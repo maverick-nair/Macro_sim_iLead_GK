@@ -184,5 +184,17 @@
   "engine.hire.joined": "{name} accepted the offer and joins {stage}.",
   "engine.hire.turnedDown": "{name} turned the offer down after the interview.",
   "engine.example.person": "{need} ({needShort})",
-  "engine.example.why": "{style} fits best here. {styleShort}"
+  "engine.example.why": "{style} fits best here. {styleShort}",
+  "engine.dyn.sick.label": "Off sick",
+  "engine.dyn.sick.cause": "{name} has felt low for a while (morale about {morale}) and is off sick.",
+  "engine.dyn.resigned.label": "Resigned",
+  "engine.dyn.resigned.cause": "{name} has felt low for too long (morale about {morale}) and has resigned.",
+  "engine.dyn.attrition.rule": "When someone's morale stays under {below} over the last {window} days, they may go off sick, and if it keeps happening they resign.",
+  "engine.var.drift": "{unit, select, year {A year} month {A month} week {A week} day {A day} other {A period}} went by",
+  "engine.choice.cause": "{by, select, you {You chose \"{option}\" for {title}.} other {Nobody chose in time, so \"{option}\" applied to {title}.}}",
+  "engine.choice.none": "Nobody decided on {title} in time.",
+  "engine.choice.defaultLabel": "No decision",
+  "engine.choice.rule": "{by, select, you {What you chose plays out as the simulation sets it.} other {A decision left past its deadline takes its default.}}",
+  "engine.choice.nobody": "Nobody",
+  "engine.choice.log": "{title}: {option}{by, select, you {} other { (default)}}"
 }

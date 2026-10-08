@@ -173,7 +173,7 @@ export function eventFrom(e: NonNullable<SL['events']>[number], followUps: Reado
     ...(e.window ? { window: { from: e.window.from, to: e.window.to, chance: e.window.probability ?? 100 } } : null),
     ...(e.when ? { condition: { kind: e.when.condition, value: e.when.value ?? 30, weeks: e.when.periods ?? 1 } } : null),
     who: e.target ?? 'team', arrives: e.delivery ?? 'modal', body: e.body.he,
-    skill: e.impact[0], morale: e.impact[1], result: e.impact[2], leadFlow: 0,
+    skill: e.impact?.[0] ?? 0, morale: e.impact?.[1] ?? 0, result: e.impact?.[2] ?? 0, leadFlow: 0,
     respondWith: e.response?.actions ?? [], within: e.response?.within ?? 2, onTime: e.response?.onTime ?? [0, 2, 0],
     ifIgnored: { sponsor: e.response ? (e.escalation?.sponsor ?? false) : false, followUp: e.escalation?.event ?? null }, origin: 'library'
   };

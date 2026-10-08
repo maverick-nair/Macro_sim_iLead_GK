@@ -9,6 +9,7 @@ import { bestStyle, lensView, NEEDS } from '../lens';
 import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
 import type { StorylineConfig } from '../config';
 import { msg, type Copy } from '../copy';
+import { choiceBody, varName } from './business';
 
 /**
  * What the participant may see. Built from engine state, never computed by the UI. Deliberately
@@ -208,6 +209,18 @@ export function buildView(sim: Sim) {
     /** The Week 0 practice on offer, and who it is with (D16, D84). */
     practice: { available: practiceAvailable(sim), partner: practicePartner(sim) },
     liveCap: { cap: sim.config.time.liveCap, used: sim.liveTaken[sim.period] ?? 0 },
+    /** Business variables the participant is shown (D136): value, the period's start, range and the last causes. */
+    variables: c.variables.filter(v => v.shown).map(v => ({ key: v.key, name: v.name, format: v.format, value: sim.vars[v.key] ?? v.start, start: sim.varsAtStart[v.key] ?? v.start, min: v.min, max: v.max, higherIsBetter: v.higherIsBetter, about: v.about ?? null, causes: sim.varCauses[v.key] ?? [] })),
+    /** Choices waiting for the participant (D137): what is known and the options, never their consequences. */
+    openChoices: sim.openChoices.map(oc => {
+      const ev = c.events.find(e => e.key === oc.eventKey)!;
+      return { id: oc.id, eventKey: ev.key, card: ev.card, title: ev.title, body: choiceBody(sim, ev, oc.memberId), memberId: oc.memberId, known: ev.choice!.known,
+        options: ev.choice!.options.map(o => ({ key: o.key, label: o.label, detail: o.detail ?? null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub) };
+    }),
+    /** Choices made or defaulted (D137), with what they changed: the decision's "what happened" and the History. */
+    choices: sim.choices.map(r => ({ id: r.id, eventKey: r.eventKey, title: r.title, option: r.option, label: r.label, outcome: r.outcome, by: r.by, period: r.period, sub: r.sub,
+      changes: r.changes, variables: r.variables.filter(x => c.variables.find(v => v.key === x.key)?.shown).map(x => ({ ...x, name: varName(sim, x.key) })), revenue: Math.round(r.revenue),
+      triggered: r.triggered.map(t => ({ key: t.key, title: t.title, period: t.period })) })),
     report: sim.phase === 'ended' ? buildReport(sim) : null
   };
 }

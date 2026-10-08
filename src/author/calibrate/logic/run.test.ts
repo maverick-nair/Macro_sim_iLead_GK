@@ -36,7 +36,8 @@ describe('a calibration run', () => {
     // Two seeds for each style and each action, and two each with every conversation Strong, then Weak (D132).
     expect(results.probes).toHaveLength(2 * (4 + raw.actions.length) + 4);
     expect(results.probes.filter(p => p.probe?.kind === 'band').map(p => p.probe!.key)).toEqual(['strong', 'strong', 'weak', 'weak']);
-    expect(results.checks.find(c => c.key === 'unused')).toMatchObject({ status: 'pass', detail: '"Hire member" and "Let go" are rare by design and not counted.' });
+    // Two runs a persona is a small sample: since people dynamics (D135), swapping roles can go unused in it (a warning, never a failure).
+    expect(results.checks.find(c => c.key === 'unused')).toMatchObject({ status: expect.stringMatching(/^(pass|warn)$/), detail: '"Hire member" and "Let go" are rare by design and not counted.' });
     expect(progress[0]).toEqual([0, 8 + results.probes.length]);
     expect(progress.at(-1)).toEqual([8 + results.probes.length, 8 + results.probes.length]);
     expect(results.checks.filter(c => c.status === 'fail')).toEqual([]);

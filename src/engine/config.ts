@@ -446,6 +446,127 @@ const Effect = z.tuple([z.number().int(), z.number().int(), z.number().int()]);
 /** Change for mismatch type 0, 1 and 2 (docs/SIMULATION.md 4.2). */
 export const EffectTable = z.object({ m0: Effect, m1: Effect, m2: Effect.optional() });
 
+// ---------------------------------------------------------------- business state (D136 to D139)
+
+/**
+ * People dynamics (D135, docs/SIMULATION.md 3.5): morale and trust act on output and attrition with a lag.
+ * Left out, none of it applies and the storyline plays exactly as before. Every number has a default.
+ */
+export const Dynamics = z.object({
+  /** Sub-periods in each person's rolling morale average: the lag between how people feel and what they deliver. */
+  window: z.number().int().min(1).max(20).default(5),
+  /** A person's result counts in the funnel in full while their rolling morale is at or above `full`, falling in a line to `floor` of it at morale 0. */
+  output: z.object({ full: Score.default(50), floor: Ratio.default(0.5) }).default({ full: 50, floor: 0.5 }),
+  /** Result gains scale the same way: someone who has felt low for a while improves more slowly. */
+  growth: z.object({ full: Score.default(50), floor: Ratio.default(0.3) }).default({ full: 50, floor: 0.3 }),
+  /** Below `full` trust, positive changes from your actions land at a share that falls in a line to `floor` at trust 0. */
+  trust: z.object({ full: Score.default(50), floor: Ratio.default(0.5) }).default({ full: 50, floor: 0.5 }),
+  /**
+   * Attrition: at each period end, someone whose rolling morale is under `below` may be off sick for `sickDays`
+   * sub-periods (probability `chance`, plus 1 point for every point under `below`); the `resignAfter`th time they resign,
+   * unless they are the last person in their stage. Drawn on the run's own dynamics stream, so it replays exactly.
+   */
+  attrition: z.object({ below: Score.default(20), chance: Ratio.default(0.2), sickDays: z.number().int().min(1).max(10).default(2), resignAfter: z.number().int().min(1).max(5).default(2) })
+    .default({ below: 20, chance: 0.2, sickDays: 2, resignAfter: 2 })
+});
+export type Dynamics = z.output<typeof Dynamics>;
+
+/** How a business variable reads: money in the storyline's currency, a percentage, or points. */
+export const VARIABLE_FORMATS = ['money', 'percent', 'points'] as const;
+/** At most this many business variables per storyline (D136). */
+export const MAX_VARIABLES = 6;
+
+/**
+ * A business variable the author names (D136): Budget, Customer satisfaction, Quality, Reputation. It starts at
+ * `start`, stays in `min` to `max`, moves by `drift` at each period end, and is changed by actions, events and
+ * choices. `shown` puts it on the participant's board; `weight` gives it a share of the Business pillar.
+ */
+export const Variable = z.object({
+  key: Key,
+  name: Copy,
+  format: z.enum(VARIABLE_FORMATS).default('points'),
+  start: z.number(),
+  min: z.number().default(0),
+  max: z.number().default(100),
+  drift: z.number().default(0),
+  shown: z.boolean().default(true),
+  /** Share of the Business pillar, 0 to 1; revenue keeps the rest. All variables' weights add up to 0.8 at most. */
+  weight: Ratio.default(0),
+  /** For the score: true when more is better (Budget, Quality); false when less is (Complaints). */
+  higherIsBetter: z.boolean().default(true),
+  /** What it means, for the board's tooltip and the report. */
+  about: Copy.optional()
+}).superRefine((v, ctx) => {
+  if (!(v.min < v.max)) ctx.addIssue({ code: 'custom', path: ['max'], message: 'The maximum must be above the minimum' });
+  if (v.start < v.min || v.start > v.max) ctx.addIssue({ code: 'custom', path: ['start'], message: 'The start must be between the minimum and the maximum' });
+});
+
+/** Days and weeks before a follow up plays (D138): `days` sub-periods plus `weeks` periods. */
+export const Delay = z.object({ days: z.number().int().min(0).max(50).default(0), weeks: z.number().int().min(0).max(10).default(0) });
+
+/**
+ * What a choice, an action or an event does to the business (D136 to D138): business variables (deltas by key),
+ * a one off change to revenue, sponsor confidence, named flags set or cleared, counters moved, and later events
+ * scheduled after a delay.
+ */
+export const Business = z.object({
+  variables: z.record(Key, z.number()).default({}),
+  revenue: z.number().default(0),
+  sponsor: z.number().int().min(-50).max(50).default(0),
+  set: z.array(Key).max(6).default([]),
+  clear: z.array(Key).max(6).default([]),
+  count: z.record(Key, z.number().int()).default({}),
+  followUps: z.array(Delay.extend({ event: Key })).max(3).default([])
+});
+export type Business = z.output<typeof Business>;
+
+/** Fit levels for an action's business effects: `always`, or only when the approach fitted (m0), partly missed (m1) or clearly missed (m2). */
+export const BusinessByFit = z.object({ always: Business.optional(), m0: Business.optional(), m1: Business.optional(), m2: Business.optional() });
+
+/** Metrics a condition can test (D138). Team values are the available team's means; `revenuePace` is revenue against the run's pace so far, in percent. */
+export const CONDITION_METRICS = ['teamMorale', 'teamTrust', 'teamSkill', 'teamResult', 'revenuePace', 'sponsor'] as const;
+const Compare = z.enum(['below', 'atLeast']);
+/** One clause of a condition (D138): a flag set or not, a counter, a business variable or a metric against a value. */
+export const Clause = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('flag'), flag: Key, is: z.boolean().default(true) }),
+  z.object({ kind: z.literal('counter'), counter: Key, op: Compare, value: z.number() }),
+  z.object({ kind: z.literal('variable'), variable: Key, op: Compare, value: z.number() }),
+  z.object({ kind: z.literal('metric'), metric: z.enum(CONDITION_METRICS), op: Compare, value: z.number() })
+]);
+export type Clause = z.output<typeof Clause>;
+
+/** The leadership read of a choice (D137): which skills it shows, and how well, apart from its business outcome. */
+export const Read = z.array(z.object({ skill: Key, band: z.enum(['strong', 'adequate', 'weak', 'harmful']) })).max(4);
+
+/** One option of a choice event (D137). */
+export const ChoiceOption = z.object({
+  key: Key,
+  label: Copy,
+  /** One line more about it, shown under the label. */
+  detail: Copy.optional(),
+  /** What happened, shown after it is chosen and in the report. */
+  outcome: Copy,
+  /** Who the people part lands on: the event's target, the whole team, a stage (`stage:<key>`) or a member id. */
+  who: z.string().regex(/^(target|team|stage:[a-z][a-z0-9_]*|[a-z][a-z0-9_]*)$/).default('target'),
+  /** Skill, morale and result for those people. */
+  people: Effect.default([0, 0, 0]),
+  trust: z.number().int().min(-30).max(30).default(0),
+  business: Business.default(() => Business.parse({})),
+  read: Read.default([])
+});
+export type ChoiceOption = z.output<typeof ChoiceOption>;
+
+/** A choice event (D137): 2 to 4 options, a deadline in sub-periods, and what happens when nobody chooses. */
+export const Choice = z.object({
+  /** What the participant knows, a line each. */
+  known: z.array(Copy).max(4).default([]),
+  options: z.array(ChoiceOption).min(2).max(4),
+  within: z.number().int().min(1).max(10).default(2),
+  /** The option that applies when nobody chooses in time. Left out, `ignored` applies (or nothing). */
+  default: Key.optional(),
+  ignored: ChoiceOption.omit({ key: true, label: true, detail: true }).partial({ outcome: true }).optional()
+});
+
 /** How an action decides its mismatch type (docs/SIMULATION.md 4.3). */
 export const ACTION_RULES = ['styleOption', 'weeklyStyle', 'trend', 'training', 'swap', 'assess', 'reward', 'fire', 'hire'] as const;
 export const LIVE_FORMATS = ['meeting', 'email', 'roleplay', 'chat', 'plan', 'interview', 'sponsor'] as const;
@@ -469,7 +590,9 @@ export const ActionOption = z.object({
   /** The people picked must be in different stages (swap roles). */
   distinctStages: z.boolean().default(false),
   /** The participant picks a stage to move the person to (reassign role). */
-  pickStage: z.boolean().default(false)
+  pickStage: z.boolean().default(false),
+  /** What the option does to the business (D136): always, or by how well the approach fitted. */
+  business: BusinessByFit.optional()
 });
 
 /** Band names in engine order. Participants never see them (spec, outcome panel). */
@@ -541,7 +664,17 @@ export const GeneralEvent = z.object({
   window: z.object({ from: z.number().int().min(1), to: z.number().int().min(1), probability: z.number().int().min(0).max(100).default(100) }).optional(),
   /** Conditional: checked at each period start, fires the first time it holds for `periods` period ends in a row. */
   when: z.object({ condition: z.enum(EVENT_CONDITIONS), value: z.number().min(0).max(100).default(30), periods: z.number().int().min(1).max(4).default(1) }).optional(),
-  impact: Effect,
+  /**
+   * Conditions on earlier choices (D138): all of these clauses must hold. On a fixed, random or follow up event
+   * they are checked when it is due, and it is skipped when they do not hold; on an event with no other timing
+   * they are checked at every sub-period, and it plays the first time they all hold.
+   */
+  if: z.array(Clause).min(1).max(3).optional(),
+  impact: Effect.default([0, 0, 0]),
+  /** What the event does to business variables, flags and revenue when it plays (D136). */
+  business: Business.optional(),
+  /** A choice the participant must make (D137). The event's card opens the decision. */
+  choice: Choice.optional(),
   /** Sub-periods the target is away (capacity loss). */
   away: z.number().int().min(0).max(10).default(0),
   /** `team`; `member` (the engine picks); `sponsor`; `stage:<key>` for everyone in a stage; or a member id. */
@@ -557,8 +690,15 @@ export const GeneralEvent = z.object({
    */
   response: z.object({ actions: z.array(Key).min(1), within: z.number().int().min(1).max(5).default(2), onTime: Effect.default([0, 2, 0]) }).optional(),
   /** If the response does not come in time: a follow up event, and whether it reaches the sponsor. */
-  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true) }).optional()
+  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true), delay: Delay.optional() }).optional()
 }).superRefine((e, ctx) => {
+  if (e.choice) {
+    const keys = e.choice.options.map(o => o.key);
+    if (new Set(keys).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['choice', 'options'], message: 'Option keys must be unique' });
+    if (e.choice.default && !keys.includes(e.choice.default)) ctx.addIssue({ code: 'custom', path: ['choice', 'default'], message: `No option called ${e.choice.default}` });
+    if (e.delivery !== 'modal') ctx.addIssue({ code: 'custom', path: ['delivery'], message: 'A choice arrives as a card on the board, where the participant decides' });
+    if (e.response) ctx.addIssue({ code: 'custom', path: ['response'], message: 'A choice is answered by choosing: leave the expected response out' });
+  }
   const kinds = [e.period !== undefined, !!e.window, !!e.when].filter(Boolean).length;
   if (kinds > 1) ctx.addIssue({ code: 'custom', path: ['period'], message: 'Give a fixed period, a random window or a condition, not more than one' });
   if (e.window && e.window.from > e.window.to) ctx.addIssue({ code: 'custom', path: ['window'], message: 'The window must start before it ends' });
@@ -676,6 +816,10 @@ export const StorylineConfig = z.object({
   maxPerStage: z.number().int().min(1).default(2),
   /** Weekly drift (Configuration Spec, Targets and KPIs): what someone loses in a period nobody acted with them. */
   drift: z.object({ morale: z.number().min(0).default(3), result: z.number().min(0).default(0) }).default({ morale: 3, result: 0 }),
+  /** People dynamics (D135): morale and trust act on output and attrition with a lag. Left out, off. */
+  dynamics: Dynamics.optional(),
+  /** Business variables (D136), 0 to 6. */
+  variables: z.array(Variable).max(MAX_VARIABLES).default([]),
   /** Funnel buffer from the Model doc, set by calibration. */
   performanceThreshold: z.number().min(-50).max(400),
   calibrated: z.boolean().default(false)
@@ -746,6 +890,36 @@ export const StorylineConfig = z.object({
   if (c.practice.with && !memberIds.has(c.practice.with)) ctx.addIssue({ code: 'custom', path: ['practice', 'with'], message: `No team member called ${c.practice.with}` });
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))
     ctx.addIssue({ code: 'custom', path: ['thresholds'], message: 'Thresholds must rise: low < amber < high' });
+
+  // Business variables, flags and follow ups (D136 to D138): every reference names something that exists.
+  const varKeys = new Set(c.variables.map(v => v.key));
+  if (varKeys.size !== c.variables.length) ctx.addIssue({ code: 'custom', path: ['variables'], message: 'Variable keys must be unique' });
+  const weights = c.variables.reduce((a, v) => a + v.weight, 0);
+  if (weights > 0.8 + 1e-9) ctx.addIssue({ code: 'custom', path: ['variables'], message: `Variables' weights in the Business pillar add up to ${Math.round(weights * 100)}%: 80% is the most, so revenue keeps a share` });
+  const skillKeys = new Set(c.report.skills.map(s => s.key));
+  const checkBusiness = (b: Business | undefined, path: Array<string | number>) => {
+    if (!b) return;
+    for (const k of Object.keys(b.variables)) if (!varKeys.has(k)) ctx.addIssue({ code: 'custom', path: [...path, 'variables', k], message: `No variable called ${k}` });
+    b.followUps.forEach((f, i) => { if (!eventKeys.has(f.event)) ctx.addIssue({ code: 'custom', path: [...path, 'followUps', i, 'event'], message: `No event called ${f.event}` }); });
+  };
+  const checkWho = (who: string, path: Array<string | number>) => {
+    if (who.startsWith('stage:') && !stageKeys.has(who.slice(6))) ctx.addIssue({ code: 'custom', path, message: `No stage called ${who.slice(6)}` });
+    else if (!['target', 'team'].includes(who) && !who.startsWith('stage:') && !memberIds.has(who)) ctx.addIssue({ code: 'custom', path, message: `No team member called ${who}` });
+  };
+  c.actions.forEach((a, i) => a.options.forEach((o, j) => {
+    for (const k of ['always', 'm0', 'm1', 'm2'] as const) checkBusiness(o.business?.[k], ['actions', i, 'options', j, 'business', k]);
+  }));
+  c.events.forEach((e, i) => {
+    checkBusiness(e.business, ['events', i, 'business']);
+    e.choice?.options.forEach((o, j) => {
+      checkBusiness(o.business, ['events', i, 'choice', 'options', j, 'business']);
+      checkWho(o.who, ['events', i, 'choice', 'options', j, 'who']);
+      o.read.forEach((r, k) => { if (!skillKeys.has(r.skill)) ctx.addIssue({ code: 'custom', path: ['events', i, 'choice', 'options', j, 'read', k, 'skill'], message: `No skill called ${r.skill}` }); });
+    });
+    if (e.choice?.ignored) { checkBusiness(e.choice.ignored.business, ['events', i, 'choice', 'ignored', 'business']); if (e.choice.ignored.who) checkWho(e.choice.ignored.who, ['events', i, 'choice', 'ignored', 'who']); }
+    (e.if ?? []).forEach((cl, k) => { if (cl.kind === 'variable' && !varKeys.has(cl.variable)) ctx.addIssue({ code: 'custom', path: ['events', i, 'if', k, 'variable'], message: `No variable called ${cl.variable}` }); });
+    if (e.escalation?.event === e.key) ctx.addIssue({ code: 'custom', path: ['events', i, 'escalation', 'event'], message: 'An event cannot follow itself' });
+  });
 });
 
 export type StorylineConfig = z.output<typeof StorylineConfig>;
