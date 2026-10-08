@@ -11,14 +11,23 @@ import { PERSONA_KEYS, type CalibrationResults, type Check, type PersonaKey, typ
  *   conversations conversation ratings rise with proficiency (warn otherwise): the scoring pipeline itself
  *   separation    neighbouring personas average more than 5% of the scale apart (warn otherwise)
  *   dominant      no one style or one action probe averages the target tier (fail), or a Proficient score (warn)
- *   unused        every action was used by some persona (warn otherwise)
+ *   unused        every action was used by some persona, leaving out actions rare by design (warn otherwise)
  *   events        Experts answered 80% or more of the events that expect an answer (warn otherwise)
+ *   styleEffect   Proficient play beats the best one style probe by 5% of the scale or more (fail otherwise):
+ *                 a flat fit table, or one where one style fits everyone, makes reading people pointless
+ *   conversationEffect  the same Proficient play with every conversation Strong reaches 5 points of the revenue
+ *                 target more than with every conversation Weak (fail otherwise): conversations change what happens
+ *   target        Beginners average under the revenue target and Experts at least half of it (fail otherwise),
+ *                 Experts at least 80% of it (warn otherwise): a target trivially reachable, or out of reach
  */
 
 export const NAMES: Record<PersonaKey, string> = { beginner: 'Beginner', developing: 'Developing', proficient: 'Proficient', expert: 'Expert' };
 export const LABELS: Record<PersonaKey, string> = { beginner: 'Low performer', developing: 'Average performer', proficient: 'High performer', expert: 'Exceptional performer' };
 
-export const THRESHOLDS = { expertTier: 0.8, beginnerTier: 0.1, skillsPass: 0.75, skillsWarn: 0.5, separation: 0.05, events: 0.8 } as const;
+export const THRESHOLDS = {
+  expertTier: 0.8, beginnerTier: 0.1, skillsPass: 0.75, skillsWarn: 0.5, separation: 0.05, events: 0.8,
+  styleEffect: 0.05, conversationEffect: 0.05, targetEasy: 1, targetHard: 0.5, targetLow: 0.8
+} as const;
 
 export const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 export const median = (xs: number[]) => {
@@ -90,7 +99,7 @@ export interface CheckContext {
   target: { key: string; name: string; min: number };
   scale: string[];
   scoreMax: number;
-  actions: Array<{ key: string; name: string }>;
+  actions: Array<{ key: string; name: string; rare?: boolean }>;
   styles: Array<{ key: string; name: string }>;
 }
 
@@ -154,14 +163,15 @@ export function checks(c: CheckContext): Check[] {
       : { key: 'separation', status: 'pass', title: 'Each level scores clearly apart', detail: null, fix: null });
   }
 
+  const proficient = stat('proficient');
+
   // Dominant strategies.
   if (c.probesRan && c.probes.length) {
     const groups = new Map<string, RunResult[]>();
-    for (const p of c.probes) if (p.probe) groups.set(`${p.probe.kind}:${p.probe.key}`, [...(groups.get(`${p.probe.kind}:${p.probe.key}`) ?? []), p]);
+    for (const p of c.probes) if (p.probe && p.probe.kind !== 'band') groups.set(`${p.probe.kind}:${p.probe.key}`, [...(groups.get(`${p.probe.kind}:${p.probe.key}`) ?? []), p]);
     const nameOf = (kind: string, key: string) => (kind === 'style' ? c.styles.find(s => s.key === key)?.name : c.actions.find(a => a.key === key)?.name) ?? key;
     const say = (kind: string, key: string) => (kind === 'style' ? `Leading everyone as ${nameOf(kind, key)}` : `Spending every day on ${nameOf(kind, key)}`);
-    const proficient = stat('proficient');
-    const winners: string[] = [], close: string[] = [];
+      const winners: string[] = [], close: string[] = [];
     const fixes: string[] = [];
     for (const [g, rs] of groups) {
       const [kind, key] = g.split(':');
@@ -176,13 +186,53 @@ export function checks(c: CheckContext): Check[] {
         : { key: 'dominant', status: 'pass', title: 'No single strategy wins without good leadership', detail: `${groups.size} strategies tried: one style for everyone, and one action every day.`, fix: null });
   }
 
-  // Unused actions.
+  // Unused actions: hiring and letting go are rare by design, so they are not counted (D132).
   const used = new Set(c.runs.flatMap(r => Object.entries(r.actions).filter(([, n]) => n > 0).map(([k]) => k)));
-  const unused = c.actions.filter(a => !used.has(a.key));
+  const unused = c.actions.filter(a => !used.has(a.key) && !a.rare);
+  const rare = c.actions.filter(a => a.rare && !used.has(a.key));
+  const rareNote = rare.length ? `${list(rare.map(a => `"${a.name}"`))} ${rare.length === 1 ? 'is' : 'are'} rare by design and not counted.` : null;
   if (c.runs.length) {
     out.push(unused.length
-      ? { key: 'unused', status: 'warn', title: `Nobody used ${list(unused.map(a => `"${a.name}"`))}: ${unused.length === 1 ? 'it' : 'they'} may be hard to find or not worth the time`, detail: null, fix: `If ${unused.length === 1 ? 'it is' : 'they are'} meant to be rare, that is fine. Otherwise make ${unused.length === 1 ? 'it' : 'them'} cheaper, more useful or easier to find.` }
-      : { key: 'unused', status: 'pass', title: 'Every action was used', detail: null, fix: null });
+      ? { key: 'unused', status: 'warn', title: `Nobody used ${list(unused.map(a => `"${a.name}"`))}: ${unused.length === 1 ? 'it' : 'they'} may be hard to find or not worth the time`, detail: rareNote, fix: `If ${unused.length === 1 ? 'it is' : 'they are'} meant to be rare, that is fine. Otherwise make ${unused.length === 1 ? 'it' : 'them'} cheaper, more useful or easier to find.` }
+      : { key: 'unused', status: 'pass', title: rare.length ? 'Every action was used, apart from those rare by design' : 'Every action was used', detail: rareNote, fix: null });
+  }
+
+  // Styles change the outcome: Proficient play must beat leading everyone in the best single style.
+  const styleProbes = new Map<string, number[]>();
+  for (const p of c.probes) if (p.probe?.kind === 'style') styleProbes.set(p.probe.key, [...(styleProbes.get(p.probe.key) ?? []), p.score]);
+  if (c.probesRan && proficient && styleProbes.size) {
+    const [bestKey, bestScores] = [...styleProbes].sort((a, b) => mean(b[1]) - mean(a[1]))[0];
+    const best = mean(bestScores);
+    const name = c.styles.find(s => s.key === bestKey)?.name ?? bestKey;
+    const margin = proficient.score.mean - best;
+    out.push(margin < c.scoreMax * THRESHOLDS.styleEffect
+      ? { key: 'styleEffect', status: 'fail', title: `Reading each person barely beats leading everyone the same way: Proficient players average ${Math.round(proficient.score.mean)}, leading everyone as ${name} ${Math.round(best)}`, detail: 'The style a participant picks for each person hardly changes the outcome.', fix: 'Check the lens\'s fit table: each need should have its own fitting style, no style should fit every need, and a style that misses should cost more than one that fits.' }
+      : { key: 'styleEffect', status: 'pass', title: 'Styles change the outcome', detail: `Proficient players average ${Math.round(proficient.score.mean)}; the best single style for everyone, ${name}, ${Math.round(best)}.`, fix: null });
+  }
+
+  // Conversations change what happens: the same play with every conversation Strong, then Weak.
+  const bandShare = (band: string) => c.probes.filter(p => p.probe?.kind === 'band' && p.probe.key === band).map(p => p.share);
+  const strong = bandShare('strong'), weak = bandShare('weak');
+  if (c.probesRan && strong.length && weak.length) {
+    const gap = mean(strong) - mean(weak);
+    out.push(gap < THRESHOLDS.conversationEffect
+      ? { key: 'conversationEffect', status: 'fail', title: `Conversations do not change what happens: every conversation Strong reaches ${pct(mean(strong))} of the revenue target, every one Weak ${pct(mean(weak))}`, detail: 'A good conversation should leave the person and the results better off than a poor one.', fix: 'Check the conversation actions\' effects by band (their consequence tables) and the impact by style: a Strong conversation should do more than a Weak one.' }
+      : { key: 'conversationEffect', status: 'pass', title: 'Conversations change what happens', detail: `Every conversation Strong reaches ${pct(mean(strong))} of the revenue target, every one Weak ${pct(mean(weak))}.`, fix: null });
+  }
+
+  // The revenue target suits the levels: not trivially reachable, not out of reach.
+  if (beginner || expert) {
+    const easy = beginner && beginner.share.mean >= THRESHOLDS.targetEasy;
+    const hard = expert && expert.share.mean < THRESHOLDS.targetHard;
+    const low = expert && expert.share.mean < THRESHOLDS.targetLow;
+    const levels = [beginner && `Beginners ${pct(beginner.share.mean)}`, expert && `Experts ${pct(expert.share.mean)}`].filter(Boolean).join(', ');
+    out.push(easy
+      ? { key: 'target', status: 'fail', title: `The revenue target is too easy: Beginner players reach ${pct(beginner!.share.mean)} of it`, detail: `Revenue against the target: ${levels}.`, fix: 'Raise the revenue target, so only good leadership reaches it.' }
+      : hard
+        ? { key: 'target', status: 'fail', title: `The revenue target is out of reach: Expert players reach only ${pct(expert!.share.mean)} of it`, detail: `Revenue against the target: ${levels}.`, fix: 'Lower the revenue target, or raise the work entering the process, so strong leadership can reach it.' }
+        : low
+          ? { key: 'target', status: 'warn', title: `Expert players reach only ${pct(expert!.share.mean)} of the revenue target`, detail: `Revenue against the target: ${levels}.`, fix: 'Strong leadership should come close to the target: lower it a little.' }
+          : { key: 'target', status: 'pass', title: 'The revenue target suits the levels', detail: `Revenue against the target: ${levels}.`, fix: null });
   }
 
   // Events that expect an answer can be answered.
@@ -207,7 +257,7 @@ export interface AggregateFacts {
   scoreMax: number;
   tiers: Array<{ key: string; name: string; min: number }>;
   targetTier?: string;
-  actions: Array<{ key: string; name: string }>;
+  actions: Array<{ key: string; name: string; rare?: boolean }>;
   settings: { seed: number; probes: boolean; personas: Record<string, number> };
   ranOn: CalibrationResults['ranOn'];
   players: CalibrationResults['players'];

@@ -38,7 +38,7 @@ export default function CalibrateView({ config, apiBase = null, results: kept = 
 
   const total = PERSONA_KEYS.reduce((n, p) => n + (setup[p].on ? setup[p].runs : 0), 0);
   const draft = config as { lens?: { styles?: unknown[] }; actions?: unknown[] } | null;
-  const probeCount = probes ? 2 * ((draft?.lens?.styles?.length ?? 4) + (draft?.actions?.length ?? 10)) : 0;
+  const probeCount = probes ? 2 * ((draft?.lens?.styles?.length ?? 4) + (draft?.actions?.length ?? 10)) + 4 : 0;
   const seconds = Math.max(2, Math.round(total * 0.12 + probeCount * 0.06));
   const estimate = apiBase ? 'On the server: a few seconds, or a few minutes with AI players' : `About ${seconds < 60 ? plural(seconds, 'second') : plural(Math.round(seconds / 60), 'minute')}`;
 

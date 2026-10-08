@@ -43,12 +43,12 @@ describe('calibration aggregation', () => {
   it('passes a well calibrated storyline', () => {
     const r = aggregate(good(), probes([['style', 'D', 500], ['action', 'coach', 450]]), facts);
     expect(CalibrationResults.parse(r)).toBeTruthy();
-    expect(status(r)).toEqual({ ordered: 'pass', expertTier: 'pass', beginnerTier: 'pass', skills: 'pass', conversations: 'pass', separation: 'pass', dominant: 'pass', unused: 'warn', events: 'pass' });
+    expect(status(r)).toEqual({ ordered: 'pass', expertTier: 'pass', beginnerTier: 'pass', skills: 'pass', conversations: 'pass', separation: 'pass', dominant: 'pass', unused: 'warn', styleEffect: 'pass', target: 'pass', events: 'pass' });
     expect(r.checks.find(c => c.key === 'unused')?.title).toBe('Nobody used "Assess member": it may be hard to find or not worth the time');
     expect(r.checks.find(c => c.key === 'beginnerTier')?.title).toBe('Beginner players never reach Gold');
     expect(r.checks.find(c => c.key === 'expertTier')?.title).toBe('Expert players reach Gold in 3 of 3 runs');
     expect(r.concernsByPerson).toEqual({ expert: { kent: 3 } });
-    expect(checkSummary(r.checks)).toBe('8 passed, 1 to look at');
+    expect(checkSummary(r.checks)).toBe('10 passed, 1 to look at');
   });
 
   it('fails when scores do not rise, Experts miss the tier or Beginners reach it', () => {
@@ -96,7 +96,43 @@ describe('calibration aggregation', () => {
   it('works with only some personas, and writes plain copy', () => {
     const r = aggregate(good().filter(x => x.persona === 'expert'), [], facts);
     expect(r.personas.map(p => p.persona)).toEqual(['expert']);
-    expect(r.checks.map(c => c.key)).toEqual(['expertTier', 'skills', 'unused', 'events']);
+    expect(r.checks.map(c => c.key)).toEqual(['expertTier', 'skills', 'unused', 'target', 'events']);
     for (const res of [r, aggregate(good(), probes([['style', 'P', 900]]), facts)]) for (const c of res.checks) for (const t of [c.title, c.detail, c.fix]) if (t) expect(copyViolations(t), t).toEqual([]);
+  });
+
+  it('leaves actions that are rare by design out of the unused warning (D132)', () => {
+    const r = aggregate(good(), [], { ...facts, actions: [...ACTIONS.slice(0, 2), { key: 'hire', name: 'Hire member', rare: true }, { key: 'fire', name: 'Let go', rare: true }] });
+    expect(r.checks.find(c => c.key === 'unused')).toMatchObject({ status: 'pass', title: 'Every action was used, apart from those rare by design', detail: '"Hire member" and "Let go" are rare by design and not counted.' });
+    expect(CalibrationResults.parse(r).actions.find(a => a.key === 'hire')?.rare).toBe(true);
+  });
+
+  it('fails when styles do not change the outcome: the best single style is as good as reading people (D132)', () => {
+    // A flat fit table: every one style probe scores what Proficient players do.
+    const flat = aggregate(good(), probes([['style', 'D', 735], ['style', 'D', 731], ['style', 'P', 728]]), facts).checks.find(c => c.key === 'styleEffect')!;
+    expect(flat.status).toBe('fail');
+    expect(flat.title).toBe('Reading each person barely beats leading everyone the same way: Proficient players average 733, leading everyone as Directing 733');
+    expect(aggregate(good(), probes([['style', 'D', 600]]), facts).checks.find(c => c.key === 'styleEffect')?.status).toBe('pass');
+    // Without the probes there is nothing to compare: no check.
+    expect(aggregate(good(), [], { ...facts, settings: { ...facts.settings, probes: false } }).checks.some(c => c.key === 'styleEffect')).toBe(false);
+  });
+
+  it('fails when conversations do not change what happens: every one Strong against every one Weak (D132)', () => {
+    const band = (key: string, share: number) => run('proficient', 700, { share, probe: { kind: 'band', key } });
+    const none = aggregate(good(), [band('strong', 0.9), band('strong', 1.1), band('weak', 0.9), band('weak', 1.1)], facts);
+    expect(none.checks.find(c => c.key === 'conversationEffect')).toMatchObject({ status: 'fail', title: 'Conversations do not change what happens: every conversation Strong reaches 100% of the revenue target, every one Weak 100%' });
+    // Band probes are not strategies: they never count as a dominant strategy.
+    expect(none.checks.find(c => c.key === 'dominant')?.status).toBe('pass');
+    const some = aggregate(good(), [band('strong', 1.3), band('weak', 0.8)], facts);
+    expect(some.checks.find(c => c.key === 'conversationEffect')?.status).toBe('pass');
+  });
+
+  it('fails a revenue target that Beginners reach, or Experts cannot get near (D132)', () => {
+    const shares = (b: number, e: number) => good().map(r => ({ ...r, share: r.persona === 'beginner' ? b : r.persona === 'expert' ? e : (b + e) / 2 }));
+    const tenth = aggregate(shares(6.5, 14.7), [], facts).checks.find(c => c.key === 'target')!;
+    expect(tenth).toMatchObject({ status: 'fail', title: 'The revenue target is too easy: Beginner players reach 650% of it' });
+    const huge = aggregate(shares(0, 0.000001), [], facts).checks.find(c => c.key === 'target')!;
+    expect(huge).toMatchObject({ status: 'fail', title: 'The revenue target is out of reach: Expert players reach only 0% of it' });
+    expect(aggregate(shares(0.4, 0.7), [], facts).checks.find(c => c.key === 'target')?.status).toBe('warn');
+    expect(aggregate(shares(0.6, 1.4), [], facts).checks.find(c => c.key === 'target')?.status).toBe('pass');
   });
 });

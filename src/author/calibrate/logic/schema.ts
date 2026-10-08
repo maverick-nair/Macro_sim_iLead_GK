@@ -50,8 +50,11 @@ export const RunResult = z.object({
   persona: PersonaKey,
   index: Int.min(0),
   seed: Int,
-  /** Set for a dominant strategy probe: the style or the action it leaned on. */
-  probe: z.object({ kind: z.enum(['style', 'action']), key: z.string() }).nullable(),
+  /**
+   * Set for a probe: a dominant strategy probe (the style or the action it leaned on, D114), or a conversation
+   * probe (`band`: every conversation rated Strong, or Weak, to see whether conversations change what happens, D132).
+   */
+  probe: z.object({ kind: z.enum(['style', 'action', 'band']), key: z.string() }).nullable(),
   score: Num,
   max: Num,
   tier: z.object({ key: z.string(), name: z.string(), index: Int.min(0) }),
@@ -74,7 +77,7 @@ export type RunResult = z.infer<typeof RunResult>;
 export const CheckStatus = z.enum(['pass', 'warn', 'fail']);
 export type CheckStatus = z.infer<typeof CheckStatus>;
 export const Check = z.object({
-  key: z.enum(['ordered', 'expertTier', 'beginnerTier', 'skills', 'conversations', 'separation', 'dominant', 'unused', 'events']),
+  key: z.enum(['ordered', 'expertTier', 'beginnerTier', 'skills', 'conversations', 'separation', 'dominant', 'unused', 'events', 'styleEffect', 'conversationEffect', 'target']),
   status: CheckStatus,
   /** One plain sentence, what the author reads in the list. */
   title: z.string(),
@@ -125,8 +128,8 @@ export const CalibrationResults = z.object({
   probes: z.array(RunResult),
   /** People whose hidden concern surfaced, per persona: in how many of its playthroughs. */
   concernsByPerson: z.record(z.string(), z.record(z.string(), Int)),
-  /** Action keys and names, in storyline order. */
-  actions: z.array(z.object({ key: z.string(), name: z.string() })),
+  /** Action keys and names, in storyline order; `rare` marks an action that is rare by design (hiring, letting go). */
+  actions: z.array(z.object({ key: z.string(), name: z.string(), rare: z.boolean().optional() })),
   settings: z.object({ seed: Int, probes: z.boolean(), personas: z.record(z.string(), Int) }),
   /** Where it ran and with which players: the in browser engine, or the server; the offline templates, or AI players. */
   ranOn: z.enum(['browser', 'server', 'cli']),
