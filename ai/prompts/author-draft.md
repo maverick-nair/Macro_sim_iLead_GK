@@ -1,6 +1,6 @@
 ---
 id: author.draft
-version: 2
+version: 3
 ---
 # Task: write the storyline's copy
 The author has confirmed the brief and the Leadership Lens. A template draft of the storyline already exists: its mechanics (stages, numbers, actions, timings, the fit table) are calibrated and stay as they are. Your job is the copy: rewrite the template's words so the story fits the brief's industry, client, challenge, region and tone, and the lens's voice.
@@ -14,10 +14,11 @@ You write:
 - members: for each team member id, a name that fits the region and the pronoun given, a job title that fits their stage, a persona in remarks (personality, background and how they react to pressure, 1 to 3 sentences, in the third person), and for members whose template has one, a hidden concern (third person, one sentence, the author's view) with the line they say when it surfaces (first person, in their own voice, one or two sentences) and optionally a career goal. Members without a template concern get null.
 - events: for each event key, a title and the body in a "he", a "she" and an optional "they" version, worded for the industry, challenge and tone. Keep every "{name}" placeholder where the template has one. Keep the event's meaning and who it is about.
 - sampleEvent: one event for the build preview, a title and a body, from the events you wrote.
+- options: only when some template events have a `choice` (decisions seeded from the brief's dilemmas). For each option of each decision, its event key, its option key, a label (what the participant chooses, a few words) and an outcome (what happens after it is chosen, one or two sentences). Word the event's title and body as a decision the participant must make now. Keep each option on its side of the dilemma: the first option puts the business first (revenue, deadlines, savings) and costs people or customers; the second protects people or customers and costs the business. Never make one option right on every count, and never change what an option does: its effects are set.
 
 The brief may also name stakeholders (people outside the team), objectives and dilemmas. The simulation plays only the participant's own team, so:
 - never add a stakeholder as a team member; a stakeholder may appear by name and role in an event's body, and when one is the participant's boss you may use that name and title for the sponsor;
-- let the events and the welcome letter reflect the objectives and the dilemmas: an event may put the two options of a dilemma in front of the participant in its words.
+- let the events and the welcome letter reflect the objectives and the dilemmas: the dilemmas are already decisions in the template (events with a `choice`), so word those; another event may also put a dilemma in front of the participant in its words.
 
 Rules:
 - Keep every id and key exactly as given. Write one entry for every member, style and event in the template, and no others.

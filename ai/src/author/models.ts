@@ -118,7 +118,9 @@ function templateView(s: StorylineInput, req: AuthorDraftRequest) {
       styles: (s.lens?.styles ?? []).map(st => ({ key: st.key, name: st.name, short: st.short, description: st.description })),
       stages: s.stages.map(st => ({ key: st.key, name: st.name })),
       members: s.members.map((m: Member) => ({ id: m.id, pronoun: m.pronoun, stage: m.homeStage, name: m.name, title: m.title, remarks: m.profile.remarks, hiddenConcern: m.hiddenConcern ?? null, concernLine: m.concernLine ?? null })),
-      events: (s.events ?? []).map(e => ({ key: e.key, title: e.title, he: e.body.he, she: e.body.she, card: e.card }))
+      events: (s.events ?? []).map(e => ({ key: e.key, title: e.title, he: e.body.he, she: e.body.she, card: e.card,
+        // A decision (D153): what is known and each option's words; its effects stay as they are.
+        ...(e.choice ? { choice: { known: e.choice.known, options: e.choice.options.map(o => ({ key: o.key, label: o.label, outcome: o.outcome })) } } : null) }))
     }
   };
 }
@@ -158,7 +160,14 @@ export function mergeCopy(template: StorylineInput, c: DraftCopy): StorylineInpu
   s.events = (s.events ?? []).map(e => {
     const n = c.events.find(x => x.key === e.key);
     if (!n) return e;
-    return { ...e, title: clean(n.title), body: { he: clean(n.he), she: clean(n.she), ...(n.they ? { they: clean(n.they) } : {}) } };
+    const choice = e.choice && {
+      ...e.choice,
+      options: e.choice.options.map(o => {
+        const w = c.options?.find(x => x.event === e.key && x.key === o.key);
+        return w ? { ...o, label: clean(w.label), outcome: clean(w.outcome) } : o;
+      })
+    };
+    return { ...e, title: clean(n.title), body: { he: clean(n.he), she: clean(n.she), ...(n.they ? { they: clean(n.they) } : {}) }, ...(choice ? { choice } : null) };
   });
   return s;
 }
@@ -241,7 +250,10 @@ export function createAnthropicAuthorDrafter(o: AnthropicAuthorOptions): AuthorD
     try {
       const out = await structuredCall(o.transport, {
         label: 'author draft', settings: o.settings, system: system('author-draft'),
-        jsonSchema: draftCopyJsonSchema({ members: base.members.map(m => m.id), styles: (base.lens?.styles ?? []).map(s => s.key), events: (base.events ?? []).map(e => e.key) }),
+        jsonSchema: draftCopyJsonSchema({
+          members: base.members.map(m => m.id), styles: (base.lens?.styles ?? []).map(s => s.key), events: (base.events ?? []).map(e => e.key),
+          choices: (base.events ?? []).filter(e => e.choice).map(e => e.key), options: [...new Set((base.events ?? []).flatMap(e => e.choice?.options.map(o => o.key) ?? []))]
+        }),
         messages: [{ role: 'user', content: `<draft_input>\n${quoteInput(JSON.stringify(view, null, 2))}\n</draft_input>` }]
       }, DraftCopy, {
         repairs, repairPrompt: loadPrompt('repair').text, signal: opts?.signal, logger: log,

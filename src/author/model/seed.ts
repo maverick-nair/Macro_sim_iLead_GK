@@ -5,6 +5,7 @@ import { DEFAULT_SCALE } from '../../engine/report/defaults';
 import { DURATION_MODES, industryOf, REGIONS, TONE_LABELS } from '../context';
 import { LENS_BY_ID } from '../lenses';
 import { buildModule } from '../module';
+import { choicesFromDilemmas, defaultSeedVariables, roundish, variablesFromBrief, type SeedChoice } from '../dilemmas';
 import { draftContext, draftStoryline } from '../storyline';
 import { AuthorDraft, type ActionDraft, type Chat, type Character, type DraftStyle, type EventDraft, type Mark } from './draft';
 import { ACTION_TEMPLATES, canPlay, ENGINE_TEMPLATES } from './library';
@@ -181,18 +182,24 @@ export function eventFrom(e: NonNullable<SL['events']>[number], followUps: Reado
   };
 }
 
-/** A round number near `n` for a budget: two significant figures. */
-const roundish = (n: number) => { const p = 10 ** Math.max(0, Math.floor(Math.log10(Math.max(1, n))) - 1); return Math.round(n / p) * p; };
-
 /**
  * The business variables a new draft starts with (D136): a budget a quarter of the revenue target, and customer trust,
  * which counts for a fifth of the Business pillar. Authors rename, add up to six, or remove them in Work process.
  */
 export function defaultVariables(target: number): VariableDraft[] {
-  return [
-    { key: 'budget', name: 'Budget', format: 'money', start: roundish(target / 4), min: 0, max: roundish(target / 2), drift: 0, shown: true, weight: 0, higherIsBetter: true, about: 'What you can spend this quarter beyond salaries: training, team events and extra help.' },
-    { key: 'customer_trust', name: 'Customer trust', format: 'percent', start: 70, min: 0, max: 100, drift: 0, shown: true, weight: 20, higherIsBetter: true, about: 'How much your customers trust the team to keep its promises. It counts in the Business score.' }
-  ];
+  return defaultSeedVariables(target);
+}
+
+/** A decision seeded from one of the brief's dilemmas (D153), as the author edits it: reads by skill name. */
+export function choiceDraft(c: SeedChoice): EventDraft {
+  return {
+    key: c.key, title: c.title, kind: 'impact', week: c.week, day: 2, timing: 'fixed', who: 'team', arrives: 'modal', body: c.body,
+    skill: 0, morale: 0, result: 0, leadFlow: 0, respondWith: [], within: 2, onTime: [0, 2, 0], ifIgnored: { sponsor: false, followUp: null }, conditions: [], origin: 'library',
+    choice: { known: c.known.join('\n'), within: 2, default: c.default, options: c.options.map(o => ({
+      ...blankOption(o.key, o.label), detail: o.detail, outcome: o.outcome, who: 'team', skill: o.skill, morale: o.morale, result: o.result, trust: o.trust,
+      revenue: o.revenue, sponsor: o.sponsor, variables: { ...o.variables }, read: o.read.map(r => ({ skill: r.skill.name, band: r.band }))
+    })) }
+  };
 }
 
 /** An option of a drafted choice: nothing changes until the author says what does. */
@@ -251,6 +258,9 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     return { key: s.key, name: s.name, people: sl.members.filter(m => m.homeStage === s.key).length, perWeek, passesOn: Math.round(s.conversionRatio * 100) };
   });
   const skills = (sl.report?.skills ?? []).map(s => ({ key: s.key, name: s.name, reportOnly: !!s.reportOnly }));
+  // Business variables from the brief's objectives, and decisions from its dilemmas (D153); else the defaults (D142).
+  const variables = variablesFromBrief(brief.objectives ?? [], sl.money.target);
+  const seeded = choicesFromDilemmas(brief.dilemmas ?? [], { weeks: sl.time.period.count, target: sl.money.target, skills: skills.filter(x => !x.reportOnly), variables, taken: (sl.events ?? []).map(e => e.key) });
   const used = new Set(sl.actions.map(a => a.key));
   const actions = sl.actions.map(a => {
     const t = ENGINE_TEMPLATES.find(x => x.key === a.key) ?? ACTION_TEMPLATES[0];
@@ -284,12 +294,13 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       ]
     },
     process: { stages, pressure, revenue: sl.money.target, weeks: sl.time.period.count, daysPerWeek: 5, pacing: 'balanced', dynamics: true },
-    variables: defaultVariables(sl.money.target),
+    variables,
     team,
     lens: { id: lens.id, title: lens.title, secondary: lens.secondary?.id ?? null, styles, library: structuredClone(styles), needs: structuredClone(lens.needs), fit: structuredClone(lens.fit) as AuthorDraft['lens']['fit'] },
     actions: actions.filter(a => used.has(a.key)),
-    events: [...(sl.events ?? []).map(e => eventFrom(e, new Set((sl.events ?? []).flatMap(x => (x.escalation?.event ? [x.escalation.event] : []))))),
-      ...defaultChoices(sl.time.period.count, sl.money.target, skills.filter(x => !x.reportOnly).map(x => x.name), ind.work, pressureName)],
+    // The template storyline carries the seeded decisions too (for the model to word); here they come as the author edits them.
+    events: [...(sl.events ?? []).filter(e => !e.choice).map(e => eventFrom(e, new Set((sl.events ?? []).flatMap(x => (x.escalation?.event ? [x.escalation.event] : []))))),
+      ...(seeded.length ? seeded.map(choiceDraft) : defaultChoices(sl.time.period.count, sl.money.target, skills.filter(x => !x.reportOnly).map(x => x.name), ind.work, pressureName))],
     scoring: {
       skills,
       samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null })),

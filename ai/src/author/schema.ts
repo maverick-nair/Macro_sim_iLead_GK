@@ -51,11 +51,13 @@ export const DraftCopy = z.object({
     hiddenConcern: z.string().nullable(), concernLine: z.string().nullable(), careerGoal: z.string().nullable()
   })),
   events: z.array(z.object({ key: z.string(), title: z.string().min(1), he: z.string().min(1), she: z.string().min(1), they: z.string().nullable() })),
-  sampleEvent: z.object({ title: z.string().min(1), body: z.string().min(1) })
+  sampleEvent: z.object({ title: z.string().min(1), body: z.string().min(1) }),
+  /** Decisions seeded from the brief's dilemmas (D153, version 3): each option's label and outcome, by event and option key. */
+  options: z.array(z.object({ event: z.string(), key: z.string(), label: z.string().min(1), outcome: z.string().min(1) })).optional()
 });
 export type DraftCopy = z.infer<typeof DraftCopy>;
 
-export function draftCopyJsonSchema(o: { members: string[]; styles: string[]; events: string[] }) {
+export function draftCopyJsonSchema(o: { members: string[]; styles: string[]; events: string[]; choices?: string[]; options?: string[] }) {
   const s = js.str();
   return js.obj({
     name: s, organisation: s,
@@ -64,6 +66,8 @@ export function draftCopyJsonSchema(o: { members: string[]; styles: string[]; ev
     styles: js.arr(js.obj({ key: js.enum(o.styles), name: s, short: s, description: s })),
     members: js.arr(js.obj({ id: js.enum(o.members), name: s, title: s, remarks: s, hiddenConcern: js.nullable(s), concernLine: js.nullable(s), careerGoal: js.nullable(s) })),
     events: js.arr(js.obj({ key: js.enum(o.events), title: s, he: s, she: s, they: js.nullable(s) })),
-    sampleEvent: js.obj({ title: s, body: s })
+    sampleEvent: js.obj({ title: s, body: s }),
+    // Only when the template has decisions: their options' words (D153).
+    ...(o.choices?.length && o.options?.length ? { options: js.arr(js.obj({ event: js.enum(o.choices), key: js.enum(o.options), label: s, outcome: s })) } : null)
   });
 }

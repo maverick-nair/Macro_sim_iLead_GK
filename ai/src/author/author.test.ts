@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Brief, type AuthorDraftRequest } from '../../../src/api/author';
 import { guardDraft } from '../../../src/author/copyGuard';
-import { SAMPLE_FRAMEWORK } from '../../../src/author/fixtures';
+import { MERGER_BRIEF, SAMPLE_FRAMEWORK } from '../../../src/author/fixtures';
+import { readBrief } from '../../../src/author/read';
 import { buildModule } from '../../../src/author/module';
 import { StorylineConfig, type StorylineInput } from '../../../src/engine/config';
 import { settingsFor, silentLogger } from '../config';
@@ -179,5 +180,34 @@ describe('the author draft', () => {
     const { d, transport } = drafter([dup, await copy()]);
     await d.draft(req);
     expect(transport.requests[1].messages.at(-1)!.content).toMatch(/different name/);
+  });
+});
+
+describe('the author draft with the brief\'s dilemmas (D153)', () => {
+  const brief = Brief.parse({ ...readBrief(MERGER_BRIEF, Brief.parse({})).fields, process: ['Intake', 'Review', 'Resolve', 'Follow up'] });
+  const module = buildModule(brief, { primary: 'readiness_based', secondary: null, clientDimensions: [] }, true);
+  const req: AuthorDraftRequest = { brief, leadership_lens: module };
+
+  it('asks the model to word each decision\'s options, and keeps what each option does', async () => {
+    const t = (await createMockAuthorDrafter().draft(req)).storyline as unknown as StorylineInput;
+    const decisions = (t.events ?? []).filter(e => e.choice);
+    expect(decisions).toHaveLength(3);
+    const answer: DraftCopy = {
+      name: t.name, organisation: t.organisation ?? t.name, sponsor: { name: t.sponsor.name, title: t.sponsor.title, styleLine: t.sponsor.styleLine ?? 'Each person needs something different.' },
+      intro: t.intro!, styles: t.lens!.styles.map(s => ({ key: s.key, name: s.name, short: s.short, description: s.description })),
+      members: t.members.map(m => ({ id: m.id, name: m.name, title: m.title, remarks: m.profile.remarks, hiddenConcern: m.hiddenConcern ?? null, concernLine: m.concernLine ?? null, careerGoal: null })),
+      events: (t.events ?? []).map(e => ({ key: e.key, title: e.title, he: e.body.he, she: e.body.she, they: null })),
+      sampleEvent: { title: 'A decision', body: 'Revenue now, or member trust.' },
+      options: [{ event: decisions[0].key, key: 'push', label: 'Offer the employer client a rate cut', outcome: 'The renewal signs this week. Members hear about it and wonder what else will change.' }]
+    };
+    const { d, transport } = drafter([JSON.stringify(answer)]);
+    const s = (await d.draft(req)).storyline as unknown as StorylineInput;
+    const schema = transport.requests[0].jsonSchema as { properties: Record<string, unknown> };
+    expect(Object.keys(schema.properties)).toContain('options');
+    expect(transport.requests[0].messages[0].content).toContain('"choice"');
+    const first = s.events!.find(e => e.key === decisions[0].key)!.choice!;
+    expect(first.options[0]).toMatchObject({ label: 'Offer the employer client a rate cut', business: decisions[0].choice!.options[0].business, people: decisions[0].choice!.options[0].people });
+    expect(first.options[1].label).toBe(decisions[0].choice!.options[1].label);
+    expect(StorylineConfig.safeParse(s).success).toBe(true);
   });
 });

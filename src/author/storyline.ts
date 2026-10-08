@@ -6,6 +6,7 @@ import salesElevator from '../engine/storylines/sales-elevator.json';
 import { sanitizeCopy } from '../i18n/copy';
 import { challengeKind, DEFAULT_PROCESS, DURATION_MODES, industryOf, REGIONS, type Industry } from './context';
 import { SKIP } from './copyGuard';
+import { choicesFromDilemmas, variableFromObjective, variablesFromBrief, type SeedChoice } from './dilemmas';
 import { fitTable, LENS_BY_ID, type Dimension, type LibraryLens, type LibraryStyle, type Tone } from './lenses';
 import { selectionOf } from './module';
 
@@ -278,6 +279,20 @@ function draftEvents(brief: Brief, ctx: DraftContext, lib: LibraryLens, members:
   return named.map(e => (e.period !== undefined ? { ...e, period: Math.ceil(e.period / 2) } : e.window ? { ...e, window: { ...e.window, from: 2, to: 3 } } : e));
 }
 
+/** A decision seeded from a dilemma as the engine plays it (D137): a card on the board, reads by skill key. */
+function choiceEvent(c: SeedChoice): Event {
+  return {
+    key: c.key, title: c.title, body: { he: c.body, she: c.body }, card: 'impact', period: c.week, subPeriod: 2, impact: [0, 0, 0], target: 'team', delivery: 'modal',
+    choice: {
+      known: c.known, within: 2, default: c.default,
+      options: c.options.map(o => ({
+        key: o.key, label: o.label, outcome: o.outcome, who: 'team', people: [o.skill, o.morale, o.result], trust: o.trust,
+        business: { variables: o.variables, revenue: o.revenue, sponsor: o.sponsor }, read: o.read.map(r => ({ skill: r.skill.key, band: r.band }))
+      }))
+    }
+  } as Event;
+}
+
 /** The welcome letter's first line and the targets' closing line per tone (Kora's tone change swaps them, D125). */
 export const WELCOME: Record<Tone, string> = {
   professional: 'Welcome to {company}. I am glad you are here.',
@@ -318,6 +333,12 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
   const stageList = ctx.stages.map(s => s.name);
   const stagesText = stageList.length > 1 ? `${stageList.slice(0, -1).join(', ')} and ${stageList[stageList.length - 1]}` : stageList[0];
   const challenge = brief.challenge ? `This quarter our challenge is ${sentence(lower(brief.challenge))}` : 'This quarter I need the number, and a team that is stronger when you leave than when you arrived.';
+  const report = draftReport(module, lens);
+  const events = draftEvents(brief, ctx, lib, members, sponsorName);
+  // A brief's objectives and dilemmas (D146) seed business variables and decisions (D153); the model words them.
+  const objectives = brief.objectives ?? [];
+  const seededVariables = objectives.some(o => variableFromObjective(o, m.target)) || brief.dilemmas?.length ? variablesFromBrief(objectives, m.target) : [];
+  const seeded = choicesFromDilemmas(brief.dilemmas ?? [], { weeks: mode.weeks, target: m.target, skills: report.skills.filter(sk => !sk.reportOnly).map(sk => ({ key: sk.key, name: sk.name })), variables: seededVariables, taken: events.map(e => e.key) });
   const storyline: StorylineInput = {
     id: `draft_${slug(ctx.company, 'c')}`,
     name: `${ctx.product}, ${ctx.company}`,
@@ -339,9 +360,10 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
     candidates,
     actions: se.actions.map(a => ({ ...a, options: a.options.map(o => (o.style ? { ...o, style: tag[o.style] ?? o.style } : o)) })),
     weeklyStyle: salesElevator.weeklyStyle as StorylineInput['weeklyStyle'],
-    events: draftEvents(brief, ctx, lib, members, sponsorName),
+    ...(seededVariables.length ? { variables: seededVariables.map(v => ({ ...v, weight: v.weight / 100 })) } : null),
+    events: [...events, ...seeded.map(choiceEvent)],
     triggers: se.triggers,
-    report: draftReport(module, lens),
+    report,
     maxPerStage: Math.max(2, ...perStage.values()),
     performanceThreshold: salesElevator.performanceThreshold,
     calibrated: false
