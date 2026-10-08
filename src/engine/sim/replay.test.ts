@@ -35,11 +35,14 @@ describe('seeded replay', () => {
   it('replays the default lens exactly as before the lens existed', async () => {
     const out: Record<string, string> = {};
     for (const policy of ['passive', 'random', 'good'] as const) for (const seed of [1, 2]) out[`${policy} ${seed}`] = await digest(policy, seed);
-    // Recorded on the quadrant maths, before the lens (D70).
+    // Recorded on the quadrant maths, before the lens (D70). Re-recorded at D143 to D145, where the report's
+    // summary (headline, lines, drivers, the guarded level line), the moments' impact lines (net per person
+    // and metric) and the reconciled skill ratings changed by design: the same runs hashed without those
+    // fields matched the earlier code for all five players on seeds 1 to 3, so what the runs decide is unchanged.
     expect(out).toEqual({
-      'passive 1': '987792d6dc92fd16', 'passive 2': '151a653a6a32f26c',
-      'random 1': '8cfdeaf23295bbd3', 'random 2': '4cdbaf1aca19d1c1',
-      'good 1': '5cb17f5bf2693bff', 'good 2': '203390d28ec2f7d1'
+      'passive 1': '74ffc58af0e3ce98', 'passive 2': 'e243b0c1284bfb66',
+      'random 1': '84e35404c7d1a6b3', 'random 2': '69fbe55c1e9e0a26',
+      'good 1': 'a08fe8690122411d', 'good 2': 'a216ef5a90e7e302'
     });
   });
 });

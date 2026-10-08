@@ -2516,6 +2516,252 @@
             "pattern": "^[a-z][a-z0-9_]*$"
           }
         },
+        "reconcile": {
+          "default": {
+            "skills": {
+              "situational_flexibility": [
+                "styleFit",
+                "diagnosis"
+              ],
+              "diagnosing_readiness": [
+                "diagnosis"
+              ],
+              "style_fit": [
+                "styleFit"
+              ],
+              "style_flexibility": [
+                "styleFit"
+              ],
+              "contextual_fit": [
+                "styleFit"
+              ]
+            },
+            "caps": [
+              {
+                "below": 40,
+                "level": 1
+              },
+              {
+                "below": 70,
+                "level": 2
+              }
+            ]
+          },
+          "type": "object",
+          "properties": {
+            "skills": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "additionalProperties": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "styleFit",
+                    "diagnosis"
+                  ]
+                }
+              }
+            },
+            "caps": {
+              "maxItems": 6,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "below": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "level": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "below",
+                  "level"
+                ]
+              }
+            }
+          },
+          "required": [
+            "skills",
+            "caps"
+          ]
+        },
+        "evidence": {
+          "default": {
+            "business": {
+              "strong": 100,
+              "weak": 80
+            },
+            "people": {
+              "moraleDrop": 10,
+              "trustDrop": 5,
+              "rise": 5
+            },
+            "styleFit": {
+              "strong": 70,
+              "weak": 40
+            },
+            "words": {
+              "strong": 75,
+              "weak": 60
+            },
+            "activity": {
+              "strong": 2,
+              "weak": 1
+            },
+            "sponsor": {
+              "strong": 10,
+              "weak": -10
+            },
+            "events": {
+              "weak": 2
+            }
+          },
+          "type": "object",
+          "properties": {
+            "business": {
+              "type": "object",
+              "properties": {
+                "strong": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "weak": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "strong",
+                "weak"
+              ]
+            },
+            "people": {
+              "type": "object",
+              "properties": {
+                "moraleDrop": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "trustDrop": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "rise": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "moraleDrop",
+                "trustDrop",
+                "rise"
+              ]
+            },
+            "styleFit": {
+              "type": "object",
+              "properties": {
+                "strong": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "weak": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "strong",
+                "weak"
+              ]
+            },
+            "words": {
+              "type": "object",
+              "properties": {
+                "strong": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "weak": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "strong",
+                "weak"
+              ]
+            },
+            "activity": {
+              "type": "object",
+              "properties": {
+                "strong": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "weak": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "strong",
+                "weak"
+              ]
+            },
+            "sponsor": {
+              "type": "object",
+              "properties": {
+                "strong": {
+                  "type": "number"
+                },
+                "weak": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "strong",
+                "weak"
+              ]
+            },
+            "events": {
+              "type": "object",
+              "properties": {
+                "weak": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "weak"
+              ]
+            }
+          },
+          "required": [
+            "business",
+            "people",
+            "styleFit",
+            "words",
+            "activity",
+            "sponsor",
+            "events"
+          ]
+        },
         "assessment": {
           "type": "object",
           "properties": {

@@ -67,6 +67,8 @@ export interface SkillRowData {
   more?: {
     anchor: string | null; observations: number; capped: boolean; quotes: ReportQuote[];
     outOf10?: string | null; description?: string | null; narrative?: string | null; verdict?: { label: string; tone: Tone; review: string } | null;
+    /** Why the rating is capped by what the participant did, not only what they said (D144). */
+    reconciliation?: string | null;
   };
 }
 
@@ -209,6 +211,11 @@ export interface SummaryExtras {
   business: string;
   /** Assessment only: the overall verdict, shown first (D75). */
   verdict?: VerdictData | null;
+  /** The headline the run's evidence gives, and its factual lines (D143). */
+  headline?: string | null;
+  lines?: string[];
+  /** "What drove your results" (D145): the decisions and patterns that moved the outcomes most. */
+  drivers?: Array<{ key: string; tone: 'positive' | 'negative'; text: string }>;
 }
 
 // ---------------------------------------------------------------- Report 3.0 (D75, D76)

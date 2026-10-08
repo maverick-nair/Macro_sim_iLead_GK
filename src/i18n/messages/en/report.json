@@ -203,5 +203,8 @@
   "report.decisions.revenue": "Revenue {value}",
   "report.decisions.sponsor": "Sponsor confidence {delta, number, ::sign-except-zero}",
   "report.decisions.led": "{title}, {when}",
-  "report.decisions.read": "{band, select, strong {Showed {skill} well} adequate {Showed some {skill}} weak {Fell short on {skill}} other {Worked against {skill}}}"
+  "report.decisions.read": "{band, select, strong {Showed {skill} well} adequate {Showed some {skill}} weak {Fell short on {skill}} other {Worked against {skill}}}",
+  "report.drivers.title": "{purpose, select, assessment {What drove the results} other {What drove your results}}",
+  "report.drivers.intro": "{purpose, select, assessment {The decisions and patterns that moved the team and the business most, largest first.} other {The decisions and patterns that moved your people and your numbers most, largest first.}}",
+  "report.drivers.tone": "{tone, select, positive {Helped} other {Held back}}"
 }

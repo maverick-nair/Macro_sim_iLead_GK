@@ -142,7 +142,8 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       case 'summary':
         return { key, narrative: r.summary.narrative, extras: {
           level: r.summary.level?.name ?? null, strengths: r.summary.strengths.map(skillName), priorities: r.summary.priorities.map(skillName), business: r.summary.business,
-          verdict: r.verdict ? verdictData(i18n, r.verdict.overall, r.verdict.overall.bar) : null
+          verdict: r.verdict ? verdictData(i18n, r.verdict.overall, r.verdict.overall.bar) : null,
+          headline: r.summary.headline, lines: r.summary.lines, drivers: r.summary.drivers
         } };
       case 'style':
         return {
@@ -179,7 +180,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
               more: {
                 anchor: s.anchor, observations: s.observations, capped: s.capped, quotes: s.quotes.slice(1),
                 outOf10: s.outOf10 === null ? null : t('report.skills.outOf10', { score: number(s.outOf10) }),
-                description: s.description, narrative: s.narrative,
+                description: s.description, narrative: s.narrative, reconciliation: s.reconciliation,
                 verdict: v?.label ? { label: v.label, tone: verdictTone(v.verdict), review: t('report.verdict.review', { review: v.review, reviewed: v.reviewed, total: v.total }) } : null
               }
             };

@@ -1,11 +1,12 @@
 import { DEFAULT_SECTIONS, purposeOf, type Purpose, type ReportSection } from '../config';
 import { roundHalfUp, capability, leadershipScore, tierFor } from '../sim/score';
 import { fitOf, lensView, NEEDS } from '../lens';
-import { firstName, person, styleName } from '../sim/sim';
+import { firstName, netChanges, person, styleName } from '../sim/sim';
 import type { Sim, Style } from '../sim/types';
 import { overallOf, rateSkills, shortName, when, type SkillRating } from './ratings';
 import { summarizeRun, type RunSummary } from './summary';
 import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
+import { narrativeOf, type BottleneckFact } from './narrative';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -61,13 +62,15 @@ export function buildReport(sim: Sim) {
   const counts = new Map<string, number>();
   for (const p of sim.periods) if (p.bottleneck) counts.set(p.bottleneck, (counts.get(p.bottleneck) ?? 0) + 1);
   const worst = [...counts].sort((a, b) => b[1] - a[1])[0];
-  const bottleneck = worst ? (() => {
-    const owners = sim.members.filter(m => m.stage === worst[0]);
-    const low = [...owners].sort((a, b) => a.result - b.result)[0];
-    const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
-    return { stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
-      why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: pr(sim, low.id) }) : null };
-  })() : null;
+  const owners = worst ? sim.members.filter(m => m.stage === worst[0]) : [];
+  const low = [...owners].sort((a, b) => a.result - b.result)[0];
+  const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
+  const bottleneck = worst ? {
+    stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
+    // The catalog selects on the person's pronoun itself (he, she, they), never a possessive.
+    why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: person(sim, low.id).pronoun }) : null
+  } : null;
+  const bottleneckFact: BottleneckFact | null = bottleneck ? { name: bottleneck.name, periods: bottleneck.periods, owner: low && stat ? { id: low.id, stat, value: low[stat] } : null } : null;
   const share = sim.funnel.value / c.money.target;
   const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions) };
   const businessLine = bottleneck
@@ -116,7 +119,11 @@ export function buildReport(sim: Sim) {
   // ---- 5. Key moments (SBI), 5 to 7, ranked by impact
   const intentFor = (memberId: string | undefined, period: number) => (memberId ? weekly.find(d => d.memberId === memberId && d.period === period)?.chosen ?? null : null);
   const change = (ch: { subject: string; metric: string; delta: number }) => msg('engine.report.change', { who: ch.subject === 'team' ? msg('engine.report.theTeam') : shortName(sim, ch.subject), metric: ch.metric, delta: ch.delta });
-  const impactOf = (chs: Array<{ subject: string; metric: string; delta: number }>): Copy => (chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange'));
+  // Same person and metric merged into one net change, the 3 largest kept (D145).
+  const impactOf = (all: Array<{ subject: string; metric: string; delta: number }>): Copy => {
+    const chs = netChanges(all).slice(0, 3);
+    return chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange');
+  };
   const unit0 = { unit: unitName(sim) };
   const fromLive = sim.liveRecords.filter(rec => rec.band !== 'adequate').map(rec => {
     const one = rec.memberIds.length === 1;
@@ -127,7 +134,7 @@ export function buildReport(sim: Sim) {
       situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team', name: one ? shortName(sim, rec.memberIds[0]) : shortName(sim, 'sponsor') }),
       behaviour: rec.styleShown ? msg('engine.moment.chose.style', { title, style: styleName(sim, rec.styleShown) }) : msg('engine.moment.chose', { title }),
       quote: rec.quotes?.[0] ?? null,
-      impact: impactOf(rec.changes?.slice(0, 3) ?? []),
+      impact: impactOf(rec.changes ?? []),
       intent: intentFor(rec.memberIds[0], rec.period), weight: rec.impact ?? 0, sub: rec.sub ?? 0
     };
   });
@@ -140,7 +147,7 @@ export function buildReport(sim: Sim) {
       title: who ? msg('engine.moment.titleWho', { title: l.title, name: shortName(sim, who) }) : l.title,
       situation: msg('engine.moment.at', { ...unit0, n: l.period, text: l.changes[0]?.reason.cause ?? l.title }),
       behaviour: msg(good ? 'engine.moment.kept' : 'engine.moment.waited'),
-      quote: null, impact: impactOf(l.changes.slice(0, 3).map(ch => ({ subject: ch.subject, metric: ch.metric, delta: ch.delta }))),
+      quote: null, impact: impactOf(l.changes),
       intent: intentFor(who, l.period), weight: l.changes.reduce((a, ch) => a + Math.abs(ch.delta), 0), sub: l.sub
     };
   });
@@ -185,7 +192,11 @@ export function buildReport(sim: Sim) {
   // Methodology names the lens in participant language; the source ("based on") is author only (D70).
   const lensLines: Copy[] = [msg('engine.report.lens', { title: c.lens.title }),
     ...(c.lens.secondary ? [msg('engine.report.lensSecondary', { title: c.lens.secondary.title })] : [])];
-  const v3 = report3(sim, purpose, skills, plan.map(p => p.name));
+  const run: RunSummary = summarizeRun(sim);
+  const v3 = report3(sim, purpose, skills, plan.map(p => p.name), run);
+  // The headline, summary, drivers and reflections from the evidence, not the level alone (D143, D145).
+  const levelLine = overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null;
+  const story = narrativeOf(sim, purpose, run, overall, levelLine, bottleneckFact);
   return {
     available: sim.phase === 'ended',
     purpose,
@@ -198,7 +209,8 @@ export function buildReport(sim: Sim) {
     summary: {
       level: overall === null ? null : { index: overall, name: r.scale[overall].name },
       strengths, priorities, business: businessLine,
-      narrative: overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null
+      narrative: story.levelLine,
+      profile: story.profile, headline: story.headline, lines: story.lines, drivers: story.drivers
     },
     style: { shares, total: choices.length, dominant: dom, capability: roundHalfUp(cap), grid, fit: fitGrid, matched, weeklyTotal: weekly.length, weeks,
       narrative: [capNarrative, ...(domLine ? [domLine] : [])] },
@@ -214,7 +226,9 @@ export function buildReport(sim: Sim) {
     methodology: { lines: [...lensLines, ...r.methodology], reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
     ...decisionsOf(sim, impactOf),
-    ...v3.sections
+    ...v3.sections,
+    // Food for thought and takeaways name what happened in this run, then the authored ones (D145).
+    thought: story.thought, takeaways: story.takeaways
   };
 }
 
@@ -222,9 +236,8 @@ export function buildReport(sim: Sim) {
  * Report 3.0's sections (D75): the run summary's numbers with the narratives the purpose's bank gives
  * them, the assessment verdicts with their evidence, food for thought, takeaways and the plan's path.
  */
-function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[]) {
+function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[], run: RunSummary) {
   const c = sim.config, r = c.report, P = r.purposeCopy[purpose];
-  const run: RunSummary = summarizeRun(sim);
   const levels = r.scale.length;
   const bar = r.assessment.bar;
   const barWords = msg('engine.report.bar', { overall: r.scale[bar.overall].name, floor: r.scale[bar.floor].name });
@@ -238,7 +251,9 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
   const skillNotes = Object.fromEntries(skills.map(s => [s.key, {
     outOf10: s.score === null ? null : s.score / 10,
     description: r.skills.find(x => x.key === s.key)?.description ?? null,
-    narrative: fillCopy(s.level === null ? P.skillNone : byLevel(P.skill, s.level.index, levels), { skill: s.name })
+    narrative: fillCopy(s.level === null ? P.skillNone : byLevel(P.skill, s.level.index, levels), { skill: s.name }),
+    // Why a skill the words rated higher is rated where it is (D144).
+    reconciliation: s.reconciled && s.level ? msg('engine.report.reconciled', { purpose, signal: s.reconciled.signal, pct: roundHalfUp(s.reconciled.pct), from: r.scale[s.reconciled.from].name, level: s.level.name }) : null
   }]));
 
   // Verdicts (assessment only), each with the conversations it rests on and their review status.
@@ -313,13 +328,10 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
       about: { lines: P.about.map(l => fillWith(l, { unit, bar: barWords })), howToRead: P.howToRead.map(l => fillWith(l, { unit, bar: barWords })), confidentiality: P.confidentiality },
       verdict,
       objectives, adaptability, styleSummary, consistency, actionSummary,
-      thought: r.thought, takeaways: r.takeaways,
       path, checkIns, needs
     }
   };
 }
-
-const pr = (sim: Sim, id: string) => { const p = person(sim, id).pronoun; return p === 'she' ? 'her' : p === 'they' ? 'their' : 'his'; };
 
 /** The default sections, with "Decisions and consequences" after the key moments when the storyline has choices or business variables (D137). */
 function withDecisions(sections: ReportSection[], sim: Sim): ReportSection[] {
@@ -340,12 +352,11 @@ function decisionsOf(sim: Sim, impactOf: (chs: Array<{ subject: string; metric: 
   const skillName = (k: string) => c.report.skills.find(s => s.key === k)?.name ?? k;
   return {
     decisions: sim.choices.map(ch => {
+      // People changes only, netted per person and metric with the 3 largest kept, as every impact line (D145).
       const people = ch.changes.filter(x => x.subject !== 'sponsor' && x.metric !== 'confidence');
-      const net = new Map<string, { subject: string; metric: string; delta: number }>();
-      for (const x of people) { const k = `${x.subject}|${x.metric}`; const n = net.get(k) ?? { subject: x.subject, metric: x.metric, delta: 0 }; n.delta += x.delta; net.set(k, n); }
       return {
         id: ch.id, period: ch.period, title: ch.title, option: ch.label, by: ch.by, outcome: ch.outcome,
-        impact: impactOf([...net.values()].filter(x => x.delta).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta)).slice(0, 3)),
+        impact: impactOf(people),
         variables: ch.variables.filter(x => shown.has(x.key)).map(x => ({ key: x.key, name: shown.get(x.key)!.name, format: shown.get(x.key)!.format, delta: x.delta })),
         revenue: Math.round(ch.revenue),
         sponsor: ch.changes.filter(x => x.subject === 'sponsor').reduce((a, x) => a + x.delta, 0),

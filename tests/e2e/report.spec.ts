@@ -119,6 +119,9 @@ test('report 3.0 in development: every section, no verdict words, the matrix as 
   }
   await expect(page.getByText('Development report', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { level: 3, name: 'Your next 90 days' })).toBeVisible();
+  // The summary reads the run's evidence (D143) and says what drove the results (D145).
+  await expect(page.getByRole('heading', { level: 3, name: 'What drove your results' })).toBeVisible();
+  expect(await page.getByRole('list', { name: 'What drove your results' }).getByRole('listitem').count()).toBeGreaterThanOrEqual(3);
   await expect(page.getByText(/out of 10$/).first()).toBeVisible();
   // Development never shows verdict words (D75).
   const text = await page.getByRole('main').innerText();
@@ -152,6 +155,9 @@ test('report 3.0 in assessment: the verdict first, skill verdicts, development n
   await expect(page.getByText(/^Based on \d+ conversations · AI only, not yet reviewed by an assessor$/)).toBeVisible();
   await expect(page.getByText(/^Records: r\d+/)).toBeVisible();
   await expect(page.getByText(/^Verdict: (Strength|Meets|Development need)$/).first()).toBeVisible();
+  // Findings in neutral words, no next step (D75, D143).
+  await expect(page.getByRole('heading', { level: 3, name: 'What drove the results' })).toBeVisible();
+  expect(await page.getByRole('main').innerText()).not.toContain('Next step:');
   expect(await axe(page)).toEqual([]);
 
   // Print: a page per section, the matrix as a table.

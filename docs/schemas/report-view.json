@@ -364,6 +364,70 @@
               "type": "null"
             }
           ]
+        },
+        "profile": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "readNoAction",
+                "absent",
+                "wordsNotChoices",
+                "allRound",
+                "numbersAtCost",
+                "peopleFirst",
+                "bothSlipped",
+                "mixed"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "headline": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "drivers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tone": {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "negative"
+                ]
+              },
+              "text": {
+                "$ref": "#/$defs/Text"
+              }
+            },
+            "required": [
+              "key",
+              "tone",
+              "text"
+            ]
+          }
         }
       },
       "required": [
@@ -709,6 +773,49 @@
           },
           "narrative": {
             "$ref": "#/$defs/Text"
+          },
+          "reconciled": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "signal": {
+                    "type": "string",
+                    "enum": [
+                      "styleFit",
+                      "diagnosis"
+                    ]
+                  },
+                  "pct": {
+                    "type": "number"
+                  },
+                  "from": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "signal",
+                  "pct",
+                  "from"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reconciliation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [

@@ -349,3 +349,45 @@ export const DEFAULT_IMPACT = { low: -2, moderate: 3, high: 10 };
 
 /** The 1.0 report's consistency actions (Meet the Team, Meet Face to Face, Set Goals, Coach Member, Give Feedback) as action keys. */
 export const DEFAULT_CONSISTENCY_ACTIONS = ['meet', 'f2f', 'goals', 'coach', 'feedback'];
+
+/**
+ * Ratings reconciled with behaviour (D144). A skill about adapting style or reading needs is rated from
+ * the participant's words, then capped by what they did: `styleFit` is the share of every style choice
+ * that fit the person's need (overall leadership adaptability), `diagnosis` the share of weekly style
+ * settings that fit. With several signals the lowest counts. Under `below`% the skill is rated at most
+ * `level` (a position on the rating scale, 0 is the lowest). Keyed by skill key: the iLead framework's
+ * Situational flexibility, and the Readiness Based lens's dimensions as GenieKreator names them.
+ */
+export const DEFAULT_RECONCILE: { skills: Record<string, Array<'styleFit' | 'diagnosis'>>; caps: Array<{ below: number; level: number }> } = {
+  skills: {
+    situational_flexibility: ['styleFit', 'diagnosis'],
+    diagnosing_readiness: ['diagnosis'],
+    style_fit: ['styleFit'],
+    style_flexibility: ['styleFit'],
+    contextual_fit: ['styleFit']
+  },
+  caps: [{ below: 40, level: 1 }, { below: 70, level: 2 }]
+};
+
+/**
+ * The thresholds the report reads the run with (D143), to pick its headline and keep every claim true to
+ * the numbers. Each dimension is strong, weak or in between; a claim that praises a weak dimension, or
+ * faults a strong one, is never shown.
+ * - business: share of target, %: strong from `strong`, weak under `weak`.
+ * - people: team average changes over the run: weak when morale fell by `moraleDrop` or more, trust by
+ *   `trustDrop` or more, or anyone resigned; otherwise strong when two of skill, morale, result and trust
+ *   rose by `rise` or more.
+ * - styleFit: share of style choices that fit, %. words: the mean band score of the conversations (at
+ *   least two). activity: actions per period, weak under `weak`, strong from `strong`. sponsor: the
+ *   confidence change, strong from `strong`, weak at `weak` or below. events: messages, briefings and
+ *   events left unanswered, weak from `weak`, strong at none with at least one answered.
+ */
+export const DEFAULT_EVIDENCE = {
+  business: { strong: 100, weak: 80 },
+  people: { moraleDrop: 10, trustDrop: 5, rise: 5 },
+  styleFit: { strong: 70, weak: 40 },
+  words: { strong: 75, weak: 60 },
+  activity: { strong: 2, weak: 1 },
+  sponsor: { strong: 10, weak: -10 },
+  events: { weak: 2 }
+};
