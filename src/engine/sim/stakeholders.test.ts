@@ -315,6 +315,14 @@ describe('the report reads stakeholder conversations (D164)', () => {
     const r = parseReport(e.view().report);
     const own = r.skills.find(s => s.key === 'results_ownership')!;
     expect(own.observations).toBeGreaterThanOrEqual(2);
+    // The Stakeholders part (D164): after Decisions and consequences, each relationship start to end and its interactions.
+    expect(r.sections.indexOf('stakeholders')).toBe(r.sections.indexOf('decisions') + 1);
+    const grace = r.stakeholders.find(s => s.key === 'cfo')!;
+    expect(grace.start).toEqual({ trust: 50, satisfaction: 50 });
+    expect(grace.end.trust).toBeGreaterThan(50);
+    expect(grace.interactions.map(x => [x.type, x.band])).toEqual([['meet', 'strong'], ['present', 'strong']]);
+    expect(grace.series).toHaveLength(r.periods);
+    expect(r.stakeholders.find(s => s.key === 'client_lead')!.interactions).toEqual([]);
   });
 });
 

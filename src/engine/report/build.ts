@@ -6,6 +6,7 @@ import type { Sim, Style } from '../sim/types';
 import { overallOf, rateSkills, shortName, when, type SkillRating } from './ratings';
 import { summarizeRun, type RunSummary } from './summary';
 import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
+import { stakeholdersOf, withStakeholders } from './stakeholders';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -194,7 +195,7 @@ export function buildReport(sim: Sim) {
     storyline: { name: c.name, organisation: c.organisation ?? null },
     lens: { ...lensView(c.lens), secondary: c.lens.secondary ? { id: c.lens.secondary.id, title: c.lens.secondary.title } : null },
     periods: sim.periods.length, periodUnit: unit,
-    sections: r.sections ?? withDecisions(DEFAULT_SECTIONS[purpose], sim),
+    sections: r.sections ?? withStakeholders(withDecisions(DEFAULT_SECTIONS[purpose], sim), sim),
     score: { total: score.total, max: score.max, tier: { key: tier.key, name: tier.name } },
     results: { revenue: Math.round(sim.funnel.value), target: c.money.target, share, conversions: Math.floor(sim.funnel.conversions), kpis },
     summary: {
@@ -216,6 +217,7 @@ export function buildReport(sim: Sim) {
     methodology: { lines: [...lensLines, ...r.methodology], reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
     ...decisionsOf(sim, impactOf),
+    ...stakeholdersOf(sim),
     ...v3.sections
   };
 }

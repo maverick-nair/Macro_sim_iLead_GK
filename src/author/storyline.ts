@@ -354,7 +354,7 @@ export const SECTION_NAMES: Record<(typeof REPORT_SECTIONS)[number], string> = {
   styles: 'Leadership styles summary', style: 'Leadership style', consistency: 'Consistency in styles', intent: 'Intent and action',
   actions: 'Summary of actions', distribution: 'Actions across the team', moments: 'Key moments', decisions: 'Decisions and consequences', people: 'People',
   business: 'Business results', analytics: 'Conversation analytics', thought: 'Food for thought', takeaways: 'Key takeaways',
-  plan: 'Development plan', progress: 'Progress over time', methodology: 'Methodology'
+  plan: 'Development plan', progress: 'Progress over time', methodology: 'Methodology', stakeholders: 'Stakeholders'
 };
 
 /** The build preview (module step 6), from a drafted storyline. */

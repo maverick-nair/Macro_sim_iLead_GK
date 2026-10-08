@@ -146,6 +146,20 @@ export interface DecisionData {
   read: string[];
 }
 
+/** One stakeholder in "Stakeholders" (D164), worded for display. */
+export interface StakeholderData {
+  key: string;
+  name: string;
+  /** "Chief Financial Officer, an executive". */
+  role: string;
+  /** "Steady to Good". */
+  relationship: string;
+  measures: Array<{ key: 'trust' | 'satisfaction'; name: string; start: number; end: number; direction: 'up' | 'down' | 'flat' }>;
+  interactions: Array<{ key: string; when: string; title: string; how: string; outcome: string | null; changes: string[] }>;
+  /** What moved the relationship most, a line each. */
+  moves: string[];
+}
+
 /** A business variable over the run (D136): start and end, formatted. */
 export interface BusinessVariableData { key: string; name: string; start: string; end: string; direction: 'up' | 'down' | 'flat'; better: boolean | null }
 

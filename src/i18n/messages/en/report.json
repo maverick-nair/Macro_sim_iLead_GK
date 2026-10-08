@@ -203,5 +203,19 @@
   "report.decisions.revenue": "Revenue {value}",
   "report.decisions.sponsor": "Sponsor confidence {delta, number, ::sign-except-zero}",
   "report.decisions.led": "{title}, {when}",
-  "report.decisions.read": "{band, select, strong {Showed {skill} well} adequate {Showed some {skill}} weak {Fell short on {skill}} other {Worked against {skill}}}"
+  "report.decisions.read": "{band, select, strong {Showed {skill} well} adequate {Showed some {skill}} weak {Fell short on {skill}} other {Worked against {skill}}}",
+  "report.stakeholders.title": "Stakeholders",
+  "report.stakeholders.intro": "The people outside your team: how each relationship changed over the run, the key interactions with them and what moved it most.",
+  "report.stakeholders.role": "{role}, {kind, select, manager {your manager} peer {a peer in another team} customer {a customer} executive {an executive} board {on the board} union {from the union} partner {a partner} other {outside your team}}",
+  "report.stakeholders.relationship": "Relationship: {from, select, strained {strained} cool {cool} steady {steady} good {good} other {strong}} at the start, {to, select, strained {strained} cool {cool} steady {steady} good {good} other {strong}} at the end",
+  "report.stakeholders.measure": "{measure, select, trust {Trust in you} other {Satisfaction}}",
+  "report.stakeholders.column": "{column, select, measure {Measure} start {Start} other {End}}",
+  "report.stakeholders.tableCaption": "{name}: the relationship at the start and the end of the run",
+  "report.stakeholders.interactionsTitle": "Key interactions",
+  "report.stakeholders.noInteractions": "You did not engage {name} in this run.",
+  "report.stakeholders.how": "{type, select, ignored {Their request went unanswered} other {{band, select, strong {It went well} adequate {It landed} weak {It did not land} harmful {It went badly} other {Decided}}}}",
+  "report.stakeholders.relation": "Trust {trust}, satisfaction {satisfaction}",
+  "report.stakeholders.answered": "Answered their request in time",
+  "report.stakeholders.movesTitle": "What moved the relationship most",
+  "report.stakeholders.move": "{when}: {cause} (trust {trust}, satisfaction {satisfaction})"
 }
