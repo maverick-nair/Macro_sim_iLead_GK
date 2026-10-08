@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import clientTrust from '../../../engine/storylines/client-trust.json';
 import raw from '../../../engine/storylines/sales-elevator.json';
 import type { Copy } from '../../../engine/copy';
 import type { Evaluation } from '../../../engine/sim/types';
@@ -184,6 +185,16 @@ describe('checks that catch broken configs (D149, D150)', () => {
     expect(playsBundledActions(fresh)).toBe(true);
     const changed = broken(c => { c.id = 'draft_sales_copy'; c.actions.find(a => a.key === 'reward')!.cost = 2; });
     expect(changedActions(changed)).toEqual(['reward']);
+    // Client Trust plays the bundled actions with budget costs on some options (D141): still advice. An author who adds
+    // a business effect to an action, or Client Trust with an action's people effects changed, gets the failure.
+    const trust = parseDraft(clientTrust);
+    expect(changedActions(trust)).toEqual([]);
+    expect(playsBundledActions(trust)).toBe(true);
+    const spends = broken(c => { c.id = 'draft_spends'; c.actions.find(a => a.key === 'reward')!.options[0].business = { always: { variables: {}, revenue: 500, sponsor: 0, set: [], clear: [], count: {}, followUps: [] } }; });
+    expect(changedActions(spends)).toEqual(['reward']);
+    const retuned = structuredClone(trust);
+    retuned.actions.find(a => a.key === 'reward')!.cost = 2;
+    expect(playsBundledActions(retuned)).toBe(false);
     expect(playsBundledActions(changed)).toBe(false);
     expect(check(await run(changed, { expert: 3 }), 'combined')).toMatchObject({ status: 'fail' });
   }, 60_000);
