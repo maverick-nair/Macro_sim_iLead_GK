@@ -6,6 +6,7 @@ import { useAuthor } from '../../../model/store';
 import { BUTTON, CARD, CardHead, Field, MarkOf, Select, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate, useRegenerateItem } from './regenerate';
+import { clearLeadsTo, leadsTo, leadsToText } from '../../../model/choices';
 import { ChoiceEditor, ConditionsEditor } from './ChoiceEditor';
 import { EventStakeholder } from './EventStakeholder';
 
@@ -48,10 +49,9 @@ export default function Events() {
   const floating = d.events.filter(x => x.timing !== 'fixed' || !x.week);
   const whoOptions = [['team', 'The whole team'], ['member', 'One person, the engine picks'], ['sponsor', 'The sponsor'], ...d.process.stages.map(s => [`stage:${s.key}`, `Everyone in ${s.name}`]), ...d.team.map(c => [c.id, `${c.first} ${c.last}`])];
   const inUse = d.actions.filter(a => a.core || a.enabled);
-  const followers = (key: string) => d.events.filter(x => x.ifIgnored.followUp === key);
   const remove = (key: string) => {
     const gone = d.events.find(x => x.key === key);
-    edit(x => { x.events = x.events.filter(y => y.key !== key); for (const y of x.events) if (y.ifIgnored.followUp === key) y.ifIgnored = { ...y.ifIgnored, followUp: null }; }, { label: `Remove the event "${gone?.title || key}"`, restorePoint: true });
+    edit(x => { x.events = x.events.filter(y => y.key !== key); clearLeadsTo(x, key); }, { label: `Remove the event "${gone?.title || key}"`, restorePoint: true });
     setSelected(d.events.find(x => x.key !== key)?.key ?? '');
     setRemoving(null);
   };
@@ -115,11 +115,11 @@ export default function Events() {
             <CardHead id="event-title" title={e.title}>
               <MarkOf path={`events.${e.key}`} />
               <button type="button" className={BUTTON.secondary} onClick={() => setItemNote({ key: e.key, text: regenItem({ event: e.key }) })}>Regenerate<span className="sr-only"> {e.title}</span></button>
-              <button type="button" className={BUTTON.secondary} onClick={() => (followers(e.key).length ? setRemoving(e.key) : remove(e.key))}>Remove</button>
+              <button type="button" className={BUTTON.secondary} onClick={() => (leadsTo(d, e.key).length ? setRemoving(e.key) : remove(e.key))}>Remove</button>
             </CardHead>
             {removing === e.key && (
               <div role="alert" className="flex flex-wrap items-center gap-3 rounded-12 border border-solid border-author-need-line bg-author-need-field p-3 text-14">
-                <span className="min-w-60 flex-1">{followers(e.key).map(f => f.title).join(', ')} {followers(e.key).length === 1 ? 'leads' : 'lead'} to this event when ignored. Removing it leaves {followers(e.key).length === 1 ? 'that event' : 'those events'} with no follow up.</span>
+                <span className="min-w-60 flex-1">{leadsToText(d, e.key)} Removing it leaves {leadsTo(d, e.key).length === 1 ? 'that way' : 'those ways'} to it with no follow up.</span>
                 <button type="button" className={BUTTON.secondary} onClick={() => remove(e.key)}>Remove anyway</button>
                 <button type="button" className={BUTTON.link} onClick={() => setRemoving(null)}>Keep it</button>
               </div>
@@ -169,7 +169,7 @@ export default function Events() {
                 </div>
               );
             })()}
-            {e.timing === 'followup' && <p className="m-0 text-13 text-author-body">{followers(e.key).length ? `Follows ${followers(e.key).map(f => f.title).join(', ')} when ${followers(e.key).length === 1 ? 'it is' : 'they are'} ignored.` : 'No event leads to this one yet. Pick it as the follow up of another event, or give it a week.'}</p>}
+            {e.timing === 'followup' && <p className="m-0 text-13 text-author-body">{leadsToText(d, e.key)}</p>}
             <Field label="What participants read">{id => <TextArea id={id} rows={3} tone={toneOf(d.marks[`events.${e.key}`])} value={e.body} onChange={ev => set({ body: ev.target.value })} />}</Field>
             <div className="grid grid-cols-4 gap-3 max-[1180px]:grid-cols-2">
               {(['skill', 'morale', 'result'] as const).map(k => <Field key={k} label={k[0].toUpperCase() + k.slice(1)}>{id => <TextInput id={id} inputMode="numeric" tone={toneOf(d.marks[`events.${e.key}`])} value={signed(e[k])} onChange={ev => set({ [k]: delta(ev.target.value) })} />}</Field>)}

@@ -44,3 +44,40 @@ export const consequenceKey = (o: ChoiceOptionDraft) => JSON.stringify([o.who, o
 
 /** The events whose conditions test this flag. */
 export const testsFlag = (d: Pick<AuthorDraft, 'events'>, flag: string): EventDraft[] => d.events.filter(e => (e.conditions ?? []).some(c => c.kind === 'flag' && c.flag === flag));
+
+/**
+ * What leads to an event (D138, D162, D166): another event's follow up when it is ignored (a stakeholder's request
+ * left unanswered included, which escalates the same way), and a decision option's follow up when it is chosen. The
+ * Events tab says this for a follow up event, and removing an event clears every one of these that names it.
+ */
+export type LeadsTo =
+  | { kind: 'ignored'; event: EventDraft }
+  | { kind: 'request'; event: EventDraft }
+  | { kind: 'decision'; event: EventDraft; option: ChoiceOptionDraft };
+export function leadsTo(d: Pick<AuthorDraft, 'events'>, key: string): LeadsTo[] {
+  const out: LeadsTo[] = [];
+  for (const e of d.events) {
+    if (e.key === key) continue;
+    if (e.ifIgnored.followUp === key) out.push({ kind: e.stakeholder && e.request ? 'request' : 'ignored', event: e });
+    for (const o of e.choice?.options ?? []) if (o.followUp?.event === key) out.push({ kind: 'decision', event: e, option: o });
+  }
+  return out;
+}
+
+/** The sentence the Events tab shows for a follow up event: what leads to it, or that nothing does yet. */
+export function leadsToText(d: Pick<AuthorDraft, 'events'>, key: string): string {
+  const ways = leadsTo(d, key);
+  if (!ways.length) return 'No event leads to this one yet. Pick it as the follow up of another event or of a decision\'s option, or give it a week.';
+  const say = (w: LeadsTo) => w.kind === 'decision' ? `"${w.event.title || w.event.key}" when "${w.option.label || w.option.key}" is chosen`
+    : w.kind === 'request' ? `"${w.event.title || w.event.key}" when the request goes unanswered` : `"${w.event.title || w.event.key}" when it is ignored`;
+  const parts = ways.map(say);
+  return `Follows ${parts.length === 1 ? parts[0] : `${parts.slice(0, -1).join(', ')} or ${parts[parts.length - 1]}`}.`;
+}
+
+/** Removes every way to an event that is gone: ignored follow ups and decision options' follow ups. */
+export function clearLeadsTo(d: Pick<AuthorDraft, 'events'>, key: string) {
+  for (const e of d.events) {
+    if (e.ifIgnored.followUp === key) e.ifIgnored = { ...e.ifIgnored, followUp: null };
+    for (const o of e.choice?.options ?? []) if (o.followUp?.event === key) o.followUp = null;
+  }
+}
