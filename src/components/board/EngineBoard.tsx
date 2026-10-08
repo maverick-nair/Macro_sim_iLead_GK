@@ -64,6 +64,9 @@ const PlayPanels = lazy(() => import('../panels/PlayPanels'));
 // A choice event's decision (D137) loads on demand, with its copy.
 const DecisionDialog = lazy(() => import('../business/DecisionDialog'));
 import { BusinessBar, type BusinessItem } from '../business/BusinessBar';
+import { StakeholderBar } from '../stakeholders/StakeholderBar';
+// The stakeholders panel (D162) loads when first opened, with its copy.
+const StakeholdersPanel = lazy(() => import('../stakeholders/StakeholdersPanel'));
 import { formatVariable, variableTrend } from '../business/format';
 import { moneyFormatter } from '../../engine/money';
 const Tour = lazy(() => import('../tour/Tour'));
@@ -228,6 +231,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   /** A choice opened from the business bar, and a choice just decided whose outcome the dialog is showing (D137). */
   const [deciding, setDeciding] = useState<string | null>(null);
   const [decided, setDecided] = useState<EngineView['openChoices'][number] | null>(null);
+  /** The stakeholders panel (D162), open on one of them or on all. */
+  const [stakeholdersOpen, setStakeholdersOpen] = useState<{ focus: string | null } | null>(null);
   const ui = useUi();
   const intent = useIntent();
   const unit = v.clock.subPeriodUnit, periodUnit = v.clock.periodUnit;
@@ -610,12 +615,24 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   /** Later sets a message aside until the next sub-period, never past the point it is due. */
   const canLater = (x: EngineView['inbox'][number]) => x.dueInSubPeriods === null || x.dueInSubPeriods >= 1;
   const inbox = v.inbox.filter(x => !readIds.includes(x.id) && !(snoozed[x.id] === stamp && canLater(x)));
-  const sender = (from: string): InboxSender => (from === 'sponsor' ? { kind: 'sponsor', initials: v.sponsor.name.split(' ').map(w => w[0]).join('').slice(0, 2) } : from === 'news' ? { kind: 'news' } : { kind: 'member', img: img(member(from)) });
+  const stakeholder = (id: string) => v.stakeholders.find(s => s.key === id);
+  const sender = (from: string): InboxSender => {
+    const sh = stakeholder(from);
+    // A stakeholder (D162): their portrait, else their initials as the sponsor's are shown.
+    if (sh) return sh.img ? { kind: 'member', img: sh.img } : { kind: 'sponsor', initials: initials(sh.name) };
+    return from === 'sponsor' ? { kind: 'sponsor', initials: v.sponsor.name.split(' ').map(w => w[0]).join('').slice(0, 2) } : from === 'news' ? { kind: 'news' } : { kind: 'member', img: img(member(from)) };
+  };
   const openMessage = async (id: string) => {
     const msg = v.inbox.find(x => x.id === id);
     ui.openPanel('none');
     if (!msg || ended) return;
     if (msg.kind === 'news') { setReadIds(r => [...r, id]); return; }
+    // A stakeholder's meeting request (D162) opens the meeting they asked for; when that is a decision, or not open now, their card in the panel.
+    const sh = v.stakeholders.find(s => s.request?.messageId === id);
+    if (sh?.request?.kind === 'meeting') {
+      const x = sh.interactions.find(i => (sh.request!.interaction ? i.key === sh.request!.interaction : i.kind === 'live'));
+      if (!x || x.kind === 'static' || x.blocked) { setStakeholdersOpen({ focus: sh.key }); return; }
+    }
     const r = await send({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: id });
     if (r?.interactionId) setFlow(null);
   };
@@ -629,10 +646,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const drawerItems: InboxDrawerItem[] = inbox.map(x => ({
     id: x.id, sender: sender(x.from), title: x.title, preview: x.body, meta: '', urgent: x.urgent,
     due: x.dueInSubPeriods === null ? null : x.dueInSubPeriods === 0 ? t('inbox.dueNow', { unit }) : t('board.due', { amount: amount(x.dueInSubPeriods) }),
-    tag: t('inbox.tag', { type: x.kind, name: x.from === 'sponsor' ? first(v.sponsor.name) : x.from === 'news' ? '' : first(member(x.from)?.name ?? '') }),
+    tag: t('inbox.tag', { type: x.kind, name: x.from === 'sponsor' ? first(v.sponsor.name) : x.from === 'news' ? '' : first(member(x.from)?.name ?? stakeholder(x.from)?.name ?? '') }),
     // News (a CEO check in) needs no answer: it is marked as read, and never set aside.
     cta: x.kind === 'news' ? 'read' : 'reply', later: x.kind !== 'news' && canLater(x)
   }));
+
+  /** Answers a stakeholder's open request (D162): the reply or meeting it asks for, else their card in the panel. */
+  const answerStakeholder = (key: string) => {
+    const sh = stakeholder(key);
+    if (sh?.request) void openMessage(sh.request.messageId);
+    else setStakeholdersOpen({ focus: key });
+  };
 
   // ---- HUD and strip ----
   const periods = v.clock.periods;
@@ -999,7 +1023,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         <Hud {...hud} />
         {call}
         <MetricsStrip {...strip} />
-        <BusinessBar items={business} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)} />
+        <BusinessBar items={business} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)}
+          aside={v.stakeholders.length ? (
+            <StakeholderBar disabled={busy || ended || v.phase !== 'board'} onOpen={key => setStakeholdersOpen({ focus: key ?? null })} onAnswer={answerStakeholder}
+              items={v.stakeholders.map(s => ({ key: s.key, name: s.name, img: s.img, level: s.level,
+                request: s.request && !ended ? { title: s.request.title, due: t('board.business.due', { n: s.request.dueInSubPeriods, unit }) } : null }))} />
+          ) : undefined} />
         <BoardNotices notices={notices} view={v} onDismiss={key => setDismissed(d => new Set([...d, key]))}
           onLeaderboard={() => openPanel({ kind: 'leaderboard' })} />
         {ended && lastWeekSeen && endView === 'board' && (
@@ -1087,6 +1116,21 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
               }}
               onDone={() => { focusHint.current = () => h1Ref.current; setDecided(null); }}
               onCloseFocus={() => rescue(true)} />
+          </Suspense>
+        )}
+        {stakeholdersOpen && (
+          <Suspense fallback={null}>
+            <StakeholdersPanel stakeholders={v.stakeholders} focus={stakeholdersOpen.focus} subPeriodUnit={unit} busy={busy} locked={ended || v.phase !== 'board' || !!demo}
+              why={blockLine} onAnswer={key => { setStakeholdersOpen(null); answerStakeholder(key); }}
+              onEngage={async (stakeholder, interaction, option) => {
+                const r = await send({ type: 'engageStakeholder', stakeholder, interaction, ...(option ? { option } : null) });
+                if (!r) return false;
+                setStakeholdersOpen(null);
+                setFlow(null);
+                return true;
+              }}
+              onClose={() => setStakeholdersOpen(null)}
+              returnFocus={() => mainRef.current?.querySelector<HTMLElement>('[data-stakeholder-bar] button') ?? h1Ref.current} />
           </Suspense>
         )}
         {card && !card.choiceId && !decided && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}

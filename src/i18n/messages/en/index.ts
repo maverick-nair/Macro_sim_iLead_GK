@@ -37,8 +37,9 @@ export const en = { ...action, ...actions, ...board, ...common, ...events, ...ga
 
 /**
  * Loaded with their screens: './end.json', './group.json' (the group report, D77), './report.json', './tablet.json' (the tablet board, D73), './weekend.json',
- * './panels.json' (the in play panels, D89), './guide.json' (the guided tour and the demo, D92, D94), './decision.json' (the decision dialog, D137).
+ * './panels.json' (the in play panels, D89), './guide.json' (the guided tour and the demo, D92, D94), './decision.json' (the decision dialog, D137),
+ * './stakeholders.json' (the stakeholders panel, D162).
  * './engine.json' (engine copy, D83) loads beside the first view, before any payload is parsed (`loadEngineCopy`).
  */
 export type LazyMessages = typeof import('./end.json') & typeof import('./engine.json') & typeof import('./group.json') & typeof import('./report.json') & typeof import('./tablet.json') & typeof import('./weekend.json')
-  & typeof import('./panels.json') & typeof import('./guide.json') & typeof import('./decision.json');
+  & typeof import('./panels.json') & typeof import('./guide.json') & typeof import('./decision.json') & typeof import('./stakeholders.json');
