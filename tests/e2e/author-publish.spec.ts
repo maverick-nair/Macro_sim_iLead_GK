@@ -54,7 +54,8 @@ test('the chat says what an iLead simulation is before question 1, then folds it
   await expect(intro).toBeVisible();
   await expect(intro).toContainText('a team of 6 to 12 direct reports through a staged work process, over up to 10 weeks');
   await expect(intro).toContainText('Not covered yet: stakeholders outside the team');
-  await expect(intro.getByText('Pressure point', { exact: true })).toBeVisible();
+  await expect(intro).toContainText('I am Kora.');
+  await expect(intro.getByRole('term').filter({ hasText: 'Pressure point' })).toBeVisible();
   const question = page.getByRole('log').getByText('Who are your participants?');
   await expect(question).toBeVisible();
   expect((await intro.boundingBox())!.y).toBeLessThan((await question.boundingBox())!.y);

@@ -134,7 +134,8 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
 
   useEffect(() => {
     const el = log.current?.parentElement;
-    if (el) el.scrollTop = el.scrollHeight;
+    // A fresh chat reads from the top: what an iLead simulation is comes before question 1 (D133).
+    if (el) el.scrollTop = chat.log.length ? el.scrollHeight : 0;
   }, [chat.log.length, chat.current?.id, chat.recommendation, j.busy]);
 
   const panel = <SoFar chat={chat} />;
@@ -164,7 +165,6 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
           <Scroll label="Conversation with Kora" className="relative -mx-1 flex-1 px-1">
             <div ref={log} role="log" aria-label="Conversation" className="flex flex-col gap-3 pb-2">
               <Intro folded={chat.log.length > 0} />
-              {chat.log.length === 0 && <Bubble from="kora">I am Kora. A few short questions and I will draft your simulation. Type or record each answer, and upload a brief or a framework at any time; I skip what it answers.</Bubble>}
               {chat.log.map((e, i) => e.kind === 'note'
                 ? e.took
                   ? (
