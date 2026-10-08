@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78), kept current since (D79 to D118). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D130). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
@@ -96,7 +96,7 @@ Built to the approved canvas in `docs/design/genie` (D105 to D111): the co-creat
 - **Voice answers** use the participant app's speech client (MediaRecorder and the chunked transcription endpoints served with `createTranscriber` from `ai/`), at `VITE_GENIE_SPEECH_URL` or else `VITE_ILEAD_SPEECH_URL`; without either, an offline mock voice (`src/author/voice.ts`).
 - **Ask Kora** runs on rules offline (`src/author/model/kora.ts`); a server would answer the same proposals with the model.
 - **Test with synthetic players** renders `CalibrateSlot` from `src/author/calibrate/index.ts` when it exists (props in `src/author/ui/workspace/tabs/Calibrate.tsx`), else a coming soon panel.
-- **Not yet in the engine config** (kept in the draft for the server's AI character): voice sliders, motivation, reactions per style, topics, age, custom fields, an event's lead flow. Publishing offline records the version and offers the configuration to download; a server publishes it.
+- **Every field reaches the storyline** (D128 to D130): events export their timing, response, escalation and lead flow; pacing and days per week move real levers; a character's persona and the Story tab's world go to the AI character (`Person.npc`, `StorylineConfig.world`). Missing references are issues, never retargeted. `src/author/model/export.test.ts` guards it field by field. Not yet: the Brand tab's theme export and the Story tab's visuals (D128). Publishing offline records the version and offers the configuration to download; a server publishes it.
 
 ### The drafting endpoints
 
@@ -207,7 +207,7 @@ The board and group report keep LCP 3 s: at this network the first load's bytes 
 - **Not built:** a design for the interview, the written plan and the Week 0 practice (functional in the shared shell, D52, D84, D85, awaiting the canvas, D80); phones (D69); playing offline (the client holds actions while offline and sends them on reconnect, D86, but the mock engine is the only offline engine).
 - **The design prototype** (`?engine=off`, `/screens`, `/states`) stays for parity only; it is not a product surface.
 - **Lens styles** (D104): every lens has 4 or 5 styles; Six Leadership Styles plays five (Drive merges Pacesetting and Commanding) and keeps its library title, which the product owner may rename. Authors rename styles per lens; report lines name a style with `{style}`.
-- **/author** (D105 to D111): offline it drafts with rules and templates; the model drafter, Kora on the model, PDF reading, the persona check on publish and publishing itself are the server's. Fields the engine config does not carry yet are listed in section 5. The calibration tab's feature lands separately (`src/author/calibrate`).
+- **/author** (D105 to D111, D128 to D130): offline it drafts with rules and templates; the model drafter, Kora on the model, PDF reading, the persona check on publish and publishing itself are the server's. What the export does not carry yet (the theme, the Story tab's visuals) is in section 5. The calibration tab's feature lands separately (`src/author/calibrate`).
 
 ## 11. What the engineer configures (server)
 
