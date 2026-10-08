@@ -85,6 +85,20 @@ test('a detailed brief in one answer: "I took these", the questions it answered 
   expect(d.scoring.skills.map((s: { name: string }) => s.name)).toEqual(['Listen', 'Empower', 'Align', 'Deliver']);
 });
 
+test('an uploaded .txt brief keeps the client it names, and says what it took', async ({ page }) => {
+  await page.goto('/author');
+  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await page.locator('input[type="file"]').setInputFiles({ name: 'brief.txt', mimeType: 'text/plain', buffer: Buffer.from(BRIEF) });
+  await expect(page.getByRole('log')).toContainText('I read brief.txt.');
+  const took = page.getByRole('region', { name: 'I took these from your brief' });
+  await expect(took).toContainText('Client: Northstar Health Partners');
+  await page.getByRole('group', { name: 'Does iLead fit this brief?' }).getByRole('button', { name: 'Continue with a team leadership version' }).click();
+  await page.getByRole('button', { name: 'Skip to the workspace' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
+  await expect.poll(async () => (await stored(page))?.story.company.name).toBe('Northstar Health Partners');
+  expect(JSON.stringify(await stored(page))).not.toContain('Greenfield Hospitals');
+});
+
 test('a short request for senior managers gets a clarifying question, not an industry of "senior managers"', async ({ page }) => {
   await page.goto('/author');
   await send(page, 'create a leadership simulation for senior managers');
