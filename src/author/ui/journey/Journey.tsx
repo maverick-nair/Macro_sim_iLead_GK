@@ -8,8 +8,10 @@ import { useAuthor } from '../../model/store';
 import { Badge, BUTTON, CARD, EYEBROW, FOCUS, savedText, Scroll } from '../kit';
 import { navigate } from '../route';
 import { Composer } from './Composer';
+import { Intro } from './Intro';
 import { SoFar } from './SoFar';
 import { useJourney, type Journey as J } from './useJourney';
+import { DECIDE } from '../../questions';
 
 /** `**bold**` in Kora's notes. */
 function rich(text: string): ReactNode {
@@ -161,6 +163,7 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
           )}
           <Scroll label="Conversation with Kora" className="relative -mx-1 flex-1 px-1">
             <div ref={log} role="log" aria-label="Conversation" className="flex flex-col gap-3 pb-2">
+              <Intro folded={chat.log.length > 0} />
               {chat.log.length === 0 && <Bubble from="kora">I am Kora. A few short questions and I will draft your simulation. Type or record each answer, and upload a brief or a framework at any time; I skip what it answers.</Bubble>}
               {chat.log.map((e, i) => e.kind === 'note'
                 ? e.took
@@ -181,7 +184,13 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
                     <Bubble from="author"><span className="sr-only">You{e.voice ? ', by voice' : ''}: </span>{e.answer}</Bubble>
                   </div>
                 ))}
-              {question && (
+              {j.fitOpen && !j.editing && (
+                <div role="group" aria-label="Does iLead fit this brief?" className="flex max-w-[44rem] flex-wrap gap-2 self-start">
+                  <button type="button" className={BUTTON.kora} onClick={j.continueFit}>Continue with a team leadership version</button>
+                  <button type="button" className={BUTTON.secondary} onClick={j.changeBrief}>Change the brief</button>
+                </div>
+              )}
+              {question && !j.fitOpen && (
                 <Bubble from="kora">
                   {question.prompt}
                   {question.confirm && <span className="mt-1 block text-14 text-author-body">From what you shared: {question.confirm}. Is that right?</span>}
@@ -189,13 +198,13 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
                 </Bubble>
               )}
               {j.editing && <Bubble from="kora">Tell me the new answer to: {questionFor(j, j.editing)}</Bubble>}
-              {chat.recommendation && !chat.current && !j.editing && <LensStep j={j} />}
+              {chat.recommendation && !chat.current && !j.editing && !j.fitOpen && <LensStep j={j} />}
               {j.busy && <p className="m-0 text-14 text-author-muted" role="status">Kora is thinking.</p>}
             </div>
           </Scroll>
-          {(question || j.editing) && (
+          {(question || j.editing) && !(j.fitOpen && !j.editing) && (
             <div className="flex flex-none flex-wrap gap-2" role="group" aria-label="Suggested answers">
-              {(j.editing ? [] : question!.chips).slice(0, 6).map(c => (
+              {(j.editing ? [] : [...question!.chips.slice(0, 6), ...question!.chips.slice(6).filter(c => c.value === DECIDE)]).map(c => (
                 <button key={c.value} type="button" disabled={j.busy} onClick={() => void j.answer(c.value)}
                   className={`min-h-10 cursor-pointer rounded-pill border border-solid px-4 text-14 font-700 ${/default/i.test(c.label) ? 'border-author-kora bg-author-ai-field text-author-ink' : 'border-author-line-control bg-author-surface text-author-ink hover:bg-author-track'} ${FOCUS}`}>
                   {c.label.replace(' (default)', ' · suggested')}
