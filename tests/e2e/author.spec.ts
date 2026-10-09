@@ -155,7 +155,7 @@ test('renamed and added styles flow into actions and the played storyline; edits
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(page.getByText('Version 1 published')).toBeVisible();
 
-  const [play] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: 'Play a week' }).click()]);
+  const [play] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: 'Preview', exact: true }).click()]);
   await play.goto('/?storyline=draft&start=board&participant=author_draft');
   const groups = play.getByRole('radiogroup', { name: /^Leadership style for/ });
   await expect(groups.first()).toBeVisible({ timeout: 20_000 });

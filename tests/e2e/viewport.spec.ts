@@ -449,7 +449,7 @@ test.describe('/author', () => {
   }
   const chip = (page: Page, name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
   const composer = (page: Page) => [page.getByRole('textbox', { name: 'Your answer' }), page.getByRole('button', { name: 'Send', exact: true })];
-  const top = (page: Page) => [page.getByRole('button', { name: 'Review and publish' }), page.getByRole('button', { name: 'Play a week' })];
+  const top = (page: Page) => [page.getByRole('button', { name: 'Review and publish' }), page.getByRole('button', { name: 'Preview', exact: true })];
   async function toLens(page: Page) {
     await page.goto('/author');
     await chip(page, 'First time managers').click();

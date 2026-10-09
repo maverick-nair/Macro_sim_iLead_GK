@@ -6,7 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
  * and History's versions; two tabs on one draft never overwrite each other silently; a stored draft
  * that has to be repaired or cannot be read says so and offers the original; a tab whose chunk cannot
  * load (offline) shows a message with Try again instead of a blank page; full storage is said in view
- * at every width, and Play a week does not play the wrong simulation.
+ * at every width, and Preview does not play the wrong simulation.
  */
 
 const errors: string[] = [];
@@ -165,7 +165,7 @@ test('a tab that cannot load offline shows a message with Try again, and the dra
   await expect(page.getByRole('textbox', { name: 'Industry' })).toHaveValue('Kept while offline');
 });
 
-test('full storage is said in view at every width, and Play a week does not play the bundled demo', async ({ page }) => {
+test('full storage is said in view at every width, and Preview does not play the bundled demo', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.addInitScript(() => {
     const set = Storage.prototype.setItem;
@@ -183,8 +183,8 @@ test('full storage is said in view at every width, and Play a week does not play
   await axe(page);
   const popups: string[] = [];
   page.context().on('page', p => popups.push(p.url()));
-  await page.getByRole('button', { name: 'Play a week' }).click();
-  await expect(page.getByRole('alert').filter({ hasText: /^Play a week could not start: your browser's storage for this site is full/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Preview', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: /^Preview could not start: your browser's storage for this site is full/ })).toBeVisible();
   await page.waitForTimeout(300);
   expect(popups).toEqual([]);
 });
