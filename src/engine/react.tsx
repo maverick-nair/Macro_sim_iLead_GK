@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { offerStorylineTheme } from '../theme/bootstrap';
 import { LensProvider } from '../components/style/lens';
 import { createDefaultClient, type EngineClient } from './client';
 import type { EngineView, Intent, IntentResult } from './contract';
@@ -37,10 +38,17 @@ export function EngineProvider({ client, children }: { client?: EngineClient; ch
   );
 }
 
-/** Every engine screen renders style names from the storyline's lens (D70), from the view. */
+/**
+ * Every engine screen renders style names from the storyline's lens (D70), from the view; and the storyline's brand and
+ * office image reach the theme (D181, D182), under a theme the server provides.
+ */
 function ViewLens({ children }: { children: ReactNode }) {
-  const lens = useEngineView().data?.lens;
-  return <LensProvider lens={lens}>{children}</LensProvider>;
+  const view = useEngineView().data;
+  const s = view?.storyline;
+  useEffect(() => {
+    offerStorylineTheme(s ? { organisation: s.organisation, brand: s.brand, logo: s.logo, office: s.office } : null);
+  }, [s]);
+  return <LensProvider lens={view?.lens}>{children}</LensProvider>;
 }
 
 /** The engine client, or null outside an EngineProvider (galleries, stories). */
