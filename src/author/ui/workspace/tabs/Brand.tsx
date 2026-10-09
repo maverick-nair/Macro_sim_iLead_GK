@@ -1,7 +1,8 @@
 import { contrastRatio, parseColor, toRgb } from '../../../../theme/color';
 import { FONTS } from '../../../../theme/schema';
 import { useAuthor } from '../../../model/store';
-import { Badge, BUTTON, CARD, CardHead, Field, Segmented, Select, SubTabs, TextInput } from '../../kit';
+import { ImageUpload } from '../../ImageUpload';
+import { Badge, CARD, CardHead, Field, Segmented, Select, SubTabs, TextInput } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 
 const WHITE = { r: 1, g: 1, b: 1, alpha: 1 };
@@ -36,11 +37,11 @@ export default function Brand() {
           <Field label="Start from">{() => <Segmented label="Start from" value={b.from} onChange={v => edit(x => { x.brand.from = v; if (v === 'knolskape') { x.brand.main = '#249DFF'; x.brand.second = '#43D6E8'; x.brand.font = 'Manrope'; } }, 'brand.from')} options={[{ value: 'knolskape', label: 'KNOLSKAPE default' }, { value: 'client', label: 'Client brand' }]} />}</Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Brand name">{id => <TextInput id={id} disabled={!client} value={b.name} onChange={e => set('name', e.target.value)} />}</Field>
-            <Field label="Logo">{id => (
-              <label className={`${BUTTON.secondary} min-h-10.5 justify-center has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary ${client ? '' : 'pointer-events-none opacity-50'}`}>
-                {b.logo ? `${b.logo} · replace` : 'Upload a logo'}
-                <input id={id} type="file" accept="image/svg+xml,image/png,image/webp" className="sr-only" disabled={!client} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) set('logo', f.name); }} />
-              </label>
+            <Field label="Logo">{() => (
+              <div className="flex items-start gap-2">
+                {b.logo && <img src={b.logo} alt={`${b.name || 'Brand'} logo`} className="h-10.5 w-14 flex-none rounded-8 bg-author-track object-contain" />}
+                <ImageUpload className="flex-1" disabled={!client} label={b.logo ? 'Replace the logo' : 'Upload a logo'} maxSide={512} onImage={src => set('logo', src)} />
+              </div>
             )}</Field>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -69,7 +70,9 @@ export default function Brand() {
           <figure id="brand-panel" role="tabpanel" aria-labelledby={`brand-tab-${b.preview}`} className={`m-0 flex min-h-96 flex-col gap-2 rounded-16 p-3 ${b.look === 'light' ? 'bg-author-canvas' : 'bg-author-preview'}`} style={{ fontFamily: FONTS[b.font as keyof typeof FONTS]?.stack }}>
             <figcaption className="sr-only">{b.preview === 'board' ? 'The board' : 'The report cover'} in {client ? b.name : 'the KNOLSKAPE'} theme</figcaption>
             <div className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-6 text-11 font-800" style={{ background: b.second, color: 'var(--il-color-brand-deep-space)' }}>{(b.name || 'KS').slice(0, 2).toUpperCase()}</span>
+              {client && b.logo
+                ? <img src={b.logo} alt="" className="h-7 w-auto max-w-20 object-contain" />
+                : <span className="flex size-7 items-center justify-center rounded-6 text-11 font-800" style={{ background: b.second, color: 'var(--il-color-brand-deep-space)' }}>{(b.name || 'KS').slice(0, 2).toUpperCase()}</span>}
               <b className={`text-14 ${b.look === 'light' ? 'text-author-ink' : 'text-brand-pale-lavender'}`}>{client ? b.name : 'iLead'}</b>
               <span className="flex-1" />
               {b.preview === 'board' && <span className="rounded-8 px-2.5 py-1 text-12 font-800" style={{ background: b.main, color: 'var(--il-color-brand-deep-space)' }}>End week 1</span>}

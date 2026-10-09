@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { bestStyle, needOf } from '../../../engine/lens';
 import { GENDERS, type AuthorDraft, type Character } from '../../model/draft';
 import { PORTRAITS, pronounsOf, VOICE_LIBRARY } from '../../model/seed';
+import { isImageRef } from '../../../engine/assets';
+import { ImageUpload } from '../ImageUpload';
 import { Avatar, Badge, BUTTON, Chip, Field, Icon, Modal, Segmented, Select, SubTabs, TEXT_MAX, TextArea, TextInput, toneOf } from '../kit';
 
 type EditTab = 'identity' | 'voice' | 'personality' | 'stats';
@@ -65,7 +67,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
           <div className="grid grid-cols-[18rem_minmax(0,1fr)] gap-6 max-[1000px]:grid-cols-[13rem_minmax(0,1fr)] max-[1000px]:gap-4">
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between"><span className="text-13 font-700 text-author-label">Photo</span><Badge kind={draft.marks[`team.${c.id}.identity`] ?? 'ai'} /></div>
-              <img src={c.photo.startsWith('/') ? c.photo : PORTRAITS[0]} alt={`${c.first} ${c.last}`.trim()} className="aspect-[6/5] w-full rounded-16 bg-author-track object-cover object-top" />
+              <img src={isImageRef(c.photo) ? c.photo : PORTRAITS[0]} alt={`${c.first} ${c.last}`.trim()} className="aspect-[6/5] w-full rounded-16 bg-author-track object-cover object-top" />
               <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
                 <legend className="mb-2 text-13 font-700 text-author-label">Choose from the library</legend>
                 <div className="grid grid-cols-5 gap-1.5 max-[1000px]:grid-cols-4">
@@ -77,11 +79,12 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
                   ))}
                 </div>
               </fieldset>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-start gap-2">
                 <button type="button" className={`${BUTTON.koraOutline} flex-1`} onClick={() => set('photo', PORTRAITS[(PORTRAITS.indexOf(c.photo) + 1) % PORTRAITS.length])}>Create with Kora</button>
+                <ImageUpload className="flex-1" label="Upload a photo" maxSide={640} onImage={src => set('photo', src)} />
               </div>
-              {!c.photo.startsWith('/') && <p className="m-0 text-12 text-author-need">This photo is not in the library, so participants see the first library portrait. Pick one above.</p>}
-              <p className="m-0 text-12 text-author-muted">Each photo comes with four moods (upbeat, steady, concerned, frustrated) so the face matches how the person feels in play.</p>
+              {!isImageRef(c.photo) && <p className="m-0 text-12 text-author-need">This photo cannot be shown, so participants see the first library portrait. Pick one above or upload one.</p>}
+              <p className="m-0 text-12 text-author-muted">{c.photo.startsWith('data:') ? 'Participants see your uploaded photo on the board, in their profile and in every conversation.' : 'Each photo comes with four moods (upbeat, steady, concerned, frustrated) so the face matches how the person feels in play.'}</p>
             </div>
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3 max-[1000px]:grid-cols-1">
