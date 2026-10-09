@@ -40,7 +40,9 @@ export const isLensTitle = (title: string) => LENS_TITLES.includes(title);
 /** Fields that are ids, enums, paths or numbers, not copy. `basedOn` is the one place sources belong. */
 export const SKIP = new Set(['basedOn', 'id', 'key', 'portrait', 'portraits', 'voice', 'homeStage', 'target', 'locale', 'currency', 'display', 'unit', 'rule', 'kind',
   'format', 'card', 'delivery', 'condition', 'intent', 'pronoun', 'style', 'opening', 'hints', 'use', 'celebration', 'scope', 'sections', 'linkage', 'fit',
-  'byStage', 'start', 'effects', 'money', 'time', 'prerequisite', 'unlocks', 'actions_keys', 'event', 'letter']);
+  'byStage', 'start', 'effects', 'money', 'time', 'prerequisite', 'unlocks', 'actions_keys', 'event', 'letter',
+  // Images, colours and settings of the brand, the world's visuals and the LMS block (D181 to D184).
+  'image', 'logo', 'colors', 'font', 'mode', 'view', 'package']);
 
 /**
  * Walks a drafted storyline (or the lens module) and returns every issue with its path. Lens titles

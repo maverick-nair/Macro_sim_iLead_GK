@@ -7,7 +7,7 @@ import { LENS_BY_ID } from '../lenses';
 import { buildModule } from '../module';
 import { choicesFromDilemmas, defaultSeedVariables, roundish, variablesFromBrief, type SeedChoice } from '../dilemmas';
 import { draftContext, draftStoryline } from '../storyline';
-import { AuthorDraft, type ActionDraft, type Chat, type Character, type DraftStyle, type EventDraft, type Mark } from './draft';
+import { AuthorDraft, DEFAULT_LMS_DRAFT, type ActionDraft, type Chat, type Character, type DraftStyle, type EventDraft, type Mark } from './draft';
 import { ACTION_TEMPLATES, canPlay, ENGINE_TEMPLATES } from './library';
 import { mapWeek } from './run';
 import type { ChoiceOptionDraft, VariableDraft } from './draft';
@@ -64,6 +64,8 @@ export function parseEffect(text: string): [number, number, number] | null {
 
 const HQ: Record<string, string> = { global: 'London, United Kingdom', us: 'Chicago, United States', uk: 'Manchester, United Kingdom', india: 'Pune, India', singapore: 'Singapore', uae: 'Dubai, United Arab Emirates', australia: 'Melbourne, Australia' };
 /** The portrait library: Sales Elevator's faces, each with its moods. */
+/** The office backdrops GenieKreator offers (D182): the player's default first. */
+export const OFFICES = [{ src: '/assets/bg-1.webp', label: 'Night skyline' }, { src: '/assets/bg-2.webp', label: 'Deep blue' }] as const;
 export const PORTRAITS = ['kent', 'beth', 'justin', 'ruth', 'derick', 'mandy', 'peter', 'lowe', 'green', 'jack'].map(n => `/assets/npc/${n}.webp`);
 const AGES = ['25 to 34', '35 to 44', '45 to 54', '25 to 34'];
 const COMM = ['Direct', 'Guarded at first', 'Detailed', 'Warm', 'Data driven', 'Competitive', 'Quiet', 'Talkative'];
@@ -282,8 +284,8 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       stakeholders: structuredClone(brief.stakeholders ?? []), objectives: [...(brief.objectives ?? [])], dilemmas: structuredClone(brief.dilemmas ?? [])
     },
     story: {
-      company: { name: ctx.company, hq: HQ[brief.region ?? 'global'], about: `${ctx.company} offers ${ctx.product}, ${ind.productLine}, to ${ind.customers} across the region.`, team: `${pressureName} and the stages around it`, office: 'Glass office, city view', logo: ctx.company.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase() },
-      product: { name: ctx.product, dealValue: null, oneLine: `${ctx.product}: ${ind.productLine}.`, points: [`Built for ${words.customers} who need it to work first time`, 'Support that answers within four hours', `Pricing that scales with each ${words.work}`], view: 'none' },
+      company: { name: ctx.company, hq: HQ[brief.region ?? 'global'], about: `${ctx.company} offers ${ctx.product}, ${ind.productLine}, to ${ind.customers} across the region.`, team: `${pressureName} and the stages around it`, office: OFFICES[0].src, logo: ctx.company.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(), logoImage: '' },
+      product: { name: ctx.product, dealValue: null, oneLine: `${ctx.product}: ${ind.productLine}.`, points: [`Built for ${words.customers} who need it to work first time`, 'Support that answers within four hours', `Pricing that scales with each ${words.work}`], view: 'none', image: '' },
       market: { customers: ind.customers, rivals: [{ name: ctx.rival, angle: 'Competes on service and reach' }] },
       sponsor: { name: sl.sponsor.name, title: sl.sponsor.title, voice: 'Warm, measured' },
       screens: [
@@ -309,6 +311,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       framework: null, levels: (sl.report?.scale ?? DEFAULT_SCALE).map(l => l.name), reportSections: null
     },
     brand: { from: 'knolskape', name: ctx.company, logo: '', main: '#249DFF', second: '#43D6E8', font: 'Manrope', look: 'dark', preview: 'board' },
+    lms: { ...DEFAULT_LMS_DRAFT },
     publish: { cohort: '', notes: '', version: 0, played: false, skipTest: false },
     marks: {},
     suggestions: [],

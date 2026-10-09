@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { Brief, Clarify, Dilemma, FrameworkDimension, QUESTION_IDS, Stakeholder } from '../../api/author';
-import { CONDITION_METRICS, EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
+import { IMAGE_REF_MAX } from '../../engine/assets';
+import { BRAND_FONTS, CONDITION_METRICS, DEFAULT_LMS, EVENT_CONDITIONS, LMS_COMPLETION, LMS_PACKAGES, LMS_PASS, MAX_MEMBERS, MAX_PERIODS, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
@@ -28,6 +29,11 @@ export const TEXT_MAX = 4000;
 const Text = z.string().max(TEXT_MAX);
 const Short = z.string().max(SHORT_MAX);
 const Pct = z.number().int().min(0).max(100);
+/**
+ * An image the author picked or uploaded (D183): a library path (`/assets/...`) or an upload embedded as a data URL,
+ * which GenieKreator shrinks to the budget on the way in. Empty for none. Export checks the budget and names any image over it.
+ */
+const Image = z.string().max(IMAGE_REF_MAX);
 /**
  * A whole number kept inside the engine's range (D128): a stored draft from before a bound tightened (12
  * weeks, say) reads back at the nearest value the engine plays, instead of failing and losing its section.
@@ -113,8 +119,8 @@ export const Character = z.object({
   title: Short,
   /** A stage key of the work process. */
   stage: z.string(),
-  /** A library portrait (each has four moods in play), or the name of an uploaded photo. */
-  photo: z.string().max(300),
+  /** A library portrait (each has four moods in play), or an uploaded photo (D183). */
+  photo: Image,
   voice: z.object({ id: Short, language: Short, accent: Short, pace: Pct, warmth: Pct, formality: Pct, replyLength: z.enum(REPLY_LENGTHS) }),
   persona: Text,
   hiddenConcern: Text,
@@ -297,8 +303,8 @@ export const StakeholderDraft = z.object({
   kind: z.enum(STAKEHOLDER_KINDS),
   gender: z.enum(GENDERS),
   pronouns: Short,
-  /** A library portrait, or empty for their initials. */
-  photo: z.string().max(300),
+  /** A library portrait, an uploaded photo (D183), or empty for their initials. */
+  photo: Image,
   /** What the participant knows about them. */
   about: Text,
   persona: Text,
@@ -429,8 +435,13 @@ export const AuthorDraft = z.object({
     dilemmas: z.array(Dilemma).max(12).default([])
   }),
   story: z.object({
-    company: z.object({ name: Short, hq: Short, about: Text, team: Short, office: Short, logo: Short }),
-    product: z.object({ name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']) }),
+    /**
+     * `office`: the office image behind the player's screens, a library backdrop or an upload, or (from drafts and Kora) a description of it
+     * (D182). `logo`: up to three letters; `logoImage`: an uploaded logo, which wins over the letters.
+     */
+    company: z.object({ name: Short, hq: Short, about: Text, team: Short, office: Image, logo: Short, logoImage: Image.default('') }),
+    /** `view`: how the onboarding's portfolio scene shows the product (D182); `image`: its photo, for the photos view. */
+    product: z.object({ name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']), image: Image.default('') }),
     market: z.object({ customers: Short, rivals: z.array(z.object({ name: Short, angle: Text })) }),
     sponsor: z.object({ name: Short, title: Short, voice: Short }),
     screens: z.array(z.object({ key: z.string(), title: Short, body: Text }))
@@ -462,16 +473,31 @@ export const AuthorDraft = z.object({
     /** The report's sections in the engine's order; null is the purpose's default set. */
     reportSections: z.array(z.enum(REPORT_SECTIONS)).min(1).nullable().default(null)
   }),
+  /** The client brand (D181): exported as the storyline's `brand`. `logo` is an uploaded image (D183); `preview` is the tab's own preview switch. */
   brand: z.object({
     from: z.enum(['knolskape', 'client']),
     name: Short,
-    logo: Short,
+    logo: Image,
     main: Short,
     second: Short,
-    font: Short,
+    font: z.string().max(40),
     look: z.enum(['dark', 'light', 'participant']),
     preview: z.enum(['board', 'report'])
   }),
+  /**
+   * What the LMS records of a run (D184), exported as the storyline's `lms`. Edited in Review and publish. `completionWeeks`: the weeks
+   * to complete for the `weeks` rule (null: every week); `passScore`: the Leadership Score, 0 to 100, for the `score` rule; `passLevel`:
+   * the lowest overall level that passes, for the `level` rule.
+   */
+  lms: z.object({
+    completion: z.enum(LMS_COMPLETION),
+    completionWeeks: IntIn(1, MAX_WEEKS).nullable(),
+    pass: z.enum(LMS_PASS),
+    passScore: Pct,
+    passLevel: Short,
+    package: z.enum(LMS_PACKAGES),
+    connected: z.boolean()
+  }).default(() => ({ ...DEFAULT_LMS_DRAFT })),
   /**
    * `skipTest`: the author ticked "Publish without testing" for this version (D132): a synthetic test that has
    * not run, or not run fully, on this version is then advisory. It never covers a failed test, and it resets on publish.
@@ -491,6 +517,13 @@ export const AuthorDraft = z.object({
   }).nullable()
 });
 export type AuthorDraft = z.infer<typeof AuthorDraft>;
+
+/** A new draft's LMS settings (D184): the engine's defaults. */
+export const DEFAULT_LMS_DRAFT = {
+  completion: DEFAULT_LMS.completion.rule, completionWeeks: null, pass: DEFAULT_LMS.pass.rule, passScore: DEFAULT_LMS.pass.score, passLevel: '',
+  package: DEFAULT_LMS.package, connected: DEFAULT_LMS.connected
+} as const satisfies z.input<typeof AuthorDraft>['lms'];
+export { BRAND_FONTS };
 
 /** Where "Play a week" leaves the storyline; the participant mock reads it (`src/engine/mock.ts`, DRAFT_KEY). */
 export const DRAFT_KEY = 'ilead.author.draft';

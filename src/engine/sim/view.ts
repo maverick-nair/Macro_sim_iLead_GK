@@ -135,8 +135,15 @@ export function buildView(sim: Sim) {
   const score = finalScore(sim);
   return {
     phase: sim.phase,
-    /** Read only storyline identity, for onboarding. */
-    storyline: { name: c.name, organisation: c.organisation ?? null, locale: c.locale, ...(c.intro ? { intro: c.intro } : null), video: c.video ?? null },
+    /**
+     * Read only storyline identity, for onboarding, and what the player renders from the storyline's look and world
+     * (D181 to D183): the client brand, the company logo, the office image, the product portfolio and the intro screens.
+     */
+    storyline: {
+      name: c.name, organisation: c.organisation ?? null, locale: c.locale,
+      ...(c.intro ? { intro: { welcome: c.intro.welcome, product: c.intro.product, targets: c.intro.targets } } : null), video: c.video ?? null,
+      ...storylineLook(c)
+    },
     /**
      * The lens's styles and needs; never the fit table or the source (D70). The Tutorial's worked examples
      * (D91) are authored archetypes, or two worded from the needs and the first style that fits each.
@@ -252,6 +259,18 @@ export function buildView(sim: Sim) {
       };
     }),
     report: sim.phase === 'ended' ? buildReport(sim) : null
+  };
+}
+
+/** The storyline's look and world for the player (D181 to D183), each null or empty when the storyline leaves it out. */
+export function storylineLook(c: StorylineConfig) {
+  const b = c.brand, w = c.world;
+  return {
+    brand: b ? { name: b.name ?? null, colors: b.colors ?? null, logo: b.logo ?? null, font: b.font ?? null, mode: b.mode ?? null } : null,
+    logo: w?.logo ? { image: w.logo.image ?? null, text: w.logo.text ?? null } : null,
+    office: w?.office?.image ?? null,
+    products: (w?.products ?? []).map(p => ({ name: p.name, line: p.line ?? null, specs: p.specs, image: p.image ?? null, view: p.view })),
+    screens: (c.intro?.screens ?? []).map(x => ({ key: x.key, title: x.title, body: x.body }))
   };
 }
 

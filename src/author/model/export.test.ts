@@ -10,6 +10,7 @@ import { createEngine } from '../../engine/sim/engine';
 import { neededStyles } from '../../engine/sim/policies';
 import { emptyChat, PORTRAITS, pronounsOf, seedDraft } from './seed';
 import { blankEffect, newStakeholder } from './stakeholders';
+import { IMAGE_BUDGET_BYTES } from '../../engine/assets';
 
 /**
  * The principle (D128): every field the author sees reaches the simulation, or is an author note
@@ -45,8 +46,14 @@ function fixture(): AuthorDraft {
     respondWith: [], within: 2, onTime: [0, 2, 0], ifIgnored: { sponsor: true, followUp: null }, stakeholder: s.key,
     request: { kind: 'meeting', interaction: 'meet', within: 2, onTime: { trust: 3, satisfaction: 3 }, ifIgnored: { trust: -6, satisfaction: -8 } }, moves: { [s.key]: { trust: 0, satisfaction: -2 } }, origin: 'yours' });
   d.events.find(e => e.key === DISCOUNT)!.choice!.options[0].stakeholders = { [s.key]: { trust: -2, satisfaction: 3 } };
+  // A client brand and a product shown with its photo (D181, D182).
+  Object.assign(d.brand, { from: 'client', name: 'Ascent Group', main: '#0B5FFF', second: '#00A3A3', font: 'Manrope' });
+  d.story.product.view = 'photos';
   return d;
 }
+
+/** A one pixel PNG, as an upload is embedded (D183). */
+const PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
 /** Reads a dotted path; a segment `key=value` picks the array element with that key. */
 function at(v: unknown, path: string): unknown {
@@ -102,6 +109,28 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['story.sponsor.title', d => { d.story.sponsor.title = 'Chief Revenue Officer'; }, 'sponsor.title'],
   ['story.sponsor.voice', d => { d.story.sponsor.voice = 'Brisk and dry'; }, 'world.sponsorVoice'],
   ['story.screens[].body', d => { d.story.screens.find(s => s.key === 'welcome')!.body = 'Welcome aboard.'; }, 'intro.welcome'],
+  // The player's look and the onboarding's scenes (D181 to D183).
+  ['story.screens[].title', d => { d.story.screens.find(s => s.key === 'team')!.title = 'Your people'; }, 'intro.screens'],
+  ['story.company.office', d => { d.story.company.office = '/assets/bg-2.webp'; }, 'world.office'],
+  ['story.company.logo', d => { d.story.company.logo = 'XY'; }, 'world.logo'],
+  ['story.company.logoImage', d => { d.story.company.logoImage = PIXEL; }, 'world.logo'],
+  ['story.product.view', d => { d.story.product.view = 'model'; }, 'world.products'],
+  ['story.product.image', d => { d.story.product.image = PIXEL; }, 'world.products'],
+  ['brand.from', d => { d.brand.from = 'knolskape'; }, 'brand'],
+  ['brand.name', d => { d.brand.name = 'Halden Group'; }, 'brand.name'],
+  ['brand.logo', d => { d.brand.logo = PIXEL; }, 'brand.logo'],
+  ['brand.main', d => { d.brand.main = '#112233'; }, 'brand.colors'],
+  ['brand.second', d => { d.brand.second = '#445566'; }, 'brand.colors'],
+  ['brand.font', d => { d.brand.font = 'Inter'; }, 'brand.font'],
+  ['brand.look', d => { d.brand.look = 'light'; }, 'brand.mode'],
+  // What the LMS records (D184).
+  ['lms.completion', d => { d.lms.completion = 'weeks'; }, 'lms.completion'],
+  ['lms.completionWeeks', d => { d.lms.completionWeeks = 2; }, 'lms.completion'],
+  ['lms.pass', d => { d.lms.pass = 'score'; }, 'lms.pass'],
+  ['lms.passScore', d => { d.lms.passScore = 85; }, 'lms.pass'],
+  ['lms.passLevel', d => { d.lms.passLevel = d.scoring.levels[2]; }, 'lms.pass'],
+  ['lms.package', d => { d.lms.package = 'scorm2004'; }, 'lms.package'],
+  ['lms.connected', d => { d.lms.connected = true; }, 'lms.connected'],
   ['process.stages[].name', d => { d.process.stages[0].name = 'Prospects'; }, 'stages.0.name'],
   ['process.stages[].people', d => { d.process.stages[0].people = 3; }, 'stages.0.ideal'],
   ['process.stages[].passesOn', d => { d.process.stages[1].passesOn = 35; }, 'stages.1.conversionRatio'],
@@ -310,17 +339,13 @@ const INTERNAL = new Set([
   'events[].key', 'events[].origin',
   'stakeholders[].key', 'stakeholders[].interactions[].type', 'stakeholders[].interactions[].options[].key',
   'scoring.skills[].key', 'scoring.skills[].name', 'scoring.skills[].reportOnly', 'scoring.samples[].id', 'scoring.samples[].with', 'scoring.samples[].answer', 'scoring.samples[].scored',
-  'publish.version', 'publish.played'
+  'publish.version', 'publish.played',
+  // The Brand and theme tab's own preview switch (board or report): it changes what the author sees, not the simulation.
+  'brand.preview'
 ]);
 
-/**
- * Known gaps, outside this change (reported in D128): the client theme is not exported yet (Brand and
- * theme), and the Story tab's visuals and extra intro screens have no engine field.
- */
-const KNOWN_GAPS = new Set([
-  'brand.from', 'brand.name', 'brand.logo', 'brand.main', 'brand.second', 'brand.font', 'brand.look', 'brand.preview',
-  'story.company.office', 'story.company.logo', 'story.product.view', 'story.screens[].title'
-]);
+/** Known gaps: none since D181 to D184 exported the brand, the Story tab's visuals, the intro screens' titles and uploaded images. */
+const KNOWN_GAPS = new Set<string>([]);
 
 const RECORDS = new Set(['chat', 'marks', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables',
   'events[].moves', 'events[].choice.options[].stakeholders', 'stakeholders[].interactions[].good.variables', 'stakeholders[].interactions[].bad.variables', 'stakeholders[].interactions[].options[].effect.variables']);
@@ -563,5 +588,71 @@ describe('choices, conditions and business variables export as authored (D135 to
     const x = out.storyline.events!.find(y => y.key === 'public_complaint')!;
     expect([x.period, x.window, x.when, x.if]).toEqual([undefined, undefined, undefined, [{ kind: 'variable', variable: 'customer_trust', op: 'below', value: 60 }]]);
     expect(out.storyline.events!.find(y => y.key === 'lens_moment')!.escalation).toEqual({ sponsor: true, event: 'public_complaint', delay: { days: 3, weeks: 0 } });
+  });
+});
+
+describe('the brand, the Story tab\'s visuals, uploads and the LMS export as authored (D181 to D184)', () => {
+  it('a client brand, the office, the logo, the product and the intro screens reach the storyline and parse', () => {
+    const d = fixture();
+    Object.assign(d.brand, { logo: PIXEL, look: 'participant' });
+    Object.assign(d.story.company, { office: PIXEL, logoImage: PIXEL });
+    d.story.product.image = PIXEL;
+    d.team[0].photo = PIXEL;
+    const out = toStoryline(d);
+    expect(out.issues).toEqual([]);
+    const p = parseStoryline(out.storyline);
+    if (!p.ok) throw new Error(p.issues.join('\n'));
+    expect(p.config.brand).toEqual({ name: 'Ascent Group', colors: { main: '#0B5FFF', second: '#00A3A3' }, logo: PIXEL, font: 'Manrope', mode: 'system' });
+    expect(p.config.world?.office).toEqual({ image: PIXEL });
+    expect(p.config.world?.logo).toEqual({ image: PIXEL, text: d.story.company.logo });
+    expect(p.config.world?.products).toEqual([{ name: d.story.product.name, line: d.story.product.oneLine, specs: d.story.product.points, image: PIXEL, view: 'photo' }]);
+    expect(p.config.members[0].portrait).toBe(PIXEL);
+    expect(p.config.intro?.screens?.map(s => s.title)).toEqual(d.story.screens.map(s => s.title));
+    expect(p.config.lms).toEqual({ completion: { rule: 'finish' }, pass: { rule: 'none', score: 70 }, score: 'leadership', package: 'scorm12', connected: false });
+  });
+
+  it('the KNOLSKAPE look exports only the look; a described office goes to the AI characters; no product view, no portfolio', () => {
+    const d = fixture();
+    d.brand.from = 'knolskape';
+    d.story.company.office = 'Glass office, city view';
+    d.story.product.view = 'none';
+    const sl = toStoryline(d).storyline;
+    expect(sl.brand).toEqual({ mode: 'dark' });
+    expect(sl.world?.office).toEqual({ description: 'Glass office, city view' });
+    expect(sl.world?.products).toBeUndefined();
+  });
+
+  it('names an upload over the budget, or a photo the player cannot show, and falls back instead', () => {
+    const d = fixture();
+    const big = `data:image/png;base64,${'A'.repeat(Math.ceil((IMAGE_BUDGET_BYTES + 2048) / 3) * 4)}`;
+    d.team[1].photo = big;
+    d.story.company.office = big;
+    d.brand.logo = 'logo.png';
+    const out = toStoryline(d);
+    const text = out.issues.join('\n');
+    expect(text).toMatch(new RegExp(`${d.team[1].first} ${d.team[1].last}'s photo is \\d+ KB, over the 300 KB an uploaded image may be`));
+    expect(text).toMatch(/The office image is \d+ KB, over the 300 KB/);
+    expect(text).toMatch(/The brand logo is not an image the simulation can show/);
+    expect(out.storyline.members[1].portrait).toMatch(/^\/assets\//);
+    expect(out.storyline.world?.office).toBeUndefined();
+    expect(out.storyline.brand?.logo).toBeUndefined();
+  });
+
+  it('names a pass level that is not on the rating scale and a completion after the last week', () => {
+    const d = fixture();
+    Object.assign(d.lms, { completion: 'weeks', completionWeeks: d.process.weeks + 1, pass: 'level', passLevel: 'Wizard' });
+    const text = toStoryline(d).issues.join('\n');
+    expect(text).toMatch(/completes after \d+ weeks, but it has/);
+    expect(text).toMatch(/the pass level "Wizard" is not one of the rating scale's levels/);
+    expect(text).not.toMatch(/^lms\./m);
+  });
+
+  it('reads a draft saved before D181 to D184 back with the new fields at their defaults', async () => {
+    const { AuthorDraft } = await import('./draft');
+    const raw = JSON.parse(JSON.stringify(fixture())) as Record<string, Record<string, Record<string, unknown>>>;
+    delete raw.lms; delete raw.story.company.logoImage; delete raw.story.product.image;
+    const back = AuthorDraft.parse(raw);
+    expect(back.lms).toEqual({ completion: 'finish', completionWeeks: null, pass: 'none', passScore: 70, passLevel: '', package: 'scorm12', connected: false });
+    expect([back.story.company.logoImage, back.story.product.image]).toEqual(['', '']);
   });
 });

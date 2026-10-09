@@ -96,6 +96,193 @@
               "type": "null"
             }
           ]
+        },
+        "brand": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "colors": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "main": {
+                          "type": "string"
+                        },
+                        "second": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "main",
+                        "second"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "logo": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "font": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "mode": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "dark",
+                        "light",
+                        "system"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "name",
+                "colors",
+                "logo",
+                "font",
+                "mode"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "logo": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "image": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "text": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "image",
+                "text"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "office": {
+          "default": null,
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "products": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/Text"
+              },
+              "line": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/Text"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "specs": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Text"
+                }
+              },
+              "image": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "view": {
+                "type": "string",
+                "enum": [
+                  "photo",
+                  "model"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "line",
+              "specs",
+              "image",
+              "view"
+            ]
+          }
+        },
+        "screens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "$ref": "#/$defs/Text"
+              },
+              "body": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Text"
+                }
+              }
+            },
+            "required": [
+              "key",
+              "title",
+              "body"
+            ]
+          }
         }
       },
       "required": [
