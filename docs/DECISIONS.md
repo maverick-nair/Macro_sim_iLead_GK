@@ -1048,6 +1048,37 @@ The report audit (P1) found narratives that contradicted the data: the overall n
 - `StakeholderBar` was in the participant's first load (about 2 KB before compression) although Sales Elevator has no stakeholders. The board now loads it lazily, like the stakeholders panel. Initial JS 221.8 KB.
 - Vitals measured back to back on this container: the code before P1 (50cbf22), the integration before this change (e7afc3b) and this commit all read first load LCP about 2550 ms and board TBT 430 to 470 ms, against earlier readings of 2440 to 2530 ms and 330 to 410 ms on a quieter machine. The P1 work adds about 7 KB of transfer and no measurable LCP or TBT; the overruns are the machine. Confirm on CI.
 
+**D180. Two products, one contract, and a traceability registry.** Decided 2026-10-09.
+- `docs/PRODUCT.md` states the two products (GenieKreator for authors, the Simulation Player for participants), their personas, UX principles and information architecture, the traceability principle and the trace matrix.
+- `src/shared/trace.ts` is the matrix as code: StorylineConfig paths (dot paths, `[]` for list elements) to `{ section, label, surfaces }`, with `SURFACES` describing each participant surface in the participant's terms, and `traceOf(path)`, `surfacesFor(section)`, `pathsFor(surface)`. An entry covers everything under it unless a closer one says otherwise. It imports only types from the author model, so the player can use it.
+- `INTERNAL` lists what is not traced, each with a kind and reason: `id`, `mechanics`, `author`, or `default` (participant facing but from engine or template defaults; these are the trace gaps PRODUCT.md lists, to close in later rounds).
+- `trace.test.ts` walks the Zod schema (about 880 leaf fields): every field is traced or internal, every listed path exists, sections are real tabs, surfaces are known, every authoring section reaches a surface. `export.test.ts` still guards the other direction.
+
+**D181. The storyline carries the client brand; a server theme still wins.** Decided 2026-10-09.
+- `StorylineConfig.brand` (optional): `name`, `colors { main, second }` (#RRGGBB), `logo` (image), `font` (the theme loader's allowlist, `BRAND_FONTS`, a test keeps them equal), `mode` (`dark`, `light`, `system`). Export: a client brand exports all of it; the KNOLSKAPE default exports only the look. "Participant chooses" is `system`.
+- The player: the engine view exposes `storyline.brand`; `EngineProvider` offers it to the theme bootstrap (`offerStorylineTheme`), which resolves it through the same loader as a server theme (main colour for accents and the button, second for links and the gradient's end, contrast corrected, D72). Only pages that started the theme apply it, never GenieKreator or a gallery.
+- Precedence: a theme from `GET /theme` or the launch payload replaces the storyline brand as a whole (colours, logo, font, mode); field by field merging would mix two brands. The brand mark is the brand logo, else the company's uploaded logo, never the dashed placeholder.
+
+**D182. Office image, company logo, product portfolio and intro screen titles reach the storyline.** Decided 2026-10-09.
+- `world.office { image, description }`: an image (library backdrop or upload) goes behind the player's screens in place of `/assets/bg-1.webp` by overriding `--il-backdrop-office` (and `--il-backdrop-daylight` for uploads, under a veil so text stays readable); a description (drafts saved before, or Kora's words) goes to the AI characters. GenieKreator offers the two library backdrops and an upload; new drafts start on the default backdrop.
+- `world.logo { image, text }`: the company's uploaded logo (new draft field `story.company.logoImage`) and its letters.
+- `world.products[] { name, line, specs, image, view }`: the portfolio scene's data, from the product, its selling points, the Product view (`photos` is `photo`, `model` the library's stylised model, `none` no scene) and a product photo (new draft field `story.product.image`).
+- `intro.screens[] { key, title, body }`: every intro screen in the author's order with its title, so added screens are no longer dropped. `intro.welcome`, `product` and `targets` stay as they were.
+- The AI scene passes the world's words only (`ai/src/scene.ts`), never embedded images; the prompt names the office when described.
+
+**D183. Uploaded images are embedded, inside a budget, and named when they cannot be used.** Decided 2026-10-09.
+- `src/engine/assets.ts`: an image is a site path, an https address or a base64 data URL (PNG, JPEG, WebP, GIF, SVG); embedded ones at most 300 KB each and 3 MB per storyline. New fields use `ImageRef`; portraits stay plain strings for back compatibility, with the budget checked in the storyline's refinement.
+- GenieKreator uploads (`ImageUpload`, `upload.ts`) shrink photos on a canvas to fit (WebP, JPEG fallback); a file that cannot fit or be read says why. Team and stakeholder photos, the office, both logos and the product photo can be uploaded.
+- Export names an image the player cannot show ("Kenneth Okoye's photo is 512 KB, over the 300 KB ...", "The brand logo is not an image the simulation can show") and leaves it out, so the fallback shows. The player renders them where it renders portraits, the backdrop and the brand mark today.
+
+**D184. The storyline says what the LMS records.** Decided 2026-10-09.
+- `StorylineConfig.lms` with defaults: `completion { rule: finish | weeks, periods? }`, `pass { rule: none | score | level, score (Leadership Score scaled 0 to 100, default 70), level? }`, `score: leadership` (the Leadership Score scaled 0 to 100), `package: scorm12 | scorm2004` (default `scorm12`, the widest LMS support), `connected` (default false). Checked: completion within the run, the pass level on the rating scale.
+- Draft `lms { completion, completionWeeks, pass, passScore, passLevel, package, connected }` with defaults (`DEFAULT_LMS_DRAFT`); exported keeping every value whichever rule is on. The authoring UI (Review and publish) and the SCORM runtime belong to other workstreams.
+
+**D185. The participant view carries what the player needs from the storyline's look and world.** Decided 2026-10-09.
+- `EngineView.storyline` adds `brand`, `logo`, `office`, `products` and `screens` (`StorylineLook` in the contract, each null or empty when the storyline leaves it out, so older views and the mock parse unchanged). `intro` keeps its three pages. Later onboarding scenes and the preview overlay render from these, never from fixtures.
+- Not done here: the portfolio scene and the intro screens list in onboarding (src/app and onboarding owners), the Review and publish LMS controls, the "Where it appears" panels and the preview overlay. A sponsor photo is not authored yet.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
