@@ -6,8 +6,9 @@
  */
 import hud from './hud.json';
 import inbox from './inbox.json';
+import lms from './lms.json';
 import settings from './settings.json';
 import time from './time.json';
 
-const es: Record<string, string> = { ...hud, ...inbox, ...settings, ...time };
+const es: Record<string, string> = { ...hud, ...inbox, ...lms, ...settings, ...time };
 export default es;

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useApi } from '../../api';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { useMoney } from '../../i18n/money';
@@ -23,6 +24,8 @@ const MARK = '\u0001';
 export function EndScreen(p: EndScreenProps) {
   const { t, number, delta } = useI18n();
   const money = useMoney();
+  /** No email service (a SCORM package, D208): Email me is left out. */
+  const email = useApi().features?.email !== false;
   const h1 = useRef<HTMLHeadingElement>(null);
   const focusOnOpen = !!p.focusOnOpen;
   useEffect(() => {
@@ -116,7 +119,7 @@ export function EndScreen(p: EndScreenProps) {
       <div className="sticky bottom-0 z-30 -mx-8 mt-auto flex flex-wrap items-center gap-2.5 border-t border-line-default bg-surface-material px-8 py-3 backdrop-blur-20">
         <NoWrapButton variant="primary" size="lg" onClick={p.onViewReport}>{t('end.report.view')}</NoWrapButton>
         <NoWrapButton variant="secondary" size="lg" onClick={p.onDownload}>{t('end.report.pdf')}</NoWrapButton>
-        <NoWrapButton variant="ghost" size="lg" disabled={p.emailing} onClick={p.onEmail}>{t('end.report.email')}</NoWrapButton>
+        {email && <NoWrapButton variant="ghost" size="lg" disabled={p.emailing} onClick={p.onEmail}>{t('end.report.email')}</NoWrapButton>}
       </div>
     </div>
   );

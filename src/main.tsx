@@ -103,9 +103,11 @@ document.documentElement.dir = dirOf(appLocale());
 void loadEngineCopy().catch(() => undefined);
 
 const path = location.pathname.replace(/\/+$/, '');
+/** A SCORM package's player, or `?lms=scorm` to try package mode here (D208): its own boot, loaded on demand. */
+const packaged = new URLSearchParams(location.search).get('lms') === 'scorm' || !!document.querySelector('meta[name="ilead-package"]');
 /** /author and its workspace and library routes (D105). */
 const author = path === '/author' || path.startsWith('/author/');
-const play = !author && !['/screens', '/states', '/group', '/report/print'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
+const play = !packaged && !author && !['/screens', '/states', '/group', '/report/print'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
 const launched = play ? launch() : null;
 
 function Root() {
@@ -125,5 +127,6 @@ const render = () => createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 // English is in the first load; another language's catalog comes first (a failed load renders in English).
-if (appLocale() === 'en') render();
+if (packaged) void import('./lms/boot').then(m => m.bootPackage(document.getElementById('root')!));
+else if (appLocale() === 'en') render();
 else void loadLocale().catch(e => console.warn('Locale catalog failed to load, showing English', e)).then(render);

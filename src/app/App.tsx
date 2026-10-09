@@ -69,6 +69,11 @@ export interface AppProps {
    * scroll. The galleries and stories leave it off and size frames with `minHeight`.
    */
   fit?: boolean;
+  /**
+   * Voice input on offer (default). A SCORM package has no transcription service, so it plays typed only
+   * (D208): no voice consent in settings, and conversations open in text mode.
+   */
+  voice?: boolean;
 }
 
 type Stats = Record<string, Record<MetricKey, number>>;
@@ -336,7 +341,7 @@ export function App(p: AppProps) {
               )}
               {engine && (scr === 'style' || scr === 'board') && (
                 <div className={p.fit ? PLAY_FIT : 'flex flex-1 flex-col'} style={p.fit ? undefined : { minHeight: minH }}>
-                  <EngineBoard voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
+                  <EngineBoard voiceConsent={s.settings.voiceConsent === true && p.voice !== false} input={s.settings.input} captions={s.settings.captions}
                     paused={!!s.overlay || held} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
                     actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })}
                     onExit={exitUrl ? () => act.overlay('exit') : undefined} fit={p.fit} />
@@ -358,7 +363,7 @@ export function App(p: AppProps) {
         </div>
 
         {s.overlay === 'settings' && (
-          <SettingsDialog values={s.settings} onChange={act.settings} onClose={closeOverlay} voiceConsent={engine} frozen={frozen} returnFocus={returnFocus} />
+          <SettingsDialog values={s.settings} onChange={act.settings} onClose={closeOverlay} voiceConsent={engine && p.voice !== false} frozen={frozen} returnFocus={returnFocus} />
         )}
         {s.overlay === 'paused' && <PauseDialog onResume={closeOverlay} frozen={frozen} returnFocus={returnFocus} />}
         {s.overlay === 'exit' && exitUrl && <ExitDialog onStay={closeOverlay} onExit={() => location.assign(exitUrl)} frozen={frozen} returnFocus={returnFocus} />}

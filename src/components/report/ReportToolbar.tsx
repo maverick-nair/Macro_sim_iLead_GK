@@ -1,3 +1,4 @@
+import { useApi } from '../../api';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import './messages';
@@ -19,11 +20,13 @@ export interface ReportToolbarProps {
 /** Back to results, Email me, Download PDF. */
 export function ReportToolbar({ onBack, onEmail, onDownload, print = false }: ReportToolbarProps) {
   const { t } = useI18n();
+  // An adapter without an email service (a SCORM package, D208) leaves Email me out wherever it is offered.
+  const email = useApi().features?.email !== false;
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       {onBack && <button type="button" onClick={onBack} className={LINK}>{t('report.toolbar.back', { print: String(print) })}</button>}
       <span className="flex-1"></span>
-      {onEmail && <NoWrapButton variant="secondary" size="sm" onClick={onEmail}>{t('report.toolbar.email')}</NoWrapButton>}
+      {onEmail && email && <NoWrapButton variant="secondary" size="sm" onClick={onEmail}>{t('report.toolbar.email')}</NoWrapButton>}
       {onDownload && <NoWrapButton variant="primary" size="sm" onClick={onDownload}>{t('report.toolbar.download', { print: String(print) })}</NoWrapButton>}
     </div>
   );
