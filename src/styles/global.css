@@ -22,6 +22,15 @@
   a:hover { color: var(--il-color-brand-cyber-cyan); }
 }
 
+/* A preview from GenieKreator (D191): its bar sits above the app, so the play screens that fit the window fit
+   what is left. Same specificity as the utilities and after them; at large text (where the page may scroll) the
+   board's own sizes stand. */
+@layer utilities {
+  :where(html[data-preview]) .h-dvh:not(:where([data-text-large], [data-text-large] *)) { height: calc(100dvh - var(--il-preview-bar-height, 0px)); }
+  :where(html[data-preview]) .max-h-dvh:not(:where([data-text-large], [data-text-large] *)) { max-height: calc(100dvh - var(--il-preview-bar-height, 0px)); }
+  :where(html[data-preview]) .min-h-dvh { min-height: calc(100dvh - var(--il-preview-bar-height, 0px)); }
+}
+
 @keyframes ilPulse { 0%, 100% { transform: scale(1); opacity: 1 } 50% { transform: scale(1.08); opacity: .75 } }
 @keyframes ilRing { 0% { transform: scale(.9); opacity: .9 } 100% { transform: scale(1.5); opacity: 0 } }
 @keyframes ilDot { 0%, 80%, 100% { opacity: .25; transform: translateY(0) } 40% { opacity: 1; transform: translateY(-3px) } }
