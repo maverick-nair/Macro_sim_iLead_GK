@@ -91,11 +91,13 @@ export class RunService {
       try {
         const run = await this.repo.createRun({
           id: randomUUID(), participantId: owner.participantId, cohortId: owner.cohortId, storylineId: s.id, storylineVersion: s.version, lensId: s.config.lens.id,
-          purpose: s.config.purpose ?? (s.config.use === 'selection' ? 'assessment' : 'development'), config: s.input, seed: randomInt(1, 2 ** 31), attempt, engineVersion: ENGINE_VERSION
+          purpose: s.config.purpose ?? (s.config.use === 'selection' ? 'assessment' : 'development'), config: s.input, seed: randomInt(1, 2 ** 31), attempt, engineVersion: ENGINE_VERSION,
+          preview: !!s.preview
         });
         const live = this.build(run);
         this.remember(live);
-        await this.repo.putSummary(run.id, run.lensId, live.engine.summary());
+        // A preview's run keeps no summary: summaries feed benchmarks, group reports and the history (D195).
+        if (!run.preview) await this.repo.putSummary(run.id, run.lensId, live.engine.summary());
         this.log.info('run started', { runId: run.id, participantId: owner.participantId, storyline: s.id, version: s.version, attempt });
         return run;
       } catch (e) {
@@ -195,7 +197,7 @@ export class RunService {
       const ai = live.recorder.take();
       const view = result.view;
       const ended = view.phase === 'ended';
-      const summary = ended || SUMMARY_AFTER.has(intent.type) ? live.engine.summary() : undefined;
+      const summary = !live.run.preview && (ended || SUMMARY_AFTER.has(intent.type)) ? live.engine.summary() : undefined;
       const patch: Parameters<Repository['appendEvent']>[2] = {
         status: ended ? 'ended' : 'active', scoreTotal: view.score.total, capability: view.score.capability,
         ...(summary ? { conversions: summary.objectives.conversions } : {}),

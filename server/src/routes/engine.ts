@@ -1,3 +1,4 @@
+import type { Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { z } from 'zod';
 import { wordTokens } from '../../../src/ai/mockStream';
@@ -9,6 +10,7 @@ import { forbidden, notFound } from '../http/errors';
 import { named } from '../http/route';
 import { wordEnglish } from '../../../src/i18n/engineCopyEn';
 import type { RunRow } from '../store/repo';
+import type { AppEnv } from '../http/types';
 
 const View = named(EngineView, 'EngineView');
 const Result = named(IntentResult, 'IntentResult');
@@ -27,13 +29,39 @@ export const runMeta = (r: RunRow): z.output<typeof RunMeta> => ({
   runId: r.id, attempt: r.attempt, status: r.status, storyline: { id: r.storylineId, version: r.storylineVersion }, purpose: r.purpose, startedAt: r.createdAt, endedAt: r.endedAt, events: r.eventCount
 });
 
+/**
+ * Streams an NPC turn of a run's open conversation as server sent events: the engine's words, already
+ * decided when the turn was sent, at a speaking pace (`STREAM_TOKENS_PER_SEC`). A participant's run, or a preview's (D195).
+ */
+export async function streamTurn(ctx: ServerContext, c: Context<AppEnv>, runId: string, interaction: string, turnId: string) {
+  const view = await ctx.runs.view(runId);
+  const turn = view.live?.id === interaction ? view.live.turns.find(t => t.id === turnId && t.by !== 'you') : undefined;
+  if (!turn) throw notFound('No such turn in the open conversation', 'unknownTurn');
+  const gap = ctx.config.STREAM_TOKENS_PER_SEC > 0 ? 1000 / ctx.config.STREAM_TOKENS_PER_SEC : 0;
+  c.header('Cache-Control', 'no-cache, no-transform');
+  c.header('X-Accel-Buffering', 'no');
+  return streamSSE(c, async stream => {
+    let aborted = false;
+    stream.onAbort(() => { aborted = true; });
+    // A turn that opens with engine copy (a reply to a message) streams its English words (D83).
+    for (const token of wordTokens(typeof turn.text === 'string' ? turn.text : wordEnglish(turn.text))) {
+      if (aborted) return;
+      await stream.writeSSE({ data: JSON.stringify({ type: 'token', text: token }) });
+      if (gap) await stream.sleep(gap);
+    }
+    if (!aborted) await stream.writeSSE({ data: JSON.stringify({ type: 'done', turnId: turn.id }) });
+  }, async (_err, stream) => {
+    await stream.writeSSE({ data: JSON.stringify({ type: 'error', retryable: true }) });
+  });
+}
+
 /** The participant's own session: the path's session id is the participant id from the launch (HANDOFF section 2). */
 export function ownerOf(p: Principal) {
   return { participantId: p.id, cohortId: p.cohort, storylineId: p.storyline, purpose: p.purpose };
 }
 
 export function registerEngine(ctx: ServerContext) {
-  const { routes, runs, repo, config } = ctx;
+  const { routes, runs, repo } = ctx;
   const session = { session: ExternalId };
 
   /** The caller's current run, checking the path names them. */
@@ -105,25 +133,7 @@ export function registerEngine(ctx: ServerContext) {
     responses: { 200: { description: 'text/event-stream of StreamChunk', schema: named(StreamChunk, 'StreamChunk'), contentType: 'text/event-stream' }, 404: Err }
   }, async (c, { params, principal }) => {
     const run = await current(principal, params.session);
-    const view = await runs.view(run.id);
-    const turn = view.live?.id === params.interaction ? view.live.turns.find(t => t.id === params.turn && t.by !== 'you') : undefined;
-    if (!turn) throw notFound('No such turn in the open conversation', 'unknownTurn');
-    const gap = config.STREAM_TOKENS_PER_SEC > 0 ? 1000 / config.STREAM_TOKENS_PER_SEC : 0;
-    c.header('Cache-Control', 'no-cache, no-transform');
-    c.header('X-Accel-Buffering', 'no');
-    return streamSSE(c, async stream => {
-      let aborted = false;
-      stream.onAbort(() => { aborted = true; });
-      // A turn that opens with engine copy (a reply to a message) streams its English words (D83).
-      for (const token of wordTokens(typeof turn.text === 'string' ? turn.text : wordEnglish(turn.text))) {
-        if (aborted) return;
-        await stream.writeSSE({ data: JSON.stringify({ type: 'token', text: token }) });
-        if (gap) await stream.sleep(gap);
-      }
-      if (!aborted) await stream.writeSSE({ data: JSON.stringify({ type: 'done', turnId: turn.id }) });
-    }, async (_err, stream) => {
-      await stream.writeSSE({ data: JSON.stringify({ type: 'error', retryable: true }) });
-    });
+    return streamTurn(ctx, c, run.id, params.interaction, params.turn);
   });
 
   routes.add({

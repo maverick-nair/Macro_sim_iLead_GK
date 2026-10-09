@@ -141,9 +141,33 @@ CREATE TABLE intent_keys (
 );
 `;
 
+/**
+ * Previews from GenieKreator (D195): a draft storyline kept for testing only, never a published version,
+ * gone after PREVIEW_DAYS. Runs played on one are flagged `preview` and left out of every cohort, group,
+ * benchmark, history and admin read.
+ */
+const previews = `
+CREATE TABLE previews (
+  id TEXT PRIMARY KEY,
+  storyline_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  config TEXT NOT NULL,
+  draft_version INTEGER,
+  saved_at TEXT,
+  created_by TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  expires_at TEXT NOT NULL
+);
+CREATE INDEX previews_expires ON previews (expires_at);
+ALTER TABLE runs ADD COLUMN preview INTEGER NOT NULL DEFAULT 0;
+CREATE INDEX runs_preview ON runs (preview);
+`;
+
 export const MIGRATIONS: Migration[] = [
   { id: 1, name: 'initial', sql: { sqlite: initial('sqlite'), postgres: initial('postgres') } },
-  { id: 2, name: 'intent_keys', sql: intentKeys }
+  { id: 2, name: 'intent_keys', sql: intentKeys },
+  { id: 3, name: 'previews', sql: previews }
 ];
 
 export async function migrate(db: Db, migrations = MIGRATIONS): Promise<number[]> {
