@@ -42,7 +42,12 @@ export const SAMPLE_VIDEO = {
   ]
 };
 
+/** A SCORM package's storyline (D208): pinned, every mock engine in the page plays it, the demo round's too. */
+let pinned: StorylineConfig | null = null;
+export function pinStoryline(config: StorylineConfig | null) { pinned = config; }
+
 export function defaultStoryline(lens?: string | null): StorylineConfig {
+  if (pinned) return pinned;
   if (new URLSearchParams(globalThis.location?.search ?? '').get('storyline') === 'draft') {
     const draft = draftStoryline();
     if (draft) return draft;
@@ -75,10 +80,23 @@ async function fastForward(engine: ReturnType<typeof createEngine>, config: Stor
   }
 }
 
-export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number; lens?: string | null } = {}): EngineClient {
+/**
+ * `replay`: intents applied before the first view, in order (a SCORM package resuming its run from the LMS,
+ * D203). The engine is deterministic for a storyline and seed, so they rebuild the run. Replay stops at the
+ * first intent the engine refuses, and `onReplayed` gets the intents it applied.
+ */
+export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number; lens?: string | null; replay?: Intent[]; onReplayed?: (applied: Intent[]) => void } = {}): EngineClient {
   const config = opts.config ?? defaultStoryline(opts.lens);
   const engine = createEngine(config, { seed: opts.seed ?? 1, evaluator: opts.evaluator });
-  const ready = opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
+  const replay = async (log: Intent[]) => {
+    const applied: Intent[] = [];
+    for (const intent of log) {
+      try { await engine.dispatch(intent); } catch { break; }
+      applied.push(intent);
+    }
+    opts.onReplayed?.(applied);
+  };
+  const ready = opts.replay ? replay(opts.replay) : opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
   const wait = async () => { await Promise.all([ready, loadEngineCopy()]); if (opts.latencyMs) await new Promise(r => setTimeout(r, opts.latencyMs)); };
   return {
     async view() {
