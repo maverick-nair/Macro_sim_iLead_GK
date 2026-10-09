@@ -133,6 +133,7 @@ export function MemberCard(props: MemberCardProps) {
       title={unavailable ? unavailableReason : undefined}
       data-tour="member"
       data-member-id={memberId}
+      data-trace={memberId ? `members.${memberId}` : undefined}
       className={`relative flex flex-col rounded-18 border-2 bg-surface-card backdrop-blur-12 outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-2 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
     >
       <button type="button" aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} onClick={e => { e.stopPropagation(); onSelect(); }} className="il-select sr-only" />
