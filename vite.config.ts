@@ -1,6 +1,7 @@
 import { defineConfig, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+import { playerBuild } from './scripts/player-build.ts';
 
 /**
  * The engine contract (Zod) and the engine's English copy are not part of the first load's code: they
@@ -44,7 +45,8 @@ function engineUrlInHtml(): Plugin {
 const SERVER_PATHS = ['/api', '/engine', '/speech', '/genie', '/launch', '/auth', '/openapi.json', '/healthz', '/readyz'];
 
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss(), preloadFirstView(), engineUrlInHtml()],
+  // playerBuild: the packaged participant player and dist/player-manifest.json, for SCORM packages (D205).
+  plugins: [react(), tailwindcss(), preloadFirstView(), engineUrlInHtml(), playerBuild()],
   build: {
     // Browsers with native light-dark(). A lower target makes the CSS minifier rewrite light-dark()
     // into variables that only resolve when color-scheme is set in a stylesheet, and the app sets it
