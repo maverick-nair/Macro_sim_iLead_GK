@@ -7,6 +7,7 @@ import { BUTTON, CARD, FOCUS, Field, Icon, TextArea, TextInput } from '../../kit
 import { download, playDraft } from '../../play';
 import { navigate } from '../../route';
 import { TabBody, TabHead } from '../Workspace';
+import { ScormPackage } from './ScormPackage';
 
 export interface Check { id: string; title: string; detail: ReactNode; state: 'passed' | 'failed' | 'advisory'; blocking: boolean; go?: Tab }
 
@@ -149,6 +150,8 @@ export default function Publish() {
           </div>
         </section>
       </div>
+      {/* Download SCORM package (D207): the same draft, for an LMS. */}
+      <ScormPackage d={d} />
     </TabBody>
   );
 }
