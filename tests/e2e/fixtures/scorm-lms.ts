@@ -33,11 +33,11 @@ export async function serveLms(page: Page, files: () => Record<string, Uint8Arra
   return watch;
 }
 
-/** GenieKreator's packager reads the site's player as the build left it in dist (`npm run build:player`). */
-export async function servePlayerFromDist(page: Page) {
-  await page.route('**/player-manifest.json', route => route.fulfill({ path: path.resolve('dist/player-manifest.json'), contentType: 'application/json' }));
+/** GenieKreator's packager reads the site's player as a build left it (`npm run build:player [out]`, dist by default). */
+export async function servePlayerFromDist(page: Page, out = 'dist') {
+  await page.route('**/player-manifest.json', route => route.fulfill({ path: path.resolve(out, 'player-manifest.json'), contentType: 'application/json' }));
   await page.route('**/player/**', route => {
-    const file = path.resolve('dist/player', decodeURIComponent(new URL(route.request().url()).pathname.replace(/^\/player\//, '')));
+    const file = path.resolve(out, 'player', decodeURIComponent(new URL(route.request().url()).pathname.replace(/^\/player\//, '')));
     return fs.existsSync(file) ? route.fulfill({ path: file }) : route.fulfill({ status: 404, body: 'Not found' });
   });
 }
