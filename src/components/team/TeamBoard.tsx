@@ -128,8 +128,8 @@ function FunnelHeader({ name, count, ideal, bottleneck, periodUnit, about, suits
         <StageInfo name={name} about={about} suits={suits} alignEnd={alignEnd} />
       </div>
       <span aria-hidden="true" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-12 text-fg-secondary">
-        <span className="whitespace-nowrap">{t('desk.stage.output', { n: number(n), ideal: number(goal) })}</span>
-        <span className="whitespace-nowrap">{t('desk.stage.people', { n: count })}</span>
+        <span className="whitespace-nowrap text-large:whitespace-normal text-large:break-words">{t('desk.stage.output', { n: number(n), ideal: number(goal) })}</span>
+        <span className="whitespace-nowrap text-large:whitespace-normal text-large:break-words">{t('desk.stage.people', { n: count })}</span>
       </span>
       <span aria-hidden="true" className="block h-1.25 rounded-3 bg-track">
         <span className={`block h-full rounded-3 ${bottleneck ? 'bg-status-attention' : 'bg-meter'}`} style={{ width: `${Math.round(share * 100)}%` }} />

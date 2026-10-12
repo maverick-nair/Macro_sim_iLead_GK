@@ -65,15 +65,15 @@ const ICONS: Record<GameMenuKey | 'pause' | 'save' | 'signOut', ReactNode> = {
 };
 
 /** One row: the icon tile, the name (the button's name), a line saying what it is (its description), a chevron. */
-function Row({ icon, name, sub, extra, onSelect, pressed }: { icon: ReactNode; name: string; sub?: string; extra?: ReactNode; onSelect: () => void; pressed?: boolean }) {
+function Row({ icon, name, sub, extra, onSelect, pressed, tight = false }: { icon: ReactNode; name: string; sub?: string; extra?: ReactNode; onSelect: () => void; pressed?: boolean; tight?: boolean }) {
   const id = useId();
   return (
     <button type="button" data-menu-item="" onClick={onSelect} aria-labelledby={`${id}n`} aria-describedby={sub ? `${id}s` : undefined} aria-pressed={pressed}
-      className={`grid min-h-13 w-full cursor-pointer grid-cols-(--il-desk-menu-row-columns) items-center gap-3.5 border-0 bg-transparent px-6 py-1.5 text-start text-fg-primary hover:bg-surface-raised ${INSET}`}>
-      <span className="flex size-10 items-center justify-center rounded-10 bg-accent-soft text-fg-primary">{icon}</span>
+      className={`grid min-h-13 w-full cursor-pointer grid-cols-(--il-desk-menu-row-columns) items-center gap-3.5 border-0 bg-transparent px-6 py-1.5 short:min-h-11 short:py-1 text-start text-fg-primary hover:bg-surface-raised ${INSET}`}>
+      <span className="flex size-10 items-center justify-center rounded-10 bg-accent-soft short:size-8 text-fg-primary">{icon}</span>
       <span className="flex min-w-0 flex-col gap-0.5">
         <b id={`${id}n`} className="text-15 font-700">{name}</b>
-        {sub && <span id={`${id}s`} className="text-13 text-fg-secondary">{sub}</span>}
+        {sub && <span id={`${id}s`} className={`text-13 text-fg-secondary ${tight ? 'shorter:hidden' : ''}`}>{sub}</span>}
       </span>
       {extra ?? <svg className="size-4.5 text-fg-secondary rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>}
     </button>
@@ -112,7 +112,7 @@ export function GameMenu({ items, where, periodUnit = 'week', scope = 'cohort', 
           <Dialog.Overlay className="fixed inset-0 z-48 bg-surface-scrim backdrop-blur-12" />
           <Dialog.Content aria-describedby={undefined} data-game-menu="" onKeyDown={onKeyDown}
             className="fixed inset-y-0 end-0 z-49 flex w-(--il-desk-menu-width) max-w-full animate-(--il-event-card-enter) flex-col border-s border-line-strong bg-surface-solid text-14 text-fg-primary shadow-(--il-event-card-shadow) outline-0">
-            <div className="flex flex-none items-center gap-3 border-b border-line-strong px-6 pt-4 pb-3.5">
+            <div className="flex flex-none items-center gap-3 border-b border-line-strong px-6 pt-4 pb-3.5 short:pt-2.5 short:pb-2">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <Dialog.Title className="m-0 text-26 font-700 tracking-(--il-tracking-title)">{t('menu.title')}</Dialog.Title>
                 {where && <span className="text-13 text-fg-secondary">{where}</span>}
@@ -136,7 +136,7 @@ export function GameMenu({ items, where, periodUnit = 'week', scope = 'cohort', 
             <ul aria-label={t('hud.menu.aria')} className="m-0 flex min-h-0 flex-1 list-none flex-col overflow-y-auto overscroll-contain p-0">
               {items.map(item => (
                 <li key={item.key} className="border-b border-line-default">
-                  <Row icon={ICONS[item.key]} name={t('hud.menu.item', { key: item.key })} sub={t('menu.sub', { key: item.key, unit: periodUnit, scope }) || undefined} onSelect={() => choose(item.onSelect)} />
+                  <Row icon={ICONS[item.key]} name={t('hud.menu.item', { key: item.key })} tight sub={t('menu.sub', { key: item.key, unit: periodUnit, scope }) || undefined} onSelect={() => choose(item.onSelect)} />
                 </li>
               ))}
             </ul>

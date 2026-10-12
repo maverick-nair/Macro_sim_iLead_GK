@@ -209,8 +209,8 @@ export function Hud(p: HudProps) {
             </button>
           )}
           {p.onSave && (
-            <button type="button" onClick={() => { if (!p.saving) p.onSave?.(); }} aria-label={t('hud.save.aria')} aria-disabled={p.saving || undefined} className={SESSION_BUTTON}>
-              <SaveIcon />{p.saving ? t('hud.save.saving') : t('hud.save.label')}
+            <button type="button" onClick={() => { if (!p.saving) p.onSave?.(); }} aria-label={t('hud.save.aria')} aria-disabled={p.saving || undefined} className={`${SESSION_BUTTON} tablet-portrait:min-w-11 tablet-portrait:justify-center tablet-portrait:px-0`}>
+              <SaveIcon /><span className="tablet-portrait:sr-only">{p.saving ? t('hud.save.saving') : t('hud.save.label')}</span>
             </button>
           )}
         </div>
