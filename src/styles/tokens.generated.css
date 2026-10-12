@@ -441,6 +441,12 @@
   --il-inbox-drawer-offset: 72px;
   --il-inbox-drawer-shadow: 0 24px 64px var(--il-color-elevation-drawer);
   --il-inbox-drawer-enter: ilIn var(--il-duration-base) ease;
+  --il-intro-message-columns: minmax(0, 1fr) 360px;
+  --il-intro-products-columns: 260px minmax(0, 1fr);
+  --il-intro-model-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  --il-intro-objectives-columns: minmax(0, 1fr) 380px;
+  --il-intro-objectives-rows: minmax(0, 1fr) auto;
+  --il-intro-code-size: calc(96px * var(--il-text-scale, 1));
   --il-live-bubble-max-width: 88%;
   --il-live-caption-cursor: ilPulse 0.9s infinite;
   --il-live-mic-glow-ready: 0 0 24px var(--il-color-voice-ready-glow);
