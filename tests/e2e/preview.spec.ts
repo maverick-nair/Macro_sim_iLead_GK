@@ -70,8 +70,9 @@ test('Preview opens the saved draft as a marked test, jumps, labels sources, rel
   await bar.getByRole('button', { name: 'Show where this comes from' }).click();
   await expect(bar.getByRole('button', { name: 'Show where this comes from' })).toHaveAttribute('aria-pressed', 'true');
   const overlay = preview.locator('[data-preview-trace]');
-  await expect(overlay).toContainText('Team · Character');
-  await expect(overlay).toContainText('Actions and conversations · Action');
+  // Labels from the traceability registry (src/shared/trace.ts): a member card, an action tile.
+  await expect(overlay).toContainText('Team · First and last name');
+  await expect(overlay).toContainText('Actions and conversations · Action name');
   await bar.getByRole('button', { name: 'Show where this comes from' }).click();
   await expect(overlay).toHaveCount(0);
 
