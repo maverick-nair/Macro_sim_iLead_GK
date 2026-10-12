@@ -177,13 +177,12 @@ function both(name: string, kind: Kind, reach: (page: Page) => Promise<void>, pr
 }
 
 test.describe('onboarding and the demo', () => {
+  // The pre-game flow (D219): each screen's way on must be on screen at every size.
   const steps: [string, (page: Page) => Locator][] = [
-    ['language', page => page.getByRole('button', { name: "Let's begin" })],
-    ['sponsor', page => page.getByRole('button', { name: 'Next' })],
-    ['consent', page => page.getByRole('button', { name: 'Accept and use voice' })],
-    ['voice', page => page.getByRole('button', { name: 'Start mic test' })],
-    ['how to play', page => page.getByRole('button', { name: 'Meet your team' })],
-    ['team', page => page.getByRole('button', { name: 'Start week 1' })]
+    ['landing', page => page.getByRole('button', { name: 'Watch the video message from Paula Jacob' })],
+    ['message', page => page.getByRole('slider', { name: 'Position in the message' })],
+    ['message end', page => page.getByRole('button', { name: 'See your objectives' })],
+    ['objectives', page => page.getByRole('button', { name: 'Start simulation' })]
   ];
   for (const [label, sizes] of [['landscape', LANDSCAPE], ['portrait', PORTRAIT]] as const) {
     test(`every onboarding step, ${label}`, async ({ page }) => {
@@ -198,16 +197,12 @@ test.describe('onboarding and the demo', () => {
           found.push(...await measure(page, 'play', [primary(page)], `onboarding ${step} at ${width}x${height}`));
         }
         await page.setViewportSize({ width: sizes[0][0], height: sizes[0][1] });
-        if (step === 'sponsor') await expect(primary(page)).toBeEnabled({ timeout: 10_000 });
-        if (step === 'voice') {
-          await primary(page).click();
-          await page.getByRole('button', { name: 'Sounds good' }).click({ timeout: 10_000 });
-        } else if (step === 'team') {
-          for (const name of ['Kent Goldberg', 'Green Bell', 'Ruth Ether']) await page.getByRole('button', { name: new RegExp(`^${name}, `) }).click();
-          await primary(page).click();
-        } else await primary(page).click();
+        if (step === 'message') await primary(page).press('End');
+        else await primary(page).click();
       }
-      // The demo offer, then the demo's first step.
+      await expect(styles(page)).toHaveCount(10, { timeout: 20_000 });
+      // The demo offer (off the default path, D219), then the demo's first step.
+      await page.goto('/?start=demo');
       await expect(page.getByRole('heading', { level: 1, name: 'Try the demo first?' })).toBeVisible();
       for (const [width, height] of sizes) {
         await page.setViewportSize({ width, height });

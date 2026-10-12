@@ -145,6 +145,8 @@ for (const [theme, q] of Object.entries(THEMES)) {
         await page.setViewportSize({ width, height: 1000 });
         await page.goto(url(q));
         await expect(page.getByRole('heading').first()).toBeVisible();
+        // The pre-game landing (D219), with the sponsor's message in (it arrives after about 2 seconds).
+        await expect(page.getByRole('button', { name: /^Watch the video message/ })).toBeVisible({ timeout: 5000 });
         await shot(page, `${theme}-${width}-onboarding`);
       });
 

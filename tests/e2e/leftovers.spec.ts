@@ -99,7 +99,7 @@ test('pausing a conversation holds the streamed line and its clock', async ({ pa
 test('a run in progress opens on the board with the welcome back recap from the engine, once per load', async ({ page }) => {
   // A new run starts at onboarding.
   await page.goto('/');
-  await expect(page.getByRole('button', { name: "Let's begin" })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /^Lead a team of ten/ })).toBeVisible();
 
   // The mock opens at week 3 with two weeks played: the app skips onboarding and says where things stand.
   await page.goto('/?period=3');

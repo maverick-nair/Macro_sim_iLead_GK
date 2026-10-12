@@ -89,8 +89,8 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   expect(await page.locator('body').innerText()).not.toMatch(FORBIDDEN);
 
   const [play] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: 'Preview week 1 as a participant' }).click()]);
-  await play.getByRole('button', { name: "Let's begin" }).click({ timeout: 20_000 });
-  await expect(play.getByText(/Ascent Lifts/).first()).toBeVisible();
+  // The pre-game flow's landing (D219) names the storyline's organisation.
+  await expect(play.getByText(/Ascent Lifts/).first()).toBeVisible({ timeout: 20_000 });
   await play.close();
 
   await page.getByRole('button', { name: 'Open the workspace' }).click();
