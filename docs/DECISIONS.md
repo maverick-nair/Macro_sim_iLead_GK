@@ -1305,6 +1305,9 @@ The overall level was the mean of the skill ratings, and the verdict read only t
 - Sales Elevator carries the canvas's portfolio (`Portfolio.dc.html`): Levo B10 Commercial, H4 Residential, P20 Panoramic and C30 Service and freight, with their loads, speeds, travel, typical deals, the four features each with the canvas's texts and spot positions, and photo descriptions. Hyphenated words are written open, as the copy rules want ("mixed use").
 - **The lift photos are temporary stand ins.** `public/assets/products/lift-{b10,h4,p20,c30}.jpg` are low resolution (618 by 768, 35 to 45 KB each) and will be replaced by full resolution versions. As site paths they cost the storyline nothing against the image budget (D183), and each is under what one upload may weigh (300 KB); a test checks both. A SCORM package carries them with the player's files.
 
+**D222. The onboarding e2e walks the Products screen.** Decided 2026-10-12.
+- With Sales Elevator's portfolio (D221), the sponsor's message ends on Explore products and the pre-game flow is four screens on the engine too. `tests/e2e/onboarding.spec.ts` walks it by keyboard in dark and light: the four models, Commercial / 01, the tagline and who it is for, the photo's description, the features as tabs (arrow keys) and as numbered spots, the specs with the typical deal, the explored count, Next: Levo H4, then the objectives, with axe on the screen.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

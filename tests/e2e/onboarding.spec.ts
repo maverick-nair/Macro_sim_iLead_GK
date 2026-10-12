@@ -2,10 +2,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 /**
- * The pre-game flow on the engine (D219), by keyboard: landing, the sponsor's video message, the objectives (the
- * Sales Elevator storyline has no product portfolio, so the message ends on the objectives; the portfolio is
- * covered by `src/components/intro/intro.test.tsx` and the `Onboarding/Pre-game flow` stories), then week 1.
- * Everything named comes from the storyline: its sponsor, organisation, team, target and weights.
+ * The pre-game flow on the engine (D219), by keyboard: landing, the sponsor's video message, the product portfolio
+ * (Sales Elevator's four Levo models, D221), the objectives, then week 1. Everything named comes from the
+ * storyline: its sponsor, organisation, products, team and target.
  */
 
 const errors: string[] = [];
@@ -70,13 +69,41 @@ for (const theme of ['dark', 'light'] as const) {
     await press(page, cc);
     await expect(cc).toHaveAttribute('aria-pressed', 'false');
     await press(page, page.getByRole('slider', { name: 'Position in the message' }), 'End');
-    // The end card: no portfolio in this storyline, so the objectives are next; Watch again starts over.
-    await expect(page.getByRole('heading', { name: 'Next, your objectives.' })).toBeFocused();
+    // The end card: the storyline has a portfolio, so the products are next; Watch again starts over.
+    await expect(page.getByRole('heading', { name: 'First, get to know what your team sells.' })).toBeFocused();
     await expect(page.getByRole('button', { name: 'Watch again' })).toBeVisible();
     await axe(page, 'message end');
+    await press(page, page.getByRole('button', { name: 'Explore products' }));
+
+    // 3. The product portfolio (D221): the storyline's four models, kind and number, tagline, who it is for, the
+    // features as tabs and as spots placed on the photo, the specs with the typical deal.
+    await expect(page.getByRole('heading', { level: 1, name: 'Product portfolio' })).toBeAttached();
+    const models = page.getByRole('navigation', { name: 'Product portfolio' }).getByRole('listitem');
+    await expect(models).toHaveCount(4);
+    await expect(page.getByText('Commercial / 01')).toBeVisible();
+    await expect(page.getByText('Engineered to fit. Built to move.')).toBeVisible();
+    await expect(page.getByText('Mid rise offices, clinics, hotels and mixed use buildings.')).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Levo B10: a steel and glass passenger lift car in a grey studio' })).toBeVisible();
+    const panel = page.getByRole('tabpanel');
+    await expect(panel).toHaveText(/^Ships in modules and installs in nine days/);
+    await expect(page.getByRole('tab', { name: /Built modular$/ })).toHaveAttribute('aria-selected', 'true');
+    await press(page, page.getByRole('tab', { name: /Built modular$/ }), 'ArrowRight');
+    await expect(page.getByRole('tab', { name: /Made to last$/ })).toBeFocused();
+    await expect(panel).toHaveText(/^A 25 year structural warranty/);
+    await press(page, page.getByRole('button', { name: 'Point 4: Winning the deal' }));
+    await expect(panel).toHaveText(/^Clients buy uptime, not steel\./);
+    await expect(page.getByText('Rated load 1,000 kg')).toBeVisible();
+    await expect(page.getByRole('listitem').filter({ hasText: 'Typical deal' })).toHaveText('Typical deal $30K');
+    await expect(page.getByRole('img', { name: 'Explored 1 of 4 models' })).toBeAttached();
+    await axe(page, 'products');
+    await press(page, page.getByRole('button', { name: 'Next: Levo H4' }));
+    await expect(page.getByRole('heading', { name: 'Levo H4' })).toBeFocused();
+    await expect(page.getByText('Residential / 02')).toBeVisible();
+    await expect(page.getByText('Quiet enough for home.')).toBeVisible();
+    await expect(page.getByRole('img', { name: 'Explored 2 of 4 models' })).toBeAttached();
     await press(page, page.getByRole('button', { name: 'See your objectives' }));
 
-    // 3. Objectives from the storyline: eight weeks, the target, ten people and how you win; no How you are scored (D220).
+    // 4. Objectives from the storyline: eight weeks, the target, ten people and how you win; no How you are scored (D220).
     await expect(page.getByRole('heading', { level: 1, name: 'Eight weeks to lead your team at Innov8 Elevators.' })).toBeFocused();
     await expect(page.getByText('8 weeks', { exact: true })).toBeVisible();
     await expect(page.getByText('$240K', { exact: true })).toBeVisible();
