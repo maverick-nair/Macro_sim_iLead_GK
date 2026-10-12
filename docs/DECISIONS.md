@@ -1048,6 +1048,47 @@ The report audit (P1) found narratives that contradicted the data: the overall n
 - `StakeholderBar` was in the participant's first load (about 2 KB before compression) although Sales Elevator has no stakeholders. The board now loads it lazily, like the stakeholders panel. Initial JS 221.8 KB.
 - Vitals measured back to back on this container: the code before P1 (50cbf22), the integration before this change (e7afc3b) and this commit all read first load LCP about 2550 ms and board TBT 430 to 470 ms, against earlier readings of 2440 to 2530 ms and 330 to 410 ms on a quieter machine. The P1 work adds about 7 KB of transfer and no measurable LCP or TBT; the overruns are the machine. Confirm on CI.
 
+**D171. Diminishing returns on repeated actions.** Decided 2026-10-09, approved by the product owner ("rebalance the storylines; it should impact the score, game and metrics as it would in the real world; diminishing returns on repeated actions and a real cost for inaction, which should invariably impact business as well"). D168 to D170 are taken on another branch.
+- A storyline's optional `realism` block (SIMULATION 3.6, `Realism` in `src/engine/config.ts`, every number defaulted there so GenieKreator can author it) switches D171 to D178 on; left out, a storyline plays exactly as before (`replay.test.ts` holds the golden run with it removed). Both bundled storylines have it.
+- The same action with the same person within 5 days (a team action within 15) lands at 100%, 60%, 35% then 20% of its good effects, people and business gains alike; costs and losses stay whole; the share recovers as uses leave the window. An action can set its own window and decay.
+- A team action repeated in its window tires everyone: morale −2, and 10% less work that day.
+- The participant sees it before confirming (the drawer: "You did this with Kent 2 days ago, so it lands at 60% of its effect this time"), in each change's reason, and in the report's drivers ("actions repeated too soon").
+- The synthetic players read a repeat's share before choosing (a player who fits the action to the need), and skip a team meeting or team energy that would land at less.
+
+**D172. Opportunity cost: the team's time.** Decided 2026-10-09.
+- A team action takes the team off its work for a share of each of its days: a quarter by default; on both bundled storylines Team building half, Team lunch a tenth, Hire member none (an interview does not stop the team). That share less gets done at every stage that day; a day's losses add up to 90% at most.
+- The participant's own update to the sponsor (D173) costs a day.
+
+**D173. The cost of inaction for the business.** Decided 2026-10-09.
+- An event left unanswered past its window costs 20% of a week's target in revenue, plus its own authored `escalation.business` (new, also without realism). Client Trust: an ignored recession costs $10,000 of budget, an ignored training request 3 points of quality, an ignored morale alarm 2.
+- Silence with the sponsor: after 2 weeks without a word (a briefing, a reply, the participant's own update), confidence slips 4 at each week end. The update is new: `openConversation` with `kind: 'sponsor'` and no message, once a week, a day, landing at half a briefing's band effect; the sponsor popover and a board alert offer it.
+- Confidence falling under 30 during a week makes the sponsor react: a deal moves to another team (25% of a week's target), plus `reaction.business` and `reaction.event` (Client Trust: $15,000 of budget).
+- A stakeholder nobody engaged for 2 weeks cools by 2 trust and 2 satisfaction each further week end, on top of D160's drift.
+
+**D174. The cost of inaction for people.** Decided 2026-10-09.
+- Someone with no one to one time (a one to one action other than Assess, or an answered message) for 4 weeks loses 3 morale and 2 trust at each further week end and delivers 10% less until given time. Three weeks was tried first: with two conversations a week for ten people even the Expert left a third of the team past it, so neglect stopped separating good play from bad; at four weeks a player who spreads their time can avoid it.
+- Each neglected person under result 30 holds the whole team back 5% (at most 15%).
+- Days left unused when the week ends deliver 10% less; a week with no action, conversation or decision (the weekly styles aside) counts 35, a Weak band, in the Leadership pillar's band mean and the week score's live part.
+- The board alerts once a week with the names of people past the window, whatever the guide setting (`dueAlerts`); the report's drivers name neglect, unused days and revenue lost to ignored events. The scripted coach of the report tests spreads its time; the synthetic Expert keeps the week's last conversation for what comes up until midweek.
+
+**D175. An overachievement curve for revenue.** Decided 2026-10-09.
+- With realism, revenue at the target is worth 85 of the Business pillar's revenue part and more counts with diminishing value: 85 + 15 × (1 − e^(−(share − 1) ÷ 0.5)), so 110% gives 88, 150% about 94.5, and nothing reaches 100. Before, Business capped at 100 at the target, so Proficient and Expert were not separated by it (CALIBRATION-SYNTHETIC 8, `mechanics`).
+
+**D176. A smoothed streak.** Decided 2026-10-09.
+- With realism (`score.streak: gradual`), every week at 2 stars or more adds cap ÷ weeks × stars ÷ 3, times a run factor from 0.75 to 1 over three weeks in a row; a week under 2 stars adds nothing and starts the run again. Eight 3 star weeks earn about +97 and eight 2 star weeks about +65, with no cliff at the third week. `steps` keeps the GenieKreator rule.
+
+**D177. Sponsor confidence and business variables in the Business pillar; leavers in the People pillar.** Decided 2026-10-09.
+- With realism, sponsor confidence takes 20% of the Business pillar beside the weighted variables (variables and sponsor together at most 90%, so revenue keeps a share; the schema refuses more).
+- The People pillar counts everyone on the team, away too, and each person who left (resigned or let go) costs 5 points; a gain rises with diminishing value, 50 + 50 × (1 − e^(−x ÷ 30)), so one repeated action cannot fill it; a loss counts in full.
+
+**D178. Morale saturation, output, and the storylines rebalanced and recalibrated.** Decided 2026-10-09.
+- Result gains from actions shrink above morale 75, to 40% at 100: a happy team gains less from more of the same. A person's result counts in full from skill 60, down to 60% at skill 0; goals set in the last 3 weeks (a written plan) add 10%.
+- Sales Elevator and Client Trust carry `realism` with the details in D172 and D173, and are recalibrated (`npm run calibrate`): Sales Elevator threshold 73 to 117, leads 33 to 34; passive 54% to 55%, random 63% to 61%, good 110% to 110%; scores 310, 382, 889 to 218, 252, 836 (good play Gold 58, Platinum 2). Client Trust threshold 127 to 293, leads 18 to 15; passive 53% to 51%, random 67% to 67%, good 113% to 110%; scores 289, 432, 945 to 212, 315, 900. Inaction's costs come off passive play whatever the team's results, so the buffer rises to keep passive play near half of good; Client Trust, with more events to answer and the sponsor's reaction, rises most. SIMULATION 9's table had Client Trust at 111 and 21 from D141; it now shows both storylines before and after.
+- Synthetic players (`npm run synthetic -- --types`, CALIBRATION-SYNTHETIC 8): every check passes on both storylines, the four findings D149 to D152 left to the storyline owner included: the best routine 784 against the Expert's 920 on Sales Elevator (984 against 946 before), reading people without acting 438 (799), People first under the Expert (862 against 920; 976 against 946 before), and Business no longer capped. Averages Beginner, Developing, Proficient, Expert: Sales Elevator 244, 370, 825, 920 (323, 462, 872, 946 before); Client Trust 252, 403, 840, 935 (326, 459, 885, 965).
+- The view adds optional realism fields (HANDOFF 2); /author has a Real world costs switch, on for new drafts, exporting `realism: {}`; Spanish words every new engine code and the new board, drawer and sponsor lines.
+- Tests: `realism.test.ts` covers each rule; the score, business, coverage and live tests that state GenieKreator's formulas or D136 to D138's mechanics read them without realism; the report narrative's bystander and driver runs now name neglect, lost revenue and unused days (the bottleneck sentence is read on the driver's run without realism); the author calibration tests check the routine and idle findings without realism and that realism clears them.
+- Not done: the run summary and the group report do not carry the realism evidence; /author edits the switch, not the numbers.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
