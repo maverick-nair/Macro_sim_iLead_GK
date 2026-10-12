@@ -293,13 +293,31 @@ export const StakeholderView = z.object({
   request: z.object({ id: Id, messageId: Id, kind: z.enum(['message', 'meeting']), title: Text, interaction: Id.nullable(), dueInSubPeriods: z.number().int().min(0) }).nullable()
 });
 
+/**
+ * What the player renders from the storyline's look and world (D181 to D183), so no screen needs a fixture: the client brand
+ * (the theme the player applies when the server has none), the company logo, the office image behind the screens, the
+ * product portfolio for onboarding, and every intro screen with its title. Images are site paths, https or data URLs.
+ */
+export const StorylineLook = z.object({
+  brand: z.object({
+    name: Text.nullable(), colors: z.object({ main: z.string(), second: z.string() }).nullable(), logo: z.string().nullable(),
+    font: z.string().nullable(), mode: z.enum(['dark', 'light', 'system']).nullable()
+  }).nullable().default(null),
+  logo: z.object({ image: z.string().nullable(), text: z.string().nullable() }).nullable().default(null),
+  office: z.string().nullable().default(null),
+  products: z.array(z.object({ name: Text, line: Text.nullable(), specs: z.array(Text), image: z.string().nullable(), view: z.enum(['photo', 'model']) })).default([]),
+  screens: z.array(z.object({ key: Id, title: Text, body: z.array(Text) })).default([])
+});
+export type StorylineLook = z.output<typeof StorylineLook>;
+
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
   /** The storyline's name, the organisation the participant joins and the authored welcome letter, for onboarding. */
   storyline: z.object({ name: Text, organisation: Text.nullable(), locale: z.string().default('en'), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish(),
     /** The welcome video, replayable from Tutorial and video (D90): its file, poster, captions track and transcript. */
-    video: z.object({ src: z.string().optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Text) }).nullish() }),
+    video: z.object({ src: z.string().optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Text) }).nullish(),
+    ...StorylineLook.shape }),
   lens: LensView,
   clock: Clock,
   money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
 import { DEFAULT_LENS } from './lensLibrary';
+import { IMAGE_BUDGET_BYTES, ImageRef, imageBytes, IMAGES_BUDGET_BYTES, kb } from './assets';
 import {
   DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_EVIDENCE, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_OUTCOMES, DEFAULT_PATH,
   DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_RECONCILE, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
@@ -144,6 +145,9 @@ export const Person = z.object({
   npc: NpcPersona.optional()
 });
 
+/** How the onboarding's portfolio scene shows a product (D182). */
+export const PRODUCT_VIEWS = ['photo', 'model'] as const;
+
 /**
  * The world around the team (D130), authored in GenieKreator's Story and world tab. The AI characters
  * read it so small talk stays in the story (ai/src/npc/prompt.ts); the engine never reads it, and a
@@ -158,8 +162,71 @@ export const World = z.object({
   customers: NpcText.optional(),
   rivals: z.array(z.object({ name: NpcText, angle: NpcText.optional() })).max(6).optional(),
   /** How the sponsor sounds, for the sponsor's own lines. */
-  sponsorVoice: NpcText.optional()
+  sponsorVoice: NpcText.optional(),
+  /**
+   * The office the participant works in (D182): the image behind the player's screens (the engine player's
+   * backdrop, in place of the default one), and a description the AI characters may mention.
+   */
+  office: z.object({ image: ImageRef.optional(), description: NpcText.optional() }).optional(),
+  /** The company's logo (D182): an image, or up to three letters when there is none. Onboarding and the player show it. */
+  logo: z.object({ image: ImageRef.optional(), text: z.string().trim().min(1).max(3).optional() }).optional(),
+  /**
+   * The product portfolio for the onboarding's portfolio scene (D182): each product's name, one line, key specs
+   * and an image. `view` says how it is shown: a photo, or the library's stylised model. Left out, no scene.
+   */
+  products: z.array(z.object({
+    name: Copy,
+    line: Copy.optional(),
+    specs: z.array(Copy).max(8).default([]),
+    image: ImageRef.optional(),
+    view: z.enum(PRODUCT_VIEWS).default('photo')
+  })).max(6).optional()
 });
+
+/** The fonts a storyline brand may name: the theme loader's allowlist (src/theme/schema.ts FONTS; a test keeps them equal). */
+export const BRAND_FONTS = ['Manrope', 'Inter', 'IBM Plex Sans', 'Source Sans 3', 'Nunito Sans', 'Work Sans', 'Lato', 'Open Sans', 'System'] as const;
+/** How the player opens: dark, light, or as the participant's device is set (they can still switch in Settings). */
+export const BRAND_MODES = ['dark', 'light', 'system'] as const;
+const HexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a colour as #RRGGBB');
+
+/**
+ * The client brand (D181), authored in GenieKreator's Brand and theme tab. The player turns it into a theme
+ * through the theme loader (contrast corrected, D72) when the storyline runs. A theme the server provides
+ * (`GET /theme`) wins over it. Left out, the KNOLSKAPE look.
+ */
+export const Brand = z.object({
+  /** The client's name, as people read it. Names the logo. */
+  name: z.string().trim().min(1).max(60).transform(sanitizeCopy).optional(),
+  /** Main: bars, selected state and the primary button. Second: eyebrows, links and the button's gradient end. */
+  colors: z.object({ main: HexColor, second: HexColor }).optional(),
+  logo: ImageRef.optional(),
+  font: z.enum(BRAND_FONTS).optional(),
+  mode: z.enum(BRAND_MODES).optional()
+});
+export type Brand = z.output<typeof Brand>;
+
+/** How a SCORM package or an LMS launch counts the run as complete (D184). */
+export const LMS_COMPLETION = ['finish', 'weeks'] as const;
+/** How it counts the run as passed (D184). */
+export const LMS_PASS = ['none', 'score', 'level'] as const;
+export const LMS_PACKAGES = ['scorm12', 'scorm2004'] as const;
+
+/**
+ * What the LMS records of a run (D184), authored in Review and publish. The SCORM runtime reads it; the engine
+ * never does. Completion: reaching the end screen (`finish`) or completing `periods` periods (`weeks`). Pass:
+ * none, a Leadership Score of at least `score` (scaled 0 to 100), or an overall level of at least `level`
+ * (a name on the report's rating scale). The score reported is the Leadership Score scaled 0 to 100.
+ */
+export const Lms = z.object({
+  completion: z.object({ rule: z.enum(LMS_COMPLETION).default('finish'), periods: z.number().int().min(1).max(MAX_PERIODS).optional() }).default({ rule: 'finish' }),
+  pass: z.object({ rule: z.enum(LMS_PASS).default('none'), score: Score.default(70), level: z.string().trim().min(1).optional() }).default({ rule: 'none', score: 70 }),
+  score: z.enum(['leadership']).default('leadership'),
+  package: z.enum(LMS_PACKAGES).default('scorm12'),
+  /** Connected mode: the package calls this server for the AI conversations and the report instead of running alone. */
+  connected: z.boolean().default(false)
+});
+export type Lms = z.output<typeof Lms>;
+export const DEFAULT_LMS: Lms = { completion: { rule: 'finish' }, pass: { rule: 'none', score: 70 }, score: 'leadership', package: 'scorm12', connected: false };
 
 export const Thresholds = z.object({
   high: Score.default(70),
@@ -979,7 +1046,15 @@ export const StorylineConfig = z.object({
    */
   locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/).default('en'),
   /** The sponsor's authored welcome letter (onboarding), drafted by the author chat (D74). Left out, onboarding words one from the storyline's facts. */
-  intro: z.object({ welcome: z.array(Copy).min(1).max(4), product: z.array(Copy).min(1).max(4), targets: z.array(Copy).min(1).max(4) }).optional(),
+  intro: z.object({
+    welcome: z.array(Copy).min(1).max(4), product: z.array(Copy).min(1).max(4), targets: z.array(Copy).min(1).max(4),
+    /** Every intro screen in the author's order, with its title (D182): the welcome letter, the product, the targets, the team and any added. */
+    screens: z.array(z.object({ key: Key, title: Copy, body: z.array(Copy).max(6).default([]) })).max(10).optional()
+  }).optional(),
+  /** The client brand: colours, logo, font and light or dark (D181). Left out, the KNOLSKAPE look. */
+  brand: Brand.optional(),
+  /** What the LMS records of a run (D184). Defaults: complete at the end screen, no pass mark, SCORM 1.2, standalone. */
+  lms: Lms.default(() => structuredClone(DEFAULT_LMS)),
   /** The company, product, market and sponsor's voice, for the AI characters (D130). */
   world: World.optional(),
   /** The leadership lens: styles, needs and fit (D70). Readiness Based Leadership when left out. */
@@ -1240,7 +1315,37 @@ export const StorylineConfig = z.object({
     x.options?.forEach((o, k) => { for (const e of [o.effect, o.effect.otherwise]) businesses.push([e?.business, ['stakeholders', i, 'interactions', j, 'options', k, 'effect', 'business']]); });
   }));
   for (const [b, path] of businesses) for (const k of Object.keys(b?.stakeholders ?? {})) if (!shKeys.has(k)) ctx.addIssue({ code: 'custom', path: [...path, 'stakeholders', k], message: `No stakeholder called ${k}` });
+
+  // What the LMS records (D184): a completion within the run, a pass level on the rating scale.
+  if (c.lms.completion.rule === 'weeks' && (c.lms.completion.periods ?? c.time.period.count) > c.time.period.count)
+    ctx.addIssue({ code: 'custom', path: ['lms', 'completion', 'periods'], message: `The run has ${c.time.period.count} periods: complete within them` });
+  if (c.lms.pass.rule === 'level' && !c.report.scale.some(l => l.name === c.lms.pass.level))
+    ctx.addIssue({ code: 'custom', path: ['lms', 'pass', 'level'], message: `Pick a level on the rating scale (${c.report.scale.map(l => l.name).join(', ')})` });
+  // Embedded images (D183) stay inside their budget together.
+  const images = imagesOf(c);
+  // Portraits predate the image rule and stay plain strings for back compatibility; an embedded one keeps to the budget.
+  for (const [at, src] of images) if (!at.startsWith('world.') && !at.startsWith('brand.') && imageBytes(src) > IMAGE_BUDGET_BYTES)
+    ctx.addIssue({ code: 'custom', path: at.split('.').map(k => (/^\d+$/.test(k) ? Number(k) : k)), message: `The image is ${kb(imageBytes(src))} KB, over the ${kb(IMAGE_BUDGET_BYTES)} KB an uploaded image may be` });
+  const bytes = images.reduce((a, [, src]) => a + imageBytes(src), 0);
+  if (bytes > IMAGES_BUDGET_BYTES) ctx.addIssue({ code: 'custom', path: [], message: `Uploaded images add up to ${kb(bytes)} KB, over the ${kb(IMAGES_BUDGET_BYTES)} KB a storyline may carry: use library images or smaller uploads` });
 });
+
+/** Every image a storyline shows (D183), with where it is: portraits, the sponsor, stakeholders, the office, logos and products. */
+export function imagesOf(c: { members: Array<{ portrait?: string; portraits?: Partial<Record<string, string>> }>; candidates?: Array<{ portrait?: string; portraits?: Partial<Record<string, string>> }>; sponsor: { portrait?: string }; stakeholders?: Array<{ portrait?: string }>; world?: { office?: { image?: string }; logo?: { image?: string }; products?: Array<{ image?: string }> }; brand?: { logo?: string } }): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  const add = (path: string, src: string | undefined) => { if (src) out.push([path, src]); };
+  for (const [list, people] of [['members', c.members], ['candidates', c.candidates ?? []]] as const) people.forEach((p, i) => {
+    add(`${list}.${i}.portrait`, p.portrait);
+    for (const [mood, src] of Object.entries(p.portraits ?? {})) add(`${list}.${i}.portraits.${mood}`, src);
+  });
+  add('sponsor.portrait', c.sponsor.portrait);
+  (c.stakeholders ?? []).forEach((s, i) => add(`stakeholders.${i}.portrait`, s.portrait));
+  add('world.office.image', c.world?.office?.image);
+  add('world.logo.image', c.world?.logo?.image);
+  (c.world?.products ?? []).forEach((p, i) => add(`world.products.${i}.image`, p.image));
+  add('brand.logo', c.brand?.logo);
+  return out;
+}
 
 export type StorylineConfig = z.output<typeof StorylineConfig>;
 export type StorylineInput = z.input<typeof StorylineConfig>;

@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { isImageRef } from '../../../../engine/assets';
+import { OFFICES } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
+import { ImageUpload } from '../../ImageUpload';
 import { Avatar, BUTTON, CARD, CardHead, EYEBROW, Field, MarkOf, Segmented, SubTabs, TEXT_MAX, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRenameOffer } from '../UpdatePrompt';
@@ -41,15 +44,28 @@ export default function Story() {
                 <Field label="Headquarters" optional>{id => <TextInput id={id} tone={tone('story.company.hq')} value={c.hq} onChange={e => edit(x => { x.story.company.hq = e.target.value; }, 'story.company.hq')} />}</Field>
               </div>
               <Field label="What it does">{id => <TextArea id={id} rows={3} tone={tone('story.company.about')} value={c.about} onChange={e => edit(x => { x.story.company.about = e.target.value; }, 'story.company.about')} />}</Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Your team">{id => <TextInput id={id} tone={tone('story.company.team')} value={c.team} onChange={e => edit(x => { x.story.company.team = e.target.value; }, 'story.company.team')} />}</Field>
-                <Field label="Office image" optional>{id => <TextInput id={id} tone={tone('story.company.office')} value={c.office} onChange={e => edit(x => { x.story.company.office = e.target.value; }, 'story.company.office')} />}</Field>
-              </div>
-              <Field label="Logo" optional>{id => (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span aria-hidden="true" className="flex size-11 items-center justify-center rounded-10 bg-author-primary-soft text-16 font-800 text-author-primary">{c.logo || c.name.slice(0, 2).toUpperCase()}</span>
+              <Field label="Your team">{id => <TextInput id={id} tone={tone('story.company.team')} value={c.team} onChange={e => edit(x => { x.story.company.team = e.target.value; }, 'story.company.team')} />}</Field>
+              <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+                <legend className="mb-1 text-13 font-700 text-author-label">Office image <span className="font-600 text-author-muted">(behind every screen participants see)</span></legend>
+                <div className="grid grid-cols-3 gap-2">
+                  {[...OFFICES.map(o => ({ src: o.src as string, label: o.label })), ...(c.office.startsWith('data:') ? [{ src: c.office, label: 'Your upload' }] : [])].map(o => (
+                    <label key={o.label} className={`flex cursor-pointer flex-col gap-1 rounded-10 border-2 border-solid p-1 text-12 font-700 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary ${c.office === o.src ? 'border-author-primary' : 'border-transparent'}`}>
+                      <input type="radio" name="office" className="sr-only" checked={c.office === o.src} onChange={() => edit(x => { x.story.company.office = o.src; }, 'story.company.office')} />
+                      <img src={o.src} alt="" className="aspect-video w-full rounded-8 object-cover" />{o.label}
+                    </label>
+                  ))}
+                </div>
+                <ImageUpload label="Upload an office photo" maxSide={1600} onImage={src => edit(x => { x.story.company.office = src; }, 'story.company.office')} />
+                {c.office.trim() && !isImageRef(c.office) && <p className="m-0 text-12 text-author-muted">Described as "{c.office}": the characters can mention it, and participants see the default office until you pick or upload an image.</p>}
+              </fieldset>
+              <Field label="Logo" optional hint="Uploaded, it shows next to the iLead wordmark and in onboarding; otherwise the letters do.">{id => (
+                <div className="flex flex-wrap items-start gap-2">
+                  {c.logoImage
+                    ? <img src={c.logoImage} alt={`${c.name} logo`} className="size-11 rounded-10 bg-author-primary-soft object-contain" />
+                    : <span aria-hidden="true" className="flex size-11 items-center justify-center rounded-10 bg-author-primary-soft text-16 font-800 text-author-primary">{c.logo || c.name.slice(0, 2).toUpperCase()}</span>}
                   <TextInput id={id} className="max-w-24" aria-label="Logo initials" value={c.logo} onChange={e => edit(x => { x.story.company.logo = e.target.value.slice(0, 3); }, 'story.company.logo')} />
-                  <label className={`${BUTTON.secondary} has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary`}>Upload<input type="file" accept="image/*" className="sr-only" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) edit(x => { x.story.company.logo = f.name.slice(0, 3).toUpperCase(); }, 'story.company.logo'); }} /></label>
+                  <ImageUpload label={c.logoImage ? 'Replace the logo' : 'Upload a logo'} maxSide={512} onImage={src => edit(x => { x.story.company.logoImage = src; }, 'story.company.logoImage')} />
+                  {c.logoImage && <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { x.story.company.logoImage = ''; }, 'story.company.logoImage')}>Remove the logo</button>}
                   <button type="button" className={BUTTON.koraOutline} onClick={() => edit(x => { x.story.company.logo = x.story.company.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(); }, 'story.company.logo', 'ai')}>Create with Kora</button>
                 </div>
               )}</Field>
@@ -77,6 +93,13 @@ export default function Story() {
               <Field label="Product view" optional>{() => (
                 <Segmented label="Product view" value={p.view} onChange={v => edit(x => { x.story.product.view = v; }, 'story.product.view')} options={[{ value: 'model', label: '3D model from the library' }, { value: 'photos', label: 'Photos' }, { value: 'none', label: 'None' }]} />
               )}</Field>
+              <p className="m-0 text-12 text-author-muted">{p.view === 'none' ? 'Participants see no product scene in onboarding.' : 'Participants see the product, its line and its selling points in a portfolio scene during onboarding.'}</p>
+              {p.view === 'photos' && (
+                <div className="flex flex-wrap items-start gap-3">
+                  {p.image && <img src={p.image} alt={p.name} className="h-20 w-28 rounded-10 bg-author-track object-cover" />}
+                  <ImageUpload label={p.image ? 'Replace the photo' : 'Upload a product photo'} maxSide={1024} onImage={src => edit(x => { x.story.product.image = src; }, 'story.product.image')} />
+                </div>
+              )}
             </section>
           </div>
         )}

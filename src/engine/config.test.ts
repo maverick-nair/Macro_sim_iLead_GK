@@ -133,3 +133,29 @@ describe('money formatting', () => {
     }
   });
 });
+
+describe('brand, world visuals and the LMS block (D181 to D184)', () => {
+  it('reads a storyline written before them with no brand and the LMS defaults', () => {
+    const r = parseStoryline(base());
+    if (!r.ok) throw new Error(r.issues.join('\n'));
+    expect(r.config.brand).toBeUndefined();
+    expect(r.config.lms).toEqual({ completion: { rule: 'finish' }, pass: { rule: 'none', score: 70 }, score: 'leadership', package: 'scorm12', connected: false });
+  });
+
+  it('checks the completion weeks, the pass level and the brand\'s colours, font and logo', () => {
+    const periods = base().time.period.count;
+    expect(issues(storyline({ lms: { completion: { rule: 'weeks', periods: periods + 1 } } }))).toEqual([expect.stringMatching(/^lms\.completion\.periods: The run has \d+ periods/)]);
+    expect(issues(storyline({ lms: { pass: { rule: 'level', level: 'Wizard' } } }))).toEqual([expect.stringMatching(/^lms\.pass\.level: Pick a level on the rating scale/)]);
+    expect(issues(storyline({ lms: { completion: { rule: 'weeks', periods: 2 }, pass: { rule: 'score', score: 75 }, package: 'scorm2004', connected: true } }))).toEqual([]);
+    expect(issues(storyline({ brand: { colors: { main: 'blue', second: '#00AA00' }, font: 'Comic Sans' as never, logo: 'logo.png' } })).map(i => i.split(':')[0]).sort())
+      .toEqual(['brand.colors.main', 'brand.font', 'brand.logo']);
+  });
+
+  it('keeps embedded images inside their budget together', () => {
+    const img = `data:image/png;base64,${'A'.repeat(400_000)}`;
+    const s = base();
+    s.members = s.members.map(m => ({ ...m, portrait: img }));
+    s.world = { products: Array.from({ length: 6 }, (_, i) => ({ name: `Product ${i + 1}`, image: img })) };
+    expect(issues(s)).toContainEqual(expect.stringMatching(/^storyline: Uploaded images add up to \d+ KB, over the 3072 KB/));
+  });
+});

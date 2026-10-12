@@ -47,6 +47,35 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "screens": {
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "body": {
+                "maxItems": 6,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "key",
+              "title"
+            ]
+          }
         }
       },
       "required": [
@@ -54,6 +83,146 @@
         "product",
         "targets"
       ]
+    },
+    "brand": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "colors": {
+          "type": "object",
+          "properties": {
+            "main": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
+            },
+            "second": {
+              "type": "string",
+              "pattern": "^#[0-9A-Fa-f]{6}$"
+            }
+          },
+          "required": [
+            "main",
+            "second"
+          ]
+        },
+        "logo": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000000,
+          "description": "A site path (/assets/...), an https address, or a base64 image data URL under the per image budget (D183)."
+        },
+        "font": {
+          "type": "string",
+          "enum": [
+            "Manrope",
+            "Inter",
+            "IBM Plex Sans",
+            "Source Sans 3",
+            "Nunito Sans",
+            "Work Sans",
+            "Lato",
+            "Open Sans",
+            "System"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "dark",
+            "light",
+            "system"
+          ]
+        }
+      }
+    },
+    "lms": {
+      "default": {
+        "completion": {
+          "rule": "finish"
+        },
+        "pass": {
+          "rule": "none",
+          "score": 70
+        },
+        "score": "leadership",
+        "package": "scorm12",
+        "connected": false
+      },
+      "type": "object",
+      "properties": {
+        "completion": {
+          "default": {
+            "rule": "finish"
+          },
+          "type": "object",
+          "properties": {
+            "rule": {
+              "default": "finish",
+              "type": "string",
+              "enum": [
+                "finish",
+                "weeks"
+              ]
+            },
+            "periods": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10
+            }
+          }
+        },
+        "pass": {
+          "default": {
+            "rule": "none",
+            "score": 70
+          },
+          "type": "object",
+          "properties": {
+            "rule": {
+              "default": "none",
+              "type": "string",
+              "enum": [
+                "none",
+                "score",
+                "level"
+              ]
+            },
+            "score": {
+              "default": 70,
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "level": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "score": {
+          "default": "leadership",
+          "type": "string",
+          "enum": [
+            "leadership"
+          ]
+        },
+        "package": {
+          "default": "scorm12",
+          "type": "string",
+          "enum": [
+            "scorm12",
+            "scorm2004"
+          ]
+        },
+        "connected": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
     },
     "world": {
       "type": "object",
@@ -128,6 +297,80 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 4000
+        },
+        "office": {
+          "type": "object",
+          "properties": {
+            "image": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000000,
+              "description": "A site path (/assets/...), an https address, or a base64 image data URL under the per image budget (D183)."
+            },
+            "description": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000
+            }
+          }
+        },
+        "logo": {
+          "type": "object",
+          "properties": {
+            "image": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1000000,
+              "description": "A site path (/assets/...), an https address, or a base64 image data URL under the per image budget (D183)."
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 3
+            }
+          }
+        },
+        "products": {
+          "maxItems": 6,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "line": {
+                "type": "string",
+                "minLength": 1
+              },
+              "specs": {
+                "maxItems": 8,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "image": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000000,
+                "description": "A site path (/assets/...), an https address, or a base64 image data URL under the per image budget (D183)."
+              },
+              "view": {
+                "default": "photo",
+                "type": "string",
+                "enum": [
+                  "photo",
+                  "model"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ]
+          }
         }
       }
     },

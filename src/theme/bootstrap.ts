@@ -4,6 +4,7 @@
  * Until then, and whenever anything fails, the default iLead theme shows.
  */
 import { useSyncExternalStore } from 'react';
+import type { StorylineLookInput, StorylineTheme } from './storyline';
 import type { AppliedTheme } from './types';
 
 export interface ThemeState {
@@ -17,6 +18,11 @@ const listeners = new Set<() => void>();
 const set = (next: ThemeState) => { state = next; listeners.forEach(l => l()); };
 let started = false;
 let written: string[] = [];
+/** The server's theme once settled (null: none), undefined until then; and the running storyline's look (D181). */
+let server: AppliedTheme | null | undefined;
+let story: StorylineTheme | null = null;
+let offered = '';
+let published = 0;
 
 /** The launch payload's inline theme (`<script type="application/json" id="il-launch">{"theme": …}</script>`), if the host page has one. */
 export function readLaunchTheme(doc: Document = document): unknown {
@@ -63,10 +69,43 @@ export function startTheme(fetch: () => Promise<unknown>, inline: unknown = read
     .then(m => m.loadTheme({ inline, fetch: () => raw ?? fetch() }))
     .catch(() => null)
     .then(theme => {
-      let applied = theme;
-      try { applyTheme(theme); } catch { applied = null; applyTheme(null); }
-      set({ status: 'ready', theme: applied });
+      server = theme;
+      publish();
     });
+}
+
+/** Applies the server's theme, or the storyline's when the server has none, with the storyline's office backdrop (D181, D182). */
+function publish() {
+  if (server === undefined) return;
+  const turn = ++published;
+  const load = story ? import('./storyline').then(m => m.combineThemes(server ?? null, story)) : Promise.resolve(server);
+  void load.catch(() => server ?? null).then(theme => {
+    if (turn !== published) return;
+    let applied = theme ?? null;
+    try { applyTheme(applied); } catch { applied = null; applyTheme(null); }
+    set({ status: 'ready', theme: applied });
+  });
+}
+
+/**
+ * The running storyline's look, from the engine view (D181, D182): its brand applies when the server provides no theme,
+ * and its office image goes behind the screens. Only on pages that started the theme (the participant app), never in
+ * GenieKreator or a gallery. The same look offered again changes nothing.
+ */
+export function offerStorylineTheme(look: StorylineLookInput | null): void {
+  if (!started) return;
+  // Embedded images are long: a fingerprint of each keeps the comparison cheap on every view.
+  const fp = (v: string | null | undefined) => (v && v.length > 256 ? `${v.length}:${v.slice(0, 96)}:${v.slice(-96)}` : v ?? null);
+  const key = look && (look.brand || look.office || look.logo?.image)
+    ? JSON.stringify([look.organisation ?? null, look.brand && { ...look.brand, logo: fp(look.brand.logo) }, fp(look.logo?.image), fp(look.office)]) : '';
+  if (key === offered) return;
+  offered = key;
+  if (!key) { story = null; publish(); return; }
+  void import('./storyline').then(m => {
+    if (offered !== key) return;
+    story = m.resolveStorylineTheme(look!);
+    publish();
+  }).catch(() => undefined);
 }
 
 export function useThemeState(): ThemeState {
