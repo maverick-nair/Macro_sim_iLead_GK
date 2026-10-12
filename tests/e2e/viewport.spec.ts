@@ -181,7 +181,9 @@ test.describe('onboarding and the demo', () => {
   const steps: [string, (page: Page) => Locator][] = [
     ['landing', page => page.getByRole('button', { name: 'Watch the video message from Paula Jacob' })],
     ['message', page => page.getByRole('slider', { name: 'Position in the message' })],
-    ['message end', page => page.getByRole('button', { name: 'See your objectives' })],
+    ['message end', page => page.getByRole('button', { name: 'Explore products' })],
+    // The product portfolio (D221): its way on to the objectives.
+    ['products', page => page.getByRole('button', { name: 'See your objectives' })],
     ['objectives', page => page.getByRole('button', { name: 'Start simulation' })]
   ];
   for (const [label, sizes] of [['landscape', LANDSCAPE], ['portrait', PORTRAIT]] as const) {

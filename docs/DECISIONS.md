@@ -1316,6 +1316,12 @@ The overall level was the mean of the skill ratings, and the verdict read only t
 - `tests/e2e/lifecycle.spec.ts`, one test: the author shows the product in onboarding and writes its tagline and kind in Story and world (About this section answers where it appears); Preview opens the saved draft marked as a test and the products screen shows the tagline; the preview writes nothing outside its own keys; Review and publish stops the untested draft, then, published without testing, downloads a SCORM 2004 package that completes after one week and passes at a Leadership Score of 1, with the settings in the storyline's own `lms` block and the tagline in its portfolio; in the mock LMS a fresh participant goes through the four pre-game screens (the same tagline), plays week 1, and completion, pass and the score reach the LMS; later sessions play on through the suspend data (`tests/e2e/fixtures/lifecycle-forward.ts` replays the participant's own week and plays on, as `scorm-build.ts` does), the participant finishes the last week and opens the report, whose tier is the run's.
 - It builds the participant player into its own folder, so it can run beside `scorm.spec.ts`, which builds `dist`. The LMS steps are `tests/e2e/fixtures/scorm-lms.ts` (D223).
 
+**D225. What the merge of the desk with the portfolio and real world costs needed.** Decided 2026-10-12.
+- The Products screen's photo collapsed on the upright tablet (a single column: an `aspect-square` figure with hidden overflow gives its grid row no height), so the numbered spots overlapped and failed axe's target size. On the tablet the photo is a fixed square (`size-120`, at most the column's width), centred. The canvas's spot positions then sit at least 24px apart.
+- The desk feed's sender names truncated at 200% text when real world costs (D173, D174) add messages from the team; they wrap there now, as the team strip's names do.
+- `tests/e2e/a11y.spec.ts` and `tests/e2e/viewport.spec.ts` walk the products screen between the message and the objectives.
+- Not fixed here, failing on `eco-ws4-player` alone as well: `decision.spec.ts` (the business bar's variables and a choice event's moved values, looked for in a region the desk renamed), `drawer.spec.ts` (the inbox after the actions in tab order: the desk's feed replaced the inbox rail) and `board.spec.ts` (one colour contrast issue in the light theme after styles are set).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

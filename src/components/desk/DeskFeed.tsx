@@ -126,7 +126,7 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
             <Card key={x.id} kind="message" urgent={x.urgent}>
               <span className="flex min-w-0 items-center gap-2">
                 <span className={`flex size-6 flex-none items-center justify-center overflow-hidden rounded-round text-11 text-large:size-auto text-large:min-h-6 text-large:min-w-6 text-large:p-0.5 font-700 text-brand-deep-space ${SENDER_TONE[x.sender.kind]}`}><SenderFace sender={x.sender} /></span>
-                <b className="min-w-0 flex-1 truncate text-13">{x.from || t('desk.feed.message', { kind: x.kind })}</b>
+                <b className="min-w-0 flex-1 truncate text-13 text-large:whitespace-normal text-large:break-words">{x.from || t('desk.feed.message', { kind: x.kind })}</b>
                 {x.due && <span className={`text-12 whitespace-nowrap ${x.urgent ? 'font-700 text-status-attention' : 'text-fg-secondary'}`}>{x.due}</span>}
               </span>
               <span className="line-clamp-2 leading-snug text-fg-secondary">{x.title}</span>

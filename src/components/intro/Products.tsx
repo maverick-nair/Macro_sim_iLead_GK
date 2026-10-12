@@ -99,7 +99,7 @@ export function Products({ products, organisation, onNext }: ProductsProps) {
               </>
             )}
           </section>
-          <figure className="relative m-0 aspect-square max-h-full overflow-hidden rounded-16 border border-line-default bg-surface-raised">
+          <figure className="relative m-0 aspect-square max-h-full w-full overflow-hidden tablet:max-h-none tablet:size-120 tablet:max-w-full tablet:justify-self-center rounded-16 border border-line-default bg-surface-raised">
             {p.image ? <img src={p.image} alt={p.imageAlt ?? t('intro.products.photo', { name: p.name })} className="absolute inset-0 size-full object-cover" />
               : <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-110 font-800 text-fg-secondary">{p.code}</span>}
             {p.features.map((x, i) => (
