@@ -178,7 +178,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   );
 
   return (
-    <section aria-label={t('metrics.strip.aria')} data-tour="kpis" className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 short:pb-2 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
+    <section aria-label={t('metrics.strip.aria')} data-tour="kpis" data-trace="stages" className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 short:pb-2 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
       {pulseTile}
       {targetTile}

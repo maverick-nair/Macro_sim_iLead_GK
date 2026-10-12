@@ -40,14 +40,8 @@ export function registerAdmin(ctx: ServerContext) {
     description: 'Checked against the storyline schema (storyline-config.json) and the copy rules. Runs in progress keep the version they started with.',
     responses: { 201: { description: 'Saved', schema: z.object({ id: z.string(), version: z.number(), status: z.string() }) }, 400: Err }
   }, async (c, { body, principal }) => {
-    const r = parseStoryline(body.config);
-    if (!r.ok) throw badRequest('The storyline does not parse', { issues: r.issues.slice(0, 20) });
-    // Author copy rules (D70): no em dashes or dashes as punctuation, no emojis, "skills" never "competency", no
-    // certification claims, KNOLSKAPE lens titles only. Hyphenated words are fine: the app's copy rules word them for participants.
-    const copy = guardDraft(body.config).filter(i => i.rule !== 'dash');
-    if (copy.length) throw badRequest('The storyline breaks the copy rules', { issues: copy.slice(0, 20) });
-    if (!ExternalId.safeParse(r.config.id).success) throw badRequest('The storyline id must be letters, digits and . _ : @ | -');
-    const saved = await repo.saveStoryline({ id: r.config.id, status: body.status, name: r.config.name, config: body.config, createdBy: principal!.id });
+    const config = checkStoryline(body.config);
+    const saved = await repo.saveStoryline({ id: config.id, status: body.status, name: config.name, config: body.config, createdBy: principal!.id });
     return c.json({ id: saved.id, version: saved.version, status: saved.status }, 201);
   });
 
@@ -123,11 +117,26 @@ export function registerAdmin(ctx: ServerContext) {
   });
 
   routes.add({ method: 'post', path: '/api/admin/retention/run', tag: 'privacy', auth: ['cohort_admin'],
-    summary: 'Apply the retention policy now (RETENTION_DAYS; it also runs daily)', responses: { 200: { description: 'What was removed', schema: z.object({ sessions: z.number(), runs: z.number() }) }, 403: Err }
+    summary: 'Apply the retention policy now (RETENTION_DAYS; it also runs daily). Expired previews always go (D195).', responses: { 200: { description: 'What was removed', schema: z.object({ sessions: z.number(), runs: z.number(), previews: z.number().optional() }) }, 403: Err }
   }, async (c, { principal }) => {
     if (!everything(principal!)) throw forbidden();
     return c.json(await purge(ctx));
   });
+}
+
+/**
+ * The checks a storyline passes before it is kept, as a version or as a preview (D195): the storyline schema,
+ * the author copy rules (D70: no em dashes or dashes as punctuation, no emojis, "skills" never "competency", no
+ * certification claims, KNOLSKAPE lens titles only; hyphenated words are fine, the app's copy rules word them for
+ * participants) and an id safe in paths. Throws 400 with the issues.
+ */
+export function checkStoryline(input: Record<string, unknown>) {
+  const r = parseStoryline(input);
+  if (!r.ok) throw badRequest('The storyline does not parse', { issues: r.issues.slice(0, 20) });
+  const copy = guardDraft(input).filter(i => i.rule !== 'dash');
+  if (copy.length) throw badRequest('The storyline breaks the copy rules', { issues: copy.slice(0, 20) });
+  if (!ExternalId.safeParse(r.config.id).success) throw badRequest('The storyline id must be letters, digits and . _ : @ | -');
+  return r.config;
 }
 
 /** Expired sessions always; runs untouched for RETENTION_DAYS when it is set. */

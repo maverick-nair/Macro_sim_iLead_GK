@@ -144,3 +144,9 @@ export const END_FIXTURE = {
   answers: ['Kent taught me that the loudest problem is not always the real one. Asking first changed everything.', ''],
   rating: 4
 };
+
+/** The design prototype's portrait for a fixture member, for the galleries' prototype screens only. */
+export const prototypePortrait = (id: string) => `/assets/npc/${id}.png`;
+
+/** Who the prototype's "The team is reacting" shows, for the galleries (the playable app reads the engine view). */
+export const REACTING_FIXTURE = ['kent', 'beth', 'jack'];

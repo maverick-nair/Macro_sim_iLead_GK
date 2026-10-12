@@ -1,11 +1,13 @@
 import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ApiContext, createDefaultApi } from './api';
+import { ApiContext, createDefaultApi, createMockApi } from './api';
 import { App } from './app/App';
 import { prefetch } from './app/prefetch';
 import { SmallScreenGate } from './app/SmallScreenGate';
 import { EngineProvider } from './engine/react';
-import { createDefaultClient } from './engine/client';
+import { createDefaultClient, createHttpClient } from './engine/client';
+import { isPreview, PREVIEW_PARTICIPANT, PREVIEW_PREFIX, readMeta, screenFor } from './components/preview/mode';
+import { previewEngineBase } from './components/preview/server';
 import { rememberedRun, rememberRun, resilientClient } from './engine/resilient';
 import { retryImport } from './lib/lazyRetry';
 import { useMediaQuery } from './lib/useMediaQuery';
@@ -33,10 +35,32 @@ const PrintReport = lazy(() => retryImport(() => import('./app/PrintReport')));
 const StatesGallery = lazy(() => retryImport(() => import('./gallery/StatesGallery')).then(m => ({ default: m.StatesGallery })));
 // Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
 const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
+// The preview bar (D191): only in a preview from GenieKreator, never in a participant's load.
+const PreviewBar = lazy(() => retryImport(() => import('./components/preview/PreviewBar')));
+
+/**
+ * A preview from GenieKreator (`?preview=1`, D193): the draft plays as the participant `preview`, on the
+ * mock engine, or on the server's preview storyline (`previewId`). Nothing a participant's history, runs or
+ * reports read is written: no remembered run, no queue kept on the device, the mock API (no history, no
+ * email, no settings on the server), and what it keeps on the device goes under `ilead.preview.`.
+ */
+/** The app fills the window less the preview bar (its height is set by the bar, D191). */
+const PREVIEW_MIN_HEIGHT = 'calc(100vh - var(--il-preview-bar-height, 0px))';
+
+function previewLaunch(q: URLSearchParams) {
+  const api = createMockApi({ participant: PREVIEW_PARTICIPANT, client: q.get('client'), themeUrl: q.get('themeUrl'), history: false, storagePrefix: PREVIEW_PREFIX });
+  const previewId = q.get('previewId');
+  const base = previewEngineBase();
+  const inner = previewId && base ? createHttpClient(base, previewId) : createDefaultClient(PREVIEW_PARTICIPANT);
+  const engine = resilientClient(inner, { storage: null });
+  startTheme(() => api.getTheme());
+  return { q, api: prefetch(api, ['getSession']), engine: prefetch(engine, ['view']), preview: { meta: readMeta(), jump: q.get('jump'), previewId: previewId && base ? previewId : null } };
+}
 
 /** The participant app's clients, made from the launch link once per load. */
 function launch() {
   const q = new URLSearchParams(location.search);
+  if (isPreview(location.search)) return previewLaunch(q);
   // The launch link names the participant (LMS or GenieKreator); settings and the session are theirs.
   // Without one (a reload of a bookmark), the run this browser last played resumes (D86).
   const participant = q.get('participant') ?? rememberedRun() ?? 'local';
@@ -53,7 +77,8 @@ function launch() {
   // The first screen's reads leave now, while the app is still starting, not after its first render (D78).
   startTheme(() => api.getTheme());
   const onEngine = q.get('engine') !== 'off';
-  return { q, api: prefetch(api, ['getScenario', 'getSession']), engine: onEngine ? prefetch(engine, ['view']) : engine };
+  // The engine's screens render from its view (D199): the prototype's scenario is read only with `?engine=off`.
+  return { q, api: prefetch(api, onEngine ? ['getSession'] : ['getScenario', 'getSession']), engine: onEngine ? prefetch(engine, ['view']) : engine, preview: null };
 }
 
 /**
@@ -65,7 +90,7 @@ function launch() {
  * Laptops, desktops and tablets only (D69): on a smaller screen a notice covers the app (`app/SmallScreenGate.tsx`).
  */
 function Play({ launched }: { launched: ReturnType<typeof launch> }) {
-  const { q, api, engine } = launched;
+  const { q, api, engine, preview } = launched;
   const { theme: applied } = useThemeState();
   const systemLight = useMediaQuery('(prefers-color-scheme: light)');
   const param = q.get('theme');
@@ -74,8 +99,10 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
   return (
     <ApiContext.Provider value={api}>
       <EngineProvider client={engine}>
+        {preview && <Suspense fallback={null}><PreviewBar meta={preview.meta} jump={preview.jump} previewId={preview.previewId} theme={theme} /></Suspense>}
         <SmallScreenGate theme={theme} clientTheme={applied}>
-          {covered => <App screen={q.get('start') === 'board' ? 'board' : q.get('start') === 'demo' ? 'demo' : undefined} engine={q.get('engine') !== 'off'} theme={theme} clientTheme={applied} held={covered} minHeight="100vh" fit />}
+          {covered => <App screen={preview ? screenFor(preview.jump) : q.get('start') === 'board' ? 'board' : q.get('start') === 'demo' ? 'demo' : undefined}
+            engine={q.get('engine') !== 'off'} report={preview?.jump === 'report'} theme={theme} clientTheme={applied} held={covered} minHeight={preview ? PREVIEW_MIN_HEIGHT : '100vh'} fit />}
         </SmallScreenGate>
       </EngineProvider>
     </ApiContext.Provider>

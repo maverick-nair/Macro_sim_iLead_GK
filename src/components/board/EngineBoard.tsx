@@ -1105,7 +1105,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                 * paint is) come first; the actions panel and the inbox follow once that has painted, built
                 * in their own render inside a transition, so the board is not one long task.
                 */}
-              <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <ActionsPanel
+              <div data-trace="actions" className="col-start-3 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <ActionsPanel
                 capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
                 notes={actionNotes}
                 team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
@@ -1118,7 +1118,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                   onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
                 } : undefined}
               />}</Deferred></div>
-              <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} />}</Deferred></div>
+              <div data-trace="events" className="col-start-1 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} />}</Deferred></div>
               {profile && <ProfilePanel {...profile} />}
               {inboxDrawer}
             </div>

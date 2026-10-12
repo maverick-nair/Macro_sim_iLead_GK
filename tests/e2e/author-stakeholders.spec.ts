@@ -4,7 +4,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 /**
  * Authoring stakeholders outside the team (D160 to D165): add one in Team, shape them in the stakeholder editor
  * (identity, the relationship they start with, a negotiation played as a decision), have an event come from them as a
- * meeting request with a deadline, and read the exported storyline where Play a week leaves it.
+ * meeting request with a deadline, and read the exported storyline where Preview leaves it.
  */
 
 const errors: string[] = [];
@@ -26,7 +26,7 @@ async function workspace(page: Page, tab: string) {
 }
 async function exported(page: Page, context: BrowserContext): Promise<Json> {
   const opened = context.waitForEvent('page');
-  await page.getByRole('banner').getByRole('button', { name: 'Play a week' }).click();
+  await page.getByRole('banner').getByRole('button', { name: 'Preview', exact: true }).click();
   await (await opened).close();
   return page.evaluate(() => JSON.parse(localStorage.getItem('ilead.author.draft') ?? 'null'));
 }

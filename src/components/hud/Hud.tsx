@@ -184,7 +184,7 @@ export function Hud(p: HudProps) {
       </nav>}
       <div className="min-w-0 flex-1 tablet-portrait:-order-1" />
       {/* D12, D84: the design's "Week 2 · Day 3" on screen; the spec's "Week 2 of 8" for screen readers, until the canvas (D80) settles the label. */}
-      <span data-tour="clock" className="flex-none text-13 text-fg-secondary tablet-portrait:-order-2 tablet-portrait:text-14">
+      <span data-tour="clock" data-trace="time" className="flex-none text-13 text-fg-secondary tablet-portrait:-order-2 tablet-portrait:text-14">
         <span aria-hidden={clock.periods ? true : undefined}>{around(where, v => <b className="text-fg-primary">{v}</b>, periodText)}</span>
         {clock.periods ? <span className="sr-only">{t('hud.clock.aria', { period: t('time.periodOf', { unit: clock.periodUnit, n: clock.period, total: clock.periods }), subPeriod: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }) })}</span> : null}
       </span>

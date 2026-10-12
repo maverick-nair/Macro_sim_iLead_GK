@@ -15,7 +15,11 @@ export interface RunRow {
   purpose: 'development' | 'assessment'; config: unknown; seed: number; attempt: number; engineVersion: string; status: RunStatus; eventCount: number;
   scoreTotal: number | null; conversions: number | null; capability: number | null; headline: string | null;
   createdAt: string; updatedAt: string; endedAt: string | null;
+  /** Played on a preview from GenieKreator (D195): left out of every cohort, group, benchmark, history and admin read. */
+  preview: boolean;
 }
+/** A preview storyline from GenieKreator (D195): a draft kept for testing only, never a published version. */
+export interface PreviewRow { id: string; storylineId: string; name: string; config: unknown; draftVersion: number | null; savedAt: string | null; createdBy: string | null; createdAt: string; updatedAt: string; expiresAt: string }
 export interface RunEvent { seq: number; kind: 'intent' | 'review'; payload: unknown; ai: unknown[]; createdAt: string }
 export interface EmailLogRow { id: string; participantId: string | null; runId: string | null; to: string; template: string; status: 'sent' | 'failed'; messageId: string | null; error: string | null; createdAt: string }
 export interface SessionRow { id: string; participantId: string | null; claims: unknown; expiresAt: string; createdAt: string }
@@ -42,7 +46,7 @@ export interface Repository {
   putTheme(id: string, config: unknown): Promise<void>;
   getTheme(id: string): Promise<unknown | null>;
 
-  createRun(r: Omit<RunRow, 'eventCount' | 'createdAt' | 'updatedAt' | 'endedAt' | 'status' | 'scoreTotal' | 'conversions' | 'capability' | 'headline'>): Promise<RunRow>;
+  createRun(r: Omit<RunRow, 'eventCount' | 'createdAt' | 'updatedAt' | 'endedAt' | 'status' | 'scoreTotal' | 'conversions' | 'capability' | 'headline' | 'preview'> & { preview?: boolean }): Promise<RunRow>;
   getRun(id: string): Promise<RunRow | null>;
   /** A participant's runs of a storyline, oldest attempt first (every storyline when left out). */
   listRuns(participantId: string, storylineId?: string): Promise<RunRow[]>;
@@ -57,7 +61,12 @@ export interface Repository {
   getIntentResult(runId: string, key: string): Promise<{ seq: number; result: unknown } | null>;
   putSummary(runId: string, lensId: string, summary: unknown): Promise<void>;
   getSummary(runId: string): Promise<unknown | null>;
-  /** Run summaries for the benchmark: every run of a lens. */
+  /** Previews (D195): a draft storyline kept until `expiresAt`. `getPreview` answers expired ones too; the caller checks. */
+  createPreview(p: Omit<PreviewRow, 'createdAt' | 'updatedAt'>): Promise<PreviewRow>;
+  getPreview(id: string): Promise<PreviewRow | null>;
+  updatePreview(id: string, p: Pick<PreviewRow, 'storylineId' | 'name' | 'config' | 'draftVersion' | 'savedAt' | 'expiresAt'>): Promise<PreviewRow | null>;
+
+  /** Run summaries for the benchmark: every run of a lens (never a preview's). */
   listSummaries(lensId: string): Promise<unknown[]>;
   /** The lenses runs have been played with. */
   lensIds(): Promise<string[]>;
@@ -77,8 +86,11 @@ export interface Repository {
   getPdf(runId: string, version: string): Promise<Buffer | null>;
   putPdf(runId: string, version: string, pdf: Uint8Array): Promise<void>;
 
-  /** Retention: deletes expired sessions, and runs (with their events) that ended or went quiet before `beforeIso`. */
-  purge(beforeIso: string | null): Promise<{ sessions: number; runs: number }>;
+  /**
+   * Retention: deletes expired sessions, and runs (with their events) that ended or went quiet before `beforeIso`.
+   * Expired previews always go, with their runs and their stand in participants (D195).
+   */
+  purge(beforeIso: string | null): Promise<{ sessions: number; runs: number; previews?: number }>;
   ping(): Promise<void>;
   close(): Promise<void>;
 }
@@ -96,10 +108,14 @@ const runOf = (r: Row): RunRow => ({
   id: String(r.id), participantId: String(r.participant_id), cohortId: str(r.cohort_id), storylineId: String(r.storyline_id), storylineVersion: Number(r.storyline_version), lensId: String(r.lens_id),
   purpose: r.purpose as RunRow['purpose'], config: parse(r.config), seed: Number(r.seed), attempt: Number(r.attempt), engineVersion: String(r.engine_version), status: r.status as RunStatus,
   eventCount: Number(r.event_count), scoreTotal: num(r.score_total), conversions: num(r.conversions), capability: num(r.capability), headline: str(r.headline),
-  createdAt: String(r.created_at), updatedAt: String(r.updated_at), endedAt: str(r.ended_at)
+  createdAt: String(r.created_at), updatedAt: String(r.updated_at), endedAt: str(r.ended_at), preview: Number(r.preview ?? 0) === 1
+});
+const previewOf = (r: Row): PreviewRow => ({
+  id: String(r.id), storylineId: String(r.storyline_id), name: String(r.name), config: parse(r.config), draftVersion: num(r.draft_version), savedAt: str(r.saved_at),
+  createdBy: str(r.created_by), createdAt: String(r.created_at), updatedAt: String(r.updated_at), expiresAt: String(r.expires_at)
 });
 
-const RUN_COLS = 'id, participant_id, cohort_id, storyline_id, storyline_version, lens_id, purpose, config, seed, attempt, engine_version, status, event_count, score_total, conversions, capability, headline, created_at, updated_at, ended_at';
+const RUN_COLS = 'id, participant_id, cohort_id, storyline_id, storyline_version, lens_id, purpose, config, seed, attempt, engine_version, status, event_count, score_total, conversions, capability, headline, created_at, updated_at, ended_at, preview';
 
 export class SqlRepository implements Repository {
   constructor(readonly db: Db) {}
@@ -205,9 +221,9 @@ export class SqlRepository implements Repository {
   async createRun(r: Parameters<Repository['createRun']>[0]) {
     const t = now();
     await this.db.run(
-      `INSERT INTO runs (id, participant_id, cohort_id, storyline_id, storyline_version, lens_id, purpose, config, seed, attempt, engine_version, status, event_count, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, ?, ?)`,
-      [r.id, r.participantId, r.cohortId, r.storylineId, r.storylineVersion, r.lensId, r.purpose, json(r.config), r.seed, r.attempt, r.engineVersion, t, t]
+      `INSERT INTO runs (id, participant_id, cohort_id, storyline_id, storyline_version, lens_id, purpose, config, seed, attempt, engine_version, status, event_count, created_at, updated_at, preview)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 0, ?, ?, ?)`,
+      [r.id, r.participantId, r.cohortId, r.storylineId, r.storylineVersion, r.lensId, r.purpose, json(r.config), r.seed, r.attempt, r.engineVersion, t, t, r.preview ? 1 : 0]
     );
     return (await this.getRun(r.id))!;
   }
@@ -224,9 +240,9 @@ export class SqlRepository implements Repository {
   async listCohortRuns(cohortId: string) {
     const rows = await this.db.all(
       `SELECT r.id, r.participant_id, r.cohort_id, r.storyline_id, r.storyline_version, r.lens_id, r.purpose, r.config, r.seed, r.attempt, r.engine_version, r.status, r.event_count,
-              r.score_total, r.conversions, r.capability, r.headline, r.created_at, r.updated_at, r.ended_at, p.name AS pname, s.summary AS summary
+              r.score_total, r.conversions, r.capability, r.headline, r.created_at, r.updated_at, r.ended_at, r.preview, p.name AS pname, s.summary AS summary
        FROM runs r JOIN participants p ON p.id = r.participant_id LEFT JOIN run_summaries s ON s.run_id = r.id
-       WHERE r.cohort_id = ? ORDER BY r.created_at`, [cohortId]);
+       WHERE r.cohort_id = ? AND r.preview = 0 ORDER BY r.created_at`, [cohortId]);
     return rows.map(r => ({ ...runOf(r), name: str(r.pname), summary: parse(r.summary) }));
   }
 
@@ -262,11 +278,28 @@ export class SqlRepository implements Repository {
     const [r] = await this.db.all('SELECT summary FROM run_summaries WHERE run_id = ?', [runId]);
     return r ? parse(r.summary) : null;
   }
+  // A preview's runs keep no summary (RunService), and are left out here too (D195).
   async lensIds() {
-    return (await this.db.all<{ lens_id: string }>('SELECT DISTINCT lens_id FROM run_summaries ORDER BY lens_id')).map(r => String(r.lens_id));
+    return (await this.db.all<{ lens_id: string }>('SELECT DISTINCT s.lens_id FROM run_summaries s JOIN runs r ON r.id = s.run_id WHERE r.preview = 0 ORDER BY s.lens_id')).map(r => String(r.lens_id));
   }
   async listSummaries(lensId: string) {
-    return (await this.db.all('SELECT summary FROM run_summaries WHERE lens_id = ? ORDER BY run_id', [lensId])).map(r => parse(r.summary));
+    return (await this.db.all('SELECT s.summary FROM run_summaries s JOIN runs r ON r.id = s.run_id WHERE s.lens_id = ? AND r.preview = 0 ORDER BY s.run_id', [lensId])).map(r => parse(r.summary));
+  }
+
+  async createPreview(p: Omit<PreviewRow, 'createdAt' | 'updatedAt'>) {
+    const t = now();
+    await this.db.run('INSERT INTO previews (id, storyline_id, name, config, draft_version, saved_at, created_by, created_at, updated_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [p.id, p.storylineId, p.name, json(p.config), p.draftVersion, p.savedAt, p.createdBy, t, t, p.expiresAt]);
+    return (await this.getPreview(p.id))!;
+  }
+  async getPreview(id: string) {
+    const [r] = await this.db.all('SELECT * FROM previews WHERE id = ?', [id]);
+    return r ? previewOf(r) : null;
+  }
+  async updatePreview(id: string, p: Pick<PreviewRow, 'storylineId' | 'name' | 'config' | 'draftVersion' | 'savedAt' | 'expiresAt'>) {
+    const r = await this.db.run('UPDATE previews SET storyline_id = ?, name = ?, config = ?, draft_version = ?, saved_at = ?, expires_at = ?, updated_at = ? WHERE id = ?',
+      [p.storylineId, p.name, json(p.config), p.draftVersion, p.savedAt, p.expiresAt, now(), id]);
+    return r.changes ? this.getPreview(id) : null;
   }
 
   async addReview(r: Parameters<Repository['addReview']>[0]) {
@@ -309,21 +342,34 @@ export class SqlRepository implements Repository {
     await this.db.run('INSERT INTO pdf_cache (run_id, version, pdf, created_at) VALUES (?, ?, ?, ?) ON CONFLICT (run_id) DO UPDATE SET version = excluded.version, pdf = excluded.pdf, created_at = excluded.created_at', [runId, version, pdf, now()]);
   }
 
+  /** Deletes runs with everything that hangs off them. */
+  private async dropRuns(ids: string[]) {
+    for (const id of ids) {
+      await this.db.tx(async db => {
+        for (const t of ['run_events', 'run_summaries', 'reviews', 'pdf_cache', 'intent_keys']) await db.run(`DELETE FROM ${t} WHERE run_id = ?`, [id]);
+        await db.run('DELETE FROM runs WHERE id = ?', [id]);
+      });
+    }
+  }
+
   async purge(beforeIso: string | null) {
     const sessions = (await this.db.run('DELETE FROM sessions WHERE expires_at < ?', [now()])).changes;
+    // Expired previews (D195): their runs, and the participant each stood in as, go with them.
+    const expired = (await this.db.all<{ id: string }>('SELECT id FROM previews WHERE expires_at < ?', [now()])).map(r => String(r.id));
+    for (const id of expired) {
+      const who = `preview.${id}`;
+      await this.dropRuns((await this.db.all<{ id: string }>('SELECT id FROM runs WHERE participant_id = ? AND preview = 1', [who])).map(r => String(r.id)));
+      await this.db.run('DELETE FROM participants WHERE id = ?', [who]);
+      await this.db.run('DELETE FROM previews WHERE id = ?', [id]);
+    }
     let runs = 0;
     if (beforeIso) {
-      const old = await this.db.all<{ id: string }>('SELECT id FROM runs WHERE updated_at < ?', [beforeIso]);
-      for (const { id } of old) {
-        await this.db.tx(async db => {
-          for (const t of ['run_events', 'run_summaries', 'reviews', 'pdf_cache', 'intent_keys']) await db.run(`DELETE FROM ${t} WHERE run_id = ?`, [id]);
-          await db.run('DELETE FROM runs WHERE id = ?', [id]);
-        });
-        runs++;
-      }
+      const old = (await this.db.all<{ id: string }>('SELECT id FROM runs WHERE updated_at < ?', [beforeIso])).map(r => String(r.id));
+      await this.dropRuns(old);
+      runs = old.length;
       await this.db.run('DELETE FROM email_log WHERE created_at < ?', [beforeIso]);
     }
-    return { sessions, runs };
+    return { sessions, runs, previews: expired.length };
   }
   ping() { return this.db.ping(); }
   close() { return this.db.close(); }

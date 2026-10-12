@@ -153,7 +153,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
 
   const Root = p.embedded ? 'div' : 'main';
   return (
-    <Root className="flex min-h-0 flex-1 flex-col gap-4.5 px-8 pt-5 pb-8 short:gap-3 short:pt-3 short:pb-4 tablet-portrait:px-6 tablet-portrait:pb-30" style={{ minHeight: p.minHeight }}>
+    <Root data-trace="lens.styles" className="flex min-h-0 flex-1 flex-col gap-4.5 px-8 pt-5 pb-8 short:gap-3 short:pt-3 short:pb-4 tablet-portrait:px-6 tablet-portrait:pb-30" style={{ minHeight: p.minHeight }}>
       <header className="flex items-center gap-4">
         <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-stylesetting-logo-tracking) text-transparent">{t('hud.logo')}</span>
         {/* The screen's heading is the visible "Week 2 of 8 · Style setting", styled as designed. */}

@@ -12,17 +12,17 @@ import type { IleadApi } from './types';
  * Settings are kept per participant (brief: settings persisted per participant). The mock keeps them
  * in this browser under the participant's id; the HTTP adapter stores them on the server.
  */
-const settingsKey = (participant: string) => `ilead.settings.${participant}`;
-function loadSettings(participant: string): Settings | null {
+const settingsKey = (participant: string, prefix = 'ilead.') => `${prefix}settings.${participant}`;
+function loadSettings(participant: string, prefix?: string): Settings | null {
   try {
-    const raw = localStorage.getItem(settingsKey(participant));
+    const raw = localStorage.getItem(settingsKey(participant, prefix));
     return raw ? (JSON.parse(raw) as Settings) : null;
   } catch {
     return null;
   }
 }
-function storeSettings(participant: string, settings: Settings) {
-  try { localStorage.setItem(settingsKey(participant), JSON.stringify(settings)); } catch { /* private mode or storage off: settings last for the session */ }
+function storeSettings(participant: string, settings: Settings, prefix?: string) {
+  try { localStorage.setItem(settingsKey(participant, prefix), JSON.stringify(settings)); } catch { /* private mode or storage off: settings last for the session */ }
 }
 
 /** A sample cohort for the mock leaderboard: names and results drawn from the participant id, the same every time. */
@@ -39,7 +39,11 @@ function sampleCohort(participant: string) {
  * `themeUrl` (a path on this site) serves any theme JSON, standing in for `GET /theme`. Both load on
  * demand, outside the first load.
  */
-export interface MockThemeOptions { client?: string | null; themeUrl?: string | null; history?: boolean; group?: MockGroupOptions }
+export interface MockThemeOptions {
+  client?: string | null; themeUrl?: string | null; history?: boolean; group?: MockGroupOptions;
+  /** Where the mock keeps settings on this device: `ilead.` by default, `ilead.preview.` in a preview (D193). */
+  storagePrefix?: string;
+}
 
 async function mockTheme({ client, themeUrl }: MockThemeOptions): Promise<unknown> {
   if (themeUrl && /^\/(?!\/)/.test(themeUrl)) {
@@ -60,10 +64,10 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
   return {
     getScenario: () => wait(clone(scenario)),
     getSession: () => {
-      const settings = loadSettings(participant);
+      const settings = loadSettings(participant, opts.storagePrefix);
       return wait(settings ? { week: 2, day: 3, capacity: 2.5, secs: 2292, styles: {}, settings } : null);
     },
-    saveSettings: settings => { storeSettings(participant, settings); return wait(undefined, 0); },
+    saveSettings: settings => { storeSettings(participant, settings, opts.storagePrefix); return wait(undefined, 0); },
     setStyle: () => wait(undefined, 0),
     planAction: () => wait(undefined, 0),
     // The prototype's "team is reacting" beat runs about 3 seconds while evaluation happens.

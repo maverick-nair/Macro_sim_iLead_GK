@@ -1149,6 +1149,49 @@ The overall level was the mean of the skill ratings, and the verdict read only t
 - `EngineView.storyline` adds `brand`, `logo`, `office`, `products` and `screens` (`StorylineLook` in the contract, each null or empty when the storyline leaves it out, so older views and the mock parse unchanged). `intro` keeps its three pages. Later onboarding scenes and the preview overlay render from these, never from fixtures.
 - Not done here: the portfolio scene and the intro screens list in onboarding (src/app and onboarding owners), the Review and publish LMS controls, the "Where it appears" panels and the preview overlay. A sponsor photo is not authored yet.
 
+## Preview from GenieKreator (9 Oct)
+
+**D190. A preview is a participant run that is marked as a test and never counts.** Decided 2026-10-09.
+- GenieKreator's "Play a week" opened the participant app on the draft with nothing saying it was a test, on the mock engine only, and wrote the participant's remembered run and settings like any launch. The workflow the product owner asks for is Build, Preview, Refine, Validate, Publish: an author must see the real participant view, return, edit and preview again, without publishing and without touching participant data or reports.
+- A preview is `?preview=1` on the participant app. It plays the same engine and screens (no separate renderer), as the stand in participant `preview`, and is clearly marked by a bar (D191). Everything below keeps it out of what participants and reports read (D193, D195).
+
+**D191. The preview bar.** Decided 2026-10-09.
+- `src/components/preview/PreviewBar.tsx`, loaded lazily only in a preview (never in a participant's first load), above the app: "Preview · test run · nothing is saved to reports", which draft it plays ("Draft for version 2, saved ..." from the meta GenieKreator leaves, D194), Jump to (D192), Restart, "Show where this comes from" (D197) and Back to GenieKreator (D198). A named region with real buttons, a disclosure for Jump to (Escape closes it, focus returns), status regions for updates and failures. Copy in `messages/en/preview.json` and `es`.
+- It sits in the page flow (sticky); the play screens that fit the window (`h-dvh`, `max-h-dvh`, `min-h-dvh`) fit what is left through `--il-preview-bar-height`, set by the bar (`global.css`, at the utilities' specificity so large text keeps its own sizes). The board at 1440x900 has no page scroll with the bar.
+
+**D192. Jump to plays the engine forward; it never fakes a screen.** Decided 2026-10-09.
+- `src/engine/jump.ts` generalizes the mock's `?period=N` fast forward (moved there, same intents): `onboarding`, `styles:N` (Monday styles), `board:N` (Your desk), `weekend:N`, `end`, `report`, `event:<key>` (the week the event is due) and `action:<key>` (its unlock week). It plays the weeks before with the styles that fit each need, no actions and the first reward offered, through a driver (`view`, `dispatch`) so the mock and the server run the same code.
+- In the browser a jump reloads the page at `?jump=<target>` (the mock engine is rebuilt per load). App opens on the board for any target past onboarding (the board shows the week's style setting, the week end or the end); `report` opens the engine's report at once (`PreviewReport`), and Back goes to the end screen's flow.
+
+**D193. Nothing a preview does reaches participant data.** Decided 2026-10-09.
+- In a preview (`previewLaunch` in `main.tsx`): no remembered run (`rememberRun` is not called, `ilead.run` is untouched), no intent queue on the device, the mock API always (no history, no email, no settings or leaderboard on a server), the mock's settings under `ilead.preview.settings.preview`, the guide's seen tours under `ilead.preview.guide`, and the early first view in `index.html` is skipped. The demo round plays the draft on the mock. The draft is read from local storage only: the reused preview tab's copy of session storage goes stale.
+- The live conversation drafts the board keeps in session storage (`liveDraft.ts`, `ilead.draft.<id>`) stay as they are: that file is outside this work, and session storage belongs to the preview tab alone.
+- The E2E checks that the preview tab leaves no `ilead.*` key outside `ilead.author.*` and `ilead.preview.*` and leaves `ilead.guide` as it was.
+
+**D194. The preview always plays the latest saved draft, in one tab.** Decided 2026-10-09.
+- The header's Preview (it replaces "Play a week"; the tabs keep their own buttons) saves first if a save is waiting (`flush`), exports the just saved draft and leaves it under `ilead.author.draft` with a meta (`ilead.preview.meta`: rev, version, save time, title, preview id), then opens the named tab `ilead-preview`, so a second preview refreshes the same tab.
+- Once a tab has previewed, every save that changes the exported storyline is handed over again (`usePreviewSync`, mounted by the header); the meta's rev goes up last, the preview tab hears it (`storage` event) and says "Updated from GenieKreator." with Reload, which reloads at the same jump target. A save that does not export is not handed over; one that changes nothing in the storyline (the played flag) is not either.
+- The storage full and blocked messages now say "Preview could not start" (D123's checks are unchanged).
+
+**D195. Previews on the server.** Decided 2026-10-09.
+- `POST /genie/author/preview` (author) checks a StorylineConfig as a published version is checked (`checkStoryline`, factored out of the admin route), keeps it in a new `previews` table (migration 3), never in `storylines`, and answers `{ id, token, url, expiresAt }`. `PUT /genie/author/preview/{id}` replaces the draft with a newer save. A preview lasts 7 days after its last save; then it answers 404 `unknownPreview` and retention removes it, its runs and its stand in participant.
+- The preview plays through the engine contract at `/genie/preview/sessions/{id}` (view, intents with idempotency, streaming, `restart` with a jump target), as the signed in author: the participant routes are untouched and a participant cannot reach a preview. Runs are the stand in participant `preview.<id>` on storyline `preview:<id>`, flagged `runs.preview`, keep no run summary, and are filtered out of cohort runs (so group reports and the leaderboard), benchmarks (`lensIds`, `listSummaries`) and the history.
+- With `VITE_GENIE_URL` set, Preview opens the tab on the click, posts the draft, and points the tab at the server's preview; if the server cannot, it previews on the mock. In the preview tab, Jump to and Restart call `restart` first; Reload sends the newer save with `PUT` first.
+- Any author may open any preview (authors already share storylines); the id is 120 random bits.
+
+**D196. `previewAt(target)` for the tabs.** Decided 2026-10-09.
+- `src/author/ui/play.ts` exports `previewAt(target)` and the hook `usePreviewAt()` (which also marks the draft played), with targets `onboarding`, `styles`, `board`, `event:<key>`, `action:<key>`, `weekend`, `end`, `report` and a week after styles, board or weekend. No tab calls them yet; the tabs are another workstream's.
+
+**D197. "Show where this comes from".** Decided 2026-10-09.
+- Participant surfaces carry `data-trace="<storyline config path>"`: member cards (`members.<id>`), action tiles (`actions.<key>`), the actions panel, the inbox rail (`events`), event cards (`events.<key>`), the KPI strip (`stages`), the HUD's week (`time`), style setting (`lens.styles`), onboarding (`intro`) and the preview's report (`report`). The toggle draws an outline and a "Section · Field" label on each (no pointer events, kept in step on scroll, resize and change) and says how many for screen readers.
+- Labels come only through `getTrace(path)` in `src/components/preview/trace.ts`, a stub keyed by the path's first parts with GenieKreator's section labels. The full registry (`src/shared/trace.ts`) is another workstream's: rewire `getTrace` (or `setTraceLookup`) to it and nothing else changes.
+
+**D198. Back to GenieKreator.** Decided 2026-10-09.
+- Focuses the tab that opened the preview when it is GenieKreator, else the tab named `ilead-author` (Preview names its tab so), else opens `/author` there. It never reloads an open GenieKreator.
+
+**D199. The engine's shell renders from the engine, not the prototype.** Decided 2026-10-09.
+- `App.tsx` no longer reads the prototype scenario (`getScenario`) on the engine: it is read for the prototype's screens only (`?engine=off`, the galleries), and the engine's screens no longer wait for it. The prototype's portraits and the reacting screen's three people moved to `src/data/fixtures.ts` (`prototypePortrait`, `REACTING_FIXTURE`) for the galleries; on the engine, "The team is reacting" shows the open conversation's people, else the person it was with, from the view. The prototype's screens render only with the scenario and never on the engine.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

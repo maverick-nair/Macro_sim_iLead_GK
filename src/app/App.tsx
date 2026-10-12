@@ -3,7 +3,7 @@ import { useApi } from '../api';
 import { Toast } from '../components/feedback/Toast';
 import { I18nProvider, useI18n } from '../i18n';
 import type { LiveVariant, MetricKey, Outcome, Scenario, StyleKey, EventType } from '../data/types';
-import { RESUME_FIXTURE } from '../data/fixtures';
+import { prototypePortrait, REACTING_FIXTURE, RESUME_FIXTURE } from '../data/fixtures';
 import { EngineBoard } from '../components/board/EngineBoard';
 import { ReactingScreen } from '../components/liveshell/ReactingScreen';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
@@ -29,6 +29,8 @@ const StyleSetting = lazy(() => import('../screens/StyleSetting').then(m => ({ d
 const WeekEnd = lazy(() => import('../screens/WeekEnd').then(m => ({ default: m.WeekEnd })));
 /** The demo round after onboarding (D92), on its own engine; it loads only when offered. */
 const DemoFlow = lazy(() => import('../components/demo/DemoFlow'));
+/** A preview's "End and report" (D192): the report at once. Loads only in a preview. */
+const PreviewReport = lazy(() => import('../components/preview/PreviewReport'));
 
 import type { AppActions, AppModel, Overlay, PlannedAction, Screen, Settings } from './types';
 
@@ -69,6 +71,8 @@ export interface AppProps {
    * scroll. The galleries and stories leave it off and size frames with `minHeight`.
    */
   fit?: boolean;
+  /** A preview opened at "End and report" (D192): the engine's report at once, then the end screen's flow. */
+  report?: boolean;
 }
 
 type Stats = Record<string, Record<MetricKey, number>>;
@@ -123,6 +127,17 @@ function EngineStart({ act, minHeight, onResume }: { act: AppActions; minHeight:
   return <EngineOnboarding act={act} minHeight={minHeight} />;
 }
 const TOAST_MS = 3400;
+
+/**
+ * "The team is reacting" on the engine: the people of the open conversation, else the person it was with,
+ * from the engine view (D199). The engine board shows its own; this covers the shell's screen.
+ */
+function EngineReacting({ who, slow, onDone }: { who: string; slow: boolean; onDone: () => void }) {
+  const { data: view } = useEngineView();
+  if (!view) return null;
+  const people = view.live ? [view.live.speaker, ...view.live.people.filter(x => x.id !== view.live?.speaker.id)] : view.members.filter(m => m.id === who);
+  return <ReactingScreen slow={slow} onKeepWaiting={onDone} onRetry={onDone} people={people.map(x => ({ id: x.id, name: x.name, img: x.img ?? '' }))} />;
+}
 
 /** The offline banner, when the engine client keeps a queue (D86). */
 function EngineConnection() {
@@ -188,7 +203,8 @@ export function App(p: AppProps) {
     }
     pendingOutcome.current = null;
     set(st => {
-      if (!st.scenario) return null;
+      // On the engine there is no prototype outcome to apply: the engine board shows the view's.
+      if (!st.scenario) return { screen: 'board' };
       const scenario = outcome ? { ...st.scenario, outcome } : st.scenario;
       if (st.applied) return { screen: 'board', outcome: true, scenario };
       return { screen: 'board', outcome: true, applied: true, scenario, stats: applyMoves(st.stats, scenario.outcome) };
@@ -198,15 +214,17 @@ export function App(p: AppProps) {
   // Load the scenario (and a saved session, if any), then open at the requested screen.
   useEffect(() => {
     let live = true;
-    Promise.all([api.getScenario(), frozen ? Promise.resolve(null) : api.getSession().catch(() => null)]).then(([D, session]) => {
+    // The engine renders from its view (D199): the prototype's scenario is read for the galleries' prototype screens only.
+    Promise.all([engine ? Promise.resolve(null) : api.getScenario(), frozen ? Promise.resolve(null) : api.getSession().catch(() => null)]).then(([D, session]) => {
       if (!live) return;
-      let stats: Stats = Object.fromEntries(D.members.map(m => [m.id, { skill: m.skill, morale: m.morale, result: m.result, trust: m.trust }]));
+      const people = D?.members ?? [];
+      let stats: Stats = Object.fromEntries(people.map(m => [m.id, { skill: m.skill, morale: m.morale, result: m.result, trust: m.trust }]));
       const st: Partial<State> = {
-        ready: true, scenario: D, styles: Object.fromEntries(D.members.map(m => [m.id, m.style])), screen: p.screen ?? 'onboarding',
+        ready: true, scenario: D, styles: Object.fromEntries(people.map(m => [m.id, m.style])), screen: p.screen ?? 'onboarding',
         variant: p.variant ?? 'roleplay', step: p.step ?? null, overlay: p.overlay ?? null, outcome: !!p.outcome
       };
       if (session) Object.assign(st, { week: session.week, day: session.day, capacity: session.capacity, secs: session.secs, settings: { ...INITIAL.settings, ...session.settings }, styles: { ...st.styles, ...session.styles } });
-      if (p.outcome) {
+      if (p.outcome && D) {
         stats = applyMoves(stats, D.outcome);
         st.applied = true;
       }
@@ -296,7 +314,7 @@ export function App(p: AppProps) {
   };
 
   const app: AppModel | null = s.ready && D ? {
-    members: D.members.map(m => ({ ...m, ...s.stats[m.id], style: s.styles[m.id], img: `/assets/npc/${m.id}.png` })),
+    members: D.members.map(m => ({ ...m, ...s.stats[m.id], style: s.styles[m.id], img: prototypePortrait(m.id) })),
     capacity: s.capacity, week: s.week, day: s.day, outcome: s.outcome, who: s.who, opened: s.opened, planned: s.planned, settings: s.settings,
     frozen, minH, clock: `${Math.floor(s.secs / 60)}:${String(s.secs % 60).padStart(2, '0')}`, showClock: s.settings.clock, client: !!p.clientTheme?.brand, dark
   } : null;
@@ -305,7 +323,9 @@ export function App(p: AppProps) {
   const uiState = p.uiState ?? 'default';
   const step = s.step ?? p.step ?? '';
   const isLoading = !s.ready || p.uiState === 'loading';
-  const screenProps = app && D ? { d: D, app, act } : null;
+  // The prototype's screens (the galleries, `?engine=off`) take the scenario; the engine's take nothing from it.
+  const screenProps = app && D && !engine ? { d: D, app, act } : null;
+  const [reportOpen, setReportOpen] = useState(!!p.report);
 
   const closeOverlay = () => set({ overlay: null });
   /** A run in progress was found on load: straight to the board, with the recap. */
@@ -323,18 +343,19 @@ export function App(p: AppProps) {
         <div className="contents" inert={!!s.overlay}>
           {isLoading && <LoadingScreen />}
 
-          {screenProps && (
+          {s.ready && (
             <Suspense>
               {scr === 'onboarding' && p.uiState !== 'loading' && (engine
-                ? <div>{p.screen ? <EngineOnboarding act={act} minHeight={minH} /> : <EngineStart act={act} minHeight={minH} onResume={resume} />}</div>
-                : <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
+                ? <div data-trace="intro">{p.screen ? <EngineOnboarding act={act} minHeight={minH} /> : <EngineStart act={act} minHeight={minH} onResume={resume} />}</div>
+                : screenProps && <div><Onboarding {...screenProps} step={step} uiState={uiState} /></div>)}
               {engine && scr === 'demo' && (
                 <div className={p.fit ? PLAY_FIT : 'flex flex-1 flex-col'} style={p.fit ? undefined : { minHeight: minH }}>
                   <DemoFlow minHeight={minH} fit={p.fit} paused={!!s.overlay || held} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
                     onDone={() => { useUi.getState().setPracticeOffer(true); act.go('style'); }} />
                 </div>
               )}
-              {engine && (scr === 'style' || scr === 'board') && (
+              {engine && (scr === 'style' || scr === 'board') && reportOpen && <PreviewReport onBack={() => setReportOpen(false)} />}
+              {engine && (scr === 'style' || scr === 'board') && !reportOpen && (
                 <div className={p.fit ? PLAY_FIT : 'flex flex-1 flex-col'} style={p.fit ? undefined : { minHeight: minH }}>
                   <EngineBoard voiceConsent={s.settings.voiceConsent === true} input={s.settings.input} captions={s.settings.captions}
                     paused={!!s.overlay || held} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
@@ -342,18 +363,19 @@ export function App(p: AppProps) {
                     onExit={exitUrl ? () => act.overlay('exit') : undefined} fit={p.fit} />
                 </div>
               )}
-              {!engine && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
-              {!engine && scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} /></div>}
-              {scr === 'live' && <div><Live {...screenProps} variant={s.variant} uiState={uiState} /></div>}
-              {scr === 'weekend' && <div><WeekEnd {...screenProps} step={step} /></div>}
-              {scr === 'end' && <div><End {...screenProps} /></div>}
-              {scr === 'report' && <div><Report {...screenProps} print={!!p.print} /></div>}
+              {screenProps && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
+              {screenProps && scr === 'board' && p.uiState !== 'loading' && <div><Board {...screenProps} uiState={uiState} eventType={p.eventType ?? ''} /></div>}
+              {screenProps && scr === 'live' && <div><Live {...screenProps} variant={s.variant} uiState={uiState} /></div>}
+              {screenProps && scr === 'weekend' && <div><WeekEnd {...screenProps} step={step} /></div>}
+              {screenProps && scr === 'end' && <div><End {...screenProps} /></div>}
+              {screenProps && scr === 'report' && <div><Report {...screenProps} print={!!p.print} /></div>}
             </Suspense>
           )}
 
-          {scr === 'reacting' && D && (
+          {scr === 'reacting' && engine && <EngineReacting who={s.who} slow={p.uiState === 'slow'} onDone={() => void toBoard()} />}
+          {scr === 'reacting' && !engine && D && (
             <ReactingScreen slow={p.uiState === 'slow'} onKeepWaiting={() => void toBoard()} onRetry={() => void toBoard()}
-              people={['kent', 'beth', 'jack'].flatMap(id => D.members.filter(m => m.id === id)).map(m => ({ id: m.id, name: m.name, img: `/assets/npc/${m.id}.png` }))} />
+              people={REACTING_FIXTURE.flatMap(id => D.members.filter(m => m.id === id)).map(m => ({ id: m.id, name: m.name, img: prototypePortrait(m.id) }))} />
           )}
         </div>
 

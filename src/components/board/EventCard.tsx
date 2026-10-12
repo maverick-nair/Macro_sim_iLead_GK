@@ -63,7 +63,7 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
         onCloseAutoFocus={e => { if (onCloseFocus) { e.preventDefault(); onCloseFocus(); } }}
         // A stray click on the scrim does not count as Got it.
         onPointerDownOutside={e => e.preventDefault()}
-        data-card={card.card}
+        data-card={card.card} data-trace={`events.${card.key}`}
         className="flex max-h-full w-full max-w-(--il-board-panel-max-width) animate-(--il-event-card-enter) flex-col overflow-auto rounded-26 border border-line-strong bg-surface-solid shadow-(--il-event-card-shadow) outline-0">
         <div className={`relative flex h-(--il-event-card-art-height) flex-none items-end gap-2 px-5 py-4 ${EVENT_ART[card.card]}`}>
           {img && <img src={img} alt="" className="absolute end-5 bottom-0 size-(--il-event-card-portrait) rounded-t-round object-cover object-top mix-blend-multiply" />}
