@@ -1048,6 +1048,53 @@ The report audit (P1) found narratives that contradicted the data: the overall n
 - `StakeholderBar` was in the participant's first load (about 2 KB before compression) although Sales Elevator has no stakeholders. The board now loads it lazily, like the stakeholders panel. Initial JS 221.8 KB.
 - Vitals measured back to back on this container: the code before P1 (50cbf22), the integration before this change (e7afc3b) and this commit all read first load LCP about 2550 ms and board TBT 430 to 470 ms, against earlier readings of 2440 to 2530 ms and 330 to 410 ms on a quieter machine. The P1 work adds about 7 KB of transfer and no measurable LCP or TBT; the overruns are the machine. Confirm on CI.
 
+**D210. The participant's desk follows the approved canvas, built on the player's tokens.** Decided 2026-10-09.
+- The product owner approved a design canvas for the participant's desk (Board, Leaderboard, Menu, TourBoard, at 1440x900 and the landscape tablet 1194x834). `docs/player-gap.md` compares it with the React player area by area and lists what is built (D211 to D218) and what stays open (D219).
+- Everything renders from the engine view and the storyline's config; the canvas's Innov8 words and numbers are sample data and appear nowhere in the code.
+- The canvas's structure is adopted (a status band of three labelled groups, the funnel on the stage columns, a feedback and inbox row under the team, the session controls, the menu as a side sheet), with its typographic habits: uppercase group labels, tabular numbers, words beside every arrow. Its palette (navy and paper) and type (Newsreader, Geist) are not: the player is themed per client in light and dark (D71, D72), so the new surfaces use the semantic tokens and keep working in every theme. Making the canvas palette and type the default theme is a theme change of its own, to decide separately (every screen's baselines move).
+- The portrait tablet board (D73) keeps its layout: its KPI tiles, notices and dock. Only the HUD's session group and the menu are shared.
+
+**D211. The status band: Team health, Business, Your progress.** Decided 2026-10-09.
+- `src/components/desk/StatusBand.tsx` replaces the KPI strip on the desk. Team health: skill, morale, result and trust with the change since the period started (`kpis[].value` against `start`), an arrow and a number on screen, "up 3 this week" for screen readers. Business: the money against the run's target with the pace marker at `clock.runShare`, "Behind pace by $15K" or "Ahead of pace by" or "On pace" in words (under half a percent of the target either side reads as on pace), the storyline's shown business variables (D136) with their causes on demand, and Results and stages. Your progress: the Leadership Score with its breakdown (the same disclosure as the HUD's, now `ScoreDisclosure`), the tier and the points to the next by the engine's thresholds, the last finished period's stars, the rank when the leaderboard is on (`BandRank`, loaded on demand, reading "Leaderboard" until the cohort API answers), and the sponsor's value against the reward and check in lines from config, with what moved it on demand.
+- `band.ts` maps the view to the band and is unit tested; it places engine values against engine thresholds and computes no score.
+- The band's lines are told apart by place and words, never colour alone: the check in line hangs below the meter, the reward line stands above it, and the line under the meter says which applies.
+- On the desk the HUD no longer shows the score and the streak (the streak is in the score's breakdown); the upright tablet keeps them in its HUD.
+
+**D212. Feedback and inbox under the team.** Decided 2026-10-09.
+- `DeskFeed` sits under the team on the desk, in the team's column, and the actions panel spans both rows (`--il-desk-rows`). Tab order stays HUD, band, team, actions, feed.
+- Its cards: how the participant's last doing landed, read from the history (styles, an action, a conversation or a decision they made, never an event that happened to them), with the engine's own title (the outcome headline for a conversation, never a band name) and up to two moves in words (people grouped as the outcome panel groups them, then the sponsor), See why opening History on it; the milestones reached this load (D93's `notices.ts`), with See results, the leaderboard when on, and Keep going; and every message waiting, with its sender, due point, Reply now or Mark as read, and Later where that does not pass the due point. "Inbox, N unread" opens the drawer.
+- The inbox icon rail leaves the desk (the feed is the inbox now); the board's grid loses its 64px column, so at 1194 the five stage columns fit without scrolling sideways. Tips (D99) stay as notices under the band.
+
+**D213. Pause, Save progress and Sign out.** Decided 2026-10-09.
+- The engine saves the run with every answered intent, so Save adds no write of its own: it waits until the resilient client's queue is empty (D86), then confirms with the time ("Progress saved at 11:06 AM"). Offline, or when the queue has not drained in 8 seconds, it says the actions are kept on this device until the connection is back. Every answered intent records the save time, and the board's first view counts as saved (`src/components/session/session.ts`).
+- Save is in the HUD beside Pause (one "Session" group, one tour stop; an icon with its name for screen readers on the upright tablet, so the HUD keeps its one row), in the pause screen and in the menu. The pause screen on the engine (`EnginePauseDialog`) offers Resume, Save progress with the last saved time, and Sign out.
+- Sign out saves first, then leaves to the launch's return address when it gave one (the mechanism of D89's Exit; Exit's confirmation dialog is no longer used on the engine, since Sign out says it saves first), else shows the signed out screen: where the run stands, the score, the money and the live conversations used, and Sign back in. Its heading takes focus.
+- `App.tsx` changes only its wiring: the engine's pause overlay is `EnginePauseDialog`, and the board's `onExit` leaves directly.
+
+**D214. The game menu is a side sheet with the session at the top.** Decided 2026-10-09.
+- A Radix modal dialog at the side of the board: the session group (Pause simulation, Save progress with when it was last saved, Sign out, a status line), then Objectives, Tutorial and video, Guided tour, History, Results and stages, the leaderboard when on, About these actions, Settings and full screen. Each row is named by its title and described by a line saying what it holds; the arrow keys move between rows, Escape and Close return focus to Menu. Windows 900 tall and under take shorter rows, and under 780 the items' lines hide (they stay as descriptions), so every item shows without scrolling down to 720 (D101).
+- Exit leaves the menu (Sign out replaces it). The canvas's "Your eight weeks" has no panel yet; History covers it.
+
+**D215. The leaderboard view.** Decided 2026-10-09.
+- The leaderboard panel gains Where you stand (score, tier, points to the next tier, rank), How points are earned (the pillar weights and the streak bonus from config) and a privacy note that follows `leaderboard.anonymous` and `scope`. It opens from the band's rank, the menu and a milestone, and only when the storyline turns the leaderboard on. The table is the cohort API's, as before.
+- The canvas's "This week" tab and "since yesterday" movement need cohort history the API does not keep; left out.
+
+**D216. The stage columns show their output against the ideal.** Decided 2026-10-09.
+- On the engine board each stage header shows "Output 4 of 8" (the engine's `throughput` and `idealThroughput` this period) with a bar, and how many people work in it. The bottleneck says "Bottleneck" beside a "!" mark, with a heavier border and its name in the attention colour; screen readers hear one line with the stage, its output, the bottleneck and the headcount. The stage info button (D97) stays. The design frames keep the old header (headcount and ideal).
+
+**D217. The desk tour follows the new layout.** Decided 2026-10-09.
+- 14 stops in the canvas's order: Menu, the clock, the days, Pause and save, Team health, Business, Results and stages, Your progress, the funnel, a member, Feedback and inbox, Actions, the action's cost, End of the week. New stops `business` and `progress`; `notifications` now points at the feed (then the outcome, as on the upright tablet); `target` is folded into `business`. A storyline's rewording of `board.target` no longer shows. Copy in `guide.json`.
+
+**D218. Gate notes for D210 to D217.** Decided 2026-10-09.
+- Unit tests: `src/components/desk/desk.test.ts` (band, feed, save), `tour.test.ts`. E2E: board, guide (sign out to the launch's address; save, pause and sign out without one), a11y, leaderboard, gamification and leftovers specs updated for the band, the feed and the pause screen's new title. Visual baselines updated only for the screens that show the board (board, event card, inbox, profile, sponsor call, the tablet board and drawer, and the fit baselines at 1366x768 and 1513x745); style setting, live, week end, end, report and onboarding are unchanged. The keyboard only week in `a11y.spec.ts` failed once under four parallel runs and passed twice alone. Stories: `Board/Desk`, the HUD's session and menu, the pause screen with the session.
+- The board's first load carries the band, the feed, the menu sheet and their copy (`desk.json`); the rank loads on demand.
+
+**D219. Open after WS4, needing the engine or the API.** Decided 2026-10-09.
+- Stars on track this week: the engine sends stars per finished period only; the band shows last week's until it sends a running week score.
+- Late pipeline value: not an engine quantity; a storyline can author it as a business variable, and the band lists those.
+- The sponsor's change before the first period end: the view has no starting value; the band shows the change from the second period.
+- Leaderboard "This week" and movement: the cohort API ranks by Leadership Score only.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
