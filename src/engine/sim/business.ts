@@ -76,13 +76,26 @@ export function applyBusiness(sim: Sim, b: Business | undefined, cause: Copy, fr
   return out;
 }
 
-/** Applies the business effect of an action's option (D136): `always`, then the one for how well the approach fitted. */
-export function applyActionBusiness(sim: Sim, option: { business?: { always?: Business; m0?: Business; m1?: Business; m2?: Business } }, mismatch: 0 | 1 | 2 | null, cause: Copy): Applied | null {
+/**
+ * A business effect with its gains scaled (D171): a repeated action's revenue, variable gains and sponsor confidence
+ * land at its share, like its effects on people; costs and losses stay whole, and flags and follow ups are unchanged.
+ */
+export function scaleBusiness(b: Business | undefined, share: number): Business | undefined {
+  if (!b || share === 1) return b;
+  const up = (n: number) => (n > 0 ? Math.round(n * share * 100) / 100 : n);
+  return { ...b, variables: Object.fromEntries(Object.entries(b.variables).map(([k, v]) => [k, up(v)])), revenue: up(b.revenue), sponsor: b.sponsor > 0 ? Math.round(b.sponsor * share) : b.sponsor };
+}
+
+/**
+ * Applies the business effect of an action's option (D136): `always`, then the one for how well the approach fitted.
+ * `share` is the repeated action's share of its gains (D171), 1 without realism.
+ */
+export function applyActionBusiness(sim: Sim, option: { business?: { always?: Business; m0?: Business; m1?: Business; m2?: Business } }, mismatch: 0 | 1 | 2 | null, cause: Copy, share = 1): Applied | null {
   const b = option.business;
   if (!b) return null;
-  const a = applyBusiness(sim, b.always, cause);
+  const a = applyBusiness(sim, scaleBusiness(b.always, share), cause);
   const byFit = mismatch === null ? undefined : b[`m${mismatch}` as const];
-  const f = applyBusiness(sim, byFit, cause);
+  const f = applyBusiness(sim, scaleBusiness(byFit, share), cause);
   return { changes: [...a.changes, ...f.changes], variables: [...a.variables, ...f.variables], revenue: a.revenue + f.revenue, set: [...a.set, ...f.set], clear: [...a.clear, ...f.clear], scheduled: [...a.scheduled, ...f.scheduled] };
 }
 

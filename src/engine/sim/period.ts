@@ -3,12 +3,14 @@ import { IntentError } from './actions';
 import { upcomingNews } from './events';
 import { sponsorLevel } from './view';
 import { advanceStreak, checkBadges, leadershipScore, nextStreakBonus, pulse, roundHalfUp, tierFor, weekScore } from './score';
-import { addMessage, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
+import { addMessage, capacityLeft, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
 import type { Change, PeriodSummary, Sim } from './types';
 import { msg, type Copy } from '../copy';
 import { attrition } from './dynamics';
 import { moveVar } from './business';
 import { stakeholdersPeriodEnd, stakeholderSummary } from './stakeholders';
+import { idleDays } from './realism';
+import { realismWeekEnd, sponsorReaction, sponsorSilence } from './realismPeriod';
 
 /** Period end, gamification and the move to the next period (docs/SIMULATION.md section 7). */
 
@@ -19,8 +21,13 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
     delete sim.interactions[id];
     log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: sim.config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [], action: it.actionKey });
   }
+  // Realism (D174): days left unused deliver less.
+  if (sim.realism) idleDays(sim, capacityLeft(sim), perPeriod(sim) - sim.sub);
   runRemaining(sim, rng);
   drift(sim);
+  // Realism (D173, D174): neglect, stakeholders left alone, and the sponsor's silence.
+  realismWeekEnd(sim);
+  sponsorSilence(sim);
   // Business variables drift (D136); sustained low morale keeps people off sick or makes them leave (D135).
   for (const v of sim.config.variables) if (v.drift) moveVar(sim, v.key, v.drift, msg('engine.var.drift', { unit: sim.config.time.period.unit }));
   // A stakeholder nobody engaged this period drifts (D160).
@@ -48,6 +55,8 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   const paceText = msg('engine.pace', { onPace: onPace ? 'yes' : 'no', unit });
   const paceChanges = sponsorChange(sim, onPace ? g.sponsor.periodPace.met : g.sponsor.periodPace.missed, paceText);
   if (paceChanges.length) log(sim, { kind: 'periodEnd', title: paceText, memberIds: [], changes: paceChanges });
+  // Realism (D173): confidence falling under the reaction line makes the sponsor react.
+  sponsorReaction(sim, rng, sFrom);
   // Crossing the unlock line upward offers one reward; dropping below the check in line costs a day next period.
   // No unlock at the last period end: there is no next period to use it in.
   const unlockOffer = sim.period < count && sFrom < g.sponsor.unlockAt && sim.sponsor.value >= g.sponsor.unlockAt ? [...g.unlocks] : null;

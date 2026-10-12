@@ -126,7 +126,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
       }
       case 'openConversation': {
         // A stakeholder's message (D162): their meeting, or a reply in writing to them.
-        const id = intent.kind === 'reply' && stakeholderMessage(sim, intent.messageId) ? openStakeholderMessage(sim, rng, intent.messageId!) : openConversation(sim, intent.kind, intent.messageId);
+        const id = intent.kind === 'reply' && stakeholderMessage(sim, intent.messageId) ? openStakeholderMessage(sim, rng, intent.messageId!) : openConversation(sim, intent.kind, intent.messageId, rng);
         await live.opening(sim, npc, id);
         return { view: buildView(sim), changes: [], interactionId: id };
       }

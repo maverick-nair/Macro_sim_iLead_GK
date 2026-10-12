@@ -582,6 +582,14 @@
                   "remarks",
                   "relations"
                 ]
+              },
+              "unattended": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "neglected": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1765,6 +1773,93 @@
                     }
                   ]
                 }
+              },
+              "repeat": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "share": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "uses": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "ago": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "window": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      "tires": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "share",
+                      "uses",
+                      "ago",
+                      "window"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "repeatFor": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "share": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "uses": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "ago": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "window": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "tires": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "share",
+                    "uses",
+                    "ago",
+                    "window"
+                  ]
+                }
+              },
+              "teamTime": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
               }
             },
             "required": [
@@ -3092,6 +3187,52 @@
                   "delta"
                 ]
               }
+            },
+            "silence": {
+              "type": "object",
+              "properties": {
+                "weeks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "costsFrom": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "weeks",
+                "costsFrom"
+              ]
+            },
+            "update": {
+              "type": "object",
+              "properties": {
+                "cost": {
+                  "type": "number"
+                },
+                "blocked": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "off",
+                        "done",
+                        "capacity"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "cost",
+                "blocked"
+              ]
             }
           },
           "required": [

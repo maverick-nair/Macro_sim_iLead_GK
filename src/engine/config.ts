@@ -545,6 +545,98 @@ export type Business = z.output<typeof Business>;
 /** Fit levels for an action's business effects: `always`, or only when the approach fitted (m0), partly missed (m1) or clearly missed (m2). */
 export const BusinessByFit = z.object({ always: Business.optional(), m0: Business.optional(), m1: Business.optional(), m2: Business.optional() });
 
+/**
+ * Realism (D171 to D178, docs/SIMULATION.md 3.6): what a working week costs and what neglect does. Left out, none of
+ * it applies and a storyline plays exactly as before. Every number has a default; an action can override the repeat
+ * window, the decay, fatigue, the share of the team's day it takes and whether it sets goals (`Action.realism`).
+ *
+ *   repeat       (D171) the same action with the same person (or a team wide action) within `window` days
+ *                (`teamWindow` for team wide actions) lands at a decaying share of its good effects: `decay[n]` for
+ *                the n-th earlier use still in the window (100%, 60%, 35%, 20%), recovering as earlier uses leave it
+ *   fatigue      (D171) a team wide action repeated in its window also costs everyone `morale` and that day `output`
+ *   opportunity  (D172) a team wide action takes the team off its work for `team` of each of its days: that much less output
+ *   escalation   (D173) an event left unanswered past its window costs `revenue` of a week's target (and its authored business)
+ *   sponsor      (D173) after `silence` weeks with no word to the sponsor (a briefing, a reply, an update), confidence
+ *                moves by `decay` each week end; `update` is the participant's own update (its `cost` in days, `share`
+ *                of a briefing's effect); confidence falling under `reaction.below` makes the sponsor react: a deal
+ *                moves to another team (`reaction.revenue` of a week's target), `reaction.business` and `reaction.event`
+ *   stakeholders (D173) a stakeholder nobody engaged for `weeks` weeks cools by `trust` and `satisfaction` each further week end
+ *   neglect      (D174) someone with no time of their own with you (a one to one action, a message answered) for
+ *                `weeks` weeks loses `morale` and `trust` at each further week end and delivers `output` less until you make time
+ *   drag         (D174) each neglected person with result under `below` lowers the whole team's output by `share` (at most `max`)
+ *   idle         (D174) a day left unused at the week end delivers `output` less; a week with no action, conversation or
+ *                decision counts `week` (a band score, 0 to 100) in the Leadership pillar and the week's stars
+ *   output       (D178) result gains from actions shrink above morale `healthy`, down to `saturation` at 100; output falls
+ *                below skill `skill.full`, to `skill.floor` at 0; goals set in the last `goals.weeks` weeks add `goals.boost`
+ *   score        revenue at the target is worth `atTarget` of the Business pillar and more counts with diminishing value
+ *                (`softness`, D175); the streak bonus grows a little every good week (`gradual`, D176) instead of in
+ *                steps; sponsor confidence takes `sponsor` of the Business pillar, and the People pillar rises with
+ *                diminishing value (`people`, the change that gives about two thirds of the room above 50), counting
+ *                everyone on the team (away too) and `leavers` points off for each person who left (D177)
+ */
+const NegInt = z.number().int().min(-20).max(0);
+const REALISM_SCORE = { atTarget: 85, softness: 0.5, sponsor: 0.2, people: 30, leavers: 5, streak: 'gradual' as const };
+export const Realism = z.object({
+  repeat: z.object({
+    window: z.number().int().min(1).max(40).default(5),
+    teamWindow: z.number().int().min(1).max(40).default(15),
+    decay: z.array(Ratio).min(1).max(6).default([1, 0.6, 0.35, 0.2])
+  }).default({ window: 5, teamWindow: 15, decay: [1, 0.6, 0.35, 0.2] }),
+  fatigue: z.object({ morale: NegInt.default(-2), output: Ratio.default(0.1) }).default({ morale: -2, output: 0.1 }),
+  opportunity: z.object({ team: Ratio.default(0.25) }).default({ team: 0.25 }),
+  neglect: z.object({ weeks: z.number().int().min(1).max(8).default(4), morale: NegInt.default(-3), trust: NegInt.default(-2), output: Ratio.default(0.1) })
+    .default({ weeks: 4, morale: -3, trust: -2, output: 0.1 }),
+  drag: z.object({ below: Score.default(30), share: Ratio.default(0.05), max: Ratio.default(0.15) }).default({ below: 30, share: 0.05, max: 0.15 }),
+  idle: z.object({ output: Ratio.default(0.1), week: Score.default(35) }).default({ output: 0.1, week: 35 }),
+  escalation: z.object({ revenue: Ratio.default(0.2) }).default({ revenue: 0.2 }),
+  sponsor: z.object({
+    silence: z.number().int().min(1).max(10).default(2),
+    decay: NegInt.default(-4),
+    update: z.object({ cost: z.number().min(0).max(5).default(1), share: Ratio.default(0.5) }).default({ cost: 1, share: 0.5 }),
+    reaction: z.object({ below: Score.default(30), revenue: Ratio.default(0.25), business: Business.optional(), event: Key.optional() }).default({ below: 30, revenue: 0.25 })
+  }).default({ silence: 2, decay: -4, update: { cost: 1, share: 0.5 }, reaction: { below: 30, revenue: 0.25 } }),
+  stakeholders: z.object({ weeks: z.number().int().min(1).max(8).default(2), trust: NegInt.default(-2), satisfaction: NegInt.default(-2) })
+    .default({ weeks: 2, trust: -2, satisfaction: -2 }),
+  output: z.object({
+    healthy: Score.default(75),
+    saturation: Ratio.default(0.4),
+    skill: z.object({ full: Score.default(60), floor: Ratio.default(0.6) }).default({ full: 60, floor: 0.6 }),
+    goals: z.object({ weeks: z.number().int().min(1).max(8).default(3), boost: Ratio.default(0.1) }).default({ weeks: 3, boost: 0.1 })
+  }).default({ healthy: 75, saturation: 0.4, skill: { full: 60, floor: 0.6 }, goals: { weeks: 3, boost: 0.1 } }),
+  score: z.object({
+    /** The Business pillar's revenue score at exactly the target (D175). */
+    atTarget: z.number().min(50).max(100).default(REALISM_SCORE.atTarget),
+    /** How fast revenue past the target closes the rest of the way to 100: each `softness` of the target closes about two thirds (D175). */
+    softness: z.number().min(0.1).max(3).default(REALISM_SCORE.softness),
+    /** Sponsor confidence's share of the Business pillar (D177). */
+    sponsor: Ratio.default(REALISM_SCORE.sponsor),
+    /** The People pillar's change that gives about two thirds of the room above 50 (D177). */
+    people: z.number().min(5).max(100).default(REALISM_SCORE.people),
+    /** People pillar points each person who left the team (resigned or let go) costs (D177). */
+    leavers: z.number().min(0).max(25).default(REALISM_SCORE.leavers),
+    /** The streak bonus: `gradual` grows a little every good week (D176); `steps` is the classic +25 from the third week. */
+    streak: z.enum(['gradual', 'steps']).default(REALISM_SCORE.streak)
+  }).default(REALISM_SCORE)
+});
+export type Realism = z.output<typeof Realism>;
+/** The realism defaults (D171 to D178), for /author and the docs. */
+export const REALISM_DEFAULTS: Realism = Realism.parse({});
+
+/** An action's own realism settings (D171): left out, the storyline's. */
+export const ActionRealism = z.object({
+  /** Days in which an earlier use still lowers this action's effect. */
+  window: z.number().int().min(1).max(40).optional(),
+  /** The share of its good effects each use lands at, by how many earlier uses are in the window. */
+  decay: z.array(Ratio).min(1).max(6).optional(),
+  /** A repeat in the window tires everyone (team wide actions by default). */
+  fatigue: z.boolean().optional(),
+  /** The share of the team's day it takes, each of its days (team wide actions: the storyline's `opportunity.team`). */
+  opportunity: Ratio.optional(),
+  /** It sets goals, so output gets the goals boost (by default, actions in the written plan format). */
+  goals: z.boolean().optional()
+});
+export type ActionRealism = z.output<typeof ActionRealism>;
+
 /** Metrics a condition can test (D138). Team values are the available team's means; `revenuePace` is revenue against the run's pace so far, in percent. */
 export const CONDITION_METRICS = ['teamMorale', 'teamTrust', 'teamSkill', 'teamResult', 'revenuePace', 'sponsor'] as const;
 const Compare = z.enum(['below', 'atLeast']);
@@ -724,7 +816,9 @@ export const ActionOption = z.object({
   /** The participant picks a stage to move the person to (reassign role). */
   pickStage: z.boolean().default(false),
   /** What the option does to the business (D136): always, or by how well the approach fitted. */
-  business: BusinessByFit.optional()
+  business: BusinessByFit.optional(),
+  /** The share of the team's day this option takes, each of its days (D172): team building takes more than a lunch. */
+  opportunity: Ratio.optional()
 });
 
 /** Band names in engine order. Participants never see them (spec, outcome panel). */
@@ -770,7 +864,9 @@ export const Action = z.object({
   prerequisite: Key.optional(),
   /** Live and hybrid actions: the interaction record. */
   live: LiveSettings.default({ turnLimit: 12, minutes: 5, opening: 'npc', hints: 'onRequest' }),
-  options: z.array(ActionOption).min(1)
+  options: z.array(ActionOption).min(1),
+  /** Diminishing returns, fatigue, the team's time and goals for this action (D171, D172). Left out, the storyline's. */
+  realism: ActionRealism.optional()
 });
 
 const Gendered = z.object({ he: Copy, she: Copy, they: Copy.optional() });
@@ -822,7 +918,9 @@ export const GeneralEvent = z.object({
    */
   response: z.object({ actions: z.array(Key).min(1), within: z.number().int().min(1).max(5).default(2), onTime: Effect.default([0, 2, 0]) }).optional(),
   /** If the response does not come in time: a follow up event, and whether it reaches the sponsor. */
-  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true), delay: Delay.optional() }).optional(),
+  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true), delay: Delay.optional(),
+    /** What ignoring it costs the business (D173): revenue, variables, sponsor confidence. With realism on, a share of a week's target is lost too. */
+    business: Business.optional() }).optional(),
   /** The stakeholder the event comes from (D162): a chat or email is their message, a card shows them. */
   stakeholder: Key.optional(),
   /** What the stakeholder asks for, by when (D162). Needs `stakeholder`. */
@@ -957,6 +1055,8 @@ export const StorylineConfig = z.object({
   drift: z.object({ morale: z.number().min(0).default(3), result: z.number().min(0).default(0) }).default({ morale: 3, result: 0 }),
   /** People dynamics (D135): morale and trust act on output and attrition with a lag. Left out, off. */
   dynamics: Dynamics.optional(),
+  /** Realism (D171 to D178): diminishing returns, the team's time, neglect, silence and idle days cost, and the score's curves. Left out, off. */
+  realism: Realism.optional(),
   /** Business variables (D136), 0 to 6. */
   variables: z.array(Variable).max(MAX_VARIABLES).default([]),
   /** Stakeholders outside the team (D160), 0 to 8. */
@@ -1037,6 +1137,9 @@ export const StorylineConfig = z.object({
   if (varKeys.size !== c.variables.length) ctx.addIssue({ code: 'custom', path: ['variables'], message: 'Variable keys must be unique' });
   const weights = c.variables.reduce((a, v) => a + v.weight, 0);
   if (weights > 0.8 + 1e-9) ctx.addIssue({ code: 'custom', path: ['variables'], message: `Variables' weights in the Business pillar add up to ${Math.round(weights * 100)}%: 80% is the most, so revenue keeps a share` });
+  // With realism, sponsor confidence takes a share of the Business pillar too (D177): revenue keeps at least 10%.
+  if (c.realism && weights + c.realism.score.sponsor > 0.9 + 1e-9) ctx.addIssue({ code: 'custom', path: ['realism', 'score', 'sponsor'], message: `Variables and sponsor confidence take ${Math.round((weights + c.realism.score.sponsor) * 100)}% of the Business pillar: 90% is the most, so revenue keeps a share` });
+  if (c.realism?.sponsor.reaction.event && !eventKeys.has(c.realism.sponsor.reaction.event)) ctx.addIssue({ code: 'custom', path: ['realism', 'sponsor', 'reaction', 'event'], message: `No event called ${c.realism.sponsor.reaction.event}` });
   const skillKeys = new Set(c.report.skills.map(s => s.key));
   const checkBusiness = (b: Business | undefined, path: Array<string | number>) => {
     if (!b) return;
@@ -1050,8 +1153,10 @@ export const StorylineConfig = z.object({
   c.actions.forEach((a, i) => a.options.forEach((o, j) => {
     for (const k of ['always', 'm0', 'm1', 'm2'] as const) checkBusiness(o.business?.[k], ['actions', i, 'options', j, 'business', k]);
   }));
+  checkBusiness(c.realism?.sponsor.reaction.business, ['realism', 'sponsor', 'reaction', 'business']);
   c.events.forEach((e, i) => {
     checkBusiness(e.business, ['events', i, 'business']);
+    checkBusiness(e.escalation?.business, ['events', i, 'escalation', 'business']);
     e.choice?.options.forEach((o, j) => {
       checkBusiness(o.business, ['events', i, 'choice', 'options', j, 'business']);
       checkWho(o.who, ['events', i, 'choice', 'options', j, 'who']);
@@ -1113,7 +1218,9 @@ export const StorylineConfig = z.object({
     businesses.push([e.business, ['events', i, 'business']]);
     e.choice?.options.forEach((o, j) => businesses.push([o.business, ['events', i, 'choice', 'options', j, 'business']]));
     if (e.choice?.ignored) businesses.push([e.choice.ignored.business, ['events', i, 'choice', 'ignored', 'business']]);
+    if (e.escalation?.business) businesses.push([e.escalation.business, ['events', i, 'escalation', 'business']]);
   });
+  if (c.realism?.sponsor.reaction.business) businesses.push([c.realism.sponsor.reaction.business, ['realism', 'sponsor', 'reaction', 'business']]);
   c.stakeholders.forEach((s, i) => s.interactions.forEach((x, j) => {
     for (const [band, eff] of Object.entries(x.consequences ?? {})) for (const e of [eff, eff?.otherwise]) businesses.push([e?.business, ['stakeholders', i, 'interactions', j, 'consequences', band, 'business']]);
     x.options?.forEach((o, k) => { for (const e of [o.effect, o.effect.otherwise]) businesses.push([e?.business, ['stakeholders', i, 'interactions', j, 'options', k, 'effect', 'business']]); });

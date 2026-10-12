@@ -112,7 +112,13 @@ export const MemberView = z.object({
   unread: z.boolean(),
   promise: Text.nullable(),
   /** `attitude`, `awareness` and `responsibilities` come only when the storyline authors them (D97). */
-  profile: z.object({ previous: Text, tenure: Text, experience: Text, skills: Text, remarks: Text, relations: Text, attitude: Text.optional(), awareness: Text.optional(), responsibilities: Text.optional() })
+  profile: z.object({ previous: Text, tenure: Text, experience: Text, skills: Text, remarks: Text, relations: Text, attitude: Text.optional(), awareness: Text.optional(), responsibilities: Text.optional() }),
+  /**
+   * Realism (D174), only when the storyline has it: whole periods this person has had no one to one time with you,
+   * and whether that is past the neglect window (they are losing heart and delivering less).
+   */
+  unattended: z.number().int().min(0).optional(),
+  neglected: z.boolean().optional()
 });
 
 export const Clock = z.object({
@@ -160,6 +166,11 @@ export const LiveView = z.object({
   stakeholder: z.object({ key: Id, role: Text, kind: z.string(), type: z.enum(['meet', 'present', 'negotiate', 'email', 'reply']) }).nullable().default(null)
 });
 
+/** How a repeated action would land now (D171). */
+export const Repeat = z.object({ share: z.number().min(0).max(1), uses: z.number().int().min(0), ago: z.number().int().min(0), window: z.number().int().min(1),
+  /** A team action: a repeat this soon also tires everyone. */
+  tires: z.boolean().optional() });
+
 export const ActionView = z.object({
   key: Id, rule: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
   /** `cost` is what it costs now (0 on the extra hire budget). `perk` names an unlock reward that applies to it. */
@@ -183,7 +194,16 @@ export const ActionView = z.object({
   /** Why a team action is unavailable, or null. */
   blocked: Block.nullable(),
   /** Why a member action is unavailable for each member, or null. */
-  blockedFor: z.record(Id, Block.nullable())
+  blockedFor: z.record(Id, Block.nullable()),
+  /**
+   * Realism (D171, D172), only when the storyline has it. A use now lands at `share` of its good effects because of
+   * `uses` earlier ones in the last `window` sub-periods, the latest `ago` sub-periods ago: for a team action
+   * (`repeat`), or by member (`repeatFor`, members with a full share left out). `teamTime` is the share of the team's
+   * working time each of its sub-periods takes (team actions).
+   */
+  repeat: Repeat.nullable().optional(),
+  repeatFor: z.record(Id, Repeat).optional(),
+  teamTime: z.number().min(0).max(1).optional()
 });
 
 export const LogEntry = z.object({
@@ -324,7 +344,14 @@ export const EngineView = z.object({
   periods: z.array(PeriodSummary),
   badges: z.array(z.object({ key: Id, rule: Id, name: Text, description: Text, earned: z.boolean(), period: z.number().int().nullable(), reason: Text.nullable() })),
   /** The sponsor meter may show its value (Configuration Spec, CEO meter 0 to 100). */
-  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, value: Num, unlockAt: Num, checkInBelow: Num, level: SponsorLevel, causes: z.array(z.object({ text: Text, delta: Num })) }),
+  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, value: Num, unlockAt: Num, checkInBelow: Num, level: SponsorLevel, causes: z.array(z.object({ text: Text, delta: Num })),
+    /**
+     * Realism (D173), only when the storyline has it: whole periods since your last word to the sponsor, and the
+     * silence at which confidence starts to slip each period; your own update, its cost in sub-periods and why it
+     * cannot be given now (`done` this period, not enough `capacity`), or null when it can.
+     */
+    silence: z.object({ weeks: z.number().int().min(0), costsFrom: z.number().int().min(1) }).optional(),
+    update: z.object({ cost: Num, blocked: z.enum(['off', 'done', 'capacity']).nullable() }).optional() }),
   /** Unlock rewards on offer: `bonus_day`, `hire_budget`, `team_activity`. */
   pendingReward: z.array(Id).nullable(),
   /** Unlock rewards in hand, not yet used. */
