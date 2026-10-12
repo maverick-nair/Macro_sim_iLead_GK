@@ -1,7 +1,8 @@
-import { useId, useRef, useState, type ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { ClientLogo } from '../../theme/brand';
+import { ScoreDisclosure } from './ScoreDisclosure';
 
 export type PeriodUnit = 'year' | 'month' | 'week' | 'day';
 export type SubPeriodUnit = 'quarter' | 'month' | 'week' | 'day' | 'hour';
@@ -49,7 +50,15 @@ export interface HudProps {
    */
   alwaysPause?: boolean;
   onPause: () => void;
-  score: HudScore;
+  /**
+   * Save progress now (D213): beside Pause, in the session group. Left out where there is nothing to save
+   * (the design frames, the demo).
+   */
+  onSave?: () => void;
+  /** A save is waiting for the server: the button says so and does nothing more. */
+  saving?: boolean;
+  /** The Leadership Score with its breakdown. Left out where the score shows elsewhere (the desk's status band, D211). */
+  score?: HudScore;
   /** Denominator of the simple breakdown's bars. Defaults to 100, the engine's pillar scale (scoring-and-report.md 6). */
   pillarScale?: number;
   /**
@@ -64,8 +73,8 @@ export interface HudProps {
    */
   scoreOpen?: boolean;
   onScoreOpenChange?: (open: boolean) => void;
-  /** Consecutive periods on target. */
-  streak: number;
+  /** Consecutive periods on target. Left out with the score. */
+  streak?: number;
   /** The streak in words, with the next bonus ("2 weeks in a row. 1 more week for a +25 bonus."). Defaults to "3 week streak". */
   streakLabel?: string;
   onPalette: () => void;
@@ -131,26 +140,22 @@ const Sliders = () => (
 
 const PILLARS = ['business', 'people', 'leadership'] as const;
 
+const SaveIcon = () => (
+  <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" /><path d="M8 3v5h7V3M8 21v-7h8v7" /></svg>
+);
+
+const SESSION_BUTTON = `flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:px-3.5 ${focus}`;
+
 /**
- * The top bar of the board: brand, game menu, where the run is ("Week 2 · Day 3"), capacity left,
- * session clock, Leadership Score with its breakdown, streak, Cmd K, settings and End period.
- * Every unit comes from the storyline, so a month based run reads "Month 2", "3 weeks left".
+ * The top bar of the board: brand, game menu, where the run is ("Week 2 · Day 3"), capacity left, the
+ * session group (clock, Pause, Save), Leadership Score with its breakdown and streak (where the board does
+ * not show them in its status band), Cmd K, settings and End period. Every unit comes from the storyline,
+ * so a month based run reads "Month 2", "3 weeks left".
  */
 export function Hud(p: HudProps) {
   const { t, number } = useI18n();
   const { clock, score } = p;
   const pillarScale = p.pillarScale ?? 100;
-  const wrap = useRef<HTMLDivElement>(null);
-  const scoreButton = useRef<HTMLButtonElement>(null);
-  /** How the score was last pressed: a touch has no hover, so a tap toggles the breakdown (D69, tablets). */
-  const touch = useRef(false);
-  const [ownOpen, setOwnOpen] = useState(false);
-  const open = p.scoreOpen ?? ownOpen;
-  const setOpen = (v: boolean) => {
-    if (p.scoreOpen === undefined) setOwnOpen(v);
-    p.onScoreOpenChange?.(v);
-  };
-  const tipId = useId();
 
   const left = clock.capacityLeft;
   const whole = Math.floor(left);
@@ -161,8 +166,9 @@ export function Hud(p: HudProps) {
 
   const periodText = t('time.period', { unit: clock.periodUnit, n: clock.period });
   const where = t('hud.clock', { period: MARK, subPeriod: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }) });
-  const streak = p.streakLabel ?? t('hud.streak', { n: number(p.streak), unit: clock.periodUnit });
+  const streak = p.streakLabel ?? t('hud.streak', { n: number(p.streak ?? 0), unit: clock.periodUnit });
   const rich = p.breakdown !== undefined;
+  const pause = p.sessionClock !== null || p.alwaysPause;
 
   return (
     <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap short:py-2 text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2 tablet-portrait:min-h-18 tablet-portrait:flex-wrap tablet-portrait:gap-2.5 tablet-portrait:gap-y-2 tablet-portrait:border-b tablet-portrait:border-line-default">
@@ -194,27 +200,26 @@ export function Hud(p: HudProps) {
         </div>
         <span className="text-13 text-fg-secondary">{around(t('time.left', { amount: MARK }), v => <b className="text-fg-primary">{v}</b>, amount)}</span>
       </div>
-      {(p.sessionClock !== null || p.alwaysPause) && (
-        <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined} data-tour="session"
-          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:px-3.5 ${focus}`}>
-          <Pause />{p.sessionClock ?? t('hud.pause.label')}
-        </button>
+      {/* The session group (D213): the clock in Pause, and Save. One tour stop. */}
+      {(pause || p.onSave) && (
+        <div role="group" aria-label={t('hud.session.aria')} data-tour="session" className="flex flex-none items-center gap-1.5">
+          {pause && (
+            <button type="button" onClick={p.onPause} aria-label={p.sessionClock !== null ? t('hud.pause.aria') : undefined} className={SESSION_BUTTON}>
+              <Pause />{p.sessionClock ?? t('hud.pause.label')}
+            </button>
+          )}
+          {p.onSave && (
+            <button type="button" onClick={() => { if (!p.saving) p.onSave?.(); }} aria-label={t('hud.save.aria')} aria-disabled={p.saving || undefined} className={`${SESSION_BUTTON} tablet-portrait:min-w-11 tablet-portrait:justify-center tablet-portrait:px-0`}>
+              <SaveIcon /><span className="tablet-portrait:sr-only">{p.saving ? t('hud.save.saving') : t('hud.save.label')}</span>
+            </button>
+          )}
+        </div>
       )}
-      {/* Focus leaving the score (and the breakdown, which can hold controls) closes it; Escape inside it closes it and returns to the score. */}
-      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions -- a mouse hover opens the breakdown (not a touch, whose emulated hover would fight the tap); the button is the control */}
-      <div ref={wrap} className="relative tablet-portrait:-order-1" onPointerEnter={e => { if (e.pointerType === 'mouse') setOpen(true); }} onPointerLeave={e => { if (e.pointerType === 'mouse') setOpen(false); }}
-        onBlur={e => { if (!wrap.current?.contains(e.relatedTarget as Node | null)) setOpen(false); }}
-        onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); scoreButton.current?.focus(); } }}>
-        {/* A disclosure: Enter, Space (a click with no pointer) and a tap toggle the breakdown. A mouse click keeps it open, since hovering already opened it. */}
-        <button ref={scoreButton} type="button" data-hud-score="" aria-label={t('hud.score.aria', { total: number(score.total) })} aria-expanded={open} aria-controls={open ? tipId : undefined} aria-describedby={open && !rich ? tipId : undefined}
-          onPointerDown={e => { touch.current = e.pointerType !== 'mouse'; }}
-          onClick={e => setOpen(e.detail === 0 || touch.current ? !open : true)}
-          className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:border tablet-portrait:border-line-strong tablet-portrait:px-3.5 ${focus}`}>
-          <Star />{number(score.total)}
-        </button>
-        {open && (
-          <div id={tipId} className={`absolute top-full end-0 z-40 mt-2 flex ${rich ? 'w-80 backdrop-blur-20' : 'w-65'} flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
-            {rich ? p.breakdown : <>
+      {score && (
+        <ScoreDisclosure className="tablet-portrait:-order-1" label={t('hud.score.aria', { total: number(score.total) })} rich={rich}
+          open={p.scoreOpen} onOpenChange={p.onScoreOpenChange}
+          buttonClassName={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:border tablet-portrait:border-line-strong tablet-portrait:px-3.5 ${focus}`}
+          content={rich ? p.breakdown : <>
             <b>{t('hud.score.title')}</b>
             <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
             {PILLARS.map(k => (
@@ -226,11 +231,11 @@ export function Hud(p: HudProps) {
                 <b className="text-end">{number(score[k])}</b>
               </div>
             ))}
-            </>}
-          </div>
-        )}
-      </div>
-      <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700 tablet-portrait:-order-1"><Flame />{number(p.streak)}</span>
+          </>}>
+          <Star />{number(score.total)}
+        </ScoreDisclosure>
+      )}
+      {score && p.streak !== undefined && <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700 tablet-portrait:-order-1"><Flame />{number(p.streak)}</span>}
       <button type="button" onClick={p.onPalette} aria-label={t('hud.palette.aria')}
         className={`min-h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary tablet-portrait:hidden ${focus}`}>
         {t('hud.palette.key')}

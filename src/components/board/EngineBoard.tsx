@@ -11,12 +11,17 @@ import { MoneyProvider } from '../../i18n/money';
 import { useI18n } from '../../i18n';
 import { Hud, type HudProps } from '../hud/Hud';
 import { MetricsStrip, type MetricsStripProps } from '../metrics/MetricsStrip';
+import { StatusBand } from '../desk/StatusBand';
+import { bandModel } from '../desk/band';
+import { DeskFeed, type FeedFeedback, type FeedMessage, type FeedMilestone } from '../desk/DeskFeed';
+import { feedbackChanges, lastFeedback } from '../desk/feed';
+import { useSaveProgress, useSession, useSignOut } from '../session/session';
+import { SignedOut } from '../session/SignedOut';
 import { TeamBoard, type StageColumn, type TeamBoardHint } from '../team/TeamBoard';
 import { ActionsPanel } from '../actions/ActionsPanel';
 import { ActionDrawer, type ActionDrawerProps } from '../action/ActionDrawer';
 import type { ActionBlock, ActionTileProps } from '../action/ActionTile';
 import { useDays } from '../action/days';
-import { InboxRail, type InboxRailItem } from '../inbox/InboxRail';
 import { InboxDrawer, type InboxDrawerItem } from '../inbox/InboxDrawer';
 import type { InboxSender } from '../inbox/sender';
 import { OutcomePanel, type OutcomePerson } from '../outcome/OutcomePanel';
@@ -38,6 +43,8 @@ const EngineReport = lazy(() => import('../report/EngineReport'));
 // Only storylines with stakeholders show the bar (D160), so it stays out of the first load (D167).
 const StakeholderBar = lazy(() => import('../stakeholders/StakeholderBar').then(m => ({ default: m.StakeholderBar })));
 const CohortRank = lazy(() => import('../gamification/CohortRank'));
+// The rank in the desk's status band (D211) loads only when the storyline turns the leaderboard on.
+const BandRank = lazy(() => import('../gamification/BandRank'));
 // The badge shelf and the command palette load when first opened (D73: room in the first load for the tablet board).
 const BadgeShelfDialog = lazy(() => import('../gamification/BadgeShelfDialog').then(m => ({ default: m.BadgeShelfDialog })));
 const CommandPalette = lazy(() => import('../palette/CommandPalette').then(m => ({ default: m.CommandPalette })));
@@ -120,7 +127,10 @@ export interface EngineBoardProps {
    * board. Stories and tests can fix it.
    */
   layout?: 'desk' | 'tablet';
-  /** Exit to the learning platform (D89): the menu offers Exit only when the launch gave a return address. */
+  /**
+   * Leave to the learning platform (D89), when the launch gave a return address: Sign out saves first and
+   * then calls it (D213). Without it, Sign out shows the signed out screen.
+   */
   onExit?: () => void;
   /**
    * The demo round (D92): the board runs on the demo's own engine, with styles set for everyone but the
@@ -209,7 +219,7 @@ function TeamScroll({ stages, label, children }: { stages: number; label: string
   }, []);
   // A card column at least 38 spacing units (152px) wide, so five stages fit beside the Actions panel at 1280 (D101), the 3 unit gaps between, and the board's 5 unit padding each side.
   const minWidth = `calc(var(--spacing) * ${38 * stages + 3 * Math.max(0, stages - 1) + 10})`;
-  const base = 'col-start-2 row-start-1 relative flex min-h-0 min-w-0 flex-col';
+  const base = 'col-start-1 row-start-1 relative flex min-h-0 min-w-0 flex-col';
   const inner = <div className="flex flex-1 flex-col" style={{ minWidth }}>{children}</div>;
   // The team scrolls inside its region when it does not fit the window (D101): narrow windows sideways,
   // short windows down. Then it is a focusable, named scroll region, and a fade marks what is below.
@@ -310,12 +320,29 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }, []);
   useEffect(() => () => clearTimeout(toastTimer.current), []);
 
+  // ---- save and sign out (D213) ----
+  const session = useSession();
+  // The view just came from the server, so the run as shown is the saved one.
+  useEffect(() => { if (useSession.getState().savedAt === null) useSession.getState().markSaved(); }, []);
+  const saveProgress = useSaveProgress();
+  const leave = useSignOut(app.onExit);
+  const [saveNote, setSaveNote] = useState<string | null>(null);
+  const saveNow = async () => {
+    const r = await saveProgress();
+    const note = t('session.save.toast', { status: r.status, at: r.at });
+    setSaveNote(note);
+    say(note);
+  };
+
   /** Sends one intent. A second click while one is on its way is ignored, so nothing is sent twice. */
   const send = async (i: Intent) => {
     if (inFlight.current) return null;
     inFlight.current = true;
     try {
-      return await intent.mutateAsync(i);
+      const r = await intent.mutateAsync(i);
+      // The engine saves the run with every answered intent (D213).
+      useSession.getState().markSaved();
+      return r;
     } catch (e) {
       say(t('board.error', { code: e instanceof EngineError ? e.code : 'other' }));
       return null;
@@ -488,6 +515,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const styleOf = (m: MemberView) => (styling ? draft[m.id] ?? null : m.style);
   const columns: StageColumn[] = v.funnel.map(st => ({
     key: st.key, name: st.name, count: st.members, ideal: st.ideal, bottleneck: st.bottleneck, about: st.about, suits: st.suits,
+    // The stage's output this period against its ideal (D216).
+    output: { n: st.throughput, ideal: st.idealThroughput },
     cards: v.members.filter(m => m.stage === st.key).map(m => ({
       id: m.id, name: m.name, title: m.title, img: img(m), mood: m.mood, away: m.away > 0,
       // The engine sends no stats until the profile is opened; the card shows its hidden state then.
@@ -662,10 +691,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     setSnoozed(s => ({ ...s, [id]: stamp }));
     say(t('board.snoozed', { unit }));
   };
-  const railItems: InboxRailItem[] = inbox.map(x => ({ id: x.id, label: x.title, sender: sender(x.from), urgent: x.urgent }));
+  const senderName = (from: string) => (from === 'sponsor' ? v.sponsor.name : from === 'news' ? '' : member(from)?.name ?? stakeholder(from)?.name ?? '');
+  const dueText = (x: EngineView['inbox'][number]) => (x.dueInSubPeriods === null ? null : x.dueInSubPeriods === 0 ? t('inbox.dueNow', { unit }) : t('board.due', { amount: amount(x.dueInSubPeriods) }));
+  /** The messages in the desk's feed (D212): each with its sender, due point, Reply or Read, and Later. */
+  const feedMessages: FeedMessage[] = inbox.map(x => ({
+    id: x.id, sender: sender(x.from), from: senderName(x.from), kind: x.kind, title: x.title, due: dueText(x), urgent: x.urgent,
+    cta: x.kind === 'news' ? 'read' : 'reply', onOpen: () => void openMessage(x.id),
+    onLater: x.kind !== 'news' && canLater(x) ? () => later(x.id) : undefined
+  }));
   const drawerItems: InboxDrawerItem[] = inbox.map(x => ({
     id: x.id, sender: sender(x.from), title: x.title, preview: x.body, meta: '', urgent: x.urgent,
-    due: x.dueInSubPeriods === null ? null : x.dueInSubPeriods === 0 ? t('inbox.dueNow', { unit }) : t('board.due', { amount: amount(x.dueInSubPeriods) }),
+    due: dueText(x),
     tag: t('inbox.tag', { type: x.kind, name: x.from === 'sponsor' ? first(v.sponsor.name) : x.from === 'news' ? '' : first(member(x.from)?.name ?? stakeholder(x.from)?.name ?? '') }),
     // News (a CEO check in) needs no answer: it is marked as read, and never set aside.
     cta: x.kind === 'news' ? 'read' : 'reply', later: x.kind !== 'news' && canLater(x)
@@ -698,29 +734,39 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       key: fullscreen ? 'exitFullscreen' as const : 'fullscreen' as const,
       onSelect: () => { void (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => say(t('board.fullscreen.failed'))); }
     }] : []),
-    ...(app.onExit ? [{ key: 'exit' as const, onSelect: app.onExit }] : [])
   ];
+  const where = t('menu.where', {
+    period: t('time.period', { unit: periodUnit, n: v.clock.period }), total: v.clock.periods,
+    sub: t('time.subPeriod', { unit, n: v.clock.subPeriod }), left: t('time.left', { amount: amount(v.clock.capacityLeft) })
+  });
+  const menu = demo ? undefined : (
+    <GameMenu items={menuItems} where={where} periodUnit={periodUnit} scope={v.gamification.leaderboard.scope}
+      session={{ savedAt: session.savedAt, saving: session.saving, note: saveNote, onPause: app.onPause, onSave: () => void saveNow(), onSignOut: () => void leave() }} />
+  );
 
+  const breakdown = (
+    <ScoreBreakdown
+      total={v.score.total} max={v.score.max}
+      pillars={(['business', 'people', 'leadership'] as const).map(k => ({ key: k, value: v.score[k], weight: v.gamification.weights[k] }))}
+      capability={v.score.capability} live={v.score.live} bonus={v.score.bonus} bonusCap={v.gamification.streak.cap}
+      streak={streak} tiers={v.gamification.tiers} tier={v.score.tier}
+      badges={{ earned: v.badges.filter(b => b.earned).length, total: v.badges.length }}
+      onBadges={() => { setScoreOpen(false); setBadgesOpen(true); }}
+      rank={v.gamification.leaderboard.enabled ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
+    />
+  );
   const hud: HudProps = {
-    menu: demo ? undefined : <GameMenu items={menuItems} />,
+    menu,
     nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, periods: v.clock.periods, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
     sessionClock: app.showClock === false ? null : <SessionClockText />, alwaysPause: true, onPause: app.onPause,
-    // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6).
-    score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership },
-    breakdown: (
-      <ScoreBreakdown
-        total={v.score.total} max={v.score.max}
-        pillars={(['business', 'people', 'leadership'] as const).map(k => ({ key: k, value: v.score[k], weight: v.gamification.weights[k] }))}
-        capability={v.score.capability} live={v.score.live} bonus={v.score.bonus} bonusCap={v.gamification.streak.cap}
-        streak={streak} tiers={v.gamification.tiers} tier={v.score.tier}
-        badges={{ earned: v.badges.filter(b => b.earned).length, total: v.badges.length }}
-        onBadges={() => { setScoreOpen(false); setBadgesOpen(true); }}
-        rank={v.gamification.leaderboard.enabled ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
-      />
-    ),
-    scoreOpen, onScoreOpenChange: setScoreOpen,
-    streak: v.streak, streakLabel: streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
+    // Save beside Pause (D213); not in the demo, which runs on its own engine.
+    onSave: demo ? undefined : () => void saveNow(), saving: session.saving,
+    // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6). On the desk the score and its
+    // breakdown are in the status band (D211); the upright tablet board keeps them in the HUD (D73).
+    score: tablet ? { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership } : undefined,
+    breakdown, scoreOpen, onScoreOpenChange: setScoreOpen,
+    streak: tablet ? v.streak : undefined, streakLabel: streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
     onEndPeriod: demo ? undefined : () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
@@ -825,7 +871,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const weekEnd = !card && !v.live && !reacting && (v.phase === 'periodEnd' || (ended && !lastWeekSeen));
   // Then the end screen (or the report opened from it) takes the whole page; the board stays reachable, read only.
   const endScreen = !card && !weekEnd && ended && lastWeekSeen && endView !== 'board';
-  const plainBoard = !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
+  const plainBoard = !session.signedOut && !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
   // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13),
   // nor while a panel or the tour is open, nor in the demo (D89, D92, D94).
   useSessionTicker(!app.paused && !ended && plainBoard && !panel && !tour && !demo);
@@ -863,6 +909,43 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     setShown(s => new Set([...s, ...fresh]));
   }, [freshKeys]);
   const nameOf = (id: string) => names.get(id) ?? null;
+
+  // ---- the desk (D211, D212): the status band, and the feedback and inbox feed under the team ----
+  const band = bandModel(v);
+  // On the desk milestones go to the feed; tips and what neglect costs (D173, D174) stay as notices. The upright
+  // tablet keeps them all as notices (D73).
+  const boardNotices = tablet ? notices : notices.filter(n => n.kind !== 'milestone');
+  const dismissNotice = (key: string) => setDismissed(d => new Set([...d, key]));
+  const feedMilestones: FeedMilestone[] = tablet ? [] : notices.flatMap(n => (n.kind !== 'milestone' ? [] : [{
+    key: n.key,
+    text: t('board.milestone.body', { kind: n.milestone.kind, pct: n.milestone.pct, stage: stageName(n.milestone.stage ?? '') }),
+    onResults: demo ? undefined : () => openPanel({ kind: 'overview', tab: n.milestone.kind === 'stage' ? 'stages' : 'results' }),
+    onLeaderboard: v.gamification.leaderboard.enabled && !demo ? () => openPanel({ kind: 'leaderboard' }) : undefined,
+    onDismiss: () => dismissNotice(n.key)
+  }]));
+  const fb = lastFeedback(v);
+  let feedback: FeedFeedback | null = null;
+  if (fb) {
+    const { changes, more } = feedbackChanges(fb, v.members.length, 2);
+    const people = new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject));
+    const single = people.size <= 1 && !people.has('team') && !people.has('group');
+    const sub = Math.min(fb.sub + 1, v.clock.capacity);
+    feedback = {
+      key: fb.id,
+      when: fb.period === v.clock.period ? t('time.subPeriod', { unit, n: sub }) : t('time.period', { unit: periodUnit, n: fb.period }),
+      title: fb.title,
+      changes: changes.map(c => ({
+        label: t('desk.feed.label', {
+          kind: c.subject === 'sponsor' ? 'sponsor' : c.subject === 'team' || c.subject === 'group' ? c.subject : single ? 'one' : 'person',
+          who: c.subject === 'sponsor' ? first(v.sponsor.name) : first(nameOf(c.subject) ?? ''), n: c.count,
+          metric: c.metric === 'confidence' ? '' : t('metric.nameLower', { metric: c.metric }), metricCap: c.metric === 'confidence' ? '' : t('metric.name', { metric: c.metric })
+        }),
+        dir: c.delta > 0 ? 'up' as const : 'down' as const, n: number(Math.abs(c.delta))
+      })),
+      more,
+      onWhy: demo ? undefined : () => openPanel({ kind: 'history', filter: fb.memberIds.length === 1 ? { person: fb.memberIds[0] } : {} })
+    };
+  }
   /** Whether each action can be taken now, in words, for the list of every action (D97). */
   const availability: Record<string, string> = Object.fromEntries(v.actions.map(a => {
     if (a.scope === 'team') { const b = tile(a.key, null).block; return [a.key, b ? actionSub(t, amount, { kind: a.kind, block: b }) : t('board.available.now')]; }
@@ -975,7 +1058,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     : t('board.h1', { view: styling ? 'style' : 'board', unit: periodUnit, n: v.clock.period });
 
   let body: ReactNode;
-  if (v.live || reacting) {
+  if (session.signedOut) {
+    // Signed out on a launch with no return address (D213): the run is saved; Sign back in returns to the board.
+    body = (
+      <SignedOut at={session.signedOutAt ?? session.savedAt ?? 0}
+        where={{ period: t('time.period', { unit: periodUnit, n: v.clock.period }), sub: t('time.subPeriod', { unit, n: v.clock.subPeriod }), left: t('time.left', { amount: amount(v.clock.capacityLeft) }) }}
+        score={{ total: v.score.total, tier: band.tier?.name ?? null }}
+        money={{ label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target }}
+        live={{ used: v.liveCap.used, cap: v.liveCap.cap }}
+        onBack={() => { focusHint.current = () => h1Ref.current; useSession.getState().setSignedOut(false); }} />
+    );
+  } else if (v.live || reacting) {
     // A live interaction takes the whole screen (spec, Live interaction screens). It stays mounted
     // behind "The team is reacting", so nothing written is lost if the engine refuses the end.
     body = (
@@ -1046,14 +1139,21 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {demo?.banner}
         <Hud {...hud} />
         {call}
-        <MetricsStrip {...strip} />
-        <BusinessBar items={business} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)}
+        {tablet ? <MetricsStrip {...strip} /> : (
+          <StatusBand model={band} periodUnit={periodUnit} subPeriodUnit={unit} targetLabel={t('board.target', { n: periods, unit: periodUnit })}
+            business={business} sponsorName={first(v.sponsor.name)} sponsorCauses={v.sponsor.causes}
+            score={{ total: v.score.total }} breakdown={breakdown} scoreOpen={scoreOpen} onScoreOpenChange={setScoreOpen}
+            rank={v.gamification.leaderboard.enabled && !demo ? <Suspense fallback={null}><BandRank view={v} onOpen={() => openPanel({ kind: 'leaderboard' })} /></Suspense> : undefined}
+            onOverview={demo ? undefined : () => openPanel({ kind: 'overview' })} />
+        )}
+        {/* On the desk the business variables are in the status band; the bar keeps decisions and stakeholders. */}
+        <BusinessBar items={tablet ? business : []} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)}
           aside={v.stakeholders.length ? (
             <Suspense fallback={null}><StakeholderBar disabled={busy || ended || v.phase !== 'board'} onOpen={key => setStakeholdersOpen({ focus: key ?? null })} onAnswer={answerStakeholder}
               items={v.stakeholders.map(s => ({ key: s.key, name: s.name, img: s.img, level: s.level,
                 request: s.request && !ended ? { title: s.request.title, due: t('board.business.due', { n: s.request.dueInSubPeriods, unit }) } : null }))} /></Suspense>
           ) : undefined} />
-        <BoardNotices notices={notices} view={v} onDismiss={key => setDismissed(d => new Set([...d, key]))}
+        <BoardNotices notices={boardNotices} view={v} onDismiss={dismissNotice}
           onLeaderboard={() => openPanel({ kind: 'leaderboard' })} onUpdateSponsor={() => { void updateSponsor(); }} />
         {ended && lastWeekSeen && endView === 'board' && (
           <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
@@ -1094,18 +1194,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <>
             {top}
             {outcome}
-            <div className={`relative grid min-h-0 flex-1 grid-rows-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
-              {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
+            <div className={`relative grid min-h-0 flex-1 grid-rows-(--il-desk-rows) ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
+              {/* Tab order follows the spec: HUD, team board, actions, then the feedback and inbox feed. The grid places the feed under the team (D212). */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
-                <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns}
-                  onOverview={demo ? undefined : () => openPanel({ kind: 'overview' })} />
+                <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
               </TeamScroll>
               {/*
                 * The board's first render is split (D87): the HUD, the KPIs and the team (where the largest
                 * paint is) come first; the actions panel and the inbox follow once that has painted, built
                 * in their own render inside a transition, so the board is not one long task.
                 */}
-              <div data-trace="actions" className="col-start-3 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <ActionsPanel
+              <div data-trace="actions" className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <ActionsPanel
                 capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
                 notes={actionNotes}
                 team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
@@ -1118,7 +1217,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                   onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
                 } : undefined}
               />}</Deferred></div>
-              <div data-trace="events" className="col-start-1 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} />}</Deferred></div>
+              <div data-trace="events" className="col-start-1 row-start-2 flex min-w-0 flex-col"><Deferred>{() => (
+                <DeskFeed feedback={feedback} milestones={feedMilestones} messages={feedMessages} subPeriodUnit={unit}
+                  onAll={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} />
+              )}</Deferred></div>
               {profile && <ProfilePanel {...profile} />}
               {inboxDrawer}
             </div>
@@ -1160,7 +1262,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {card && !card.choiceId && !decided && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
         <Suspense fallback={null}>
           {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
-            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header [data-hud-score]')} />}
+            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('[data-hud-score]')} />}
           {pal && plainBoard && <CommandPalette open onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />}
           {panel && <PlayPanels panel={panel} view={v} nameOf={nameOf} availability={availability} onClose={() => setPanel(null)}
             onTour={() => { setPanel(null); setTour('board'); }}
@@ -1175,8 +1277,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} data-celebration={v.gamification.celebration} data-tablet={tablet ? '' : undefined}
       data-fit={app.fit && !weekEnd && !endScreen ? '' : undefined}
       className={`relative flex min-h-0 flex-1 flex-col ${app.fit && !weekEnd && !endScreen ? FIT : ''}`}>
-      {/* The week end, the end screen and the report bring their own headings. */}
-      {!weekEnd && !endScreen && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
+      {/* The week end, the end screen, the report and the signed out screen bring their own headings. */}
+      {!weekEnd && !endScreen && !session.signedOut && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
       {body}
       {tour && <Suspense fallback={null}><Tour key={tour} area={tour} view={v} onEnd={endTour} /></Suspense>}
       <div role="status" className="sr-only">{announce}</div>

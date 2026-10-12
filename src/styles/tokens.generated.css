@@ -357,8 +357,8 @@
   --il-app-loading-track: linear-gradient(90deg, var(--il-color-track) 0%, var(--il-color-accent-soft) 50%, var(--il-color-track) 100%);
   --il-app-loading-track-size: 400px 6px;
   --il-app-loading-shimmer: ilShimmer 1.4s linear infinite;
-  --il-board-columns: 64px minmax(0, 1fr) 330px;
-  --il-board-columns-collapsed: 64px minmax(0, 1fr) calc(var(--il-space-unit) * 6 + 72px);
+  --il-board-columns: minmax(0, 1fr) 330px;
+  --il-board-columns-collapsed: minmax(0, 1fr) calc(var(--il-space-unit) * 6 + 72px);
   --il-board-scroll-fade: linear-gradient(to bottom, transparent, color-mix(in oklch, var(--il-color-surface-solid) 92%, transparent));
   --il-board-panel-max-width: 560px;
   --il-button-radius: var(--il-radius-pill);
@@ -397,6 +397,13 @@
   --il-celebration-burst-fill: radial-gradient(circle, transparent 42%, var(--il-color-celebration-glow) 52%, transparent 68%);
   --il-celebration-burst-inset: -40px;
   --il-celebration-burst-motion: ilBurst var(--il-duration-slow) var(--il-easing-brand) both;
+  --il-desk-band-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.3fr);
+  --il-desk-band-progress-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr);
+  --il-desk-band-eyebrow-tracking: var(--il-tracking-eyebrow-wide);
+  --il-desk-rows: minmax(0, 1fr) auto;
+  --il-desk-feed-card-width: calc(232px * var(--il-text-scale, 1));
+  --il-desk-menu-width: 420px;
+  --il-desk-menu-row-columns: 2.5rem minmax(0, 1fr) auto;
   --il-end-glow-fill: radial-gradient(ellipse at center, var(--il-color-end-glow), transparent 65%);
   --il-end-logo-tracking: -0.03em;
   --il-end-max-width: 1600px;
@@ -434,6 +441,12 @@
   --il-inbox-drawer-offset: 72px;
   --il-inbox-drawer-shadow: 0 24px 64px var(--il-color-elevation-drawer);
   --il-inbox-drawer-enter: ilIn var(--il-duration-base) ease;
+  --il-intro-message-columns: minmax(0, 1fr) 360px;
+  --il-intro-products-columns: 260px minmax(0, 1fr);
+  --il-intro-model-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  --il-intro-objectives-columns: minmax(0, 1fr) 380px;
+  --il-intro-objectives-rows: minmax(0, 1fr) auto;
+  --il-intro-code-size: calc(96px * var(--il-text-scale, 1));
   --il-live-bubble-max-width: 88%;
   --il-live-caption-cursor: ilPulse 0.9s infinite;
   --il-live-mic-glow-ready: 0 0 24px var(--il-color-voice-ready-glow);

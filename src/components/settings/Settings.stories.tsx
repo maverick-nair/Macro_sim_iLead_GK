@@ -33,6 +33,14 @@ export const LargeTextOff: Story = { render: () => <LiveSettings initial={{ text
 export const ShortWindow: Story = { decorators: [S => <AppArea height={420}><S /></AppArea>], render: () => <LiveSettings initial={VALUES} voiceConsent /> };
 /** Frame x2. */
 export const Paused: Story = { render: () => <PauseDialog onResume={noop} /> };
+/** On the engine (D213): Resume, Save progress with the time it last saved, and Sign out, which saves first. */
+export const PausedWithSession: Story = {
+  render: () => <PauseDialog onResume={noop} session={{ savedAt: new Date('2026-10-06T11:05:00').getTime(), saving: false, note: null, subPeriodUnit: 'day', onSave: noop, onSignOut: noop }} />
+};
+/** Just saved: the status line says when. */
+export const PausedSaved: Story = {
+  render: () => <PauseDialog onResume={noop} session={{ savedAt: new Date('2026-10-06T11:06:00').getTime(), saving: false, note: 'Progress saved at 11:06 AM', subPeriodUnit: 'day', onSave: noop, onSignOut: noop }} />
+};
 /** Frame x3. */
 export const Resume: Story = {
   render: () => (

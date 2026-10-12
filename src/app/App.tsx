@@ -8,6 +8,7 @@ import { EngineBoard } from '../components/board/EngineBoard';
 import { ReactingScreen } from '../components/liveshell/ReactingScreen';
 import { SettingsDialog } from '../components/settings/SettingsDialog';
 import { ExitDialog, PauseDialog, ResumeDialog, SessionExpiredDialog } from '../components/settings/SessionDialogs';
+import { EnginePauseDialog } from '../components/settings/EnginePauseDialog';
 import { LoadingScreen } from '../components/shell/LoadingScreen';
 import { ConnectionBanner, type ConnectionSource } from '../components/shell/ConnectionBanner';
 import { Onboarding } from '../screens/Onboarding';
@@ -365,7 +366,7 @@ export function App(p: AppProps) {
                   <EngineBoard voiceConsent={s.settings.voiceConsent === true && p.voice !== false} input={s.settings.input} captions={s.settings.captions}
                     paused={!!s.overlay || held} showClock={s.settings.clock} onPause={() => act.overlay('paused')} onSettings={() => act.overlay('settings')}
                     actionsCollapsed={s.settings.actionsCollapsed === true} onActionsCollapsed={v => act.settings({ actionsCollapsed: v })}
-                    onExit={exitUrl ? () => act.overlay('exit') : undefined} fit={p.fit} />
+                    onExit={exitUrl ? () => location.assign(exitUrl) : undefined} fit={p.fit} />
                 </div>
               )}
               {screenProps && scr === 'style' && <div><StyleSetting {...screenProps} view={step} /></div>}
@@ -387,7 +388,10 @@ export function App(p: AppProps) {
         {s.overlay === 'settings' && (
           <SettingsDialog values={s.settings} onChange={act.settings} onClose={closeOverlay} voiceConsent={engine && p.voice !== false} frozen={frozen} returnFocus={returnFocus} />
         )}
-        {s.overlay === 'paused' && <PauseDialog onResume={closeOverlay} frozen={frozen} returnFocus={returnFocus} />}
+        {s.overlay === 'paused' && (engine
+          // On the engine the pause screen saves and signs out too (D213); signing out leaves to the launch's return address, when it gave one.
+          ? <EnginePauseDialog onResume={closeOverlay} onLeave={exitUrl ? () => location.assign(exitUrl) : undefined} frozen={frozen} returnFocus={returnFocus} />
+          : <PauseDialog onResume={closeOverlay} frozen={frozen} returnFocus={returnFocus} />)}
         {s.overlay === 'exit' && exitUrl && <ExitDialog onStay={closeOverlay} onExit={() => location.assign(exitUrl)} frozen={frozen} returnFocus={returnFocus} />}
         {/* On the engine the recap is built from the engine view; the gallery frame (x3) keeps the design fixture. */}
         {s.overlay === 'resume' && engine && (

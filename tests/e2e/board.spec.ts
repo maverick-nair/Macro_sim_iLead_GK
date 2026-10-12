@@ -220,7 +220,8 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   // Sponsor confidence fell below the check in line in week 3 of this run: the CEO check in took a day of week 4.
   await expect(left).not.toHaveText(before);
   await expect(page.getByText('The CEO check in took a day this week')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Briefing with Paula/ })).toBeVisible();
+  // Back in the feedback and inbox feed (D212).
+  await expect(page.getByRole('button', { name: /^Reply now\W+Briefing with Paula/ })).toBeVisible();
 });
 
 test('palette: Ctrl K on the plain board only', async ({ page }) => {

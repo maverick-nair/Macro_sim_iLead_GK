@@ -72,10 +72,19 @@ export const ClientTextLogo: Story = {
 /** Large numbers through the number formatter. */
 export const LargeValues: Story = { ...sized(1440, 280), args: { ...base, clock: clock({ period: 10, subPeriod: 5 }), score: { ...base.score, total: 12480, business: 980, people: 1000, leadership: 40 }, streak: 12, scoreOpen: true } };
 
-const MENU: GameMenuItem[] = (['objectives', 'tutorial', 'history', 'overview', 'leaderboard', 'actions', 'tour', 'settings', 'fullscreen', 'exit'] as const).map(key => ({ key, onSelect: noop }));
+const MENU: GameMenuItem[] = (['objectives', 'tutorial', 'tour', 'history', 'overview', 'leaderboard', 'actions', 'settings', 'fullscreen'] as const).map(key => ({ key, onSelect: noop }));
+/** The session group (D213, D214): Pause, Save progress with when it was last saved, and Sign out. */
+const SESSION = { savedAt: new Date('2026-10-06T11:05:00').getTime(), saving: false, note: null, onPause: noop, onSave: noop, onSignOut: noop };
+const WHERE = 'Week 2 of 8 · Day 3 · 2½ days left';
 /** The engine board's HUD with the game menu (D89) in place of the hidden nav (D38). */
 export const WithMenu: Story = { ...sized(1440, 520), args: { ...base, nav: [], menu: <GameMenu items={MENU} /> } };
-/** The game menu open: Objectives, Tutorial and video, History, Results and stages, Leaderboard, About these actions, Guided tour, Settings, Full screen, Exit. */
-export const MenuOpen: Story = { ...sized(1440, 520), args: { ...base, nav: [], menu: <GameMenu items={MENU} defaultOpen /> } };
+/** The game menu open (D214): the session group, then Objectives, Tutorial and video, Guided tour, History, Results and stages, Leaderboard, About these actions, Settings and Full screen, each with its line. */
+export const MenuOpen: Story = { ...sized(1440, 900), args: { ...base, nav: [], menu: <GameMenu items={MENU} where={WHERE} session={SESSION} defaultOpen /> } };
+/** Just saved: the status line says when. */
+export const MenuSaved: Story = { ...sized(1440, 900), args: { ...base, nav: [], menu: <GameMenu items={MENU} where={WHERE} session={{ ...SESSION, note: 'Progress saved at 11:06 AM' }} defaultOpen /> } };
+/** The engine desk's HUD (D211, D213): no score (it is in the status band), Pause and Save in the session group. */
+export const DeskSession: Story = { ...frame, args: { ...base, nav: [], score: undefined, streak: undefined, alwaysPause: true, onSave: noop, menu: <GameMenu items={MENU} where={WHERE} session={SESSION} /> } };
+/** Saving: the Save button says so and waits. */
+export const DeskSaving: Story = { ...frame, args: { ...base, nav: [], score: undefined, streak: undefined, alwaysPause: true, onSave: noop, saving: true } };
 /** At 1280 the menu fits beside the clock and score. */
 export const MenuAt1280: Story = { ...sized(1280, 120), args: { ...base, nav: [], menu: <GameMenu items={MENU.filter(m => m.key !== 'leaderboard')} /> } };

@@ -10,10 +10,12 @@ import action from './action.json';
 import actions from './actions.json';
 import board from './board.json';
 import common from './common.json';
+import desk from './desk.json';
 import events from './events.json';
 import gamification from './gamification.json';
 import hud from './hud.json';
 import inbox from './inbox.json';
+import intro from './intro.json';
 import live from './live.json';
 import liveformats from './liveformats.json';
 import liveshell from './liveshell.json';
@@ -33,7 +35,7 @@ import stylesetting from './stylesetting.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...smallscreen, ...style, ...stylesetting, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...desk, ...events, ...gamification, ...hud, ...inbox, ...intro, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...smallscreen, ...style, ...stylesetting, ...team, ...time };
 
 /**
  * Loaded with their screens: './end.json', './group.json' (the group report, D77), './report.json', './tablet.json' (the tablet board, D73), './weekend.json',

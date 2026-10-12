@@ -24,13 +24,18 @@ describe('guided tour (D94)', () => {
     expect(placeTip(null, tip, view)).toEqual({ top: 260, left: 470 });
   });
 
-  it('has the board, style setting and live tours in 1.0\'s order, each step with a target', () => {
-    expect(TOURS.board.map(s => s.key)).toEqual(['menu', 'clock', 'days', 'session', 'stages', 'member', 'notifications', 'kpis', 'target', 'overview', 'actions', 'duration', 'end']);
+  it('has the desk tour in the canvas\'s order (D217), the style setting and live tours, each step with a target', () => {
+    expect(TOURS.board.map(s => s.key)).toEqual(['menu', 'clock', 'days', 'session', 'kpis', 'business', 'overview', 'progress', 'stages', 'member', 'notifications', 'actions', 'duration', 'end']);
     expect(TOURS.style).toHaveLength(4);
     expect(TOURS.live).toHaveLength(4);
     for (const area of Object.values(TOURS)) for (const s of area) expect(s.targets.length).toBeGreaterThan(0);
-    const root = { querySelector: (sel: string) => (sel === '[data-tour="inbox"]' ? ({} as Element) : null) };
-    expect(findTarget(TOURS.board[6], root as unknown as Document)).toBe('[data-tour="inbox"]');
+    // A step falls back to its next target: without the desk's feed (the upright tablet), the outcome band.
+    const only = (target: string) => ({ querySelector: (sel: string) => (sel === target ? ({} as Element) : null) }) as unknown as Document;
+    const step = (key: string) => TOURS.board.find(s => s.key === key)!;
+    expect(findTarget(step('notifications'), only('[data-tour="outcome"]'))).toBe('[data-tour="outcome"]');
+    expect(findTarget(step('notifications'), only('[data-tour="feed"]'))).toBe('[data-tour="feed"]');
+    expect(findTarget(step('business'), only('[data-tour="target"]'))).toBe('[data-tour="target"]');
+    const root = only('[data-tour="inbox"]');
     expect(findTarget(TOURS.board[0], root as unknown as Document)).toBeNull();
   });
 

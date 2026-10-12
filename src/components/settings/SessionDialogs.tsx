@@ -1,4 +1,4 @@
-import { NoWrapButton } from '../../ds/Button';
+import { Button, NoWrapButton } from '../../ds/Button';
 import type { MetricKey } from '../../engine/contract';
 import { useI18n } from '../../i18n';
 import type { PeriodUnit, SubPeriodUnit } from '../action/days';
@@ -9,13 +9,47 @@ interface Common {
   returnFocus?: () => HTMLElement | null;
 }
 
-export interface PauseDialogProps extends Common {
-  onResume: () => void;
+export interface PauseSession {
+  /** When the server last confirmed the run, epoch ms; null when not known on this load. */
+  savedAt: number | null;
+  /** A Save or sign out is waiting for the server. */
+  saving: boolean;
+  /** What the last Save said ("Progress saved at 11:06"), or null. */
+  note: string | null;
+  /** The sub-period the participant comes back to ("this exact day"). */
+  subPeriodUnit: SubPeriodUnit;
+  onSave: () => void;
+  onSignOut: () => void;
 }
 
-/** Paused: the clock has stopped. Resume, Escape or a click on the scrim carries on. */
-export function PauseDialog({ onResume, frozen, returnFocus }: PauseDialogProps) {
+export interface PauseDialogProps extends Common {
+  onResume: () => void;
+  /** Save and sign out from the pause screen (D213), on the engine. Without it, Resume only (the design frames). */
+  session?: PauseSession;
+}
+
+/**
+ * Paused: the clock has stopped. Resume, Escape or a click on the scrim carries on. On the engine it also
+ * offers Save progress (with the time it was last saved) and Sign out, which saves first (D213).
+ */
+export function PauseDialog({ onResume, session, frozen, returnFocus }: PauseDialogProps) {
   const { t } = useI18n();
+  if (session) {
+    const known = session.savedAt !== null ? 'yes' : 'no';
+    return (
+      <AppDialog onDismiss={onResume} frozen={frozen} returnFocus={returnFocus} described className="flex w-110 flex-col gap-3.5 p-7">
+        <span className="text-12 font-700 tracking-(--il-appdialog-eyebrow-tracking) text-fg-secondary uppercase">{t('session.paused.eyebrow')}</span>
+        <DialogTitle className="m-0 text-28 font-700">{t('session.paused.title')}</DialogTitle>
+        <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('session.paused.body', { known, at: session.savedAt ?? 0 })}</DialogDescription>
+        <Button variant="primary" size="lg" onClick={onResume}>{t('settings.paused.resume')}</Button>
+        <div className="grid grid-cols-2 gap-2">
+          <Button variant="secondary" size="md" onClick={() => { if (!session.saving) session.onSave(); }}>{session.saving ? t('session.saving') : t('session.save')}</Button>
+          <Button variant="secondary" size="md" onClick={() => { if (!session.saving) session.onSignOut(); }}>{t('session.signOut')}</Button>
+        </div>
+        <p role="status" className="m-0 min-h-5 text-13 text-fg-secondary">{session.note ?? t('session.paused.note', { unit: session.subPeriodUnit })}</p>
+      </AppDialog>
+    );
+  }
   return (
     <AppDialog onDismiss={onResume} frozen={frozen} returnFocus={returnFocus} described className="flex w-110 flex-col items-center gap-4 p-8 text-center">
       <div aria-hidden="true" className="flex size-16 items-center justify-center gap-1.5 rounded-round bg-(image:--il-fill-brand)">

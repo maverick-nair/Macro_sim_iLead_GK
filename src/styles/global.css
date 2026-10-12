@@ -53,6 +53,16 @@
   }
 }
 
+/*
+ * The pre-game flow (D219). `il-reveal-later` keeps an element hidden (so it cannot take focus) for 5 seconds,
+ * then fades it in: the hidden state is the animation's backwards fill, so where animation is off (reduced
+ * motion) the element simply shows at once. `il-slide-in` brings the sponsor's notification in from the side.
+ */
+@keyframes il-reveal-later { from { visibility: hidden; opacity: 0; } to { visibility: visible; opacity: 1; } }
+.il-reveal-later { animation: il-reveal-later 0.4s ease-out 5s backwards; }
+@keyframes il-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.il-slide-in { animation: il-slide-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
