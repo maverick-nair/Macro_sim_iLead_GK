@@ -15,17 +15,20 @@ export interface TourStepDef {
 const at = (...names: string[]) => names.map(n => `[data-tour="${n}"]`);
 
 export const TOURS: Record<TourArea, TourStepDef[]> = {
+  // The desk tour (D217, the approved canvas): the HUD, the status band, the funnel and a member, the feed,
+  // the actions and End. On the upright tablet (D73) the band's stops fall back to its tiles and the outcome.
   board: [
     { key: 'menu', targets: at('menu') },
     { key: 'clock', targets: at('clock') },
     { key: 'days', targets: at('days') },
     { key: 'session', targets: at('session') },
+    { key: 'kpis', targets: at('kpis') },
+    { key: 'business', targets: at('business', 'target') },
+    { key: 'overview', targets: at('overview') },
+    { key: 'progress', targets: at('progress') },
     { key: 'stages', targets: at('stage') },
     { key: 'member', targets: at('member') },
-    { key: 'notifications', targets: at('outcome', 'inbox') },
-    { key: 'kpis', targets: at('kpis') },
-    { key: 'target', targets: at('target') },
-    { key: 'overview', targets: at('overview') },
+    { key: 'notifications', targets: at('feed', 'outcome', 'inbox') },
     { key: 'actions', targets: at('actions') },
     { key: 'duration', targets: at('action-cost') },
     { key: 'end', targets: at('end') }
