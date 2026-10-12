@@ -1320,7 +1320,7 @@ The overall level was the mean of the skill ratings, and the verdict read only t
 - The Products screen's photo collapsed on the upright tablet (a single column: an `aspect-square` figure with hidden overflow gives its grid row no height), so the numbered spots overlapped and failed axe's target size. On the tablet the photo is a fixed square (`size-120`, at most the column's width), centred. The canvas's spot positions then sit at least 24px apart.
 - The desk feed's sender names truncated at 200% text when real world costs (D173, D174) add messages from the team; they wrap there now, as the team strip's names do.
 - `tests/e2e/a11y.spec.ts` and `tests/e2e/viewport.spec.ts` walk the products screen between the message and the objectives.
-- Not fixed here, failing on `eco-ws4-player` alone as well: `decision.spec.ts` (the business bar's variables and a choice event's moved values, looked for in a region the desk renamed), `drawer.spec.ts` (the inbox after the actions in tab order: the desk's feed replaced the inbox rail) and `board.spec.ts` (one colour contrast issue in the light theme after styles are set).
+- Not fixed here, failing on `eco-ws4-player` alone as well: `decision.spec.ts` (the business bar's variables and a choice event's moved values, looked for in a region the desk renamed), `drawer.spec.ts` (the inbox after the actions in tab order: the desk's feed replaced the inbox rail); `board.spec.ts`'s light theme contrast check also failed on `eco-ws4-player` and in the first integration run, and passed in the final one, so it is intermittent there.
 
 ## Blocked on missing docs
 
