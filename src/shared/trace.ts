@@ -115,6 +115,8 @@ export const TRACE: Record<string, TraceEntry> = {
   'drift': e('process', 'Pacing', 'board.team', 'weekend.summary'),
   'gamification.sponsor.escalation': e('process', 'Pacing', 'board.sponsor'),
   'dynamics': e('process', 'People dynamics', 'board.team', 'weekend.summary'),
+  // Real world costs (D171 to D178): the switch turns the block on with the engine's numbers.
+  'realism': e('process', 'Real world costs', 'board.actions', 'board.team', 'board.sponsor', 'board.hud', 'weekend.summary', 'end.screen'),
   'variables[]': e('process', 'Business variables', 'board.variables', 'weekend.summary', 'report.business'),
   'variables[].shown': e('process', 'Shown on the board', 'board.variables'),
   'variables[].about': e('process', 'What it means', 'board.variables', 'report.business'),
@@ -248,6 +250,7 @@ export const INTERNAL: Record<string, { kind: 'id' | 'mechanics' | 'author' | 'd
   'actions[].prerequisite': { kind: 'mechanics', reason: 'From the action\'s template' },
   'actions[].live': { kind: 'default', reason: 'Rubric, turn limit, minutes, hints and interview questions: the format\'s defaults' },
   'actions[].options[]': { kind: 'mechanics', reason: 'Option mechanics from the template (key, intent, cost, targets, stage moves, business effects)' },
+  'actions[].realism': { kind: 'mechanics', reason: 'Per action overrides of the real world costs (D171): not authored, the storyline block applies' },
   'events[].key': { kind: 'id', reason: 'Event key, matched by the engine and never shown' },
   'events[].away': { kind: 'default', reason: 'Days away an event causes: from the template' },
   'events[].impactText': { kind: 'default', reason: 'A bulletin\'s See impact line: from the template' },
