@@ -1,8 +1,10 @@
+import { DEFAULT_LMS as STORYLINE_LMS } from '../engine/config';
+import { DEFAULT_SCALE } from '../engine/report/defaults';
+
 /**
- * What an LMS records for a run, and when (D201). The storyline will carry these as `StorylineConfig.lms`
- * (another workstream adds the block to src/engine/config.ts); until then this is the type and its
- * defaults, and every reader goes through `lmsSettingsOf`, which reads `config.lms` defensively, so wiring
- * the schema in later is one line.
+ * What an LMS records for a run, and when (D201). The storyline carries these as `StorylineConfig.lms` (D184),
+ * authored in GenieKreator's Review and publish; this is the runtime's form of that block, and every reader
+ * goes through `lmsSettingsOf`, which reads `config.lms` defensively. The defaults are the storyline's.
  */
 export type ScormVersion = 'scorm12' | 'scorm2004';
 
@@ -18,7 +20,8 @@ export interface LmsSettings {
   connected: boolean;
 }
 
-export const DEFAULT_LMS: LmsSettings = { version: 'scorm2004', completion: { kind: 'finish' }, pass: { kind: 'none' }, connected: false };
+/** The storyline's defaults (`DEFAULT_LMS` in src/engine/config.ts) in this form. */
+export const DEFAULT_LMS: LmsSettings = { version: STORYLINE_LMS.package, completion: { kind: 'finish' }, pass: { kind: 'none' }, connected: STORYLINE_LMS.connected };
 
 const int = (v: unknown, lo: number, hi: number, d: number) => (typeof v === 'number' && Number.isFinite(v) ? Math.min(hi, Math.max(lo, Math.round(v))) : d);
 const obj = (v: unknown): Record<string, unknown> => (v && typeof v === 'object' ? v as Record<string, unknown> : {});
@@ -38,8 +41,25 @@ export function normalizeLms(raw: unknown): LmsSettings {
   return { version, completion, pass, connected: r.connected === true };
 }
 
-/** The storyline's LMS settings, or the defaults. Reads `config.lms` without trusting its shape. */
+/**
+ * The storyline's LMS settings, or the defaults. Reads the authored block (`StorylineConfig.lms`, D184: `completion
+ * { rule, periods? }`, `pass { rule, score, level? }`, `package`, `connected`) without trusting its shape: completing
+ * by weeks with no number means every period of the run, and a pass level is found by name on the storyline's
+ * rating scale (`report.scale`, or the default scale). A block in this module's own form (nested or flat) is read too.
+ */
 export function lmsSettingsOf(config: unknown): LmsSettings {
-  // When `lms` joins StorylineConfig this stays as is: the schema's defaults and this agree.
-  return normalizeLms((config as { lms?: unknown } | null | undefined)?.lms);
+  const c = obj(config);
+  const l = obj(c.lms);
+  const completion = obj(l.completion), pass = obj(l.pass);
+  const authored = typeof l.package === 'string' || typeof completion.rule === 'string' || typeof pass.rule === 'string';
+  if (!authored) return normalizeLms(c.lms);
+  const periods = completion.periods ?? obj(obj(c.time).period).count;
+  const scale = (Array.isArray(obj(c.report).scale) ? obj(c.report).scale as unknown[] : DEFAULT_SCALE).map(x => obj(x).name);
+  const level = typeof pass.level === 'string' ? scale.findIndex(n => typeof n === 'string' && n.trim() === (pass.level as string).trim()) : -1;
+  return normalizeLms({
+    version: l.package,
+    completion: completion.rule === 'weeks' ? { kind: 'weeks', weeks: periods } : { kind: 'finish' },
+    pass: pass.rule === 'score' ? { kind: 'score', min: pass.score } : pass.rule === 'level' ? { kind: 'level', min: level >= 0 ? level : undefined } : { kind: 'none' },
+    connected: l.connected
+  });
 }

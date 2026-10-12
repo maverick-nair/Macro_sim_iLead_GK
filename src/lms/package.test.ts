@@ -1,5 +1,7 @@
 import { strFromU8, strToU8, unzipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
+import { DEFAULT_LMS as STORYLINE_LMS, parseStoryline } from '../engine/config';
+import { DEFAULT_SCALE } from '../engine/report/defaults';
 import salesElevator from '../engine/storylines/sales-elevator.json';
 import { manifest12, manifest2004, ncName } from './manifest';
 import { buildPackage, buildPackageFromSite, contentHash, PACKAGE_META, packageIndex, PackageError, storylineJson, type PlayerManifest } from './package';
@@ -26,7 +28,22 @@ describe('settings', () => {
     expect(lmsSettingsOf({ lms: { version: 'scorm12', completion: 'weeks', weeks: 4, pass: 'score', threshold: 75, connected: true } }))
       .toEqual({ version: 'scorm12', completion: { kind: 'weeks', weeks: 4 }, pass: { kind: 'score', min: 75 }, connected: true });
     expect(normalizeLms({ version: 'scorm3', pass: { kind: 'score', min: 400 }, completion: { kind: 'weeks', weeks: 0 } }))
-      .toEqual({ version: 'scorm2004', completion: { kind: 'weeks', weeks: 1 }, pass: { kind: 'score', min: 100 }, connected: false });
+      .toEqual({ version: 'scorm12', completion: { kind: 'weeks', weeks: 1 }, pass: { kind: 'score', min: 100 }, connected: false });
+  });
+
+  it('reads the authored StorylineConfig.lms block (D184), with the storyline\'s defaults', () => {
+    const parsed = parseStoryline(salesElevator);
+    if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
+    const config = parsed.config;
+    expect(DEFAULT_LMS).toEqual({ version: STORYLINE_LMS.package, completion: { kind: 'finish' }, pass: { kind: 'none' }, connected: STORYLINE_LMS.connected });
+    expect(lmsSettingsOf(config)).toEqual(DEFAULT_LMS);
+    const scale = config.report.scale.map(l => l.name);
+    const lms = { completion: { rule: 'weeks' as const }, pass: { rule: 'level' as const, score: 70, level: scale[3] }, score: 'leadership' as const, package: 'scorm2004' as const, connected: true };
+    expect(lmsSettingsOf({ ...config, lms }))
+      .toEqual({ version: 'scorm2004', completion: { kind: 'weeks', weeks: config.time.period.count }, pass: { kind: 'level', min: 3 }, connected: true });
+    expect(lmsSettingsOf({ ...config, lms: { ...lms, completion: { rule: 'weeks', periods: 3 }, pass: { rule: 'score', score: 65 } } }))
+      .toMatchObject({ completion: { kind: 'weeks', weeks: 3 }, pass: { kind: 'score', min: 65 } });
+    expect(lmsSettingsOf({ lms: { package: 'scorm12', pass: { rule: 'level', level: DEFAULT_SCALE[1].name } } }).pass).toEqual({ kind: 'level', min: 1 });
   });
 });
 
@@ -87,7 +104,7 @@ describe('the package', () => {
   it('connected mode names the service and the package, never a secret', async () => {
     const built = await buildPackage({ storyline: salesElevator, settings: { connected: true }, version: 1, player: PLAYER, read, serviceUrl: 'https://ilead.example.com/' });
     expect(built.info.service).toEqual({ url: 'https://ilead.example.com', packageId: `sales_elevator-${built.info.hash.slice(0, 12)}` });
-    expect(built.info.settings.version).toBe('scorm2004');
+    expect(built.info.settings.version).toBe(DEFAULT_LMS.version);
   });
 
   it('refuses a storyline that does not play, with its issues', async () => {

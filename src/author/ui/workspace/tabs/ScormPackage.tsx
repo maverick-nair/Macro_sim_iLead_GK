@@ -5,6 +5,7 @@ import { useI18n } from '../../../../i18n';
 import '../../../../lms/messages';
 import { lmsSettingsOf, type LmsSettings, type ScormVersion } from '../../../../lms/settings';
 import type { AuthorDraft } from '../../../model/draft';
+import { useAuthor } from '../../../model/store';
 import { toStoryline } from '../../../model/export';
 import { validateDraft } from '../../../model/validate';
 import { BUTTON, CARD, Field, Segmented, Select, TextInput, Toggle } from '../../kit';
@@ -22,23 +23,39 @@ function save(name: string, bytes: Uint8Array) {
  * "Download SCORM package" (D207): the draft as last saved, exported and checked the way Publish checks it,
  * packaged with the participant player for an LMS. The author picks the standard, when a run counts as
  * complete, what passes, and connected mode; the package records the draft's version and content hash so it
- * ties to the Preview of the same draft. The choices live here until the storyline's own LMS block lands
- * (src/lms/settings.ts), which then gives their starting values.
+ * ties to the Preview of the same draft. The choices are the draft's own LMS settings (`draft.lms`, exported as
+ * the storyline's `lms` block, D184): the section edits them, and the package reads them back from the exported
+ * storyline through `lmsSettingsOf`, so what the LMS records traces to this section.
  */
 export function ScormPackage({ d }: { d: AuthorDraft }) {
   const { t } = useI18n();
   const exported = useMemo(() => toStoryline(d).storyline, [d]);
+  const edit = useAuthor(x => x.edit);
   const facts = useMemo(() => {
     const p = parseStoryline(exported);
     const scale = p.ok ? p.config.report.scale.map(l => l.name) : DEFAULT_SCALE.map(l => l.name);
-    return { unit: p.ok ? p.config.time.period.unit : 'week', periods: p.ok ? p.config.time.period.count : 8, scale };
+    return { unit: p.ok ? p.config.time.period.unit : 'week', periods: p.ok ? p.config.time.period.count : 8, scale, settings: lmsSettingsOf(p.ok ? p.config : exported) };
   }, [exported]);
-  const [s, setS] = useState<LmsSettings>(() => lmsSettingsOf(exported));
+  const s = facts.settings;
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<Done | null>(null);
   const [problem, setProblem] = useState<string | null>(null);
   const version = d.publish.version + 1;
-  const set = (patch: Partial<LmsSettings>) => { setS(x => ({ ...x, ...patch })); setDone(null); };
+  /** Writes a choice into the draft's LMS settings (D184), in the draft's terms. */
+  const set = (patch: Partial<LmsSettings>) => {
+    edit(x => {
+      const l = x.lms;
+      if (patch.version) l.package = patch.version;
+      if (patch.completion) { l.completion = patch.completion.kind; if (patch.completion.kind === 'weeks') l.completionWeeks = patch.completion.weeks; }
+      if (patch.pass) {
+        l.pass = patch.pass.kind;
+        if (patch.pass.kind === 'score') l.passScore = patch.pass.min;
+        if (patch.pass.kind === 'level') l.passLevel = facts.scale[patch.pass.min] ?? l.passLevel;
+      }
+      if (patch.connected !== undefined) l.connected = patch.connected;
+    });
+    setDone(null);
+  };
   const standard = (v: ScormVersion) => t(v === 'scorm12' ? 'lms.scorm.version.scorm12' : 'lms.scorm.version.scorm2004');
 
   async function download() {
@@ -81,7 +98,7 @@ export function ScormPackage({ d }: { d: AuthorDraft }) {
         <div className="flex flex-col gap-2">
           <Field label={t('lms.scorm.completion.label')}>
             {id => (
-              <Select id={id} value={s.completion.kind} onChange={e => set({ completion: e.target.value === 'weeks' ? { kind: 'weeks', weeks: Math.min(facts.periods, 4) } : { kind: 'finish' } })}>
+              <Select id={id} value={s.completion.kind} onChange={e => set({ completion: e.target.value === 'weeks' ? { kind: 'weeks', weeks: Math.min(facts.periods, d.lms.completionWeeks ?? 4) } : { kind: 'finish' } })}>
                 <option value="finish">{t('lms.scorm.completion.finish')}</option>
                 <option value="weeks">{t('lms.scorm.completion.periods', { unit: facts.unit })}</option>
               </Select>
@@ -97,7 +114,7 @@ export function ScormPackage({ d }: { d: AuthorDraft }) {
         <div className="flex flex-col gap-2">
           <Field label={t('lms.scorm.pass.label')}>
             {id => (
-              <Select id={id} value={pass.kind} onChange={e => set({ pass: e.target.value === 'score' ? { kind: 'score', min: 70 } : e.target.value === 'level' ? { kind: 'level', min: Math.min(2, facts.scale.length - 1) } : { kind: 'none' } })}>
+              <Select id={id} value={pass.kind} onChange={e => set({ pass: e.target.value === 'score' ? { kind: 'score', min: d.lms.passScore } : e.target.value === 'level' ? { kind: 'level', min: facts.scale.includes(d.lms.passLevel.trim()) ? facts.scale.indexOf(d.lms.passLevel.trim()) : Math.min(2, facts.scale.length - 1) } : { kind: 'none' } })}>
                 <option value="none">{t('lms.scorm.pass.none')}</option>
                 <option value="score">{t('lms.scorm.pass.score')}</option>
                 <option value="level">{t('lms.scorm.pass.level')}</option>
