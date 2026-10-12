@@ -164,8 +164,11 @@ describe('checks that catch broken configs (D149, D150)', () => {
   }, 60_000);
 
   it('a storyline where reading people alone reaches Gold warns: do nothing after diagnosis', async () => {
-    const heavy = broken(c => { c.id = 'do_nothing_gold'; c.gamification.weights = { business: 0.1, people: 0.1, leadership: 0.8 }; });
+    // Without realism, the check finds it; with realism (D174) idle days, neglect and silence keep the same weighting under Gold.
+    const heavy = broken(c => { c.id = 'do_nothing_gold'; c.gamification.weights = { business: 0.1, people: 0.1, leadership: 0.8 }; c.realism = undefined; });
     expect(check(await run(heavy), 'idle')).toMatchObject({ status: 'warn', title: expect.stringMatching(/^Reading people right without taking any action reaches Gold/) });
+    const real = broken(c => { c.id = 'do_nothing_costs'; c.gamification.weights = { business: 0.1, people: 0.1, leadership: 0.8 }; });
+    expect(check(await run(real), 'idle')).toMatchObject({ status: 'pass' });
     // People weighed most: only actions grow people. Since people dynamics and the recalibrated funnel (D135), reading
     // without acting reaches the target in revenue, so a weighting with Business at 0.45 no longer keeps it under Gold.
     const light = broken(c => { c.id = 'acting_counts'; c.gamification.weights = { business: 0.1, people: 0.8, leadership: 0.1 }; });
@@ -173,17 +176,23 @@ describe('checks that catch broken configs (D149, D150)', () => {
   }, 60_000);
 
   it('Sales Elevator: the combined finding is advice on the bundled actions, and a failure once an author changes what they do', async () => {
+    // With realism (D171), repeats land at less and a team activity takes the team's time: no routine beats the Expert,
+    // and People first no longer beats the Expert on score.
     const r = await run(raw, { expert: 3, peopleFirst: 2 });
-    expect(check(r, 'combined')).toMatchObject({ status: 'warn', detail: expect.stringMatching(/^A finding in the bundled Sales Elevator's calibrated actions/) });
+    expect(check(r, 'combined')).toMatchObject({ status: 'pass' });
+    expect(check(r, 'tradeOff')).toMatchObject({ status: 'pass' });
+    // Without it, the bundled actions' known finding comes back, as advice.
+    const classic = await run(broken(c => { c.realism = undefined; }), { expert: 3, peopleFirst: 2 });
+    expect(check(classic, 'combined')).toMatchObject({ status: 'warn', detail: expect.stringMatching(/^A finding in the bundled Sales Elevator's calibrated actions/) });
     // People first beats the Expert on score and revenue: no trade-off between people and results.
-    expect(check(r, 'tradeOff')).toMatchObject({ status: 'warn' });
+    expect(check(classic, 'tradeOff')).toMatchObject({ status: 'warn' });
     // A draft keeps the bundled actions under its own id and wording: still advice.
     expect(playsBundledActions(parseDraft({ ...raw, id: 'draft_acme', actions: raw.actions.map(a => ({ ...a, name: `${a.name} now` })) }))).toBe(true);
     // A fresh /author draft plays them too (its actions switched off do not count), until the author changes one.
     const fresh = parseDraft(toStoryline(freshDraft()).storyline);
     expect(changedActions(fresh)).toEqual([]);
     expect(playsBundledActions(fresh)).toBe(true);
-    const changed = broken(c => { c.id = 'draft_sales_copy'; c.actions.find(a => a.key === 'reward')!.cost = 2; });
+    const changed = broken(c => { c.id = 'draft_sales_copy'; c.actions.find(a => a.key === 'reward')!.cost = 2; c.realism = undefined; });
     expect(changedActions(changed)).toEqual(['reward']);
     // Client Trust plays the bundled actions with budget costs on some options (D141): still advice. An author who adds
     // a business effect to an action, or Client Trust with an action's people effects changed, gets the failure.

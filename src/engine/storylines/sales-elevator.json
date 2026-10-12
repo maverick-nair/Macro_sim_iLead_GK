@@ -9,7 +9,7 @@
     "target": 240000,
     "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      33
+      34
     ]
   },
   "time": {
@@ -1161,7 +1161,8 @@
               -4
             ]
           },
-          "cooldownDays": 10
+          "cooldownDays": 10,
+          "opportunity": 0.1
         },
         {
           "key": "team_building",
@@ -1184,7 +1185,8 @@
             ]
           },
           "cooldownDays": 10,
-          "cost": 2
+          "cost": 2,
+          "opportunity": 0.5
         }
       ]
     },
@@ -1410,7 +1412,11 @@
             ]
           }
         }
-      ]
+      ],
+      "realism": {
+        "opportunity": 0,
+        "fatigue": false
+      }
     },
     {
       "key": "fire",
@@ -2439,6 +2445,7 @@
     }
   ],
   "dynamics": {},
-  "performanceThreshold": 73,
+  "realism": {},
+  "performanceThreshold": 117,
   "calibrated": true
 }

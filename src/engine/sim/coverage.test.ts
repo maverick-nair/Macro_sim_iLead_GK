@@ -21,7 +21,8 @@ async function onBoard(seed = 1, cfg = config) {
 describe('funnel (Model doc, normalized per D36)', () => {
   it('a stage at result 100 converts exactly its ratio, and never more, whatever the buffer', () => {
     for (const buffer of [0, 50, 200]) {
-      const sim = createSim({ ...config, performanceThreshold: buffer }, 1);
+      // Without realism (D172 to D174): the team's lost time and idle days would hold the day's input back.
+      const sim = createSim({ ...config, performanceThreshold: buffer, realism: undefined }, 1);
       // Morale at 100 too: with people dynamics (D135) a low rolling morale would take a share of the result.
       for (const m of sim.members) { m.result = 100; m.morale = 100; m.away = 0; }
       runFunnel(sim);

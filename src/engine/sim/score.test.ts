@@ -18,6 +18,8 @@ import type { Sim } from './types';
 const parsed = parseStoryline(salesElevator);
 if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
 const config: StorylineConfig = parsed.config;
+/** The formulas as GenieKreator states them, without realism (D171 to D178), which `realism.test.ts` covers. */
+const classic: StorylineConfig = { ...config, realism: undefined };
 const rng = () => createRng(1);
 const fresh = (cfg = config) => { const s = createSim(cfg, 1); s.phase = 'board'; return s; };
 const decide = (sim: Sim, n: number, ok: number, source = 'weeklyStyle') => {
@@ -30,7 +32,7 @@ const withEvents = (events: unknown[]): StorylineConfig => ({ ...config, events:
 
 describe('Leadership Score', () => {
   it('is 9 × (0.3 B + 0.3 P + 0.4 L) + streak, with L the capability % when there is no live interaction', () => {
-    const sim = fresh();
+    const sim = fresh(classic);
     sim.funnel.value = config.money.target / 2; // B 50
     decide(sim, 10, 7); // capability 70
     const s = leadershipScore(sim);
@@ -45,7 +47,7 @@ describe('Leadership Score', () => {
   });
 
   it('caps B at 100 and keeps P inside 0 to 100', () => {
-    const sim = fresh();
+    const sim = fresh(classic);
     sim.funnel.value = config.money.target * 2;
     for (const m of sim.members) { m.morale = 0; m.trust = 0; }
     const s = leadershipScore(sim);
@@ -71,7 +73,7 @@ describe('week score and stars', () => {
   });
 
   it('with no live interaction, the live weight moves to style fit (D62)', () => {
-    const sim = fresh();
+    const sim = fresh(classic);
     decide(sim, 10, 5);
     const w = weekScore(sim);
     expect(w.live).toBeNull();
@@ -87,7 +89,7 @@ describe('week score and stars', () => {
 
 describe('streak', () => {
   it('pays +25 from the third period in a row at 2 stars, +25 a period after, capped at 100, and resets for free', () => {
-    const sim = fresh();
+    const sim = fresh(classic);
     expect([2, 2, 3, 2, 2, 3, 3].map(n => advanceStreak(sim, n))).toEqual([0, 0, 25, 25, 25, 25, 0]);
     expect(sim.streakBonus).toBe(100);
     expect(advanceStreak(sim, 1)).toBe(0);
