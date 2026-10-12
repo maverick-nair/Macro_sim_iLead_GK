@@ -51,7 +51,12 @@ export const SAMPLE_VIDEO = {
   ]
 };
 
+/** A SCORM package's storyline (D208): pinned, every mock engine in the page plays it, the demo round's too. */
+let pinned: StorylineConfig | null = null;
+export function pinStoryline(config: StorylineConfig | null) { pinned = config; }
+
 export function defaultStoryline(lens?: string | null): StorylineConfig {
+  if (pinned) return pinned;
   if (new URLSearchParams(globalThis.location?.search ?? '').get('storyline') === 'draft') {
     const draft = draftStoryline();
     if (draft) return draft;
@@ -74,11 +79,26 @@ export function defaultStoryline(lens?: string | null): StorylineConfig {
  * `startPeriod` (`?period=N`, demo and test aid, mock only): opens every profile, then plays the periods before
  * `period` with the needed styles and no actions, so a later period (interviews from week 3, the week 4 sponsor
  * briefing) can be opened. `jump` (a preview's Jump to, D192) plays forward to a point in the run the same way.
+ *
+ * `replay`: intents applied before the first view, in order (a SCORM package resuming its run from the LMS,
+ * D203). The engine is deterministic for a storyline and seed, so they rebuild the run. Replay stops at the
+ * first intent the engine refuses, and `onReplayed` gets the intents it applied. A replay wins over `jump`
+ * and `startPeriod` (a package never jumps).
  */
-export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number; lens?: string | null; jump?: JumpTarget | null } = {}): EngineClient {
+export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number; lens?: string | null; jump?: JumpTarget | null; replay?: Intent[]; onReplayed?: (applied: Intent[]) => void } = {}): EngineClient {
   const config = opts.config ?? defaultStoryline(opts.lens);
   const engine = createEngine(config, { seed: opts.seed ?? 1, evaluator: opts.evaluator });
-  const ready = opts.jump ? jumpTo(engine, config, opts.jump) : opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
+  const replay = async (log: Intent[]) => {
+    const applied: Intent[] = [];
+    for (const intent of log) {
+      try { await engine.dispatch(intent); } catch { break; }
+      applied.push(intent);
+    }
+    opts.onReplayed?.(applied);
+  };
+  const ready = opts.replay ? replay(opts.replay)
+    : opts.jump ? jumpTo(engine, config, opts.jump)
+    : opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
   const wait = async () => { await Promise.all([ready, loadEngineCopy()]); if (opts.latencyMs) await new Promise(r => setTimeout(r, opts.latencyMs)); };
   return {
     async view() {
