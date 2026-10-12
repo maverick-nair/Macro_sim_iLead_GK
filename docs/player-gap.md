@@ -35,3 +35,11 @@ sends, never the sample.
   canvas's structure: uppercase group labels, tabular numbers, words beside every arrow. Adopting the
   canvas palette and type as the default theme is a separate theme change (fonts, every screen's
   baselines) to decide on its own.
+
+## Pre-game flow (added later, D219)
+
+The canvas's pre-game flow is four screens: landing (Main), the sponsor's video message (Sponsor), the product
+portfolio (Portfolio) and the objectives (Ready). The React player had a six step onboarding (language, the
+sponsor's letter, consent, a voice check, how to play, the team), then the demo offer and the Week 0 practice.
+The engine player now shows the four screens only, from the engine view; the portfolio appears when the storyline
+contract carries one (workstream 1's `storyline.products`), and is skipped otherwise.
