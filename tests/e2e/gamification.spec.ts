@@ -86,8 +86,7 @@ test('score breakdown and badge shelf, by keyboard', async ({ page }) => {
   // Two weeks with stars so far: the streak says how far the bonus is.
   await expect(pop.getByText('2 weeks in a row. 1 more week for a +25 bonus.')).toBeVisible();
   await expect(pop.getByRole('listitem').filter({ hasText: 'You are here' })).toHaveCount(1);
-  // The flame says the same.
-  await expect(page.getByRole('img', { name: '2 weeks in a row. 1 more week for a +25 bonus.' })).toBeVisible();
+  // On the desk the score and its breakdown are in the status band (D211); the streak's flame stays on the upright tablet's HUD.
   expect(await axe(page)).toEqual([]);
 
   // Tab into the breakdown: it stays open while focus is inside, and the badge shelf is the way on.
@@ -114,10 +113,16 @@ test('score breakdown and badge shelf, by keyboard', async ({ page }) => {
   await expect(score).toBeFocused();
 });
 
-test('Team Pulse and sponsor confidence show the engine values', async ({ page }) => {
+test('the status band: team health, the money against pace, the tier, the stars and the sponsor show the engine values (D211)', async ({ page }) => {
   await board(page, 'period=3');
-  await expect(page.getByRole('group', { name: /^Team pulse \d+, (rising|easing|steady) since the start of the week\. \d+ upbeat, \d+ steady, \d+ struggling$/ })).toBeVisible();
-  const sponsor = page.getByRole('button', { name: /Sponsor confidence (Low|Wavering|Steady|Confident|Champion), \d+/ });
+  const band = page.getByRole('region', { name: 'How your team and business are doing' });
+  await expect(band.getByRole('group', { name: 'Team health' }).getByText(/^(up \d+|down \d+|no change) this week$/).first()).toBeAttached();
+  await expect(band.getByRole('img', { name: /^8 week target: \d+ percent of the target\. Pace marker at \d+ percent\.$/ })).toBeVisible();
+  await expect(band.getByText(/^(Behind pace by|Ahead of pace by|On pace)/)).toBeVisible();
+  await expect(band.getByText(/^\d+ to (Silver|Gold|Platinum)$|^Top tier$/)).toBeVisible();
+  await expect(band.getByRole('img', { name: /^\d of 3 stars in Week 2$/ })).toBeVisible();
+  await expect(band.getByRole('img', { name: /^Paula's confidence \d+ of 100\. Reward at 70, check in below 30\.$/ })).toBeVisible();
+  const sponsor = band.getByRole('button', { name: /^Paula \d+, your sponsor's confidence/ });
   await sponsor.click();
   await expect(page.getByText('Rise to 70 and Paula offers you a reward.')).toBeVisible();
   await expect(page.getByText('Drop below 30 and the CEO asks for a check in. It takes a day of your time.')).toBeVisible();

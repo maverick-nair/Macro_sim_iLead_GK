@@ -302,7 +302,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await page.keyboard.press('Escape');
           await expect(page.getByRole('dialog', { name: 'Settings' })).toHaveCount(0);
           await page.getByRole('button', { name: /^Pause/ }).first().click();
-          const paused = page.getByRole('dialog', { name: 'You are paused' });
+          const paused = page.getByRole('dialog', { name: 'Take your time.' });
           await expect(paused).toBeVisible();
           await scan(page, 'paused');
           await paused.getByRole('button', { name: 'Resume' }).click();

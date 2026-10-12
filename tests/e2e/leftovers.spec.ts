@@ -50,7 +50,7 @@ test('Pause in the HUD stops the session clock until Resume', async ({ page }) =
   await expect.poll(() => pause.textContent(), { timeout: 10_000 }).not.toBe(start);
 
   await pause.click();
-  const dialog = page.getByRole('dialog', { name: 'You are paused' });
+  const dialog = page.getByRole('dialog', { name: 'Take your time.' });
   await expect(dialog).toBeVisible();
   expect(await axe(page)).toEqual([]);
   // A tick already on its way when Pause was pressed may still land: read the held time after it.
@@ -69,7 +69,7 @@ test('with the clock hidden the HUD keeps a Pause button', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('ilead.settings.local', JSON.stringify({ text: 100, captions: true, reduced: false, input: 'ptt', clock: false, voiceConsent: false })));
   await toBoard(page);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'You are paused' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Take your time.' })).toBeVisible();
 });
 
 test('pausing a conversation holds the streamed line and its clock', async ({ page }) => {
@@ -80,7 +80,7 @@ test('pausing a conversation holds the streamed line and its clock', async ({ pa
   await page.getByRole('button', { name: /Confirm and start/ }).click();
   const timer = page.getByRole('button', { name: /^Pause\. \d+:\d\d left$/ });
   await timer.click();
-  const dialog = page.getByRole('dialog', { name: 'You are paused' });
+  const dialog = page.getByRole('dialog', { name: 'Take your time.' });
   await expect(dialog).toBeVisible();
   const main = page.getByRole('main');
   // A word already on its way when Pause was pressed may still land: take the snapshot after it.
@@ -124,7 +124,7 @@ test('a run in progress opens on the board with the welcome back recap from the 
 test('at 1024 the Actions panel folds to a rail, opens for a selected person, and stays folded after a reload', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 900 });
   await toBoard(page);
-  const team = page.getByRole('heading', { name: /^Your team/ }).locator('xpath=ancestor::*[contains(@class, "col-start-2")][1]');
+  const team = page.getByRole('heading', { name: /^Your team/ }).locator('xpath=ancestor::*[contains(@class, "col-start-1")][1]');
   const wide = (await team.boundingBox())!.width;
 
   await page.getByRole('button', { name: 'Hide actions, to give the team board more room' }).click();
@@ -167,7 +167,7 @@ for (const [theme, q] of [['light', '&theme=light'], ['client', '&client=halden'
     await expect(page.getByRole('button', { name: /^Show actions\./ })).toBeVisible();
     expect(await axe(page)).toEqual([]);
     await page.getByRole('button', { name: 'Pause the simulation' }).click();
-    await expect(page.getByRole('dialog', { name: 'You are paused' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Take your time.' })).toBeVisible();
     expect(await axe(page)).toEqual([]);
   });
 }
