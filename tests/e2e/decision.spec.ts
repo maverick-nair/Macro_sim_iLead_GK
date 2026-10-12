@@ -45,6 +45,9 @@ async function dismissEvents(page: Page) {
   }
 }
 
+/** The business on the desk (D211): the status band's Business group, where the shown variables are. */
+const business = (page: Page) => page.getByRole('region', { name: 'How your team and business are doing' }).getByRole('group', { name: 'Business' });
+
 /** Two days on team building: the week's day 2 runs, and the choice event on it comes up. On the tablet, from the dock. */
 async function teamBuilding(page: Page, tablet = false) {
   if (tablet) {
@@ -61,9 +64,9 @@ async function teamBuilding(page: Page, tablet = false) {
   await page.getByRole('button', { name: 'Dismiss outcome' }).click();
 }
 
-test('the business bar shows the variables the participant is shown, and what moved them', async ({ page }) => {
+test('the business on the desk shows the variables the participant is shown, and what moved them', async ({ page }) => {
   await week2(page);
-  const bar = page.getByRole('region', { name: 'The business' });
+  const bar = business(page);
   await expect(bar.getByRole('button', { name: /^Budget \$60K/ })).toBeVisible();
   await expect(bar.getByRole('button', { name: /^Customer trust 70%/ })).toBeVisible();
   await expect(bar.getByRole('button', { name: /^Product quality \d+/ })).toBeVisible();
@@ -95,7 +98,8 @@ test('a choice event: the options, a decision, what happened and what it changed
   await dialog.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
-  await expect(page.getByRole('region', { name: 'The business' }).getByRole('button', { name: /^Customer trust 74%/ })).toBeVisible();
+  // What it changed, on the desk's status band (D211).
+  await expect(business(page).getByRole('button', { name: /^Customer trust 74%/ })).toBeVisible();
 });
 
 test('decide later: the decision waits on the board with its deadline, and opens again from there', async ({ page }) => {

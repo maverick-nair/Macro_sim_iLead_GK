@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { parseStoryline } from '../../engine/config';
 import type { EngineView } from '../../engine/contract';
+import { storylineLook } from '../../engine/sim/view';
+import salesElevator from '../../engine/storylines/sales-elevator.json';
 import { IntroFlow, type IntroScreen } from './IntroFlow';
 
 /**
@@ -12,13 +15,16 @@ type Story = StoryObj;
 
 const noop = () => {};
 const members = ['kent', 'beth', 'justin', 'derick', 'green', 'lowe', 'jack', 'peter', 'ruth', 'mandy'].map(id => ({ id, name: id[0].toUpperCase() + id.slice(1), img: `/assets/npc/${id}.png` }));
-const PRODUCTS = [
-  { name: 'Levo B10', line: 'Commercial', specs: ['A quiet, smooth ride in busy lobbies', 'Fits the shafts older buildings already have', 'Facilities managers who hate downtime', 'Lead with the service contract, not the cab', 'Rated load 1,000 kg', 'Speed 1.6 m/s', 'Travel up to 60 m', 'Typical deal $42K'], image: null },
-  { name: 'Levo H4', line: 'Residential', specs: ['Quiet enough for home', 'A small footprint', 'Families, for an older parent', 'Talk safety and independence before finishes'], image: null },
-  { name: 'Levo P20', line: 'Panoramic', specs: ['Glass on three sides', 'A showpiece for hotels'], image: null },
-  { name: 'Levo C30', line: 'Service and freight', specs: ['Built for pallets', 'Hard wearing floor'], image: null }
+/** Sales Elevator's portfolio (D221) as the view carries it: code, kind, tagline, who it is for, typical deal, photo and its description, four features placed on the photo. */
+const parsed = parseStoryline(salesElevator);
+if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
+const PRODUCTS = storylineLook(parsed.config).products;
+/** A storyline from before D221: names, lines and specs only; the first four specs are the features, spots evenly placed. */
+const PLAIN = [
+  { name: 'Levo B10', line: 'Commercial', specs: ['A quiet, smooth ride in busy lobbies', 'Fits the shafts older buildings already have', 'Facilities managers who hate downtime', 'Lead with the service contract, not the cab', 'Rated load 1,000 kg'], image: null },
+  { name: 'Levo H4', line: 'Residential', specs: ['Quiet enough for home', 'A small footprint'], image: null }
 ];
-const view = (products = PRODUCTS) => ({
+const view = (products: unknown[] = PRODUCTS) => ({
   sponsor: { name: 'Paula Jacob', title: 'Regional Sales Director', img: null, styleLine: 'To each their own. Your people need different things from you this week.' },
   storyline: { name: 'Sales Elevator', organisation: 'Innov8 Elevators', locale: 'en', video: null, products },
   clock: { period: 1, periods: 8, periodUnit: 'week', subPeriod: 1, subPeriodUnit: 'day', capacity: 5, capacityLeft: 5, costStep: 0.5, runShare: 0 },
@@ -31,7 +37,7 @@ const LETTER = {
   product: ['Deals move through five stages.'],
   targets: ['Reach $240,000 in revenue over eight weeks.']
 };
-const flow = (start: IntroScreen, products = PRODUCTS) => (
+const flow = (start: IntroScreen, products: unknown[] = PRODUCTS) => (
   <IntroFlow view={view(products)} letter={LETTER} start={start} noticeAfter={0} autoPlay={false} onLogOut={noop} onStart={noop} onVoice={noop} onText={noop} />
 );
 
@@ -39,8 +45,10 @@ const flow = (start: IntroScreen, products = PRODUCTS) => (
 export const Landing: Story = { render: () => flow('landing') };
 /** The sponsor's message, paused at its start, captions on. */
 export const Message: Story = { render: () => flow('message') };
-/** The portfolio: four models, the first explored. */
+/** The portfolio: Sales Elevator's four models with their photos and placed features, the first explored. */
 export const Products: Story = { render: () => flow('products') };
+/** A portfolio from before D221 (no codes, kinds or features): the specs stand in, as the player falls back. */
+export const ProductsWithoutFeatures: Story = { render: () => flow('products', PLAIN) };
 /** The objectives; Start simulation shows after five seconds (at once with reduced motion). */
 export const Objectives: Story = { render: () => flow('objectives') };
 /** A storyline without a portfolio: the message ends on the objectives. */

@@ -80,16 +80,37 @@ test('profile: stats revealed, timeline from the engine, actions for that person
   await expect(page.getByRole('button', { name: /^Kent Goldberg.*Skill \d+/ })).toBeVisible();
 });
 
-test('keyboard: the inbox comes after the actions in tab order', async ({ page }) => {
-  await toBoard(page);
-  // The actions panel and the inbox rail render once the board has painted (D87).
-  await expect(page.getByRole('button', { name: /^Inbox/ }).first()).toBeVisible();
+test('keyboard: the feed and its messages come after the actions in tab order', async ({ page }) => {
+  // Week 3, so the feed under the team (D212) carries messages as well as the feedback.
+  await page.goto('/?start=board&period=3');
+  const groups = page.getByRole('radiogroup', { name: /^Leadership style for/ });
+  await expect(groups).toHaveCount(10, { timeout: 20000 });
+  for (const g of await groups.all()) await g.getByRole('radio').nth(1).click();
+  await page.getByRole('button', { name: 'Review and confirm' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
+  await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+  const gotIt = page.getByRole('button', { name: 'Got it' });
+  while (await gotIt.count()) await gotIt.first().click();
+  // The actions panel and the feed render once the board has painted (D87).
+  const feed = page.getByRole('region', { name: 'Feedback and inbox' });
+  await expect(feed.getByRole('button', { name: /^Inbox/ })).toBeVisible();
+  await expect(feed.getByRole('button', { name: /^Reply now/ }).first()).toBeVisible();
   const order = await page.evaluate(() => {
-    const all = Array.from(document.querySelectorAll<HTMLElement>('button, [tabindex="0"]')).filter(el => !el.hasAttribute('disabled'));
-    const actions = all.findIndex(el => el.closest('aside[aria-label="Actions"]'));
-    const inbox = all.findIndex(el => /inbox/i.test(el.getAttribute('aria-label') ?? ''));
-    return { actions, inbox };
+    const all = Array.from(document.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]'))
+      .filter(el => !el.hasAttribute('disabled') && el.tabIndex >= 0 && el.getClientRects().length > 0);
+    const at = (pick: (el: HTMLElement) => boolean) => all.map((el, i) => (pick(el) ? i : -1)).filter(i => i >= 0);
+    return {
+      actions: at(el => !!el.closest('aside[aria-label="Actions"]')),
+      feed: at(el => !!el.closest('[data-desk-feed]')),
+      messages: at(el => !!el.closest('[data-desk-feed]') && /^Reply now/.test(el.textContent ?? '')),
+      positive: all.filter(el => el.tabIndex > 0).length
+    };
   });
-  expect(order.actions).toBeGreaterThan(-1);
-  expect(order.inbox).toBeGreaterThan(order.actions);
+  // Tab order is the document's: nothing jumps the queue with a positive tabindex.
+  expect(order.positive).toBe(0);
+  expect(order.actions.length).toBeGreaterThan(0);
+  expect(order.messages.length).toBeGreaterThan(0);
+  // Every control of the feed, its messages too, comes after every action.
+  expect(Math.min(...order.feed)).toBeGreaterThan(Math.max(...order.actions));
+  expect(Math.min(...order.messages)).toBeGreaterThan(Math.max(...order.actions));
 });

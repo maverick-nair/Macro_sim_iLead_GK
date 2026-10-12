@@ -18,8 +18,11 @@ test.afterEach(() => expect(errors).toEqual([]));
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 /** Axe on what is on screen now. @axe-core/playwright is typed against a slightly different Playwright version. */
 async function axe(page: Page) {
+  // Panels enter with an animation (the outcome band, D78): colours are measured once they have finished, not mid fade.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))));
   const r = await new AxeBuilder({ page: page as never }).withTags(TAGS).analyze();
-  return r.violations.map(v => `${v.id}: ${v.nodes.length}`);
+  // Each violation names its nodes and why, so a failure says what to fix.
+  return r.violations.map(v => `${v.id}: ${v.nodes.length}: ${v.nodes.map(n => `${n.target.join(' ')} ${n.html.slice(0, 120)} (${n.failureSummary?.replace(/\s+/g, ' ').trim()})`).join(' | ')}`);
 }
 
 /** Dismisses the outcome panel and waits for it to go (event cards wait behind it). */

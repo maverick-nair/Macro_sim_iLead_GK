@@ -1322,6 +1322,12 @@ The overall level was the mean of the skill ratings, and the verdict read only t
 - `tests/e2e/a11y.spec.ts` and `tests/e2e/viewport.spec.ts` walk the products screen between the message and the objectives.
 - Not fixed here, failing on `eco-ws4-player` alone as well: `decision.spec.ts` (the business bar's variables and a choice event's moved values, looked for in a region the desk renamed), `drawer.spec.ts` (the inbox after the actions in tab order: the desk's feed replaced the inbox rail); `board.spec.ts`'s light theme contrast check also failed on `eco-ws4-player` and in the first integration run, and passed in the final one, so it is intermittent there.
 
+**D226. The specs follow the desk; the light theme contrast check waits for the outcome band; the Products story uses the contract.** Decided 2026-10-12. Closes what D225 left.
+- `decision.spec.ts`: the shown business variables, what moved them, and a decision's change to Customer trust are found where the desk renders them, the status band's Business group (D211), with the same values and the hidden variable still absent.
+- `drawer.spec.ts`: the inbox rail is gone; in week 3 the feed under the team (D212) and every one of its controls, its messages' Reply now included, come after every action in the document's tab order, and no control has a positive tabindex.
+- `board.spec.ts`, light theme: about one run in twelve, axe measured the outcome band's "Reply 1 of 10" (`text-fg-secondary` on `bg-surface-raised`, over the band's material surface) while the band was still entering, at 4.33:1. Settled, it passes. Its axe helper now waits for finite animations to finish before scanning (as the onboarding spec does) and names each failing node with why; 30 runs in a row pass. The rule stays on.
+- `Onboarding/Pre-game flow`, Products: the story takes Sales Elevator's portfolio through `storylineLook`, as the view carries it (codes, kinds, taglines, who each is for, typical deals, photos with their descriptions, four placed features); a new story keeps a portfolio from before D221 to show the fallback.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
