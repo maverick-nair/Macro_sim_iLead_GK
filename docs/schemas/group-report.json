@@ -1288,6 +1288,16 @@
         ]
       }
     },
+    "capped": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "assessment": {
       "anyOf": [
         {

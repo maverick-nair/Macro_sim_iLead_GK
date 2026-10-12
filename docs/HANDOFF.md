@@ -63,6 +63,7 @@ Schema: `src/engine/contract.ts`. JSON Schemas: `docs/schemas/engine-view.json`,
 - **The view never includes a member's needed style**, the fit table, raw model scores or the lens's source. Members' stats are `null` until the profile is opened (D39).
 - **Streaming:** abort the request to stop a line, then send `interruptTurn`. A body that ends without `done` or `error` is read as a retryable error. Details: `src/ai/sse.ts`, `docs/SPEECH.md`.
 - **The report's summary** (D143 to D145) adds `profile`, `headline`, `lines` and `drivers` (what drove the results, which also names decisions and business variables that moved, D152), and a reconciled skill carries `reconciled`; all defaulted, so reports stored before still parse.
+- **The overall level and the verdict follow what happened** (D168 to D170): the summary adds `levelCap` (the level the words reached, the gates that held it lower, the line saying why) and the verdict's overall `why`; the run summary's `overall` is the capped level and adds `words` and `caps`; the benchmark's `overall` adds `capped` and the group report `capped`. All optional or defaulted, so payloads stored before still parse. A storyline may set `report.outcomes` (the caps and thresholds).
 - **The report** (`EngineView.report`) is null until the run ends, then a `ReportView` (`src/engine/reportContract.ts`, `docs/schemas/report-view.json`). The first load checks only that it is an object; the end screen and the report (both lazy) parse it.
 
 ## 3. The app API (proposed endpoints)

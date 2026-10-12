@@ -5,6 +5,7 @@ import { DEFAULT_GROUP_COPY, type GroupCopy } from './groupDefaults';
 import { impactBand, type RunSummary } from './summary';
 import { listOf, msg, template, type Copy, type Param } from '../copy';
 import type { VerdictKey } from './verdict';
+import { GATES } from './outcomes';
 
 /**
  * The group report (D75, D77): aggregates of a cohort's run summaries, for the organization. Pure and
@@ -92,7 +93,14 @@ export function summarizeBenchmark(runs: RunSummary[], opts: { completeAt?: numb
     return { key, reportOnly, rated: scores.length, score: scores.length ? r2(mean(scores)) : null, levels: tally(mine.map(s => s.level)), unrated: done.length - mine.filter(s => s.level !== null).length };
   });
   const overallScores = done.map(r => r.overall.score).filter((x): x is number => x !== null);
-  const overall = { rated: overallScores.length, score: overallScores.length ? r2(mean(overallScores)) : null, levels: tally(done.map(r => r.overall.level)), unrated: done.filter(r => r.overall.level === null).length };
+  // Capped levels (D168): the runs whose outcomes held the overall level under their words', by gate.
+  const cappedRuns = done.filter(r => r.overall.caps?.length);
+  const gates: Record<string, number> = {};
+  for (const r of cappedRuns) for (const g of r.overall.caps!) gates[g] = (gates[g] ?? 0) + 1;
+  const overall = {
+    rated: overallScores.length, score: overallScores.length ? r2(mean(overallScores)) : null, levels: tally(done.map(r => r.overall.level)), unrated: done.filter(r => r.overall.level === null).length,
+    capped: { count: cappedRuns.length, gates: Object.fromEntries(GATES.filter(k => gates[k]).map(k => [k, gates[k]])) }
+  };
 
   // Objectives and the team.
   const kpi = (k: 'skill' | 'morale' | 'result' | 'trust') => ({ start: r2(mean(done.map(r => r.objectives.team[k].start))), end: r2(mean(done.map(r => r.objectives.team[k].end))) });
@@ -313,7 +321,8 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
       const key = run.verdict?.overall ?? null;
       const rv = run.review ?? { conversations: 0, reviewed: 0 };
       return {
-        name, completion: run.completion, level: run.overall.level === null ? null : scale[run.overall.level]?.name ?? null,
+        name, completion: run.completion,
+        level: run.overall.level === null ? null : run.overall.caps?.length ? msg('engine.group.levelCapped', { level: scale[run.overall.level]?.name ?? '' }) : scale[run.overall.level]?.name ?? null,
         verdict: key, label: run.verdict ? label(key ?? 'none') : null,
         review: rv.conversations && rv.reviewed === rv.conversations ? 'assessor' as const : rv.reviewed ? 'mixed' as const : 'ai' as const
       };
@@ -321,6 +330,12 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
   } : null;
 
   const takeaways = shown ? P.takeaways : [];
+  // How often the outcomes held the overall level down (D168), most frequent gate first.
+  const cap = g.overall.capped;
+  const capped = shown && cap && cap.count ? msg('engine.group.capped', {
+    n: cap.count, total: completed,
+    gates: listOf(Object.entries(cap.gates).sort((x, y) => y[1] - x[1] || GATES.indexOf(x[0] as never) - GATES.indexOf(y[0] as never)).map(([gate, count]) => msg('engine.group.cappedGate', { gate, n: count })), 'and')
+  }) : null;
   const present: Record<GroupSection, boolean> = {
     about: true, verdicts: !!assessment, skills: !!skills, distribution: !!skills, completion: !!completion, business: !!business, adaptability: !!styles,
     styles: !!styles, consistency: !!consistency, funnel: !!funnel, actions: !!actions, attention: !!attention, takeaways: takeaways.length > 0
@@ -333,6 +348,6 @@ export function buildGroupReport({ runs, names, benchmark: bench = null, cohort 
     sections: (purpose === 'assessment' ? ASSESSMENT_SECTIONS : DEVELOPMENT_SECTIONS).filter(s => present[s]),
     withheld,
     benchmark: b ? { participants: b.participants } : null,
-    about, completion, skills, business, styles, consistency, funnel, actions, attention, takeaways, assessment
+    about, completion, skills, business, styles, consistency, funnel, actions, attention, takeaways, capped, assessment
   };
 }

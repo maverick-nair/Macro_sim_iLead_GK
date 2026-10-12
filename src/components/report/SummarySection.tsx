@@ -22,6 +22,7 @@ export function VerdictCard({ verdict }: { verdict: VerdictData }) {
     <div className="flex flex-col gap-2 rounded-16 border-2 border-line-control px-4 py-3.5">
       <span className="text-12 text-fg-secondary">{t('report.verdict.title')}</span>
       <b className={`text-24 font-700 ${TONE_TEXT[verdict.tone]}`}>{verdict.label}</b>
+      {verdict.why && <span className="text-14 text-pretty">{verdict.why}</span>}
       <span className="text-14 text-pretty">{verdict.bar}</span>
       <span className="text-13 text-fg-secondary">{verdict.evidence}{t('report.separator')}{verdict.review}</span>
       {verdict.quotes.length > 0 && (
@@ -77,6 +78,7 @@ export function SummarySection({ narrative, extras }: SummarySectionProps) {
         <div className={BOX}>
           <span className="text-12 text-fg-secondary">{t('report.summary.level')}</span>
           {extras.level ? <b className="text-20">{extras.level}</b> : <span className="text-14">{t('report.summary.noLevel')}</span>}
+          {extras.levelWhy && <span className="text-13 text-fg-secondary text-pretty">{extras.levelWhy}</span>}
         </div>
         <div className={BOX}>
           <span className="text-12 text-fg-secondary">{t('report.summary.strengths', { purpose })}</span>
