@@ -103,3 +103,18 @@ export function DynamicsCard() {
     </section>
   );
 }
+
+/** Work process: real world costs (D171 to D178), on for new drafts. */
+export function RealismCard() {
+  const d = useAuthor(s => s.draft);
+  const edit = useAuthor(s => s.edit);
+  return (
+    <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="realism">
+      <CardHead id="realism" title="Real world costs" />
+      <Switch label="Time, repeats and neglect cost something" checked={!!d.process.realism} onChange={c => edit(x => { x.process.realism = c; }, { mark: 'process.realism', label: c ? 'Switch real world costs on' : 'Switch real world costs off' })} />
+      <p className="m-0 text-13 text-author-body">{d.process.realism
+        ? 'On: the same action with the same person soon after lands at less each time, and a team activity takes the team off its work. People with no one to one time for four weeks lose heart and deliver less, ignored events cost revenue, and a sponsor left without news loses confidence. Revenue past the target, a happy team and a streak all add less the more there is.'
+        : 'Off: repeating what works keeps paying in full, time with the team is free, and silence costs only what the storyline authors.'}</p>
+    </section>
+  );
+}
