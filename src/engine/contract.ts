@@ -305,7 +305,13 @@ export const StorylineLook = z.object({
   }).nullable().default(null),
   logo: z.object({ image: z.string().nullable(), text: z.string().nullable() }).nullable().default(null),
   office: z.string().nullable().default(null),
-  products: z.array(z.object({ name: Text, line: Text.nullable(), specs: z.array(Text), image: z.string().nullable(), view: z.enum(['photo', 'model']) })).default([]),
+  products: z.array(z.object({
+    name: Text, line: Text.nullable(), specs: z.array(Text), image: z.string().nullable(), view: z.enum(['photo', 'model']),
+    // D221: each null or empty when the storyline leaves it out.
+    code: Text.nullable().default(null), kind: Text.nullable().default(null), tagline: Text.nullable().default(null),
+    audience: Text.nullable().default(null), dealValue: z.number().nullable().default(null), imageAlt: Text.nullable().default(null),
+    features: z.array(z.object({ title: Text, text: Text, spot: z.object({ x: z.number(), y: z.number() }).nullable() })).default([])
+  })).default([]),
   screens: z.array(z.object({ key: Id, title: Text, body: z.array(Text) })).default([])
 });
 export type StorylineLook = z.output<typeof StorylineLook>;

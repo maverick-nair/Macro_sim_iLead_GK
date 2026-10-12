@@ -32,7 +32,11 @@ describe('the pre-game flow (D219)', () => {
     expect(introLogo(view({}))).toBeNull();
     expect(introScreen(view({}), 'landing')).toBeNull();
     const v = view({ products: PRODUCTS, logo: { image: null, text: 'I8' }, screens: [{ key: 'landing', title: 'T', body: ['About the run.'] }] });
-    expect(introProducts(v)[0]).toEqual({ name: 'Levo B10', code: 'B10', line: 'Commercial', points: ['Quiet ride', 'Small footprint', 'Who buys it', 'Winning the deal'], specs: ['450 kg', '0.6 m/s'], image: '/p/b10.png' });
+    expect(introProducts(v)[0]).toEqual({
+      name: 'Levo B10', code: 'B10', kind: null, line: 'Commercial', audience: null,
+      features: ['Quiet ride', 'Small footprint', 'Who buys it', 'Winning the deal'].map(x => ({ title: x, text: x, spot: null })),
+      specs: ['450 kg', '0.6 m/s'], dealValue: null, image: '/p/b10.png', imageAlt: null
+    });
     expect(introLogo(v)).toEqual({ image: null, text: 'I8' });
     expect(introScreen(v, 'landing')).toBe('About the run.');
   });
@@ -47,5 +51,24 @@ describe('the pre-game flow (D219)', () => {
     expect(html).toContain('Next: Levo H4');
     expect(html).toContain('450 kg');
     expect(html).toContain('alt="Levo B10"');
+  });
+
+  it('shows the storyline\'s named features where it places them, its kind, tagline, audience and typical deal (D221)', () => {
+    const named = [{
+      ...PRODUCTS[0], code: 'X10', kind: 'Commercial', tagline: 'Built to move.', audience: 'Mid-rise offices.', dealValue: 30000, imageAlt: 'A steel lift car',
+      features: [{ title: 'Built modular', text: 'Installs in nine days.', spot: { x: 40, y: 50 } }, { title: 'Made to last', text: 'A 25 year warranty.', spot: null }]
+    }];
+    const [p] = introProducts(view({ products: named }));
+    expect(p).toMatchObject({ code: 'X10', kind: 'Commercial', line: 'Built to move.', specs: PRODUCTS[0].specs, dealValue: 30000 });
+    const html = renderToStaticMarkup(<I18nProvider><Products products={[p]} organisation={null} onNext={() => undefined} /></I18nProvider>);
+    expect(html.match(/role="tab"/g)).toHaveLength(2);
+    expect(html).toMatch(/role="tabpanel"[^>]*>Installs in nine days\.</);
+    expect(html).toContain('aria-label="Point 1: Built modular"');
+    expect(html).toContain('inset-inline-start:40%;inset-block-start:50%');
+    expect(html).toContain('Commercial / 01');
+    expect(html).toContain('Built to move.');
+    expect(html).toContain('Mid-rise offices.');
+    expect(html).toContain('Typical deal');
+    expect(html).toContain('alt="A steel lift car"');
   });
 });

@@ -290,7 +290,11 @@ export function storylineLook(c: StorylineConfig) {
     brand: b ? { name: b.name ?? null, colors: b.colors ?? null, logo: b.logo ?? null, font: b.font ?? null, mode: b.mode ?? null } : null,
     logo: w?.logo ? { image: w.logo.image ?? null, text: w.logo.text ?? null } : null,
     office: w?.office?.image ?? null,
-    products: (w?.products ?? []).map(p => ({ name: p.name, line: p.line ?? null, specs: p.specs, image: p.image ?? null, view: p.view })),
+    products: (w?.products ?? []).map(p => ({
+      name: p.name, line: p.line ?? null, specs: p.specs, image: p.image ?? null, view: p.view,
+      code: p.code ?? null, kind: p.kind ?? null, tagline: p.tagline ?? null, audience: p.audience ?? null, dealValue: p.dealValue ?? null,
+      imageAlt: p.imageAlt ?? null, features: p.features.map(f => ({ title: f.title, text: f.text, spot: f.spot ?? null }))
+    })),
     screens: (c.intro?.screens ?? []).map(x => ({ key: x.key, title: x.title, body: x.body }))
   };
 }

@@ -49,6 +49,8 @@ function fixture(): AuthorDraft {
   // A client brand and a product shown with its photo (D181, D182).
   Object.assign(d.brand, { from: 'client', name: 'Ascent Group', main: '#0B5FFF', second: '#00A3A3', font: 'Manrope' });
   d.story.product.view = 'photos';
+  // A named feature placed on the photo (D221).
+  d.story.product.features = [{ title: 'Quiet ride', text: 'Under 50 dB, with a soft start and stop.', x: 40, y: 50 }];
   return d;
 }
 
@@ -100,6 +102,7 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['story.company.team', d => { d.story.company.team = 'The closing desk'; }, 'world.team'],
   ['story.product.name', d => { d.story.product.name = 'Ascent Quiet'; }, 'world.product.name'],
   ['story.product.dealValue', d => { d.story.product.dealValue = 41000; }, 'money.valuePerConversion'],
+  ['story.product.dealValue', d => { d.story.product.dealValue = 41000; }, 'world.products.0.dealValue'],
   ['story.product.oneLine', d => { d.story.product.oneLine = 'Quiet lifts.'; }, 'world.product.line'],
   ['story.product.points', d => { d.story.product.points.push('Ten year warranty'); }, 'world.product.points'],
   ['story.market.customers', d => { d.story.market.customers = 'Hospital groups'; }, 'world.customers'],
@@ -116,6 +119,16 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['story.company.logoImage', d => { d.story.company.logoImage = PIXEL; }, 'world.logo'],
   ['story.product.view', d => { d.story.product.view = 'model'; }, 'world.products'],
   ['story.product.image', d => { d.story.product.image = PIXEL; }, 'world.products'],
+  // The portfolio scene's words and features (D221).
+  ['story.product.code', d => { d.story.product.code = 'AQ1'; }, 'world.products.0.code'],
+  ['story.product.kind', d => { d.story.product.kind = 'Commercial'; }, 'world.products.0.kind'],
+  ['story.product.tagline', d => { d.story.product.tagline = 'Quiet enough for home.'; }, 'world.products.0.tagline'],
+  ['story.product.audience', d => { d.story.product.audience = 'Hospitals and clinics.'; }, 'world.products.0.audience'],
+  ['story.product.imageAlt', d => { d.story.product.image = PIXEL; d.story.product.imageAlt = 'A quiet lift car'; }, 'world.products.0.imageAlt'],
+  ['story.product.features[].title', d => { d.story.product.features[0].title = 'Soft start'; }, 'world.products.0.features.0.title'],
+  ['story.product.features[].text', d => { d.story.product.features[0].text = 'It starts and stops softly.'; }, 'world.products.0.features.0.text'],
+  ['story.product.features[].x', d => { d.story.product.features[0].x = 10; }, 'world.products.0.features.0.spot'],
+  ['story.product.features[].y', d => { d.story.product.features[0].y = 10; }, 'world.products.0.features.0.spot'],
   ['brand.from', d => { d.brand.from = 'knolskape'; }, 'brand'],
   ['brand.name', d => { d.brand.name = 'Halden Group'; }, 'brand.name'],
   ['brand.logo', d => { d.brand.logo = PIXEL; }, 'brand.logo'],
@@ -606,7 +619,10 @@ describe('the brand, the Story tab\'s visuals, uploads and the LMS export as aut
     expect(p.config.brand).toEqual({ name: 'Ascent Group', colors: { main: '#0B5FFF', second: '#00A3A3' }, logo: PIXEL, font: 'Manrope', mode: 'system' });
     expect(p.config.world?.office).toEqual({ image: PIXEL });
     expect(p.config.world?.logo).toEqual({ image: PIXEL, text: d.story.company.logo });
-    expect(p.config.world?.products).toEqual([{ name: d.story.product.name, line: d.story.product.oneLine, specs: d.story.product.points, image: PIXEL, view: 'photo' }]);
+    expect(p.config.world?.products).toEqual([{
+      name: d.story.product.name, line: d.story.product.oneLine, specs: d.story.product.points, image: PIXEL, view: 'photo', dealValue: 30000,
+      features: [{ title: 'Quiet ride', text: 'Under 50 dB, with a soft start and stop.', spot: { x: 40, y: 50 } }]
+    }]);
     expect(p.config.members[0].portrait).toBe(PIXEL);
     expect(p.config.intro?.screens?.map(s => s.title)).toEqual(d.story.screens.map(s => s.title));
     expect(p.config.lms).toEqual({ completion: { rule: 'finish' }, pass: { rule: 'none', score: 70 }, score: 'leadership', package: 'scorm12', connected: false });

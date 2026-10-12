@@ -365,6 +365,77 @@
                   "photo",
                   "model"
                 ]
+              },
+              "code": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 8
+              },
+              "kind": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "tagline": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "audience": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240
+              },
+              "dealValue": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "imageAlt": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "features": {
+                "maxItems": 4,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 40
+                    },
+                    "text": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 300
+                    },
+                    "spot": {
+                      "type": "object",
+                      "properties": {
+                        "x": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "y": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "title",
+                    "text"
+                  ]
+                }
               }
             },
             "required": [

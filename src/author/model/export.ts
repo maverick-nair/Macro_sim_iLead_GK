@@ -249,8 +249,19 @@ function worldOf(d: AuthorDraft, issues: string[]): SL['world'] {
   const logo = { ...(logoImage ? { image: logoImage } : null), ...(t(st.company.logo) ? { text: st.company.logo.trim().slice(0, 3) } : null) };
   const productImage = st.product.image.trim() && usableImage(st.product.image, 'the product photo', issues) ? st.product.image.trim() : undefined;
   if (st.product.view !== 'none' && !t(st.product.name)) issues.push('The product view shows the product in onboarding, but the product has no name. Name it in Story and world, or set the view to None.');
+  // The portfolio scene's words (D221): each only when the author wrote it; a feature needs its title and text, and
+  // its spot is kept only when both coordinates are set.
+  const pr = st.product;
+  const features = pr.features.filter(f => t(f.title) && t(f.text)).slice(0, 4)
+    .map(f => ({ title: f.title.trim(), text: f.text.trim(), ...(f.x !== null && f.y !== null ? { spot: { x: f.x, y: f.y } } : null) }));
+  const portfolio = {
+    ...(t(pr.code) ? { code: pr.code.trim().slice(0, 8) } : null), ...(t(pr.kind) ? { kind: pr.kind.trim() } : null),
+    ...(t(pr.tagline) ? { tagline: pr.tagline.trim() } : null), ...(t(pr.audience) ? { audience: pr.audience.trim() } : null),
+    ...(pr.dealValue ? { dealValue: pr.dealValue } : null), ...(t(pr.imageAlt) && productImage ? { imageAlt: pr.imageAlt.trim() } : null),
+    ...(features.length ? { features } : null)
+  };
   const products = st.product.view !== 'none' && t(st.product.name)
-    ? [{ name: st.product.name.trim(), ...(t(st.product.oneLine) ? { line: st.product.oneLine.trim() } : null), specs: points.slice(0, 8), ...(productImage ? { image: productImage } : null), view: st.product.view === 'model' ? 'model' as const : 'photo' as const }]
+    ? [{ name: st.product.name.trim(), ...(t(st.product.oneLine) ? { line: st.product.oneLine.trim() } : null), specs: points.slice(0, 8), ...(productImage ? { image: productImage } : null), view: st.product.view === 'model' ? 'model' as const : 'photo' as const, ...portfolio }]
     : undefined;
   return {
     ...(officeOut ? { office: officeOut } : null),

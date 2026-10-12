@@ -147,6 +147,16 @@ export const Person = z.object({
 
 /** How the onboarding's portfolio scene shows a product (D182). */
 export const PRODUCT_VIEWS = ['photo', 'model'] as const;
+/** The most named features a product shows (D221): the scene's tabs and the photo's numbered spots. */
+export const MAX_PRODUCT_FEATURES = 4;
+/** Where a feature's numbered spot sits on the product photo, in percent from the inline start and the top (D221). */
+const Percent = z.number().min(0).max(100);
+/** A named feature of a product (D221): a title, a sentence or two, and optionally its spot on the photo. */
+export const ProductFeature = z.object({
+  title: z.string().trim().min(1).max(40).transform(sanitizeCopy),
+  text: z.string().trim().min(1).max(300).transform(sanitizeCopy),
+  spot: z.object({ x: Percent, y: Percent }).optional()
+});
 
 /**
  * The world around the team (D130), authored in GenieKreator's Story and world tab. The AI characters
@@ -173,13 +183,24 @@ export const World = z.object({
   /**
    * The product portfolio for the onboarding's portfolio scene (D182): each product's name, one line, key specs
    * and an image. `view` says how it is shown: a photo, or the library's stylised model. Left out, no scene.
+   * Each product may also carry (D221) a short code ("B10"), its kind ("Commercial"), a tagline, who it is for,
+   * a typical deal value in the storyline's money, the photo's description for screen readers, and up to four
+   * named features, each a title, a sentence or two, and where its numbered spot sits on the photo (percent from
+   * the left and the top). Every one is optional: the scene words what is left out from the name and the specs.
    */
   products: z.array(z.object({
     name: Copy,
     line: Copy.optional(),
     specs: z.array(Copy).max(8).default([]),
     image: ImageRef.optional(),
-    view: z.enum(PRODUCT_VIEWS).default('photo')
+    view: z.enum(PRODUCT_VIEWS).default('photo'),
+    code: z.string().trim().min(1).max(8).transform(sanitizeCopy).optional(),
+    kind: z.string().trim().min(1).max(40).transform(sanitizeCopy).optional(),
+    tagline: z.string().trim().min(1).max(120).transform(sanitizeCopy).optional(),
+    audience: z.string().trim().min(1).max(240).transform(sanitizeCopy).optional(),
+    dealValue: z.number().positive().optional(),
+    imageAlt: z.string().trim().min(1).max(200).transform(sanitizeCopy).optional(),
+    features: z.array(ProductFeature).max(MAX_PRODUCT_FEATURES).default([])
   })).max(6).optional()
 });
 

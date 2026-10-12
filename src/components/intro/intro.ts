@@ -10,22 +10,46 @@ import type { EngineView } from '../../engine/contract';
  * as optional fields and each part of the flow that needs them is left out, never filled with sample data.
  */
 
+/** A named feature of a model (D221): a tab with its panel, and a numbered spot on the photo. */
+export interface IntroFeature {
+  title: string;
+  text: string;
+  /** Where its spot sits on the photo, percent from the inline start and the top; null places it evenly. */
+  spot: { x: number; y: number } | null;
+}
+
 export interface IntroProduct {
   name: string;
-  /** The model's short code, the last word of its name ("Levo H4" is H4). */
+  /** The model's short code: the storyline's, else the last word of its name ("Levo H4" is H4). */
   code: string;
+  /** Its kind ("Commercial"), when the storyline names one. */
+  kind: string | null;
+  /** Its tagline, else its one line. */
   line: string | null;
-  /** Up to four points about the model; the feature tabs and the image's numbered spots show the same ones. */
-  points: string[];
-  /** The rest of its specs, for the strip under it. */
+  /** Who it is for, when the storyline says. */
+  audience: string | null;
+  /**
+   * Up to four features; the tabs and the photo's numbered spots show the same ones. The storyline's named
+   * features, else its first four specs (each its own title and text, as before D221).
+   */
+  features: IntroFeature[];
+  /** The specs for the strip under it: all of them with named features, else those after the first four. */
   specs: string[];
+  /** A typical deal, in the storyline's money. */
+  dealValue: number | null;
   image: string | null;
+  /** The photo's description for screen readers, when the storyline has one. */
+  imageAlt: string | null;
 }
 
 /** The look the storyline contract adds to `view.storyline` (D181 to D185), each part optional here. */
 interface StorylineLook {
   logo?: { image: string | null; text: string | null } | null;
-  products?: Array<{ name: string; line: string | null; specs: string[]; image: string | null }>;
+  products?: Array<{
+    name: string; line: string | null; specs: string[]; image: string | null;
+    code?: string | null; kind?: string | null; tagline?: string | null; audience?: string | null; dealValue?: number | null; imageAlt?: string | null;
+    features?: Array<{ title: string; text: string; spot: { x: number; y: number } | null }>;
+  }>;
   screens?: Array<{ key: string; title: string; body: string[] }>;
 }
 const lookOf = (view: Pick<EngineView, 'storyline'>): StorylineLook => view.storyline as EngineView['storyline'] & StorylineLook;
@@ -34,7 +58,13 @@ const lookOf = (view: Pick<EngineView, 'storyline'>): StorylineLook => view.stor
 export function introProducts(view: Pick<EngineView, 'storyline'>): IntroProduct[] {
   return (lookOf(view).products ?? []).map(p => {
     const words = p.name.trim().split(/\s+/);
-    return { name: p.name, code: words[words.length - 1] ?? p.name, line: p.line, points: p.specs.slice(0, 4), specs: p.specs.slice(4), image: p.image };
+    const named = (p.features ?? []).slice(0, 4);
+    return {
+      name: p.name, code: p.code ?? words[words.length - 1] ?? p.name, kind: p.kind ?? null, line: p.tagline ?? p.line, audience: p.audience ?? null,
+      features: named.length ? named : p.specs.slice(0, 4).map(x => ({ title: x, text: x, spot: null })),
+      specs: named.length ? p.specs : p.specs.slice(4),
+      dealValue: p.dealValue ?? null, image: p.image, imageAlt: p.imageAlt ?? null
+    };
   });
 }
 

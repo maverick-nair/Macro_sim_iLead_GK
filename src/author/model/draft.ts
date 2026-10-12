@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { Brief, Clarify, Dilemma, FrameworkDimension, QUESTION_IDS, Stakeholder } from '../../api/author';
 import { IMAGE_REF_MAX } from '../../engine/assets';
-import { BRAND_FONTS, CONDITION_METRICS, DEFAULT_LMS, EVENT_CONDITIONS, LMS_COMPLETION, LMS_PACKAGES, LMS_PASS, MAX_MEMBERS, MAX_PERIODS, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
+import { BRAND_FONTS, CONDITION_METRICS, DEFAULT_LMS, EVENT_CONDITIONS, LMS_COMPLETION, LMS_PACKAGES, LMS_PASS, MAX_MEMBERS, MAX_PERIODS, MAX_PRODUCT_FEATURES, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
@@ -440,8 +440,18 @@ export const AuthorDraft = z.object({
      * (D182). `logo`: up to three letters; `logoImage`: an uploaded logo, which wins over the letters.
      */
     company: z.object({ name: Short, hq: Short, about: Text, team: Short, office: Image, logo: Short, logoImage: Image.default('') }),
-    /** `view`: how the onboarding's portfolio scene shows the product (D182); `image`: its photo, for the photos view. */
-    product: z.object({ name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']), image: Image.default('') }),
+    /**
+     * `view`: how the onboarding's portfolio scene shows the product (D182); `image`: its photo, for the photos view.
+     * For the portfolio scene (D221): `code` (a short code such as B10), `kind`, `tagline`, `audience` (who it is for),
+     * `imageAlt` (the photo described for screen readers) and up to four `features`, each a title, a sentence or two
+     * and, when placed, its spot on the photo (`x`, `y`: percent from the left and the top). The deal value is the
+     * product's typical deal too.
+     */
+    product: z.object({
+      name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']), image: Image.default(''),
+      code: Short.default(''), kind: Short.default(''), tagline: Short.default(''), audience: Text.default(''), imageAlt: Short.default(''),
+      features: z.array(z.object({ title: Short, text: Text, x: Pct.nullable(), y: Pct.nullable() })).max(MAX_PRODUCT_FEATURES).default([])
+    }),
     market: z.object({ customers: Short, rivals: z.array(z.object({ name: Short, angle: Text })) }),
     sponsor: z.object({ name: Short, title: Short, voice: Short }),
     screens: z.array(z.object({ key: z.string(), title: Short, body: Text }))
