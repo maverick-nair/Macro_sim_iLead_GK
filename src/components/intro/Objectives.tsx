@@ -18,8 +18,6 @@ export interface ObjectivesProps {
   team: Array<{ id: string; name: string; img: string | null }>;
   /** Live conversations a period. */
   liveCap: number;
-  /** The Leadership Score's weights, 0 to 1. */
-  weights: { business: number; people: number; leadership: number };
   sponsor: { name: string; title: string; img: string | null; initials: string; quote: string };
   onStart: () => void;
   /** The mic test heard the participant: voice is on. */
@@ -31,22 +29,20 @@ export interface ObjectivesProps {
 const TILE = 'flex flex-col gap-3 rounded-14 border border-line-default bg-surface-card p-5';
 const LABEL = 'm-0 text-12 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
 const AVATARS = 6;
-const ORDER = ['leadership', 'business', 'people'] as const;
-const BAR: Record<(typeof ORDER)[number], string> = { leadership: 'bg-accent-secondary', business: 'bg-accent-default', people: 'bg-status-attention' };
 
 /**
  * The objectives (D219, the canvas's Ready): the run's length with a track of its periods, the target, the team
- * with their faces, how you win, how you are scored (the storyline's weights), the sponsor's word, then Start
+ * with their faces, how you win, the sponsor's word, then Start
  * simulation, which shows after five seconds (hidden until then, so it cannot be reached early; at once where
- * motion is reduced), and an optional microphone test with Use text instead.
+ * motion is reduced), and an optional microphone test with Use text instead. The canvas no longer has How you
+ * are scored (D220): the score's make up is in the report and the menu, not before the first week.
  */
 export function Objectives(p: ObjectivesProps) {
   const { t } = useI18n();
   const money = useMoney();
-  const ids = { win: useId(), score: useId(), mic: useId() };
+  const ids = { win: useId(), mic: useId() };
   const h1 = useRef<HTMLHeadingElement>(null);
   useEffect(() => { h1.current?.focus({ preventScroll: true }); }, []);
-  const pct = (w: number) => Math.round(w * 100);
   const shown = p.team.slice(0, AVATARS);
   const win = [
     [t('intro.objectives.win.1'), t('intro.objectives.win.1b')],
@@ -99,17 +95,6 @@ export function Objectives(p: ObjectivesProps) {
               </li>
             ))}
           </ol>
-        </section>
-        <section aria-labelledby={ids.score} className="flex flex-col gap-2">
-          <h2 id={ids.score} className={LABEL}>{t('intro.objectives.scored')}</h2>
-          <div role="img" aria-label={t('intro.objectives.scoredAria', { leadership: pct(p.weights.leadership), business: pct(p.weights.business), people: pct(p.weights.people) })} className="flex gap-1">
-            {ORDER.map(k => (
-              <span key={k} className="flex min-w-0 flex-col gap-1.5" style={{ flexGrow: Math.max(1, pct(p.weights[k])), flexBasis: 0 }}>
-                <span className={`block h-1.5 rounded-2 ${BAR[k]}`} />
-                <span aria-hidden="true" className="truncate text-14"><b className="tabular-nums">{t('intro.objectives.weight', { n: pct(p.weights[k]) })}</b> {t('intro.objectives.pillar', { pillar: k })} <span className="text-fg-secondary">· {t('intro.objectives.pillarLine', { pillar: k })}</span></span>
-              </span>
-            ))}
-          </div>
         </section>
       </div>
       <aside className="flex min-h-0 flex-col justify-center gap-6 overflow-y-auto border-s border-line-default px-10 py-10 short:gap-4 short:py-6 tablet:gap-3 tablet:border-s-0 tablet:border-t tablet:px-6 tablet:py-4">

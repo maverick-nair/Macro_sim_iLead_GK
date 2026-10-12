@@ -76,13 +76,13 @@ for (const theme of ['dark', 'light'] as const) {
     await axe(page, 'message end');
     await press(page, page.getByRole('button', { name: 'See your objectives' }));
 
-    // 3. Objectives from the storyline: eight weeks, the target, ten people, how you win and are scored.
+    // 3. Objectives from the storyline: eight weeks, the target, ten people and how you win; no How you are scored (D220).
     await expect(page.getByRole('heading', { level: 1, name: 'Eight weeks to lead your team at Innov8 Elevators.' })).toBeFocused();
     await expect(page.getByText('8 weeks', { exact: true })).toBeVisible();
     await expect(page.getByText('$240K', { exact: true })).toBeVisible();
     await expect(page.getByText('10 people', { exact: true })).toBeVisible();
     await expect(page.getByText('Have 2 live conversations a week.')).toBeVisible();
-    await expect(page.getByRole('img', { name: 'Leadership 40%, Business 30%, People 30%' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'How you are scored' })).toHaveCount(0);
     // Start simulation shows after five seconds, and cannot be reached before.
     const start = page.getByRole('button', { name: 'Start simulation' });
     await expect(start).toBeHidden();

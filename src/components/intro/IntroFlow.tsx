@@ -72,7 +72,7 @@ export function IntroFlow({ view, letter, start = 'landing', noticeAfter, autoPl
         {screen === 'objectives' && (
           <Objectives organisation={storyline.organisation} length={length} periods={clock.periods} periodUnit={clock.periodUnit}
             target={money.target} start={money.value} team={view.members.map(m => ({ id: m.id, name: m.name, img: m.img }))} liveCap={view.liveCap.cap}
-            weights={view.gamification.weights} sponsor={{ ...person, quote: sponsor.styleLine }}
+            sponsor={{ ...person, quote: sponsor.styleLine }}
             onStart={onStart} onVoice={onVoice} onText={onText} />
         )}
       </div>

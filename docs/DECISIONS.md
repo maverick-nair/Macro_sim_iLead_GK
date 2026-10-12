@@ -1292,6 +1292,12 @@ The overall level was the mean of the skill ratings, and the verdict read only t
 - Log out saves (D213) and leaves to the launch's return address, or shows the signed out screen with Sign back in.
 - Tests: `tests/e2e/onboarding.spec.ts` (the four screens by keyboard in dark and light, axe on each, reduced motion, Log out), the a11y, viewport (no page scroll at the laptop and tablet sizes), leftovers, author preview and visual onboarding baselines updated; `src/components/intro/intro.test.tsx` covers the message, the portfolio's reading of the contract and the portfolio's tabs and spots, since Sales Elevator has no portfolio. Stories: `Onboarding/Pre-game flow`.
 
+## Integrating the ecosystem: the player's gaps and the full lifecycle (12 Oct)
+
+**D220. The Objectives screen has no How you are scored.** Decided 2026-10-12, by the product owner on the design canvas. Amends D219.
+- The Objectives screen (`src/components/intro/Objectives.tsx`) shows the run's length, the target, the team, how you win, the sponsor's word, Start simulation and the microphone test. The section with the Leadership Score's weights is gone, with its copy (`intro.objectives.scored`, `pillar`, `pillarLine`, `weight`, `scoredAria`; the Spanish catalog had none) and its `weights` prop. The weights still shape the score and still show in the report and the menu.
+- The onboarding e2e checks the section is absent; the onboarding baselines are refreshed with the rest after the gate.
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
