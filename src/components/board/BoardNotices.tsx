@@ -5,8 +5,10 @@ import type { Notice } from './notices';
 
 export interface BoardNoticesProps {
   notices: Notice[];
-  view: Pick<EngineView, 'clock' | 'funnel' | 'actions' | 'gamification'>;
+  view: Pick<EngineView, 'clock' | 'funnel' | 'actions' | 'gamification' | 'members' | 'sponsor'>;
   onDismiss: (key: string) => void;
+  /** Opens your own update to the sponsor (D173), from the silence alert. */
+  onUpdateSponsor?: () => void;
   /** Opens the leaderboard from a milestone, when it is on. */
   onLeaderboard?: () => void;
 }
@@ -19,12 +21,12 @@ const Bulb = () => (
 );
 
 /**
- * Milestones reached (D93) and one time tips (D99), as slim notices under the team metrics, in the board's
+ * Milestones reached (D93), one time tips (D99) and what neglect is costing now (D173, D174), as slim notices under the team metrics, in the board's
  * flow like the sponsor call, so they never cover a card or a button. A status region: each is read out
  * once, and focus stays where it is. A milestone offers the leaderboard (when it is on) and Continue;
  * a tip, Got it. With `celebration: full` and motion allowed, a milestone's flag gets the burst.
  */
-export function BoardNotices({ notices, view, onDismiss, onLeaderboard }: BoardNoticesProps) {
+export function BoardNotices({ notices, view, onDismiss, onLeaderboard, onUpdateSponsor }: BoardNoticesProps) {
   const { t } = useI18n();
   const stageName = (key?: string) => view.funnel.find(f => f.key === key)?.name ?? key ?? '';
   const hire = view.actions.find(a => a.rule === 'hire');
@@ -33,8 +35,14 @@ export function BoardNotices({ notices, view, onDismiss, onLeaderboard }: BoardN
     <div role="status" aria-live="polite" className="contents">
       {notices.map(n => {
         const milestone = n.kind === 'milestone';
+        const sponsor = view.sponsor.name.split(' ')[0];
+        const firsts = (ids: string[]) => ids.map(id => view.members.find(m => m.id === id)?.name.split(' ')[0] ?? id);
         const text = n.kind === 'milestone'
           ? t('board.milestone.body', { kind: n.milestone.kind, pct: n.milestone.pct, stage: stageName(n.milestone.stage ?? undefined) })
+          : n.kind === 'alert'
+          ? n.alert === 'neglect'
+            ? t('board.alert.neglect', { names: firsts(n.ids).join(', '), count: n.ids.length, weeks: n.weeks, unit: view.clock.periodUnit })
+            : t('board.alert.silence', { name: sponsor, unit: view.clock.periodUnit })
           : t('board.tip.body', {
               tip: n.tip, stage: stageName(n.stage), unit: view.clock.periodUnit, sub: view.clock.subPeriodUnit,
               hire: hireOpen ? 'open' : 'locked', period: hire ? t('time.period', { unit: view.clock.periodUnit, n: hire.unlockPeriod }) : ''
@@ -42,9 +50,10 @@ export function BoardNotices({ notices, view, onDismiss, onLeaderboard }: BoardN
         return (
           <div key={n.key} data-notice={n.kind} className="mx-6 mb-2.5 flex flex-wrap items-center gap-3 rounded-16 border border-line-strong bg-surface-material py-2 pe-2.5 ps-3 text-13 short:mb-2 short:py-1.5">
             <span className={`flex size-7 flex-none items-center justify-center rounded-round ${milestone ? 'il-burst bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-accent-soft text-fg-primary'}`}>{milestone ? <Flag /> : <Bulb />}</span>
-            <span className="min-w-0 flex-1"><b>{milestone ? t('board.milestone.title') : t('board.tip.title')}</b> {text}</span>
+            <span className="min-w-0 flex-1"><b>{milestone ? t('board.milestone.title') : n.kind === 'alert' ? t('board.alert.title') : t('board.tip.title')}</b> {text}</span>
+            {n.kind === 'alert' && n.alert === 'silence' && onUpdateSponsor && view.sponsor.update && !view.sponsor.update.blocked && <NoWrapButton variant="primary" size="sm" onClick={onUpdateSponsor}>{t('metrics.sponsor.update', { name: sponsor })}</NoWrapButton>}
             {milestone && onLeaderboard && view.gamification.leaderboard.enabled && <NoWrapButton variant="secondary" size="sm" onClick={onLeaderboard}>{t('board.notice.leaderboard')}</NoWrapButton>}
-            <NoWrapButton variant={milestone ? 'primary' : 'secondary'} size="sm" onClick={() => onDismiss(n.key)}>{milestone ? t('board.notice.keepGoing') : t('board.notice.hideTip')}</NoWrapButton>
+            <NoWrapButton variant={milestone ? 'primary' : 'secondary'} size="sm" onClick={() => onDismiss(n.key)}>{milestone ? t('board.notice.keepGoing') : n.kind === 'alert' ? t('board.notice.noted') : t('board.notice.hideTip')}</NoWrapButton>
           </div>
         );
       })}

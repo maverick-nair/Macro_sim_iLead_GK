@@ -53,7 +53,7 @@ import { initials, streakText } from '../gamification/display';
 import { teamChips, type Chip } from './chips';
 import { GameMenu, type GameMenuItem } from '../hud/GameMenu';
 import { BoardNotices } from './BoardNotices';
-import { dueTips, newMilestones, type Notice } from './notices';
+import { dueAlerts, dueTips, newMilestones, type Notice } from './notices';
 import { guideOff, guideSeen, markGuideSeen, turnGuideOff } from '../tour/guideStore';
 import type { TourArea } from '../tour/steps';
 import type { TourEnd } from '../tour/Tour';
@@ -557,8 +557,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // ---- action drawer ----
   let drawer: ActionDrawerProps | null = null;
   if (f && fa) {
-    const names = f.picks.map(id => first(member(id)?.name ?? ''));
-    const list = names.length > 1 ? t('action.list.pair', { rest: names.slice(0, -1).join(', '), last: names[names.length - 1] }) : names[0] ?? '';
+    const listNames = (xs: string[]) => (xs.length > 1 ? t('action.list.pair', { rest: xs.slice(0, -1).join(', '), last: xs[xs.length - 1] }) : xs[0] ?? '');
+    const list = listNames(f.picks.map(id => first(member(id)?.name ?? '')));
     const cost = hireFree(fa) ? 0 : choice?.option.cost ?? fa.cost;
     const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
     const detail = (c: Choice) => [
@@ -579,8 +579,19 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const unassessed = pre && !f.nudgeOk ? f.picks.map(id => ({ m: member(id)!, to: destination(id) })).find(x => x.m && x.to && !x.m.assessedStages.includes(x.to)) : undefined;
 
     const isStatic = fa.kind !== 'live';
+    // Realism (D171, D172): a repeat lands at less (the lowest share among the people picked), and a team action takes the team's time.
+    const pct = (x: number) => Math.round(x * 100);
+    const repeats = f.picks.map(id => ({ id, r: fa.repeatFor?.[id] })).filter((x): x is { id: string; r: NonNullable<typeof x.r> } => !!x.r);
+    const low = fa.repeat ?? repeats.map(x => x.r).sort((a, b) => a.share - b.share)[0];
+    const notes = [
+      low ? t('action.drawer.repeat', {
+        who: fa.repeat ? 'team' : 'people', names: listNames(repeats.filter(x => x.r.share === low.share).map(x => first(member(x.id)?.name ?? ''))),
+        pct: pct(low.share), ago: low.ago, agoText: amount(low.ago), window: amount(low.window), tires: low.tires ? 'yes' : 'no'
+      }) : '',
+      fa.teamTime ? t('action.drawer.teamTime', { pct: pct(fa.teamTime), unit }) : ''
+    ].filter(Boolean);
     drawer = {
-      name: fa.name, kind: fa.kind, days: cost, description: fa.description,
+      name: fa.name, kind: fa.kind, days: cost, description: fa.description, notes,
       perk: hireFree(fa) ? t('actions.perk.drawer', { perk: 'hire', unit }) : freeActivity(fa) ? t('actions.perk.drawer', { perk: 'activity', unit }) : undefined,
       options: choices.length > 1 ? choices.map(c => ({ name: label(c), detail: detail(c), disabled: !!c.stageBlocked })) : undefined,
       option: choice ? choices.indexOf(choice) : null,
@@ -635,6 +646,14 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       if (!x || x.kind === 'static' || x.blocked) { setStakeholdersOpen({ focus: sh.key }); return; }
     }
     const r = await send({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: id });
+    if (r?.interactionId) setFlow(null);
+  };
+  /** Your own update to the sponsor (D173): a conversation like a briefing, for a sub-period, once a period. */
+  const updateSponsor = async () => {
+    if (ended || styling || busy || !v.sponsor.update || v.sponsor.update.blocked) return;
+    ui.openPanel('none');
+    setSponsorOpen(false);
+    const r = await send({ type: 'openConversation', kind: 'sponsor' });
     if (r?.interactionId) setFlow(null);
   };
   const later = (id: string) => {
@@ -710,7 +729,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     pulse: { ...v.pulse, periodUnit },
     target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: v.clock.runShare, pacePeriod: { unit: periodUnit, n: v.clock.period } },
     sponsor: { level: v.sponsor.level, causes: v.sponsor.causes, open: sponsorOpen, onToggle: () => setSponsorOpen(o => !o),
-      meter: { value: v.sponsor.value, unlockAt: v.sponsor.unlockAt, checkInBelow: v.sponsor.checkInBelow, sponsorName: first(v.sponsor.name), subPeriodUnit: unit } }
+      meter: { value: v.sponsor.value, unlockAt: v.sponsor.unlockAt, checkInBelow: v.sponsor.checkInBelow, sponsorName: first(v.sponsor.name), subPeriodUnit: unit },
+      silence: v.sponsor.silence ? { ...v.sponsor.silence, periodUnit } : undefined,
+      update: v.sponsor.update && v.sponsor.update.blocked !== 'off' && !ended ? { cost: amount(v.sponsor.update.cost), blocked: v.sponsor.update.blocked, onUpdate: () => { void updateSponsor(); } } : undefined }
   };
 
   // ---- the business (D136, D137): variables on the board, decisions still waiting ----
@@ -827,7 +848,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // ---- notices (D93, D99): milestones as the engine reaches them, and tips at key moments, once each ----
   const notices: Notice[] = demo || !plainBoard ? [] : [
     ...newMilestones(v, dismissed),
-    ...(guideOff() ? [] : dueTips(v).filter(n => !dismissed.has(n.key) && (shown.has(n.key) || !guideSeen(n.key))))
+    ...(guideOff() ? [] : dueTips(v).filter(n => !dismissed.has(n.key) && (shown.has(n.key) || !guideSeen(n.key)))),
+    // What neglect is costing now (D173, D174): each period, whatever the guide setting, until dismissed.
+    ...dueAlerts(v).filter(n => !dismissed.has(n.key))
   ];
   const freshKeys = notices.filter(n => !shown.has(n.key)).map(n => n.key).join('|');
   useEffect(() => {
@@ -1031,7 +1054,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                 request: s.request && !ended ? { title: s.request.title, due: t('board.business.due', { n: s.request.dueInSubPeriods, unit }) } : null }))} /></Suspense>
           ) : undefined} />
         <BoardNotices notices={notices} view={v} onDismiss={key => setDismissed(d => new Set([...d, key]))}
-          onLeaderboard={() => openPanel({ kind: 'leaderboard' })} />
+          onLeaderboard={() => openPanel({ kind: 'leaderboard' })} onUpdateSponsor={() => { void updateSponsor(); }} />
         {ended && lastWeekSeen && endView === 'board' && (
           <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
             <span className="flex-1">{t('board.ended.readOnly')}</span>

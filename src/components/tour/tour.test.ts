@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { demoStep, demoTarget, DEMO_STEPS } from '../demo/demoSteps';
-import { dueTips, newMilestones } from '../board/notices';
+import { dueAlerts, dueTips, newMilestones } from '../board/notices';
 import { placeTip } from './Coachmark';
 import { guideOff, guideSeen, markGuideSeen, turnGuideOff } from './guideStore';
 import { findTarget, TOURS } from './steps';
@@ -82,6 +82,19 @@ describe('notices (D93, D99)', () => {
     expect(dueTips({ ...view, clock: { ...view.clock, capacityLeft: 0 } }).map(n => n.key)).toContain('tip:noDays');
     expect(dueTips({ ...view, clock: { ...view.clock, period: 2 } }).map(n => n.key)).not.toContain('tip:hireUnlocked');
     expect(dueTips({ ...view, phase: 'style' })).toEqual([]);
+  });
+  it('alerts (D173, D174): people past the neglect window and a sponsor about to lose confidence, once a period', () => {
+    type AlertView = Parameters<typeof dueAlerts>[0];
+    const member = (id: string, unattended: number, neglected: boolean) => ({ id, name: `${id} Smith`, away: 0, unattended, neglected }) as unknown as AlertView['members'][number];
+    const base = { phase: 'board', live: null, clock: { period: 5 }, members: [member('kent', 4, true), member('beth', 5, true), member('ruth', 1, false)],
+      sponsor: { silence: { weeks: 1, costsFrom: 2 }, update: { cost: 1, blocked: null } } } as unknown as AlertView;
+    expect(dueAlerts(base)).toEqual([
+      { key: 'alert:neglect:5', kind: 'alert', alert: 'neglect', ids: ['kent', 'beth'], weeks: 4 },
+      { key: 'alert:silence:5', kind: 'alert', alert: 'silence' }
+    ]);
+    // Without realism the view carries neither, and nothing is due.
+    expect(dueAlerts({ ...base, members: [member('ruth', 0, false)], sponsor: {} as AlertView['sponsor'] })).toEqual([]);
+    expect(dueAlerts({ ...base, phase: 'style' } as AlertView)).toEqual([]);
   });
   it('milestones not shown yet', () => {
     expect(newMilestones(view, new Set()).map(n => n.key)).toEqual(['milestone:target:25']);
