@@ -184,6 +184,27 @@ Attrition draws on its own stream (`dynamicsSeed(seed)`), so it never moves anot
 
 **The burnout experiment** (`src/engine/sim/burnout.ts`, `dynamics.test.ts`): Sales Elevator with every fitting effect set to morale −8 and result +14, played by the good policy over 20 seeds. Without dynamics (the pre D135 values), burnout reached 223% of target against balanced play's 113% (scores 755 and 891), with team morale 0 and nobody leaving. With dynamics and the recalibrated values, burnout reaches 88% against balanced play's 111% (scores 729 and 890), morale 2, and 4.5 people leave on average. The test fails if burnout beats balanced play on revenue or score again.
 
+### 3.6 Real world costs (D171 to D178)
+*Config* `realism`, optional; left out, none of this applies and a storyline plays exactly as before (the same numbers and random draws: nothing here draws). Both bundled storylines enable it (`"realism": {}` with a few authored details below). Every number below is the default and *config*; an action can set its own `window`, `decay`, `fatigue`, `opportunity` and `goals` (`Action.realism`), and an option its own `opportunity`. Code: `src/engine/sim/realism.ts`, `realismPeriod.ts`, the score curves in `score.ts`. /author switches it on for new drafts at the defaults (Work process, Real world costs).
+
+| Rule | Default | What it does |
+|---|---|---|
+| Diminishing returns (`repeat`, D171) | window 5 days, team 15, decay 100%, 60%, 35%, 20% | The same action with the same person (a team action: with the team) within its window lands at a share of its good effects by how many earlier uses are still in the window: people and business gains alike (revenue, variable gains, sponsor confidence). Costs and losses land in full. The share recovers as uses leave the window. The action drawer says so before the participant confirms. |
+| Fatigue (`fatigue`, D171) | morale −2, 10% of that day's output | A team action repeated in its window also tires everyone present. |
+| The team's time (`opportunity`, D172) | a quarter of each of its days | A team action takes the team off its work: that much less gets done at every stage on each of its days. Sales Elevator and Client Trust: Team building 50%, Team lunch 10%, hiring none. A day's losses add up to 90% at most. |
+| Ignored events (`escalation`, D173) | 20% of a week's target | An event left unanswered past its window costs that revenue, plus its own `escalation.business` (Client Trust: the recession costs $10,000 of budget, the training request 3 points of quality, the morale alarm 2). |
+| The sponsor (`sponsor`, D173) | silence 2 weeks, −4 a week; update 1 day, half a briefing; reaction under 30, 25% of a week's target | A briefing, a reply to the sponsor or the participant's own update is a word to them. After 2 weeks without one, confidence slips 4 at each week end. The update (the sponsor tile's popover, or the board's alert) is a conversation like a briefing, once a week, for a day, landing at half a briefing's band effect. Falling under 30 during a week makes the sponsor react: a deal moves to another team (the revenue), plus `reaction.business` and `reaction.event` (Client Trust: $15,000 of budget). |
+| Stakeholders (`stakeholders`, D173) | 2 weeks, trust −2, satisfaction −2 | A stakeholder nobody engaged for 2 weeks cools each further week end, on top of their own drift (D160). |
+| Neglect (`neglect`, D174) | 4 weeks, morale −3, trust −2, 10% output | Someone with no one to one time (a one to one action other than Assess, or an answered message) for 4 weeks loses morale and trust at each further week end and delivers 10% less until given time. The board alerts once a week with their names. |
+| Drag (`drag`, D174) | under result 30, 5% each, at most 15% | Each neglected person under result 30 holds the whole team's output back. |
+| Idle days (`idle`, D174) | 10% output a day; a quiet week counts 35 | Days left unused when the week ends deliver 10% less. A week with no action, conversation or decision (the weekly styles aside) counts 35 (a Weak band) in the Leadership pillar's band mean and as the week score's live part. |
+| Output (`output`, D178) | healthy 75, saturation 40%; skill 60, floor 60%; goals 3 weeks, +10% | Result gains from actions shrink above morale 75, to 40% at 100. A person's result counts in full from skill 60, down to 60% at skill 0. Goals set in the last 3 weeks (a written plan) add 10%. |
+| Score (`score`, D175 to D177) | at target 85, softness 0.5; sponsor 20%; people 30, leavers 5; streak gradual | See 7.1 and 7.3. |
+
+The participant sees what it costs: the action drawer's notes (a repeat's share, the team's time), the board's alerts (people past the neglect window, a sponsor about to lose confidence, with Update), the sponsor popover (weeks since the last word, Update), each change's reason in the history and the profile, and the report's drivers (8.6).
+
+**Why** (the product owner's brief): repeated actions should give less each time, time spent on the team should cost something, and doing nothing should cost people and the business, as it would in the real world. Before it, the synthetic players found that a routine of two repeated actions beat the Expert on Sales Elevator, reading people without acting reached Gold, People first beat the Expert on score and revenue, and Business was capped for the best players (CALIBRATION-SYNTHETIC 8). With it every one of those checks passes on both storylines.
+
 ---
 
 ## 4. Actions [M][W]
@@ -480,12 +501,13 @@ The GenieKreator rules (`docs/genie/scoring-and-report.md` section 6, D62). Form
 
 | Pillar | 0 to 100 |
 |---|---|
-| Business (B) | min(100, revenue ÷ target × 100); with weighted business variables (6.6, D139), (1 − Σ weights) × that + Σ weight × the variable's position in its range (0 at the bottom, 100 at the top; inverted when less is better) |
-| People (P) | 50 + change in team morale + 0.5 × change in team trust, since the start of the run, kept in 0 to 100 |
+| Business (B) | min(100, revenue ÷ target × 100); with weighted business variables (6.6, D139), (1 − Σ weights) × that + Σ weight × the variable's position in its range (0 at the bottom, 100 at the top; inverted when less is better). With realism (3.6): revenue's part is 85 × revenue ÷ target up to the target, then 85 + 15 × (1 − e^(−(share − 1) ÷ 0.5)) past it (110% gives 88, 150% gives 94.5, never 100; D175), and sponsor confidence takes 20% of the pillar beside the variables (D177) |
+| People (P) | 50 + change in team morale + 0.5 × change in team trust, since the start of the run, kept in 0 to 100. With realism (D177): the change x is over everyone on the team (away too), less 5 for each person who left (resigned or let go); a gain counts as 50 + 50 × (1 − e^(−x ÷ 30)) (a change of 30 gives about 82, never 100), a loss as 50 + x |
 | Leadership (L) | 0.5 × contextual capability % + 0.5 × the mean band score of all live interactions and of every choice the participant decided that has a read (each at its read's mean band score, D139); with neither, the capability % |
 
 - **Contextual capability %** = style tagged choices that matched what the person needed ÷ all style tagged choices, whole run. Style tagged: weekly style setting, and live conversations with one person (meetings, briefings, interviews and multi person emails carry no style).
 - **Band scores:** Strong 100, Adequate 70, Weak 35, Harmful 0.
+- **Quiet weeks** (realism, D174): a finished week with no action, conversation or decision counts as one more band score in the mean, at 35.
 
 ### 7.2 Stars, per period
 **Week score** = 0.5 × weekly style fit % + 0.3 × mean band score of the period's live interactions + 0.2 × min(100, final stage output ÷ the period's ideal × 100). With no live interaction in the period, 0.8 × weekly style fit % + 0.2 × the funnel part (D62).
@@ -494,6 +516,8 @@ The GenieKreator rules (`docs/genie/scoring-and-report.md` section 6, D62). Form
 
 ### 7.3 Streak and badges
 **Streak:** periods in a row at 2 stars or more. The third adds +25 to the score, each period after it another +25, up to +100 for the run. A broken streak resets the count at no cost.
+
+**Gradual streak** (realism, D176, `realism.score.streak: gradual`): every period at 2 stars or more adds cap ÷ periods × stars ÷ 3 × (0.75 + 0.25 × min(1, run ÷ 3)), where run is the periods in a row so far; a period under 2 stars adds nothing and starts the run again. Eight 3 star weeks earn about +97, eight 2 star weeks about +65, with no cliff at the third week. `steps` keeps the rule above.
 
 **Badges** (each earned once, with its reason in words; unearned badges show their description):
 
@@ -525,6 +549,9 @@ From the final Leadership Score: Platinum 850 and up, Gold 700 to 849, Silver 50
 | Escalation: a missed briefing, or an event ignored past its window | −10 |
 | Sponsor message unanswered past due | −5 [N] |
 | An authored consequence table entry | as authored |
+| With realism (3.6, D173): 2 weeks or more without a word to the sponsor, at each week end | −4 |
+| With realism: the participant's own update, by band | half a briefing's |
+| With realism: a repeated action's sponsor gain | at its share (D171) |
 
 Tapping the meter lists the last 3 causes [S].
 
@@ -627,7 +654,7 @@ For the organization, not the participant: aggregates of a cohort's run summarie
 - **Contradiction guard.** Every claim names its dimension and tone; praise of a weak dimension, or criticism of a strong one, is refused, and a dimension with no evidence takes only neutral claims (`contradicts`, unit tested). The authored level line is praise of the whole run in the upper half of the scale, so it shows then only when conversations, style fit, people and business are none of them weak.
 - **Profile and headline.** First match: read people well but rarely acted (activity weak, style fit strong); little leadership reached the team (activity weak); words and choices did not match (conversations not weak, style fit weak); team and numbers grew together (business and people strong); numbers at the team's expense (business not weak, people weak); strong with people, numbers lagged (people strong, business not strong); both slipped (people and business weak); mixed. The headline's own claims pass the guard. Assessment words each neutrally.
 - **Summary lines.** Factual, with the run's numbers: the team averages that moved, who left, style fit, one style used for 60% or more of choices (unless fit was strong), conversations that went well or landed, activity when low or the profile is about acting, unanswered items, the sponsor when the change was strong or weak. Development ends with the profile's next step; assessment states findings only.
-- **What drove the results.** 3 to 5 decisions and patterns ranked by the size of what they moved: one action with one person (the net change it made, its weeks), team actions, the weekly style fits and misses, weeks without attention (drift), unanswered messages (trust), escalations (sponsor confidence), mixed signals (trust), resignations, the bottleneck stage with its owner's weakest number, and (D152) each choice decided or left to its default, weighed by what it moved (people points, a shown variable's move in points of its range, revenue in points of a period's target; the tone is their net, a variable counted for or against as more is better or not), and each shown business variable that moved 5 points of its range or more over the run.
+- **What drove the results.** With realism (D171 to D174) the drivers can also name people left without one to one time (person weeks past the window, the morale and trust it cost), actions repeated too soon, weeks of silence with the sponsor (the confidence it cost), revenue lost to ignored events and the sponsor's reaction, and days left unused. 3 to 5 decisions and patterns ranked by the size of what they moved: one action with one person (the net change it made, its weeks), team actions, the weekly style fits and misses, weeks without attention (drift), unanswered messages (trust), escalations (sponsor confidence), mixed signals (trust), resignations, the bottleneck stage with its owner's weakest number, and (D152) each choice decided or left to its default, weighed by what it moved (people points, a shown variable's move in points of its range, revenue in points of a period's target; the tone is their net, a variable counted for or against as more is better or not), and each shown business variable that moved 5 points of its range or more over the run.
 - **Food for thought and takeaways.** Up to 3 questions that name the run (the person given least one to one time, the actions not taken, the person whose style missed most, words against choices, the hardest week, the first unanswered message, the person whose morale fell most, the bottleneck stage, the best conversation), in the order the profile makes most useful, then the authored questions. Takeaways: the profile's two, one about a person in the run, then the authored ones, up to 6.
 
 ## 9. Calibration ("make it playable")
@@ -638,7 +665,7 @@ The funnel numbers are tuned per storyline by `npm run calibrate -- <storyline>`
 |---|---|---|
 | Passive | Keeps the starting styles, takes no actions | 40 to 65% |
 | Random | Random styles and affordable actions | 35 to 65%. Acting without reading people can do more harm than doing nothing, as in the Model doc. |
-| Good | Sets a style that fits each need each period (the lens's fit table), picks actions that address low metrics, conversations at Adequate or better | 100 to 125%, reached in 80% or more of runs |
+| Good | Sets a style that fits each need each period (the lens's fit table), picks actions that address low metrics, conversations at Adequate or better; with realism, updates the sponsor before a silence costs confidence | 100 to 125%, reached in 80% or more of runs |
 
 **What it adjusts, in order:**
 1. `performanceThreshold`, the Model doc's funnel buffer. It is bisected until passive play earns about half of what good play earns (medians), because the compounding across stages is what makes or breaks playability.
@@ -652,8 +679,14 @@ It then plays 200 runs per policy and checks every band. The output is a report 
 
 | Storyline | Threshold, leads a day | Passive | Random | Good | Scores (passive, random, good) |
 |---|---|---|---|---|---|
-| Sales Elevator (dynamics on, D135) | 73, 33 | 54% | 63% | 110% | 310, 382, 889 |
-| Client Trust (D141) | 111, 21 | 56% | 66% | 113% | 307, 435, 904 | The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
+| Sales Elevator, before realism (D135) | 73, 33 | 54% | 63% | 110% | 310, 382, 889 |
+| Sales Elevator, with realism (D178) | 117, 34 | 55% | 61% | 110% | 218, 252, 836 |
+| Client Trust, before realism (D165, D166) | 127, 18 | 53% | 67% | 113% | 289, 432, 945 |
+| Client Trust, with realism (D178) | 293, 15 | 51% | 67% | 110% | 212, 315, 900 |
+
+With realism, what inaction costs (idle days, neglect, silence, ignored events) comes off passive play whatever the team's results, so the buffer rises to keep passive play near half of good play: Client Trust, with more events that call for an answer and the sponsor's reaction, rises most. Good play lands where it did; passive and random play score lower, and good play's Business pillar no longer caps at 100 (D175).
+
+The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
 
 For the Sales Elevator default, calibration starts from the workbook's starting values; the prototype's on-screen numbers are only design fixtures for the `/screens` gallery.
 

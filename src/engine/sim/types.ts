@@ -2,6 +2,7 @@ import type { StorylineConfig } from '../config';
 import type { NeedKey } from '../lens';
 import type { Mismatch, Style, Triple } from './rules';
 import type { Copy } from '../copy';
+import type { RealismState } from './realism';
 
 export type MetricKey = 'skill' | 'morale' | 'result' | 'trust';
 export type Band = 'strong' | 'adequate' | 'weak' | 'harmful';
@@ -177,6 +178,10 @@ export interface Interaction {
   plan?: PlanFields;
   /** A conversation with a stakeholder (D161): who, which of their interactions, how it is evaluated, and the request it answers. */
   stakeholder?: { key: string; interaction: string; format: StakeholderFormat; requestId?: string };
+  /** Realism (D171): the share each person's effects land at (by member id, or `team`), worked out when it was planned. */
+  shares?: Record<string, number>;
+  /** The participant's own update to the sponsor (D173), not a scheduled briefing. */
+  update?: boolean;
 }
 
 /** How a stakeholder conversation is evaluated and voiced (D161): a meeting, a presentation, a negotiation or an email. */
@@ -525,6 +530,8 @@ export interface Sim {
   stakeholders: Record<string, StakeholderState>;
   stakeholderRequests: StakeholderRequestState[];
   stakeholderRecords: StakeholderRecord[];
+  /** Realism (D171 to D178): uses, the team's lost time, attention, the sponsor's last word. Only with a realism block. */
+  realism?: RealismState;
 }
 
 export type { Mismatch, NeedKey, Style, Triple };

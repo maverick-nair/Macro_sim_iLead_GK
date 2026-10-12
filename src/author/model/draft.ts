@@ -443,7 +443,12 @@ export const AuthorDraft = z.object({
     daysPerWeek: IntIn(MIN_DAYS, MAX_DAYS),
     pacing: z.enum(['forgiving', 'balanced', 'demanding']),
     /** People dynamics (D135): morale and trust reach output and attrition. New drafts switch it on; drafts saved before read back off. */
-    dynamics: z.boolean().optional()
+    dynamics: z.boolean().optional(),
+    /**
+     * Real world costs (D171 to D178) at the engine's defaults: diminishing returns on repeats, the team's time, the cost
+     * of neglect and silence, and the score's curves. New drafts switch it on; drafts saved before read back off.
+     */
+    realism: z.boolean().optional()
   }),
   /** Business variables (D136), 0 to 6, edited in Work process. */
   variables: z.array(VariableDraft).max(MAX_VARIABLES).default([]),

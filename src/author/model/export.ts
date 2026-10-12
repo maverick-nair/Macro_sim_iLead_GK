@@ -412,6 +412,8 @@ export function toStoryline(d: AuthorDraft): Exported {
     ...(balanced ? null : { drift: { morale: pace.drift, result: 0 }, gamification: { ...(base.gamification ?? {}), sponsor: { ...(base.gamification?.sponsor ?? {}), escalation: pace.escalation } } }),
     // People dynamics (D135) at the engine's defaults, and the business variables (D136), with weights as shares.
     ...(d.process.dynamics ? { dynamics: {} } : null),
+    // Real world costs (D171 to D178) at the engine's defaults.
+    ...(d.process.realism ? { realism: {} } : null),
     variables: d.variables.map(v => ({ key: v.key, name: v.name || v.key, format: v.format, start: v.start, min: v.min, max: v.max, drift: v.drift, shown: v.shown, weight: v.weight / 100, higherIsBetter: v.higherIsBetter, ...(v.about.trim() ? { about: v.about.trim() } : null) })),
     ...(stakeholders.length ? { stakeholders } : null),
     ...(hasStatic ? null : { demo: { enabled: false } }),

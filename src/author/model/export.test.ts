@@ -195,8 +195,9 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['events[].ifIgnored.followUp', d => { ev(d, 'lens_moment').ifIgnored.followUp = 'public_complaint'; }, 'events.key=lens_moment.escalation'],
   ['scoring.framework', d => { d.scoring.framework = { file: 'ours.md', pages: 1, step: 3, confirmed: true, rows: [{ skill: 'Listening', behaviors: 'Asks open questions', levels: 5, page: 1, include: true }, { skill: 'Clarity', behaviors: 'Sets one next step', levels: 5, page: 1, include: true }] }; d.scoring.skills = [{ key: 'listening', name: 'Listening', reportOnly: false }, { key: 'clarity', name: 'Clarity', reportOnly: false }]; d.actions.forEach(a => { a.scoredOn = ['Listening', 'Clarity']; }); remapReads(d); }, 'report.skills'],
   ['scoring.levels', d => { d.scoring.levels = ['Starting', 'Growing', 'Strong']; }, 'report.scale'],
-  // People dynamics and business variables (D135, D136).
+  // People dynamics, real world costs and business variables (D135, D171, D136).
   ['process.dynamics', d => { d.process.dynamics = false; }, 'dynamics'],
+  ['process.realism', d => { d.process.realism = false; }, 'realism'],
   ['variables[].key', d => { d.variables[1].key = 'trust_index'; for (const e of d.events) for (const o of e.choice?.options ?? []) { if (o.variables.customer_trust !== undefined) { o.variables.trust_index = o.variables.customer_trust; delete o.variables.customer_trust; } } }, 'variables.1.key'],
   ['variables[].name', d => { d.variables[0].name = 'Spend'; }, 'variables.0.name'],
   ['variables[].format', d => { d.variables[0].format = 'points'; }, 'variables.0.format'],

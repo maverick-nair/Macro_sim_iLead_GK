@@ -19,5 +19,9 @@
   "metrics.sponsor.lines": "The lines",
   "metrics.sponsor.unlock": "Rise to {at} and {name} offers you a reward.",
   "metrics.sponsor.checkIn": "Drop below {below} and the CEO asks for a check in. It takes a {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} of your time.",
-  "metrics.sponsor.none": "Nothing has moved it yet."
+  "metrics.sponsor.none": "Nothing has moved it yet.",
+  "metrics.sponsor.keepInTouch": "Keep in touch",
+  "metrics.sponsor.silence": "{weeks, plural, =0 {You have spoken to {name} this {unit, select, year {year} month {month} week {week} day {day} other {period}}.} one {{name} has not heard from you for # {unit, select, year {year} month {month} week {week} day {day} other {period}}.} other {{name} has not heard from you for # {unit, select, year {years} month {months} week {weeks} day {days} other {periods}}.}} After {from, plural, one {# {unit, select, year {year} month {month} week {week} day {day} other {period}}} other {# {unit, select, year {years} month {months} week {weeks} day {days} other {periods}}}} without a word, confidence slips every {unit, select, year {year} month {month} week {week} day {day} other {period}}.",
+  "metrics.sponsor.update": "Update {name}",
+  "metrics.sponsor.updateBlocked": "{why, select, done {Updated this {unit, select, year {year} month {month} week {week} day {day} other {period}}} other {Not enough time left}}"
 }

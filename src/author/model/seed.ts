@@ -293,7 +293,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
         { key: 'team', title: 'Meet your team', body: `You lead ${team.length} people across ${stages.length} stages. Open each profile to see what they need from you.` }
       ]
     },
-    process: { stages, pressure, revenue: sl.money.target, weeks: sl.time.period.count, daysPerWeek: 5, pacing: 'balanced', dynamics: true },
+    process: { stages, pressure, revenue: sl.money.target, weeks: sl.time.period.count, daysPerWeek: 5, pacing: 'balanced', dynamics: true, realism: true },
     variables,
     // Stakeholders outside the team (D160): none until the author adds them, or creates the brief's.
     stakeholders: [],

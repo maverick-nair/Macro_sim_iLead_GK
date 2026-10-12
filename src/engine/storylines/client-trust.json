@@ -26,7 +26,7 @@
     "target": 240000,
     "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      18
+      15
     ]
   },
   "time": {
@@ -1185,7 +1185,8 @@
                 "budget": -1500
               }
             }
-          }
+          },
+          "opportunity": 0.1
         },
         {
           "key": "team_building",
@@ -1215,7 +1216,8 @@
                 "budget": -5000
               }
             }
-          }
+          },
+          "opportunity": 0.5
         }
       ]
     },
@@ -1472,7 +1474,11 @@
             }
           }
         }
-      ]
+      ],
+      "realism": {
+        "opportunity": 0,
+        "fatigue": false
+      }
     },
     {
       "key": "fire",
@@ -2416,7 +2422,12 @@
         ]
       },
       "escalation": {
-        "sponsor": true
+        "sponsor": true,
+        "business": {
+          "variables": {
+            "budget": -10000
+          }
+        }
       }
     },
     {
@@ -2803,7 +2814,12 @@
         ]
       },
       "escalation": {
-        "sponsor": false
+        "sponsor": false,
+        "business": {
+          "variables": {
+            "quality": -3
+          }
+        }
       }
     },
     {
@@ -2938,7 +2954,12 @@
         ]
       },
       "escalation": {
-        "sponsor": true
+        "sponsor": true,
+        "business": {
+          "variables": {
+            "quality": -2
+          }
+        }
       }
     },
     {
@@ -3326,6 +3347,17 @@
     }
   ],
   "dynamics": {},
+  "realism": {
+    "sponsor": {
+      "reaction": {
+        "business": {
+          "variables": {
+            "budget": -15000
+          }
+        }
+      }
+    }
+  },
   "stakeholders": [
     {
       "key": "client_lead",
@@ -3716,6 +3748,6 @@
       ]
     }
   ],
-  "performanceThreshold": 127,
+  "performanceThreshold": 293,
   "calibrated": true
 }

@@ -157,6 +157,27 @@ export function drivers(sim: Sim, purpose: Purpose, bottleneck: BottleneckFact |
   const confidence = sum(escalated.flatMap(l => l.changes.filter(ch => ch.metric === 'confidence').map(ch => ch.delta)));
   if (escalated.length && confidence) push('escalated', Math.abs(confidence), 'negative', msg('engine.report.driver.escalated', { n: escalated.length, name: nameOf(sim, 'sponsor'), delta: confidence }));
 
+  // Realism (D171 to D174): what repeats, neglect, silence, unused days and ignored events cost, when the storyline has it.
+  const real = sim.realism?.evidence;
+  if (real) {
+    const neglect = changesOf(sim, 'engine.real.neglect.label');
+    const nMorale = total(neglect, 'morale'), nTrust = total(neglect, 'trust');
+    if (real.neglectWeeks) push('neglect', Math.abs(nMorale) + Math.abs(nTrust) + 2 * real.neglectWeeks, 'negative', msg('engine.report.driver.neglect', {
+      purpose, n: real.neglectWeeks, weeks: sim.config.realism!.neglect.weeks, unit, morale: nMorale, trust: nTrust
+    }));
+    const repeated = Object.entries(real.repeatedActions).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    if (real.repeats >= 2) push('repeats', Math.min(25, 3 * real.repeats), 'negative', msg('engine.report.driver.repeats', {
+      n: real.repeats, actions: listOf(repeated.slice(0, 3).map(([k]) => actionName(sim, k)), 'and')
+    }));
+    const silence = sim.log.filter(l => hasCode(l.title, 'engine.real.silence.log'));
+    const quiet = sum(silence.flatMap(l => l.changes.filter(ch => ch.metric === 'confidence').map(ch => ch.delta)));
+    if (silence.length && quiet) push('silence', Math.abs(quiet), 'negative', msg('engine.report.driver.silence', { purpose, name: nameOf(sim, 'sponsor'), n: silence.length, unit, delta: quiet }));
+    if (real.escalationRevenue > 0) push('lost', (100 * real.escalationRevenue) / Math.max(1, sim.config.money.target / Math.max(1, sim.config.time.period.count)), 'negative', msg('engine.report.driver.lost', {
+      reaction: real.reactions ? 'yes' : 'no', name: nameOf(sim, 'sponsor'), amount: Math.round(real.escalationRevenue), currency: sim.config.money.currency
+    }));
+    if (real.idleDays) push('idle', 2 * real.idleDays, 'negative', msg('engine.report.driver.idle', { n: real.idleDays, unit }));
+  }
+
   // Saying one style and showing another.
   const mixed = changesOf(sim, 'engine.mixed.label');
   if (mixed.length) push('mixed', Math.abs(total(mixed, 'trust')), 'negative', msg('engine.report.driver.mixed', { purpose, n: mixed.length, delta: total(mixed, 'trust') }));

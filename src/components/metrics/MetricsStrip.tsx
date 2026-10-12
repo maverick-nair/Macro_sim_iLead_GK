@@ -3,6 +3,7 @@ import type { MetricKey } from '../../engine/contract';
 import { useI18n } from '../../i18n';
 import { useMoney } from '../../i18n/money';
 import { KpiTile, type KpiTrend } from '../metric/KpiTile';
+import { NoWrapButton } from '../../ds/Button';
 import type { PeriodUnit, SubPeriodUnit } from '../hud/Hud';
 
 export const SPONSOR_LEVELS = ['low', 'wavering', 'steady', 'confident', 'champion'] as const;
@@ -59,6 +60,12 @@ export interface SponsorConfidence {
    * When given, the tile reads "Confident, 72" and the popover says what the lines mean. The design frames pass none.
    */
   meter?: { value: number; unlockAt: number; checkInBelow: number; sponsorName: string; subPeriodUnit: SubPeriodUnit };
+  /**
+   * Realism (D173), when the storyline has it: whole periods since your last word to the sponsor, the silence at which
+   * confidence starts to slip, and your own update (its cost, why it cannot be given now, and what opens it).
+   */
+  silence?: { weeks: number; costsFrom: number; periodUnit: PeriodUnit };
+  update?: { cost: string; blocked: 'done' | 'capacity' | null; onUpdate: () => void };
 }
 
 export interface MetricsStripProps {
@@ -153,6 +160,18 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
           <b className="border-t border-line-default pt-2">{t('metrics.sponsor.lines')}</b>
           <span>{t('metrics.sponsor.unlock', { at: number(meter.unlockAt), name: meter.sponsorName })}</span>
           <span>{t('metrics.sponsor.checkIn', { below: number(meter.checkInBelow), unit: meter.subPeriodUnit })}</span>
+        </>
+      )}
+      {meter && sponsor.silence && (
+        <>
+          <b className="border-t border-line-default pt-2">{t('metrics.sponsor.keepInTouch')}</b>
+          <span>{t('metrics.sponsor.silence', { name: meter.sponsorName, weeks: sponsor.silence.weeks, from: sponsor.silence.costsFrom, unit: sponsor.silence.periodUnit })}</span>
+          {sponsor.update && (
+            <div className="flex flex-wrap items-center gap-2">
+              <NoWrapButton variant="secondary" size="sm" disabled={!!sponsor.update.blocked} onClick={sponsor.update.onUpdate}>{t('metrics.sponsor.update', { name: meter.sponsorName })}</NoWrapButton>
+              <span className="text-12 text-fg-secondary">{sponsor.update.blocked ? t('metrics.sponsor.updateBlocked', { why: sponsor.update.blocked, unit: sponsor.silence.periodUnit }) : sponsor.update.cost}</span>
+            </div>
+          )}
         </>
       )}
     </div>

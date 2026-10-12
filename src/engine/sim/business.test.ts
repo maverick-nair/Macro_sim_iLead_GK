@@ -15,7 +15,8 @@ const base = salesElevator as unknown as StorylineInput;
 type EventIn = NonNullable<StorylineInput['events']>[number];
 type ChoiceIn = NonNullable<EventIn['choice']>;
 function storyline(extra: Partial<StorylineInput>): StorylineConfig {
-  const p = parseStoryline({ ...structuredClone(base), events: [], triggers: [], ...extra });
+  // Without realism (D171 to D178): these rules are read on their own; realism.test.ts covers what realism adds.
+  const p = parseStoryline({ ...structuredClone(base), events: [], triggers: [], realism: undefined, ...extra });
   if (!p.ok) throw new Error(p.issues.join('\n'));
   return p.config;
 }
@@ -79,7 +80,8 @@ describe('business variables (D136)', () => {
     for (const e of [a, b]) { await toBoard(e); await nextWeek(e); }
     const ra = a.view().score.business, rb = b.view().score.business;
     // Revenue alone is rb; half of it plus half of a full variable (100) is the weighted pillar.
-    expect(ra).toBeCloseTo(0.5 * rb + 50, 0);
+    // Both are rounded for the view, so they can sit half a point apart.
+    expect(Math.abs(ra - (0.5 * rb + 50))).toBeLessThanOrEqual(0.5);
   });
 
   it('refuse a reference to a variable that does not exist, and weights over 80%', () => {

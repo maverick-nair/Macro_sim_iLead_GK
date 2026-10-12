@@ -1,0 +1,6 @@
+{
+  "metrics.sponsor.keepInTouch": "Mantén el contacto",
+  "metrics.sponsor.silence": "{weeks, plural, =0 {Has hablado con {name} {unit, select, year {este año} month {este mes} week {esta semana} day {hoy} other {este periodo}}.} one {{name} lleva # {unit, select, year {año} month {mes} week {semana} day {día} other {periodo}} sin saber de ti.} other {{name} lleva # {unit, select, year {años} month {meses} week {semanas} day {días} other {periodos}} sin saber de ti.}} Tras {from, plural, one {# {unit, select, year {año} month {mes} week {semana} day {día} other {periodo}}} other {# {unit, select, year {años} month {meses} week {semanas} day {días} other {periodos}}}} sin noticias, la confianza baja cada {unit, select, year {año} month {mes} week {semana} day {día} other {periodo}}.",
+  "metrics.sponsor.update": "Informar a {name}",
+  "metrics.sponsor.updateBlocked": "{why, select, done {Ya informaste {unit, select, year {este año} month {este mes} week {esta semana} day {hoy} other {este periodo}}} other {No queda tiempo suficiente}}"
+}

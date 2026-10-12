@@ -12,6 +12,8 @@ import { msg, type Copy } from '../copy';
 import { choiceBody, varName } from './business';
 import { engagedNow, interactionLabel, interactionOf, offered, stakeholderBlock, stakeholderMood } from './stakeholders';
 import { relationLevel, stakeholderConfig } from './stakeholderState';
+import { opportunityOf, realismOf, repeatOf, tires, unattendedWeeks, windowOf } from './realism';
+import { sponsorUpdateBlock } from './actions';
 
 /**
  * What the participant may see. Built from engine state, never computed by the UI. Deliberately
@@ -128,10 +130,18 @@ export function buildView(sim: Sim) {
       unread: sim.inbox.some(x => x.from === m.id && x.state === 'open'),
       promise: sim.promises.find(x => x.memberId === m.id && x.state === 'open')?.text ?? null,
       // The optional authored rows (D97) are sent only when the storyline has them.
-      profile: p.profile
+      profile: p.profile,
+      // Realism (D174): weeks with no time of their own with you, so the board can say so. Only with realism.
+      ...(realism ? { unattended: unattendedWeeks(sim, m.id), neglected: unattendedWeeks(sim, m.id) >= realism.neglect.weeks } : null)
     };
   };
   const demoAction = c.demo.action ?? c.actions.find(a => a.kind === 'static' && a.scope === 'member')?.key ?? null;
+  const realism = realismOf(sim);
+  /** How a use now would land (D171): the share of its good effects, earlier uses in its window and the days since the last. */
+  const repeatView = (a: StorylineConfig['actions'][number], id: string | null) => {
+    const r = repeatOf(sim, a, id);
+    return r.share < 1 ? { share: r.share, uses: r.uses, ago: r.ago ?? 0, window: windowOf(realism!, a), ...(a.scope === 'team' ? { tires: tires(a) } : null) } : null;
+  };
   const score = finalScore(sim);
   return {
     phase: sim.phase,
@@ -179,7 +189,13 @@ export function buildView(sim: Sim) {
         // Stages a move can go to, with a reason where the stage has no room (role coverage).
         stages: o.pickStage ? c.stages.map(st => ({ key: st.key, blocked: a.rule === 'swap' && sim.members.filter(m => m.stage === st.key).length >= c.maxPerStage ? { reason: 'stageFull' as const, stage: st.key } : null })) : null, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,
-      blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {}
+      blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {},
+      // Realism (D171, D172): a repeat lands at less (for the team, or by person), and the share of the team's day it takes.
+      ...(realism ? {
+        repeat: a.scope === 'team' ? repeatView(a, null) : null,
+        repeatFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, repeatView(a, m.id)]).filter(([, r]) => r)) : {},
+        teamTime: a.scope === 'team' ? opportunityOf(realism, a, a.options[0]) : 0
+      } : null)
     })),
     promises: sim.promises.map(x => ({ id: x.id, memberId: x.memberId, text: x.text, state: x.state, dueInSubPeriods: Math.max(0, x.dueAbsSub - sim.absSub) })),
     inbox: sim.inbox.filter(x => x.state === 'open').map(message),
@@ -202,7 +218,12 @@ export function buildView(sim: Sim) {
       return { key: b.key, rule: b.rule, name: b.name, description: b.description, earned: !!got, period: got?.period ?? null, reason: got?.reason ?? null };
     }),
     sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, styleLine: c.sponsor.styleLine, value: sim.sponsor.value,
-      unlockAt: c.gamification.sponsor.unlockAt, checkInBelow: c.gamification.sponsor.checkInBelow, level: sponsorLevel(sim), causes: sim.sponsor.causes },
+      unlockAt: c.gamification.sponsor.unlockAt, checkInBelow: c.gamification.sponsor.checkInBelow, level: sponsorLevel(sim), causes: sim.sponsor.causes,
+      // Realism (D173): weeks since your last word to the sponsor, when silence starts to cost, and your own update.
+      ...(realism && sim.realism ? {
+        silence: { weeks: sim.period - sim.realism.sponsorContact - (sim.realism.sponsorContact === sim.period ? 0 : 1), costsFrom: realism.sponsor.silence },
+        update: { cost: realism.sponsor.update.cost, blocked: sponsorUpdateBlock(sim) }
+      } : null) },
     pendingReward: sim.pendingReward,
     perks: { bonusDay: sim.bonusPeriod !== null && sim.bonusPeriod >= sim.period, hireBudget: sim.hireBudget, teamActivity: sim.freeTeamActivity, checkIn: sim.checkInPeriod === sim.period },
     history: sim.log,

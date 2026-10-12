@@ -99,6 +99,8 @@ export interface ActionDrawerProps {
   description: string;
   /** A sponsor reward that applies to this action ("Extra hire budget from your sponsor: ..."). */
   perk?: string;
+  /** What this costs beyond its days (D171, D172): a repeat that lands at less, the team's working time it takes. */
+  notes?: string[];
   options?: ActionOption[];
   option?: number | null;
   onOption?: (index: number) => void;
@@ -165,6 +167,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
         <Heading ref={heading} tabIndex={-1} level={p.headingLevel ?? 2} className="m-0 text-22 font-700 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</Heading>
         <span className="text-13 text-pretty text-fg-secondary">{p.description}</span>
         {p.perk && <span role="note" className="text-13 font-700 text-pretty text-status-gain">{p.perk}</span>}
+        {p.notes?.map(n => <span key={n} role="note" className="text-13 text-pretty text-status-decline">{n}</span>)}
       </div>
       {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} />}
       <div className="flex flex-col gap-2">
