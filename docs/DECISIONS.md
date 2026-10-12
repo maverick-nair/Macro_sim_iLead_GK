@@ -1308,6 +1308,10 @@ The overall level was the mean of the skill ratings, and the verdict read only t
 **D222. The onboarding e2e walks the Products screen.** Decided 2026-10-12.
 - With Sales Elevator's portfolio (D221), the sponsor's message ends on Explore products and the pre-game flow is four screens on the engine too. `tests/e2e/onboarding.spec.ts` walks it by keyboard in dark and light: the four models, Commercial / 01, the tagline and who it is for, the photo's description, the features as tabs (arrow keys) and as numbered spots, the specs with the typical deal, the explored count, Next: Levo H4, then the objectives, with axe on the screen.
 
+**D223. A packaged storyline's site images pass the image check; the SCORM spec starts at the pre-game flow.** Decided 2026-10-12.
+- Inside a SCORM package the player makes the storyline's site paths relative (`/assets/...` to `./assets/...`, D208) before it parses the storyline, and `ImageRef` only took paths from the site root, so a storyline with a site image (an office from the library, a logo, a product photo) could not start in a package: "This simulation could not start". Sales Elevator's product photos (D221) showed it. `ImageRef` now takes `./` paths too (`src/engine/assets.ts`); a unit test parses Sales Elevator as a package does.
+- `tests/e2e/scorm.spec.ts` was written before the pre-game flow (D219) and waited for the old onboarding's Let's begin; its first launch now waits for the landing. Its LMS harness steps move to `tests/e2e/fixtures/scorm-lms.ts`, shared with the lifecycle spec (D224).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:

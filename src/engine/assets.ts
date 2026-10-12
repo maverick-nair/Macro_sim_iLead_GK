@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 /**
  * Images a storyline carries (D183): portraits, the office backdrop, the company and brand logos and the
- * product image. Each is a path on this site (`/assets/...`, the library GenieKreator offers), an https
+ * product image. Each is a path on this site (`/assets/...`, the library GenieKreator offers; `./assets/...` in a
+ * SCORM package, D223), an https
  * address, or an image uploaded in GenieKreator and embedded as a base64 data URL. Embedded images have a
  * budget each and together, so a storyline stays quick to load for participants and in a SCORM package.
  */
@@ -15,7 +16,8 @@ export const IMAGES_BUDGET_BYTES = 3 * 1024 * 1024;
 export const IMAGE_REF_MAX = 1_000_000;
 
 const DATA_URL = /^data:image\/(png|jpeg|webp|gif|svg\+xml);base64,([a-z0-9+/=]+)$/i;
-const PATH = /^\/(?!\/)[^\s"'<>()]*$/;
+// A site path; inside a SCORM package the player makes `/assets/...` relative (`./assets/...`, src/lms/boot.tsx), so that form passes too.
+const PATH = /^\.?\/(?!\/)[^\s"'<>()]*$/;
 const HTTPS = /^https:\/\/[^\s"'<>()]+$/i;
 
 /** True for an embedded image (a base64 data URL). */

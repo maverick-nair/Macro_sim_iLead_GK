@@ -6,6 +6,7 @@ import salesElevator from '../engine/storylines/sales-elevator.json';
 import { manifest12, manifest2004, ncName } from './manifest';
 import { buildPackage, buildPackageFromSite, contentHash, PACKAGE_META, packageIndex, PackageError, storylineJson, type PlayerManifest } from './package';
 import { DEFAULT_LMS, lmsSettingsOf, normalizeLms } from './settings';
+import { relativeAssets } from './boot';
 
 const ENTRY = '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="utf-8" />\n    <title>Simulation</title>\n    <script type="module" src="./assets/player.js"></script>\n  </head>\n  <body><div id="root"></div></body>\n</html>\n';
 const PLAYER: PlayerManifest = { format: 1, build: 'b1', base: 'player/', entry: 'player.html', files: ['player.html', 'assets/player.js', 'player.css', 'assets/npc/kent.webp'] };
@@ -44,6 +45,15 @@ describe('settings', () => {
     expect(lmsSettingsOf({ ...config, lms: { ...lms, completion: { rule: 'weeks', periods: 3 }, pass: { rule: 'score', score: 65 } } }))
       .toMatchObject({ completion: { kind: 'weeks', weeks: 3 }, pass: { kind: 'score', min: 65 } });
     expect(lmsSettingsOf({ lms: { package: 'scorm12', pass: { rule: 'level', level: DEFAULT_SCALE[1].name } } }).pass).toEqual({ kind: 'level', min: 1 });
+  });
+});
+
+describe('the packaged storyline', () => {
+  it('still parses once its site images are made relative to the package (D223): product photos, portraits', () => {
+    const rel = relativeAssets(salesElevator);
+    expect(rel.world?.products?.[0].image).toBe('./assets/products/lift-b10.jpg');
+    const parsed = parseStoryline(rel);
+    expect(parsed.ok ? parsed.config.world?.products?.length : parsed.issues).toBe(4);
   });
 });
 
