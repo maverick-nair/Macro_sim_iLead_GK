@@ -93,6 +93,12 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
       let guard = 20;
       v = await decide(engine, config, v, policy, rng);
       v = await withStakeholders(v);
+      // Realism (D173): the good player updates the sponsor before a silence costs confidence (only where the view offers it).
+      const up = v.sponsor.update, silence = v.sponsor.silence;
+      if (policy === 'good' && up && !up.blocked && silence && silence.weeks + 1 >= silence.costsFrom) {
+        const o = await engine.dispatch({ type: 'openConversation', kind: 'sponsor' });
+        v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: BRIEF })).view;
+      }
       while (v.clock.capacityLeft >= 1 && guard-- > 0) {
         const step = policy === 'good' ? goodStep(v, high, lens) : policy === 'oneStyle' ? goodStep(v, high, lens, one) : randomStep(v, rng, lens);
         if (!step) break;
