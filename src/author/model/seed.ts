@@ -313,8 +313,8 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       ...(seeded.length ? seeded.map(choiceDraft) : defaultChoices(sl.time.period.count, sl.money.target, skills.filter(x => !x.reportOnly).map(x => x.name), ind.work, pressureName))],
     scoring: {
       skills,
-      samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null })),
-      framework: null, levels: (sl.report?.scale ?? DEFAULT_SCALE).map(l => l.name), reportSections: null
+      samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null, reason: '', resolution: null })),
+      framework: null, levels: (sl.report?.scale ?? DEFAULT_SCALE).map(l => l.name), reportSections: null, rubric: [], anchors: {}
     },
     brand: { from: 'knolskape', name: ctx.company, logo: '', main: '#249DFF', second: '#43D6E8', font: 'Manrope', look: 'dark', preview: 'board' },
     lms: { ...DEFAULT_LMS_DRAFT },

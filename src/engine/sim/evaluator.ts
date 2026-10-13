@@ -13,8 +13,14 @@ export interface EvaluationInput {
   /** Everything the participant said or wrote, in order. */
   text: string;
   usedVoice?: boolean;
-  /** Rubric dimensions for this interaction; defaults per format. */
-  rubric?: Array<{ key: string }>;
+  /**
+   * Rubric dimensions for this interaction; defaults per format. `label` is what the dimension looks for in the
+   * author's words, `cues` phrases that count as evidence of it (D229): the keyword evaluator adds them to its own, a
+   * model reads both.
+   */
+  rubric?: Array<{ key: string; label?: string; cues?: string[] }>;
+  /** The skills' names and level anchors, as the storyline words them (D229), for a model to rate against. */
+  skillDefs?: Array<{ key: string; name: string; anchors?: string[]; description?: string }>;
   /** Skills this interaction rates (Report 2.0 linkage matrix); each gets a band as an observation. */
   skills?: string[];
   /** The lens's styles (D70): the style shown is one of these keys. Readiness Based Leadership when left out. */
@@ -78,6 +84,34 @@ const DUE: Record<string, number> = { tomorrow: 1, 'this week': 3 };
 function sentences(text: string) {
   return text.split(/(?<=[.?!])\s+/).map(s => s.trim()).filter(Boolean);
 }
+
+/**
+ * What each rubric dimension looks for, in plain words (D229): the rubric GenieKreator shows behind its scoring samples
+ * and the label a storyline's rubric starts from. Each dimension reads Strong with two or more signs of it, Adequate
+ * with one, Weak with none; the overall band is the middle one, and any red flag makes it Harmful.
+ */
+export const RUBRIC_LABELS: Record<string, string> = {
+  listening: 'Listening: asks open questions about their view and acknowledges what they say',
+  clarity: 'Clarity: says what is needed, with a plan and a next step by a set time',
+  involvement: 'Involvement: invites their ideas and agrees the plan with them',
+  responsiveness: 'Responsiveness: answers soon, acknowledges the message and asks what is needed',
+  specificity: 'Specificity: gives numbers, examples or the reason, and a next step',
+  tone: 'Tone: thanks, appreciates and keeps it courteous',
+  fairness: 'Fairness: treats everyone alike and bases it on results and evidence',
+  agenda: 'Agenda: sets the purpose and the order, and closes with a next step',
+  inclusion: 'Inclusion: invites everyone in, by name, with open questions',
+  ownership: 'Ownership: owns the number and says what they will do',
+  honesty: 'Honesty: names what is behind, the risk and the numbers',
+  plan: 'Plan: steps, dates and the support needed',
+  structure: 'Structure: the same open questions to every candidate, asking for examples',
+  probing: 'Probing: follows up on what happened, how and why',
+  specific: 'Specific: goals with numbers and exactly who does what',
+  measurable: 'Measurable: a measure and a date to check it by',
+  influence: 'Influence: proposes, with the reason and the benefit for them',
+  interests: 'Interests: asks what matters to them and acknowledges it',
+  options: 'Options: offers alternatives and trades',
+  agreement: 'Agreement: confirms what was agreed and the next step'
+};
 
 /** Default rubric dimensions per format (Design doc, Action by action; Configuration Spec). */
 export const DEFAULT_RUBRIC: Record<string, string[]> = {
@@ -159,8 +193,11 @@ export function planBand(key: string, plan: PlanFields): { band: Band; evidence:
   return null;
 }
 
-function dimensionBand(key: string, text: string): { band: Band; evidence: string[] } {
-  const cues = DIM_CUES[key] ?? DIM_CUES.clarity;
+/** A phrase the author gave as a cue (D229), matched as words, whatever the case. */
+const phraseCue = (p: string) => new RegExp(`\\b${p.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+')}\\b`, 'i');
+
+function dimensionBand(key: string, text: string, extra: string[] = []): { band: Band; evidence: string[] } {
+  const cues = [...(DIM_CUES[key] ?? DIM_CUES.clarity), ...extra.filter(c => c.trim()).map(phraseCue)];
   const hits = cues.filter(rx => rx.test(text)).length;
   const evidence = sentences(text).filter(sn => cues.some(rx => rx.test(sn))).slice(0, 2);
   return { band: hits >= 2 ? 'strong' : hits === 1 ? 'adequate' : 'weak', evidence };
@@ -192,7 +229,8 @@ export const heuristicEvaluator: Evaluator = {
     }
     // A band per rubric dimension, then the overall band (scoring-and-report.md 4).
     const keys = rubric?.map(r => r.key) ?? DEFAULT_RUBRIC[format] ?? DEFAULT_RUBRIC.roleplay;
-    const dimensions = keys.map(key => ({ key, ...((plan && planBand(key, plan)) || dimensionBand(key, text)) }));
+    const extra = (key: string) => rubric?.find(r => r.key === key)?.cues ?? [];
+    const dimensions = keys.map(key => ({ key, ...((plan && planBand(key, plan)) || dimensionBand(key, text, extra(key))) }));
     const redFlags = RED_FLAGS.filter(([, rx]) => rx.test(text)).map(([k]) => k);
     const band = overallBand(dimensions, redFlags);
     const all = cues.flatMap(([, rxs]) => rxs);

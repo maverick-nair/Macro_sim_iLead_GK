@@ -191,6 +191,8 @@ export const TRACE: Record<string, TraceEntry> = {
   'actions[].unlockPeriod': e('actions', 'Available from week', 'board.actions'),
   'actions[].live.goal': e('actions', 'Conversation goal', 'live.brief'),
   'actions[].live.opening': e('actions', 'Who starts', 'live.npc'),
+  // The rubric behind the scoring samples (D229): what each dimension looks for, and phrases that count as evidence.
+  'actions[].live.rubric': e('scoring', 'Rubric: what a conversation is rated on', 'live.outcome', 'report.skills'),
   'actions[].options[].label': e('actions', 'Option label', 'board.actions'),
   'actions[].options[].style': e('actions', 'Option style', 'board.actions', 'live.outcome', 'report.styles'),
   'actions[].options[].effects': e('actions', 'Impact by style, if it fits and if it misses', 'live.outcome', 'board.team'),

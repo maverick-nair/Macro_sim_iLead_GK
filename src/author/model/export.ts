@@ -2,6 +2,7 @@ import { Brief } from '../../api/author';
 import { isImageRef } from '../../engine/assets';
 import { BRAND_FONTS, parseStoryline, type StorylineInput } from '../../engine/config';
 import { NEEDS } from '../../engine/lens';
+import { DEFAULT_RUBRIC, RUBRIC_LABELS } from '../../engine/sim/evaluator';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 import { regionOf } from '../context';
 import { guardDraft, type CopyIssue } from '../copyGuard';
@@ -430,6 +431,19 @@ export function toStoryline(d: AuthorDraft): Exported {
   const actions = d.actions.filter(a => a.core || a.enabled).map(a => overlayAction(templates.get(a.template) ?? templates.get('f2f')!, a, styleKeys));
   const actionKeys = new Set(actions.map(a => a.key));
   for (const a of actions) if (a.prerequisite && !actionKeys.has(a.prerequisite)) delete a.prerequisite;
+  // The rubric in the author's words (D229): every conversation rated on a dimension they worded carries it.
+  const rubricBy = new Map(d.scoring.rubric.map(r => [r.key, r]));
+  if (rubricBy.size) for (const a of actions) {
+    if (a.kind === 'static' || !a.format) continue;
+    const old = a.live?.rubric;
+    const keys = old?.map(r => r.key) ?? DEFAULT_RUBRIC[a.format] ?? DEFAULT_RUBRIC.roleplay;
+    if (!keys.some(k => rubricBy.has(k))) continue;
+    a.live = { ...(a.live ?? {}), rubric: keys.map(k => {
+      const mine = rubricBy.get(k), was = old?.find(r => r.key === k);
+      const cues = mine ? mine.cues.map(c => c.trim()).filter(c => c.length >= 2) : was?.cues ?? [];
+      return { key: k, label: mine?.label.trim() || was?.label || RUBRIC_LABELS[k] || k, ...(cues.length ? { cues } : null) };
+    }) } as Action['live'];
+  }
 
   // Events (D128): timing, response and escalation as authored; references checked, never retargeted.
   const baseEvents = new Map((base.events ?? []).map(e => [e.key, e]));
@@ -477,7 +491,11 @@ export function toStoryline(d: AuthorDraft): Exported {
   if (levels.some(l => !l)) issues.push('Name every level of the rating scale in Scoring and report.');
   const mins = scaleMins(levels.length);
   report.scale = levels.map((name, i) => ({ name: name || `Level ${i + 1}`, min: mins[i] }));
-  report.skills = (report.skills ?? []).map(s => ({ ...s, anchors: resample(s.anchors, levels.length) }));
+  // What each level looks like, in the author's words where they wrote them (D229).
+  report.skills = (report.skills ?? []).map(s => {
+    const mine = (d.scoring.anchors[s.key] ?? []).map(a => a.trim());
+    return { ...s, anchors: mine.length && mine.every(Boolean) ? resample(mine, levels.length) : resample(s.anchors, levels.length) };
+  });
   if (d.scoring.reportSections) report.sections = [...d.scoring.reportSections];
   const skillKey = new Map((report.skills ?? []).map(s => [s.name.trim().toLowerCase(), s.key]));
   const linkage = { ...(report.linkage ?? {}) };

@@ -524,7 +524,19 @@ export const AuthorDraft = z.object({
   events: z.array(EventDraft),
   scoring: z.object({
     skills: z.array(z.object({ key: z.string(), name: Short, reportOnly: z.boolean() })),
-    samples: z.array(z.object({ id: z.string(), with: Short, answer: Text, scored: z.enum(BANDS), call: z.enum(BANDS).nullable() })),
+    /**
+     * `reason`: why the author disagrees with the band GenieKreator gave (D229), kept with the draft; a disagreement
+     * with a reason counts as resolved for the publish gate. `resolution`: how they resolved it, by changing the
+     * rubric or by recording the reason alone.
+     */
+    samples: z.array(z.object({ id: z.string(), with: Short, answer: Text, scored: z.enum(BANDS), call: z.enum(BANDS).nullable(), reason: Text.default(''), resolution: z.enum(['reason', 'rubric']).nullable().default(null) })),
+    /**
+     * The conversations' rubric in the author's words (D229): per dimension key (listening, clarity, involvement for a
+     * 1:1), what it looks for and phrases that count as evidence. Exported to every conversation rated on it.
+     */
+    rubric: z.array(z.object({ key: z.string().regex(/^[a-z][a-z0-9_]*$/), label: Short, cues: z.array(z.string().max(80)).max(12) })).default([]),
+    /** What each level looks like for a skill (D229), lowest first, by skill key: the anchors the report and the evaluator read. */
+    anchors: z.record(z.string(), z.array(Text)).default({}),
     framework: z.object({ file: Short, pages: z.number().int().min(0), step: z.union([z.literal(1), z.literal(2), z.literal(3)]), rows: z.array(FrameworkRow), confirmed: z.boolean() }).nullable(),
     /** The rating scale's level names, lowest first: 3 to 7 (the report's scale, D128). */
     levels: z.array(Short).min(3).max(7).default(() => DEFAULT_SCALE.map(l => l.name)),

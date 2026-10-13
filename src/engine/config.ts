@@ -952,8 +952,11 @@ const BandDeltas = z.object({
 export const LiveSettings = z.object({
   /** What the participant sees before starting. */
   goal: Copy.optional(),
-  /** 2 to 4 rubric dimensions; the evaluator returns a band for each. Defaults per format. */
-  rubric: z.array(z.object({ key: Key, label: Copy })).min(2).max(4).optional(),
+  /**
+   * 2 to 4 rubric dimensions; the evaluator returns a band for each. Defaults per format. `label` says what the
+   * dimension looks for; `cues` are phrases that count as evidence of it (D229), up to 12.
+   */
+  rubric: z.array(z.object({ key: Key, label: Copy, cues: z.array(z.string().trim().min(2).max(80)).max(12).optional() })).min(2).max(4).optional(),
   /** Deltas per band. Without it, 1.0's mismatch maths generates the consequences (D35). */
   consequences: z.object({ strong: BandDeltas, adequate: BandDeltas, weak: BandDeltas, harmful: BandDeltas }).optional(),
   turnLimit: z.number().int().min(1).max(30).default(12),

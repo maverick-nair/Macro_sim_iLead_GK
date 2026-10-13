@@ -28,7 +28,7 @@ export interface ResolvedInput {
   format: string;
   text: string;
   locale: string;
-  dimensions: Array<{ key: string; label: string }>;
+  dimensions: Array<{ key: string; label: string; cues?: string[] }>;
   skills: SkillDef[];
   styles: Array<{ key: string; name: string; short: string }>;
   promiseActions: string[];
@@ -42,7 +42,7 @@ export function resolveInput(input: EvaluatorInput): ResolvedInput {
     format: input.format,
     text: input.text,
     locale: input.locale ?? 'en',
-    dimensions: keys.map(key => ({ key, label: input.rubricLabels?.[key] ?? key })),
+    dimensions: keys.map(key => { const r = input.rubric?.find(x => x.key === key); return { key, label: input.rubricLabels?.[key] ?? r?.label ?? key, ...(r?.cues?.length ? { cues: r.cues } : null) }; }),
     skills: (input.skills ?? []).map(key => known.get(key) ?? { key, name: key }),
     styles: input.styles ?? DEFAULT_LENS.styles.map(s => ({ key: s.key, name: s.name, short: s.short })),
     promiseActions: input.promiseActions ?? DEFAULT_PROMISE_ACTIONS
@@ -61,7 +61,7 @@ export function contextBlock(input: EvaluatorInput, r: ResolvedInput): string {
     if (input.counterpart.hiddenConcern) s += `Their private concern (for judging concernSurfaced only; never quote it): ${input.counterpart.hiddenConcern}\n`;
   }
   s += '\n## Rubric dimensions (one band each)\n';
-  for (const d of r.dimensions) s += `- ${d.key}${d.label !== d.key ? `: ${d.label}` : ''}\n`;
+  for (const d of r.dimensions) s += `- ${d.key}${d.label !== d.key ? `: ${d.label}` : ''}${d.cues?.length ? `. Counts as evidence: ${d.cues.join('; ')}` : ''}\n`;
   s += '\n## Skills this interaction rates (one band each)\n';
   if (!r.skills.length) s += '(none: return an empty skills list)\n';
   for (const k of r.skills) {

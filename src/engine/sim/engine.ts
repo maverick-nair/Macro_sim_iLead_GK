@@ -88,6 +88,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
   const evaluator = opts.evaluator ?? heuristicEvaluator;
   const npc = opts.npc ?? live.personaNpc;
   const rubric = (actionKey: string) => config.actions.find(a => a.key === actionKey)?.live.rubric;
+  /** The rated skills as the storyline words them (D229): names, level anchors and descriptions. */
+  const skillDefs = (keys: string[]) => config.report.skills.filter(s => keys.includes(s.key)).map(s => ({ key: s.key, name: s.name, anchors: s.anchors, ...(s.description ? { description: s.description } : null) }));
 
   /** Evaluates everything the participant said, applies the band's consequences, closes the interaction. */
   async function finish(id: string, extra?: { text: string; usedVoice?: boolean }, npcReply?: string): Promise<Result> {
@@ -99,7 +101,7 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
     if (!text.trim()) throw new IntentError('Say something first', 'empty');
     // A stakeholder conversation (D161) is evaluated as its own format, on the skills its interaction rates.
     const sh = it.stakeholder ? stakeholderEvaluation(sim, it) : null;
-    const ev = await evaluator.evaluate({ format: it.stakeholder?.format ?? it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: sh ? sh.rubric : rubric(it.actionKey), skills: sh ? sh.skills : config.report.linkage[it.actionKey] ?? [], styles: config.lens.styles, ...(it.plan ? { plan: it.plan } : {}) });
+    const ev = await evaluator.evaluate({ format: it.stakeholder?.format ?? it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: sh ? sh.rubric : rubric(it.actionKey), skills: sh ? sh.skills : config.report.linkage[it.actionKey] ?? [], skillDefs: skillDefs(sh ? sh.skills : config.report.linkage[it.actionKey] ?? []), styles: config.lens.styles, ...(it.plan ? { plan: it.plan } : {}) });
     // The plan's due date is a promise to check in on it with that person (SIMULATION 5.4).
     if (it.plan?.due && !ev.flags.promise) {
       ev.flags.promise = { text: it.plan.goals.length > 60 ? `${it.plan.goals.slice(0, 57).trimEnd()}...` : it.plan.goals, dueInSubPeriods: Math.max(1, it.plan.due - sim.sub), fulfilledBy: ['f2f', 'coach', 'feedback', 'goals'] };

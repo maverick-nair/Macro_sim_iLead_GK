@@ -2,7 +2,7 @@ import { useId, useMemo, useState, type ReactNode } from 'react';
 import type { AuthorDraft, Tab } from '../../../model/draft';
 import { markCounts } from '../../../model/needs';
 import { useAuthor } from '../../../model/store';
-import { SCORING_AGREEMENT, validateDraft, validationOf, type Issue, type IssueArea, type Validation } from '../../../model/validate';
+import { sampleAgreement, SCORING_AGREEMENT, validateDraft, validationOf, type Issue, type IssueArea, type Validation } from '../../../model/validate';
 import { BUTTON, CARD, FOCUS, Field, Icon, TextArea, TextInput } from '../../kit';
 import { download, playDraft } from '../../play';
 import { navigate } from '../../route';
@@ -28,7 +28,7 @@ export function checksOf(d: AuthorDraft, v: Validation = validationOf(d)): Check
   const all = [...v.blocking, ...v.advisories];
   const counts = markCounts(d);
   const inUse = d.actions.filter(a => a.core || a.enabled).length;
-  const agreed = d.scoring.samples.filter(s => s.call === s.scored).length;
+  const ag = sampleAgreement(d.scoring.samples);
   const row = (area: IssueArea, title: string, passed: string, go?: Tab): Check => {
     const mine = all.filter(i => i.area === area);
     const blocking = mine.filter(i => i.blocking);
@@ -43,7 +43,7 @@ export function checksOf(d: AuthorDraft, v: Validation = validationOf(d)): Check
     row('mechanics', 'Choices make a difference', `${inUse} actions in use, the core ones included. Styles change what happens, and every decision has options.`),
     row('names', 'Names are unique', 'Every character, style, tag and skill has its own name.'),
     row('links', 'Events and people line up', 'Every event, person and relationship points at someone or a stage in this draft.'),
-    row('scoring', 'Scoring matches your judgment', `${agreed} of ${d.scoring.samples.length} samples agree after your review (target ${Math.round(SCORING_AGREEMENT * 100)}%).`),
+    row('scoring', 'Scoring matches your judgment', `${ag.agreed} of ${d.scoring.samples.length} samples agree after your review${ag.reasoned.length ? `, and you gave your reason for ${ag.reasoned.length} you disagree with` : ''} (target ${Math.round(SCORING_AGREEMENT * 100)}%).`),
     row('copy', 'Copy rules', 'Plain language, "skills" throughout, no dashes as punctuation, KNOLSKAPE lens names only.'),
     row('trace', 'Every text has a home', 'Every text participants read comes from a field in a tab, or is iLead\'s standard wording (the report\'s narratives, the people triggers\' messages, the line over style setting).'),
     row('synthetic', 'Synthetic players', d.calibration?.summary ?? 'Passed on this version.', 'calibrate'),

@@ -51,6 +51,8 @@ function fixture(): AuthorDraft {
   d.story.product.view = 'photos';
   // A named feature placed on the photo (D221).
   d.story.product.features = [{ title: 'Quiet ride', text: 'Under 50 dB, with a soft start and stop.', x: 40, y: 50 }];
+  // The rubric in the author's words (D229).
+  d.scoring.rubric = [{ key: 'involvement', label: 'Involvement: asks for their plan first', cues: ['your plan'] }];
   return d;
 }
 
@@ -254,6 +256,11 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['events[].ifIgnored.followUp', d => { ev(d, 'lens_moment').ifIgnored.followUp = 'public_complaint'; }, 'events.key=lens_moment.escalation'],
   ['scoring.framework', d => { d.scoring.framework = { file: 'ours.md', pages: 1, step: 3, confirmed: true, rows: [{ skill: 'Listening', behaviors: 'Asks open questions', levels: 5, page: 1, include: true }, { skill: 'Clarity', behaviors: 'Sets one next step', levels: 5, page: 1, include: true }] }; d.scoring.skills = [{ key: 'listening', name: 'Listening', reportOnly: false }, { key: 'clarity', name: 'Clarity', reportOnly: false }]; d.actions.forEach(a => { a.scoredOn = ['Listening', 'Clarity']; }); remapReads(d); }, 'report.skills'],
   ['scoring.levels', d => { d.scoring.levels = ['Starting', 'Growing', 'Strong']; }, 'report.scale'],
+  // The rubric behind the scoring samples, in the author's words (D229).
+  ['scoring.rubric[].key', d => { d.scoring.rubric = [{ key: 'clarity', label: '', cues: [] }]; }, 'actions.key=f2f.live.rubric'],
+  ['scoring.rubric[].label', d => { d.scoring.rubric = [{ key: 'listening', label: 'Listening: asks about their beat first', cues: [] }]; }, 'actions.key=f2f.live.rubric'],
+  ['scoring.rubric[].cues', d => { d.scoring.rubric = [{ key: 'listening', label: '', cues: ['what is getting in the way'] }]; }, 'actions.key=f2f.live.rubric'],
+  ['scoring.anchors', d => { const k = d.scoring.skills[0].key; d.scoring.anchors = { [k]: d.scoring.levels.map((l, i) => `Level ${i + 1} looks like this.`) }; }, 'report.skills'],
   // People dynamics, real world costs and business variables (D135, D171, D136).
   ['process.dynamics', d => { d.process.dynamics = false; }, 'dynamics'],
   ['process.realism', d => { d.process.realism = false; }, 'realism'],
@@ -354,6 +361,8 @@ const AUTHOR_NOTES: Record<string, string> = {
   'brief.dilemmas': 'Brief for Kora (D146): kept as title, two options and what is at stake, to seed choice events later',
   'process.pressure': 'Kora leans events and characters on it when drafting',
   'scoring.samples[].call': 'The author\'s check that scoring matches their judgment; Review and publish reads it',
+  'scoring.samples[].reason': 'Why the author disagrees with a sample (D229): kept with the draft, Review and publish reads it',
+  'scoring.samples[].resolution': 'How the author resolved a disagreement (D229): Review and publish reads it',
   'publish.cohort': 'The publishing record',
   'publish.notes': 'The publishing record',
   'publish.skipTest': 'Publish without testing (D132): Review and publish reads it, the simulation never does'
@@ -378,7 +387,7 @@ const INTERNAL = new Set([
 /** Known gaps: none since D181 to D184 exported the brand, the Story tab's visuals, the intro screens' titles and uploaded images. */
 const KNOWN_GAPS = new Set<string>([]);
 
-const RECORDS = new Set(['chat', 'marks', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables',
+const RECORDS = new Set(['chat', 'marks', 'scoring.anchors', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables',
   'events[].moves', 'events[].choice.options[].stakeholders', 'stakeholders[].interactions[].good.variables', 'stakeholders[].interactions[].bad.variables', 'stakeholders[].interactions[].options[].effect.variables']);
 /** Every field path of a draft: arrays as `[]` over all their elements, records as one field. */
 function fieldsOf(v: unknown, path = '', out = new Set<string>()): Set<string> {

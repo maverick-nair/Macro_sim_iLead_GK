@@ -47,6 +47,20 @@ export const MIN_ACTIONS = 4;
 /** The scoring samples a draft must have, and the share the author must agree with (D110). */
 export const MIN_SAMPLES = 6;
 export const SCORING_AGREEMENT = 0.85;
+/** A disagreement with a scoring sample counts for the gate with a reason at least this long (D229). */
+export const REASON_MIN = 10;
+const BAND_NAME = { strong: 'Strong', adequate: 'Adequate', weak: 'Weak', harmful: 'Harmful' } as const;
+
+/**
+ * The scoring samples' agreement (D110, D229): the samples the author agrees with, and the disagreements they gave a
+ * reason for, kept with the draft. Both count toward the publish gate; a disagreement without a reason does not.
+ */
+export function sampleAgreement(samples: AuthorDraft['scoring']['samples']) {
+  const agreed = samples.filter(x => x.call !== null && x.call === x.scored);
+  const disagreed = samples.filter(x => x.call !== null && x.call !== x.scored);
+  const reasoned = disagreed.filter(x => x.reason.trim().length >= REASON_MIN);
+  return { agreed: agreed.length, reasoned, unreasoned: disagreed.filter(x => !reasoned.includes(x)), share: samples.length ? (agreed.length + reasoned.length) / samples.length : 0 };
+}
 /** The core actions (D108), by the engine template they play as: a draft without one of them is not iLead. */
 export const CORE_TEMPLATES = ENGINE_TEMPLATES.filter(t => t.inNew === 'core').map(t => ({ key: t.template, name: t.name }));
 /** Templates whose static form is a choice between options, beside every style based action. */
@@ -281,10 +295,12 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   // Scoring matches the author's judgment, on all the samples: none is not a pass.
   const s = d.scoring.samples;
   const answered = s.filter(x => x.call !== null);
-  const agreed = s.filter(x => x.call === x.scored).length;
+  const ag = sampleAgreement(s);
   if (s.length < MIN_SAMPLES) block({ id: 'scoring.samples.missing', area: 'scoring', title: s.length ? `Only ${s.length} scoring ${s.length === 1 ? 'sample' : 'samples'} to check` : 'There are no scoring samples to check', detail: `Check ${MIN_SAMPLES} sample answers, so scoring is known to match your judgment. Regenerate the Scoring and report tab to get them back.`, tab: 'scoring', target: 'scoring.samples' });
   else if (answered.length < s.length) block({ id: 'scoring.samples', area: 'scoring', title: `${s.length - answered.length} of ${s.length} scoring samples still need your call`, detail: 'Agree or disagree with each sample\'s band.', tab: 'scoring', target: 'scoring.samples' });
-  else if (agreed / s.length < SCORING_AGREEMENT) block({ id: 'scoring.agreement', area: 'scoring', title: `You agree with only ${agreed} of ${s.length} scoring samples`, detail: `Publishing needs ${Math.round(SCORING_AGREEMENT * 100)}% agreement. Look at the rubric for the samples you disagreed with.`, tab: 'scoring', target: 'scoring.samples' });
+  else if (ag.share < SCORING_AGREEMENT) block({ id: 'scoring.agreement', area: 'scoring', title: `You agree with only ${ag.agreed} of ${s.length} scoring samples`, detail: `Publishing needs ${Math.round(SCORING_AGREEMENT * 100)}% agreement, counting a disagreement you give a reason for. Open the rubric behind each sample you disagree with: change what it looks for, or say why you disagree.`, tab: 'scoring', target: 'scoring.samples' });
+  // A reasoned disagreement is resolved, and stays in the checks as a note (D229).
+  for (const x of ag.reasoned) advise({ id: `scoring.reason.${x.id}`, area: 'scoring', title: `You rate a sample ${BAND_NAME[x.call!]}, not ${BAND_NAME[x.scored]}`, detail: `"${x.answer.slice(0, 70)}". ${x.resolution === 'rubric' ? 'You changed the rubric' : 'Your reason'}: ${x.reason.trim()}`, tab: 'scoring', target: 'scoring.samples' });
 
   // Synthetic players, and playing it yourself.
   const synthetic = syntheticGate(d.calibration, configHash(exported.storyline), d.publish.skipTest);
