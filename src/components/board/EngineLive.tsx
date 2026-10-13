@@ -11,7 +11,7 @@ import type { MicState } from '../live/MicButton';
 import { EmailStage, type EmailField } from '../liveshell/EmailStage';
 import { LiveShell } from '../liveshell/LiveShell';
 import { MeetingStage } from '../liveshell/MeetingStage';
-import { RolePlayStage } from '../liveshell/RolePlayStage';
+import { RolePlayPortrait, RolePlayStage } from '../liveshell/RolePlayStage';
 import { SponsorStage, type SponsorNote } from '../liveshell/SponsorStage';
 import type { LiveBrief, LiveConversation, LiveFormat, LiveMode, LiveMood, LivePerson, LiveTurn } from '../liveshell/types';
 import { ChatStage } from '../liveformats/ChatStage';
@@ -75,7 +75,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   /** Words written here and not sent come back after a reload (D86). */
   const [saved] = useState(() => loadDraft(lv.id));
   const [draft, setDraft] = useState(saved.draft ?? '');
-  const [briefOpen, setBriefOpen] = useState(layout !== 'tablet');
+  // Over the 1:1 portrait the brief starts at the goal (D227); beside the other stages it starts open.
+  const [briefOpen, setBriefOpen] = useState(layout !== 'tablet' && lv.format !== 'roleplay');
   const [paused, setPaused] = useState(false);
   const startSeconds = Math.round(lv.minutes * 60);
   const [seconds, setSeconds] = useState(startSeconds);
@@ -434,7 +435,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
           />
         );
       default:
-        return <RolePlayStage person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} onReplay={replay} layout={layout}
+        return <RolePlayStage person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} onReplay={replay} layout={layout === 'tablet' ? 'tablet' : 'split'}
           aside={layout === 'tablet' ? <LiveBriefCard layout="tablet" bare format="roleplay" brief={brief} pronoun={speaker.pronoun} tip={lv.hint.text} open={briefOpen} onToggle={() => setBriefOpen(o => !o)} periodUnit={v.clock.periodUnit} /> : undefined} />;
     }
   })();
@@ -480,8 +481,12 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         onInterrupt={interrupt}
         layout={layout}
         briefInStage={shellFormat === 'roleplay'}
+        portrait={shellFormat === 'roleplay' && layout !== 'tablet' ? (
+          <RolePlayPortrait person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation}
+            brief={<LiveBriefCard layout="overlay" format="roleplay" brief={brief} pronoun={speaker.pronoun} tip={lv.hint.text} open={briefOpen} onToggle={() => setBriefOpen(o => !o)} />} />
+        ) : undefined}
       >
-        <div role="status" className={notice ? 'rounded-6 border border-status-attention bg-status-attention-soft px-3.5 py-2.5 text-13' : 'sr-only'}>{notice}</div>
+        <div role="status" className={notice ? 'border border-status-attention bg-status-attention-soft px-3.5 py-2.5 text-13' : 'sr-only'}>{notice}</div>
         {stage}
       </LiveShell>
       <Dialog.Root open={confirmPass} onOpenChange={setConfirmPass}>

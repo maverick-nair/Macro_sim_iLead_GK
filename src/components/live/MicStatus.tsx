@@ -16,7 +16,7 @@ export interface MicStatusProps {
 export function MicStatus({ status, speaker = '' }: MicStatusProps) {
   const { t } = useI18n();
   return (
-    <span aria-live="polite" className={`px-2 text-12 font-600 ${status === 'listening' ? 'text-status-gain' : 'text-fg-secondary'}`}>
+    <span aria-live="polite" className={`font-mono text-12 font-500 tracking-[0.06em] uppercase ${status === 'listening' ? 'text-status-decline' : 'text-fg-body'}`}>
       {t('live.mic.status', { status, name: speaker })}
     </span>
   );
@@ -32,5 +32,5 @@ export interface MicHintProps {
 /** Below the reply bar: how to talk or type, and that the transcript can be edited first. */
 export function MicHint({ input }: MicHintProps) {
   const { t } = useI18n();
-  return <span className="px-2 text-12 text-fg-secondary">{t('live.mic.hint', { input })}</span>;
+  return <span className="text-13 text-fg-body">{t('live.mic.hint', { input })}</span>;
 }

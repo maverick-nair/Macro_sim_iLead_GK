@@ -305,7 +305,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await quiet(page);
           await scan(page, 'live: 1:1');
           await say(page, 'I am sorry it has been rough. What is on your mind?');
-          await page.getByRole('button', { name: 'Hint' }).click();
+          await page.getByRole('button', { name: 'Ask for a hint' }).click();
           await scan(page, 'live: 1:1 with a hint');
           await endLive(page);
           await expect(page.getByText('The team is reacting')).toBeVisible();

@@ -43,14 +43,15 @@ export function MicButton({ state, mode, onPress, layout = 'desk' }: MicButtonPr
   const denied = state === 'denied';
   const listening = state === 'listening';
   const voice = mode === 'voice' && !denied;
-  const box = layout === 'tablet' ? 'size-14' : voice ? 'size-15' : 'size-12';
+  const box = layout === 'tablet' ? 'size-13' : 'size-11';
+  // The canvas's outlined control (D227): mint while voice is the way in, filled while it listens.
   const look = denied
-    ? 'bg-track text-fg-secondary'
+    ? 'border-line-default bg-track text-fg-secondary'
     : listening
-      ? 'bg-voice-listening text-button-on-solid shadow-(--il-live-mic-glow-listening)'
+      ? 'border-voice-listening bg-voice-listening text-button-on-solid'
       : voice
-        ? 'bg-(image:--il-fill-brand) text-button-on-solid shadow-(--il-live-mic-glow-ready)'
-        : 'bg-surface-raised text-fg-primary';
+        ? 'border-accent-secondary bg-transparent text-accent-secondary'
+        : 'border-line-strong bg-transparent text-fg-primary';
   return (
     <button
       type="button"
@@ -58,9 +59,9 @@ export function MicButton({ state, mode, onPress, layout = 'desk' }: MicButtonPr
       disabled={denied}
       aria-label={t('live.mic.aria', { state: denied ? 'denied' : listening ? 'listening' : 'idle' })}
       aria-pressed={listening}
-      className={`relative flex flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 disabled:cursor-not-allowed ${box} ${look} ${FOCUS}`}
+      className={`relative flex flex-none cursor-pointer items-center justify-center rounded-4 border border-solid p-0 disabled:cursor-not-allowed ${box} ${look} ${FOCUS}`}
     >
-      {listening && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-live-mic-ring) rounded-round border-2 border-solid border-accent-secondary" />}
+      {listening && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-live-mic-ring) rounded-6 border-2 border-solid border-accent-secondary" />}
       {denied ? <MicOffIcon /> : <MicIcon />}
     </button>
   );
@@ -78,7 +79,7 @@ export function RecordAgainButton({ onPress }: RecordAgainButtonProps) {
       type="button"
       onClick={onPress}
       aria-label={t('live.mic.redo')}
-      className={`size-11 flex-none cursor-pointer rounded-round border border-solid border-line-default bg-surface-raised p-0 text-fg-primary ${FOCUS}`}
+      className={`size-11 flex-none cursor-pointer rounded-4 border border-solid border-line-strong bg-transparent p-0 text-fg-primary ${FOCUS}`}
     >
       <span aria-hidden="true">↺</span>
     </button>

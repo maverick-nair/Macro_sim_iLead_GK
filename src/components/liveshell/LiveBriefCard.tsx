@@ -17,7 +17,7 @@ export interface LiveBriefCardProps {
    * `tablet`: the goal always shows, large, with your style for the person; the other rows open
    * under it (D72). `bare` drops the card around it, beside the 1:1 portrait.
    */
-  layout?: 'desk' | 'tablet';
+  layout?: 'desk' | 'tablet' | 'overlay';
   bare?: boolean;
   /** The storyline's period, for "Style you set this week" on the tablet. */
   periodUnit?: 'year' | 'month' | 'week' | 'day';
@@ -43,6 +43,35 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
   const { t } = useI18n();
   const lens = useLens();
   const id = useId();
+  if (layout === 'overlay') {
+    // Over the 1:1 portrait (D227): the goal in one line on navy, the rest of the brief opening under it.
+    const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
+    return (
+      <aside aria-label={t('liveshell.brief.title')} className="flex flex-col gap-2.5 bg-[oklch(0.1831_0.0309_263.38/0.8)] px-3 py-2.5 text-13 text-(--il-color-white)">
+        <span className="text-pretty">{t('liveshell.brief.goalLine', { goal: brief.goal })}</span>
+        {open && (
+          <div id={id} className="flex flex-col gap-2 border-t border-(--il-color-canvas-navy-750) pt-2.5">
+            {brief.agenda && brief.agenda.length > 0 && <Row label={t('liveshell.brief.agenda')}><span className={value}>{brief.agenda.map((item, i) => t('liveshell.brief.agendaItem', { n: i + 1, item })).join(' ')}</span></Row>}
+            {brief.known && brief.known.length > 0 && <Row label={t('liveshell.brief.known', { format, pronoun })}><span className={value}>{brief.known.join(' ')}</span></Row>}
+            {moodText && <Row label={t('liveshell.brief.mood', { format })}><span className={value}>{moodText}</span></Row>}
+            {brief.promises && <Row label={t('liveshell.brief.promises')}>{brief.promises.length === 0 ? <span className={value}>{t('liveshell.brief.noPromises')}</span> : brief.promises.map((x, i) => <span key={i} className={value}>{x}</span>)}</Row>}
+            {brief.declaredStyle !== undefined && <Row label={t('liveshell.brief.style', { pronoun })}><span className={value}>{brief.declaredStyle ? t('liveshell.brief.styleValue', { name: styleOf(lens, brief.declaredStyle).name, short: styleOf(lens, brief.declaredStyle).short }) : t('liveshell.brief.styleNone')}</span></Row>}
+            {brief.tone && <Row label={t('liveshell.brief.tone')}><span className={value}>{brief.tone}</span></Row>}
+          </div>
+        )}
+        {tip !== null && (
+          <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 border-s-2 border-(--il-color-canvas-mint) ps-2.5">
+            <b className="font-600 text-(--il-color-canvas-mint)">{t('liveshell.tip.title')}</b>
+            <span>{tip}</span>
+          </div>
+        )}
+        <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={open ? id : undefined}
+          className={`min-h-11 cursor-pointer self-start rounded-4 border border-solid border-(--il-color-canvas-steel) bg-transparent px-3 py-0 text-13 font-500 text-(--il-color-white) ${FOCUS}`}>
+          {open ? t('liveshell.brief.hide') : t('liveshell.brief.show')}
+        </button>
+      </aside>
+    );
+  }
   if (layout === 'tablet') {
     const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
     return (
