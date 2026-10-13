@@ -8,6 +8,7 @@
   "end.tier.aria": "Tier: {tier}. {all}",
   "end.score.label": "Leadership Score",
   "end.score.max": "of {max, number, integer}",
+  "end.score.of": "/ {max, number, integer}",
   "end.results.aria": "Results",
   "end.results.target": "Target achieved",
   "end.results.of": "of {target}",

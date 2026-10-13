@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { useI18n } from '../../i18n';
 import type { Cohort, CohortRow } from './cohort';
 import './messages';
+import { EYEBROW } from './display';
 
 export interface CohortPanelProps extends Cohort {
   /** Who is ranked: the cohort, the business unit or every participant (Configuration Spec, Leaderboard). */
@@ -10,7 +11,7 @@ export interface CohortPanelProps extends Cohort {
   size: number;
 }
 
-const CELL = 'px-3 py-2';
+const CELL = 'px-3 py-2.5';
 
 /**
  * The cohort leaderboard on the end screen: the top N by Leadership Score with rank, name (or "A
@@ -23,31 +24,31 @@ export function CohortPanel({ scope, size, top, outside, you }: CohortPanelProps
   const row = (r: CohortRow, key: string) => (
     <tr key={key} aria-current={r.you || undefined}
       className={`border-t border-line-default ${r.you ? 'bg-accent-soft font-600 text-fg-primary' : ''}`}>
-      <td className={`${CELL} text-end`}>{number(r.rank)}</td>
+      <td className={`${CELL} text-end font-mono`}>{number(r.rank)}</td>
       <th scope="row" className={`${CELL} text-start ${r.you ? 'font-600' : 'font-400'}`}>
         <span className="flex flex-wrap items-center gap-2">
           {r.name !== null && <span>{r.name}</span>}
           {r.you && <span className="rounded-4 border border-accent-secondary px-2 text-12 text-fg-primary">{t('end.cohort.you')}</span>}
         </span>
       </th>
-      <td className={`${CELL} text-end`}>{number(r.score)}</td>
+      <td className={`${CELL} text-end font-mono`}>{number(r.score)}</td>
       <td className={CELL}>{r.tier}</td>
     </tr>
   );
   return (
-    <section aria-labelledby={id} className="relative flex max-w-180 flex-col gap-3 rounded-6 border border-line-default bg-surface-card p-5">
+    <section aria-labelledby={id} className="relative flex max-w-180 flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id={id} className="m-0 text-16 font-600">{t('end.cohort.title', { scope })}</h2>
-        {you && <span className="text-13 font-600 text-fg-secondary">{t('end.cohort.rank', { rank: you.rank, total: you.total })}</span>}
+        <h2 id={id} className={EYEBROW}>{t('end.cohort.title', { scope })}</h2>
+        {you && <span className="text-13 text-fg-body">{t('end.cohort.rank', { rank: you.rank, total: you.total })}</span>}
       </div>
-      <table className="w-full border-collapse text-13">
+      <table className="w-full border-collapse text-15">
         <caption className="sr-only">{t('end.cohort.caption', { scope, size, outside: String(!!outside) })}</caption>
         <thead>
-          <tr className="text-12 text-fg-secondary">
-            <th scope="col" className={`${CELL} text-end font-600`}>{t('end.cohort.col.rank')}</th>
-            <th scope="col" className={`${CELL} text-start font-600`}>{t('end.cohort.col.name')}</th>
-            <th scope="col" className={`${CELL} text-end font-600`}>{t('end.cohort.col.score')}</th>
-            <th scope="col" className={`${CELL} text-start font-600`}>{t('end.cohort.col.tier')}</th>
+          <tr className="text-13 text-fg-body">
+            <th scope="col" className={`${CELL} text-end font-500`}>{t('end.cohort.col.rank')}</th>
+            <th scope="col" className={`${CELL} text-start font-500`}>{t('end.cohort.col.name')}</th>
+            <th scope="col" className={`${CELL} text-end font-500`}>{t('end.cohort.col.score')}</th>
+            <th scope="col" className={`${CELL} text-start font-500`}>{t('end.cohort.col.tier')}</th>
           </tr>
         </thead>
         <tbody>{top.map((r, i) => row(r, String(i)))}</tbody>

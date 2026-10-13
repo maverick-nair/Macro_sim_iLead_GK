@@ -1,19 +1,10 @@
 import './messages';
-import type { EndTier, SaveState, Tone } from './types';
+import type { SaveState, Tone } from './types';
 
 /**
  * Display mappings for the end screen. None of these decides an outcome: they place engine values on
  * bars, pick words and pick which of the engine's moments fit on one screen.
  */
-
-/** The tier bars, lowest first: each bar grows a step, and the bars up to the tier reached are filled. */
-export function tierBars(tiers: EndTier[], current: string): Array<EndTier & { filled: boolean; step: number }> {
-  const at = tiers.findIndex(x => x.key === current);
-  return tiers.map((x, i) => ({ ...x, filled: at >= 0 && i <= at, step: i }));
-}
-
-/** Bar height for a tier bar, in spacing units: 20px for the lowest, 10px more per tier (the design's 20 to 50). */
-export const tierBarHeight = (step: number) => 5 + 2.5 * step;
 
 /** Lowest first, by the engine's thresholds (the engine lists them highest first). */
 export function tiersAscending<T extends { min: number }>(tiers: T[]): T[] {
@@ -30,6 +21,9 @@ export function sharePercent(share: number): number {
 export function toneOf(delta: number): Tone {
   return delta > 0 ? 'gain' : delta < 0 ? 'decline' : 'neutral';
 }
+
+/** Section headings in small capitals, as the canvas sets them (D227). */
+export const EYEBROW = 'm-0 text-13 font-600 tracking-(--il-tracking-eyebrow-wide) text-fg-body uppercase';
 
 export const TONE_TEXT: Record<Tone, string> = { gain: 'text-status-gain', decline: 'text-status-decline', neutral: 'text-fg-secondary' };
 
