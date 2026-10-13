@@ -116,6 +116,47 @@ test('decide later: the decision waits on the board with its deadline, and opens
   await expect(page.getByRole('dialog')).toHaveCount(0);
 });
 
+/**
+ * A decision never resolves unseen (D231): End week pressed before the choice's day shows it first, on its day.
+ * The participant keeps the default, recorded as theirs and said so at the week end, or decides, and the week ends.
+ */
+test('End week with a decision still to come shows it first; the default kept is said as kept', async ({ page }) => {
+  await week2(page);
+  await page.getByRole('button', { name: /End week/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'A deep discount to close this week' });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole('heading', { name: 'A deep discount to close this week' })).toBeFocused();
+  await expect(dialog.getByText('Before the week ends: decide now, or let the default stand.')).toBeVisible();
+  await expect(dialog.getByRole('radio', { name: /Approve the discount and close this week \(the default\)/ })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Decide later' })).toHaveCount(0);
+  expect(await axe(page)).toEqual([]);
+  // Escape does not put it off while the week is ending.
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Let the default stand' }).click();
+  await expect(dialog.getByText('You let the default stand:')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Continue' }).click();
+  // Events from the days the week ran through show as cards, then the week end.
+  await dismissEvents(page);
+  // The week ends, and says the default was the participant's call, not a decision nobody made.
+  await page.getByRole('button', { name: 'See your week' }).click();
+  await expect(page.getByText(/You let the default stand on A deep discount to close this week: Approve the discount/)).toHaveCount(1, { timeout: 15000 });
+  await expect(page.getByText(/Nobody decided A deep discount/)).toHaveCount(0);
+});
+
+test('End week with a decision still to come: deciding it ends the week as decided', async ({ page }) => {
+  await week2(page);
+  await page.getByRole('button', { name: /End week/ }).click();
+  const dialog = page.getByRole('dialog', { name: 'A deep discount to close this week' });
+  await dialog.getByRole('radio', { name: /Hold the price/ }).check();
+  await dialog.getByRole('button', { name: 'Decide', exact: true }).click();
+  await expect(dialog.getByText('You chose:')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Continue' }).click();
+  await dismissEvents(page);
+  await page.getByRole('button', { name: 'See your week' }).click();
+  await expect(page.getByText(/You decided A deep discount to close this week: Hold the price/)).toHaveCount(1, { timeout: 15000 });
+});
+
 for (const size of [{ width: 1024, height: 768 }, { width: 834, height: 1112 }]) {
   test(`the business bar and the decision fit at ${size.width} wide`, async ({ page }) => {
     await week2(page, size);

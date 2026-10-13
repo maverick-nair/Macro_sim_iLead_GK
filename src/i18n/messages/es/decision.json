@@ -1,0 +1,12 @@
+{
+  "decision.tag": "Decisión",
+  "decision.known": "Lo que sabes",
+  "decision.legend": "¿Qué haces?",
+  "decision.later": "Decidir más tarde",
+  "decision.decide": "Decidir",
+  "decision.chose": "{by, select, you {Elegiste:} kept {Dejaste la opción por defecto:} other {Nadie eligió a tiempo, así que se aplicó:}}",
+  "decision.done": "Continuar",
+  "decision.ending": "Antes de que termine {unit, select, year {el año} month {el mes} week {la semana} day {el día} other {el periodo}}: decide ahora o deja la opción por defecto.",
+  "decision.keep": "Dejar la opción por defecto",
+  "decision.default": "(por defecto)"
+}

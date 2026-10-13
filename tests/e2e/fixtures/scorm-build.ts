@@ -6,6 +6,7 @@ import { buildPlayer } from '../../../scripts/player-build';
 import { parseStoryline } from '../../../src/engine/config';
 import { createEngine } from '../../../src/engine/sim/engine';
 import { neededStyles } from '../../../src/engine/sim/policies';
+import { endWeek } from '../../../src/engine/sim/endWeek';
 import type { Intent } from '../../../src/engine/contract';
 import { encodeSnapshot } from '../../../src/lms/snapshot';
 
@@ -26,7 +27,8 @@ async function sevenWeeks(raw: unknown): Promise<Intent[]> {
   const send = async (i: Intent) => { await engine.dispatch(i); log.push(i); };
   while (engine.view().clock.period < config.time.period.count && engine.view().phase !== 'ended') {
     if (engine.view().phase === 'style') await send({ type: 'confirmStyles', styles: await neededStyles(engine, config.thresholds.high, config.lens) });
-    await send({ type: 'endPeriod' });
+    // A decision still to come holds the week end (D231): these sessions let its default stand.
+    await endWeek({ view: () => engine.view(), dispatch: send });
     const v = engine.view();
     if (v.pendingReward) await send({ type: 'chooseReward', reward: v.pendingReward[0] });
     if (engine.view().phase === 'periodEnd') await send({ type: 'startNextPeriod' });

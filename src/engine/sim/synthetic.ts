@@ -199,6 +199,20 @@ class Player implements PlayerApi {
     return this.engine.dispatch(intent);
   }
 
+  /**
+   * End week (D231): a decision still to come this week is shown first. The player decides it by their nature (as on
+   * the board); one they would leave, they now leave explicitly, letting its default stand. Then End week again.
+   */
+  private async endWeek(): Promise<EngineView> {
+    let v = (await this.send({ type: 'endPeriod' })).view;
+    for (let guard = 0; guard < 50 && v.phase === 'board' && v.endingWeek; guard++) {
+      v = await this.choose(v);
+      for (const c of v.openChoices.filter(x => x.holdsWeekEnd)) v = (await this.send({ type: 'keepDefault', choiceId: c.id })).view;
+      v = (await this.send({ type: 'endPeriod' })).view;
+    }
+    return v;
+  }
+
   async play(): Promise<SyntheticRun> {
     let v = this.engine.view();
     for (let guard = 0; v.phase !== 'ended' && guard < 400; guard++) {
@@ -207,7 +221,7 @@ class Player implements PlayerApi {
         this.own = 0;
         v = await this.board(v);
         const period = v.clock.period;
-        v = (await this.send({ type: 'endPeriod' })).view;
+        v = await this.endWeek();
         const week = this.weeks.find(w => w.period === period);
         const sum = v.periods.find(p => p.period === period);
         if (week && sum) Object.assign(week, { styleFit: { correct: sum.week.styleFit.correct, total: sum.week.styleFit.total }, revenue: Math.round(sum.valueThisPeriod), score: sum.week.score });

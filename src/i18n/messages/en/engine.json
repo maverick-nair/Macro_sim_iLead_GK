@@ -194,12 +194,12 @@
   "engine.dyn.resigned.cause": "{name} has felt low for too long (morale about {morale}) and has resigned.",
   "engine.dyn.attrition.rule": "When someone's morale stays under {below} over the last {window} days, they may go off sick, and if it keeps happening they resign.",
   "engine.var.drift": "{unit, select, year {A year} month {A month} week {A week} day {A day} other {A period}} went by",
-  "engine.choice.cause": "{by, select, you {You chose \"{option}\" for {title}.} other {Nobody chose in time, so \"{option}\" applied to {title}.}}",
+  "engine.choice.cause": "{by, select, you {You chose \"{option}\" for {title}.} kept {You let the default stand for {title}, so \"{option}\" applied.} other {Nobody chose in time, so \"{option}\" applied to {title}.}}",
   "engine.choice.none": "Nobody decided on {title} in time.",
   "engine.choice.defaultLabel": "No decision",
-  "engine.choice.rule": "{by, select, you {What you chose plays out as the simulation sets it.} other {A decision left past its deadline takes its default.}}",
+  "engine.choice.rule": "{by, select, you {What you chose plays out as the simulation sets it.} kept {You let the default stand when the week ended, so it plays out as the simulation sets it.} other {A decision left past its deadline takes its default.}}",
   "engine.choice.nobody": "Nobody",
-  "engine.choice.log": "{title}: {option}{by, select, you {} other { (default)}}",
+  "engine.choice.log": "{title}: {option}{by, select, you {} kept { (default, kept by you)} other { (default)}}",
   "engine.report.headline": "{purpose, select, assessment {{profile, select, readNoAction {People were read accurately, but little action followed.} absent {Little leadership action reached the team.} wordsNotChoices {The words in conversation and the style choices did not match.} allRound {The team grew and the target was met.} numbersAtCost {{met, select, yes {The target was met} other {The result came close to the target}} at the team's expense.} peopleFirst {People outcomes were strong; the business result fell short.} bothSlipped {Both the team and the business result declined.} other {The run shows mixed results.}}} other {{profile, select, readNoAction {You read people well but rarely acted.} absent {Little of your leadership reached the team.} wordsNotChoices {Your words and your choices did not match.} allRound {Your team grew and the numbers followed.} numbersAtCost {{met, select, yes {You hit the numbers} other {You pushed the numbers close}} at the team's expense.} peopleFirst {Strong with people; the numbers lagged.} bothSlipped {The team and the numbers both slipped.} other {A mixed run: some of what you did worked.}}}}",
   "engine.report.move": "{metric, select, skill {skill} morale {morale} result {result} other {trust}} {delta, number, ::sign-except-zero}",
   "engine.report.people": "{purpose, select, assessment {Over the run the team's averages moved: {moves}.} other {Over the run your team's averages moved: {moves}.}}",
@@ -230,7 +230,7 @@
   "engine.report.driver.bottleneck": "{stage} was the bottleneck in {periods} of {total} {unit, select, year {years} month {months} week {weeks} day {days} other {periods}}{owner, select, yes {: {name}, who owns it, ended with {stat, select, skill {skill} morale {morale} other {result}} at {value}} other {}}.",
   "engine.report.varMove": "{name} {delta, number, ::sign-except-zero}",
   "engine.report.revenue": "revenue",
-  "engine.report.driver.choice": "In {unit, select, year {year} month {month} week {week} day {day} other {period}} {n}, {by, select, you {on \"{title}\", {purpose, select, assessment {\"{option}\" was chosen} other {you chose \"{option}\"}}} other {\"{title}\" was left to its default, \"{option}\"}}: {moves}.",
+  "engine.report.driver.choice": "In {unit, select, year {year} month {month} week {week} day {day} other {period}} {n}, {by, select, you {on \"{title}\", {purpose, select, assessment {\"{option}\" was chosen} other {you chose \"{option}\"}}} kept {on \"{title}\", {purpose, select, assessment {the default \"{option}\" was kept} other {you kept the default, \"{option}\"}}} other {\"{title}\" was left to its default, \"{option}\"}}: {moves}.",
   "engine.report.driver.variable": "{name} went from {format, select, percent {{from}% to {to}%} money {{from, number} {currency} to {to, number} {currency}} other {{from} to {to}}} over the run.",
   "engine.report.thought.neglected": "{name} got {n, plural, =0 {none} one {one} other {#}} of your {total} one to one actions. What kept you from spending more time with {name}?",
   "engine.report.guide.neglected": "People who get little of your time drift. A short check in each week keeps them on track.",
@@ -284,5 +284,6 @@
   "engine.report.driver.repeats": "{n, plural, one {One action was} other {# actions were}} repeated too soon with the same people ({actions}): each repeat did less than the first time.",
   "engine.report.driver.silence": "{name} went {n, plural, one {one {unit, select, year {year} month {month} week {week} day {day} other {period}}} other {# {unit, select, year {years} month {months} week {weeks} day {days} other {periods}}}} without hearing from {purpose, select, assessment {the manager} other {you}}: confidence {delta, number, ::sign-except-zero}.",
   "engine.report.driver.lost": "Events left unanswered{reaction, select, yes { and {name}'s loss of confidence} other {}} cost {amount, number} {currency} in revenue.",
-  "engine.report.driver.idle": "{n, plural, one {One day was} other {# days were}} left unused at the end of a {unit, select, year {year} month {month} week {week} day {day} other {period}}, and the team did less on {n, plural, one {it} other {them}}."
+  "engine.report.driver.idle": "{n, plural, one {One day was} other {# days were}} left unused at the end of a {unit, select, year {year} month {month} week {week} day {day} other {period}}, and the team did less on {n, plural, one {it} other {them}}.",
+  "engine.choice.keptNone": "You let {title} pass without a decision."
 }

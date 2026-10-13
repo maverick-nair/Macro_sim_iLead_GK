@@ -2,7 +2,7 @@ import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, PRACTICE, practiceAvailable, practicePartner, speakerFor, turnLimit } from './live';
 import { purposeOf } from '../config';
 import { buildReport } from '../report/build';
-import { finalScore } from './period';
+import { finalScore, holdingChoices } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, fill, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import { bestStyle, lensView, NEEDS } from '../lens';
@@ -111,6 +111,7 @@ function liveView(sim: Sim) {
 
 export function buildView(sim: Sim) {
   const c = sim.config;
+  const holding = new Set(sim.ending ? holdingChoices(sim).map(h => h.id) : []);
   const ideal = idealThroughput(sim);
   const ratios = sim.funnel.stageOutPeriod.map((v, i) => (ideal[i] ? v / ideal[i] : 1));
   const bottleneck = sim.sub > 0 ? ratios.indexOf(Math.min(...ratios)) : -1;
@@ -257,8 +258,11 @@ export function buildView(sim: Sim) {
       const ev = c.events.find(e => e.key === oc.eventKey)!;
       const f = (t: string) => fill(t, sim, oc.memberId);
       return { id: oc.id, eventKey: ev.key, card: ev.card, title: f(ev.title), body: choiceBody(sim, ev, oc.memberId), memberId: oc.memberId, known: ev.choice!.known.map(f),
-        options: ev.choice!.options.map(o => ({ key: o.key, label: f(o.label), detail: o.detail ? f(o.detail) : null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub) };
+        options: ev.choice!.options.map(o => ({ key: o.key, label: f(o.label), detail: o.detail ? f(o.detail) : null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub),
+        default: ev.choice!.default ?? null, holdsWeekEnd: !!sim.ending && holding.has(oc.id) };
     }),
+    /** End week was pressed and a decision holds the week end (D231): it is shown before the week ends. */
+    endingWeek: !!sim.ending,
     /** Choices made or defaulted (D137), with what they changed: the decision's "what happened" and the History. */
     choices: sim.choices.map(r => ({ id: r.id, eventKey: r.eventKey, title: r.title, option: r.option, label: r.label, outcome: r.outcome, by: r.by, period: r.period, sub: r.sub,
       changes: r.changes, variables: r.variables.filter(x => c.variables.find(v => v.key === x.key)?.shown).map(x => ({ ...x, name: varName(sim, x.key) })), revenue: Math.round(r.revenue),

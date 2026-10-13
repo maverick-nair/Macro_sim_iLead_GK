@@ -194,12 +194,12 @@
   "engine.dyn.resigned.cause": "{name} lleva demasiado tiempo desanimado (moral cerca de {morale}) y ha renunciado.",
   "engine.dyn.attrition.rule": "Cuando la moral de alguien se queda por debajo de {below} en los últimos {window} días, puede darse de baja, y si se repite, renuncia.",
   "engine.var.drift": "{unit, select, year {Pasó un año} month {Pasó un mes} week {Pasó una semana} day {Pasó un día} other {Pasó un periodo}}",
-  "engine.choice.cause": "{by, select, you {Elegiste «{option}» en {title}.} other {Nadie eligió a tiempo, así que se aplicó «{option}» en {title}.}}",
+  "engine.choice.cause": "{by, select, you {Elegiste «{option}» en {title}.} kept {Dejaste la opción por defecto en {title}, así que se aplicó «{option}».} other {Nadie eligió a tiempo, así que se aplicó «{option}» en {title}.}}",
   "engine.choice.none": "Nadie decidió sobre {title} a tiempo.",
   "engine.choice.defaultLabel": "Sin decisión",
-  "engine.choice.rule": "{by, select, you {Lo que elegiste tiene el efecto que la simulación le da.} other {Una decisión sin tomar a tiempo aplica su opción por defecto.}}",
+  "engine.choice.rule": "{by, select, you {Lo que elegiste tiene el efecto que la simulación le da.} kept {Dejaste la opción por defecto al cerrar la semana, así que tiene el efecto que la simulación le da.} other {Una decisión sin tomar a tiempo aplica su opción por defecto.}}",
   "engine.choice.nobody": "Nadie",
-  "engine.choice.log": "{title}: {option}{by, select, you {} other { (por defecto)}}",
+  "engine.choice.log": "{title}: {option}{by, select, you {} kept { (por defecto, lo dejaste tú)} other { (por defecto)}}",
   "engine.report.headline": "{purpose, select, assessment {{profile, select, readNoAction {Se leyó bien a las personas, pero se actuó poco.} absent {Poca acción de liderazgo llegó al equipo.} wordsNotChoices {Las palabras en las conversaciones y las elecciones de estilo no coincidieron.} allRound {El equipo creció y se alcanzó el objetivo.} numbersAtCost {{met, select, yes {Se alcanzó el objetivo} other {El resultado se acercó al objetivo}} a costa del equipo.} peopleFirst {Los resultados con las personas fueron buenos; el resultado de negocio se quedó corto.} bothSlipped {Tanto el equipo como el resultado de negocio empeoraron.} other {La simulación muestra resultados mixtos.}}} other {{profile, select, readNoAction {Leíste bien a las personas, pero actuaste poco.} absent {Poco de tu liderazgo llegó al equipo.} wordsNotChoices {Tus palabras y tus elecciones no coincidieron.} allRound {Tu equipo creció y los números lo acompañaron.} numbersAtCost {{met, select, yes {Alcanzaste los números} other {Acercaste los números}} a costa del equipo.} peopleFirst {Fuerte con las personas; los números se quedaron atrás.} bothSlipped {El equipo y los números empeoraron a la vez.} other {Una simulación mixta: parte de lo que hiciste funcionó.}}}}",
   "engine.report.move": "{metric, select, skill {habilidad} morale {moral} result {resultado} other {confianza}} {delta, number, ::sign-except-zero}",
   "engine.report.people": "{purpose, select, assessment {A lo largo de la simulación, los promedios del equipo cambiaron: {moves}.} other {A lo largo de la simulación, los promedios de tu equipo cambiaron: {moves}.}}",
@@ -230,7 +230,7 @@
   "engine.report.driver.bottleneck": "{stage} fue el cuello de botella en {periods} de {total} {unit, select, year {años} month {meses} week {semanas} day {días} other {periodos}}{owner, select, yes {: {name}, que la lleva, terminó con {stat, select, skill {la habilidad} morale {la moral} other {el resultado}} en {value}} other {}}.",
   "engine.report.varMove": "{name} {delta, number, ::sign-except-zero}",
   "engine.report.revenue": "ingresos",
-  "engine.report.driver.choice": "En {unit, select, year {el año} month {el mes} week {la semana} day {el día} other {el periodo}} {n}, {by, select, you {ante «{title}», {purpose, select, assessment {se eligió «{option}»} other {elegiste «{option}»}}} other {«{title}» quedó en su opción por defecto, «{option}»}}: {moves}.",
+  "engine.report.driver.choice": "En {unit, select, year {el año} month {el mes} week {la semana} day {el día} other {el periodo}} {n}, {by, select, you {ante «{title}», {purpose, select, assessment {se eligió «{option}»} other {elegiste «{option}»}}} kept {ante «{title}», {purpose, select, assessment {se dejó la opción por defecto, «{option}»} other {dejaste la opción por defecto, «{option}»}}} other {«{title}» quedó en su opción por defecto, «{option}»}}: {moves}.",
   "engine.report.driver.variable": "{name} pasó de {format, select, percent {{from}% a {to}%} money {{from, number} {currency} a {to, number} {currency}} other {{from} a {to}}} a lo largo de la simulación.",
   "engine.report.thought.neglected": "{name} recibió {n, plural, =0 {ninguna} one {una} other {#}} de tus {total} acciones individuales. ¿Qué te impidió dedicarle más tiempo a {name}?",
   "engine.report.guide.neglected": "Las personas que reciben poco de tu tiempo se desconectan. Un breve seguimiento cada semana las mantiene en marcha.",
@@ -284,5 +284,6 @@
   "engine.report.driver.repeats": "{n, plural, one {Una acción se repitió} other {# acciones se repitieron}} demasiado pronto con las mismas personas ({actions}): cada repetición hizo menos que la primera vez.",
   "engine.report.driver.silence": "{name} pasó {n, plural, one {un {unit, select, year {año} month {mes} week {semana} day {día} other {periodo}}} other {# {unit, select, year {años} month {meses} week {semanas} day {días} other {periodos}}}} sin saber nada de {purpose, select, assessment {la persona responsable} other {ti}}: confianza {delta, number, ::sign-except-zero}.",
   "engine.report.driver.lost": "Los eventos sin respuesta{reaction, select, yes { y la pérdida de confianza de {name}} other {}} costaron {amount, number} {currency} en ingresos.",
-  "engine.report.driver.idle": "{n, plural, one {Un día quedó} other {# días quedaron}} sin usar al final de {unit, select, year {un año} month {un mes} week {una semana} day {un día} other {un periodo}}, y el equipo hizo menos en {n, plural, one {él} other {ellos}}."
+  "engine.report.driver.idle": "{n, plural, one {Un día quedó} other {# días quedaron}} sin usar al final de {unit, select, year {un año} month {un mes} week {una semana} day {un día} other {un periodo}}, y el equipo hizo menos en {n, plural, one {él} other {ellos}}.",
+  "engine.choice.keptNone": "Dejaste pasar {title} sin decidir."
 }

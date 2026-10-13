@@ -159,7 +159,7 @@ function testsFlags(ev: EventConfig, flags: string[]) {
  * (`by: 'default'`): its people, trust, business and flags apply, its follow ups are scheduled, and the record
  * keeps all of it for the report. Returns the record.
  */
-export function resolveChoice(sim: Sim, rng: Rng, choiceId: string, optionKey: string | null, by: 'you' | 'default'): ChoiceRecord {
+export function resolveChoice(sim: Sim, rng: Rng, choiceId: string, optionKey: string | null, by: 'you' | 'kept' | 'default'): ChoiceRecord {
   const open = sim.openChoices.find(c => c.id === choiceId);
   if (!open) throw new IntentError('That choice is closed', 'closedChoice');
   const ev = sim.config.events.find(e => e.key === open.eventKey)!;
@@ -172,7 +172,8 @@ export function resolveChoice(sim: Sim, rng: Rng, choiceId: string, optionKey: s
   sim.cards = sim.cards.filter(c => c.choiceId !== choiceId);
   const id = choiceId;
   const label: Copy | null = picked ? fill(picked.label, sim, open.memberId) : null;
-  const cause: Copy = label ? msg('engine.choice.cause', { title: ev.title, option: label, by }) : msg('engine.choice.none', { title: ev.title });
+  const none = () => (by === 'kept' ? msg('engine.choice.keptNone', { title: ev.title }) : msg('engine.choice.none', { title: ev.title }));
+  const cause: Copy = label ? msg('engine.choice.cause', { title: ev.title, option: label, by }) : none();
   const target = open.memberId ? [member(sim, open.memberId)].filter((m): m is MemberSim => !!m) : ev.target === 'team' ? sim.members.filter(m => m.away === 0) : ev.target.startsWith('stage:') ? sim.members.filter(m => m.stage === ev.target.slice(6)) : [];
   const changes: Change[] = [];
   let applied: Applied = { changes: [], variables: [], revenue: 0, set: [], clear: [], scheduled: [] };
@@ -194,7 +195,7 @@ export function resolveChoice(sim: Sim, rng: Rng, choiceId: string, optionKey: s
   // A choice is an action in the report's record of what reached whom.
   const actionRec: ActionRecord = { id: `a${sim.actionRecords.length + 1}`, period: sim.period, sub: sim.sub, actionKey: `choice:${ev.key}`, optionKey: rec.option, scope: 'member', reached: [...new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject))], effects: {}, uses: [] };
   addEffects(actionRec, changes);
-  log(sim, { kind: 'event', title: label ? msg('engine.choice.log', { title: ev.title, option: label, by }) : msg('engine.choice.none', { title: ev.title }), memberIds: [...new Set(changes.map(c => c.subject).filter(s => s !== 'sponsor'))], changes, action: `choice:${ev.key}` });
+  log(sim, { kind: 'event', title: label ? msg('engine.choice.log', { title: ev.title, option: label, by }) : none(), memberIds: [...new Set(changes.map(c => c.subject).filter(s => s !== 'sponsor'))], changes, action: `choice:${ev.key}` });
   return rec;
 }
 

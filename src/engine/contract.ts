@@ -244,7 +244,7 @@ export const PeriodSummary = z.object({
   /** Shown business variables at the period's start and end (D136); left out when the storyline has none. */
   variables: z.array(z.object({ key: Id, start: Num, end: Num })).optional(),
   /** Choices made, or left to their default, this period (D137). */
-  choices: z.array(z.object({ id: Id, title: Text, label: Text.nullable(), by: z.enum(['you', 'default']) })).optional(),
+  choices: z.array(z.object({ id: Id, title: Text, label: Text.nullable(), by: z.enum(['you', 'kept', 'default']) })).optional(),
   /** People off sick or gone because their morale stayed low (D135). */
   attrition: z.array(z.object({ memberId: Id, name: Text, kind: z.enum(['sick', 'resigned']) })).optional(),
   /** Each stakeholder's relationship at the period's start and end (D160). */
@@ -261,11 +261,15 @@ export const VariableView = z.object({
 /** A choice waiting for the participant (D137): what is known and the options, never their consequences. */
 export const OpenChoice = z.object({
   id: Id, eventKey: Id, card: z.enum(['impact', 'signal', 'capacity', 'diagnostic', 'opportunity', 'crisis']), title: Text, body: Text, memberId: Id.nullable(), known: z.array(Text),
-  options: z.array(z.object({ key: Id, label: Text, detail: Text.nullable() })).min(2).max(4), dueInSubPeriods: z.number().int().min(0)
+  options: z.array(z.object({ key: Id, label: Text, detail: Text.nullable() })).min(2).max(4), dueInSubPeriods: z.number().int().min(0),
+  /** The option that applies when nobody decides, or null for none (D231: the participant may let it stand). */
+  default: Id.nullable().default(null),
+  /** End week was pressed and this decision is still open (D231): it is shown before the week ends. */
+  holdsWeekEnd: z.boolean().default(false)
 });
 /** A choice made, or left to its default (D137), and what it changed. */
 export const ChoiceView = z.object({
-  id: Id, eventKey: Id, title: Text, option: Id.nullable(), label: Text.nullable(), outcome: Text.nullable(), by: z.enum(['you', 'default']), period: z.number().int(), sub: z.number().int(),
+  id: Id, eventKey: Id, title: Text, option: Id.nullable(), label: Text.nullable(), outcome: Text.nullable(), by: z.enum(['you', 'kept', 'default']), period: z.number().int(), sub: z.number().int(),
   changes: z.array(MetricChange), variables: z.array(z.object({ key: Id, name: Text, delta: Num })), revenue: Num,
   triggered: z.array(z.object({ key: Id, title: Text, period: z.number().int() }))
 });
@@ -402,6 +406,8 @@ export const EngineView = z.object({
   /** Choices waiting for the participant, and choices made (D137). */
   openChoices: z.array(OpenChoice).default([]),
   choices: z.array(ChoiceView).default([]),
+  /** End week was pressed and a decision holds the week end (D231); End week again once it is decided or its default kept. */
+  endingWeek: z.boolean().default(false),
   /** Stakeholders outside the team (D160): none in a storyline without them. */
   stakeholders: z.array(StakeholderView).default([]),
   /**
@@ -441,6 +447,8 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('skipPractice') }),
   /** A choice event's option (D137). Costs no time. */
   z.object({ type: z.literal('decide'), choiceId: Id, option: Id }),
+  /** Decide later, when the week is ending (D231): the participant lets the choice's default stand. Recorded as theirs. Costs no time. */
+  z.object({ type: z.literal('keepDefault'), choiceId: Id }),
   /** A stakeholder interaction (D161): a live one opens a conversation; a static one needs its option. Costs its days. */
   z.object({ type: z.literal('engageStakeholder'), stakeholder: Id, interaction: Id, option: Id.optional() })
 ]);

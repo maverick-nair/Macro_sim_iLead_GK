@@ -1,7 +1,7 @@
 import type { StorylineConfig } from '../config';
 import { confirmStyles, IntentError, openConversation, planAction, submitInteraction } from './actions';
 import { heuristicEvaluator, type Evaluator } from './evaluator';
-import { chooseReward, endPeriod, startNextPeriod } from './period';
+import { chooseReward, endPeriod, holdForDecisions, startNextPeriod } from './period';
 import { createRng } from './rng';
 import type { Style } from './rules';
 import { createSim, log, member } from './sim';
@@ -40,7 +40,11 @@ export type Intent =
   | { type: 'startPractice' }
   | { type: 'skipPractice' }
   | { type: 'decide'; choiceId: string; option: string }
+  | { type: 'keepDefault'; choiceId: string }
   | { type: 'engageStakeholder'; stakeholder: string; interaction: string; option?: string };
+
+/** What can still be done once End week is pressed and a decision holds the week end (D231). */
+const WHILE_ENDING = new Set<Intent['type']>(['endPeriod', 'decide', 'keepDefault', 'dismissCard', 'clearOutcome', 'openProfile']);
 
 export interface Result {
   view: EngineView;
@@ -109,6 +113,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
   let queue = Promise.resolve();
 
   async function run(intent: Intent): Promise<Result> {
+    // While the week is ending (D231), only the decisions holding it, and reading what is on the board, remain.
+    if (sim.ending && !WHILE_ENDING.has(intent.type)) throw new IntentError('The week is ending', 'wrongPhase');
     switch (intent.type) {
       case 'confirmStyles': {
         const changes = confirmStyles(sim, rng, intent.styles, intent.notes);
@@ -188,6 +194,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         sim.outcome = null;
         return { view: buildView(sim), changes: [] };
       case 'endPeriod': {
+        // A decision still to come this week is shown first (D231): the result has no summary while one waits.
+        if (holdForDecisions(sim, rng)) return { view: buildView(sim), changes: [] };
         const summary = endPeriod(sim, rng);
         return { view: buildView(sim), changes: [], summary };
       }
@@ -206,6 +214,12 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         // A choice event (D137): the option applies now and costs no time; the view's `choices` says what happened.
         if (sim.phase !== 'board') throw new IntentError('Choices are made on the board', 'wrongPhase');
         const rec = resolveChoice(sim, rng, intent.choiceId, intent.option, 'you');
+        return { view: buildView(sim), changes: rec.changes };
+      }
+      case 'keepDefault': {
+        // Decide later, at the week's end (D231): the participant lets the default stand. It applies now, recorded as theirs.
+        if (sim.phase !== 'board') throw new IntentError('Choices are made on the board', 'wrongPhase');
+        const rec = resolveChoice(sim, rng, intent.choiceId, null, 'kept');
         return { view: buildView(sim), changes: rec.changes };
       }
       case 'engageStakeholder': {

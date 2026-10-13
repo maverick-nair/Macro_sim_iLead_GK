@@ -1393,6 +1393,7 @@
             "type": "string",
             "enum": [
               "you",
+              "kept",
               "default"
             ]
           },

@@ -3246,6 +3246,7 @@
                   "type": "string",
                   "enum": [
                     "you",
+                    "kept",
                     "default"
                   ]
                 }
@@ -4460,6 +4461,22 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 9007199254740991
+          },
+          "default": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "holdsWeekEnd": {
+            "default": false,
+            "type": "boolean"
           }
         },
         "required": [
@@ -4526,6 +4543,7 @@
             "type": "string",
             "enum": [
               "you",
+              "kept",
               "default"
             ]
           },
@@ -4695,6 +4713,10 @@
           "triggered"
         ]
       }
+    },
+    "endingWeek": {
+      "default": false,
+      "type": "boolean"
     },
     "stakeholders": {
       "type": "array",

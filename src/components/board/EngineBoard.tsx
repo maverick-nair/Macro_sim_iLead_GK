@@ -865,7 +865,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // A sponsor call is not a modal: it rings over the board until it is answered or put off.
   // A choice event's card is a decision (D137): the decision dialog, or its outcome right after deciding.
   const card = !oc ? v.cards.find(c => c.delivery === 'modal') : undefined;
-  const decisionOpen = decided ?? v.openChoices.find(c => c.id === (card?.choiceId ?? deciding)) ?? null;
+  // End week was pressed with a decision still open (D231): it shows before the week ends, whether or not it has a card.
+  const holding = v.endingWeek && v.phase === 'board' ? v.openChoices.find(c => c.holdsWeekEnd) : undefined;
+  const decisionOpen = decided ?? v.openChoices.find(c => c.id === (card?.choiceId ?? deciding)) ?? holding ?? null;
   const callCard = v.phase === 'board' ? v.cards.find(c => c.delivery === 'sponsorCall' && (c.messageId === null || v.inbox.some(m => m.id === c.messageId))) : undefined;
   // The week end replaces the board at a period end, and once more at the end of the run before the end screen.
   const weekEnd = !card && !v.live && !reacting && (v.phase === 'periodEnd' || (ended && !lastWeekSeen));
@@ -1234,13 +1236,24 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
               due={t('board.business.due', { n: decisionOpen.dueInSubPeriods, unit })}
               changes={choiceLines}
               onDecide={async option => { if (await send({ type: 'decide', choiceId: decisionOpen.id, option })) { setDecided(decisionOpen); setDeciding(null); } }}
+              ending={v.endingWeek && decisionOpen.holdsWeekEnd ? { periodUnit } : null}
               onLater={async () => {
+                // While the week is ending (D231), Decide later is Let the default stand: kept as the participant's own call.
+                if (v.endingWeek && decisionOpen.holdsWeekEnd) {
+                  if (await send({ type: 'keepDefault', choiceId: decisionOpen.id })) { setDecided(decisionOpen); setDeciding(null); }
+                  return;
+                }
                 const c = v.cards.find(x => x.choiceId === decisionOpen.id);
                 focusHint.current = () => h1Ref.current;
                 if (c && !(await send({ type: 'dismissCard', cardId: c.id }))) return;
                 setDeciding(null);
               }}
-              onDone={() => { focusHint.current = () => h1Ref.current; setDecided(null); }}
+              onDone={() => {
+                focusHint.current = () => h1Ref.current;
+                setDecided(null);
+                // The week was ending: once the decision is settled, End week goes on (the next one, if any, shows first).
+                if (v.endingWeek && !busy) void send({ type: 'endPeriod' });
+              }}
               onCloseFocus={() => rescue(true)} />
           </Suspense>
         )}

@@ -72,6 +72,7 @@ describe('player types decide by their nature, and probes leave every choice to 
   it('a probe decides nothing', async () => {
     const made = await choices('expert', [1], { probe: { kind: 'idle' } });
     expect(made.length).toBeGreaterThan(0);
-    expect(made.every(c => c.by === 'default')).toBe(true);
+    // Shown at the week's end (D231), a probe lets every default stand.
+    expect(made.every(c => c.by !== 'you')).toBe(true);
   });
 });

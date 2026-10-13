@@ -1,0 +1,3 @@
+{
+  "weekend.business.choice": "{by, select, you {Decidiste {title}: {option}.} kept {Dejaste la opción por defecto en {title}: se aplicó {option}.} other {Nadie decidió {title} a tiempo: se aplicó {option}.}}"
+}

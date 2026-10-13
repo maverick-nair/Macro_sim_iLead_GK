@@ -138,7 +138,7 @@ export interface DecisionData {
   title: string;
   /** The option taken, or null when nothing applied. */
   option: string | null;
-  by: 'you' | 'default';
+  by: 'you' | 'kept' | 'default';
   outcome: string | null;
   /** What it changed: people, then business variables and revenue, as display lines. */
   changes: string[];

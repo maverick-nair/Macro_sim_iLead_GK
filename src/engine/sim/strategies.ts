@@ -2,6 +2,7 @@ import type { StorylineConfig } from '../config';
 import { bestStyle, fitOf, needOf, type Lens } from '../lens';
 import { createEngine } from './engine';
 import { neededStyles } from './policies';
+import { endWeek } from './endWeek';
 import type { Style } from './rules';
 import type { EngineView } from './view';
 
@@ -104,7 +105,8 @@ export async function playStrategy(config: StorylineConfig, strategy: Strategy, 
         v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: words })).view;
       }
     }
-    v = (await engine.dispatch({ type: 'endPeriod' })).view;
+    // End week shows a decision still to come first (D231): these scripted players let its default stand.
+    v = await endWeek(engine);
     if (v.pendingReward) v = (await engine.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] })).view;
     if (v.phase === 'periodEnd') v = (await engine.dispatch({ type: 'startNextPeriod' })).view;
   }

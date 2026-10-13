@@ -196,7 +196,7 @@
   "report.decisions.variablesTitle": "The business, start to end",
   "report.decisions.column": "{column, select, name {Measure} start {Start} other {End}}",
   "report.decisions.direction": "{dir, select, up {, up} down {, down} other {, unchanged}}{better, select, true {, better} false {, worse} other {}}",
-  "report.decisions.by": "{by, select, you {Your decision} other {Left to the default}}",
+  "report.decisions.by": "{by, select, you {Your decision} kept {You kept the default} other {Left to the default}}",
   "report.decisions.term": "{term, select, option {What was chosen} outcome {What happened} changed {What it changed} led {What it led to} other {The leadership it showed}}",
   "report.decisions.nothing": "Nothing was chosen.",
   "report.decisions.variable": "{name} {value}",
