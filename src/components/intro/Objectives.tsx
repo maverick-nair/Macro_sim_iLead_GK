@@ -26,9 +26,9 @@ export interface ObjectivesProps {
   onText: () => void;
 }
 
-const TILE = 'flex flex-col gap-2.5 rounded-6 border border-line-default bg-surface-raised p-5 short:p-4';
+const TILE = 'flex flex-col gap-2.5 rounded-4 border border-line-default bg-surface-raised p-5 short:p-4';
 const LABEL = 'm-0 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-fg-secondary';
-const STAT = 'font-mono text-34 leading-none font-500 tracking-[-0.03em] short:text-30';
+const STAT = 'font-mono text-34 leading-none font-500 tracking-(--il-canvas-tracking-display) short:text-30';
 const AVATARS = 6;
 
 /**
@@ -54,8 +54,8 @@ export function Objectives(p: ObjectivesProps) {
     <main className="grid min-h-0 flex-1 grid-cols-(--il-intro-objectives-columns) bg-surface-card tablet:grid-cols-1 tablet:grid-rows-(--il-intro-objectives-rows)">
       <div className="flex min-h-0 flex-col gap-9 overflow-y-auto px-16 py-9 short:gap-6 short:py-6 tablet:gap-5 tablet:px-8 tablet:py-6 [&>*:first-child]:mt-auto [&>*:last-child]:mb-auto">
         <div className="flex flex-col gap-2.5">
-          <p className={`${EYEBROW} text-13 tracking-[0.16em]`}>{t('intro.objectives.eyebrow')}</p>
-          <h1 ref={h1} tabIndex={-1} className={`${DISPLAY} text-58 leading-[1.05] outline-0 short:text-48 tablet:text-40`}>
+          <p className={`${EYEBROW} text-13 tracking-(--il-canvas-tracking-caps)`}>{t('intro.objectives.eyebrow')}</p>
+          <h1 ref={h1} tabIndex={-1} className={`${DISPLAY} text-58 leading-(--il-canvas-leading-display) outline-0 short:text-48 tablet:text-40`}>
             {t('intro.objectives.title', { length: p.length.charAt(0).toUpperCase() + p.length.slice(1), organisation: p.organisation ?? 'none' })}
           </h1>
         </div>
@@ -66,13 +66,13 @@ export function Objectives(p: ObjectivesProps) {
             <span role="img" aria-label={t('intro.objectives.timeAria', { n: p.periods, unit: p.periodUnit })} className="flex h-2 gap-1">
               {Array.from({ length: p.periods }, (_, i) => <span key={i} className={`h-2 flex-1 rounded-2 ${i === 0 ? 'bg-accent-secondary' : 'bg-(--il-color-canvas-charcoal-800)'}`} />)}
             </span>
-            <span className="text-14 leading-[1.45] text-fg-secondary">{t('intro.objectives.timeNote', { unit: p.periodUnit })}</span>
+            <span className="text-14 leading-(--il-canvas-leading-line) text-fg-secondary">{t('intro.objectives.timeNote', { unit: p.periodUnit })}</span>
           </li>
           <li className={TILE}>
             <h2 className={LABEL}>{t('intro.objectives.target')}</h2>
             <b className={`${STAT} text-accent-secondary`}>{money.compact(p.target)}</b>
             <span aria-hidden="true" className="relative block h-2 rounded-2 bg-(--il-color-canvas-charcoal-800)"><span className="absolute inset-y-0 start-0 block min-w-0.75 bg-accent-secondary" style={{ width: `${Math.round((p.start / Math.max(1, p.target)) * 100)}%` }} /></span>
-            <span className="text-14 leading-[1.45] text-fg-secondary">{t('intro.objectives.targetNote', { start: money.format(p.start) })}</span>
+            <span className="text-14 leading-(--il-canvas-leading-line) text-fg-secondary">{t('intro.objectives.targetNote', { start: money.format(p.start) })}</span>
           </li>
           <li className={TILE}>
             <h2 className={LABEL}>{t('intro.objectives.team')}</h2>
@@ -83,14 +83,14 @@ export function Objectives(p: ObjectivesProps) {
                 : <span key={m.id} aria-hidden="true" className="-ms-1.5 flex size-5.5 items-center justify-center rounded-round border-2 border-surface-raised bg-surface-solid text-11 font-600">{m.name[0]}</span>))}
               {p.team.length > AVATARS && <span className="ms-1.5 font-mono text-12 font-500 text-fg-secondary"><span aria-hidden="true">{t('intro.objectives.more', { n: p.team.length - AVATARS })}</span></span>}
             </span>
-            <span className="text-14 leading-[1.45] text-fg-secondary">{t('intro.objectives.teamNote')}</span>
+            <span className="text-14 leading-(--il-canvas-leading-line) text-fg-secondary">{t('intro.objectives.teamNote')}</span>
           </li>
         </ul>
         <section aria-labelledby={ids.win} className="flex flex-col gap-2.5">
           <h2 id={ids.win} className={LABEL}>{t('intro.objectives.win')}</h2>
           <ol className="m-0 flex list-none flex-col p-0">
             {win.map(([lead, rest], i) => (
-              <li key={i} className="grid grid-cols-[28px_minmax(0,1fr)] items-baseline gap-3 border-b border-line-default py-3.25 text-16 leading-[1.45] short:py-2">
+              <li key={i} className="grid grid-cols-(--il-canvas-objective-columns) items-baseline gap-3 border-b border-line-default py-3.25 text-16 leading-(--il-canvas-leading-line) short:py-2">
                 <span aria-hidden="true" className="font-mono text-12 font-500 text-accent-secondary">{String(i + 1).padStart(2, '0')}</span>
                 <span className="text-fg-secondary"><b className="font-600 text-fg-primary">{lead}</b> {rest}</span>
               </li>
@@ -100,7 +100,7 @@ export function Objectives(p: ObjectivesProps) {
       </div>
       <aside className="flex min-h-0 flex-col justify-center gap-6.5 overflow-y-auto border-s border-line-default bg-surface-solid px-11 py-9 short:gap-4 short:py-6 tablet:gap-3 tablet:border-s-0 tablet:border-t tablet:px-8 tablet:py-4">
         <figure className="m-0 flex flex-col gap-3.5 tablet:hidden">
-          <blockquote className="m-0 font-serif text-26 leading-[1.3] text-fg-primary">{t('intro.objectives.quote', { quote: p.sponsor.quote })}</blockquote>
+          <blockquote className="m-0 font-serif text-26 leading-(--il-canvas-leading-snug) text-fg-primary">{t('intro.objectives.quote', { quote: p.sponsor.quote })}</blockquote>
           <figcaption className="flex items-center gap-3 text-14 text-fg-secondary">
             {p.sponsor.img ? <img src={p.sponsor.img} alt="" className="size-10 rounded-round object-cover object-top" /> : <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-round bg-(--il-color-canvas-navy-800) font-serif text-16 text-fg-primary">{p.sponsor.initials}</span>}
             <span className="flex flex-col"><b className="font-600 text-fg-primary">{p.sponsor.name}</b><span>{p.sponsor.title}</span></span>

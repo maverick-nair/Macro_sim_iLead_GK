@@ -53,19 +53,19 @@ export function DecisionDialog({ choice, result, busy, img, due, changes, onDeci
           onOpenAutoFocus={e => { e.preventDefault(); title.current?.focus({ preventScroll: true }); }}
           onCloseAutoFocus={e => { if (onCloseFocus) { e.preventDefault(); onCloseFocus(); } }}
           onPointerDownOutside={e => e.preventDefault()}
-          className={`grid max-h-full w-full animate-(--il-event-card-enter) overflow-auto rounded-4 bg-surface-card shadow-(--il-event-card-shadow) outline-0 ${img ? 'max-w-(--il-event-card-width) grid-cols-[340px_minmax(0,1fr)] tablet:max-w-(--il-board-panel-max-width) tablet:grid-cols-1' : 'max-w-(--il-board-panel-max-width) grid-cols-1'}`}>
+          className={`grid max-h-full w-full animate-(--il-event-card-enter) overflow-auto rounded-4 bg-surface-card shadow-(--il-event-card-shadow) outline-0 ${img ? 'max-w-(--il-event-card-width) grid-cols-(--il-canvas-event-columns) tablet:max-w-(--il-board-panel-max-width) tablet:grid-cols-1' : 'max-w-(--il-board-panel-max-width) grid-cols-1'}`}>
           {img && <EventPortrait img={img} />}
           <div className="flex min-w-0 flex-col gap-3.5 px-7.5 pt-7 pb-6">
             <div className="flex flex-wrap items-center gap-2.5">
               <span className={EVENT_TAG}>{t('decision.tag')}</span>
               {!done && <span className="text-13 font-600 text-status-attention">{due}</span>}
             </div>
-            <Dialog.Title ref={title} tabIndex={-1} className="m-0 font-display text-36 leading-[1.1] font-400 text-balance outline-0">{choice.title}</Dialog.Title>
+            <Dialog.Title ref={title} tabIndex={-1} className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400 text-balance outline-0">{choice.title}</Dialog.Title>
             <p id={`${id}body`} className="m-0 text-15 leading-normal text-pretty text-fg-body">{choice.body}</p>
             {!done && choice.known.length > 0 && (
               <div className="flex flex-col gap-1">
                 <b className="text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-fg-body">{t('decision.known')}</b>
-                <ul className="m-0 flex list-[square] flex-col gap-1 ps-4 text-14 text-fg-body">{choice.known.map((k, i) => <li key={i}>{k}</li>)}</ul>
+                <ul className="m-0 flex list-disc flex-col gap-1 ps-4 text-14 text-fg-body">{choice.known.map((k, i) => <li key={i}>{k}</li>)}</ul>
               </div>
             )}
             {!done ? (

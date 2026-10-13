@@ -16,7 +16,7 @@ export interface ProductsProps {
 const SPOTS: Array<[string, string]> = [['22%', '28%'], ['68%', '20%'], ['36%', '66%'], ['76%', '58%']];
 
 const Tick = ({ on }: { on: boolean }) => (
-  <span aria-hidden="true" className={`flex size-5.5 flex-none items-center justify-center rounded-round border-[1.5px] ${on ? 'border-accent-secondary bg-accent-secondary text-fg-on-accent' : 'border-line-control'}`}>
+  <span aria-hidden="true" className={`flex size-5.5 flex-none items-center justify-center rounded-round border-(length:--il-canvas-product-spot-border) ${on ? 'border-accent-secondary bg-accent-secondary text-fg-on-accent' : 'border-line-control'}`}>
     {on && <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>}
   </span>
 );
@@ -51,7 +51,7 @@ export function Products({ products, organisation, onNext }: ProductsProps) {
       <nav aria-labelledby={ids.list} className="flex min-h-0 flex-col gap-2.5 overflow-y-auto border-e border-line-default bg-surface-solid px-4 pt-6.5 pb-5.5">
         <div className="flex flex-col gap-2.5 px-3 pb-1.5">
           {organisation && <p className="m-0 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-fg-secondary">{organisation}</p>}
-          <h2 id={ids.list} className="m-0 text-24 font-400">{t('intro.products.title')}</h2>
+          <h2 id={ids.list} className="m-0 font-serif text-26 font-400">{t('intro.products.title')}</h2>
           <p className="m-0 text-14 leading-normal text-fg-secondary">{t('intro.products.intro')}</p>
         </div>
         <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
@@ -72,18 +72,18 @@ export function Products({ products, organisation, onNext }: ProductsProps) {
             <span className="block h-full bg-accent-secondary" style={{ width: `${Math.round((explored / products.length) * 100)}%` }} />
           </span>
         </div>
-        <p className="mt-auto mb-0 px-3 text-13 leading-[1.55] text-fg-secondary">{t('intro.products.note')}</p>
+        <p className="mt-auto mb-0 px-3 text-13 leading-(--il-canvas-leading-body) text-fg-secondary">{t('intro.products.note')}</p>
       </nav>
       <div className="flex min-h-0 flex-col">
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_minmax(0,528px)] items-center gap-10 overflow-y-auto px-13 pt-7 pb-5.5 short:pt-4 tablet:grid-cols-1 tablet:px-7">
+        <div className="grid min-h-0 flex-1 grid-cols-(--il-canvas-product-columns) items-center gap-10 overflow-y-auto px-13 pt-7 pb-5.5 short:pt-4 tablet:grid-cols-1 tablet:px-7">
           <section aria-labelledby={`${ids.list}-code`} className="flex min-w-0 flex-col gap-3">
             {(p.kind ?? p.line) && <p className="m-0 text-13 font-500 uppercase tracking-(--il-tracking-eyebrow) text-fg-secondary">{p.kind ? t('intro.products.kind', { kind: p.kind, n: String(at + 1).padStart(2, '0') }) : p.line}</p>}
             <h2 id={`${ids.list}-code`} ref={code} tabIndex={-1} className="m-0 flex flex-col gap-1 outline-0">
-              <span aria-hidden="true" className="text-(length:--il-intro-code-size) leading-[1.04] font-700 tracking-[-0.04em] short:text-96">{p.code}<span className="text-accent-secondary">.</span></span>
+              <span aria-hidden="true" className="text-(length:--il-intro-code-size) leading-(--il-canvas-leading-display) font-700 tracking-(--il-canvas-tracking-display) short:text-96">{p.code}<span className="text-accent-secondary">.</span></span>
               <span className="text-26 font-500">{p.name}</span>
             </h2>
-            {p.kind && p.line && <p className="m-0 font-display text-36 leading-[1.15] font-400 short:text-30">{p.line}</p>}
-            {p.audience && <p className="m-0 max-w-[40ch] text-16 leading-[1.55] text-fg-secondary"><span className="sr-only">{t('intro.products.audience')} </span>{p.audience}</p>}
+            {p.kind && p.line && <p className="m-0 font-display text-36 leading-(--il-canvas-leading-title) font-400 short:text-30">{p.line}</p>}
+            {p.audience && <p className="m-0 max-w-(--il-canvas-measure-lead) text-16 leading-(--il-canvas-leading-body) text-fg-secondary"><span className="sr-only">{t('intro.products.audience')} </span>{p.audience}</p>}
             {p.features.length > 0 && (
               <>
                 <div role="tablist" aria-label={t('intro.products.points', { name: p.name })} className="-ms-3 mt-1.5 flex flex-wrap gap-1">
@@ -91,29 +91,29 @@ export function Products({ products, organisation, onNext }: ProductsProps) {
                     <button key={i} type="button" role="tab" id={`${ids.tabs}-${i}`} aria-selected={i === point} aria-controls={ids.panel} tabIndex={i === point ? 0 : -1}
                       onClick={() => setPoint(i)} onKeyDown={e => onRovingKey(e, i, p.features.length, setPoint)}
                       title={x.title}
-                      className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-4 border-0 px-3 text-14 font-500 text-(--il-color-canvas-mist-light) ${i === point ? 'bg-surface-raised shadow-[inset_0_-2px_0_var(--il-color-accent-secondary)]' : 'bg-transparent'} ${FOCUS}`}>
+                      className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-4 border-0 px-3 text-14 font-500 text-(--il-color-canvas-mist-light) ${i === point ? 'bg-surface-raised shadow-(--il-canvas-product-tab-mark)' : 'bg-transparent'} ${FOCUS}`}>
                       <span className="font-mono text-12 text-accent-secondary">{String(i + 1).padStart(2, '0')}</span><span className="inline-block max-w-60 truncate">{x.title}</span>
                     </button>
                   ))}
                 </div>
-                <div role="tabpanel" id={ids.panel} aria-labelledby={`${ids.tabs}-${point}`} tabIndex={0} className={`flex min-h-31 max-w-[46ch] flex-col gap-1.5 border-s-2 border-accent-secondary py-2 ps-4 short:min-h-0 ${FOCUS}`}>
+                <div role="tabpanel" id={ids.panel} aria-labelledby={`${ids.tabs}-${point}`} tabIndex={0} className={`flex min-h-31 max-w-(--il-canvas-measure-lead) flex-col gap-1.5 border-s-2 border-accent-secondary py-2 ps-4 short:min-h-0 ${FOCUS}`}>
                   <span aria-hidden="true" className="font-mono text-13 text-accent-secondary">{String(point + 1).padStart(2, '0')} · {feature?.title}</span>
-                  <span className="text-16 leading-[1.55] text-(--il-color-canvas-mist-light)">{feature?.text}</span>
+                  <span className="text-16 leading-(--il-canvas-leading-body) text-(--il-color-canvas-mist-light)">{feature?.text}</span>
                 </div>
               </>
             )}
           </section>
-          <figure className="relative m-0 aspect-[928/1152] max-h-full w-full justify-self-end overflow-hidden rounded-6 bg-(--il-color-canvas-sand-600) shadow-[0_24px_60px_rgb(0_0_0/0.35)] tablet:max-h-none tablet:w-100 tablet:max-w-full tablet:justify-self-center">
+          <figure className="relative m-0 aspect-(--il-canvas-product-aspect) max-h-full w-full justify-self-end overflow-hidden rounded-4 bg-(--il-color-canvas-sand-600) shadow-(--il-canvas-product-shadow) tablet:max-h-none tablet:w-100 tablet:max-w-full tablet:justify-self-center">
             {p.image ? <img src={p.image} alt={p.imageAlt ?? t('intro.products.photo', { name: p.name })} className="absolute inset-0 size-full object-cover" />
               : <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-110 font-700 text-(--il-color-canvas-navy)">{p.code}</span>}
             {p.features.map((x, i) => (
               <button key={i} type="button" onClick={() => setPoint(i)} aria-label={t('intro.products.spot', { n: i + 1, text: x.title })} aria-pressed={i === point}
                 className={`group absolute flex size-11 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-round border-0 bg-transparent p-0 rtl:translate-x-1/2 ${FOCUS}`}
                 style={x.spot ? { insetInlineStart: `${x.spot.x}%`, insetBlockStart: `${x.spot.y}%` } : { insetInlineStart: SPOTS[i][0], insetBlockStart: SPOTS[i][1] }}>
-                <span className={`flex size-8.5 items-center justify-center rounded-round border-[1.5px] font-mono text-12 font-500 ${i === point ? 'border-accent-secondary bg-accent-secondary text-fg-on-accent' : 'border-[rgb(255_255_255/0.7)] bg-[rgb(11_18_32/0.82)] text-(--il-color-white)'}`}>{String(i + 1).padStart(2, '0')}</span>
+                <span className={`flex size-8.5 items-center justify-center rounded-round border-(length:--il-canvas-product-spot-border) font-mono text-12 font-500 ${i === point ? 'border-accent-secondary bg-accent-secondary text-fg-on-accent' : 'border-(--il-canvas-veil-line) bg-(--il-canvas-veil-strong) text-(--il-color-white)'}`}>{String(i + 1).padStart(2, '0')}</span>
               </button>
             ))}
-            <figcaption className="absolute start-3.5 bottom-3 rounded-3 bg-[rgb(11_18_32/0.78)] px-2.25 py-1.25 text-12 text-(--il-color-canvas-mist-light)">{t('intro.products.hint', { name: p.name })}</figcaption>
+            <figcaption className="absolute start-3.5 bottom-3 rounded-3 bg-(--il-canvas-veil-soft) px-2.25 py-1.25 text-12 text-(--il-color-canvas-mist-light)">{t('intro.products.hint', { name: p.name })}</figcaption>
           </figure>
         </div>
         <div className="flex flex-none flex-wrap items-center gap-6 border-t border-line-default px-13 py-4 tablet:px-7">

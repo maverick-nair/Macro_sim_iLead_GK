@@ -65,8 +65,8 @@ export interface StyleControlProps {
  */
 const COLUMNS: Record<number, string> = {
   2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4',
-  5: 'grid-cols-5 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-6',
-  6: 'grid-cols-6 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-6'
+  5: 'grid-cols-5 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-4',
+  6: 'grid-cols-6 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-4'
 };
 const columns = (n: number) => COLUMNS[n] ?? 'grid-cols-4';
 

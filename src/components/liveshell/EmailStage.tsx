@@ -53,7 +53,7 @@ export function EmailStage(p: EmailStageProps) {
   const { t } = useI18n();
   const rows: Array<'to' | 'cc' | 'subject'> = ['to', 'cc', 'subject'];
   return (
-    <div className="flex flex-1 flex-col overflow-hidden rounded-6 border border-line-default bg-surface-card ">
+    <div className="flex flex-1 flex-col overflow-hidden rounded-4 border border-line-default bg-surface-card ">
       {rows.map(field => (
         <div key={field} className="flex min-h-13 items-center gap-2.5 border-b border-line-default px-4 py-2.5">
           <span className="w-14 text-13 text-fg-secondary">{t('liveshell.email.field', { field })}</span>
@@ -81,7 +81,7 @@ export function EmailStage(p: EmailStageProps) {
         <textarea value={p.body} onChange={e => p.onBody(e.target.value)} aria-label={t('liveshell.email.bodyAria')}
           className="min-h-65 flex-1 resize-none border-0 bg-transparent p-4 text-15 leading-(--il-liveshell-email-leading) text-fg-primary outline-0 focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary" />
         {p.dictating && (
-          <div role="status" className="absolute end-4 bottom-3 start-4 flex items-center gap-2.5 rounded-6 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
+          <div role="status" className="absolute end-4 bottom-3 start-4 flex items-center gap-2.5 rounded-4 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
             <Waveform levels={p.levels} size="sm" />
             {t('liveshell.email.dictating', { field: p.dictating })}
           </div>

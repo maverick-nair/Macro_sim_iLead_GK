@@ -49,7 +49,7 @@ export function ReportDocument({ blocks, toolbar, footer, landmark = false, page
     <Outer className={outer}>
       {/* The toolbar (Back, Email, Download) stays at the top of the window as the report scrolls (D101). */}
       {toolbar && (print
-        ? <div className="sticky top-0 z-30 -mx-3 w-auto rounded-b-6 px-3 py-2.5 scheme-dark bg-(--il-report-print-desk) print:hidden">{toolbar}</div>
+        ? <div className="sticky top-0 z-30 -mx-3 w-auto rounded-b-4 px-3 py-2.5 scheme-dark bg-(--il-report-print-desk) print:hidden">{toolbar}</div>
         : <div className="il-chrome sticky top-0 z-30 px-8 py-2.5 print:hidden"><div className="mx-auto w-full max-w-(--il-report-width)">{toolbar}</div></div>)}
       {print && <style>{REPORT_PAGE_RULE}</style>}
       {print ? <PrintPages blocks={blocks} footer={footer} label={label} /> : (

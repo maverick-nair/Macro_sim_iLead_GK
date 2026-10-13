@@ -70,7 +70,7 @@ export function LiveTranscript({ turns, onReplay, captionsAnnounce = false, fill
     );
   }
   return (
-    <div role="region" aria-label={t('liveshell.transcript.title')} className={`flex ${fill ? 'flex-1' : 'max-h-(--il-liveshell-roleplay-transcript-max-height)'} min-h-0 flex-col overflow-hidden rounded-6 border border-line-default bg-surface-card `}>
+    <div role="region" aria-label={t('liveshell.transcript.title')} className={`flex ${fill ? 'flex-1' : 'max-h-(--il-liveshell-roleplay-transcript-max-height)'} min-h-0 flex-col overflow-hidden rounded-4 border border-line-default bg-surface-card `}>
       <div className="flex justify-between border-b border-line-default px-4 py-3 text-12 text-fg-secondary">
         <b>{t('liveshell.transcript.title')}</b>
         <span>{t('liveshell.transcript.saved')}</span>
@@ -129,8 +129,8 @@ export function RolePlayPortrait({ person, mood, conversation, brief }: RolePlay
   return (
     <div className="absolute inset-0 overflow-hidden bg-(image:--il-fill-portrait-calm)">
       {person.img && <img src={person.img} alt={person.name} className="absolute inset-0 size-full object-cover object-top mix-blend-multiply" />}
-      {brief && <div data-tour="live-brief" className="absolute start-4 end-4 top-4 max-h-[calc(100%-9rem)] overflow-auto">{brief}</div>}
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-[linear-gradient(to_top,var(--il-color-canvas-navy)_15%,transparent)] px-6 pt-20 pb-6 text-(--il-color-white)">
+      {brief && <div data-tour="live-brief" className="absolute start-4 end-4 top-4 max-h-(--il-canvas-live-brief-max-height) overflow-auto">{brief}</div>}
+      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-(image:--il-canvas-fade-portrait) px-6 pt-20 pb-6 text-(--il-color-white)">
         <span className="flex items-center gap-2.5 font-display text-26 leading-tight">
           {person.name}
           {conversation === 'npcSpeaking' && <span aria-hidden="true" className="size-2.5 animate-(--il-liveshell-roleplay-speaking-ring) bg-(--il-color-canvas-mint)" />}

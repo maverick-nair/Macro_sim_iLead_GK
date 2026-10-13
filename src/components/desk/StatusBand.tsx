@@ -112,7 +112,7 @@ export function StatusBand(p: StatusBandProps) {
               <dt className="truncate text-12 text-fg-body text-large:whitespace-normal">{t('metric.name', { metric: k.metric })}</dt>
               <dd className="m-0 flex flex-col gap-1">
                 <span className="flex items-baseline gap-1.5">
-                  <b className="font-mono text-22 leading-[1.1] font-400 short:text-20">{number(k.value)}</b>
+                  <b className="font-mono text-22 leading-(--il-canvas-leading-heading) font-400 short:text-20">{number(k.value)}</b>
                   <Delta delta={k.delta} unit={unit} />
                 </span>
                 <MetricTrack value={k.value} />

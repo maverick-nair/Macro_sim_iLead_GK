@@ -71,7 +71,7 @@ export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, c
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape goes back, Tab stays inside */}
       <div ref={dialog} role="dialog" aria-modal="true" aria-label={t('stylesetting.summary.aria')} tabIndex={-1}
         onKeyDown={onKeyDown}
-        className="flex w-180 max-w-full animate-(--il-stylesetting-summary-enter) flex-col gap-4 rounded-6 border border-line-strong outline-none bg-surface-material p-6.5">
+        className="flex w-180 max-w-full animate-(--il-stylesetting-summary-enter) flex-col gap-4 rounded-4 border border-line-strong outline-none bg-surface-material p-6.5">
         <h2 className="m-0 text-24 font-600">{t('stylesetting.summary.title', { unit: periodUnit, n: period })}</h2>
         <div role="table" aria-label={t('stylesetting.summary.title', { unit: periodUnit, n: period })} className="grid grid-cols-2 gap-x-6 gap-y-1.5">
           <div role="row" className="sr-only">

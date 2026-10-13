@@ -76,7 +76,7 @@ export function SettingsDialog({ values, onChange, onClose, voiceConsent = false
     <AppDialog onDismiss={onClose} frozen={frozen} returnFocus={returnFocus} described
       className="flex max-h-full w-140 flex-col gap-5.5 overflow-x-hidden overflow-y-auto p-7">
       <div className="flex items-center justify-between">
-        <DialogTitle className="m-0 text-22 font-600">{t('settings.title')}</DialogTitle>
+        <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('settings.title')}</DialogTitle>
         <button type="button" onClick={onClose} aria-label={t('settings.close')}
           className={`size-9 cursor-pointer rounded-round border-0 bg-surface-raised leading-none text-fg-primary ${FOCUS}`}>{CLOSE_GLYPH}</button>
       </div>

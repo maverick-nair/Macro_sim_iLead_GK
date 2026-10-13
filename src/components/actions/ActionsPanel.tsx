@@ -88,7 +88,7 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
         <div className="flex flex-1 flex-col overflow-hidden border border-line-strong bg-surface-card">
           <button type="button" aria-expanded={false} onClick={collapse.onToggle}
             aria-label={t('actions.rail.aria', { n: collapse.open, left: t('time.left', { amount: fmt(capacityLeft) }) })}
-            className="flex flex-1 cursor-pointer flex-col items-center gap-3 rounded-6 border-0 bg-transparent px-1 py-4 text-fg-primary hover:bg-surface-raised focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
+            className="flex flex-1 cursor-pointer flex-col items-center gap-3 rounded-4 border-0 bg-transparent px-1 py-4 text-fg-primary hover:bg-surface-raised focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
             <span className="flex size-8 items-center justify-center rounded-round border border-line-default bg-surface-raised text-fg-secondary"><Chevron to="left" /></span>
             <b className="flex min-h-8 min-w-8 items-center justify-center rounded-4 bg-accent-soft px-1.5 text-15">{number(collapse.open)}</b>
             <span className="text-13 font-600 [writing-mode:vertical-rl]">{t('actions.rail.label', { n: collapse.open })}</span>

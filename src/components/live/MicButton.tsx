@@ -61,7 +61,7 @@ export function MicButton({ state, mode, onPress, layout = 'desk' }: MicButtonPr
       aria-pressed={listening}
       className={`relative flex flex-none cursor-pointer items-center justify-center rounded-4 border border-solid p-0 disabled:cursor-not-allowed ${box} ${look} ${FOCUS}`}
     >
-      {listening && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-live-mic-ring) rounded-6 border-2 border-solid border-accent-secondary" />}
+      {listening && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-live-mic-ring) rounded-4 border-2 border-solid border-accent-secondary" />}
       {denied ? <MicOffIcon /> : <MicIcon />}
     </button>
   );

@@ -68,7 +68,7 @@ export function ResumeRecap(p: ResumeRecapProps) {
     <AppDialog onDismiss={p.onBack} frozen={p.frozen} returnFocus={p.returnFocus} className="flex max-h-full w-130 flex-col gap-4.5 overflow-y-auto p-7">
       <span className="text-12 font-600 tracking-(--il-appdialog-eyebrow-tracking) text-fg-secondary uppercase">{t('settings.resume.eyebrow')}</span>
       <div className="flex flex-col gap-1">
-        <DialogTitle className="m-0 text-24 font-600">{t('settings.resume.title', { period: p.periodUnit, n: p.period, sub: p.subPeriodUnit, subN: p.sub })}</DialogTitle>
+        <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('settings.resume.title', { period: p.periodUnit, n: p.period, sub: p.subPeriodUnit, subN: p.sub })}</DialogTitle>
         <span className="text-13 text-fg-secondary">{p.left}</span>
       </div>
       {p.headline && (

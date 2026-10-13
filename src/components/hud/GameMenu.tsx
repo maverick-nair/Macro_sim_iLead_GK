@@ -114,7 +114,7 @@ export function GameMenu({ items, where, periodUnit = 'week', scope = 'cohort', 
             className="fixed inset-y-0 end-0 z-49 flex w-(--il-desk-menu-width) max-w-full animate-(--il-event-card-enter) flex-col border-s border-fg-primary bg-surface-page text-14 text-fg-primary outline-0">
             <div className="flex flex-none items-center gap-3 border-b border-fg-primary px-6 pt-4 pb-3.5 short:pt-2.5 short:pb-2">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <Dialog.Title className="m-0 font-serif text-30 leading-[1.1] font-400">{t('menu.title')}</Dialog.Title>
+                <Dialog.Title className="m-0 font-serif text-30 leading-(--il-canvas-leading-heading) font-400">{t('menu.title')}</Dialog.Title>
                 {where && <span className="text-13 text-fg-secondary">{where}</span>}
               </div>
               <Dialog.Close aria-label={t('menu.close')} className={`flex min-h-11 flex-none cursor-pointer items-center gap-2 rounded-4 border border-line-strong bg-surface-card px-3 text-14 font-500 text-fg-primary ${FOCUS}`}>

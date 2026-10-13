@@ -75,7 +75,7 @@ export interface MetricsStripProps {
   sponsor: SponsorConfidence;
 }
 
-const tile = 'flex flex-col gap-1.5 rounded-6 border border-line-default bg-surface-card px-3.5 py-2.5 short:gap-1 short:py-1.5';
+const tile = 'flex flex-col gap-1.5 rounded-4 border border-line-default bg-surface-card px-3.5 py-2.5 short:gap-1 short:py-1.5';
 const PULSE = [
   { group: 'upbeat', bg: 'bg-metrics-pulse-upbeat' },
   { group: 'steady', bg: 'bg-metrics-pulse-steady' },
@@ -146,7 +146,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
     </button>
   );
   const causes = (cls: string) => (
-    <div id={popId} className={`${cls} flex flex-col gap-2 rounded-6 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)`}>
+    <div id={popId} className={`${cls} flex flex-col gap-2 rounded-4 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)`}>
       <b>{t('metrics.sponsor.causes')}</b>
       {meter && sponsor.causes.length === 0 && <span className="text-fg-secondary">{t('metrics.sponsor.none')}</span>}
       {sponsor.causes.map((c, i) => {

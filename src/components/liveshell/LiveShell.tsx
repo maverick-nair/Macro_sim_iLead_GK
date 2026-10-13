@@ -187,7 +187,7 @@ export function LiveShell(p: LiveShellProps) {
       )}
 
       {split ? (
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,39fr)_minmax(0,61fr)]">
+        <div className="grid min-h-0 flex-1 grid-cols-(--il-canvas-live-columns)">
           <div className="relative min-h-0 border-e border-line-default">{p.portrait}</div>
           <section aria-label={t('liveshell.stage.aria')} className="@container flex min-h-0 min-w-0 flex-col">
             <div className="flex min-h-0 flex-1 flex-col gap-3.5 px-10 pt-6 pb-4 tablet:px-6">{p.children}</div>

@@ -39,7 +39,7 @@ export function PauseDialog({ onResume, session, frozen, returnFocus }: PauseDia
     return (
       <AppDialog onDismiss={onResume} frozen={frozen} returnFocus={returnFocus} described className="flex w-110 flex-col gap-3.5 p-7">
         <span className="text-12 font-600 tracking-(--il-appdialog-eyebrow-tracking) text-fg-secondary uppercase">{t('session.paused.eyebrow')}</span>
-        <DialogTitle className="m-0 text-28 font-600">{t('session.paused.title')}</DialogTitle>
+        <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('session.paused.title')}</DialogTitle>
         <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('session.paused.body', { known, at: session.savedAt ?? 0 })}</DialogDescription>
         <Button variant="primary" size="lg" onClick={onResume}>{t('settings.paused.resume')}</Button>
         <div className="grid grid-cols-2 gap-2">
@@ -56,7 +56,7 @@ export function PauseDialog({ onResume, session, frozen, returnFocus }: PauseDia
         <span className="h-5.5 w-1.5 rounded-2 bg-brand-deep-space" />
         <span className="h-5.5 w-1.5 rounded-2 bg-brand-deep-space" />
       </div>
-      <DialogTitle className="m-0 text-24 font-600">{t('settings.paused.title')}</DialogTitle>
+      <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('settings.paused.title')}</DialogTitle>
       <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('settings.paused.body')}</DialogDescription>
       <NoWrapButton variant="primary" size="lg" onClick={onResume}>{t('settings.paused.resume')}</NoWrapButton>
     </AppDialog>
@@ -76,7 +76,7 @@ export function ExitDialog({ onStay, onExit, frozen, returnFocus }: ExitDialogPr
   const { t } = useI18n();
   return (
     <AppDialog onDismiss={onStay} frozen={frozen} returnFocus={returnFocus} described className="flex w-110 flex-col gap-4 p-7">
-      <DialogTitle className="m-0 text-24 font-600">{t('settings.exit.title')}</DialogTitle>
+      <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('settings.exit.title')}</DialogTitle>
       <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('settings.exit.body')}</DialogDescription>
       <div className="flex flex-wrap justify-end gap-2.5">
         <NoWrapButton variant="secondary" size="md" onClick={onStay}>{t('settings.exit.stay')}</NoWrapButton>
@@ -112,7 +112,7 @@ export function ResumeDialog({ period, periodUnit, sub, subPeriodUnit, recent, w
   return (
     <AppDialog onDismiss={onBack} frozen={frozen} returnFocus={returnFocus} className="flex w-130 flex-col gap-4.5 p-7">
       <span className="text-12 font-600 tracking-(--il-appdialog-eyebrow-tracking) text-fg-secondary uppercase">{t('settings.resume.eyebrow')}</span>
-      <DialogTitle className="m-0 text-24 font-600">{t('settings.resume.title', { period: periodUnit, n: period, sub: subPeriodUnit, subN: sub })}</DialogTitle>
+      <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('settings.resume.title', { period: periodUnit, n: period, sub: subPeriodUnit, subN: sub })}</DialogTitle>
       <div className="flex flex-col gap-2">
         <span className="text-13 font-600">{t('settings.resume.recent', { count: recent.length })}</span>
         {recent.map(r => (
@@ -146,7 +146,7 @@ export function SessionExpiredDialog({ onSignIn, frozen, returnFocus }: SessionE
         <circle cx="12" cy="12" r="10" />
         <polyline points="12 6 12 12 16 14" />
       </svg>
-      <DialogTitle className="m-0 text-22 font-600">{t('settings.expired.title')}</DialogTitle>
+      <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('settings.expired.title')}</DialogTitle>
       <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('settings.expired.body')}</DialogDescription>
       <NoWrapButton variant="primary" size="md" onClick={onSignIn}>{t('settings.expired.signIn')}</NoWrapButton>
     </AppDialog>

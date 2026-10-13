@@ -143,7 +143,7 @@ export default function PreviewBar({ meta, jump, previewId, theme }: PreviewBarP
             {t('preview.jump.button')}
           </button>
           {open && (
-            <div id={menuId} role="group" aria-label={t('preview.jump.aria')} className="absolute end-0 top-full z-60 mt-2 flex w-max min-w-60 flex-col gap-1 rounded-6 border border-line-strong bg-surface-solid p-2 shadow-(--il-hud-score-shadow)">
+            <div id={menuId} role="group" aria-label={t('preview.jump.aria')} className="absolute end-0 top-full z-60 mt-2 flex w-max min-w-60 flex-col gap-1 rounded-4 border border-line-strong bg-surface-solid p-2 shadow-(--il-hud-score-shadow)">
               <label htmlFor={weekId} className="flex items-center justify-between gap-3 px-2 py-1 text-13 font-600">
                 {t('preview.jump.week', { unit })}
                 <select id={weekId} value={w} onChange={e => setWeek(Number(e.target.value))} className={`min-h-8 rounded-4 border border-line-control bg-surface-raised px-2 text-13 text-fg-primary ${focus}`}>

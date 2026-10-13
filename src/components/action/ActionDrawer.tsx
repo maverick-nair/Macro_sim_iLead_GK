@@ -57,7 +57,7 @@ export function OptionCards({ options, value, onChange, label, size = 'md' }: Op
         return (
           <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
             aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-6 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-6 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
+            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-4 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-4 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
             <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
               <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
             </span>
@@ -136,7 +136,7 @@ export function NudgeNote({ nudge }: { nudge: ActionNudge }) {
   const { t } = useI18n();
   const fmt = useDays();
   return (
-    <div role="note" className="flex flex-col gap-2 rounded-6 border border-status-attention bg-status-attention-soft p-3 text-13">
+    <div role="note" className="flex flex-col gap-2 rounded-4 border border-status-attention bg-status-attention-soft p-3 text-13">
       <span className="text-pretty">{t('action.drawer.nudge', { name: nudge.name, area: nudge.area, cost: fmt(nudge.days) })}</span>
       <div className="flex gap-2">
         <NoWrapButton variant="secondary" size="sm" onClick={nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
@@ -179,7 +179,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
       </div>
       </ScrollArea>
       <div className="flex flex-none flex-col gap-3.5 px-4.5 pb-4 short:gap-2.5 short:pb-3">
-        <div aria-live="polite" className="rounded-6 bg-surface-raised p-3 text-13 text-pretty short:p-2.5">{p.summary}</div>
+        <div aria-live="polite" className="rounded-4 bg-surface-raised p-3 text-13 text-pretty short:p-2.5">{p.summary}</div>
         <div data-tour="drawer-confirm" className="w-full"><Button variant="primary" size="lg" disabled={!p.canConfirm} onClick={p.onConfirm}>{t('action.drawer.cta', { cta: p.cta })}</Button></div>
       </div>
     </div>

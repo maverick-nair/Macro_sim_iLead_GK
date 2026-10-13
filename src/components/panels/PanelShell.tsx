@@ -54,7 +54,7 @@ export function PanelShell<K extends string>({ title, intro, tabs, tab, onTab, t
           <div className="flex flex-none flex-col gap-3 border-b border-fg-primary px-7 pt-6 pb-4 short:gap-2 short:px-5 short:pt-4 short:pb-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-col gap-1">
-                <Dialog.Title ref={heading} tabIndex={-1} className="m-0 font-display text-38 leading-[1.1] font-400 outline-0 short:text-30">{title}</Dialog.Title>
+                <Dialog.Title ref={heading} tabIndex={-1} className="m-0 font-display text-38 leading-(--il-canvas-leading-heading) font-400 outline-0 short:text-30">{title}</Dialog.Title>
                 {intro && <Dialog.Description className="m-0 text-15 text-fg-body">{intro}</Dialog.Description>}
               </div>
               <Dialog.Close className={`flex min-h-11 flex-none cursor-pointer items-center gap-2 rounded-4 border border-line-strong bg-surface-card px-3 text-14 font-500 text-fg-primary ${PANEL_FOCUS}`}>

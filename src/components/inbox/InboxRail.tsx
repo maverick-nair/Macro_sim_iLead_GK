@@ -37,7 +37,7 @@ export function InboxRail({ unread, items, onToggle, onOpen }: InboxRailProps) {
   return (
     <aside aria-label={t('inbox.title')} data-tour="inbox" className="flex flex-col items-center gap-2.5 pt-1 pe-0 pb-6 ps-4">
       <button type="button" onClick={onToggle} aria-label={t('inbox.open', { count: unread })}
-        className={`relative flex size-11 cursor-pointer items-center justify-center rounded-6 border border-solid border-line-default bg-surface-card p-0 text-fg-primary ${focus}`}>
+        className={`relative flex size-11 cursor-pointer items-center justify-center rounded-4 border border-solid border-line-default bg-surface-card p-0 text-fg-primary ${focus}`}>
         <InboxIcon />
         {unread > 0 && (
           <span aria-hidden="true" className="absolute -top-1.5 -end-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-4 bg-brand px-1.25 text-12 font-600 text-button-on-solid">{number(unread)}</span>

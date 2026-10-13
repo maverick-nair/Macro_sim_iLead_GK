@@ -14,7 +14,7 @@ export const QUIET_BUTTON = `flex min-h-11 cursor-pointer items-center gap-2 rou
 export const PRIMARY = `inline-flex min-h-12 cursor-pointer items-center justify-center gap-2.5 rounded-4 border-0 bg-(image:--il-fill-brand) px-6 text-16 font-600 text-button-on-solid ${FOCUS}`;
 export const LINK = `inline-flex min-h-11 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-15 text-fg-secondary underline underline-offset-3 hover:text-fg-primary ${FOCUS}`;
 /** The headlines: Newsreader at its display size, regular weight. */
-export const DISPLAY = 'm-0 font-display font-400 leading-[1.04] tracking-(--il-tracking-headline)';
+export const DISPLAY = 'm-0 font-display font-400 leading-(--il-canvas-leading-display) tracking-(--il-tracking-headline)';
 
 const LogOutIcon = () => (
   <svg className="size-4 rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>

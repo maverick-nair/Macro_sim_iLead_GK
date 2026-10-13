@@ -65,7 +65,7 @@ export function TranscriptBubble({ speaker, text, name = '', streaming = false, 
   const npc = speaker === 'npc';
   if (look === 'line') {
     return (
-      <div aria-busy={streaming || undefined} className={`flex max-w-[44rem] flex-col gap-1.5 ${npc ? 'self-start' : 'self-end text-end'}`}>
+      <div aria-busy={streaming || undefined} className={`flex max-w-(--il-canvas-measure-line) flex-col gap-1.5 ${npc ? 'self-start' : 'self-end text-end'}`}>
         <span className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-12 text-fg-body ${npc ? 'justify-start' : 'justify-end'}`}>
           <span>{npc ? name : t('live.turn.you')}</span>
           {npc && ai && <span className="flex items-center gap-0.75"><Sparkle />{t('live.turn.ai')}</span>}
@@ -77,13 +77,13 @@ export function TranscriptBubble({ speaker, text, name = '', streaming = false, 
             </button>
           )}
         </span>
-        <span className={npc ? 'font-serif text-21 leading-[1.4] text-pretty text-fg-primary' : 'text-17 leading-normal text-pretty text-fg-primary'}>{text}</span>
+        <span className={npc ? 'font-serif text-21 leading-(--il-canvas-leading-line) text-pretty text-fg-primary' : 'text-17 leading-normal text-pretty text-fg-primary'}>{text}</span>
       </div>
     );
   }
   return (
     <div aria-busy={streaming || undefined} className={`flex max-w-(--il-live-bubble-max-width) flex-col gap-1 ${npc ? 'self-start' : 'self-end'}`}>
-      <div className={`px-3.5 py-2.5 text-14 text-pretty ${npc ? 'rounded-6 rounded-es-6 bg-surface-raised text-fg-primary' : 'rounded-6 rounded-ee-6 bg-(image:--il-fill-brand) text-button-on-solid'}`}>{voiceNote && <VoiceNoteBar npc={npc} {...voiceNote} />}{text}</div>
+      <div className={`px-3.5 py-2.5 text-14 text-pretty ${npc ? 'rounded-4 rounded-es-4 bg-surface-raised text-fg-primary' : 'rounded-4 rounded-ee-4 bg-(image:--il-fill-brand) text-button-on-solid'}`}>{voiceNote && <VoiceNoteBar npc={npc} {...voiceNote} />}{text}</div>
       <span className={`flex items-center gap-1.5 text-12 text-fg-secondary ${npc ? 'justify-start' : 'justify-end'}`}>
         <span>{npc ? name : t('live.turn.you')}</span>
         {npc && (

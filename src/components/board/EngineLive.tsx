@@ -493,8 +493,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 ">
           <Dialog.Content aria-modal="true"
             onCloseAutoFocus={e => { const o = passOpener.current; if (o?.isConnected) { e.preventDefault(); o.focus(); } }}
-            className="flex w-full max-w-(--il-board-panel-max-width) flex-col gap-3 rounded-6 border border-line-strong bg-surface-solid p-6 outline-0">
-            <Dialog.Title className="m-0 text-22 font-600">{t('board.live.compareEnd.title')}</Dialog.Title>
+            className="flex w-full max-w-(--il-board-panel-max-width) flex-col gap-3 rounded-4 border border-line-strong bg-surface-solid p-6 outline-0">
+            <Dialog.Title className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('board.live.compareEnd.title')}</Dialog.Title>
             <Dialog.Description className="m-0 text-14 text-fg-secondary">{t('board.live.compareEnd.body')}</Dialog.Description>
             <div className="flex justify-end gap-2">
               <Button variant="secondary" size="md" onClick={() => setConfirmPass(false)}>{t('board.live.compareEnd.keep')}</Button>

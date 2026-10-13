@@ -160,7 +160,7 @@ export function ProfileSummary(props: ProfilePanelProps & { compact?: boolean })
         <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
       </div>
       <div className="flex flex-col gap-0.5">
-        <h2 className={`m-0 font-400 ${compact ? 'text-24 font-600' : 'font-display text-36 leading-[1.1]'}`}>{name}</h2>
+        <h2 className={`m-0 font-400 ${compact ? 'text-24 font-600' : 'font-display text-36 leading-(--il-canvas-leading-heading)'}`}>{name}</h2>
         <span className="text-15 text-fg-body">{title}</span>
         <span className="text-13 font-600">{away ? t('member.mood.away') : t('member.mood', { mood })}</span>
       </div>
@@ -188,7 +188,7 @@ export function ProfileHistory({ name, timeline, promises, periodUnit, subPeriod
   const { t } = useI18n();
   return (
     <>
-      <h3 id={headingId} className="m-0 border-b border-fg-primary pb-2.5 font-display text-28 leading-[1.1] font-400">{t('profile.interactions.title')}</h3>
+      <h3 id={headingId} className="m-0 border-b border-fg-primary pb-2.5 font-display text-28 leading-(--il-canvas-leading-heading) font-400">{t('profile.interactions.title')}</h3>
       {timeline.length === 0
         ? <p className="m-0 text-13 text-fg-secondary">{t('profile.interactions.empty', { name })}</p>
         : <ol className="m-0 contents list-none p-0">{timeline.map(e => <TimelineItem key={e.id} entry={e} periodUnit={periodUnit} subPeriodUnit={subPeriodUnit} />)}</ol>}
@@ -241,7 +241,7 @@ export function ProfilePanel(props: ProfilePanelProps) {
 
       <div className="flex flex-col gap-2 overflow-auto py-6 pe-11 ps-6">
         <div className="flex items-end justify-between gap-3 border-b border-fg-primary pb-2.5">
-          <h3 className="m-0 font-display text-28 leading-[1.1] font-400">{t('profile.actions.title')}</h3>
+          <h3 className="m-0 font-display text-28 leading-(--il-canvas-leading-heading) font-400">{t('profile.actions.title')}</h3>
           <button type="button" onClick={onClose} aria-label={t('profile.close')}
             className={`flex min-h-11 flex-none cursor-pointer items-center gap-2 rounded-4 border border-line-strong bg-surface-card px-3 text-14 font-500 text-fg-primary ${focus}`}><span aria-hidden="true">{CLOSE_GLYPH}</span><span aria-hidden="true">{t('menu.closeShort')}</span></button>
         </div>

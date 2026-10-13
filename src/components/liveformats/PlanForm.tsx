@@ -113,7 +113,7 @@ export function PlanForm(props: PlanFormProps) {
       <div className="flex min-w-0 flex-col gap-1.5">
         {input}
         {on && (
-          <div id={id(f, 'live')} role="status" className="flex items-center gap-2.5 rounded-6 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
+          <div id={id(f, 'live')} role="status" className="flex items-center gap-2.5 rounded-4 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
             <Waveform levels={levels.slice(0, 12).map(w => Math.max(4, w / 2))} size="sm" />
             <span>{t('liveformats.plan.dictating', { field: label(f) })}</span>
           </div>

@@ -72,7 +72,7 @@ const Spark = () => (
 
 function Card({ children, urgent = false, kind }: { children: ReactNode; urgent?: boolean; kind: string }) {
   // Four to a row as the canvas lays them out (D227); more scroll sideways. Wider with larger text.
-  return <li data-feed={kind} className="flex w-[calc((100%-1.5rem)/4)] min-w-(--il-desk-feed-card-width) flex-none"><div className={`${CARD} w-full ${urgent ? 'border-status-attention' : 'border-line-strong'}`}>{children}</div></li>;
+  return <li data-feed={kind} className="flex w-(--il-canvas-feed-card-width) min-w-(--il-desk-feed-card-width) flex-none"><div className={`${CARD} w-full ${urgent ? 'border-status-attention' : 'border-line-strong'}`}>{children}</div></li>;
 }
 
 /**
@@ -97,7 +97,7 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
           {feedback && (
             <Card kind="feedback">
               <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow) text-status-gain"><Spark />{t('desk.feed.feedback', { when: feedback.when })}</span>
-              <span className="line-clamp-2 leading-[1.4]">{feedback.title}</span>
+              <span className="line-clamp-2 leading-(--il-canvas-leading-line)">{feedback.title}</span>
               <span className="flex flex-wrap gap-x-2 text-12 text-fg-body">
                 {feedback.changes.length === 0 && <span>{t('desk.feed.noChange')}</span>}
                 {feedback.changes.map((c, i) => (
@@ -115,7 +115,7 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
           {milestones.map(m => (
             <Card key={m.key} kind="milestone">
               <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow) text-accent-secondary"><Flag />{t('desk.feed.milestone')}</span>
-              <span className="leading-[1.4]">{m.text}</span>
+              <span className="leading-(--il-canvas-leading-line)">{m.text}</span>
               <span className="mt-auto flex flex-wrap gap-x-3">
                 {m.onResults && <button type="button" onClick={m.onResults} className={LINK}>{t('desk.feed.results')}</button>}
                 {m.onLeaderboard && <button type="button" onClick={m.onLeaderboard} className={LINK}>{t('board.notice.leaderboard')}</button>}
@@ -130,7 +130,7 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
                 <b className="min-w-0 flex-1 truncate text-13 font-600 text-large:whitespace-normal text-large:break-words">{x.from || t('desk.feed.message', { kind: x.kind })}</b>
                 {x.due && <span className={`text-12 whitespace-nowrap ${x.urgent ? 'font-600 text-status-attention' : 'text-fg-body'}`}>{x.due}</span>}
               </span>
-              <span className="line-clamp-2 leading-[1.4] text-fg-body">{x.title}</span>
+              <span className="line-clamp-2 leading-(--il-canvas-leading-line) text-fg-body">{x.title}</span>
               <span className="mt-auto flex flex-wrap gap-x-3">
                 <button type="button" onClick={x.onOpen} className={LINK}>{t('inbox.cta', { cta: x.cta })}<span className="sr-only">: {x.title}</span></button>
                 {x.onLater && <button type="button" onClick={x.onLater} className={QUIET}>{t('inbox.later')}<span className="sr-only">: {x.title}</span></button>}

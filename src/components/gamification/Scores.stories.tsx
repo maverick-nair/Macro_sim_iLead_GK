@@ -33,7 +33,7 @@ function Breakdown(p: Partial<ScoreBreakdownProps> & { count?: number; next?: nu
   const { t } = useI18n();
   const streak = streakText(t, { count: p.count ?? 2, next: p.firstWeek ? undefined : p.next === undefined ? 1 : p.next, periodUnit: 'week', rule: RULE });
   return (
-    <div className="flex w-80 flex-col gap-2 rounded-6 border border-line-strong bg-surface-material p-3.5">
+    <div className="flex w-80 flex-col gap-2 rounded-4 border border-line-strong bg-surface-material p-3.5">
       <ScoreBreakdown total={433} max={1000}
         pillars={[{ key: 'business', value: 18, weight: 0.3 }, { key: 'people', value: 49, weight: 0.3 }, { key: 'leadership', value: 70, weight: 0.4 }]}
         capability={70} live={null} bonus={0} bonusCap={100} tiers={TIERS} tier={null}

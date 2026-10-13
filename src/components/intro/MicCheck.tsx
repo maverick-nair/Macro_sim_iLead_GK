@@ -68,7 +68,7 @@ export default function MicCheck({ onHeard, onText }: MicCheckProps) {
           ))}
         </span>
       </div>
-      <p role="status" className={`m-0 min-h-5 text-14 leading-[1.4] ${shown === 'heard' ? 'text-accent-secondary' : 'text-fg-secondary'}`}>{shown === 'idle' ? '' : t('intro.mic.status', { state: shown })}</p>
+      <p role="status" className={`m-0 min-h-5 text-14 leading-(--il-canvas-leading-line) ${shown === 'heard' ? 'text-accent-secondary' : 'text-fg-secondary'}`}>{shown === 'idle' ? '' : t('intro.mic.status', { state: shown })}</p>
       <span><button type="button" onClick={() => { setState('text'); onText(); }} className={`${LINK} text-14 ${FOCUS}`}>{t('intro.mic.text')}</button></span>
     </div>
   );

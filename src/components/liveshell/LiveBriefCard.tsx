@@ -47,7 +47,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
     // Over the 1:1 portrait (D227): the goal in one line on navy, the rest of the brief opening under it.
     const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
     return (
-      <aside aria-label={t('liveshell.brief.title')} className="flex flex-col gap-2.5 bg-[oklch(0.1831_0.0309_263.38/0.8)] px-3 py-2.5 text-13 text-(--il-color-white)">
+      <aside aria-label={t('liveshell.brief.title')} className="flex flex-col gap-2.5 bg-(--il-canvas-veil-soft) px-3 py-2.5 text-13 text-(--il-color-white)">
         <span className="text-pretty">{t('liveshell.brief.goalLine', { goal: brief.goal })}</span>
         {open && (
           <div id={id} className="flex flex-col gap-2 border-t border-(--il-color-canvas-navy-750) pt-2.5">
@@ -75,7 +75,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
   if (layout === 'tablet') {
     const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
     return (
-      <aside aria-label={t('liveshell.brief.title')} className={`flex min-w-0 flex-col gap-2.5 ${bare ? '' : 'rounded-6 border border-line-default bg-surface-card p-4.5 '}`}>
+      <aside aria-label={t('liveshell.brief.title')} className={`flex min-w-0 flex-col gap-2.5 ${bare ? '' : 'rounded-4 border border-line-default bg-surface-card p-4.5 '}`}>
         <span className="sr-only">{t('liveshell.brief.goal')}</span>
         <b className={`${bare ? 'text-22' : 'text-17'} leading-tight text-pretty`}>{brief.goal}</b>
         {brief.declaredStyle !== undefined && <span className="text-14 text-fg-secondary">{t('tablet.live.styleSet', { unit: periodUnit, style: brief.declaredStyle ? styleOf(lens, brief.declaredStyle).name : t('liveshell.brief.styleNone') })}</span>}
@@ -89,7 +89,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
           </div>
         )}
         {tip !== null && (
-          <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-6 border border-accent-default bg-accent-soft p-3 text-13">
+          <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-4 border border-accent-default bg-accent-soft p-3 text-13">
             <b>{t('liveshell.tip.title')}</b>
             <span>{tip}</span>
           </div>
@@ -112,7 +112,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
   const mood = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
   return (
     <aside id={id} aria-label={t('liveshell.brief.title')}
-      className="flex flex-col gap-3.5 self-start rounded-6 border border-line-default bg-surface-card p-4.5 ">
+      className="flex flex-col gap-3.5 self-start rounded-4 border border-line-default bg-surface-card p-4.5 ">
       <div className="flex items-center justify-between">
         <span className="text-12 font-600 tracking-(--il-liveshell-eyebrow-tracking) text-fg-secondary uppercase">{t('liveshell.brief.title')}</span>
         <button type="button" onClick={onToggle} aria-expanded aria-controls={id}
@@ -145,7 +145,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
       )}
       {brief.tone && <Row label={t('liveshell.brief.tone')}><span className={value}>{brief.tone}</span></Row>}
       {tip !== null && (
-        <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-6 border border-accent-default bg-accent-soft p-3 text-13">
+        <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-4 border border-accent-default bg-accent-soft p-3 text-13">
           <b>{t('liveshell.tip.title')}</b>
           <span>{tip}</span>
         </div>

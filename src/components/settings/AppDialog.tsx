@@ -45,7 +45,7 @@ export function AppDialog({ onDismiss, frozen = false, returnFocus, role = 'dial
           }}
           onEscapeKeyDown={e => { if (!dismissable) e.preventDefault(); }}
           onInteractOutside={e => { if (!dismissable) e.preventDefault(); }}
-          className={`max-w-full animate-(--il-appdialog-enter) rounded-6 border border-line-strong bg-surface-material outline-none ${className}`}>
+          className={`max-w-full animate-(--il-appdialog-enter) rounded-4 border border-line-strong bg-surface-material outline-none ${className}`}>
           {children}
         </Dialog.Content>
       </div>

@@ -1,0 +1,68 @@
+{
+  "canvas": {
+    "leading": {
+      "display": { "value": "1.05", "$description": "Display serif headlines (D227)" },
+      "heading": { "value": "1.1", "$description": "Serif titles of dialogs, panels and cards" },
+      "title": { "value": "1.2", "$description": "Serif titles that wrap to two lines" },
+      "snug": { "value": "1.3", "$description": "Card lines on the desk" },
+      "line": { "value": "1.4", "$description": "Spoken lines and short paragraphs" },
+      "body": { "value": "1.55", "$description": "Paragraphs on the navy screens" }
+    },
+    "tracking": {
+      "display": { "value": "-0.03em", "$description": "Large display numbers and words" },
+      "caps": { "value": "0.16em", "$description": "The navy screens' wide small capitals" }
+    },
+    "measure": {
+      "narrow": { "value": "30ch", "$description": "A caption over the sponsor's video" },
+      "lead": { "value": "46ch", "$description": "A lead paragraph on the navy screens" },
+      "line": { "value": "44rem", "$description": "A line of the live conversation" },
+      "hero": { "value": "48rem", "$description": "The week end banner's words" }
+    },
+    "veil": {
+      "strong": { "value": "color-mix(in oklch, {color.canvas.navy} 86%, transparent)", "$description": "Navy over a photo or video, for words on it" },
+      "soft": { "value": "color-mix(in oklch, {color.canvas.navy} 78%, transparent)", "$description": "Navy over a photo, for a control on it" },
+      "line": { "value": "color-mix(in oklch, {color.white} 70%, transparent)", "$description": "A thin light rule on a photo" }
+    },
+    "fade": {
+      "landing": { "value": "linear-gradient(90deg, {color.canvas.navy} 0%, color-mix(in oklch, {color.canvas.navy} 88%, transparent) 38%, color-mix(in oklch, {color.canvas.navy} 35%, transparent) 75%, color-mix(in oklch, {color.canvas.navy} 20%, transparent) 100%)", "$description": "The arrival photo fading into the navy behind the words" },
+      "landing-rtl": { "value": "linear-gradient(270deg, {color.canvas.navy} 0%, color-mix(in oklch, {color.canvas.navy} 88%, transparent) 38%, color-mix(in oklch, {color.canvas.navy} 35%, transparent) 75%, color-mix(in oklch, {color.canvas.navy} 20%, transparent) 100%)", "$description": "The same, right to left" },
+      "video": { "value": "linear-gradient(0deg, color-mix(in oklch, {color.black} 85%, transparent), transparent)", "$description": "The foot of the sponsor's video, under its controls" },
+      "portrait": { "value": "linear-gradient(to top, {color.canvas.navy} 15%, transparent)", "$description": "The foot of the 1:1 portrait, under the name" },
+      "lounge": { "value": "linear-gradient(to right, {color.canvas.navy}, transparent 45%)", "$description": "The week end's lounge photo fading in" },
+      "lounge-rtl": { "value": "linear-gradient(to left, {color.canvas.navy}, transparent 45%)", "$description": "The same, right to left" }
+    },
+    "lounge": {
+      "width": { "value": "42%", "$description": "The lounge photo's share of the week end banner" }
+    },
+    "video": {
+      "fade-height": { "value": "45%", "$description": "How far up the video's foot fades" },
+      "caption-inset": { "value": "9%", "$description": "The caption's side margins over the video" },
+      "position": { "value": "50% 25%", "$description": "The sponsor's face in the frame" },
+      "black": { "value": "{color.black}", "$description": "Behind the video" }
+    },
+    "product": {
+      "aspect": { "value": "928 / 1152", "$description": "A product photo" },
+      "columns": { "value": "minmax(0, 1fr) minmax(0, 528px)", "$description": "A model's words, then its photo" },
+      "spot-border": { "value": "1.5px", "$description": "A numbered spot on the photo" },
+      "shadow": { "value": "0 24px 60px color-mix(in oklch, {color.black} 35%, transparent)", "$description": "The photo lifted off the navy" },
+      "tab-mark": { "value": "inset 0 -2px 0 {color.accent.secondary}", "$description": "The chosen model in the list" }
+    },
+    "objective": {
+      "columns": { "value": "28px minmax(0, 1fr)", "$description": "An objective's number, then its words" }
+    },
+    "stylesetting": {
+      "columns": { "value": "minmax(0, 1fr) 300px", "$description": "The cards, then the definitions and Review" },
+      "columns-tablet": { "value": "minmax(0, 1fr) 230px", "$description": "The same on a landscape tablet" }
+    },
+    "event": {
+      "columns": { "value": "340px minmax(0, 1fr)", "$description": "An event or decision about someone: their photo, then the card" }
+    },
+    "live": {
+      "columns": { "value": "minmax(0, 39fr) minmax(0, 61fr)", "$description": "The desk 1:1: the portrait, then the conversation" },
+      "brief-max-height": { "value": "calc(100% - 9rem)", "$description": "The brief over the portrait stops above the name" }
+    },
+    "feed": {
+      "card-width": { "value": "calc((100% - 1.5rem) / 4)", "$description": "Four feed cards to a row" }
+    }
+  }
+}

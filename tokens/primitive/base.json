@@ -30,6 +30,10 @@
     "white": {
       "$value": "oklch(1 0 0)"
     },
+    "black": {
+      "$value": "oklch(0 0 0)",
+      "$description": "Behind video, and its shade (D227)"
+    },
     "ink": {
       "200": {
         "$value": "oklch(0.2 0.03 280)"

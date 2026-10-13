@@ -77,7 +77,7 @@ export function LanguageStep({ title, languages, lang, onLang, onBegin }: Langua
               return (
                 <button key={l.id} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1} lang={l.id}
                   onClick={() => onLang(j)} onKeyDown={e => onRovingKey(e, j, languages.length, onLang)}
-                  className={`flex cursor-pointer flex-col gap-0.5 rounded-6 border-(length:--il-onboarding-choice-border) border-solid p-3.5 text-start text-fg-primary ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'}`}>
+                  className={`flex cursor-pointer flex-col gap-0.5 rounded-4 border-(length:--il-onboarding-choice-border) border-solid p-3.5 text-start text-fg-primary ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'}`}>
                   <b>{l.name}</b>
                   <span className="text-12 text-fg-secondary">{l.note}</span>
                 </button>
@@ -112,13 +112,13 @@ export function SponsorStep({ sponsor, tab, onTab, wait, onPlay, onNext }: Spons
   const index = SPONSOR_TABS.indexOf(tab);
   return (
     <div className={`grid flex-1 grid-cols-(--il-onboarding-sponsor-columns) items-center gap-10 ${ENTER}`}>
-      <div className="relative flex aspect-4/5 max-h-160 items-center justify-center overflow-hidden rounded-6 bg-(image:--il-onboarding-sponsor-fill)">
+      <div className="relative flex aspect-4/5 max-h-160 items-center justify-center overflow-hidden rounded-4 bg-(image:--il-onboarding-sponsor-fill)">
         {sponsor.img
           ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-top" />
           : <span aria-hidden="true" className="text-120 font-600 text-button-on-solid opacity-85">{sponsor.initials}</span>}
         {video?.label && <span className="absolute top-4 start-4 text-12 font-600 text-button-on-solid">{video.label}</span>}
         {video && (
-          <div className="absolute end-4 bottom-4 start-4 flex items-center gap-3 rounded-6 bg-onboarding-caption-bar px-3.5 py-3 text-(color:--il-color-white)">
+          <div className="absolute end-4 bottom-4 start-4 flex items-center gap-3 rounded-4 bg-onboarding-caption-bar px-3.5 py-3 text-(color:--il-color-white)">
             <button type="button" onClick={onPlay} aria-label={t('onboarding.sponsor.play')}
               className={`size-10 flex-none cursor-pointer rounded-round border-0 bg-(color:--il-color-white) text-button-on-solid ${FOCUS}`}>{PLAY_GLYPH}</button>
             <span className="text-13">{open}<span>{video.caption}</span>{close}</span>
@@ -169,11 +169,11 @@ export function ConsentStep({ organisation, onAccept, onTextOnly }: ConsentStepP
   const { t } = useI18n();
   return (
     <div className="flex flex-1 items-center justify-center">
-      <div className={`flex w-180 max-w-full flex-col gap-5 rounded-6 border border-line-default bg-surface-card p-8 ${ENTER}`}>
+      <div className={`flex w-180 max-w-full flex-col gap-5 rounded-4 border border-line-default bg-surface-card p-8 ${ENTER}`}>
         <h1 tabIndex={-1} className={`${HEADING} text-32 tracking-(--il-onboarding-title-tracking)`}>{t('onboarding.consent.title')}</h1>
         <div className="grid grid-cols-(--il-onboarding-consent-columns) gap-3">
           {CONSENT_ITEMS.map(item => (
-            <div key={item} className="flex flex-col gap-1 rounded-6 bg-surface-raised p-3.5">
+            <div key={item} className="flex flex-col gap-1 rounded-4 bg-surface-raised p-3.5">
               <b>{t('onboarding.consent.item', { item })}</b>
               <span className="text-13 text-pretty text-fg-secondary">{t('onboarding.consent.detail', { item, organisation: organisation ?? 'none' })}</span>
             </div>
@@ -229,7 +229,7 @@ export function VoiceStep({ check, listening, wave, words, heard, sampleName, on
         <span className={EYEBROW}>{t('onboarding.voice.eyebrow')}</span>
         <h1 tabIndex={-1} className={`${HEADING} text-36 tracking-(--il-onboarding-title-tracking)`}>{t('onboarding.voice.title', { state: check })}</h1>
         {denied && (
-          <div role="alert" className="flex w-full flex-col gap-1.5 rounded-6 border border-status-attention bg-status-attention-soft p-4 text-start">
+          <div role="alert" className="flex w-full flex-col gap-1.5 rounded-4 border border-status-attention bg-status-attention-soft p-4 text-start">
             <b>{t(check === 'unavailable' ? 'onboarding.voice.unavailable.title' : 'onboarding.voice.denied.title')}</b>
             <span className="text-13">{t(check === 'unavailable' ? 'onboarding.voice.unavailable.body' : 'onboarding.voice.denied.body')}</span>
             {onText && <div className="pt-1.5"><NoWrapButton variant="primary" size="md" onClick={onText}>{t('onboarding.voice.useText')}</NoWrapButton></div>}
@@ -248,7 +248,7 @@ export function VoiceStep({ check, listening, wave, words, heard, sampleName, on
           {wave.map((h, j) => <span key={j} className="w-1 rounded-2 bg-accent-secondary [transition:var(--il-onboarding-wave-transition)]" style={{ height: h }} />)}
         </div>
         {status !== undefined && <span role="status" className="min-h-5 text-13 text-fg-secondary">{status}</span>}
-        <div className="min-w-105 rounded-6 border border-line-default bg-surface-card px-4.5 py-3.5 text-18">
+        <div className="min-w-105 rounded-4 border border-line-default bg-surface-card px-4.5 py-3.5 text-18">
           <span className="text-fg-secondary">{t('onboarding.voice.say')}</span>{open}<b>{said}</b>
           <span className="text-fg-secondary">{rest}</span>{close}
           {heardText !== undefined && (
@@ -300,8 +300,8 @@ export function HowToPlayStep({ periodUnit, amount, onNext }: HowToPlayStepProps
       <div className="grid grid-cols-4 gap-4">
         {HOW_CARDS.map((c, j) => (
           <div key={c.key}
-            className={`flex flex-col gap-3 rounded-6 border-(length:--il-onboarding-choice-border) border-solid bg-surface-card p-5 [transition:var(--il-onboarding-how-transition)] ${j === 0 ? 'border-accent-secondary [transform:var(--il-onboarding-how-lift)]' : 'border-line-default'}`}>
-            <div className={`flex h-30 items-end rounded-6 p-3 ${c.art}`}>
+            className={`flex flex-col gap-3 rounded-4 border-(length:--il-onboarding-choice-border) border-solid bg-surface-card p-5 [transition:var(--il-onboarding-how-transition)] ${j === 0 ? 'border-accent-secondary [transform:var(--il-onboarding-how-lift)]' : 'border-line-default'}`}>
+            <div className={`flex h-30 items-end rounded-4 p-3 ${c.art}`}>
               <span aria-hidden="true" className="text-44 leading-none font-600 text-button-on-solid">{number(j + 1)}</span>
             </div>
             <b className="text-18">{t('onboarding.how.card', { card: c.key })}</b>

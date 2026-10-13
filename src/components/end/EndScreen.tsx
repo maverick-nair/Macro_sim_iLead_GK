@@ -67,7 +67,7 @@ export function EndScreen(p: EndScreenProps) {
               <span className="text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-accent-secondary uppercase">
                 {t('end.eyebrow', { periods: p.periods, unit, people: p.people })}
               </span>
-              <h1 ref={h1} tabIndex={-1} className="m-0 font-display text-58 leading-[1.05] font-400 text-balance outline-none">
+              <h1 ref={h1} tabIndex={-1} className="m-0 font-display text-58 leading-(--il-canvas-leading-display) font-400 text-balance outline-none">
                 {before}<span className="bg-(image:--il-end-tier-fill) bg-clip-text text-transparent [filter:var(--il-end-tier-glow)]">{tierName}</span>{after}
               </h1>
               <p className="m-0 max-w-160 text-17 leading-relaxed text-pretty text-fg-body">{t('end.lead')}</p>

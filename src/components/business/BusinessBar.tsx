@@ -79,7 +79,7 @@ export function BusinessBar({ items, decisions, onDecide, aside }: BusinessBarPr
       {/* A decision still waiting: the canvas's navy strip, its deadline in words, Decide (D227). */}
       {decisions.map(d => (
         <div key={d.id} data-decision-due="" className="il-chrome flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 border-b-0 px-3.5 py-1.5 text-14">
-          <span className="text-12 font-600 uppercase tracking-[0.1em] whitespace-nowrap text-status-attention">{t('board.business.decision')} · {d.due}</span>
+          <span className="text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) whitespace-nowrap text-status-attention">{t('board.business.decision')} · {d.due}</span>
           <span className="min-w-0 flex-1 truncate text-15">{d.title}</span>
           <button type="button" onClick={() => onDecide(d.id)}
             className={`flex min-h-9 flex-none cursor-pointer items-center gap-2 rounded-4 border-0 bg-transparent px-2 text-13 text-fg-primary hover:bg-surface-raised ${FOCUS}`}>

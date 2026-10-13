@@ -73,7 +73,7 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
   return (
     <main className="grid min-h-0 flex-1 grid-cols-(--il-intro-message-columns) gap-8 overflow-y-auto px-12 pt-2 pb-10 short:pb-6 tablet:grid-cols-1 tablet:px-8">
       <h1 className="sr-only">{t('intro.message.title', { name: sponsor.name })}</h1>
-      <section aria-label={t('intro.message.title', { name: sponsor.name })} className="relative flex min-h-110 flex-col overflow-hidden rounded-6 bg-[#000]">
+      <section aria-label={t('intro.message.title', { name: sponsor.name })} className="relative flex min-h-110 flex-col overflow-hidden rounded-4 bg-black">
         <div className="relative flex min-h-0 flex-1 items-center justify-center">
           {message.video ? (
             // The captions show over the video from the transcript (aria-live below); the storyline's track, when it has one, goes along.
@@ -84,18 +84,18 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
               {message.video.track && <track kind="captions" src={message.video.track} default />}
             </video>
           ) : sponsor.img
-            ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-[50%_25%]" />
+            ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-(--il-canvas-video-position)" />
             : <span aria-hidden="true" className="flex size-40 items-center justify-center rounded-round bg-(--il-color-canvas-navy-800) font-display text-60 text-(--il-color-canvas-mist-light)">{sponsor.initials}</span>}
-          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] bg-[linear-gradient(0deg,rgb(0_0_0/0.85),rgb(0_0_0/0))]" />
-          <span className="absolute start-4 top-4 flex items-center gap-2 rounded-4 bg-[rgb(11_18_32/0.78)] px-2.5 py-1.5 text-13"><b className="font-600">{sponsor.name}</b> <span className="text-fg-secondary">{sponsor.title}</span></span>
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-(--il-canvas-video-fade-height) bg-(image:--il-canvas-fade-video)" />
+          <span className="absolute start-4 top-4 flex items-center gap-2 rounded-4 bg-(--il-canvas-veil-soft) px-2.5 py-1.5 text-13"><b className="font-600">{sponsor.name}</b> <span className="text-fg-secondary">{sponsor.title}</span></span>
           {/* Captions, on by default and read out politely; off, the region stays and says nothing. */}
-          <div role="region" aria-label={t('intro.message.captions')} className="absolute inset-x-[9%] bottom-18.5 flex justify-center">
-            <p aria-live="polite" className={`m-0 text-center text-20 leading-[1.45] text-(--il-color-white) [text-shadow:0_1px_3px_rgb(0_0_0/0.9)] ${cc && !ended ? '' : 'hidden'}`}>{cc && !ended ? message.captions[line] : ''}</p>
+          <div role="region" aria-label={t('intro.message.captions')} className="absolute inset-x-(--il-canvas-video-caption-inset) bottom-18.5 flex justify-center">
+            <p aria-live="polite" className={`m-0 text-center text-20 leading-(--il-canvas-leading-line) text-(--il-color-white) [text-shadow:0_1px_3px_rgb(0_0_0/0.9)] ${cc && !ended ? '' : 'hidden'}`}>{cc && !ended ? message.captions[line] : ''}</p>
           </div>
           {ended && (
-            <div data-intro-end="" className="absolute inset-0 flex flex-col items-center justify-center gap-4.5 bg-[rgb(11_18_32/0.86)] px-6 text-center">
-              <p className={`${EYEBROW} text-13 tracking-[0.14em]`}>{t('intro.message.end')}</p>
-              <h2 ref={endHeading} tabIndex={-1} className={`${DISPLAY} max-w-[30ch] text-40 leading-[1.2] outline-0`}>{t('intro.message.endTitle', { products: hasProducts ? 'yes' : 'no' })}</h2>
+            <div data-intro-end="" className="absolute inset-0 flex flex-col items-center justify-center gap-4.5 bg-(--il-canvas-veil-strong) px-6 text-center">
+              <p className={`${EYEBROW} text-13 tracking-(--il-tracking-eyebrow-wide)`}>{t('intro.message.end')}</p>
+              <h2 ref={endHeading} tabIndex={-1} className={`${DISPLAY} max-w-(--il-canvas-measure-narrow) text-40 leading-(--il-canvas-leading-title) outline-0`}>{t('intro.message.endTitle', { products: hasProducts ? 'yes' : 'no' })}</h2>
               <button type="button" onClick={onNext} className={`${PRIMARY} min-h-14 px-7 text-17`}>{hasProducts ? t('intro.message.explore') : t('intro.message.objectives')}<Arrow /></button>
               <button type="button" onClick={again} className={`${LINK} text-14`}>{t('intro.message.again')}</button>
             </div>
@@ -117,7 +117,7 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
         </div>
       </section>
       <section aria-labelledby={chaptersId} className="flex flex-col gap-3">
-        <h2 id={chaptersId} className="m-0 text-12 font-600 uppercase tracking-[0.14em] text-fg-secondary">{t('intro.message.chapters')}</h2>
+        <h2 id={chaptersId} className="m-0 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-fg-secondary">{t('intro.message.chapters')}</h2>
         <ol className="m-0 flex list-none flex-col gap-2 p-0">
           {message.chapters.map((c, i) => {
             const title = t('intro.message.chapter', { key: c.key });

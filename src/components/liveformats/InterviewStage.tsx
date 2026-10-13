@@ -125,7 +125,7 @@ export function InterviewStage({ candidate, position, turns, notes, onNotes, onR
   return (
     <section aria-label={t('liveformats.interview.aria', { name: candidate.name })}
       className="grid size-full min-h-0 grid-cols-(--il-liveformats-interview-columns) gap-5 stage-narrow:grid-cols-1 stage-narrow:overflow-y-auto">
-      <div role="region" aria-labelledby={nameId} tabIndex={0} className={`flex min-h-0 flex-col gap-4 overflow-auto rounded-6 p-1 ${FOCUS}`}>
+      <div role="region" aria-labelledby={nameId} tabIndex={0} className={`flex min-h-0 flex-col gap-4 overflow-auto rounded-4 p-1 ${FOCUS}`}>
         {who}
         {caption}
         <CvCard cv={candidate.cv} />

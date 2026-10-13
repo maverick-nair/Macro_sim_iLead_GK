@@ -82,13 +82,13 @@ export function BannerStep({ period, periodUnit, headline, line, stars, onNext }
   const { t } = useI18n();
   return (
     <div className="il-scheme-dark relative flex flex-1 overflow-hidden bg-(--il-color-canvas-navy) text-fg-primary">
-      <div aria-hidden="true" className="absolute inset-y-0 end-0 w-[42%] tablet-portrait:hidden">
+      <div aria-hidden="true" className="absolute inset-y-0 end-0 w-(--il-canvas-lounge-width) tablet-portrait:hidden">
         <img src={LOUNGE} alt="" className="size-full object-cover" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--il-color-canvas-navy),transparent_45%)] rtl:bg-[linear-gradient(to_left,var(--il-color-canvas-navy),transparent_45%)]"></div>
+        <div className="absolute inset-0 bg-(image:--il-canvas-fade-lounge) rtl:bg-(image:--il-canvas-fade-lounge-rtl)"></div>
       </div>
-      <div className="relative flex max-w-[48rem] flex-col items-start justify-center gap-6 px-11 py-12 tablet:px-8">
+      <div className="relative flex max-w-(--il-canvas-measure-hero) flex-col items-start justify-center gap-6 px-11 py-12 tablet:px-8">
         <span className={EYEBROW}>{t('weekend.banner.eyebrow', { unit: periodUnit, n: period })}</span>
-        <h1 tabIndex={-1} className="m-0 font-display text-58 leading-[1.05] font-400 text-balance outline-none">{headline}</h1>
+        <h1 tabIndex={-1} className="m-0 font-display text-58 leading-(--il-canvas-leading-display) font-400 text-balance outline-none">{headline}</h1>
         <StarMeter earned={stars} total={3} />
         <p className="m-0 max-w-140 text-17 leading-relaxed text-pretty text-fg-body">{line}</p>
         <NoWrapButton variant="primary" size="lg" onClick={onNext}>{t('weekend.banner.cta', { unit: periodUnit })}</NoWrapButton>
@@ -142,7 +142,7 @@ export function UnlockStep({ sponsorFirstName, period, periodUnit, rewards, chos
           return (
             <button key={r.key} type="button" role="radio" aria-checked={on} tabIndex={on || (chosen === null && i === 0) ? 0 : -1}
               onClick={() => onChoose(i)} onKeyDown={e => onRovingKey(e, i, rewards.length, onChoose)}
-              className={`flex cursor-pointer flex-col gap-2.5 rounded-4 border-solid p-5 text-start text-fg-primary [transition:var(--il-weekend-reward-transition)] ${FOCUS} ${on ? 'border-2 border-accent-default bg-surface-card p-[19px]' : 'border border-line-strong bg-surface-card'}`}>
+              className={`flex cursor-pointer flex-col gap-2.5 rounded-4 border-solid p-5 text-start text-fg-primary [transition:var(--il-weekend-reward-transition)] ${FOCUS} ${on ? 'border-2 border-accent-default bg-surface-card p-4.75' : 'border border-line-strong bg-surface-card'}`}>
               <span aria-hidden="true" className={`h-22.5 ${REWARD_ART[i % REWARD_ART.length]}`}></span>
               <b className="font-serif text-21 font-400">{r.name}</b>
               <span className="text-14 text-fg-body">{r.description}</span>

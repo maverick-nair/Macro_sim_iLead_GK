@@ -104,7 +104,7 @@ function DemoRun({ fit, paused, onPause, onSettings, onFinish, onLeave }: { fit?
     (focusable ?? el)?.focus();
   };
   const banner = (
-    <div className="mx-6 mt-3 flex flex-wrap items-center gap-3 rounded-6 border border-accent-default bg-accent-soft py-2 pe-2 ps-4 text-13 font-600">
+    <div className="mx-6 mt-3 flex flex-wrap items-center gap-3 rounded-4 border border-accent-default bg-accent-soft py-2 pe-2 ps-4 text-13 font-600">
       <span className="flex-1">{t('demo.banner')}</span>
       <button ref={exitButton} type="button" onClick={() => setConfirmExit(true)}
         className={`min-h-8 cursor-pointer rounded-4 border border-line-strong bg-surface-raised px-3.5 text-13 font-600 text-fg-primary ${FOCUS}`}>{t('demo.exit')}</button>
@@ -127,7 +127,7 @@ function DemoRun({ fit, paused, onPause, onSettings, onFinish, onLeave }: { fit?
       )}
       {confirmExit && (
         <AppDialog onDismiss={() => setConfirmExit(false)} returnFocus={() => exitButton.current} described className="flex w-110 flex-col gap-4 p-7">
-          <DialogTitle className="m-0 text-24 font-600">{t('demo.exit.title')}</DialogTitle>
+          <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('demo.exit.title')}</DialogTitle>
           <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('demo.exit.body')}</DialogDescription>
           <div className="flex flex-wrap justify-end gap-2.5">
             <NoWrapButton variant="secondary" size="md" onClick={() => setConfirmExit(false)}>{t('demo.exit.stay')}</NoWrapButton>

@@ -128,7 +128,7 @@ export function OutcomePanel(p: OutcomePanelProps) {
       </div>
       <div className="flex min-w-0 flex-col gap-2">
         <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
-        <Heading level={p.headingLevel ?? 3} className="m-0 font-display text-30 leading-[1.1] font-400 short:text-24">{p.headline}</Heading>
+        <Heading level={p.headingLevel ?? 3} className="m-0 font-display text-30 leading-(--il-canvas-leading-heading) font-400 short:text-24">{p.headline}</Heading>
         {/* A decision with no words (energize, training, assess) has no reply to quote. */}
         {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5">
           {p.onReplay && (

@@ -63,7 +63,7 @@ export function CommandPalette({ open, onClose, query, onQueryChange, results }:
             onOpenAutoFocus={() => { opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; }}
             onCloseAutoFocus={e => { e.preventDefault(); opener.current?.focus(); }}
             aria-modal="true"
-            className="w-(--il-palette-width) max-w-(--il-palette-max-width) overflow-hidden rounded-6 border border-line-strong bg-surface-material outline-0">
+            className="w-(--il-palette-width) max-w-(--il-palette-max-width) overflow-hidden rounded-4 border border-line-strong bg-surface-material outline-0">
             <Dialog.Title className="sr-only">{t('palette.title')}</Dialog.Title>
             <Dialog.Description className="sr-only">{t('palette.hint')}</Dialog.Description>
             <input value={query} onChange={e => onQueryChange(e.target.value)} onKeyDown={onKeyDown}

@@ -37,7 +37,7 @@ export function MeetingStage({ attendees, caption, spokenLine, onCallOn }: Meeti
           const name = shortNameOf(a);
           return (
             <div key={a.id} role="listitem"
-              className={`relative aspect-4/3 overflow-hidden rounded-6 border-3 border-solid bg-(image:--il-fill-portrait-calm) [transition:var(--il-liveshell-meeting-tile-transition)] ${a.speaking ? 'border-liveshell-speaking shadow-(--il-liveshell-meeting-tile-glow)' : 'border-transparent'}`}>
+              className={`relative aspect-4/3 overflow-hidden rounded-4 border-3 border-solid bg-(image:--il-fill-portrait-calm) [transition:var(--il-liveshell-meeting-tile-transition)] ${a.speaking ? 'border-liveshell-speaking shadow-(--il-liveshell-meeting-tile-glow)' : 'border-transparent'}`}>
               {a.img && <img src={a.img} alt="" className="size-full object-cover object-(--il-liveshell-meeting-tile-position) mix-blend-multiply" />}
               <div className="absolute inset-0 bg-(image:--il-liveshell-meeting-tile-overlay)" />
               <span className="absolute bottom-2 start-2.5 text-13 font-600 text-liveshell-on-tile">{name}</span>

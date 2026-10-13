@@ -26,7 +26,7 @@ export interface StakeholdersPanelProps {
   returnFocus?: () => HTMLElement | null | undefined;
 }
 
-const card = 'flex flex-col gap-3 rounded-6 border border-line-default bg-surface-card px-4 py-3.5';
+const card = 'flex flex-col gap-3 rounded-4 border border-line-default bg-surface-card px-4 py-3.5';
 const pill = `flex min-h-9 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-strong bg-transparent px-3.5 py-0 text-13 font-600 text-fg-primary disabled:cursor-not-allowed disabled:opacity-60 ${PANEL_FOCUS}`;
 
 /** One relationship measure: its name, a bar on the 0 to 100 scale, its value and its trend this period. */
@@ -82,7 +82,7 @@ export function StakeholdersPanel({ stakeholders, focus, subPeriodUnit, busy, lo
             </div>
           </div>
           {s.about && <p className="m-0 text-13 text-pretty">{s.about}</p>}
-          {s.concern && <p className="m-0 rounded-6 bg-surface-raised px-3 py-2 text-13 text-pretty"><b>{t('stakeholders.concern')}</b> {s.concern}</p>}
+          {s.concern && <p className="m-0 rounded-4 bg-surface-raised px-3 py-2 text-13 text-pretty"><b>{t('stakeholders.concern')}</b> {s.concern}</p>}
           <div className="flex flex-col gap-1.5">
             <Measure measure="trust" value={s.trust} start={s.start.trust} />
             <Measure measure="satisfaction" value={s.satisfaction} start={s.start.satisfaction} />
@@ -96,7 +96,7 @@ export function StakeholdersPanel({ stakeholders, focus, subPeriodUnit, busy, lo
             </details>
           )}
           {s.request && (
-            <div data-request="" className="flex flex-wrap items-center gap-2 rounded-6 bg-status-attention-soft px-3 py-2 text-13">
+            <div data-request="" className="flex flex-wrap items-center gap-2 rounded-4 bg-status-attention-soft px-3 py-2 text-13">
               <span className="flex-1"><b>{t('stakeholders.asks', { kind: s.request.kind, name: s.name.split(' ')[0] })}</b> {s.request.title} <span className="text-fg-secondary">{t('stakeholders.due', { n: s.request.dueInSubPeriods, unit: subPeriodUnit })}</span></span>
               <Button variant="secondary" size="sm" disabled={busy || locked} onClick={() => onAnswer(s.key)}>{t('stakeholders.answer')}<span className="sr-only"> {s.name}</span></Button>
             </div>
@@ -121,10 +121,10 @@ export function StakeholdersPanel({ stakeholders, focus, subPeriodUnit, busy, lo
                     </div>
                     <span id={descId} className="text-12 text-pretty text-fg-secondary">{blocked ? why(blocked) : x.goal ?? ''}</span>
                     {isOpen && x.options && (
-                      <fieldset className="m-0 flex flex-col gap-2 rounded-6 border border-line-default p-3">
+                      <fieldset className="m-0 flex flex-col gap-2 rounded-4 border border-line-default p-3">
                         <legend className="px-1 text-13 font-600">{t('stakeholders.options')}</legend>
                         {x.options.map(o => (
-                          <label key={o.key} className={`flex cursor-pointer items-start gap-2.5 rounded-6 border px-3 py-2 text-13 ${picked === o.key ? 'border-accent-secondary bg-accent-soft' : 'border-line-default'}`}>
+                          <label key={o.key} className={`flex cursor-pointer items-start gap-2.5 rounded-4 border px-3 py-2 text-13 ${picked === o.key ? 'border-accent-secondary bg-accent-soft' : 'border-line-default'}`}>
                             <input type="radio" name={`${id}${s.key}${x.key}`} value={o.key} checked={picked === o.key} onChange={() => setPicked(o.key)} className={`mt-1 ${PANEL_FOCUS}`} />
                             <span className="flex flex-col gap-0.5"><b>{o.label}</b>{o.detail && <span className="text-12 text-fg-secondary">{o.detail}</span>}</span>
                           </label>

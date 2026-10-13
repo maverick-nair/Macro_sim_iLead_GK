@@ -72,7 +72,7 @@ export function ScoreBreakdown(p: ScoreBreakdownProps) {
           {p.tiers.map(x => {
             const on = x.key === here;
             return (
-              <li key={x.key} aria-current={on || undefined} className={`flex items-center gap-2 rounded-6 px-1.5 py-0.5 ${on ? 'bg-accent-soft text-fg-primary' : 'text-fg-secondary'}`}>
+              <li key={x.key} aria-current={on || undefined} className={`flex items-center gap-2 rounded-4 px-1.5 py-0.5 ${on ? 'bg-accent-soft text-fg-primary' : 'text-fg-secondary'}`}>
                 <span aria-hidden="true" className={`size-1.5 flex-none rounded-round ${on ? 'bg-accent-default' : 'bg-track'}`} />
                 <span className={on ? 'font-600' : ''}>{x.name}</span>
                 <span className="flex-1" />

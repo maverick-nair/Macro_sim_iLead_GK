@@ -134,10 +134,10 @@ export function MemberCard(props: MemberCardProps) {
       data-tour="member"
       data-member-id={memberId}
       data-trace={memberId ? `members.${memberId}` : undefined}
-      className={`relative flex flex-col rounded-6 border-2 bg-surface-card outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-3 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
+      className={`relative flex flex-col rounded-4 border-2 bg-surface-card outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-3 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
     >
       <button type="button" aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} onClick={e => { e.stopPropagation(); onSelect(); }} className="il-select sr-only" />
-      <div className={`relative h-29.5 overflow-hidden rounded-t-6 short:h-21 shorter:h-17 ${backdrop(mood, away)}`}>
+      <div className={`relative h-29.5 overflow-hidden rounded-t-4 short:h-21 shorter:h-17 ${backdrop(mood, away)}`}>
         <img src={img} alt="" className={`absolute inset-0 size-full object-cover object-(--il-member-portrait-position) mix-blend-multiply short:object-(--il-member-portrait-position-compact) ${away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-member-portrait-overlay)" />
         {selected && <span aria-hidden="true" className="absolute top-2 start-2 flex size-6 items-center justify-center rounded-round bg-(image:--il-fill-brand) text-button-on-solid"><Check /></span>}

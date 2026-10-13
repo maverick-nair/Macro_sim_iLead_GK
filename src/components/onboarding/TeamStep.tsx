@@ -50,7 +50,7 @@ export function TeamStep({ members, read, open, readsNeeded, startLabel, onOpen,
             return (
               <button key={m.id} type="button" onClick={() => onOpen(m.id)} aria-controls={profileId}
                 aria-label={t('onboarding.team.member.aria', { name: m.name, stage: m.stage, read: isRead ? 'yes' : 'no' })}
-                className={`flex cursor-pointer flex-col overflow-hidden rounded-6 border-2 border-solid bg-surface-card p-0 text-start text-fg-primary [transition:var(--il-onboarding-team-card-transition)] hover:[transform:var(--il-onboarding-team-card-lift)] ${FOCUS} ${open === m.id ? 'border-accent-secondary' : 'border-line-default'}`}>
+                className={`flex cursor-pointer flex-col overflow-hidden rounded-4 border-2 border-solid bg-surface-card p-0 text-start text-fg-primary [transition:var(--il-onboarding-team-card-transition)] hover:[transform:var(--il-onboarding-team-card-lift)] ${FOCUS} ${open === m.id ? 'border-accent-secondary' : 'border-line-default'}`}>
                 <div className="relative h-37.5 w-full bg-(image:--il-fill-portrait-calm) short:h-30 tablet:h-28">
                   {m.img && <img src={m.img} alt="" className="size-full object-cover object-(--il-onboarding-team-portrait-position) mix-blend-multiply" />}
                   {isRead && <span className="absolute top-2 end-2 flex min-h-5.5 items-center rounded-4 bg-brand-mint-green px-2 text-12 font-600 text-button-on-solid">{t('onboarding.team.readBadge')}</span>}
@@ -65,7 +65,7 @@ export function TeamStep({ members, read, open, readsNeeded, startLabel, onOpen,
           })}
         </div>
       </div>
-      <aside id={profileId} aria-label={t('onboarding.team.profile.aria')} className="flex flex-col overflow-hidden rounded-6 border border-line-strong bg-surface-material tablet:min-h-60">
+      <aside id={profileId} aria-label={t('onboarding.team.profile.aria')} className="flex flex-col overflow-hidden rounded-4 border border-line-strong bg-surface-material tablet:min-h-60">
         {op && (
           <>
             <div className="flex items-center gap-4 px-5 pt-5.5 pb-1">

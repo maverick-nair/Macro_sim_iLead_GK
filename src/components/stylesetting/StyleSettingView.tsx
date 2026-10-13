@@ -155,20 +155,20 @@ export function StyleSettingView(p: StyleSettingViewProps) {
         <Heading level={p.embedded ? 2 : 1} className="m-0 text-14 font-400 text-fg-secondary">
           {rich(where, [<b key="p" className="font-500 text-fg-primary">{t('time.period', { unit: periodUnit, n: p.period })}</b>])}
         </Heading>
-        <span className="text-12 font-600 uppercase tracking-[0.1em] text-accent-secondary tablet:hidden">{t('stylesetting.eyebrow')}</span>
+        <span className="text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-accent-secondary tablet:hidden">{t('stylesetting.eyebrow')}</span>
         <span className="flex-1" />
         {p.status}
       </header>
       {/* A portrait tablet confirms from a bar at the bottom, in reach of a thumb (D73). */}
-      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-6 border border-line-strong bg-surface-material py-2.5 pe-2.5 ps-5">
+      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-4 border border-line-strong bg-surface-material py-2.5 pe-2.5 ps-5">
         <span className="flex-1 text-14 text-fg-secondary">{t('stylesetting.bar')}</span>
         <span className="w-60">{review}</span>
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_300px] gap-7 px-11 py-5.5 short:py-3.5 tablet:grid-cols-[minmax(0,1fr)_230px] tablet:gap-5 tablet:px-7 tablet-portrait:grid-cols-1 tablet-portrait:pb-30">
+      <div className="grid min-h-0 flex-1 grid-cols-(--il-canvas-stylesetting-columns) gap-7 px-11 py-5.5 short:py-3.5 tablet:grid-cols-(--il-canvas-stylesetting-columns-tablet) tablet:gap-5 tablet:px-7 tablet-portrait:grid-cols-1 tablet-portrait:pb-30">
         <div className="flex min-h-0 min-w-0 flex-col gap-3.5 short:gap-2.5">
           <div className="flex items-end justify-between gap-4 border-b border-fg-primary pb-3 short:pb-2">
-            <p className="m-0 font-display text-38 leading-[1.05] text-pretty short:text-30 tablet:text-30">{t('stylesetting.question', { unit: periodUnit })}</p>
+            <p className="m-0 font-display text-38 leading-(--il-canvas-leading-display) text-pretty short:text-30 tablet:text-30">{t('stylesetting.question', { unit: periodUnit })}</p>
             <span className="flex flex-none items-center gap-3">
               <span role="status" className="text-14 whitespace-nowrap text-fg-secondary">{t('stylesetting.progress', { set: number(set), total: number(members.length) })}</span>
               <LayoutToggle value={layout} onChange={p.onViewChange} />

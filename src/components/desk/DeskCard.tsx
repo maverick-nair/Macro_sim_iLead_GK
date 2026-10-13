@@ -49,7 +49,7 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
         </span>
       </span>
       <span className="flex min-w-0 items-center gap-1.5 text-13 text-fg-body"><MoodMark mood={away ? 'neutral' : mood} /><span className="truncate">{moodName}</span></span>
-      {desk.flag && <span className="text-12 leading-[1.3] text-status-attention">{desk.flag}</span>}
+      {desk.flag && <span className="text-12 leading-(--il-canvas-leading-snug) text-status-attention">{desk.flag}</span>}
       <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>
     </button>
   );

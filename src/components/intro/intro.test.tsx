@@ -45,7 +45,7 @@ describe('the pre-game flow (D219)', () => {
     const html = renderToStaticMarkup(<I18nProvider><Products products={introProducts(view({ products: PRODUCTS }))} organisation="Innov8" onNext={() => undefined} /></I18nProvider>);
     expect(html.match(/role="tab"/g)).toHaveLength(4);
     expect(html).toContain('aria-selected="true"');
-    expect(html).toMatch(/role="tabpanel"[^>]*>Quiet ride</);
+    expect(html).toMatch(/role="tabpanel"[\s\S]*?>Quiet ride</);
     expect(html.match(/aria-label="Point \d: /g)).toHaveLength(4);
     expect(html).toContain('aria-label="Explored 1 of 2 models"');
     expect(html).toContain('Next: Levo H4');
@@ -62,7 +62,7 @@ describe('the pre-game flow (D219)', () => {
     expect(p).toMatchObject({ code: 'X10', kind: 'Commercial', line: 'Built to move.', specs: PRODUCTS[0].specs, dealValue: 30000 });
     const html = renderToStaticMarkup(<I18nProvider><Products products={[p]} organisation={null} onNext={() => undefined} /></I18nProvider>);
     expect(html.match(/role="tab"/g)).toHaveLength(2);
-    expect(html).toMatch(/role="tabpanel"[^>]*>Installs in nine days\.</);
+    expect(html).toMatch(/role="tabpanel"[\s\S]*?>Installs in nine days\.</);
     expect(html).toContain('aria-label="Point 1: Built modular"');
     expect(html).toContain('inset-inline-start:40%;inset-block-start:50%');
     expect(html).toContain('Commercial / 01');

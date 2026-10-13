@@ -70,7 +70,7 @@ function StyleLegend({ id, periodUnit }: { id: string; periodUnit: PeriodUnit })
   const lens = useLens();
   return (
     <div id={id} role="dialog" aria-label={t('team.legend.title')}
-      className={`absolute top-full end-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-6 border border-line-strong bg-surface-material p-4`}>
+      className={`absolute top-full end-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-4 border border-line-strong bg-surface-material p-4`}>
       <span className="text-13 text-fg-secondary">{lens.id === 'readiness_based' ? t('team.legend.intro', { unit: periodUnit }) : t('team.legend.introLens', { unit: periodUnit, count: lens.styles.length })}</span>
       {lens.styles.map(s => (
         <div key={s.key} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">
@@ -105,7 +105,7 @@ function StageInfo({ name, about, suits, alignEnd }: { name: string; about?: str
         <InfoIcon />
       </button>
       {info && (
-        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-6 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
+        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-4 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
           <b className="text-14">{name}</b>
           {about && <span>{about}</span>}
           {suits && <span className="text-fg-secondary"><b className="text-fg-primary">{t('team.stage.suits')}</b> {suits}</span>}
@@ -173,7 +173,7 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
         </span>
       </div>
       {info && (
-        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-6 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
+        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-4 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
           <b className="text-14">{name}</b>
           {about && <span>{about}</span>}
           {suits && <span className="text-fg-secondary"><b className="text-fg-primary">{t('team.stage.suits')}</b> {suits}</span>}

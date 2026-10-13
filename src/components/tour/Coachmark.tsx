@@ -118,17 +118,17 @@ export function Coachmark({ target, title, body, counter, children, footer, onEs
     <>
       {/* The ring, and the dimming around it. Not interactive: the tip is the only control. */}
       {box
-        ? <div aria-hidden="true" className="pointer-events-none fixed z-70 rounded-6 shadow-(--il-panel-tour-dim)" style={{ top: box.top - 4, left: box.left - 4, width: box.width + 8, height: box.height + 8 }}>
-            <div className="size-full rounded-6 shadow-(--il-panel-tour-ring)" />
+        ? <div aria-hidden="true" className="pointer-events-none fixed z-70 shadow-(--il-panel-tour-dim)" style={{ top: box.top - 4, left: box.left - 4, width: box.width + 8, height: box.height + 8 }}>
+            <div className="size-full shadow-(--il-panel-tour-ring)" />
           </div>
         : <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-70 bg-surface-scrim" />}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape ends the tour and Tab stays inside the tip */}
       <div ref={tipRef} role="dialog" aria-modal="false" aria-labelledby={`${id}-title`} aria-describedby={`${id}-body`} onKeyDown={onKeyDown} data-coachmark=""
-        className="fixed z-71 flex w-(--il-panel-tour-width) flex-col gap-2.5 rounded-6 border border-line-strong bg-surface-solid p-4.5 shadow-(--il-event-card-shadow)"
+        className="fixed z-71 flex w-(--il-panel-tour-width) flex-col gap-3 border border-line-strong bg-surface-card px-6 pt-5.5 pb-5 shadow-(--il-event-card-shadow)"
         style={pos ? { top: pos.top, left: pos.left } : { visibility: 'hidden' }}>
-        {counter && <span className="text-12 font-600 tracking-(--il-action-section-tracking) text-accent-secondary uppercase">{counter}</span>}
-        <h2 ref={headingRef} id={`${id}-title`} tabIndex={-1} className="m-0 text-17 font-600 outline-0">{title}</h2>
-        <div id={`${id}-body`} className="text-14 text-pretty text-fg-secondary">{body}</div>
+        {counter && <span className="text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-fg-body uppercase">{counter}</span>}
+        <h2 ref={headingRef} id={`${id}-title`} tabIndex={-1} className="m-0 font-display text-30 leading-(--il-canvas-leading-heading) font-400 outline-0">{title}</h2>
+        <div id={`${id}-body`} className="text-15 leading-normal text-pretty text-fg-body">{body}</div>
         <div className="flex flex-wrap items-center justify-end gap-2 pt-1">{children}</div>
         {footer && <div className="-mb-1 flex border-t border-line-default pt-1.5">{footer}</div>}
       </div>
