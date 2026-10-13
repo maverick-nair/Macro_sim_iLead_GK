@@ -40,10 +40,10 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
         <>
           <section aria-labelledby="overview-targets" className="flex flex-col gap-2">
             <PanelHeading id="overview-targets">{t('panels.overview.targets')}</PanelHeading>
-            <div className="flex flex-col gap-1.5 rounded-6 border border-line-default bg-surface-card p-4">
+            <div className="flex flex-col gap-1.5 border border-line-default bg-surface-card p-4">
               <span className="text-14">{t('panels.overview.money', { value: money.format(view.money.value), target: money.format(view.money.target) })}</span>
               <div role="img" aria-label={t('panels.overview.moneyAria', { pct: Math.round(share(view.money.value, view.money.target) * 100), pace: Math.round(clock.runShare * 100) })} className="relative h-2.5 overflow-hidden rounded-5 bg-track">
-                <div className="h-full rounded-5 bg-(image:--il-fill-brand)" style={{ width: `${share(view.money.value, view.money.target) * 100}%` }} />
+                <div className="h-full bg-accent-default" style={{ width: `${share(view.money.value, view.money.target) * 100}%` }} />
                 <div aria-hidden="true" className="absolute top-0 h-full w-0.5 bg-fg-primary" style={{ insetInlineStart: `${clock.runShare * 100}%` }} />
               </div>
               <span className="text-12 text-fg-secondary">{t('panels.overview.pace', { pace: money.format(pace), unit: clock.periodUnit, n: clock.period })}</span>
@@ -106,7 +106,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
                 <li key={f.key} className="grid grid-cols-(--il-panel-funnel-columns) items-center gap-3 text-13">
                   <b className="truncate text-large:whitespace-normal">{f.name}</b>
                   <div role="img" aria-label={t('panels.overview.stageAria', { stage: f.name, output: number(f.throughput), ideal: number(f.idealThroughput) })} className="h-2.5 overflow-hidden rounded-5 bg-track">
-                    <div className={`h-full rounded-5 ${f.bottleneck ? 'bg-status-attention' : 'bg-(image:--il-fill-brand)'}`} style={{ width: `${share(f.throughput, f.idealThroughput) * 100}%` }} />
+                    <div className={`h-full rounded-5 ${f.bottleneck ? 'bg-status-attention' : 'bg-accent-default'}`} style={{ width: `${share(f.throughput, f.idealThroughput) * 100}%` }} />
                   </div>
                   <span className="text-end text-fg-secondary tabular-nums">{t('panels.overview.of', { output: number(f.throughput), ideal: number(f.idealThroughput) })}</span>
                 </li>

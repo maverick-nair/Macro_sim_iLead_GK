@@ -315,7 +315,7 @@ export function App(p: AppProps) {
   // Text size scales every font size token (and the ported screens' pixel sizes) from the app root,
   // so text grows and wraps while the layout keeps its size. CSS zoom scaled the layout too.
   const rootVars: CSSProperties & Record<string, string | number> = {
-    colorScheme: dark ? 'dark' : 'light', minHeight: minH, '--il-text-scale': s.settings.text / 100,
+    colorScheme: dark ? 'dark' : 'light', '--il-page-scheme': dark ? 'dark' : 'light', minHeight: minH, '--il-text-scale': s.settings.text / 100,
     background: dark ? 'var(--il-backdrop-office)' : 'var(--il-backdrop-daylight)',
     ...p.clientTheme?.vars
   };

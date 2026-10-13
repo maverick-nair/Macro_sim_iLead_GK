@@ -54,7 +54,8 @@ test('swap roles: different stages only, assess nudge, then the conversation', a
 
   // Derick shares Justin's stage, so he is dimmed with the reason and cannot be picked.
   await expect(page.getByRole('button', { name: /^Derick Kaynes.*Not available: Same stage as Justin/ })).toBeVisible();
-  await page.getByText('Derick Kaynes', { exact: true }).click();
+  // The card says it is not available (aria-disabled); a click on it still explains why.
+  await page.getByText('Derick Kaynes', { exact: true }).click({ force: true });
   await expect(page.getByText('PEOPLE · 1 OF 2', { exact: false }).or(page.getByText(/People · 1 of 2/i))).toBeVisible();
 
   await page.getByText('Ruth Ether', { exact: true }).click();
@@ -70,6 +71,8 @@ test('swap roles: different stages only, assess nudge, then the conversation', a
 
 test('profile: stats revealed, timeline from the engine, actions for that person', async ({ page }) => {
   await toBoard(page);
+  // The desk opens a profile from the person's actions (D227): select them first.
+  if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
   await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
   const dialog = page.getByRole('dialog', { name: /Profile for Kent Goldberg/ });
   await expect(dialog).toBeVisible();

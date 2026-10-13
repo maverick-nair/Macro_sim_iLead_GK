@@ -37,7 +37,7 @@ export function ActionsListPanel({ view, availability, onClose, returnFocus }: A
               ].filter((x): x is string => !!x);
               const options = a.options.length > 1 ? a.options : [];
               return (
-                <li key={a.key} className="flex flex-col gap-1.5 rounded-6 border border-line-default bg-surface-card p-4">
+                <li key={a.key} className="flex flex-col gap-1.5 border border-line-default bg-surface-card p-4">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <b className="text-15">{a.name}</b>
                     <span className="text-12 font-600 text-fg-secondary">{availability[a.key] ?? ''}</span>

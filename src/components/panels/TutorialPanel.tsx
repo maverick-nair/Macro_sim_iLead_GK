@@ -37,7 +37,7 @@ export function TutorialPanel({ view, onClose, onTour, returnFocus }: TutorialPa
       {tab === 'video' && video?.src && (
         // Captions come with the video when the storyline has a track; the transcript is the next tab either way.
         // eslint-disable-next-line jsx-a11y/media-has-caption -- the captions track is authored when there is one, and the transcript tab carries every word
-        <video controls preload="metadata" src={video.src} poster={video.poster} className="aspect-video w-full rounded-6 bg-surface-raised">
+        <video controls preload="metadata" src={video.src} poster={video.poster} className="aspect-video w-full bg-surface-raised">
           {video.captions && <track kind="captions" src={video.captions} srcLang={view.storyline.locale} label={t('panels.tutorial.captions')} default />}
         </video>
       )}
@@ -70,7 +70,7 @@ export function TutorialPanel({ view, onClose, onTour, returnFocus }: TutorialPa
               <PanelHeading id="tutorial-examples">{t('panels.tutorial.examples')}</PanelHeading>
               <ol className="m-0 flex list-none flex-col gap-2.5 p-0">
                 {lens.examples.map((x, i) => (
-                  <li key={i} className="flex flex-col gap-1.5 rounded-6 border border-line-default bg-surface-card p-4">
+                  <li key={i} className="flex flex-col gap-1.5 border border-line-default bg-surface-card p-4">
                     <span className="text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{t('panels.tutorial.example', { n: i + 1, need: needOf(x.need)?.label ?? '' })}</span>
                     <p className="m-0 text-14 text-pretty">{x.person}</p>
                     <p className="m-0 text-14 text-pretty"><b>{t('panels.tutorial.fits', { style: styleOf(x.style)?.name ?? x.style })}</b> {x.why}</p>

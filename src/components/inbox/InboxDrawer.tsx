@@ -38,28 +38,28 @@ export interface InboxDrawerProps {
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
 const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const pill = `h-7.5 cursor-pointer rounded-4 px-3 py-0 text-12 font-600 ${focus}`;
+const pill = `min-h-9 cursor-pointer rounded-4 px-3.5 py-0 text-13 font-600 ${focus}`;
 
 function Item({ it, onOpen, onLater }: { it: InboxDrawerItem; onOpen: () => void; onLater: () => void }) {
   const { t } = useI18n();
   return (
-    <div className={`flex flex-col gap-2.5 rounded-6 border bg-surface-raised p-3 ${it.urgent ? 'border-status-attention' : 'border-line-default'}`}>
+    <div className={`flex flex-col gap-2.5 border-b border-s-2 border-b-line-default py-3.5 pe-4 ps-3.5 ${it.urgent ? 'border-s-status-attention bg-surface-card' : 'border-s-transparent'}`}>
       <div className="flex gap-2.5">
         <span className={`flex size-10 flex-none items-center justify-center overflow-hidden rounded-round text-12 font-600 text-button-on-solid ${SENDER_TONE[it.sender.kind]}`}>
           <SenderFace sender={it.sender} />
         </span>
         <span className="flex min-w-0 flex-1 flex-col">
-          <span className="flex justify-between gap-1.5 text-12 text-fg-secondary"><b>{it.tag}</b><span>{it.meta}</span></span>
-          <b className="text-14">{it.title}</b>
-          <span className="text-13 text-fg-secondary">{it.preview}</span>
+          <span className="flex justify-between gap-1.5 text-13 text-fg-body"><span className="font-500 text-fg-primary">{it.tag}</span><span>{it.meta}</span></span>
+          <b className="text-15 font-600">{it.title}</b>
+          <span className="text-13 text-fg-body">{it.preview}</span>
         </span>
       </div>
       <div className="flex items-center gap-2">
-        {it.urgent && <span className="text-12 font-600 text-status-attention">{it.due ? t('inbox.pinnedDue', { due: it.due }) : t('inbox.pinned')}</span>}
-        {!it.urgent && it.due && <span className="text-12 text-fg-secondary">{it.due}</span>}
+        {it.urgent && <span className="text-12 font-600 tracking-(--il-tracking-eyebrow) text-status-attention uppercase">{it.due ? t('inbox.pinnedDue', { due: it.due }) : t('inbox.pinned')}</span>}
+        {!it.urgent && it.due && <span className="text-13 text-fg-body">{it.due}</span>}
         <span className="flex-1" />
-        {it.later !== false && <button type="button" onClick={onLater} className={`${pill} border border-solid border-line-default bg-transparent text-fg-primary`}>{t('inbox.later')}</button>}
-        <button type="button" onClick={onOpen} className={`${pill} border-0 bg-brand text-button-on-solid`}>{t('inbox.cta', { cta: it.cta })}</button>
+        {it.later !== false && <button type="button" onClick={onLater} className={`${pill} border border-solid border-line-strong bg-surface-card text-fg-primary`}>{t('inbox.later')}</button>}
+        <button type="button" onClick={onOpen} className={`${pill} border-0 bg-button-solid text-button-on-solid`}>{t('inbox.cta', { cta: it.cta })}</button>
       </div>
     </div>
   );
@@ -97,11 +97,11 @@ function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLate
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the dialog
     <div ref={ref} role="dialog" aria-label={t('inbox.title')} tabIndex={-1} onKeyDown={onKeyDown}
-      className="absolute top-0 bottom-6 start-(--il-inbox-drawer-offset) z-30 tablet-portrait:top-20 tablet-portrait:bottom-27 tablet-portrait:start-6 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden rounded-6 border border-line-strong bg-surface-material shadow-(--il-inbox-drawer-shadow) outline-0 ">
-      <div className="flex items-center justify-between border-b border-line-default px-4.5 py-4">
-        <h2 className="m-0 text-18 font-600">{t('inbox.title')}</h2>
+      className="absolute top-0 bottom-6 start-(--il-inbox-drawer-offset) z-30 tablet-portrait:top-20 tablet-portrait:bottom-27 tablet-portrait:start-6 flex w-(--il-inbox-drawer-width) animate-(--il-inbox-drawer-enter) flex-col overflow-hidden border border-fg-primary bg-surface-page shadow-(--il-inbox-drawer-shadow) outline-0">
+      <div className="flex items-center justify-between border-b border-fg-primary px-4.5 py-3">
+        <h2 className="m-0 font-display text-30 leading-tight font-400">{t('inbox.title')}</h2>
         <button type="button" onClick={onClose} aria-label={t('inbox.close')}
-          className={`size-8 cursor-pointer rounded-round border-0 bg-surface-raised p-0 text-fg-primary ${focus}`}>{CLOSE_GLYPH}</button>
+          className={`size-11 cursor-pointer rounded-4 border border-line-strong bg-surface-card p-0 text-fg-primary ${focus}`}>{CLOSE_GLYPH}</button>
       </div>
       {items.length === 0 && (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center">
@@ -109,10 +109,10 @@ function OpenDrawer({ subPeriodUnit, items, sponsorName, onClose, onOpen, onLate
           <span className="text-13 text-fg-secondary">{sponsorName ? t('inbox.empty.bodySponsor', { sponsor: sponsorName }) : t('inbox.empty.body')}</span>
         </div>
       )}
-      <div className="flex flex-1 flex-col gap-2 overflow-auto p-2.5">
+      <div className="flex flex-1 flex-col overflow-auto">
         {items.map(it => <Item key={it.id} it={it} onOpen={() => onOpen(it.id)} onLater={() => onLater(it.id)} />)}
       </div>
-      <span className="border-t border-line-default px-4.5 py-2.5 text-12 text-fg-secondary">{t('inbox.footer', { unit: subPeriodUnit })}</span>
+      <span className="border-t border-line-default px-4.5 py-2.5 text-13 text-fg-body">{t('inbox.footer', { unit: subPeriodUnit })}</span>
     </div>
   );
 }

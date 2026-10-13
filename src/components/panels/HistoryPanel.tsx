@@ -57,8 +57,8 @@ export function HistoryPanel({ view, nameOf, initial, onClose, returnFocus }: Hi
       <p role="status" className="sr-only">{t('panels.history.count', { n: weeks.reduce((s, w) => s + w.entries.length, 0) })}</p>
       {weeks.length === 0 && <p className="m-0 text-14 text-fg-secondary">{filter.person || filter.what ? t('panels.history.noneFiltered') : t('panels.history.none')}</p>}
       {weeks.map((w, i) => (
-        <details key={w.period} open={i === 0} className="group flex flex-col rounded-6 border border-line-default bg-surface-card">
-          <summary className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-6 px-4 text-15 font-600 ${PANEL_FOCUS}`}>
+        <details key={w.period} open={i === 0} className="group flex flex-col border border-line-default bg-surface-card">
+          <summary className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 text-15 font-600 ${PANEL_FOCUS}`}>
             <span>{t('time.period', { unit: view.clock.periodUnit, n: w.period })}</span>
             <span className="text-12 font-600 text-fg-secondary">{t('panels.history.entries', { n: w.entries.length })}</span>
           </summary>

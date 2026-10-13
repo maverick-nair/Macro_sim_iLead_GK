@@ -31,6 +31,9 @@
 @layer base {
   .il-scheme-dark { color-scheme: dark; }
   .il-chrome { color-scheme: dark; background-color: var(--il-color-canvas-navy); color: var(--il-color-fg-primary); border-bottom: 1px solid var(--il-color-canvas-navy-800); }
+  /* A dialog opened from the navy bar (the menu, pause, settings) is the page's, not the bar's: it takes the
+     theme's scheme back (the app root sets --il-page-scheme). */
+  .il-chrome :is([role='dialog'], [role='alertdialog'], [data-radix-popper-content-wrapper]) { color-scheme: var(--il-page-scheme, light); }
 }
 
 /* A preview from GenieKreator (D191): its bar sits above the app, so the play screens that fit the window fit
