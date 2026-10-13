@@ -21,8 +21,11 @@ test.afterEach(() => expect(errors).toEqual([]));
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 async function axe(page: Page) {
+  // Drawers and panels enter with an animation (D78): colours are measured once they have finished, not mid fade.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))));
   const r = await new AxeBuilder({ page: page as never }).withTags(TAGS).analyze();
-  return r.violations.map(v => `${v.id}: ${v.nodes.length}`);
+  // Each violation names its nodes and why, so a failure says what to fix.
+  return r.violations.map(v => `${v.id}: ${v.nodes.length}: ${v.nodes.map(n => `${n.target.join(' ')} ${n.html.slice(0, 120)} (${n.failureSummary?.replace(/\s+/g, ' ').trim()})`).join(' | ')}`);
 }
 
 /** Opens the board at a period, sets every style, and clears the outcome and any event cards. */
