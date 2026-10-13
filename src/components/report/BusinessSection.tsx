@@ -13,7 +13,7 @@ export function BusinessSection({ data, unit, periods }: { data: BusinessData; u
   const bottleneck = data.funnel.find(f => f.bottleneck);
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.business.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.business.title')}</h2>
       <p className="m-0 text-14 text-pretty">{data.line}</p>
       <div className="grid gap-5 grid-cols-2">
         <ChartBlock

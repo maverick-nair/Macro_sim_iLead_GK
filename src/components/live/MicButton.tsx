@@ -47,9 +47,9 @@ export function MicButton({ state, mode, onPress, layout = 'desk' }: MicButtonPr
   const look = denied
     ? 'bg-track text-fg-secondary'
     : listening
-      ? 'bg-voice-listening text-brand-deep-space shadow-(--il-live-mic-glow-listening)'
+      ? 'bg-voice-listening text-button-on-solid shadow-(--il-live-mic-glow-listening)'
       : voice
-        ? 'bg-(image:--il-fill-brand) text-brand-deep-space shadow-(--il-live-mic-glow-ready)'
+        ? 'bg-(image:--il-fill-brand) text-button-on-solid shadow-(--il-live-mic-glow-ready)'
         : 'bg-surface-raised text-fg-primary';
   return (
     <button

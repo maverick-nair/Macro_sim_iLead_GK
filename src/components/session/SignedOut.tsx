@@ -28,14 +28,14 @@ export function SignedOut({ at, where, score, money: m, live, onBack }: SignedOu
   const fact = (label: string, value: string, rest: string | null) => (
     <div className="flex flex-col gap-1">
       <dt className="text-13 text-fg-secondary">{label}</dt>
-      <dd className="m-0 text-15 text-fg-secondary"><b className="text-24 font-700 text-fg-primary tabular-nums">{value}</b>{rest && <> {rest}</>}</dd>
+      <dd className="m-0 text-15 text-fg-secondary"><b className="text-24 font-600 text-fg-primary tabular-nums">{value}</b>{rest && <> {rest}</>}</dd>
     </div>
   );
   return (
     <section data-signed-out="" className="flex flex-1 flex-col justify-end gap-6 px-12 py-14 tablet:px-8">
       <div className="flex max-w-195 flex-col gap-6">
-        <span className="text-13 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary">{t('signedOut.eyebrow', { at })}</span>
-        <h1 ref={h1} tabIndex={-1} className="m-0 text-48 leading-tight font-700 tracking-(--il-tracking-title) outline-0">{t('signedOut.title')}</h1>
+        <span className="text-13 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary">{t('signedOut.eyebrow', { at })}</span>
+        <h1 ref={h1} tabIndex={-1} className="m-0 text-48 leading-tight font-600 tracking-(--il-tracking-title) outline-0">{t('signedOut.title')}</h1>
         <p className="m-0 text-18 text-fg-secondary">{t('signedOut.body', where)}</p>
         <dl className="m-0 grid grid-cols-3 gap-4.5 border-t border-line-strong pt-4.5 text-large:grid-cols-1">
           {fact(t('signedOut.score'), number(score.total), score.tier)}

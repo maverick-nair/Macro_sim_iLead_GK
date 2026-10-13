@@ -10,6 +10,7 @@ import { ScrollArea } from '../shell/ScrollArea';
 import { StyleSettingList } from './StyleSettingList';
 import { StyleSummary } from './StyleSummary';
 import { initials, type PeriodUnit, type StyleSettingMember } from './types';
+import { ILeadLogo } from '../shell/Logo';
 
 export type StyleSettingLayout = 'cards' | 'list';
 export type StyleSettingViewMode = StyleSettingLayout | 'summary';
@@ -74,13 +75,13 @@ function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange
     refs.current[next]?.focus();
   };
   return (
-    <div role="radiogroup" aria-label={t('stylesetting.view.aria')} className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.75">
+    <div role="radiogroup" aria-label={t('stylesetting.view.aria')} className="flex gap-0.5 rounded-4 border border-line-default bg-surface-raised p-0.75">
       {LAYOUTS.map((k, i) => {
         const on = value === k;
         return (
           <button key={k} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1}
             onClick={() => onChange(k)} onKeyDown={e => onKey(e, i)}
-            className={`h-8 cursor-pointer rounded-pill border-0 px-3.5 py-0 text-13 font-700 ${focus} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}>
+            className={`h-8 cursor-pointer rounded-4 border-0 px-3.5 py-0 text-13 font-600 ${focus} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary'}`}>
             {t('stylesetting.view', { view: k })}
           </button>
         );
@@ -106,18 +107,18 @@ function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine:
   const grid = introGrid(lens.styles.length);
   return (
     <div id={defsId} data-tour="style-definitions" className={`grid ${grid.className} gap-3`}>
-      <div className={`flex items-center gap-3 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 short:py-2 ${grid.prompt}`}>
-        <span aria-hidden="true" className="flex size-11 short:size-9 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">{initials(sponsorName)}</span>
+      <div className={`flex items-center gap-3 rounded-6 border border-line-default bg-surface-card px-3.5 py-3 short:py-2 ${grid.prompt}`}>
+        <span aria-hidden="true" className="flex size-11 short:size-9 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-600 text-button-on-solid">{initials(sponsorName)}</span>
         <span className="text-14 text-pretty">
           <span className="sr-only">{t('stylesetting.sponsor.says', { name: sponsorName })}</span>
           {t('common.quote', { text: sponsorLine })}
         </span>
-        <a href={`#${defsId}`} className={`sr-only text-13 font-700 focus:not-sr-only ${focus}`}>{t('stylesetting.sponsor.definitions', { count: lens.styles.length })}</a>
+        <a href={`#${defsId}`} className={`sr-only text-13 font-600 focus:not-sr-only ${focus}`}>{t('stylesetting.sponsor.definitions', { count: lens.styles.length })}</a>
       </div>
       <div role="list" aria-label={t('stylesetting.definitions.aria')} className="contents">
         {lens.styles.map(s => (
-          <div key={s.key} role="listitem" className="flex items-start gap-2.5 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 short:py-2">
-            <span aria-hidden="true" className={`flex size-7.5 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
+          <div key={s.key} role="listitem" className="flex items-start gap-2.5 rounded-6 border border-line-default bg-surface-card px-3.5 py-3 short:py-2">
+            <span aria-hidden="true" className={`flex size-7.5 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-600 text-button-on-solid ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
             <span className="flex flex-col">
               <b className="text-14">{s.name}</b>
               <span className="text-12 leading-(--il-stylesetting-intro-leading) text-fg-secondary">{s.description}</span>
@@ -155,7 +156,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
   return (
     <Root data-trace="lens.styles" className="flex min-h-0 flex-1 flex-col gap-4.5 px-8 pt-5 pb-8 short:gap-3 short:pt-3 short:pb-4 tablet-portrait:px-6 tablet-portrait:pb-30" style={{ minHeight: p.minHeight }}>
       <header className="flex items-center gap-4">
-        <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-stylesetting-logo-tracking) text-transparent">{t('hud.logo')}</span>
+        <ILeadLogo size="md" />
         {/* The screen's heading is the visible "Week 2 of 8 · Style setting", styled as designed. */}
         <Heading level={p.embedded ? 2 : 1} className="m-0 text-13 font-400 whitespace-nowrap text-fg-secondary">
           {rich(where, [<b key="p" className="text-fg-primary">{t('time.period', { unit: periodUnit, n: p.period })}</b>])}
@@ -168,7 +169,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
         <span data-tour="style-confirm" className="inline-flex flex-none tablet-portrait:hidden"><NoWrapButton variant="primary" size="md" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton></span>
       </header>
       {/* A portrait tablet confirms from a bar at the bottom, in reach of a thumb (D73). */}
-      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-20 border border-line-default bg-surface-material py-2.5 pe-2.5 ps-5 backdrop-blur-20">
+      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-6 border border-line-default bg-surface-material py-2.5 pe-2.5 ps-5 ">
         <span className="flex-1 text-14 text-fg-secondary">{t('stylesetting.bar')}</span>
         <NoWrapButton variant="primary" size="lg" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton>
       </div>

@@ -103,12 +103,12 @@ function ModeSwitch({ mode, onChange }: { mode: LiveMode; onChange: (m: LiveMode
   };
   return (
     <div role="radiogroup" tabIndex={-1} aria-label={t('liveshell.mode.aria')} onKeyDown={onKey}
-      className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.75">
+      className="flex gap-0.5 rounded-4 border border-line-default bg-surface-raised p-0.75">
       {MODES.map((m, i) => {
         const on = mode === m;
         return (
           <button key={m} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1} onClick={() => onChange(m)}
-            className={`h-7 cursor-pointer rounded-pill border-0 px-3 py-0 text-12 font-700 ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'} ${FOCUS}`}>
+            className={`h-7 cursor-pointer rounded-4 border-0 px-3 py-0 text-12 font-600 ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary'} ${FOCUS}`}>
             {t('liveshell.mode.option', { mode: m })}
           </button>
         );
@@ -139,8 +139,8 @@ export function LiveShell(p: LiveShellProps) {
     // Escape anywhere in the shell interrupts the NPC; the controls inside stay the interactive elements.
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div onKeyDown={onKeyDown} className="flex flex-1 flex-col">
-      <header className="flex items-center border-b border-line-default bg-surface-material backdrop-blur-(--il-liveshell-header-blur) gap-4 px-6 py-3 tablet-portrait:min-h-18 tablet-portrait:gap-3">
-        <span aria-hidden="true" className="flex size-9 flex-none tablet-portrait:hidden items-center justify-center rounded-12 bg-(image:--il-fill-brand) text-liveshell-on-signal">
+      <header className="flex items-center border-b border-line-default bg-surface-material gap-4 px-6 py-3 tablet-portrait:min-h-18 tablet-portrait:gap-3">
+        <span aria-hidden="true" className="flex size-9 flex-none tablet-portrait:hidden items-center justify-center rounded-4 bg-(image:--il-fill-brand) text-liveshell-on-signal">
           <HeaderMic />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -152,14 +152,14 @@ export function LiveShell(p: LiveShellProps) {
           </span>
         </div>
         <button type="button" onClick={p.onPause} aria-label={t('liveshell.timer.aria', { paused: p.timer.paused, time, direction: p.timer.counts === 'up' ? 'elapsed' : 'left' })}
-          className={`flex h-8.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-raised px-3 py-0 text-13 font-700 text-fg-primary tablet-portrait:h-11 tablet-portrait:rounded-12 ${FOCUS}`}>
+          className={`flex h-8.5 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-default bg-surface-raised px-3 py-0 text-13 font-600 text-fg-primary tablet-portrait:h-11 tablet-portrait:rounded-4 ${FOCUS}`}>
           {p.timer.paused ? <PlayIcon /> : <PauseIcon />}
           <span>{time}</span>
         </button>
         <span className="text-12 text-fg-secondary tablet-portrait:hidden">{t('liveshell.clock.paused')}</span>
         {p.hint && (
           <button type="button" onClick={p.hint.onRequest} disabled={!p.hint.available} data-tour="live-hint"
-            className={`h-8.5 cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 tablet-portrait:h-11 tablet-portrait:rounded-12 tablet-portrait:px-4 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
+            className={`h-8.5 cursor-pointer rounded-4 border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-600 tablet-portrait:h-11 tablet-portrait:rounded-4 tablet-portrait:px-4 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
             {t('liveshell.hint.button', { used: p.hint.text !== null })}
           </button>
         )}

@@ -187,7 +187,7 @@ export function Modal({ open, onOpenChange, title, description, children, footer
       <Dialog.Portal>
         <Dialog.Overlay className="il-theme fixed inset-0 z-50 bg-author-scrim [color-scheme:light]" />
         <Dialog.Content
-          className={`il-theme fixed z-50 flex flex-col overflow-hidden bg-author-surface font-sans text-author-ink [color-scheme:light] focus:outline-none ${side ? 'inset-y-0 end-0 w-[min(100vw,820px)] shadow-[0_0_40px_rgb(20_26_46/0.25)]' : `inset-x-4 top-1/2 mx-auto max-h-[calc(100dvh-32px)] -translate-y-1/2 rounded-24 shadow-[0_20px_60px_rgb(20_26_46/0.3)] ${width}`}`}>
+          className={`il-theme il-genie fixed z-50 flex flex-col overflow-hidden bg-author-surface font-sans text-author-ink [color-scheme:light] focus:outline-none ${side ? 'inset-y-0 end-0 w-[min(100vw,820px)] shadow-[0_0_40px_rgb(20_26_46/0.25)]' : `inset-x-4 top-1/2 mx-auto max-h-[calc(100dvh-32px)] -translate-y-1/2 rounded-24 shadow-[0_20px_60px_rgb(20_26_46/0.3)] ${width}`}`}>
           <div className="flex flex-none items-start gap-4 border-b border-solid border-author-line px-6 pt-5 pb-4">
             {head}
             <div className="flex min-w-0 flex-1 flex-col gap-1">

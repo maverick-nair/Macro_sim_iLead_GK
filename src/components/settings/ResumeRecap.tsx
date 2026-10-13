@@ -52,9 +52,9 @@ export interface ResumeRecapProps {
   returnFocus?: () => HTMLElement | null;
 }
 
-const ROW = 'flex items-center gap-2.5 rounded-12 bg-surface-raised px-3 py-2.5 text-13';
+const ROW = 'flex items-center gap-2.5 rounded-4 bg-surface-raised px-3 py-2.5 text-13';
 const SECTION = 'flex flex-col gap-2';
-const LABEL = 'm-0 text-13 font-700';
+const LABEL = 'm-0 text-13 font-600';
 const TREND: Record<ResumeRecapChange['trend'], string> = { up: 'text-status-gain', down: 'text-status-decline', flat: 'text-fg-secondary' };
 
 /**
@@ -66,9 +66,9 @@ export function ResumeRecap(p: ResumeRecapProps) {
   const { t, number } = useI18n();
   return (
     <AppDialog onDismiss={p.onBack} frozen={p.frozen} returnFocus={p.returnFocus} className="flex max-h-full w-130 flex-col gap-4.5 overflow-y-auto p-7">
-      <span className="text-12 font-700 tracking-(--il-appdialog-eyebrow-tracking) text-fg-secondary uppercase">{t('settings.resume.eyebrow')}</span>
+      <span className="text-12 font-600 tracking-(--il-appdialog-eyebrow-tracking) text-fg-secondary uppercase">{t('settings.resume.eyebrow')}</span>
       <div className="flex flex-col gap-1">
-        <DialogTitle className="m-0 text-24 font-700">{t('settings.resume.title', { period: p.periodUnit, n: p.period, sub: p.subPeriodUnit, subN: p.sub })}</DialogTitle>
+        <DialogTitle className="m-0 text-24 font-600">{t('settings.resume.title', { period: p.periodUnit, n: p.period, sub: p.subPeriodUnit, subN: p.sub })}</DialogTitle>
         <span className="text-13 text-fg-secondary">{p.left}</span>
       </div>
       {p.headline && (
@@ -84,7 +84,7 @@ export function ResumeRecap(p: ResumeRecapProps) {
             {p.inbox.map(m => (
               <li key={m.id} className={ROW}>
                 <span className="flex min-w-0 flex-1 flex-col">
-                  <b className="font-700">{m.title}</b>
+                  <b className="font-600">{m.title}</b>
                   <span className="text-12 text-fg-secondary">{m.from}</span>
                 </span>
                 <span className="flex flex-none flex-col items-end text-12">
@@ -116,7 +116,7 @@ export function ResumeRecap(p: ResumeRecapProps) {
             {p.changes.map(c => (
               <div key={c.metric} className={`${ROW} justify-between`}>
                 <dt>{t('settings.resume.metric', { metric: c.metric })}</dt>
-                <dd className={`m-0 font-700 ${TREND[c.trend]}`}>{t('settings.resume.move', { start: number(c.start), now: number(c.now) })}</dd>
+                <dd className={`m-0 font-600 ${TREND[c.trend]}`}>{t('settings.resume.move', { start: number(c.start), now: number(c.now) })}</dd>
               </div>
             ))}
           </dl>

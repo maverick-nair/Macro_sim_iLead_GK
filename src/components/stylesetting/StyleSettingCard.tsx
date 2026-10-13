@@ -62,8 +62,8 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
 
   return (
     <div role="group" aria-label={t('stylesetting.member.aria', { name: m.name, title: m.title, mood: t('member.mood', { mood: m.mood }) })} data-member-id={m.id}
-      className={`flex flex-col rounded-20 border-2 bg-surface-card backdrop-blur-12 ${styleChanged(m) ? 'border-accent-secondary' : 'border-line-default'}`}>
-      <div className={`relative h-30 overflow-hidden rounded-t-18 short:h-19 shorter:h-15 ${portraitBackdrop(m.away)}`}>
+      className={`flex flex-col rounded-6 border-2 bg-surface-card ${styleChanged(m) ? 'border-accent-secondary' : 'border-line-default'}`}>
+      <div className={`relative h-30 overflow-hidden rounded-t-6 short:h-19 shorter:h-15 ${portraitBackdrop(m.away)}`}>
         <img src={m.img} alt="" className={`size-full object-cover object-(--il-stylesetting-portrait-position) mix-blend-multiply short:object-(--il-stylesetting-portrait-position-compact) ${m.away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-stylesetting-portrait-overlay)" />
         <div className="absolute bottom-2 start-3 flex flex-col text-member-on-portrait">
@@ -88,12 +88,12 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
             onKeyDown={e => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); close(true); } }}
             placeholder={t('stylesetting.rationale.placeholder')}
             aria-label={t('stylesetting.rationale.aria', { name: m.name })}
-            className="h-8.5 rounded-10 text-13 border border-solid border-line-control bg-surface-raised px-2.5 py-0 text-fg-primary"
+            className="h-8.5 rounded-4 text-13 border border-solid border-line-control bg-surface-raised px-2.5 py-0 text-fg-primary"
           />
         ) : (
           <button ref={opener} type="button" onClick={() => setEditing(true)} data-tour="style-reason"
             aria-label={m.rationale ? t('stylesetting.rationale.editAria', { name: m.name, text: m.rationale }) : t('stylesetting.rationale.addAria', { name: m.name })}
-            className={`cursor-pointer text-12 self-start border-0 bg-transparent p-0 font-700 text-accent-secondary ${focus}`}>
+            className={`cursor-pointer text-12 self-start border-0 bg-transparent p-0 font-600 text-accent-secondary ${focus}`}>
             {m.rationale ? t('stylesetting.rationale.note', { text: m.rationale.slice(0, NOTE_PREVIEW) }) : t('stylesetting.rationale.add')}
           </button>
         )}

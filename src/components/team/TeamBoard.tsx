@@ -63,11 +63,11 @@ function StyleLegend({ id, periodUnit }: { id: string; periodUnit: PeriodUnit })
   const lens = useLens();
   return (
     <div id={id} role="dialog" aria-label={t('team.legend.title')}
-      className={`absolute top-full end-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-18 border border-line-strong bg-surface-material p-4`}>
+      className={`absolute top-full end-0 z-40 mt-2 w-(--il-team-legend-width) shadow-(--il-team-legend-shadow) flex animate-(--il-team-legend-enter) flex-col gap-3 rounded-6 border border-line-strong bg-surface-material p-4`}>
       <span className="text-13 text-fg-secondary">{lens.id === 'readiness_based' ? t('team.legend.intro', { unit: periodUnit }) : t('team.legend.introLens', { unit: periodUnit, count: lens.styles.length })}</span>
       {lens.styles.map(s => (
         <div key={s.key} className="grid grid-cols-(--il-team-legend-columns) items-start gap-3">
-          <span className={`flex size-8 items-center justify-center rounded-round bg-brand font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
+          <span className={`flex size-8 items-center justify-center rounded-round bg-brand font-600 text-button-on-solid ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
           <span className="flex flex-col"><b>{s.name}</b><span className="text-13 text-fg-secondary">{s.description}</span></span>
         </div>
       ))}
@@ -98,7 +98,7 @@ function StageInfo({ name, about, suits, alignEnd }: { name: string; about?: str
         <InfoIcon />
       </button>
       {info && (
-        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
+        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-6 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
           <b className="text-14">{name}</b>
           {about && <span>{about}</span>}
           {suits && <span className="text-fg-secondary"><b className="text-fg-primary">{t('team.stage.suits')}</b> {suits}</span>}
@@ -120,11 +120,11 @@ function FunnelHeader({ name, count, ideal, bottleneck, periodUnit, about, suits
   const share = goal > 0 ? Math.max(0, Math.min(1, output.n / output.ideal)) : 0;
   return (
     <div data-tour="stage" data-bottleneck={bottleneck ? '' : undefined}
-      className={`relative flex flex-col gap-1 rounded-12 px-3 py-2 short:gap-0.5 short:py-1.5 ${bottleneck ? 'border-2 border-status-attention bg-status-attention-soft' : 'border border-line-default bg-surface-card'}`}>
+      className={`relative flex flex-col gap-1 rounded-4 px-3 py-2 short:gap-0.5 short:py-1.5 ${bottleneck ? 'border-2 border-status-attention bg-status-attention-soft' : 'border border-line-default bg-surface-card'}`}>
       <span className="sr-only">{t('desk.stage.outputAria', { stage: name, n, ideal: goal, unit: periodUnit, bottleneck: bottleneck ? 'yes' : 'no', people: count, ideal2: ideal })}</span>
       <div className="flex min-h-6 items-center gap-1.5">
         <b aria-hidden="true" title={name} className={`min-w-0 flex-1 truncate text-13 text-large:whitespace-normal text-large:break-words ${bottleneck ? 'text-status-attention' : ''}`}>{name}</b>
-        {bottleneck && <span aria-hidden="true" className="flex flex-none items-center gap-0.5 text-12 font-700 text-status-attention"><b>!</b>{t('desk.stage.bottleneck')}</span>}
+        {bottleneck && <span aria-hidden="true" className="flex flex-none items-center gap-0.5 text-12 font-600 text-status-attention"><b>!</b>{t('desk.stage.bottleneck')}</span>}
         <StageInfo name={name} about={about} suits={suits} alignEnd={alignEnd} />
       </div>
       <span aria-hidden="true" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-12 text-fg-secondary">
@@ -150,7 +150,7 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
   const hasInfo = !!(about || suits);
   if (output) return <FunnelHeader {...{ name, count, ideal, bottleneck, periodUnit, about, suits, output, alignEnd }} />;
   return (
-    <div data-tour="stage" className={`relative flex flex-col gap-0.5 rounded-12 border px-3 py-2 short:py-1.5 ${bottleneck ? 'border-status-attention bg-status-attention-soft' : 'border-line-default bg-surface-card'}`}>
+    <div data-tour="stage" className={`relative flex flex-col gap-0.5 rounded-4 border px-3 py-2 short:py-1.5 ${bottleneck ? 'border-status-attention bg-status-attention-soft' : 'border-line-default bg-surface-card'}`}>
       <div className="flex items-baseline justify-between gap-1.5">
         <b title={name} className="min-w-0 truncate text-13 text-large:whitespace-normal text-large:break-words">{name}</b>
         <span className="flex flex-none items-center gap-1">
@@ -166,13 +166,13 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
         </span>
       </div>
       {info && (
-        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
+        <div id={infoId} role="note" className={`absolute top-full ${alignEnd ? 'end-0' : 'start-0'} z-40 mt-2 flex w-(--il-team-legend-width) max-w-(--il-panel-notice-width) flex-col gap-1.5 rounded-6 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-team-legend-shadow)`}>
           <b className="text-14">{name}</b>
           {about && <span>{about}</span>}
           {suits && <span className="text-fg-secondary"><b className="text-fg-primary">{t('team.stage.suits')}</b> {suits}</span>}
         </div>
       )}
-      <span className={`text-12 ${bottleneck ? 'font-700 text-status-attention' : 'font-400 text-fg-secondary'}`}>
+      <span className={`text-12 ${bottleneck ? 'font-600 text-status-attention' : 'font-400 text-fg-secondary'}`}>
         {bottleneck ? t('team.stage.bottleneck', { unit: periodUnit }) : t('team.stage.ideal', { ideal })}
       </span>
     </div>
@@ -196,18 +196,18 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
     <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-3 px-5 pt-1 pb-6 short:gap-2 short:pb-3">
       <div className="flex items-center justify-between gap-3 text-large:flex-wrap">
         <div className="flex items-baseline gap-3">
-          <Heading level={headingLevel} className="m-0 text-20 font-700 tracking-(--il-team-title-tracking) short:text-17">{t('team.title')}</Heading>
+          <Heading level={headingLevel} className="m-0 text-20 font-600 tracking-(--il-team-title-tracking) short:text-17">{t('team.title')}</Heading>
           <span aria-live="polite" className="text-13 text-fg-secondary">{hintText}</span>
         </div>
         <div className="relative flex items-center gap-2 text-large:flex-wrap">
           {onOverview && (
             <button type="button" onClick={onOverview} data-tour="overview"
-              className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+              className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
               <ChartIcon />{t('team.overview')}
             </button>
           )}
           <button type="button" onClick={onToggleLegend} aria-expanded={legendOpen} aria-controls={legendOpen ? legendId : undefined}
-            className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+            className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
             <HelpIcon />{t('team.legend.button', { letters })}
           </button>
           {legendOpen && <StyleLegend id={legendId} periodUnit={periodUnit} />}

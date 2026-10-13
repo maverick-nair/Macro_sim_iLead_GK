@@ -1156,7 +1156,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         <BoardNotices notices={boardNotices} view={v} onDismiss={dismissNotice}
           onLeaderboard={() => openPanel({ kind: 'leaderboard' })} onUpdateSponsor={() => { void updateSponsor(); }} />
         {ended && lastWeekSeen && endView === 'board' && (
-          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
+          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-6 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
             <span className="flex-1">{t('board.ended.readOnly')}</span>
             <Button variant="secondary" size="sm" onClick={() => setEndView('end')}>{t('board.ended.reopen')}</Button>
           </div>

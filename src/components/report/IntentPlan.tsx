@@ -5,7 +5,7 @@ import { usePurpose } from './context';
 import type { IntentCardData, PlanExtras, PlanItemData } from './types';
 import './messages';
 
-const CARD = 'flex flex-col gap-1 rounded-16 border border-line-default px-3.5 py-3 text-13';
+const CARD = 'flex flex-col gap-1 rounded-6 border border-line-default px-3.5 py-3 text-13';
 
 /** A column of the report with its own h2. Stands alone as a section, or sits in a pair as a plain column. */
 function Column({ title, alone, children }: { title: string; alone: boolean; children: ReactNode }) {
@@ -13,7 +13,7 @@ function Column({ title, alone, children }: { title: string; alone: boolean; chi
   const Tag = alone ? 'section' : 'div';
   return (
     <Tag aria-labelledby={alone ? `${id}h` : undefined} className="flex flex-col gap-2.5">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{title}</h2>
+      <h2 id={`${id}h`} className="m-0 text-20 font-600">{title}</h2>
       {children}
     </Tag>
   );
@@ -44,7 +44,7 @@ export function IntentSection({ cards, alone = true }: IntentSectionProps) {
           {t('report.quote', { text: c.quote.text })}{' '}<span className="whitespace-nowrap">{c.quote.when}</span>
         </span>
       )}
-      <span className={`font-700 ${TONE_TEXT[c.tone]}`}>{c.verdict}</span>
+      <span className={`font-600 ${TONE_TEXT[c.tone]}`}>{c.verdict}</span>
       {c.cost && <span className="text-12 text-fg-secondary">{c.cost}</span>}
     </div>
   ));
@@ -91,8 +91,8 @@ export function PlanSection({ items, reflection, checkIn, alone = true, extras }
   return (
     <Column title={t('report.plan.title', { purpose })} alone={alone}>
       {items.map((p, i) => (
-        <div key={p.key} className="grid grid-cols-(--il-report-plan-columns) gap-2.5 rounded-16 border border-line-default px-3.5 py-3 text-14">
-          <b className="flex min-h-7 min-w-7 self-start items-center justify-center rounded-round px-1 bg-(image:--il-fill-brand) text-13 text-brand-deep-space">{number(i + 1)}</b>
+        <div key={p.key} className="grid grid-cols-(--il-report-plan-columns) gap-2.5 rounded-6 border border-line-default px-3.5 py-3 text-14">
+          <b className="flex min-h-7 min-w-7 self-start items-center justify-center rounded-round px-1 bg-(image:--il-fill-brand) text-13 text-button-on-solid">{number(i + 1)}</b>
           {p.skill ? (
             <div className="flex flex-col gap-1">
               <b>{p.skill}</b>
@@ -107,7 +107,7 @@ export function PlanSection({ items, reflection, checkIn, alone = true, extras }
       {checkIn && !extras?.checkIns?.length && <span className="text-13 font-600">{checkIn}</span>}
       {extras?.path && (
         <>
-          <h3 className="m-0 mt-2 text-15 font-700">{t('report.plan.pathTitle')}</h3>
+          <h3 className="m-0 mt-2 text-15 font-600">{t('report.plan.pathTitle')}</h3>
           <ol className="m-0 grid list-none gap-2.5 p-0 grid-cols-(--il-report-tiles-columns)">
             {[extras.path.day30, extras.path.day60, extras.path.day90].map(step => <li key={step} className={`${CARD} text-pretty`}>{step}</li>)}
           </ol>
@@ -115,7 +115,7 @@ export function PlanSection({ items, reflection, checkIn, alone = true, extras }
       )}
       {extras?.checkIns && extras.checkIns.length > 0 && (
         <div className="flex flex-col gap-1">
-          <h3 className="m-0 text-15 font-700">{t('report.plan.checkIns')}</h3>
+          <h3 className="m-0 text-15 font-600">{t('report.plan.checkIns')}</h3>
           <ul className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1 p-0 text-13 font-600">
             {extras.checkIns.map(d => <li key={d}>{d}</li>)}
           </ul>

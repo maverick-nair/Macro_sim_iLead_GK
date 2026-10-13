@@ -83,16 +83,16 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
     <>
       <span className={`flex flex-col ${layout === 'panel' ? 'min-w-0' : ''}`}>
         <b className="text-13">{name}</b>
-        <span id={reasonId} className={`text-12 ${perk && !block ? 'font-700 text-status-gain' : 'text-fg-secondary'}`}>{sub}</span>
+        <span id={reasonId} className={`text-12 ${perk && !block ? 'font-600 text-status-gain' : 'text-fg-secondary'}`}>{sub}</span>
       </span>
-      <span data-tour="action-cost" className="text-12 font-700 text-fg-secondary">{fmt(days)}</span>
+      <span data-tour="action-cost" className="text-12 font-600 text-fg-secondary">{fmt(days)}</span>
     </>
   );
 
   if (layout === 'compact') {
     return (
       <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip}
-        className={`grid grid-cols-(--il-action-tile-compact-columns) items-center gap-2 rounded-14 border border-line-default bg-surface-raised p-3 text-start ${tone} ${focus}`}>
+        className={`grid grid-cols-(--il-action-tile-compact-columns) items-center gap-2 rounded-6 border border-line-default bg-surface-raised p-3 text-start ${tone} ${focus}`}>
         {text}
       </button>
     );
@@ -100,11 +100,11 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
 
   const icon = block?.reason === 'locked' ? <LockIcon /> : kind === 'static' ? <BoltIcon /> : <MicIcon />;
   const iconFill = disabled ? 'bg-track text-fg-secondary'
-    : kind === 'static' ? 'bg-(image:--il-action-icon-instant) text-brand-deep-space' : 'bg-(image:--il-action-icon-live) text-brand-deep-space';
+    : kind === 'static' ? 'bg-(image:--il-action-icon-instant) text-button-on-solid' : 'bg-(image:--il-action-icon-live) text-button-on-solid';
   return (
     <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip} data-action={actionKey} data-trace={actionKey ? `actions.${actionKey}` : undefined}
-      className={`grid grid-cols-(--il-action-tile-columns) items-center gap-2.5 rounded-14 border border-line-default bg-surface-raised px-2.5 py-2.25 text-start ${tone} ${disabled ? '' : 'hover:border-line-strong'} ${focus}`}>
-      <span className={`flex size-7.5 items-center justify-center rounded-10 ${iconFill}`}>{icon}</span>
+      className={`grid grid-cols-(--il-action-tile-columns) items-center gap-2.5 rounded-6 border border-line-default bg-surface-raised px-2.5 py-2.25 text-start ${tone} ${disabled ? '' : 'hover:border-line-strong'} ${focus}`}>
+      <span className={`flex size-7.5 items-center justify-center rounded-4 ${iconFill}`}>{icon}</span>
       {text}
     </button>
   );

@@ -6,7 +6,7 @@ import { paginate, splitAt } from './paginate';
 import type { ReportBlock } from './types';
 import './messages';
 
-const WEB_PAGE = 'flex flex-col gap-7 border border-line-default bg-surface-card backdrop-blur-14';
+const WEB_PAGE = 'flex flex-col gap-7 border border-line-default bg-surface-card ';
 /** A letter page: light colours whatever the theme, shown at 0.8 so it is 8.5 by 11 inches on screen and on paper. */
 const PRINT_PAGE = 'flex flex-col gap-7 overflow-hidden bg-surface-solid px-16 pt-16 pb-12 text-fg-primary shadow-(--il-report-print-shadow) scheme-light w-(--il-report-print-page-width) [zoom:var(--il-report-print-zoom)] print:shadow-none print:[zoom:1] print:origin-top-left print:scale-(--il-report-print-scale)';
 /** Printing: one letter sheet per page, clipping the unscaled layout box so it never spills onto a blank sheet. */
@@ -47,10 +47,10 @@ export function ReportDocument({ blocks, toolbar, footer, landmark = false, page
   return (
     <Outer className={outer}>
       {/* The toolbar (Back, Email, Download) stays at the top of the window as the report scrolls (D101). */}
-      {toolbar && <div className={`sticky top-0 z-30 -mx-3 w-auto rounded-b-16 px-3 py-2.5 backdrop-blur-20 print:hidden ${print ? 'scheme-dark bg-(--il-report-print-desk)' : 'bg-surface-material'}`}>{toolbar}</div>}
+      {toolbar && <div className={`sticky top-0 z-30 -mx-3 w-auto rounded-b-6 px-3 py-2.5 print:hidden ${print ? 'scheme-dark bg-(--il-report-print-desk)' : 'bg-surface-material'}`}>{toolbar}</div>}
       {print && <style>{REPORT_PAGE_RULE}</style>}
       {print ? <PrintPages blocks={blocks} footer={footer} label={label} /> : splitAt(blocks, b => !!b.card).map((group, i) => (
-        <article key={group[0].key} aria-label={label(i + 1)} className={`${WEB_PAGE} rounded-28 p-8`}>
+        <article key={group[0].key} aria-label={label(i + 1)} className={`${WEB_PAGE} rounded-6 p-8`}>
           {group.map(b => <Fragment key={b.key}>{b.node}</Fragment>)}
         </article>
       ))}

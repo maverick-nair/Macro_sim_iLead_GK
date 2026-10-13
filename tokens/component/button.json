@@ -1,10 +1,11 @@
 {
   "button": {
     "radius": {
-      "value": "{radius.pill}"
+      "value": "{radius.4}",
+      "$description": "4px corners, as on the approved canvas (D227)"
     },
     "font-weight": {
-      "value": "{font.weight.700}"
+      "value": "{font.weight.600}"
     },
     "sm": {
       "height": {
@@ -50,12 +51,14 @@
         "value": "{fill.brand}"
       },
       "fg": {
-        "value": "{color.brand.deep-space}"
+        "value": "{color.button.on-solid}",
+        "$description": "White on the navy button, ink on the paper button (D227)"
       }
     },
     "secondary": {
       "bg": {
-        "value": "{color.surface.raised}"
+        "value": "{color.button.quiet}",
+        "$description": "White on paper, clear on dark, as the canvas draws its outlined buttons (D227)"
       },
       "fg": {
         "value": "{color.fg.primary}"

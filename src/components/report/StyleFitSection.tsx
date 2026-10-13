@@ -40,7 +40,7 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id={`${id}h`} className="m-0 text-20 font-700">{title}</h2>
+        <h2 id={`${id}h`} className="m-0 text-20 font-600">{title}</h2>
         <div className="flex gap-3 text-12 text-fg-secondary">
           {legend.map(([fit, cls]) => (
             <span key={fit} className="flex items-center gap-1.25">
@@ -73,7 +73,7 @@ export function StyleFitSection({ unit, periods, rows, summary, extras }: StyleF
                   : t('report.fit.cellNone', { name: r.fullName, unit, n: periods[i] });
                 return (
                   <span key={i} role="cell" title={label} aria-label={label}
-                    className={`flex min-h-7 items-center justify-center rounded-6 text-12 font-700 ${fitClass(c)}`}>
+                    className={`flex min-h-7 items-center justify-center rounded-6 text-12 font-600 ${fitClass(c)}`}>
                     {c ? styleOf(lens, c.style).letter : null}
                   </span>
                 );

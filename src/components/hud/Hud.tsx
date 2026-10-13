@@ -3,6 +3,7 @@ import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { ClientLogo } from '../../theme/brand';
 import { ScoreDisclosure } from './ScoreDisclosure';
+import { ILeadLogo } from '../shell/Logo';
 
 export type PeriodUnit = 'year' | 'month' | 'week' | 'day';
 export type SubPeriodUnit = 'quarter' | 'month' | 'week' | 'day' | 'hour';
@@ -144,7 +145,7 @@ const SaveIcon = () => (
   <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v15H5z" /><path d="M8 3v5h7V3M8 21v-7h8v7" /></svg>
 );
 
-const SESSION_BUTTON = `flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:px-3.5 ${focus}`;
+const SESSION_BUTTON = `flex min-h-8 cursor-pointer items-center gap-1.5 rounded-4 border border-line-default bg-surface-raised px-2.5 py-0 text-13 font-600 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-4 tablet-portrait:px-3.5 ${focus}`;
 
 /**
  * The top bar of the board: brand, game menu, where the run is ("Week 2 · Day 3"), capacity left, the
@@ -174,13 +175,13 @@ export function Hud(p: HudProps) {
     <header className="flex min-w-0 items-center gap-3.5 px-6 py-3.5 whitespace-nowrap short:py-2 text-large:flex-wrap text-large:gap-y-2 tablet:flex-wrap tablet:gap-y-2 tablet-portrait:min-h-18 tablet-portrait:flex-wrap tablet-portrait:gap-2.5 tablet-portrait:gap-y-2 tablet-portrait:border-b tablet-portrait:border-line-default">
       <div className="flex items-center gap-2.5 tablet-portrait:-order-3">
         <ClientLogo />
-        <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-hud-logo-tracking) text-transparent">{t('hud.logo')}</span>
+        <ILeadLogo size="md" />
       </div>
       {p.menu && <div className="flex-none tablet-portrait:-order-3">{p.menu}</div>}
       {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden tablet-portrait:hidden">
         {p.nav.map(n => (n.label ? (
           <button key={n.key} type="button" onClick={() => p.onNav(n.key)}
-            className={`min-h-8 flex-none cursor-pointer rounded-pill border-0 bg-transparent px-2 py-0 text-13 font-600 text-fg-secondary hover:bg-surface-raised hover:text-fg-primary ${focus}`}>
+            className={`min-h-8 flex-none cursor-pointer rounded-4 border-0 bg-transparent px-2 py-0 text-13 font-600 text-fg-secondary hover:bg-surface-raised hover:text-fg-primary ${focus}`}>
             {n.label}
           </button>
         ) : (
@@ -218,7 +219,7 @@ export function Hud(p: HudProps) {
       {score && (
         <ScoreDisclosure className="tablet-portrait:-order-1" label={t('hud.score.aria', { total: number(score.total) })} rich={rich}
           open={p.scoreOpen} onOpenChange={p.onScoreOpenChange}
-          buttonClassName={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border-0 bg-transparent px-2.5 py-0 text-15 font-700 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-12 tablet-portrait:border tablet-portrait:border-line-strong tablet-portrait:px-3.5 ${focus}`}
+          buttonClassName={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-4 border-0 bg-transparent px-2.5 py-0 text-15 font-600 text-fg-primary tablet-portrait:min-h-11 tablet-portrait:rounded-4 tablet-portrait:border tablet-portrait:border-line-strong tablet-portrait:px-3.5 ${focus}`}
           content={rich ? p.breakdown : <>
             <b>{t('hud.score.title')}</b>
             <span className="text-12 text-fg-secondary">{t('hud.score.body')}</span>
@@ -235,13 +236,13 @@ export function Hud(p: HudProps) {
           <Star />{number(score.total)}
         </ScoreDisclosure>
       )}
-      {score && p.streak !== undefined && <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-700 tablet-portrait:-order-1"><Flame />{number(p.streak)}</span>}
+      {score && p.streak !== undefined && <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 text-15 font-600 tablet-portrait:-order-1"><Flame />{number(p.streak)}</span>}
       <button type="button" onClick={p.onPalette} aria-label={t('hud.palette.aria')}
-        className={`min-h-8 cursor-pointer rounded-pill border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-700 text-fg-secondary tablet-portrait:hidden ${focus}`}>
+        className={`min-h-8 cursor-pointer rounded-4 border border-line-default bg-surface-raised px-2.5 py-0 text-12 font-600 text-fg-secondary tablet-portrait:hidden ${focus}`}>
         {t('hud.palette.key')}
       </button>
       <button type="button" onClick={p.onSettings} aria-label={t('hud.settings.aria')}
-        className={`flex size-8 cursor-pointer items-center justify-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:bg-surface-raised tablet-portrait:-order-1 tablet-portrait:size-11 tablet-portrait:rounded-12 tablet-portrait:border tablet-portrait:border-line-default ${focus}`}>
+        className={`flex size-8 cursor-pointer items-center justify-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:bg-surface-raised tablet-portrait:-order-1 tablet-portrait:size-11 tablet-portrait:rounded-4 tablet-portrait:border tablet-portrait:border-line-default ${focus}`}>
         <Sliders />
       </button>
       {/* The number is its own flex item, 8px from the words, as the design renders it. */}

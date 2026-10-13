@@ -30,7 +30,7 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-2.5">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.skills.title')}</h2>
+        <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.skills.title')}</h2>
         <span className="text-12 text-fg-secondary">{t('report.skills.note')}</span>
       </div>
       {rows.map(k => {
@@ -42,7 +42,7 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
           <div key={k.key} className="grid items-center gap-3.5 border-t border-line-default py-2.5 grid-cols-(--il-report-skills-columns)">
             <span className={`flex flex-wrap items-center gap-x-2 gap-y-1 ${k.more?.description ? 'self-start' : ''}`}>
               <b className="text-14">{k.name}</b>
-              {k.reportOnly && <span className="rounded-pill bg-surface-raised px-2 py-0.5 text-12 font-700 text-fg-secondary">{t('report.skills.reportOnly')}</span>}
+              {k.reportOnly && <span className="rounded-4 bg-surface-raised px-2 py-0.5 text-12 font-600 text-fg-secondary">{t('report.skills.reportOnly')}</span>}
               {k.more?.description && <span className="basis-full text-12 text-fg-secondary text-pretty">{k.more.description}</span>}
             </span>
             <div className={`flex items-center gap-2 text-large:flex-wrap ${k.more?.outOf10 !== undefined ? 'flex-wrap self-start' : ''}`}>
@@ -51,8 +51,8 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
                   <span key={i} className={`h-2 w-6.5 rounded-4 ${on ? 'bg-accent-default' : 'bg-track'}`}></span>
                 ))}
               </div>
-              <span aria-hidden="true" className={`text-12 font-700 ${k.level ? '' : 'text-fg-secondary'}`}>{label}</span>
-              {k.more?.outOf10 && <span className="basis-full text-13 font-700">{k.more.outOf10}</span>}
+              <span aria-hidden="true" className={`text-12 font-600 ${k.level ? '' : 'text-fg-secondary'}`}>{label}</span>
+              {k.more?.outOf10 && <span className="basis-full text-13 font-600">{k.more.outOf10}</span>}
             </div>
             {k.more ? (
               <div className="flex flex-col gap-1">

@@ -83,7 +83,7 @@ const PlayIcon = () => <svg className="size-3.5" viewBox="0 0 24 24" fill="curre
 /** Icon glyphs, not copy: the buttons are named from the catalog. */
 const CLOSE_GLYPH = '✕';
 
-const eyebrow = 'text-12 font-700 tracking-(--il-outcome-eyebrow-tracking) text-fg-secondary uppercase';
+const eyebrow = 'text-12 font-600 tracking-(--il-outcome-eyebrow-tracking) text-fg-secondary uppercase';
 const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const link = `cursor-pointer border-0 bg-transparent px-1.5 py-0.25 text-13 ${focus}`;
 
@@ -103,9 +103,9 @@ export function OutcomePanel(p: OutcomePanelProps) {
 
   const stepper = current && replies ? (
           <div role="group" aria-label={t('outcome.replies.aria', { n: step + 1, total: replies.length, name: current.person.name })} data-tour="replies"
-            className="flex flex-col gap-2 rounded-14 bg-surface-raised px-3 py-2.5">
+            className="flex flex-col gap-2 rounded-6 bg-surface-raised px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
-              <span aria-hidden="true" className="text-12 font-700 text-fg-secondary">{t('outcome.replies.count', { n: step + 1, total: replies.length })}</span>
+              <span aria-hidden="true" className="text-12 font-600 text-fg-secondary">{t('outcome.replies.count', { n: step + 1, total: replies.length })}</span>
               <span className="flex gap-1">
                 <button type="button" onClick={() => p.onStep?.(step - 1)} disabled={step === 0} aria-label={t('outcome.replies.prev')}
                   className={`flex size-7 cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-card p-0 text-fg-primary disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}><Arrow to="prev" /></button>
@@ -122,18 +122,18 @@ export function OutcomePanel(p: OutcomePanelProps) {
   ) : null;
 
   return (
-    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-6 mt-0 mb-3.5 grid flex-none animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 rounded-22 border border-line-strong bg-surface-material px-5 py-4 shadow-(--il-outcome-band-shadow) short:mb-2 short:max-h-(--il-outcome-band-max-height-short) short:gap-4 short:overflow-y-auto short:overscroll-contain short:py-2.5">
+    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-6 mt-0 mb-3.5 grid flex-none animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 rounded-6 border border-line-strong bg-surface-material px-5 py-4 shadow-(--il-outcome-band-shadow) short:mb-2 short:max-h-(--il-outcome-band-max-height-short) short:gap-4 short:overflow-y-auto short:overscroll-contain short:py-2.5">
       <div className="size-21 overflow-hidden rounded-round bg-portrait-calm shadow-(--il-outcome-portrait-ring) short:size-14">
         <img src={p.person.img} alt={p.person.name} className="size-full object-cover object-top mix-blend-multiply" />
       </div>
       <div className="flex min-w-0 flex-col gap-2">
         <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
-        <Heading level={p.headingLevel ?? 3} className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking) short:text-17">{p.headline}</Heading>
+        <Heading level={p.headingLevel ?? 3} className="m-0 text-20 font-600 tracking-(--il-outcome-headline-tracking) short:text-17">{p.headline}</Heading>
         {/* A decision with no words (energize, training, assess) has no reply to quote. */}
         {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5">
           {p.onReplay && (
             <button type="button" onClick={p.onReplay} aria-label={t('outcome.replay', { name: p.person.shortName })}
-              className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}><PlayIcon /></button>
+              className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-button-on-solid ${focus}`}><PlayIcon /></button>
           )}
           <span className="text-14 text-pretty">{quote}</span>
         </div>}
@@ -151,7 +151,7 @@ export function OutcomePanel(p: OutcomePanelProps) {
             </button>
           ))}
         </div>
-        {!replies && p.reaction && <span aria-live="polite" className="rounded-12 bg-surface-raised px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
+        {!replies && p.reaction && <span aria-live="polite" className="rounded-4 bg-surface-raised px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
         <div className="flex flex-wrap gap-1.5">{chips}</div>
         <span className="text-13 text-fg-secondary">{p.ripple}</span>
         {changed.map((c, i) => <span key={i} className="text-13">{c}</span>)}
@@ -160,7 +160,7 @@ export function OutcomePanel(p: OutcomePanelProps) {
         <button type="button" onClick={p.onDismiss} aria-label={t('outcome.dismiss')} className={`size-8 cursor-pointer rounded-round border-0 bg-surface-raised p-0 text-fg-primary ${focus}`}>
           <span aria-hidden="true">{CLOSE_GLYPH}</span>
         </button>
-        <button type="button" onClick={p.onToggleWhy} aria-expanded={p.whyOpen} aria-controls={p.whyOpen ? whyId : undefined} className={`${link} font-700 text-accent-secondary`}>{whyLabel}</button>
+        <button type="button" onClick={p.onToggleWhy} aria-expanded={p.whyOpen} aria-controls={p.whyOpen ? whyId : undefined} className={`${link} font-600 text-accent-secondary`}>{whyLabel}</button>
         {p.onOpenHistory && <button type="button" onClick={p.onOpenHistory} className={`${link} font-600 text-fg-secondary`}>{t('outcome.history')}</button>}
       </div>
     </section>

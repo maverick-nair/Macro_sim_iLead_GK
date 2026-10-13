@@ -71,7 +71,7 @@ const InfoIcon = () => (
 );
 const toggleClass = 'flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
-const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
+const section = 'text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
 
 /**
  * The Actions card beside the board: capacity left, team actions, actions for the selected person
@@ -86,13 +86,13 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
     // The rail: one button that brings the card back, with how many actions are open and the time left.
     return (
       <aside aria-label={t('actions.title')} className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0">
-        <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
+        <div className="flex flex-1 flex-col overflow-hidden rounded-6 border border-line-default bg-surface-card ">
           <button type="button" aria-expanded={false} onClick={collapse.onToggle}
             aria-label={t('actions.rail.aria', { n: collapse.open, left: t('time.left', { amount: fmt(capacityLeft) }) })}
-            className="flex flex-1 cursor-pointer flex-col items-center gap-3 rounded-22 border-0 bg-transparent px-1 py-4 text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
+            className="flex flex-1 cursor-pointer flex-col items-center gap-3 rounded-6 border-0 bg-transparent px-1 py-4 text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
             <span className="flex size-8 items-center justify-center rounded-round border border-line-default bg-surface-raised text-fg-secondary"><Chevron to="left" /></span>
-            <b className="flex min-h-8 min-w-8 items-center justify-center rounded-pill bg-accent-soft px-1.5 text-15">{number(collapse.open)}</b>
-            <span className="text-13 font-700 [writing-mode:vertical-rl]">{t('actions.rail.label', { n: collapse.open })}</span>
+            <b className="flex min-h-8 min-w-8 items-center justify-center rounded-4 bg-accent-soft px-1.5 text-15">{number(collapse.open)}</b>
+            <span className="text-13 font-600 [writing-mode:vertical-rl]">{t('actions.rail.label', { n: collapse.open })}</span>
           </button>
         </div>
       </aside>
@@ -100,13 +100,13 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
   }
   return (
     <aside aria-label={t('actions.title')} data-tour="actions" className="flex min-h-0 flex-col pt-1 pe-6 pb-6 ps-0 short:pb-3">
-      <div className="flex flex-1 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-14">
+      <div className="flex flex-1 flex-col overflow-hidden rounded-6 border border-line-default bg-surface-card ">
         <SubPeriodUnitContext.Provider value={subPeriodUnit}>
           {drawer ? drawer : (
             <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto overscroll-contain px-4.5 py-4 short:gap-2.5 short:py-3">
               <div className="flex items-baseline justify-between">
                 <span className="flex items-center gap-1.5">
-                  <Heading level={headingLevel} className="m-0 text-18 font-700">{t('actions.title')}</Heading>
+                  <Heading level={headingLevel} className="m-0 text-18 font-600">{t('actions.title')}</Heading>
                   {onAbout && (
                     <button type="button" onClick={onAbout} aria-label={t('actions.about')} title={t('actions.about')}
                       className="flex size-6 cursor-pointer items-center justify-center self-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
@@ -124,11 +124,11 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
               </div>
               {notes && notes.length > 0 && (
                 <div className="-mt-2 flex flex-col items-end text-12">
-                  {notes.map(n => <span key={n.text} className={n.tone === 'gain' ? 'font-700 text-status-gain' : 'text-fg-secondary'}>{n.text}</span>)}
+                  {notes.map(n => <span key={n.text} className={n.tone === 'gain' ? 'font-600 text-status-gain' : 'text-fg-secondary'}>{n.text}</span>)}
                 </div>
               )}
               {outOfCapacity && (
-                <div role="status" className="flex flex-col gap-1 rounded-14 bg-surface-raised p-3 text-13">
+                <div role="status" className="flex flex-col gap-1 rounded-6 bg-surface-raised p-3 text-13">
                   <b>{t('actions.out.title', { amount: fmt(capacity) })}</b>
                   <span className="text-fg-secondary">{t('actions.out.body', { period: periodUnit, unit: subPeriodUnit })}</span>
                 </div>

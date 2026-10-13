@@ -6,10 +6,10 @@ import { barPercent, funnelNumber, funnelRow, levelSteps } from './display';
 import type { FunnelView, PeriodUnit, WeekEndReport as Report } from './types';
 import './messages';
 
-const CARD = 'flex flex-col rounded-24 border border-line-default bg-surface-card p-5 backdrop-blur-14';
-const SMALL_BOX = 'flex flex-col rounded-24 border p-4.5';
+const CARD = 'flex flex-col rounded-6 border border-line-default bg-surface-card p-5 ';
+const SMALL_BOX = 'flex flex-col rounded-6 border p-4.5';
 const SMALL_CARD = `${SMALL_BOX} border-line-default bg-surface-card`;
-const H2 = 'm-0 text-20 font-700';
+const H2 = 'm-0 text-20 font-600';
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 /** Arrow glyphs beside a change. Decorative: the words say up or down. */
 const UP = '▲';
@@ -60,10 +60,10 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
             {hasTotal ? (
               <div className="flex items-center gap-3">
                 {legend}
-                <div role="group" aria-label={t('weekend.funnel.viewAria')} className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.5">
+                <div role="group" aria-label={t('weekend.funnel.viewAria')} className="flex gap-0.5 rounded-4 border border-line-default bg-surface-raised p-0.5">
                   {(['period', 'total'] as const).map(k => (
                     <button key={k} type="button" aria-pressed={shown === k} onClick={() => setView(k)}
-                      className={`cursor-pointer rounded-pill border-0 px-2.5 py-0.5 text-12 font-600 ${FOCUS} ${shown === k ? 'bg-accent-soft text-fg-primary' : 'bg-transparent text-fg-secondary'}`}>
+                      className={`cursor-pointer rounded-4 border-0 px-2.5 py-0.5 text-12 font-600 ${FOCUS} ${shown === k ? 'bg-accent-soft text-fg-primary' : 'bg-transparent text-fg-secondary'}`}>
                       {t('weekend.funnel.view', { view: k, unit })}
                     </button>
                   ))}
@@ -114,7 +114,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
         <section aria-labelledby={`${id}team`} className={`${CARD} gap-2.5`}>
           <h2 id={`${id}team`} className={H2}>{t('weekend.team.title', { unit })}</h2>
           <div role="table" aria-labelledby={`${id}team`} className="flex flex-col gap-2.5">
-            <div role="row" className="grid grid-cols-(--il-weekend-kpi-columns) gap-2 text-12 font-700 text-fg-secondary">
+            <div role="row" className="grid grid-cols-(--il-weekend-kpi-columns) gap-2 text-12 font-600 text-fg-secondary">
               <span role="columnheader"><span className="sr-only">{t('weekend.team.column', { column: 'metric' })}</span></span>
               <span role="columnheader" className="text-end">{t('weekend.team.column', { column: 'start' })}</span>
               <span role="columnheader" className="text-end">{t('weekend.team.column', { column: 'change' })}</span>
@@ -157,7 +157,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
           <div className={`${SMALL_CARD} gap-1.5`}>
             <span className="text-12 text-fg-secondary">{t('weekend.sponsor.title')}</span>
             <b className="text-22">{sponsorMove.dir === 'same' ? level(r.sponsor.to) : t('weekend.sponsor.levels', { from: level(r.sponsor.from), to: level(r.sponsor.to) })}</b>
-            <span className={`text-12 font-700 ${sponsorMove.dir === 'up' ? 'text-status-gain' : sponsorMove.dir === 'down' ? 'text-status-decline' : 'text-fg-secondary'}`}>
+            <span className={`text-12 font-600 ${sponsorMove.dir === 'up' ? 'text-status-gain' : sponsorMove.dir === 'down' ? 'text-status-decline' : 'text-fg-secondary'}`}>
               {sponsorMove.dir !== 'same' && <span aria-hidden="true">{sponsorMove.dir === 'up' ? UP : DOWN}</span>}
               {sponsorMove.dir !== 'same' && ' '}
               {r.sponsor.values ? t('weekend.sponsor.values', { change, from: number(r.sponsor.values.from), to: number(r.sponsor.values.to) }) : change}

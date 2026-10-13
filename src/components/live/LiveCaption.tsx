@@ -39,16 +39,16 @@ export function LiveCaption({ name, text, streaming = false, variant = 'stage', 
   const said = announce && <LineAnnouncer line={{ name, text, streaming, aiGenerated }} />;
   if (variant === 'panel') {
     return (
-      <div className={`rounded-20 border border-line-strong bg-surface-material px-4.5 py-3.5 text-16 ${centered ? 'w-full max-w-130 text-center' : ''}`}>
-        <b className="block text-12 font-700 text-fg-secondary">{t('live.caption.label', { name })}{ai}</b>
+      <div className={`rounded-6 border border-line-strong bg-surface-material px-4.5 py-3.5 text-16 ${centered ? 'w-full max-w-130 text-center' : ''}`}>
+        <b className="block text-12 font-600 text-fg-secondary">{t('live.caption.label', { name })}{ai}</b>
         <span>{text}</span>
         {said}
       </div>
     );
   }
   return (
-    <div className={`max-w-140 rounded-20 border border-line-strong bg-surface-material px-4.5 py-3.5 text-center leading-normal text-pretty ${size === 'lg' ? 'text-18' : 'text-15'}`}>
-      <span className="mb-1 block text-12 font-700 text-fg-secondary">{t('live.caption.label', { name })}{ai}</span>
+    <div className={`max-w-140 rounded-6 border border-line-strong bg-surface-material px-4.5 py-3.5 text-center leading-normal text-pretty ${size === 'lg' ? 'text-18' : 'text-15'}`}>
+      <span className="mb-1 block text-12 font-600 text-fg-secondary">{t('live.caption.label', { name })}{ai}</span>
       <span>{text}</span>
       {streaming && <span aria-hidden="true" className="ms-0.75 inline-block h-4.5 w-0.5 animate-(--il-live-caption-cursor) bg-accent-secondary align-middle" />}
       {said}

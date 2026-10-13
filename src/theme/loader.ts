@@ -7,7 +7,7 @@
  * primitives, after validating it (schema.ts, per field fallback) and correcting its contrast
  * (correct.ts). It never throws: anything it cannot use falls back to the iLead default.
  */
-import { formatOklch, parseColor, toOklch } from './color';
+import { contrastRatio, formatOklch, parseColor, toOklch, toRgb } from './color';
 import { correctContrast, type Slot } from './correct';
 import { themeVar, type Mode } from './paint';
 import { FONTS, parseTheme, type ThemeColor, type ThemeConfig } from './schema';
@@ -21,6 +21,15 @@ const BRAND_ANGLE = 135;
 const MODES: Mode[] = ['light', 'dark'];
 
 const perMode = (c: ThemeColor): Record<Mode, string> => (typeof c === 'string' ? { light: c, dark: c } : c);
+
+/** Deep space and white: the labels a client's brand fill may carry. */
+const LABELS = ['#0A081B', '#FFFFFF'] as const;
+/** The label that reads better on every stop of a fill: the one whose worst contrast is highest. */
+function labelOn(stops: string[]): string {
+  const rgb = stops.map(s => toRgb(parseColor(s)!));
+  const worst = (label: string) => Math.min(...rgb.map(c => contrastRatio(toRgb(parseColor(label)!), c)));
+  return worst(LABELS[0]) >= worst(LABELS[1]) ? LABELS[0] : LABELS[1];
+}
 
 function slotFor(token: string, mode: Mode, stop: number, source: string): Slot {
   const parsed = parseColor(source);
@@ -44,6 +53,9 @@ export function slotsOf(theme: ThemeConfig): { slots: Map<string, Record<Mode, S
   if (c.brand) {
     const from = perMode(c.brand.from), to = perMode(c.brand.to);
     slots.set('fill.brand', Object.fromEntries(MODES.map(m => [m, [slotFor('fill.brand', m, 0, from[m]), slotFor('fill.brand', m, 1, to[m])]])) as Record<Mode, Slot[]>);
+    // The label on the brand fill (D227): the default's is white on navy and ink on paper; a client's own fill gets deep
+    // space or white, whichever reads better on both of its stops, so a light brand keeps its dark label as before.
+    slots.set('color.button.on-solid', Object.fromEntries(MODES.map(m => [m, [slotFor('color.button.on-solid', m, 0, labelOn([from[m], to[m]]))]])) as Record<Mode, Slot[]>);
   }
   return { slots, angle: c.brand?.angle ?? BRAND_ANGLE };
 }
@@ -81,7 +93,8 @@ export function resolveTheme(raw: unknown): AppliedTheme | null {
     for (const [v, px] of Object.entries(RADII)) vars[v] = `${Math.round(px * theme.radiusScale * 100) / 100}px`;
   }
   const font = theme.font ? FONTS[theme.font] : null;
-  if (font && theme.font !== 'Manrope') vars['--il-font-family-sans'] = font.stack;
+  // The default face is the canvas's Geist (D227); any font the theme names, Manrope included, replaces it.
+  if (font) vars['--il-font-family-sans'] = font.stack;
 
   return report({
     id: theme.id ?? 'client', brand: brandOf(theme), mode: theme.mode ?? null, vars,

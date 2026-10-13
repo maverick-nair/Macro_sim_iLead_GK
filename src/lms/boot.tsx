@@ -16,6 +16,7 @@ import { startTheme, useThemeState } from '../theme/bootstrap';
 import { postRun } from './connected';
 import { PACKAGE_INFO, PACKAGE_STORYLINE, type PackageInfo } from './package';
 import { connectLms, type LmsAdapter } from './scorm';
+import { pickMode } from '../theme/mode';
 import { lmsSettingsOf, normalizeLms, type ScormVersion } from './settings';
 import { createTracker, trackedClient, type Tracker } from './tracker';
 
@@ -112,8 +113,7 @@ export async function startPackage(win: Window = window, q = new URLSearchParams
 function PackagePlay({ started, look }: { started: Started; look: 'light' | 'dark' | null }) {
   const { theme: applied } = useThemeState();
   const systemLight = useMediaQuery('(prefers-color-scheme: light)');
-  const preferred = applied?.mode === 'system' ? (systemLight ? 'light' : 'dark') : applied?.mode;
-  const theme = look ?? (preferred === 'light' ? 'light' : 'dark');
+  const theme = pickMode(look, applied?.mode, systemLight);
   return (
     <ApiContext.Provider value={started.api}>
       <EngineProvider client={started.engine}>

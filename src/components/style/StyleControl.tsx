@@ -22,7 +22,7 @@ export function StyleTooltip({ style, align, size = 'sm' }: StyleTooltipProps) {
   const s = styleOf(useLens(), style);
   const place = align === 'start' ? 'start-0' : 'left-full -translate-x-full';
   return (
-    <div role="tooltip" className={`absolute bottom-full z-45 mb-2.5 flex flex-col gap-0.5 rounded-12 bg-(--il-style-tooltip-bg) px-3 py-2.5 text-(color:--il-style-tooltip-fg) pointer-events-none ${place} ${SIZES[size].tip}`}>
+    <div role="tooltip" className={`absolute bottom-full z-45 mb-2.5 flex flex-col gap-0.5 rounded-4 bg-(--il-style-tooltip-bg) px-3 py-2.5 text-(color:--il-style-tooltip-fg) pointer-events-none ${place} ${SIZES[size].tip}`}>
       <b className="text-13">{s.name}</b>
       <span className="text-12 leading-(--il-style-tooltip-leading)">{s.description}</span>
     </div>
@@ -60,8 +60,8 @@ export interface StyleControlProps {
  */
 const COLUMNS: Record<number, string> = {
   2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4',
-  5: 'grid-cols-5 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-18',
-  6: 'grid-cols-6 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-18'
+  5: 'grid-cols-5 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-6',
+  6: 'grid-cols-6 pointer-coarse:grid-cols-(--il-style-segment-columns-touch) pointer-coarse:rounded-6'
 };
 const columns = (n: number) => COLUMNS[n] ?? 'grid-cols-4';
 
@@ -99,7 +99,7 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
       aria-label={t('style.group.aria', { name: memberName })}
       aria-disabled={disabled || undefined}
       onClick={stop}
-      className={`grid ${columns(n)} gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.5 ${disabled ? 'opacity-60' : ''}`}
+      className={`grid ${columns(n)} gap-0.5 rounded-4 border border-line-default bg-surface-raised p-0.5 ${disabled ? 'opacity-60' : ''}`}
     >
       {lens.styles.map(({ key: k, letter, name, description }, i) => {
         const on = value === k;
@@ -115,7 +115,7 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
               onFocus={show(k)}
               onBlur={hide(k)}
               onKeyDown={onKey}
-              className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-pill border-0 p-0 font-700 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${n > 4 ? SIZES[size].many : SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}
+              className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-4 border-0 p-0 font-600 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${n > 4 ? SIZES[size].many : SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary'}`}
             >
               {letter}
             </ToggleGroup.Item>

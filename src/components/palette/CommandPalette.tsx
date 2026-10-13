@@ -63,7 +63,7 @@ export function CommandPalette({ open, onClose, query, onQueryChange, results }:
             onOpenAutoFocus={() => { opener.current = document.activeElement instanceof HTMLElement ? document.activeElement : null; }}
             onCloseAutoFocus={e => { e.preventDefault(); opener.current?.focus(); }}
             aria-modal="true"
-            className="w-(--il-palette-width) max-w-(--il-palette-max-width) overflow-hidden rounded-20 border border-line-strong bg-surface-material backdrop-blur-24 outline-0">
+            className="w-(--il-palette-width) max-w-(--il-palette-max-width) overflow-hidden rounded-6 border border-line-strong bg-surface-material outline-0">
             <Dialog.Title className="sr-only">{t('palette.title')}</Dialog.Title>
             <Dialog.Description className="sr-only">{t('palette.hint')}</Dialog.Description>
             <input value={query} onChange={e => onQueryChange(e.target.value)} onKeyDown={onKeyDown}
@@ -72,7 +72,7 @@ export function CommandPalette({ open, onClose, query, onQueryChange, results }:
             <div className="flex max-h-(--il-palette-results-max-height) flex-col gap-0.5 overflow-auto p-2">
               {results.map((r, i) => (
                 <button key={r.id} type="button" onClick={r.onRun}
-                  className={`flex cursor-pointer items-center gap-3 rounded-12 border-0 px-3 py-2 text-start text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-accent-secondary ${i === 0 && searching ? 'bg-surface-raised' : 'bg-transparent'}`}>
+                  className={`flex cursor-pointer items-center gap-3 rounded-4 border-0 px-3 py-2 text-start text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-accent-secondary ${i === 0 && searching ? 'bg-surface-raised' : 'bg-transparent'}`}>
                   <span className={`size-7.5 flex-none overflow-hidden rounded-round ${TONE[r.tone]}`}>
                     {r.img && <img src={r.img} alt="" className="size-full object-cover object-top mix-blend-multiply" />}
                   </span>

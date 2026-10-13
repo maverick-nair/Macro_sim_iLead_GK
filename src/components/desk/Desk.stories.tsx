@@ -34,7 +34,7 @@ const breakdown = (
   <ScoreBreakdown total={412} max={1000} capability={61} live={58} bonus={25} bonusCap={100} streak="2 weeks in a row. 1 more week for a +25 bonus." tiers={TIERS} tier={null}
     pillars={[{ key: 'business', value: 40, weight: 0.3 }, { key: 'people', value: 52, weight: 0.3 }, { key: 'leadership', value: 45, weight: 0.4 }]} badges={{ earned: 2, total: 9 }} onBadges={noop} />
 );
-const rank = <button type="button" className="self-start text-13 font-700 underline">Rank 6 of 24</button>;
+const rank = <button type="button" className="self-start text-13 font-600 underline">Rank 6 of 24</button>;
 const band = (over: Partial<BandView> = {}, props: Partial<StatusBandProps> = {}): StatusBandProps => ({
   model: bandModel({ ...VIEW, ...over }), periodUnit: 'week', subPeriodUnit: 'day', targetLabel: '8 week target', business: VARS,
   sponsorName: 'Roger', sponsorCauses: VIEW.sponsor.causes, score: { total: 412 }, breakdown, rank, onOverview: noop, ...props

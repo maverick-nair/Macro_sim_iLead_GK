@@ -32,12 +32,12 @@ export interface StatusBandProps {
 }
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const EYEBROW = 'm-0 text-12 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
+const EYEBROW = 'm-0 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
 const GROUP = 'flex min-w-0 flex-col gap-1.5 px-4 py-2.5 short:gap-1 short:py-2';
 const tone = (d: Dir) => (d === 'up' ? 'text-status-gain' : d === 'down' ? 'text-status-decline' : 'text-fg-secondary');
 const pct = (n: number) => `${Math.round(Math.max(0, Math.min(1, n)) * 100)}%`;
 /** A text button that reads as part of the band: underlined on hover, the focus ring on the keyboard. */
-const LINK = `inline-flex min-h-6 cursor-pointer items-center gap-1 rounded-4 border-0 bg-transparent p-0 text-13 font-700 text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary ${FOCUS}`;
+const LINK = `inline-flex min-h-6 cursor-pointer items-center gap-1 rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary ${FOCUS}`;
 
 /**
  * A disclosure that opens a small popover under its button: what a business variable means and what moved
@@ -54,7 +54,7 @@ function Pop({ label, children, content, className, buttonClassName }: { label: 
       onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); button.current?.focus(); } }}>
       <button ref={button} type="button" aria-label={label} aria-expanded={open} aria-controls={open ? id : undefined} onClick={() => setOpen(o => !o)} className={buttonClassName}>{children}</button>
       {open && (
-        <div id={id} className="absolute end-0 top-full z-40 mt-2 flex w-72 flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 whitespace-normal shadow-(--il-metrics-popover-shadow)">
+        <div id={id} className="absolute end-0 top-full z-40 mt-2 flex w-72 flex-col gap-2 rounded-6 border border-line-strong bg-surface-material p-3.5 text-13 whitespace-normal shadow-(--il-metrics-popover-shadow)">
           {content}
         </div>
       )}
@@ -68,7 +68,7 @@ function Delta({ delta, unit, className = '' }: { delta: number; unit: PeriodUni
   const dir = dirOf(delta);
   const n = number(Math.abs(delta));
   return (
-    <span className={`text-12 font-700 tabular-nums whitespace-nowrap ${tone(dir)} ${className}`}>
+    <span className={`text-12 font-600 tabular-nums whitespace-nowrap ${tone(dir)} ${className}`}>
       <span aria-hidden="true">{t('desk.delta', { dir, n })}</span>
       <span className="sr-only">{t('desk.deltaSr', { dir, n, unit })}</span>
     </span>
@@ -102,7 +102,7 @@ export function StatusBand(p: StatusBandProps) {
 
   return (
     <section aria-label={t('desk.band.aria')} data-status-band=""
-      className="relative z-30 mx-6 mb-3 grid flex-none grid-cols-(--il-desk-band-columns) rounded-16 border border-line-default bg-surface-card backdrop-blur-12 short:mb-2 text-large:grid-cols-1">
+      className="relative z-30 mx-6 mb-3 grid flex-none grid-cols-(--il-desk-band-columns) rounded-6 border border-line-default bg-surface-card short:mb-2 text-large:grid-cols-1">
       {/* Team health */}
       <div role="group" aria-labelledby={ids.team} data-tour="kpis" className={`${GROUP} border-e border-line-default text-large:border-e-0 text-large:border-b`}>
         <h2 id={ids.team} className={EYEBROW}>{t('desk.team.title')}</h2>
@@ -112,7 +112,7 @@ export function StatusBand(p: StatusBandProps) {
               <dt className="truncate text-12 text-fg-secondary text-large:whitespace-normal">{t('metric.name', { metric: k.metric })}</dt>
               <dd className="m-0 flex flex-col gap-1">
                 <span className="flex items-baseline gap-1.5">
-                  <b className="text-22 leading-none font-700 tabular-nums short:text-20">{number(k.value)}</b>
+                  <b className="text-22 leading-none font-600 tabular-nums short:text-20">{number(k.value)}</b>
                   <Delta delta={k.delta} unit={unit} />
                 </span>
                 <MetricTrack value={k.value} />
@@ -128,7 +128,7 @@ export function StatusBand(p: StatusBandProps) {
         <div data-tour="target" className="flex flex-col gap-1.5">
           <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-13">
             <span className="min-w-0"><span className="text-fg-secondary">{p.targetLabel}</span>{' '}<b className="text-15 tabular-nums">{money.format(mo.value)}</b>{' '}<span className="text-fg-secondary">{t('metrics.target.of', { target: money.format(mo.target) })}</span></span>
-            <b data-pace={mo.state} className={`text-13 font-700 whitespace-nowrap ${mo.state === 'behind' ? 'text-status-decline' : mo.state === 'ahead' ? 'text-status-gain' : 'text-fg-secondary'}`}>
+            <b data-pace={mo.state} className={`text-13 font-600 whitespace-nowrap ${mo.state === 'behind' ? 'text-status-decline' : mo.state === 'ahead' ? 'text-status-gain' : 'text-fg-secondary'}`}>
               {t('desk.money.pace', { state: mo.state, amount: gapText })}
             </b>
           </span>
@@ -148,7 +148,7 @@ export function StatusBand(p: StatusBandProps) {
                 {v.causes.map((c, i) => <span key={i}><b className={c.dir === 'up' ? 'text-status-gain' : 'text-status-decline'}>{c.change}</b> {c.text}</span>)}
               </>}>
               {v.name} <b className="text-fg-primary tabular-nums">{v.value}</b>
-              {v.dir !== 'flat' && <span aria-hidden="true" className={`text-12 font-700 ${v.better === null ? 'text-fg-secondary' : v.better ? 'text-status-gain' : 'text-status-decline'}`}>{v.dir === 'up' ? '↑' : '↓'}</span>}
+              {v.dir !== 'flat' && <span aria-hidden="true" className={`text-12 font-600 ${v.better === null ? 'text-fg-secondary' : v.better ? 'text-status-gain' : 'text-status-decline'}`}>{v.dir === 'up' ? '↑' : '↓'}</span>}
             </Pop>
           ))}
           {p.onOverview && <button type="button" onClick={p.onOverview} data-tour="overview" className={LINK}>{t('team.overview')}</button>}
@@ -193,7 +193,7 @@ export function StatusBand(p: StatusBandProps) {
                 <span>{t('metrics.sponsor.checkIn', { below: lines.below, unit: p.subPeriodUnit })}</span>
               </>}>
               <span>{p.sponsorName}</span><b className="text-15 tabular-nums">{number(sp.value)}</b>
-              {sp.delta !== null && <span aria-hidden="true" className={`text-12 font-700 ${tone(spDir!)}`}>{t('desk.delta', { dir: spDir, n: number(Math.abs(sp.delta)) })}</span>}
+              {sp.delta !== null && <span aria-hidden="true" className={`text-12 font-600 ${tone(spDir!)}`}>{t('desk.delta', { dir: spDir, n: number(Math.abs(sp.delta)) })}</span>}
             </Pop>
             <span role="img" aria-label={t('desk.sponsor.meterAria', { name: p.sponsorName, value: number(sp.value), ...lines })} className="relative block h-1.5 rounded-3 bg-track">
               <span className="absolute inset-y-0 start-0 rounded-3 bg-meter" style={{ width: pct(sp.value / 100) }} />
@@ -201,7 +201,7 @@ export function StatusBand(p: StatusBandProps) {
               <span className="absolute top-0 -bottom-1.5 w-0.5 bg-status-decline" style={{ insetInlineStart: pct(sp.checkInBelow / 100) }} />
               <span className="absolute -top-1.5 bottom-0 w-0.5 bg-status-gain" style={{ insetInlineStart: pct(sp.unlockAt / 100) }} />
             </span>
-            <span className={`text-12 ${sp.state === 'checkIn' ? 'font-700 text-status-decline' : sp.state === 'reward' ? 'font-700 text-status-gain' : 'text-fg-secondary'}`}>
+            <span className={`text-12 ${sp.state === 'checkIn' ? 'font-600 text-status-decline' : sp.state === 'reward' ? 'font-600 text-status-gain' : 'text-fg-secondary'}`}>
               {t('desk.sponsor.line', { state: sp.state, ...lines })}
             </span>
           </div>

@@ -43,18 +43,18 @@ export function PanelShell<K extends string>({ title, intro, tabs, tab, onTab, t
   const index = tabs && tab ? Math.max(0, tabs.findIndex(x => x.key === tab)) : 0;
   return (
     <Dialog.Root open onOpenChange={o => { if (!o) onClose(); }}>
-      <Dialog.Overlay className="fixed inset-0 z-48 flex justify-end bg-surface-scrim p-3 backdrop-blur-12 short:p-2">
+      <Dialog.Overlay className="fixed inset-0 z-48 flex justify-end bg-surface-scrim p-3 short:p-2">
         <Dialog.Content
           aria-modal="true"
           {...(intro ? {} : { 'aria-describedby': undefined })}
           onOpenAutoFocus={e => { e.preventDefault(); heading.current?.focus({ preventScroll: true }); }}
           onCloseAutoFocus={e => { const el = returnFocus?.(); if (el) { e.preventDefault(); el.focus({ preventScroll: true }); } }}
           data-panel=""
-          className={`flex h-full max-h-full w-full ${wide ? 'max-w-(--il-panel-wide-width)' : 'max-w-(--il-panel-width)'} animate-(--il-event-card-enter) flex-col overflow-hidden rounded-26 border border-line-strong bg-surface-solid shadow-(--il-event-card-shadow) outline-0`}>
+          className={`flex h-full max-h-full w-full ${wide ? 'max-w-(--il-panel-wide-width)' : 'max-w-(--il-panel-width)'} animate-(--il-event-card-enter) flex-col overflow-hidden rounded-6 border border-line-strong bg-surface-solid shadow-(--il-event-card-shadow) outline-0`}>
           <div className="flex flex-none flex-col gap-3 border-b border-line-default px-6 pt-5 pb-4 short:gap-2 short:px-5 short:pt-4 short:pb-3">
             <div className="flex items-start justify-between gap-3">
               <div className="flex min-w-0 flex-col gap-1">
-                <Dialog.Title ref={heading} tabIndex={-1} className="m-0 text-22 font-700 tracking-(--il-tracking-title) outline-0 short:text-20">{title}</Dialog.Title>
+                <Dialog.Title ref={heading} tabIndex={-1} className="m-0 text-22 font-600 tracking-(--il-tracking-title) outline-0 short:text-20">{title}</Dialog.Title>
                 {intro && <Dialog.Description className="m-0 text-13 text-fg-secondary">{intro}</Dialog.Description>}
               </div>
               <Dialog.Close aria-label={t('panels.close')} className={`size-8 flex-none cursor-pointer rounded-round border-0 bg-surface-raised p-0 text-fg-primary ${PANEL_FOCUS}`}>
@@ -62,13 +62,13 @@ export function PanelShell<K extends string>({ title, intro, tabs, tab, onTab, t
               </Dialog.Close>
             </div>
             {tabs && tabs.length > 1 && onTab && (
-              <div role="tablist" aria-label={t('panels.tabs', { title })} className="flex flex-wrap gap-0.5 self-start rounded-pill border border-line-default bg-surface-raised p-0.75">
+              <div role="tablist" aria-label={t('panels.tabs', { title })} className="flex flex-wrap gap-0.5 self-start rounded-4 border border-line-default bg-surface-raised p-0.75">
                 {tabs.map((x, j) => {
                   const on = j === index;
                   return (
                     <button key={x.key} type="button" role="tab" id={`${id}-${x.key}`} aria-selected={on} aria-controls={`${id}-panel`} tabIndex={on ? 0 : -1}
                       onClick={() => onTab(x.key)} onKeyDown={e => onRovingKey(e, j, tabs.length, i => onTab(tabs[i].key))}
-                      className={`min-h-8 cursor-pointer rounded-pill border-0 px-3.5 py-0 text-13 font-700 whitespace-nowrap ${PANEL_FOCUS} ${on ? 'bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary hover:text-fg-primary'}`}>
+                      className={`min-h-8 cursor-pointer rounded-4 border-0 px-3.5 py-0 text-13 font-600 whitespace-nowrap ${PANEL_FOCUS} ${on ? 'bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary hover:text-fg-primary'}`}>
                       {x.label}
                     </button>
                   );
@@ -89,5 +89,5 @@ export function PanelShell<K extends string>({ title, intro, tabs, tab, onTab, t
 
 /** A section heading inside a panel. */
 export function PanelHeading({ children, id }: { children: ReactNode; id?: string }) {
-  return <h3 id={id} className="m-0 text-16 font-700">{children}</h3>;
+  return <h3 id={id} className="m-0 text-16 font-600">{children}</h3>;
 }

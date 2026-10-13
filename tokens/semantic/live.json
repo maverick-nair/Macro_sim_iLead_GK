@@ -2,26 +2,41 @@
   "color": {
     "live": {
       "replay": {
-        "light": "{color.blue.530}",
-        "dark": "{color.brand.cyber-cyan}",
-        "contrast": { "against": "color.surface.solid", "min": 4.5 },
+        "light": "{color.canvas.button}",
+        "dark": "{color.canvas.mint}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 4.5
+        },
         "$description": "Replay link text under NPC turns. Text needs 4.5:1, which the secondary accent does not reach in light; dark keeps the design's cyan"
       }
     },
     "voice": {
       "ready-glow": {
-        "light": { "ref": "color.azure.750", "alpha": 0.4 },
-        "dark": { "ref": "color.azure.750", "alpha": 0.4 },
+        "light": {
+          "ref": "color.canvas.mint",
+          "alpha": 0.4
+        },
+        "dark": {
+          "ref": "color.canvas.mint",
+          "alpha": 0.4
+        },
         "$description": "Halo around the mic when voice is ready"
       },
       "listening": {
-        "light": "{color.brand.mint-green}",
-        "dark": "{color.brand.mint-green}",
-        "$description": "Mic fill while it is listening"
+        "light": "{color.canvas.red-400}",
+        "dark": "{color.canvas.red-400}",
+        "$description": "The listening dot and the mic while it listens, as on the canvas (D227)"
       },
       "listening-glow": {
-        "light": { "ref": "color.mint.860", "alpha": 0.6 },
-        "dark": { "ref": "color.mint.860", "alpha": 0.6 },
+        "light": {
+          "ref": "color.canvas.red-300",
+          "alpha": 0.5
+        },
+        "dark": {
+          "ref": "color.canvas.red-300",
+          "alpha": 0.5
+        },
         "$description": "Halo around the mic while it is listening"
       }
     }

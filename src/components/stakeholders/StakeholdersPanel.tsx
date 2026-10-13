@@ -26,8 +26,8 @@ export interface StakeholdersPanelProps {
   returnFocus?: () => HTMLElement | null | undefined;
 }
 
-const card = 'flex flex-col gap-3 rounded-20 border border-line-default bg-surface-card px-4 py-3.5';
-const pill = `flex min-h-9 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-strong bg-transparent px-3.5 py-0 text-13 font-700 text-fg-primary disabled:cursor-not-allowed disabled:opacity-60 ${PANEL_FOCUS}`;
+const card = 'flex flex-col gap-3 rounded-6 border border-line-default bg-surface-card px-4 py-3.5';
+const pill = `flex min-h-9 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-strong bg-transparent px-3.5 py-0 text-13 font-600 text-fg-primary disabled:cursor-not-allowed disabled:opacity-60 ${PANEL_FOCUS}`;
 
 /** One relationship measure: its name, a bar on the 0 to 100 scale, its value and its trend this period. */
 function Measure({ measure, value, start }: { measure: 'trust' | 'satisfaction'; value: number; start: number }) {
@@ -37,7 +37,7 @@ function Measure({ measure, value, start }: { measure: 'trust' | 'satisfaction';
     <div role="img" aria-label={t('stakeholders.measureAria', { measure, value, dir })} className="grid grid-cols-(--il-metric-bar-columns) items-center gap-1.5 text-12">
       <span className="text-fg-secondary">{t('stakeholders.measure', { measure })}</span>
       <MetricTrack value={value} low={value < 30} />
-      <b className={`text-end font-700 ${value < 30 ? 'text-status-attention' : ''}`}>
+      <b className={`text-end font-600 ${value < 30 ? 'text-status-attention' : ''}`}>
         {number(value)}{dir !== 'flat' && <span aria-hidden="true" className={`ms-0.5 text-11 ${dir === 'up' ? 'text-status-gain' : 'text-status-decline'}`}>{dir === 'up' ? '▲' : '▼'}</span>}
       </b>
     </div>
@@ -76,27 +76,27 @@ export function StakeholdersPanel({ stakeholders, focus, subPeriodUnit, busy, lo
           <div className="flex items-start gap-3">
             <StakeholderFace name={s.name} img={s.img} level={s.level} size="lg" />
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-              <h3 id={`${id}${s.key}h`} className="m-0 text-16 font-700">{s.name}</h3>
+              <h3 id={`${id}${s.key}h`} className="m-0 text-16 font-600">{s.name}</h3>
               <span className="text-13 text-fg-secondary">{t('stakeholders.role', { role: s.role, kind: s.kind })}</span>
               <span className="text-13 font-600">{t('stakeholders.level', { level: s.level })}</span>
             </div>
           </div>
           {s.about && <p className="m-0 text-13 text-pretty">{s.about}</p>}
-          {s.concern && <p className="m-0 rounded-14 bg-surface-raised px-3 py-2 text-13 text-pretty"><b>{t('stakeholders.concern')}</b> {s.concern}</p>}
+          {s.concern && <p className="m-0 rounded-6 bg-surface-raised px-3 py-2 text-13 text-pretty"><b>{t('stakeholders.concern')}</b> {s.concern}</p>}
           <div className="flex flex-col gap-1.5">
             <Measure measure="trust" value={s.trust} start={s.start.trust} />
             <Measure measure="satisfaction" value={s.satisfaction} start={s.start.satisfaction} />
           </div>
           {s.causes.length > 0 && (
             <details className="text-13">
-              <summary className={`cursor-pointer font-700 ${PANEL_FOCUS}`}>{t('stakeholders.causes')}</summary>
+              <summary className={`cursor-pointer font-600 ${PANEL_FOCUS}`}>{t('stakeholders.causes')}</summary>
               <ul className="m-0 mt-1.5 flex list-none flex-col gap-1 p-0">
                 {s.causes.map((c, i) => <li key={i}>{c.text} <span className="text-fg-secondary">{t('stakeholders.moved', { trust: delta(c.trust), satisfaction: delta(c.satisfaction) })}</span></li>)}
               </ul>
             </details>
           )}
           {s.request && (
-            <div data-request="" className="flex flex-wrap items-center gap-2 rounded-16 bg-status-attention-soft px-3 py-2 text-13">
+            <div data-request="" className="flex flex-wrap items-center gap-2 rounded-6 bg-status-attention-soft px-3 py-2 text-13">
               <span className="flex-1"><b>{t('stakeholders.asks', { kind: s.request.kind, name: s.name.split(' ')[0] })}</b> {s.request.title} <span className="text-fg-secondary">{t('stakeholders.due', { n: s.request.dueInSubPeriods, unit: subPeriodUnit })}</span></span>
               <Button variant="secondary" size="sm" disabled={busy || locked} onClick={() => onAnswer(s.key)}>{t('stakeholders.answer')}<span className="sr-only"> {s.name}</span></Button>
             </div>
@@ -121,10 +121,10 @@ export function StakeholdersPanel({ stakeholders, focus, subPeriodUnit, busy, lo
                     </div>
                     <span id={descId} className="text-12 text-pretty text-fg-secondary">{blocked ? why(blocked) : x.goal ?? ''}</span>
                     {isOpen && x.options && (
-                      <fieldset className="m-0 flex flex-col gap-2 rounded-16 border border-line-default p-3">
-                        <legend className="px-1 text-13 font-700">{t('stakeholders.options')}</legend>
+                      <fieldset className="m-0 flex flex-col gap-2 rounded-6 border border-line-default p-3">
+                        <legend className="px-1 text-13 font-600">{t('stakeholders.options')}</legend>
                         {x.options.map(o => (
-                          <label key={o.key} className={`flex cursor-pointer items-start gap-2.5 rounded-14 border px-3 py-2 text-13 ${picked === o.key ? 'border-accent-secondary bg-accent-soft' : 'border-line-default'}`}>
+                          <label key={o.key} className={`flex cursor-pointer items-start gap-2.5 rounded-6 border px-3 py-2 text-13 ${picked === o.key ? 'border-accent-secondary bg-accent-soft' : 'border-line-default'}`}>
                             <input type="radio" name={`${id}${s.key}${x.key}`} value={o.key} checked={picked === o.key} onChange={() => setPicked(o.key)} className={`mt-1 ${PANEL_FOCUS}`} />
                             <span className="flex flex-col gap-0.5"><b>{o.label}</b>{o.detail && <span className="text-12 text-fg-secondary">{o.detail}</span>}</span>
                           </label>

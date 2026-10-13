@@ -36,7 +36,7 @@ export interface CompareViewProps {
 
 const FOCUS_WITHIN = 'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary';
 const MARK_ON: Record<HireMark, string> = {
-  hire: 'has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-brand-deep-space',
+  hire: 'has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-button-on-solid',
   pass: 'has-checked:border-transparent has-checked:bg-fg-primary has-checked:text-surface-solid'
 };
 
@@ -74,13 +74,13 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
   const decisionCell = (c: Candidate) => {
     if (decided) {
       const hired = shownMarks[c.id] === 'hire';
-      return <b className={`inline-flex h-7.5 items-center rounded-pill px-3 text-13 ${hired ? 'bg-status-gain-soft text-fg-primary' : 'bg-surface-raised text-fg-secondary'}`}>{t('liveformats.compare.result', { mark: shownMarks[c.id] })}</b>;
+      return <b className={`inline-flex h-7.5 items-center rounded-4 px-3 text-13 ${hired ? 'bg-status-gain-soft text-fg-primary' : 'bg-surface-raised text-fg-secondary'}`}>{t('liveformats.compare.result', { mark: shownMarks[c.id] })}</b>;
     }
     return (
       <fieldset className="m-0 flex flex-wrap gap-2 border-0 p-0">
         <legend className="sr-only">{t('liveformats.compare.decisionFor', { name: c.name })}</legend>
         {(['hire', 'pass'] as HireMark[]).map(m => (
-          <label key={m} className={`flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-control px-4 text-13 font-700 ${MARK_ON[m]} ${FOCUS_WITHIN}`}>
+          <label key={m} className={`flex h-8.5 cursor-pointer items-center rounded-4 border border-solid border-line-control px-4 text-13 font-600 ${MARK_ON[m]} ${FOCUS_WITHIN}`}>
             <input type="radio" name={`${uid}-${c.id}`} value={m} checked={marks[c.id] === m} onChange={() => setMarks(x => applyMark(x, c.id, m, ids))} className="sr-only" />
             {t('liveformats.compare.mark', { mark: m })}
           </label>
@@ -96,7 +96,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
   return (
     <section aria-labelledby={titleId} className={`flex size-full min-h-0 flex-col overflow-hidden ${CARD}`}>
       <div className="flex flex-col gap-1 border-b border-line-default px-5 py-4">
-        <h2 id={titleId} className="m-0 text-18 font-700">{t('liveformats.compare.title')}</h2>
+        <h2 id={titleId} className="m-0 text-18 font-600">{t('liveformats.compare.title')}</h2>
         <span className="text-13 text-fg-secondary">{t('liveformats.compare.intro')}</span>
       </div>
       <div role="region" aria-labelledby={titleId} tabIndex={0} className={`min-h-0 flex-1 overflow-auto ${FOCUS} focus-visible:-outline-offset-2`}>
@@ -107,7 +107,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
               <th scope="col" className="w-(--il-liveformats-compare-label-width)"><span className="sr-only">{t('liveformats.compare.field')}</span></th>
               {candidates.map((c, i) => (
                 <th key={c.id} id={col(i)} scope="col" className="px-3.5 py-3 text-start align-bottom">
-                  <span className="block font-700 text-17">{c.name}</span>
+                  <span className="block font-600 text-17">{c.name}</span>
                   <span className="block text-12 font-400 text-fg-secondary">{c.title}</span>
                 </th>
               ))}
@@ -123,7 +123,7 @@ export function CompareView({ candidates, notes, onHire, onPassBoth, decided = n
         </table>
       </div>
       <div className="flex items-center gap-3 border-t border-line-default px-5 py-3.5">
-        <span aria-live="polite" className={`flex-1 text-13 ${decided ? 'font-700' : 'text-fg-secondary'}`}>{status}</span>
+        <span aria-live="polite" className={`flex-1 text-13 ${decided ? 'font-600' : 'text-fg-secondary'}`}>{status}</span>
         {!decided && (
           <Button variant="primary" size="md" disabled={!decision} onClick={confirm}>
             {t('liveformats.compare.confirm', { kind: decision?.kind ?? 'none', name: decision?.kind === 'hire' ? nameOf(decision.id) : '' })}

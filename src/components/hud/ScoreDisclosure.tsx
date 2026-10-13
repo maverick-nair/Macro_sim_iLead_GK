@@ -47,7 +47,7 @@ export function ScoreDisclosure({ label, children, content, rich = false, open: 
         {children}
       </button>
       {open && (
-        <div id={tipId} className={`absolute z-40 flex ${popoverClassName ?? 'top-full end-0 mt-2'} ${rich ? 'w-80 backdrop-blur-20' : 'w-65'} flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
+        <div id={tipId} className={`absolute z-40 flex ${popoverClassName ?? 'top-full end-0 mt-2'} ${rich ? 'w-80 ' : 'w-65'} flex-col gap-2 rounded-6 border border-line-strong bg-surface-material p-3.5 whitespace-normal shadow-(--il-hud-score-shadow)`}>
           {content}
         </div>
       )}

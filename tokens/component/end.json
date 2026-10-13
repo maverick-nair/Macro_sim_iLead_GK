@@ -1,7 +1,7 @@
 {
   "end": {
     "glow": {
-      "fill": { "value": "radial-gradient(ellipse at center, {color.end.glow}, transparent 65%)", "$description": "Glow at the top of the end screen, behind the headline" }
+      "fill": { "value": "none", "$description": "No glow behind the headline (D227)" }
     },
     "logo": {
       "tracking": { "value": "-0.03em" }

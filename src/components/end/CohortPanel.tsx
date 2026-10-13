@@ -22,12 +22,12 @@ export function CohortPanel({ scope, size, top, outside, you }: CohortPanelProps
   const id = useId();
   const row = (r: CohortRow, key: string) => (
     <tr key={key} aria-current={r.you || undefined}
-      className={`border-t border-line-default ${r.you ? 'bg-accent-soft font-700 text-fg-primary' : ''}`}>
+      className={`border-t border-line-default ${r.you ? 'bg-accent-soft font-600 text-fg-primary' : ''}`}>
       <td className={`${CELL} text-end`}>{number(r.rank)}</td>
-      <th scope="row" className={`${CELL} text-start ${r.you ? 'font-700' : 'font-400'}`}>
+      <th scope="row" className={`${CELL} text-start ${r.you ? 'font-600' : 'font-400'}`}>
         <span className="flex flex-wrap items-center gap-2">
           {r.name !== null && <span>{r.name}</span>}
-          {r.you && <span className="rounded-pill border border-accent-secondary px-2 text-12 text-fg-primary">{t('end.cohort.you')}</span>}
+          {r.you && <span className="rounded-4 border border-accent-secondary px-2 text-12 text-fg-primary">{t('end.cohort.you')}</span>}
         </span>
       </th>
       <td className={`${CELL} text-end`}>{number(r.score)}</td>
@@ -35,9 +35,9 @@ export function CohortPanel({ scope, size, top, outside, you }: CohortPanelProps
     </tr>
   );
   return (
-    <section aria-labelledby={id} className="relative flex max-w-180 flex-col gap-3 rounded-20 border border-line-default bg-surface-card p-5">
+    <section aria-labelledby={id} className="relative flex max-w-180 flex-col gap-3 rounded-6 border border-line-default bg-surface-card p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id={id} className="m-0 text-16 font-700">{t('end.cohort.title', { scope })}</h2>
+        <h2 id={id} className="m-0 text-16 font-600">{t('end.cohort.title', { scope })}</h2>
         {you && <span className="text-13 font-600 text-fg-secondary">{t('end.cohort.rank', { rank: you.rank, total: you.total })}</span>}
       </div>
       <table className="w-full border-collapse text-13">

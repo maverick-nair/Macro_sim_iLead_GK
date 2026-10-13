@@ -21,8 +21,8 @@ export function BadgeList({ badges, periodUnit }: BadgeListProps) {
   return (
     <ul className="m-0 flex list-none flex-col gap-2 p-0">
       {shelfOrder(badges).map(b => (
-        <li key={b.key} className={`flex items-start gap-3 rounded-16 border border-line-default p-2.5 ${b.earned ? 'bg-surface-raised' : 'bg-transparent'}`}>
-          <span aria-hidden="true" className={`flex size-10 flex-none items-center justify-center rounded-round ${b.earned ? 'bg-(image:--il-fill-spectrum) text-brand-deep-space' : 'bg-track text-fg-secondary'}`}>
+        <li key={b.key} className={`flex items-start gap-3 rounded-6 border border-line-default p-2.5 ${b.earned ? 'bg-surface-raised' : 'bg-transparent'}`}>
+          <span aria-hidden="true" className={`flex size-10 flex-none items-center justify-center rounded-round ${b.earned ? 'bg-(image:--il-fill-spectrum) text-fg-on-accent' : 'bg-track text-fg-secondary'}`}>
             <span className="size-5">{badgeIcon(b.rule)}</span>
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5 text-13">
@@ -54,14 +54,14 @@ export function BadgeShelfDialog({ badges, periodUnit, onClose, returnFocus }: B
   const earned = badges.filter(b => b.earned).length;
   return (
     <Dialog.Root open onOpenChange={o => { if (!o) onClose(); }}>
-      <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-12">
+      <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 ">
         <Dialog.Content
           aria-modal="true"
           onOpenAutoFocus={e => { e.preventDefault(); title.current?.focus({ preventScroll: true }); }}
           onCloseAutoFocus={e => { const el = returnFocus?.(); if (el) { e.preventDefault(); el.focus({ preventScroll: true }); } }}
-          className="flex max-h-full w-full max-w-(--il-board-panel-max-width) animate-(--il-event-card-enter) flex-col gap-3 overflow-hidden rounded-26 border border-line-strong bg-surface-solid p-6 shadow-(--il-event-card-shadow) outline-0">
+          className="flex max-h-full w-full max-w-(--il-board-panel-max-width) animate-(--il-event-card-enter) flex-col gap-3 overflow-hidden rounded-6 border border-line-strong bg-surface-solid p-6 shadow-(--il-event-card-shadow) outline-0">
           <div className="flex items-baseline justify-between gap-3">
-            <Dialog.Title ref={title} tabIndex={-1} className="m-0 text-22 font-700 outline-0">{t('badges.title')}</Dialog.Title>
+            <Dialog.Title ref={title} tabIndex={-1} className="m-0 text-22 font-600 outline-0">{t('badges.title')}</Dialog.Title>
             <Dialog.Description className="m-0 text-13 text-fg-secondary">{t('badges.count', { earned, total: badges.length })}</Dialog.Description>
           </div>
           {earned === 0 && <p className="m-0 text-13 text-fg-secondary">{t('badges.none')}</p>}

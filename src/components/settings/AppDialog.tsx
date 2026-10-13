@@ -30,7 +30,7 @@ export function AppDialog({ onDismiss, frozen = false, returnFocus, role = 'dial
   const dismissable = !!onDismiss && !frozen;
   return (
     <Dialog.Root open modal={false} onOpenChange={o => { if (!o && dismissable) onDismiss(); }}>
-      <div className="absolute inset-0 z-50 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-(--il-appdialog-scrim-blur)">
+      <div className="absolute inset-0 z-50 flex items-center justify-center bg-surface-scrim p-6 ">
         <Dialog.Content
           role={role}
           aria-modal="true"
@@ -45,7 +45,7 @@ export function AppDialog({ onDismiss, frozen = false, returnFocus, role = 'dial
           }}
           onEscapeKeyDown={e => { if (!dismissable) e.preventDefault(); }}
           onInteractOutside={e => { if (!dismissable) e.preventDefault(); }}
-          className={`max-w-full animate-(--il-appdialog-enter) rounded-24 border border-line-strong bg-surface-material outline-none ${className}`}>
+          className={`max-w-full animate-(--il-appdialog-enter) rounded-6 border border-line-strong bg-surface-material outline-none ${className}`}>
           {children}
         </Dialog.Content>
       </div>

@@ -22,9 +22,9 @@ const noop = () => {};
 export const Tip: StoryObj = {
   render: () => (
     <div style={{ position: 'relative', height: 600 }}>
-      <button type="button" data-tour="example" className="m-20 rounded-pill border border-line-default bg-surface-raised px-4 py-2 text-fg-primary">End week 2</button>
+      <button type="button" data-tour="example" className="m-20 rounded-4 border border-line-default bg-surface-raised px-4 py-2 text-fg-primary">End week 2</button>
       <Coachmark target='[data-tour="example"]' title="End of the week" body="When you are done, end the week. You will see your report and the news." counter="Board tour · 13 of 13" stepKey="end" onEscape={noop}>
-        <button type="button" className="min-h-9 rounded-pill border-0 bg-(image:--il-fill-brand) px-3.5 text-13 font-700 text-brand-deep-space">Done</button>
+        <button type="button" className="min-h-9 rounded-4 border-0 bg-(image:--il-fill-brand) px-3.5 text-13 font-600 text-button-on-solid">Done</button>
       </Coachmark>
     </div>
   )
@@ -35,7 +35,7 @@ export const TipWithoutTarget: StoryObj = {
   render: () => (
     <div style={{ position: 'relative', height: 600 }}>
       <Coachmark target={null} title="Notifications" body="When you act, the people involved respond here." counter="Board tour · 7 of 13" stepKey="n" onEscape={noop}>
-        <button type="button" className="min-h-9 rounded-pill border-0 bg-(image:--il-fill-brand) px-3.5 text-13 font-700 text-brand-deep-space">Next</button>
+        <button type="button" className="min-h-9 rounded-4 border-0 bg-(image:--il-fill-brand) px-3.5 text-13 font-600 text-button-on-solid">Next</button>
       </Coachmark>
     </div>
   )

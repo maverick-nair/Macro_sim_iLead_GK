@@ -23,10 +23,10 @@ export interface SponsorCallProps {
 export function SponsorCall({ name, initials, img, line, laterLabel, onAnswer, onLater }: SponsorCallProps) {
   const { t } = useI18n();
   return (
-    <div role="alert" className="mx-6 mt-0 mb-3 flex animate-(--il-event-call-enter) items-center gap-3.5 rounded-18 border border-accent-default bg-surface-material py-2.5 pe-3 ps-2.5 shadow-(--il-event-call-shadow)">
+    <div role="alert" className="mx-6 mt-0 mb-3 flex animate-(--il-event-call-enter) items-center gap-3.5 rounded-6 border border-accent-default bg-surface-material py-2.5 pe-3 ps-2.5 shadow-(--il-event-call-shadow)">
       <div className="relative size-11">
         <div className="absolute -inset-1 animate-(--il-event-call-ring) rounded-round border-2 border-accent-default" />
-        <div className="flex size-11 items-center justify-center overflow-hidden rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">
+        <div className="flex size-11 items-center justify-center overflow-hidden rounded-round bg-(image:--il-fill-brand) font-600 text-button-on-solid">
           {img ? <img src={img} alt="" className="size-full object-cover object-top mix-blend-multiply" /> : initials}
         </div>
       </div>

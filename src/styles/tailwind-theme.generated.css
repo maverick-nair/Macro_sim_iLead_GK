@@ -70,6 +70,9 @@
   --color-status-gain-soft: var(--il-color-status-gain-soft);
   --color-status-decline: var(--il-color-status-decline);
   --color-status-decline-soft: var(--il-color-status-decline-soft);
+  --color-button-solid: var(--il-color-button-solid);
+  --color-button-on-solid: var(--il-color-button-on-solid);
+  --color-button-quiet: var(--il-color-button-quiet);
   --color-control-track-off: var(--il-color-control-track-off);
   --color-elevation-drawer: var(--il-color-elevation-drawer);
   --color-elevation-panel: var(--il-color-elevation-panel);
@@ -152,7 +155,11 @@
   --color-brand-pale-lavender: var(--il-color-brand-pale-lavender);
   --color-brand-surface-1: var(--il-color-brand-surface-1);
   --font-sans: var(--il-font-family-sans);
+  --font-display: var(--il-font-family-display);
+  --font-serif: var(--il-font-family-serif);
+  --font-mono: var(--il-font-family-mono);
   --font-weight-400: var(--il-font-weight-400);
+  --font-weight-500: var(--il-font-weight-500);
   --font-weight-600: var(--il-font-weight-600);
   --font-weight-700: var(--il-font-weight-700);
   --font-weight-800: var(--il-font-weight-800);

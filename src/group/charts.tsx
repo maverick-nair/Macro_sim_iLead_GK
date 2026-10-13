@@ -30,7 +30,7 @@ export function ShareGridChart({ rows, columns, label }: { rows: Array<{ key: st
           <span className="self-center pe-2 text-13 text-pretty">{r.label}</span>
           {r.cells.map((v, i) => (
             <span key={columns[i]} className="flex min-h-9 flex-col items-center justify-center gap-1 rounded-6 bg-report-chart-cell px-1.5 py-1">
-              <span className={v ? 'font-700' : 'text-fg-secondary'}>{`${Math.round(v)}%`}</span>
+              <span className={v ? 'font-600' : 'text-fg-secondary'}>{`${Math.round(v)}%`}</span>
               <span className="h-1 w-full rounded-2"><span className="block h-full rounded-2 bg-report-chart-series" style={{ inlineSize: `${Math.min(100, (100 * v) / max)}%` }}></span></span>
             </span>
           ))}
@@ -73,7 +73,7 @@ export function TrendChart({ periods, series, label, format }: {
         );
       })}
       {series.map(s => (
-        <text key={s.key} x={cx(periods.length - 1) + 10} y={ends.find(e => e.key === s.key)!.y} dominantBaseline="central" className={s.look === 'solid' ? `${LABEL} font-700` : MUTED}>
+        <text key={s.key} x={cx(periods.length - 1) + 10} y={ends.find(e => e.key === s.key)!.y} dominantBaseline="central" className={s.look === 'solid' ? `${LABEL} font-600` : MUTED}>
           {`${s.label} ${format(s.values.at(-1) ?? 0)}`}
         </text>
       ))}

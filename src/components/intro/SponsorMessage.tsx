@@ -72,7 +72,7 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
   return (
     <main className="grid min-h-0 flex-1 grid-cols-(--il-intro-message-columns) gap-8 overflow-y-auto px-12 py-6 tablet:grid-cols-1 tablet:px-6">
       <h1 className="sr-only">{t('intro.message.title', { name: sponsor.name })}</h1>
-      <section aria-label={t('intro.message.title', { name: sponsor.name })} className="relative flex min-h-110 flex-col overflow-hidden rounded-16 border border-line-default bg-surface-solid">
+      <section aria-label={t('intro.message.title', { name: sponsor.name })} className="relative flex min-h-110 flex-col overflow-hidden rounded-6 border border-line-default bg-surface-solid">
         <div className="relative flex min-h-0 flex-1 items-center justify-center bg-surface-raised">
           {message.video ? (
             // The captions show over the video from the transcript (aria-live below); the storyline's track, when it has one, goes along.
@@ -84,16 +84,16 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
             </video>
           ) : sponsor.img
             ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-top opacity-90" />
-            : <span aria-hidden="true" className="flex size-40 items-center justify-center rounded-round bg-brand text-48 font-700 text-brand-deep-space">{sponsor.initials}</span>}
-          <span className="absolute start-4 top-4 rounded-8 bg-surface-material px-3 py-1.5 text-13"><b>{sponsor.name}</b> <span className="text-fg-secondary">{sponsor.title}</span></span>
+            : <span aria-hidden="true" className="flex size-40 items-center justify-center rounded-round bg-brand text-48 font-600 text-button-on-solid">{sponsor.initials}</span>}
+          <span className="absolute start-4 top-4 rounded-4 bg-surface-material px-3 py-1.5 text-13"><b>{sponsor.name}</b> <span className="text-fg-secondary">{sponsor.title}</span></span>
           {/* Captions, on by default and read out politely; off, the region stays and says nothing. */}
           <div role="region" aria-label={t('intro.message.captions')} className="absolute inset-x-6 bottom-6 flex justify-center">
-            <p aria-live="polite" className={`m-0 max-w-180 rounded-10 bg-surface-material px-4 py-2.5 text-center text-18 leading-snug ${cc && !ended ? '' : 'hidden'}`}>{cc && !ended ? message.captions[line] : ''}</p>
+            <p aria-live="polite" className={`m-0 max-w-180 rounded-4 bg-surface-material px-4 py-2.5 text-center text-18 leading-snug ${cc && !ended ? '' : 'hidden'}`}>{cc && !ended ? message.captions[line] : ''}</p>
           </div>
           {ended && (
-            <div data-intro-end="" className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-surface-material px-6 text-center backdrop-blur-12">
+            <div data-intro-end="" className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-surface-material px-6 text-center ">
               <p className={EYEBROW}>{t('intro.message.end')}</p>
-              <h2 ref={endHeading} tabIndex={-1} className="m-0 text-34 font-700 outline-0">{t('intro.message.endTitle', { products: hasProducts ? 'yes' : 'no' })}</h2>
+              <h2 ref={endHeading} tabIndex={-1} className="m-0 text-34 font-600 outline-0">{t('intro.message.endTitle', { products: hasProducts ? 'yes' : 'no' })}</h2>
               <button type="button" onClick={onNext} className={PRIMARY}>{hasProducts ? t('intro.message.explore') : t('intro.message.objectives')}<Arrow /></button>
               <button type="button" onClick={again} className={LINK}>{t('intro.message.again')}</button>
             </div>
@@ -109,7 +109,7 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
             className={`h-11 min-w-0 flex-1 cursor-pointer accent-(--il-color-accent-default) ${FOCUS}`} />
           <span aria-hidden="true" className="flex-none text-13 tabular-nums text-fg-secondary">{clockText(Math.round(at))} / {clockText(duration)}</span>
           <button type="button" onClick={() => setCc(c => !c)} aria-pressed={cc} aria-label={t('intro.message.cc')}
-            className={`flex min-h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-8 border px-2 text-13 font-700 ${cc ? 'border-accent-secondary text-fg-primary' : 'border-line-strong text-fg-secondary'} bg-transparent ${FOCUS}`}>
+            className={`flex min-h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-4 border px-2 text-13 font-600 ${cc ? 'border-accent-secondary text-fg-primary' : 'border-line-strong text-fg-secondary'} bg-transparent ${FOCUS}`}>
             <span aria-hidden="true">{t('intro.message.ccShort')}</span>
           </button>
         </div>
@@ -124,7 +124,7 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
               <li key={c.key}>
                 <button type="button" onClick={() => { seek(start); setPlaying(true); }} aria-current={i === chapter && !ended ? 'step' : undefined}
                   aria-label={t('intro.message.chapterAria', { n: i + 1, title, at: clockText(start) })}
-                  className={`flex w-full cursor-pointer flex-col gap-1 rounded-12 border bg-surface-card p-4 text-start text-fg-primary ${i === chapter && !ended ? 'border-accent-secondary' : 'border-line-default'} ${FOCUS}`}>
+                  className={`flex w-full cursor-pointer flex-col gap-1 rounded-4 border bg-surface-card p-4 text-start text-fg-primary ${i === chapter && !ended ? 'border-accent-secondary' : 'border-line-default'} ${FOCUS}`}>
                   <span className="flex justify-between text-13 text-fg-secondary"><span>{t('intro.message.part', { n: i + 1 })}</span><span className="tabular-nums">{clockText(start)}</span></span>
                   <b className="text-16">{title}</b>
                   <span className="text-14 text-fg-secondary">{c.summary}</span>

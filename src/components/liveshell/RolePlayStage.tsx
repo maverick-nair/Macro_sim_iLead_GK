@@ -43,7 +43,7 @@ export function LiveTranscript({ turns, onReplay, captionsAnnounce = false, fill
     if (el && el.scrollHeight > el.clientHeight) el.scrollTop = el.scrollHeight;
   }, [follow]);
   return (
-    <div role="region" aria-label={t('liveshell.transcript.title')} className={`flex ${fill ? 'flex-1' : 'max-h-(--il-liveshell-roleplay-transcript-max-height)'} min-h-0 flex-col overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-12`}>
+    <div role="region" aria-label={t('liveshell.transcript.title')} className={`flex ${fill ? 'flex-1' : 'max-h-(--il-liveshell-roleplay-transcript-max-height)'} min-h-0 flex-col overflow-hidden rounded-6 border border-line-default bg-surface-card `}>
       <div className="flex justify-between border-b border-line-default px-4 py-3 text-12 text-fg-secondary">
         <b>{t('liveshell.transcript.title')}</b>
         <span>{t('liveshell.transcript.saved')}</span>
@@ -113,7 +113,7 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
             </div>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-            <span className="flex min-h-7 items-center gap-1.5 self-start rounded-pill border border-line-default bg-surface-card px-3 text-13 font-700">
+            <span className="flex min-h-7 items-center gap-1.5 self-start rounded-4 border border-line-default bg-surface-card px-3 text-13 font-600">
               <span className={`size-2 rounded-round ${m.dot}`} />
               {rich(t('liveshell.roleplay.mood', { name: mark(0), mood: mark(1) }), [nameNode, <span>{t('liveshell.roleplay.moodWord', { mood })}</span>])}
             </span>
@@ -122,14 +122,14 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
         </div>
         {caption && <LiveCaption name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} />}
         {conversation === 'npcThinking' && !slow && (
-          <div role="status" className="flex items-center gap-2 self-center rounded-pill border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
+          <div role="status" className="flex items-center gap-2 self-center rounded-4 border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
             {rich(t('liveshell.roleplay.thinking', { name: mark(0) }), [nameNode])}
           </div>
         )}
         {slow && (
           <div role="alert" className="flex items-center gap-2.5 self-center text-13">
             <span className="text-fg-secondary">{t('liveshell.roleplay.slow', { name })}</span>
-            {onRetry && <button type="button" onClick={onRetry} className={`min-h-7.5 cursor-pointer rounded-pill border border-solid border-line-control bg-transparent px-3 py-0 font-700 text-fg-primary ${FOCUS}`}>{t('liveshell.roleplay.retry')}</button>}
+            {onRetry && <button type="button" onClick={onRetry} className={`min-h-7.5 cursor-pointer rounded-4 border border-solid border-line-control bg-transparent px-3 py-0 font-600 text-fg-primary ${FOCUS}`}>{t('liveshell.roleplay.retry')}</button>}
           </div>
         )}
         <LiveTranscript turns={turns} onReplay={onReplay} captionsAnnounce={!!caption} fill />
@@ -146,13 +146,13 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
             {person.img && <img src={person.img} alt={person.name} className="size-full object-cover object-top mix-blend-multiply" />}
           </div>
         </div>
-        <span className="flex h-6.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-card px-3 text-12 font-700">
+        <span className="flex h-6.5 items-center gap-1.5 rounded-4 border border-line-default bg-surface-card px-3 text-12 font-600">
           <span className={`size-2 rounded-round ${m.dot}`} />
           {rich(t('liveshell.roleplay.mood', { name: mark(0), mood: mark(1) }), [nameNode, <span>{t('liveshell.roleplay.moodWord', { mood })}</span>])}
         </span>
         {caption && <LiveCaption name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} size="lg" />}
         {conversation === 'npcThinking' && !slow && (
-          <div role="status" className="flex items-center gap-2 rounded-pill border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
+          <div role="status" className="flex items-center gap-2 rounded-4 border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
             <span className="flex gap-1">
               {DOTS.map(d => <span key={d} className={`size-1.5 rounded-round bg-fg-secondary ${d}`} />)}
             </span>
@@ -163,7 +163,7 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
           <div role="alert" className="flex items-center gap-2.5 text-13">
             <span className="text-fg-secondary">{t('liveshell.roleplay.slow', { name })}</span>
             {onRetry && (
-              <button type="button" onClick={onRetry} className={`h-7.5 cursor-pointer rounded-pill border border-solid border-line-control bg-transparent px-3 py-0 font-700 text-fg-primary ${FOCUS}`}>
+              <button type="button" onClick={onRetry} className={`h-7.5 cursor-pointer rounded-4 border border-solid border-line-control bg-transparent px-3 py-0 font-600 text-fg-primary ${FOCUS}`}>
                 {t('liveshell.roleplay.retry')}
               </button>
             )}

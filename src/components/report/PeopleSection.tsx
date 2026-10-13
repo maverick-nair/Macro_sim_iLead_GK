@@ -21,7 +21,7 @@ export function PeopleSection({ people }: { people: PersonData[] }) {
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.people.title')}</h2>
+        <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.people.title')}</h2>
         <div className="flex flex-wrap items-center gap-3 text-12 text-fg-secondary">
           {!alt.showTable && METRICS.map(m => <span key={m} className="flex items-center gap-1.25"><LineSample metric={m} />{metric(m)}</span>)}
           {alt.button}
@@ -36,9 +36,9 @@ export function PeopleSection({ people }: { people: PersonData[] }) {
               rows={METRICS.map(m => ({ key: m, header: metric(m), cells: p.points.map(x => number(x[m])) }))} />
           );
           return (
-            <div key={p.id} role="group" aria-labelledby={`${id}${p.id}`} className="flex min-w-0 flex-col gap-2 rounded-16 border border-line-default px-3.5 py-3">
+            <div key={p.id} role="group" aria-labelledby={`${id}${p.id}`} className="flex min-w-0 flex-col gap-2 rounded-6 border border-line-default px-3.5 py-3">
               <div className="flex items-baseline justify-between gap-2">
-                <h3 id={`${id}${p.id}`} className="m-0 text-14 font-700">{p.name}</h3>
+                <h3 id={`${id}${p.id}`} className="m-0 text-14 font-600">{p.name}</h3>
                 {p.left && <span className="text-12 text-fg-secondary">{t('report.left')}</span>}
               </div>
               {alt.showTable ? table : (

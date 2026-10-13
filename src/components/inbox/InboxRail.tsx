@@ -37,15 +37,15 @@ export function InboxRail({ unread, items, onToggle, onOpen }: InboxRailProps) {
   return (
     <aside aria-label={t('inbox.title')} data-tour="inbox" className="flex flex-col items-center gap-2.5 pt-1 pe-0 pb-6 ps-4">
       <button type="button" onClick={onToggle} aria-label={t('inbox.open', { count: unread })}
-        className={`relative flex size-11 cursor-pointer items-center justify-center rounded-14 border border-solid border-line-default bg-surface-card p-0 text-fg-primary ${focus}`}>
+        className={`relative flex size-11 cursor-pointer items-center justify-center rounded-6 border border-solid border-line-default bg-surface-card p-0 text-fg-primary ${focus}`}>
         <InboxIcon />
         {unread > 0 && (
-          <span aria-hidden="true" className="absolute -top-1.5 -end-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-10 bg-brand px-1.25 text-12 font-700 text-brand-deep-space">{number(unread)}</span>
+          <span aria-hidden="true" className="absolute -top-1.5 -end-1.5 flex min-h-5 min-w-5 items-center justify-center rounded-4 bg-brand px-1.25 text-12 font-600 text-button-on-solid">{number(unread)}</span>
         )}
       </button>
       {items.map(it => (
         <button key={it.id} type="button" onClick={() => onOpen(it.id)} aria-label={it.label}
-          className={`relative flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-round border-2 border-solid p-0 text-12 font-700 text-brand-deep-space ${it.urgent ? 'border-(--il-inbox-rail-ring-urgent)' : 'border-line-default'} ${SENDER_TONE[it.sender.kind]} ${focus}`}>
+          className={`relative flex size-10 cursor-pointer items-center justify-center overflow-hidden rounded-round border-2 border-solid p-0 text-12 font-600 text-button-on-solid ${it.urgent ? 'border-(--il-inbox-rail-ring-urgent)' : 'border-line-default'} ${SENDER_TONE[it.sender.kind]} ${focus}`}>
           <SenderFace sender={it.sender} />
         </button>
       ))}

@@ -134,10 +134,11 @@ describe('token pipeline', () => {
     });
 
     it('reproduce the values the design renders', () => {
-      // From the prototype's iLeadApp root.
-      expect(out.tokensCss).toContain('--il-color-ink-200: oklch(0.2 0.03 280);');
-      expect(out.tokensCss).toContain('--il-color-surface-card: var(--il-theme-color-surface-card, light-dark(var(--il-color-white), oklch(0.17 0.035 283 / 0.82)));');
-      expect(out.tokensCss).toContain('--il-color-accent-default: var(--il-theme-color-accent-default, light-dark(var(--il-color-blue-530), var(--il-color-brand-electric-blue)));');
+      // The approved canvas (D227): paper and navy, white and charcoal cards, navy and mint accents, Geist.
+      expect(out.tokensCss).toContain('--il-color-canvas-paper: #F6F4EF;');
+      expect(out.tokensCss).toContain('--il-color-surface-card: var(--il-theme-color-surface-card, light-dark(var(--il-color-white), var(--il-color-canvas-charcoal-900)));');
+      expect(out.tokensCss).toContain('--il-color-accent-default: var(--il-theme-color-accent-default, light-dark(var(--il-color-canvas-button), var(--il-color-canvas-mint)));');
+      expect(out.tokensCss).toContain("--il-font-family-sans: 'Geist', system-ui, sans-serif;");
     });
 
     it('match the committed generated files', () => {

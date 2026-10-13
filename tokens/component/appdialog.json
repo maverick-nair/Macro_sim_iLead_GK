@@ -1,7 +1,7 @@
 {
   "appdialog": {
     "enter": { "value": "ilIn 240ms ease", "$description": "Settings, pause, resume and session dialogs rise in" },
-    "scrim-blur": { "value": "6px", "$description": "Backdrop blur behind an app dialog" },
+    "scrim-blur": { "value": "0px", "$description": "No blur behind an app dialog: no glass in the canvas look (D227)" },
     "eyebrow-tracking": { "value": "0.08em", "$description": "WELCOME BACK on the resume recap" }
   },
   "app": {

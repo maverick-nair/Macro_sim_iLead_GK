@@ -23,7 +23,7 @@ const withTheme: Decorator = (Story, ctx) => {
   const client = theme.startsWith('corrected') ? CLIENTS.corrected : theme.startsWith('client') ? CLIENTS.client : null;
   return (
     <div style={{ colorScheme: light ? 'light' : 'dark', ...client?.vars }}>
-      <div className="il-theme" style={{ minHeight: '100vh', padding: 24, background: light ? 'oklch(0.97 0.012 270)' : 'var(--il-color-brand-deep-space)', color: 'var(--il-color-fg-primary)', fontFamily: 'var(--il-font-family-sans)', fontSize: 14 }}>
+      <div className="il-theme" style={{ minHeight: '100vh', padding: 24, background: light ? 'var(--il-backdrop-daylight)' : 'var(--il-backdrop-office)', color: 'var(--il-color-fg-primary)', fontFamily: 'var(--il-font-family-sans)', fontSize: 14 }}>
         <BrandContext.Provider value={client?.brand ?? null}>
           <I18nProvider>
             <Story />
@@ -51,7 +51,7 @@ const preview: Preview = {
       }
     }
   },
-  initialGlobals: { theme: 'dark' },
+  initialGlobals: { theme: 'light' },
   parameters: { layout: 'fullscreen', controls: { expanded: true } }
 };
 

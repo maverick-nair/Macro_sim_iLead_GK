@@ -26,8 +26,8 @@ export interface ObjectivesProps {
   onText: () => void;
 }
 
-const TILE = 'flex flex-col gap-3 rounded-14 border border-line-default bg-surface-card p-5';
-const LABEL = 'm-0 text-12 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
+const TILE = 'flex flex-col gap-3 rounded-6 border border-line-default bg-surface-card p-5';
+const LABEL = 'm-0 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
 const AVATARS = 6;
 
 /**
@@ -54,14 +54,14 @@ export function Objectives(p: ObjectivesProps) {
       <div className="flex min-h-0 flex-col gap-7 overflow-y-auto px-16 py-10 short:gap-5 short:py-6 tablet:px-6 [&>*:first-child]:mt-auto [&>*:last-child]:mb-auto">
         <div className="flex flex-col gap-2">
           <p className={EYEBROW}>{t('intro.objectives.eyebrow')}</p>
-          <h1 ref={h1} tabIndex={-1} className="m-0 text-48 leading-tight font-700 tracking-(--il-tracking-title) outline-0 tablet:text-36">
+          <h1 ref={h1} tabIndex={-1} className="m-0 text-48 leading-tight font-600 tracking-(--il-tracking-title) outline-0 tablet:text-36">
             {t('intro.objectives.title', { length: p.length.charAt(0).toUpperCase() + p.length.slice(1), organisation: p.organisation ?? 'none' })}
           </h1>
         </div>
         <ul className="m-0 grid list-none grid-cols-3 gap-4 p-0 text-large:grid-cols-1">
           <li className={TILE}>
             <h2 className={LABEL}>{t('intro.objectives.time')}</h2>
-            <b className="text-34 leading-none font-700 tabular-nums">{t('intro.objectives.timeValue', { n: p.periods, unit: p.periodUnit })}</b>
+            <b className="text-34 leading-none font-600 tabular-nums">{t('intro.objectives.timeValue', { n: p.periods, unit: p.periodUnit })}</b>
             <span role="img" aria-label={t('intro.objectives.timeAria', { n: p.periods, unit: p.periodUnit })} className="flex gap-1">
               {Array.from({ length: p.periods }, (_, i) => <span key={i} className={`h-1.5 flex-1 rounded-2 ${i === 0 ? 'bg-accent-secondary' : 'bg-track'}`} />)}
             </span>
@@ -69,17 +69,17 @@ export function Objectives(p: ObjectivesProps) {
           </li>
           <li className={TILE}>
             <h2 className={LABEL}>{t('intro.objectives.target')}</h2>
-            <b className="text-34 leading-none font-700 tabular-nums text-accent-secondary">{money.compact(p.target)}</b>
+            <b className="text-34 leading-none font-600 tabular-nums text-accent-secondary">{money.compact(p.target)}</b>
             <span aria-hidden="true" className="block h-1.5 rounded-2 bg-track"><span className="block h-full rounded-2 bg-accent-secondary" style={{ width: `${Math.max(1, Math.round((p.start / Math.max(1, p.target)) * 100))}%` }} /></span>
             <span className="text-14 text-fg-secondary">{t('intro.objectives.targetNote', { start: money.format(p.start) })}</span>
           </li>
           <li className={TILE}>
             <h2 className={LABEL}>{t('intro.objectives.team')}</h2>
-            <b className="text-34 leading-none font-700 tabular-nums">{t('intro.objectives.teamValue', { n: p.team.length })}</b>
+            <b className="text-34 leading-none font-600 tabular-nums">{t('intro.objectives.teamValue', { n: p.team.length })}</b>
             <span className="flex items-center">
               {shown.map(m => (m.img
                 ? <img key={m.id} src={m.img} alt="" title={m.name} className="-me-2 size-8 rounded-round border-2 border-surface-solid bg-surface-raised object-cover object-top" />
-                : <span key={m.id} aria-hidden="true" className="-me-2 flex size-8 items-center justify-center rounded-round border-2 border-surface-solid bg-surface-raised text-11 font-700">{m.name[0]}</span>))}
+                : <span key={m.id} aria-hidden="true" className="-me-2 flex size-8 items-center justify-center rounded-round border-2 border-surface-solid bg-surface-raised text-11 font-600">{m.name[0]}</span>))}
               {p.team.length > AVATARS && <span className="ms-4 text-13 text-fg-secondary"><span aria-hidden="true">{t('intro.objectives.more', { n: p.team.length - AVATARS })}</span></span>}
             </span>
             <span className="text-14 text-fg-secondary">{t('intro.objectives.teamNote')}</span>
@@ -101,7 +101,7 @@ export function Objectives(p: ObjectivesProps) {
         <figure className="m-0 flex flex-col gap-4 tablet:hidden">
           <blockquote className="m-0 text-24 leading-snug">{p.sponsor.quote}</blockquote>
           <figcaption className="flex items-center gap-3">
-            {p.sponsor.img ? <img src={p.sponsor.img} alt="" className="size-10 rounded-round object-cover object-top" /> : <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-round bg-brand text-13 font-700 text-brand-deep-space">{p.sponsor.initials}</span>}
+            {p.sponsor.img ? <img src={p.sponsor.img} alt="" className="size-10 rounded-round object-cover object-top" /> : <span aria-hidden="true" className="flex size-10 items-center justify-center rounded-round bg-brand text-13 font-600 text-button-on-solid">{p.sponsor.initials}</span>}
             <span className="flex flex-col text-14"><b>{p.sponsor.name}</b><span className="text-fg-secondary">{p.sponsor.title}</span></span>
           </figcaption>
         </figure>

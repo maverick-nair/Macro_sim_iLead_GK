@@ -38,8 +38,8 @@ export interface StageNpc {
 }
 
 export const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-export const CARD = 'rounded-22 border border-line-default bg-surface-card backdrop-blur-12';
-export const FIELD = 'rounded-12 border border-line-control bg-surface-raised text-fg-primary';
+export const CARD = 'rounded-6 border border-line-default bg-surface-card ';
+export const FIELD = 'rounded-4 border border-line-control bg-surface-raised text-fg-primary';
 
 const MOOD_BORDER: Record<MoodKey, string> = {
   happy: 'border-member-mood-happy',
@@ -83,7 +83,7 @@ export function Portrait({ img, alt = '', size, mood }: { img: string; alt?: str
 export function MoodPill({ name, mood }: { name: string; mood: MoodKey }) {
   const { t } = useI18n();
   return (
-    <span className="flex h-6.5 flex-none items-center gap-1.5 rounded-pill border border-line-default bg-surface-card px-3 text-12 font-700 whitespace-nowrap">
+    <span className="flex h-6.5 flex-none items-center gap-1.5 rounded-4 border border-line-default bg-surface-card px-3 text-12 font-600 whitespace-nowrap">
       <span aria-hidden="true" className={`size-2 rounded-round ${MOOD_DOT[mood]}`} />
       {t('liveformats.mood', { name, mood })}
     </span>
@@ -95,7 +95,7 @@ export function TypingIndicator({ name, state }: { name: string; state: 'typing'
   const { t } = useI18n();
   const dot = 'size-1.5 rounded-round bg-fg-secondary animate-(--il-liveformats-typing-dot)';
   return (
-    <div role="status" className="flex w-fit items-center gap-2 rounded-pill border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
+    <div role="status" className="flex w-fit items-center gap-2 rounded-4 border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
       <span aria-hidden="true" className="flex gap-1">
         <span className={dot} />
         <span className={`${dot} [animation-delay:var(--il-liveformats-typing-delay-2)]`} />
@@ -117,7 +117,7 @@ export const MicGlyph = ({ className = 'size-3.5' }: { className?: string }) => 
 export function DictateButton({ on, label, onPress }: { on: boolean; label: string; onPress: () => void }) {
   return (
     <button type="button" onClick={onPress} aria-pressed={on} aria-label={label}
-      className={`relative flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border border-solid p-0 ${on ? 'border-transparent bg-voice-listening text-brand-deep-space' : 'border-line-default bg-surface-raised text-fg-secondary'} ${FOCUS}`}>
+      className={`relative flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border border-solid p-0 ${on ? 'border-transparent bg-voice-listening text-button-on-solid' : 'border-line-default bg-surface-raised text-fg-secondary'} ${FOCUS}`}>
       {on && <span aria-hidden="true" className="absolute -inset-1 animate-(--il-live-mic-ring) rounded-round border-2 border-solid border-accent-secondary" />}
       <MicGlyph />
     </button>

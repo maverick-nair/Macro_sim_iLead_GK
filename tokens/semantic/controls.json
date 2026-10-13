@@ -3,37 +3,52 @@
   "color": {
     "fg": {
       "link": {
-        "light": "{color.blue.530}",
-        "dark": "{color.brand.electric-blue}",
-        "$description": "Ghost buttons and plain text actions. Light was the brand blue, 2.54:1 on the attention chip (D8)"
+        "light": "{color.canvas.button}",
+        "dark": "{color.white}",
+        "$description": "Ghost buttons and plain text actions: navy on paper, white on dark (D227)"
       },
       "link-hover": {
-        "light": "{color.blue.450}",
-        "dark": "{color.brand.cyber-cyan}",
-        "$description": "Ghost buttons on hover. Light was the brand cyan, 1.75:1 on white (D8)"
+        "light": "{color.canvas.navy-900}",
+        "dark": "{color.canvas.mint-light}",
+        "$description": "Ghost buttons on hover"
       },
       "inverse": {
         "light": "{color.white}",
-        "dark": "{color.brand.deep-space}",
+        "dark": "{color.canvas.ink}",
         "$description": "Text on an inverted fill (fg.primary as the background): toasts and the style tooltip"
       }
     },
     "control": {
       "track-off": {
         "light": "{color.mist.600}",
-        "dark": { "ref": "color.white", "alpha": 0.12 },
+        "dark": {
+          "ref": "color.white",
+          "alpha": 0.12
+        },
         "$description": "Track of an off switch. Light was white at 12%, invisible on white (WCAG 1.4.11, D8); dark keeps the design's value"
       }
     },
     "elevation": {
       "drawer": {
-        "light": { "ref": "color.member-elevation.ink", "alpha": 0.45 },
-        "dark": { "ref": "color.member-elevation.ink", "alpha": 0.45 },
+        "light": {
+          "ref": "color.member-elevation.ink",
+          "alpha": 0.45
+        },
+        "dark": {
+          "ref": "color.member-elevation.ink",
+          "alpha": 0.45
+        },
         "$description": "Drop shadow of side drawers (inbox)"
       },
       "panel": {
-        "light": { "ref": "color.member-elevation.ink", "alpha": 0.5 },
-        "dark": { "ref": "color.member-elevation.ink", "alpha": 0.5 },
+        "light": {
+          "ref": "color.member-elevation.ink",
+          "alpha": 0.5
+        },
+        "dark": {
+          "ref": "color.member-elevation.ink",
+          "alpha": 0.5
+        },
         "$description": "Drop shadow of large floating panels (profile)"
       }
     }

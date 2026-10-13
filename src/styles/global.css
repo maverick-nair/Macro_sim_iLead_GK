@@ -15,11 +15,22 @@
 
 /* App globals, from the iLeadApp design component helmet. In the base layer so utilities win. */
 @layer base {
-  body { margin: 0; background: var(--il-color-brand-deep-space); }
+  body { margin: 0; background: var(--il-color-canvas-navy); }
   *, *::before, *::after { box-sizing: border-box; }
   button, input, textarea, select { font: inherit; }
-  a { color: var(--il-color-brand-electric-blue); }
-  a:hover { color: var(--il-color-brand-cyber-cyan); }
+  a { color: var(--il-color-fg-link, var(--il-color-canvas-button)); }
+  a:hover { color: var(--il-color-fg-link-hover, var(--il-color-canvas-navy-900)); }
+}
+
+/*
+ * The approved canvas's look (D227). Its header is navy on every screen, and the screens it draws on navy (the
+ * pre-game flow, the live conversation, the week's end) stay navy in the light theme too: `il-scheme-dark` turns
+ * the subtree's color-scheme to dark, so every light-dark() token resolves to its dark value there, a client
+ * theme's included. In the dark theme it changes nothing.
+ */
+@layer base {
+  .il-scheme-dark { color-scheme: dark; }
+  .il-chrome { color-scheme: dark; background-color: var(--il-color-canvas-navy); color: var(--il-color-fg-primary); }
 }
 
 /* A preview from GenieKreator (D191): its bar sits above the app, so the play screens that fit the window fit

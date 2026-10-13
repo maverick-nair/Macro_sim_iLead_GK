@@ -9,9 +9,10 @@ import { EndMoments } from './EndMoments';
 import { EndReflection } from './EndReflection';
 import type { EndScreenProps } from './types';
 import './messages';
+import { ILeadLogo } from '../shell/Logo';
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const TILE = 'flex flex-col rounded-20 border border-line-default bg-surface-card p-4';
+const TILE = 'flex flex-col rounded-6 border border-line-default bg-surface-card p-4';
 /** Stands in for the tier's name in the headline, so the name can carry the spectrum fill. */
 const MARK = '\u0001';
 
@@ -47,12 +48,12 @@ export function EndScreen(p: EndScreenProps) {
     <div className="relative mx-auto flex w-full max-w-(--il-end-max-width) flex-1 flex-col gap-5.5 px-8 pt-5 pb-0" style={{ minHeight: p.minHeight }}>
       <div aria-hidden="true" className="pointer-events-none absolute top-0 left-1/2 h-125 w-225 -translate-x-1/2 bg-(image:--il-end-glow-fill)"></div>
       <header className="relative flex items-center gap-4">
-        <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-end-logo-tracking) text-transparent">{t('hud.logo')}</span>
+        <ILeadLogo size="md" />
         <span className="text-13 text-fg-secondary">{t('end.header')}</span>
         {p.onLookAtBoard && (
           <>
             <span className="flex-1"></span>
-            <button type="button" onClick={p.onLookAtBoard} className={`cursor-pointer rounded-8 border-0 bg-transparent px-1 py-0.5 text-13 font-600 text-fg-secondary underline ${FOCUS}`}>
+            <button type="button" onClick={p.onLookAtBoard} className={`cursor-pointer rounded-4 border-0 bg-transparent px-1 py-0.5 text-13 font-600 text-fg-secondary underline ${FOCUS}`}>
               {t('end.lookAtBoard')}
             </button>
           </>
@@ -61,15 +62,15 @@ export function EndScreen(p: EndScreenProps) {
 
       <section className="relative grid grid-cols-(--il-end-hero-columns) gap-8 items-end">
         <div className="flex flex-col gap-2.5">
-          <span className="text-12 font-700 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase">
+          <span className="text-12 font-600 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase">
             {t('end.eyebrow', { periods: p.periods, unit, people: p.people })}
           </span>
-          <h1 ref={h1} tabIndex={-1} className="m-0 text-60 leading-none font-700 tracking-(--il-end-display-tracking) outline-none">
+          <h1 ref={h1} tabIndex={-1} className="m-0 text-60 leading-none font-600 tracking-(--il-end-display-tracking) outline-none">
             {before}<span className="bg-(image:--il-end-tier-fill) bg-clip-text text-transparent [filter:var(--il-end-tier-glow)]">{tierName}</span>{after}
           </h1>
           <p className="m-0 max-w-160 text-17 text-pretty text-fg-secondary">{t('end.lead')}</p>
         </div>
-        <div className="flex items-center gap-4 rounded-24 border border-line-default bg-surface-card px-5.5 py-4">
+        <div className="flex items-center gap-4 rounded-6 border border-line-default bg-surface-card px-5.5 py-4">
           <div role="img" aria-label={t('end.tier.aria', { tier: tierName, all: p.tiers.map(x => x.name).join(', ') })} className="flex gap-1.5">
             {bars.map(b => (
               <span key={b.key} title={b.name} className={`w-3.5 self-end rounded-4 ${b.filled ? 'bg-(image:--il-fill-spectrum)' : 'bg-track'}`}
@@ -99,7 +100,7 @@ export function EndScreen(p: EndScreenProps) {
           <div key={x.key} className={`${TILE} gap-1`}>
             <span className="text-12 text-fg-secondary">{x.label}</span>
             <b className="text-24">{x.value}</b>
-            <span className={`text-12 font-700 ${TONE_TEXT[x.tone]}`}>{x.note}</span>
+            <span className={`text-12 font-600 ${TONE_TEXT[x.tone]}`}>{x.note}</span>
           </div>
         ))}
       </section>
@@ -108,7 +109,7 @@ export function EndScreen(p: EndScreenProps) {
         <div className="flex flex-col gap-3">
           <EndMoments moments={p.moments} periods={p.periods} periodUnit={unit} />
           <div className="flex flex-col gap-2 pt-1.5">
-            <h2 className="m-0 text-16 font-700">{t('end.badges.title')}</h2>
+            <h2 className="m-0 text-16 font-600">{t('end.badges.title')}</h2>
             <BadgeShelf badges={p.badges} />
           </div>
         </div>
@@ -116,7 +117,7 @@ export function EndScreen(p: EndScreenProps) {
       </section>
       {p.cohort}
       {/* The report's actions stay in reach at the bottom of the window however far the page scrolls (D101). */}
-      <div className="sticky bottom-0 z-30 -mx-8 mt-auto flex flex-wrap items-center gap-2.5 border-t border-line-default bg-surface-material px-8 py-3 backdrop-blur-20">
+      <div className="sticky bottom-0 z-30 -mx-8 mt-auto flex flex-wrap items-center gap-2.5 border-t border-line-default bg-surface-material px-8 py-3 ">
         <NoWrapButton variant="primary" size="lg" onClick={p.onViewReport}>{t('end.report.view')}</NoWrapButton>
         <NoWrapButton variant="secondary" size="lg" onClick={p.onDownload}>{t('end.report.pdf')}</NoWrapButton>
         {email && <NoWrapButton variant="ghost" size="lg" disabled={p.emailing} onClick={p.onEmail}>{t('end.report.email')}</NoWrapButton>}

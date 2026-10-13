@@ -88,17 +88,17 @@ export function LiveInputBar(p: LiveInputBarProps) {
   return (
     <div className="flex flex-col gap-2">
       {denied && (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-16 border border-status-attention bg-status-attention-soft px-3.5 py-3 text-13">
+        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-6 border border-status-attention bg-status-attention-soft px-3.5 py-3 text-13">
           <span className="min-w-50 flex-1"><b>{t('liveshell.micDenied.title')}</b> {t('liveshell.micDenied.body')}</span>
           <NoWrapButton variant="secondary" size="sm" onClick={() => p.onModeChange('text')}>{t('liveshell.micDenied.action')}</NoWrapButton>
         </div>
       )}
       {p.partial && (
-        <div role="alert" className="rounded-16 border border-line-strong bg-surface-raised px-3.5 py-2.5 text-13">
+        <div role="alert" className="rounded-6 border border-line-strong bg-surface-raised px-3.5 py-2.5 text-13">
           <b>{t('liveshell.partial.title')}</b> {t('liveshell.partial.body')}
         </div>
       )}
-      <div className={`flex items-end ${p.layout === 'tablet' ? 'gap-3 rounded-22 p-3' : 'gap-2.5 rounded-24 p-2.5'} border border-solid bg-surface-material ${listening ? 'border-voice-listening shadow-(--il-liveshell-reply-listening-ring)' : 'border-line-control'}`}>
+      <div className={`flex items-end ${p.layout === 'tablet' ? 'gap-3 rounded-6 p-3' : 'gap-2.5 rounded-6 p-2.5'} border border-solid bg-surface-material ${listening ? 'border-voice-listening shadow-(--il-liveshell-reply-listening-ring)' : 'border-line-control'}`}>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
           <MicStatus status={micStatusFor(p)} speaker={p.speakerName} />
           {listening ? (
@@ -108,13 +108,13 @@ export function LiveInputBar(p: LiveInputBarProps) {
             </div>
           ) : (
             <textarea value={draft} onChange={e => p.onDraft(e.target.value)} onKeyDown={onKey} placeholder={placeholder} aria-label={t('liveshell.reply.aria')} rows={2}
-              className="w-full resize-none rounded-12 border-0 bg-transparent p-2 text-15 leading-normal text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
+              className="w-full resize-none rounded-4 border-0 bg-transparent p-2 text-15 leading-normal text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
           )}
         </div>
         {canRedo && <RecordAgainButton onPress={p.onRecordAgain!} />}
         <MicButton state={mic} mode={mode} onPress={pressMic} layout={p.layout} />
         <button type="button" onClick={p.onSend} disabled={cantSend} aria-label={t('liveshell.reply.send')}
-          className={`flex ${p.layout === 'tablet' ? 'size-14' : 'size-12'} flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-brand-deep-space ${listening || closed ? 'bg-track' : 'bg-transparent bg-(image:--il-fill-brand)'} ${FOCUS}`}>
+          className={`flex ${p.layout === 'tablet' ? 'size-14' : 'size-12'} flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-button-on-solid ${listening || closed ? 'bg-track' : 'bg-transparent bg-(image:--il-fill-brand)'} ${FOCUS}`}>
           <SendIcon />
         </button>
       </div>

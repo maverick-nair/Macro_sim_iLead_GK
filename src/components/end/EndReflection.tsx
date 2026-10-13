@@ -24,14 +24,14 @@ export function EndReflection({ questions, answers, rating, onAnswer, onRate, di
   const base = useId();
   const count = questions.length;
   return (
-    <div className="flex flex-col gap-3.5 rounded-24 border border-line-strong bg-surface-material p-5">
-      <h2 className="m-0 text-20 font-700">{t('end.reflect.title', { count })}</h2>
+    <div className="flex flex-col gap-3.5 rounded-6 border border-line-strong bg-surface-material p-5">
+      <h2 className="m-0 text-20 font-600">{t('end.reflect.title', { count })}</h2>
       <span className="text-13 text-fg-secondary">{t('end.reflect.lead', { count })}</span>
       {questions.map((q, i) => {
         const listening = dictating === i;
         return (
           <div key={i} className="flex flex-col gap-1.5">
-            <label htmlFor={`${base}-q${i}`} className="text-14 font-700">{q}</label>
+            <label htmlFor={`${base}-q${i}`} className="text-14 font-600">{q}</label>
             <div className="flex items-start gap-2">
               <textarea
                 id={`${base}-q${i}`}
@@ -40,10 +40,10 @@ export function EndReflection({ questions, answers, rating, onAnswer, onRate, di
                 rows={3}
                 maxLength={2000}
                 placeholder={t('end.reflect.placeholder')}
-                className={`flex-1 resize-none rounded-14 border border-line-strong bg-surface-raised px-3 py-2.5 text-14 text-fg-primary ${FOCUS}`}
+                className={`flex-1 resize-none rounded-6 border border-line-strong bg-surface-raised px-3 py-2.5 text-14 text-fg-primary ${FOCUS}`}
               ></textarea>
               <button type="button" onClick={() => onMic(i)} aria-label={t('end.reflect.mic', { listening: String(listening) })} aria-pressed={listening}
-                className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-(image:--il-fill-brand) text-brand-deep-space ${FOCUS} ${listening ? 'outline-2 outline-offset-2 outline-accent-secondary' : ''}`}>
+                className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-(image:--il-fill-brand) text-button-on-solid ${FOCUS} ${listening ? 'outline-2 outline-offset-2 outline-accent-secondary' : ''}`}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                   <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
                   <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
@@ -64,7 +64,7 @@ export function EndReflection({ questions, answers, rating, onAnswer, onRate, di
             return (
               <button key={n} type="button" role="radio" aria-checked={on} aria-label={t('end.rating.option', { n })} tabIndex={inTab ? 0 : -1}
                 onClick={() => onRate(n)} onKeyDown={e => onRovingKey(e, i, RATINGS.length, j => onRate(RATINGS[j]))}
-                className={`size-11 cursor-pointer rounded-round border-(length:--il-end-rating-border) border-solid font-700 ${FOCUS} ${on ? 'border-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'border-line-strong bg-transparent text-fg-primary'}`}>
+                className={`size-11 cursor-pointer rounded-round border-(length:--il-end-rating-border) border-solid font-600 ${FOCUS} ${on ? 'border-transparent bg-(image:--il-fill-brand) text-button-on-solid' : 'border-line-strong bg-transparent text-fg-primary'}`}>
                 {n}
               </button>
             );

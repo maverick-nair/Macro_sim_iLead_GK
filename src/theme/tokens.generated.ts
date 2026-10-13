@@ -3,7 +3,7 @@
 import type { ContrastPair, TokenNode } from './paint';
 
 /** Semantic tokens a GenieKreator theme may set (`"themable": true` in tokens/semantic). */
-export const THEMABLE = ["color.surface.card","color.surface.solid","color.surface.raised","color.surface.material","color.accent.default","color.accent.secondary","color.accent.soft","fill.brand"] as const;
+export const THEMABLE = ["color.surface.card","color.surface.solid","color.surface.raised","color.surface.material","color.accent.default","color.accent.secondary","color.accent.soft","color.button.on-solid","fill.brand"] as const;
 
 /** Every WCAG pair the token build checks: the ones declared on semantic tokens and tokens/contrast.json. */
 export const PAIRS: ContrastPair[] = [
@@ -383,10 +383,10 @@ export const PAIRS: ContrastPair[] = [
   "why": "Icon of a badge not earned yet, on its empty medal"
  },
  {
-  "fg": "color.brand.deep-space",
+  "fg": "color.fg.on-accent",
   "bg": "fill.spectrum",
   "min": 3,
-  "why": "Icon of an earned badge on its medal"
+  "why": "Icon of an earned badge on its medal (D227: the medal is the flat accent)"
  },
  {
   "fg": "color.accent.default",
@@ -473,40 +473,31 @@ export const NODES: Record<string, TokenNode> = {
   "value": "{fill.brand}"
  },
  "button.primary.fg": {
-  "value": "{color.brand.deep-space}"
+  "value": "{color.button.on-solid}"
  },
  "button.secondary.bg": {
-  "value": "{color.surface.raised}"
+  "value": "{color.button.quiet}"
  },
  "button.secondary.fg": {
   "value": "{color.fg.primary}"
  },
  "color.accent.default": {
-  "light": "{color.blue.530}",
-  "dark": "{color.brand.electric-blue}",
+  "light": "{color.canvas.button}",
+  "dark": "{color.canvas.mint}",
   "themable": true
  },
  "color.accent.secondary": {
-  "light": "{color.cyan.520}",
-  "dark": "{color.brand.cyber-cyan}",
+  "light": "{color.canvas.button}",
+  "dark": "{color.canvas.mint}",
   "themable": true
  },
  "color.accent.soft": {
-  "light": "{color.blue.950}",
+  "light": "{color.canvas.sky-100}",
   "dark": {
-   "ref": "color.blue.620",
-   "alpha": 0.18
+   "ref": "color.canvas.mint",
+   "alpha": 0.14
   },
   "themable": true
- },
- "color.amber.530": {
-  "$value": "oklch(0.53 0.13 62)"
- },
- "color.amber.840": {
-  "$value": "oklch(0.84 0.14 78)"
- },
- "color.amber.960": {
-  "$value": "oklch(0.96 0.04 80)"
  },
  "color.author.ai": {
   "light": "{color.gk.teal-700}",
@@ -608,36 +599,106 @@ export const NODES: Record<string, TokenNode> = {
   "light": "{color.gk.purple-50}",
   "dark": "{color.gk.purple-50}"
  },
- "color.blue.450": {
-  "$value": "oklch(0.45 0.17 252)"
- },
- "color.blue.530": {
-  "$value": "oklch(0.53 0.17 252)"
- },
- "color.blue.620": {
-  "$value": "oklch(0.62 0.17 250)"
- },
- "color.blue.950": {
-  "$value": "oklch(0.95 0.03 250)"
- },
- "color.brand.cyber-cyan": {
-  "$value": "#43D6E8"
- },
  "color.brand.deep-space": {
   "$value": "#0A081B"
- },
- "color.brand.electric-blue": {
-  "$value": "#249DFF"
- },
- "color.brand.mint-green": {
-  "$value": "#00F2AD"
  },
  "color.brand.pale-lavender": {
   "$value": "#DEE9FF"
  },
+ "color.button.on-solid": {
+  "light": "{color.white}",
+  "dark": "{color.canvas.ink}",
+  "themable": true
+ },
+ "color.button.quiet": {
+  "light": "{color.white}",
+  "dark": {
+   "ref": "color.white",
+   "alpha": 0.04
+  }
+ },
+ "color.button.solid": {
+  "light": "{color.canvas.button}",
+  "dark": "{color.canvas.paper-light}"
+ },
+ "color.canvas.button": {
+  "$value": "oklch(0.32 0.0661 257.5)"
+ },
+ "color.canvas.charcoal-600": {
+  "$value": "#6B7689"
+ },
+ "color.canvas.charcoal-800": {
+  "$value": "#262C33"
+ },
+ "color.canvas.charcoal-850": {
+  "$value": "#22282E"
+ },
+ "color.canvas.charcoal-900": {
+  "$value": "#1A1E22"
+ },
+ "color.canvas.charcoal-950": {
+  "$value": "#15181C"
+ },
+ "color.canvas.green-100": {
+  "$value": "#DCF1E6"
+ },
+ "color.canvas.green-300": {
+  "$value": "oklch(0.8712 0.1363 154.45)"
+ },
+ "color.canvas.green-800": {
+  "$value": "#166534"
+ },
+ "color.canvas.ink": {
+  "$value": "oklch(0.2101 0.0318 264.66)"
+ },
+ "color.canvas.mint": {
+  "$value": "oklch(0.8154 0.0896 177.51)"
+ },
+ "color.canvas.mint-light": {
+  "$value": "#CFE9E2"
+ },
+ "color.canvas.mist": {
+  "$value": "#C9D1DE"
+ },
+ "color.canvas.navy": {
+  "$value": "oklch(0.1831 0.0309 263.38)"
+ },
+ "color.canvas.navy-900": {
+  "$value": "#0F2038"
+ },
+ "color.canvas.orange-300": {
+  "$value": "oklch(0.8366 0.1165 66.29)"
+ },
+ "color.canvas.orange-50": {
+  "$value": "#FFF4EC"
+ },
+ "color.canvas.orange-800": {
+  "$value": "#9A3412"
+ },
+ "color.canvas.paper-light": {
+  "$value": "#FBFAF7"
+ },
+ "color.canvas.red-300": {
+  "$value": "oklch(0.8077 0.1035 19.57)"
+ },
+ "color.canvas.sand-200": {
+  "$value": "#EEEAE1"
+ },
+ "color.canvas.sand-300": {
+  "$value": "#E2DED5"
+ },
+ "color.canvas.sand-600": {
+  "$value": "#7D8085"
+ },
+ "color.canvas.sky-100": {
+  "$value": "#E3EEF9"
+ },
+ "color.canvas.slate-600": {
+  "$value": "#4B5563"
+ },
  "color.celebration.star": {
-  "light": "{color.cyan.520}",
-  "dark": "{color.brand.cyber-cyan}"
+  "light": "{color.canvas.button}",
+  "dark": "{color.canvas.mint}"
  },
  "color.control.track-off": {
   "light": "{color.mist.600}",
@@ -646,30 +707,9 @@ export const NODES: Record<string, TokenNode> = {
    "alpha": 0.12
   }
  },
- "color.coral.530": {
-  "$value": "oklch(0.53 0.17 25)"
- },
- "color.coral.780": {
-  "$value": "oklch(0.78 0.13 25)"
- },
- "color.coral.960": {
-  "$value": "oklch(0.96 0.025 25)"
- },
- "color.cyan.520": {
-  "$value": "oklch(0.52 0.12 205)"
- },
- "color.event.lime-100": {
-  "$value": "#ECFBC4"
- },
  "color.event.on-tag": {
   "light": "{color.white}",
   "dark": "{color.white}"
- },
- "color.event.rose-100": {
-  "$value": "#FFD6CF"
- },
- "color.event.rose-300": {
-  "$value": "#F5848C"
  },
  "color.event.tag": {
   "light": {
@@ -683,27 +723,27 @@ export const NODES: Record<string, TokenNode> = {
  },
  "color.fg.inverse": {
   "light": "{color.white}",
-  "dark": "{color.brand.deep-space}"
+  "dark": "{color.canvas.ink}"
  },
  "color.fg.link": {
-  "light": "{color.blue.530}",
-  "dark": "{color.brand.electric-blue}"
+  "light": "{color.canvas.button}",
+  "dark": "{color.white}"
  },
  "color.fg.link-hover": {
-  "light": "{color.blue.450}",
-  "dark": "{color.brand.cyber-cyan}"
+  "light": "{color.canvas.navy-900}",
+  "dark": "{color.canvas.mint-light}"
  },
  "color.fg.on-accent": {
   "light": "{color.white}",
-  "dark": "{color.brand.deep-space}"
+  "dark": "{color.canvas.navy}"
  },
  "color.fg.primary": {
-  "light": "{color.ink.200}",
-  "dark": "{color.lavender.940}"
+  "light": "{color.canvas.ink}",
+  "dark": "{color.white}"
  },
  "color.fg.secondary": {
-  "light": "{color.ink.450}",
-  "dark": "{color.lavender.780}"
+  "light": "{color.canvas.slate-600}",
+  "dark": "{color.canvas.mist}"
  },
  "color.gk.amber-200": {
   "$value": "#FCEBC8"
@@ -777,67 +817,19 @@ export const NODES: Record<string, TokenNode> = {
  "color.gk.white": {
   "$value": "#FFFFFF"
  },
- "color.ink.200": {
-  "$value": "oklch(0.2 0.03 280)"
- },
- "color.ink.450": {
-  "$value": "oklch(0.45 0.025 278)"
- },
- "color.lavender.780": {
-  "$value": "oklch(0.78 0.03 268)"
- },
- "color.lavender.940": {
-  "$value": "oklch(0.94 0.03 265)"
- },
  "color.line.control": {
-  "light": "{color.mist.600}",
-  "dark": {
-   "ref": "color.white",
-   "alpha": 0.36
-  }
+  "light": "{color.canvas.sand-600}",
+  "dark": "{color.canvas.charcoal-600}"
  },
  "color.live.replay": {
-  "light": "{color.blue.530}",
-  "dark": "{color.brand.cyber-cyan}"
- },
- "color.mint.500": {
-  "$value": "oklch(0.5 0.11 165)"
- },
- "color.mint.860": {
-  "$value": "oklch(0.86 0.17 165)"
- },
- "color.mint.950": {
-  "$value": "oklch(0.95 0.04 165)"
+  "light": "{color.canvas.button}",
+  "dark": "{color.canvas.mint}"
  },
  "color.mist.600": {
   "$value": "oklch(0.6 0.015 270)"
  },
- "color.mist.920": {
-  "$value": "oklch(0.92 0.01 270)"
- },
- "color.mist.955": {
-  "$value": "oklch(0.955 0.01 270)"
- },
- "color.night.160": {
-  "$value": "oklch(0.16 0.035 284)"
- },
- "color.night.170": {
-  "$value": "oklch(0.17 0.035 283)"
- },
- "color.portrait.sand-100": {
-  "$value": "#FFE7C2"
- },
- "color.portrait.sand-300": {
-  "$value": "#F7C17E"
- },
  "color.portrait.shade": {
   "$value": "oklch(0.13 0.03 285)"
- },
- "color.portrait.sky-100": {
-  "$value": "#DEE9FF"
- },
- "color.portrait.sky-300": {
-  "$value": "#9FDCEB"
  },
  "color.report.chart.attention": {
   "light": "{color.status.attention}",
@@ -864,110 +856,89 @@ export const NODES: Record<string, TokenNode> = {
   "dark": "{color.fg.primary}"
  },
  "color.status.attention": {
-  "light": "{color.amber.530}",
-  "dark": "{color.amber.840}"
+  "light": "{color.canvas.orange-800}",
+  "dark": "{color.canvas.orange-300}"
  },
  "color.status.attention-soft": {
-  "light": "{color.amber.960}",
+  "light": "{color.canvas.orange-50}",
   "dark": {
-   "ref": "color.amber.840",
+   "ref": "color.canvas.orange-300",
    "alpha": 0.14
   }
  },
  "color.status.decline": {
-  "light": "{color.coral.530}",
-  "dark": "{color.coral.780}"
+  "light": "{color.canvas.orange-800}",
+  "dark": "{color.canvas.red-300}"
  },
  "color.status.decline-soft": {
-  "light": "{color.coral.960}",
+  "light": "{color.canvas.orange-50}",
   "dark": {
-   "ref": "color.coral.780",
+   "ref": "color.canvas.red-300",
    "alpha": 0.14
   }
  },
  "color.status.gain": {
-  "light": "{color.mint.500}",
-  "dark": "{color.brand.mint-green}"
+  "light": "{color.canvas.green-800}",
+  "dark": "{color.canvas.green-300}"
  },
  "color.status.gain-soft": {
-  "light": "{color.mint.950}",
+  "light": "{color.canvas.green-100}",
   "dark": {
-   "ref": "color.mint.860",
+   "ref": "color.canvas.green-300",
    "alpha": 0.14
   }
  },
  "color.surface.card": {
   "light": "{color.white}",
-  "dark": {
-   "ref": "color.night.170",
-   "alpha": 0.82
-  },
+  "dark": "{color.canvas.charcoal-900}",
   "themable": true
  },
  "color.surface.material": {
-  "light": {
-   "ref": "color.white",
-   "alpha": 0.93
-  },
-  "dark": {
-   "ref": "color.night.160",
-   "alpha": 0.93
-  },
+  "light": "{color.canvas.paper-light}",
+  "dark": "{color.canvas.charcoal-950}",
   "themable": true
  },
  "color.surface.raised": {
-  "light": "{color.mist.955}",
-  "dark": {
-   "ref": "color.white",
-   "alpha": 0.06
-  },
+  "light": "{color.canvas.sand-200}",
+  "dark": "{color.canvas.charcoal-850}",
   "themable": true
  },
  "color.surface.solid": {
   "light": "{color.white}",
-  "dark": "{color.night.170}",
+  "dark": "{color.canvas.charcoal-950}",
   "themable": true
  },
  "color.track": {
-  "light": "{color.mist.920}",
-  "dark": {
-   "ref": "color.white",
-   "alpha": 0.1
-  }
+  "light": "{color.canvas.sand-300}",
+  "dark": "{color.canvas.charcoal-800}"
  },
  "color.white": {
   "$value": "oklch(1 0 0)"
  },
  "fill.brand": {
-  "value": "{gradient.brand}",
+  "value": "linear-gradient({color.button.solid}, {color.button.solid})",
   "themable": true
  },
  "fill.event.capacity": {
-  "value": "linear-gradient(135deg,{color.portrait.sand-100},{color.portrait.sand-300})"
+  "value": "linear-gradient({color.canvas.sand-200},{color.canvas.sand-200})"
  },
  "fill.event.crisis": {
-  "value": "linear-gradient(135deg,{color.event.rose-100},{color.event.rose-300})"
+  "value": "linear-gradient({color.canvas.orange-50},{color.canvas.orange-50})"
  },
  "fill.event.diagnostic": {
-  "value": "linear-gradient(135deg,{color.brand.electric-blue},{color.brand.cyber-cyan})"
+  "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})"
  },
  "fill.event.impact": {
-  "value": "linear-gradient(135deg,{color.brand.cyber-cyan},{color.brand.mint-green})"
+  "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})"
  },
  "fill.event.opportunity": {
-  "value": "linear-gradient(135deg,{color.event.lime-100},{color.brand.mint-green})"
+  "value": "linear-gradient({color.canvas.green-100},{color.canvas.green-100})"
  },
  "fill.event.signal": {
-  "value": "linear-gradient(135deg,{color.portrait.sky-100},{color.portrait.sky-300})"
+  "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})"
  },
  "fill.spectrum": {
-  "value": "{gradient.spectrum}"
- },
- "gradient.brand": {
-  "$value": "linear-gradient(135deg,#249DFF,#43D6E8)"
- },
- "gradient.spectrum": {
-  "$value": "linear-gradient(135deg,#249DFF 0%,#43D6E8 50%,#00F2AD 100%)"
+  "value": "linear-gradient({color.accent.default}, {color.accent.default})"
  },
  "style.tooltip.bg": {
   "value": "{color.fg.primary}"
@@ -979,7 +950,7 @@ export const NODES: Record<string, TokenNode> = {
   "value": "{color.brand.pale-lavender}"
  },
  "switch.thumb-on": {
-  "value": "{color.brand.deep-space}"
+  "value": "{color.button.on-solid}"
  },
  "switch.track-off": {
   "value": "{color.control.track-off}"

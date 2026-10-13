@@ -58,9 +58,9 @@ export interface DeskFeedProps {
 }
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const EYEBROW = 'm-0 text-12 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
-const CARD = 'flex h-full flex-col gap-1.5 rounded-14 border bg-surface-card p-3 text-13 backdrop-blur-12 short:gap-1 short:p-2.5';
-const LINK = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-700 text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary ${FOCUS}`;
+const EYEBROW = 'm-0 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
+const CARD = 'flex h-full flex-col gap-1.5 rounded-6 border bg-surface-card p-3 text-13 short:gap-1 short:p-2.5';
+const LINK = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary ${FOCUS}`;
 const QUIET = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary hover:text-fg-primary ${FOCUS}`;
 
 const Flag = () => (
@@ -95,7 +95,7 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
         <ul aria-label={t('desk.feed.aria')} className="m-0 flex list-none gap-2 overflow-x-auto overscroll-x-contain p-0 pb-0.5">
           {feedback && (
             <Card kind="feedback">
-              <span className="flex items-center gap-1.5 text-12 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary"><Spark />{t('desk.feed.feedback', { when: feedback.when })}</span>
+              <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary"><Spark />{t('desk.feed.feedback', { when: feedback.when })}</span>
               <span className="line-clamp-2 leading-snug">{feedback.title}</span>
               <span className="flex flex-wrap gap-x-2 text-12 text-fg-secondary">
                 {feedback.changes.length === 0 && <span>{t('desk.feed.noChange')}</span>}
@@ -113,7 +113,7 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
           )}
           {milestones.map(m => (
             <Card key={m.key} kind="milestone">
-              <span className="flex items-center gap-1.5 text-12 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-primary"><Flag />{t('desk.feed.milestone')}</span>
+              <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-primary"><Flag />{t('desk.feed.milestone')}</span>
               <span className="leading-snug">{m.text}</span>
               <span className="mt-auto flex flex-wrap gap-x-3">
                 {m.onResults && <button type="button" onClick={m.onResults} className={LINK}>{t('desk.feed.results')}</button>}
@@ -125,9 +125,9 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
           {messages.map(x => (
             <Card key={x.id} kind="message" urgent={x.urgent}>
               <span className="flex min-w-0 items-center gap-2">
-                <span className={`flex size-6 flex-none items-center justify-center overflow-hidden rounded-round text-11 text-large:size-auto text-large:min-h-6 text-large:min-w-6 text-large:p-0.5 font-700 text-brand-deep-space ${SENDER_TONE[x.sender.kind]}`}><SenderFace sender={x.sender} /></span>
+                <span className={`flex size-6 flex-none items-center justify-center overflow-hidden rounded-round text-11 text-large:size-auto text-large:min-h-6 text-large:min-w-6 text-large:p-0.5 font-600 text-button-on-solid ${SENDER_TONE[x.sender.kind]}`}><SenderFace sender={x.sender} /></span>
                 <b className="min-w-0 flex-1 truncate text-13 text-large:whitespace-normal text-large:break-words">{x.from || t('desk.feed.message', { kind: x.kind })}</b>
-                {x.due && <span className={`text-12 whitespace-nowrap ${x.urgent ? 'font-700 text-status-attention' : 'text-fg-secondary'}`}>{x.due}</span>}
+                {x.due && <span className={`text-12 whitespace-nowrap ${x.urgent ? 'font-600 text-status-attention' : 'text-fg-secondary'}`}>{x.due}</span>}
               </span>
               <span className="line-clamp-2 leading-snug text-fg-secondary">{x.title}</span>
               <span className="mt-auto flex flex-wrap gap-x-3">

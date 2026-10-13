@@ -29,7 +29,7 @@ export function ReasonChip({ name, metric, delta, showNumbers, onToggle }: Reaso
       type="button"
       aria-pressed={showNumbers}
       onClick={onToggle}
-      className={`${sizing} py-0 whitespace-nowrap rounded-pill border border-line-default font-700 text-fg-primary ${up ? 'bg-status-gain-soft' : 'bg-status-decline-soft'}`}
+      className={`${sizing} py-0 whitespace-nowrap rounded-4 border border-line-default font-600 text-fg-primary ${up ? 'bg-status-gain-soft' : 'bg-status-decline-soft'}`}
     >
       <span aria-hidden="true" className={up ? 'text-status-gain' : 'text-status-decline'}>{up ? '▲' : '▼'}</span> {text}
       {showNumbers && <span className="sr-only">{t('reason.chip.direction', { direction: up ? 'up' : 'down' })}</span>}

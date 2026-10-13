@@ -46,7 +46,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
   if (layout === 'tablet') {
     const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
     return (
-      <aside aria-label={t('liveshell.brief.title')} className={`flex min-w-0 flex-col gap-2.5 ${bare ? '' : 'rounded-22 border border-line-default bg-surface-card p-4.5 backdrop-blur-14'}`}>
+      <aside aria-label={t('liveshell.brief.title')} className={`flex min-w-0 flex-col gap-2.5 ${bare ? '' : 'rounded-6 border border-line-default bg-surface-card p-4.5 '}`}>
         <span className="sr-only">{t('liveshell.brief.goal')}</span>
         <b className={`${bare ? 'text-22' : 'text-17'} leading-tight text-pretty`}>{brief.goal}</b>
         {brief.declaredStyle !== undefined && <span className="text-14 text-fg-secondary">{t('tablet.live.styleSet', { unit: periodUnit, style: brief.declaredStyle ? styleOf(lens, brief.declaredStyle).name : t('liveshell.brief.styleNone') })}</span>}
@@ -60,13 +60,13 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
           </div>
         )}
         {tip !== null && (
-          <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-14 border border-accent-default bg-accent-soft p-3 text-13">
+          <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-6 border border-accent-default bg-accent-soft p-3 text-13">
             <b>{t('liveshell.tip.title')}</b>
             <span>{tip}</span>
           </div>
         )}
         <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={open ? id : undefined}
-          className={`min-h-9 cursor-pointer self-start rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 text-fg-primary ${FOCUS}`}>
+          className={`min-h-9 cursor-pointer self-start rounded-4 border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-600 text-fg-primary ${FOCUS}`}>
           {open ? t('liveshell.brief.hide') : t('liveshell.brief.show')}
         </button>
       </aside>
@@ -75,7 +75,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
   if (!open) {
     return (
       <button type="button" onClick={onToggle} aria-expanded={false}
-        className={`h-9 cursor-pointer self-start rounded-pill border border-solid border-line-default bg-surface-card px-3.5 py-0 text-13 font-700 text-fg-primary ${FOCUS}`}>
+        className={`h-9 cursor-pointer self-start rounded-4 border border-solid border-line-default bg-surface-card px-3.5 py-0 text-13 font-600 text-fg-primary ${FOCUS}`}>
         {t('liveshell.brief.show')}
       </button>
     );
@@ -83,11 +83,11 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
   const mood = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
   return (
     <aside id={id} aria-label={t('liveshell.brief.title')}
-      className="flex flex-col gap-3.5 self-start rounded-22 border border-line-default bg-surface-card p-4.5 backdrop-blur-14">
+      className="flex flex-col gap-3.5 self-start rounded-6 border border-line-default bg-surface-card p-4.5 ">
       <div className="flex items-center justify-between">
-        <span className="text-12 font-700 tracking-(--il-liveshell-eyebrow-tracking) text-fg-secondary uppercase">{t('liveshell.brief.title')}</span>
+        <span className="text-12 font-600 tracking-(--il-liveshell-eyebrow-tracking) text-fg-secondary uppercase">{t('liveshell.brief.title')}</span>
         <button type="button" onClick={onToggle} aria-expanded aria-controls={id}
-          className={`cursor-pointer rounded-4 border-0 bg-transparent px-1.5 py-0.25 text-12 font-700 text-accent-secondary ${FOCUS}`}>
+          className={`cursor-pointer rounded-4 border-0 bg-transparent px-1.5 py-0.25 text-12 font-600 text-accent-secondary ${FOCUS}`}>
           {t('liveshell.brief.hide')}
         </button>
       </div>
@@ -116,7 +116,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
       )}
       {brief.tone && <Row label={t('liveshell.brief.tone')}><span className={value}>{brief.tone}</span></Row>}
       {tip !== null && (
-        <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-14 border border-accent-default bg-accent-soft p-3 text-13">
+        <div role="note" className="flex animate-(--il-liveshell-tip-enter) flex-col gap-1 rounded-6 border border-accent-default bg-accent-soft p-3 text-13">
           <b>{t('liveshell.tip.title')}</b>
           <span>{tip}</span>
         </div>

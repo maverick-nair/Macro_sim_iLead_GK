@@ -8,11 +8,12 @@ import { badgeIcon } from './badgeIcons';
 import { newsArt, REWARD_ART } from './display';
 import type { PeriodUnit, WeekEndBadge, WeekEndNews, WeekEndReward } from './types';
 import './messages';
+import { ILeadLogo } from '../shell/Logo';
 
 export const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const EYEBROW = 'text-12 font-700 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase';
+const EYEBROW = 'text-12 font-600 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase';
 /** Step headings take focus when the step changes, so keyboard and screen reader users start at the top. */
-const HEADING = 'm-0 font-700 outline-none';
+const HEADING = 'm-0 font-600 outline-none';
 const ENTER = 'animate-(--il-weekend-enter)';
 
 export interface WeekEndHeaderProps {
@@ -28,7 +29,7 @@ export function WeekEndHeader({ period, periods, periodUnit, onShortcut }: WeekE
   const { t } = useI18n();
   return (
     <header className="flex items-center gap-4">
-      <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-weekend-logo-tracking) text-transparent">{t('hud.logo')}</span>
+      <ILeadLogo size="md" />
       <span className="text-13 text-fg-secondary">{t('weekend.header', { unit: periodUnit, n: period, total: periods })}</span>
       <span className="flex-1"></span>
       {onShortcut && (
@@ -112,8 +113,8 @@ export function UnlockStep({ sponsorFirstName, period, periodUnit, rewards, chos
           return (
             <button key={r.key} type="button" role="radio" aria-checked={on} tabIndex={on || (chosen === null && i === 0) ? 0 : -1}
               onClick={() => onChoose(i)} onKeyDown={e => onRovingKey(e, i, rewards.length, onChoose)}
-              className={`flex cursor-pointer flex-col gap-2.5 rounded-24 border-2 border-solid p-5 text-start text-fg-primary [transition:var(--il-weekend-reward-transition)] ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft [transform:var(--il-weekend-reward-lift)]' : 'border-line-default bg-surface-card'}`}>
-              <span aria-hidden="true" className={`h-22.5 rounded-16 ${REWARD_ART[i % REWARD_ART.length]}`}></span>
+              className={`flex cursor-pointer flex-col gap-2.5 rounded-6 border-2 border-solid p-5 text-start text-fg-primary [transition:var(--il-weekend-reward-transition)] ${FOCUS} ${on ? 'border-accent-secondary bg-accent-soft [transform:var(--il-weekend-reward-lift)]' : 'border-line-default bg-surface-card'}`}>
+              <span aria-hidden="true" className={`h-22.5 rounded-6 ${REWARD_ART[i % REWARD_ART.length]}`}></span>
               <b className="text-17">{r.name}</b>
               <span className="text-13 text-fg-secondary">{r.description}</span>
             </button>
@@ -149,18 +150,18 @@ export function NewsStep({ period, periodUnit, news, index, total, impact, artLa
   return (
     <div className={`flex flex-1 flex-col items-center justify-center gap-5 ${ENTER}`}>
       <h1 tabIndex={-1} className={`${HEADING} ${EYEBROW}`}>{t('weekend.news.eyebrow', { unit: periodUnit, n: period, index: index + 1, total })}</h1>
-      <article aria-labelledby={`${id}title`} className="w-180 max-w-full overflow-hidden rounded-28 border border-line-strong bg-surface-material">
+      <article aria-labelledby={`${id}title`} className="w-180 max-w-full overflow-hidden rounded-6 border border-line-strong bg-surface-material">
         <div className={`relative h-55 ${newsArt(news.card)}`}>
-          {artLabel && <span className="absolute top-3.5 start-4.5 text-12 font-700 text-brand-deep-space">{artLabel}</span>}
+          {artLabel && <span className="absolute top-3.5 start-4.5 text-12 font-600 text-button-on-solid">{artLabel}</span>}
         </div>
         <div className="flex flex-col gap-2.5 px-6 py-5.5">
-          <h2 id={`${id}title`} className="m-0 text-26 font-700 tracking-(--il-weekend-title-tracking)">{news.title}</h2>
+          <h2 id={`${id}title`} className="m-0 text-26 font-600 tracking-(--il-weekend-title-tracking)">{news.title}</h2>
           <p className="m-0 text-fg-secondary">{news.body}</p>
-          {impact && news.impact && <div id={`${id}impact`} className="rounded-14 bg-surface-raised p-3 text-13">{news.impact}</div>}
+          {impact && news.impact && <div id={`${id}impact`} className="rounded-6 bg-surface-raised p-3 text-13">{news.impact}</div>}
           <div className="flex items-center gap-2.5">
             {news.impact && (
               <button type="button" aria-expanded={impact} aria-controls={impact ? `${id}impact` : undefined} onClick={onImpact}
-                className={`cursor-pointer border-0 bg-transparent p-0 text-13 font-700 text-accent-secondary ${FOCUS}`}>
+                className={`cursor-pointer border-0 bg-transparent p-0 text-13 font-600 text-accent-secondary ${FOCUS}`}>
                 {t('weekend.news.impact')}
               </button>
             )}

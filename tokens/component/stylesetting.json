@@ -20,7 +20,7 @@
       "header-tracking": { "value": "{tracking.label}" }
     },
     "summary": {
-      "scrim-blur": { "value": "6px", "$description": "Backdrop blur behind the summary dialog" },
+      "scrim-blur": { "value": "0px", "$description": "Backdrop blur behind the summary dialog" },
       "enter": { "value": "ilIn {duration.base} ease" }
     }
   }

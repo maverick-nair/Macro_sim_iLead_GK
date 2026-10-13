@@ -1,0 +1,51 @@
+{
+  "$description": "The approved design canvas's palette (D227): navy and paper, a mint accent used on dark only, warm sand lines. Raw values as the canvas writes them; colours a semantic token puts an alpha on are OKLCH.",
+  "color": {
+    "canvas": {
+      "navy": { "$value": "oklch(0.1831 0.0309 263.38)", "$description": "#0B1220. The page and the header on dark screens; the header on every screen" },
+      "navy-900": { "$value": "#0F2038", "$description": "Dark ink on paper buttons and selected marks" },
+      "navy-850": { "$value": "#111B2E", "$description": "Fields and panels on the live conversation" },
+      "navy-800": { "$value": "#1E2940", "$description": "Hairlines on navy" },
+      "navy-750": { "$value": "#2B364C", "$description": "Control borders on navy" },
+      "steel": { "$value": "#3A4760", "$description": "Container borders on navy, empty stars" },
+      "slate-500": { "$value": "#8F9AAD", "$description": "Quiet text on navy" },
+      "button": { "$value": "oklch(0.32 0.0661 257.5)", "$description": "#1C3354. The primary button and selected state on paper" },
+      "button-hover": { "$value": "#0F2038" },
+      "sky-100": { "$value": "#E3EEF9", "$description": "Selected rows on paper" },
+      "paper": { "$value": "#F6F4EF", "$description": "The page on light screens" },
+      "paper-light": { "$value": "#FBFAF7", "$description": "Raised paper, the paper button on dark" },
+      "sand-200": { "$value": "#EEEAE1", "$description": "Insets and chips on paper" },
+      "sand-300": { "$value": "#E2DED5", "$description": "Hairlines and empty tracks on paper" },
+      "sand-400": { "$value": "#D9D5CB", "$description": "Container borders on paper" },
+      "sand-600": { "$value": "#7D8085", "$description": "Control borders on paper (3:1)" },
+      "ink": { "$value": "oklch(0.2101 0.0318 264.66)", "$description": "#111827. Text on paper" },
+      "slate-700": { "$value": "#374151", "$description": "Body text on paper" },
+      "slate-600": { "$value": "#4B5563", "$description": "Labels and metadata on paper" },
+      "mist": { "$value": "#C9D1DE", "$description": "Body text on dark" },
+      "mist-light": { "$value": "#E6EAF2", "$description": "Strong text on dark" },
+      "charcoal-950": { "$value": "#15181C", "$description": "Opaque surface on dark screens" },
+      "charcoal-900": { "$value": "#1A1E22", "$description": "Cards on dark screens" },
+      "charcoal-850": { "$value": "#22282E", "$description": "Insets on dark screens" },
+      "charcoal-800": { "$value": "#262C33", "$description": "Hairlines on dark cards" },
+      "charcoal-600": { "$value": "#6B7689", "$description": "Control borders on dark cards (3:1)" },
+      "mint": { "$value": "oklch(0.8154 0.0896 177.51)", "$description": "#7FD6C2. The accent, on dark only" },
+      "mint-light": { "$value": "#CFE9E2", "$description": "Links on dark, hovered" },
+      "green-800": { "$value": "#166534", "$description": "Success on paper" },
+      "green-100": { "$value": "#DCF1E6" },
+      "orange-800": { "$value": "#9A3412", "$description": "Warning and decline on paper" },
+      "orange-700": { "$value": "#C2410C", "$description": "The bottleneck's border" },
+      "orange-50": { "$value": "#FFF4EC" },
+      "orange-300": { "$value": "oklch(0.8366 0.1165 66.29)", "$description": "#FDBA74. Warning on dark" },
+      "red-300": { "$value": "oklch(0.8077 0.1035 19.57)", "$description": "#FCA5A5. Decline on dark" },
+      "red-400": { "$value": "#F87171", "$description": "The listening dot" },
+      "green-300": { "$value": "oklch(0.8712 0.1363 154.45)", "$description": "#86EFAC. Gain on dark" }
+    }
+  },
+  "font": {
+    "family": {
+      "display": { "$value": "'Newsreader Display', 'Newsreader', Georgia, serif", "$description": "Newsreader at its display size: headlines from 28px" },
+      "serif": { "$value": "'Newsreader', Georgia, serif", "$description": "Newsreader at its text size: quotes, people's words, smaller headings" },
+      "mono": { "$value": "'Geist Mono', ui-monospace, monospace", "$description": "Numbers: scores, money, clocks, counts" }
+    }
+  }
+}

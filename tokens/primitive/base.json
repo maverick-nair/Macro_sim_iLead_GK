@@ -148,12 +148,16 @@
   "font": {
     "family": {
       "sans": {
-        "$value": "'Manrope', system-ui, sans-serif"
+        "$value": "'Geist', system-ui, sans-serif",
+        "$description": "Geist, the interface face of the approved canvas (D227). A client theme may name another (src/theme/schema.ts FONTS)"
       }
     },
     "weight": {
       "400": {
         "$value": "400"
+      },
+      "500": {
+        "$value": "500"
       },
       "600": {
         "$value": "600"

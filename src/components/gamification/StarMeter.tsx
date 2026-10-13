@@ -61,7 +61,7 @@ export function StarRow({ kind, title, earned, detail }: StarRowProps) {
         <polygon points={STAR_POINTS} fill={earned ? 'var(--il-color-celebration-star)' : 'transparent'} stroke={earned ? 'var(--il-color-celebration-star)' : 'var(--il-color-line-control)'} strokeWidth="1.5" />
       </svg>
       <span className="flex flex-col">
-        <b className="text-14 font-700">{title ?? t('gamification.star.title', { kind: kind ?? 'other', earned: String(earned) })}</b>
+        <b className="text-14 font-600">{title ?? t('gamification.star.title', { kind: kind ?? 'other', earned: String(earned) })}</b>
         <span className="text-12 text-fg-secondary">{detail}</span>
       </span>
     </div>

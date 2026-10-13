@@ -75,22 +75,22 @@ function Composer({ c, npcName }: { c: ChatComposer; npcName: string }) {
   };
   return (
     <div className="flex flex-col gap-2">
-      <div className={`flex items-end gap-2.5 rounded-20 border bg-surface-material p-2 ${c.recording ? 'border-voice-listening shadow-(--il-liveformats-composer-listening)' : 'border-line-control'}`}>
+      <div className={`flex items-end gap-2.5 rounded-6 border bg-surface-material p-2 ${c.recording ? 'border-voice-listening shadow-(--il-liveformats-composer-listening)' : 'border-line-control'}`}>
         <div className="flex min-w-0 flex-1 flex-col">
           <label htmlFor={id} className="sr-only">{t('liveformats.chat.draft.label', { name: npcName })}</label>
           {c.recording && (
-            <span role="status" className="flex items-center gap-2.5 px-2 pt-1 text-12 font-700 text-status-gain">
+            <span role="status" className="flex items-center gap-2.5 px-2 pt-1 text-12 font-600 text-status-gain">
               <Waveform levels={(c.levels ?? []).slice(0, 12).map(w => Math.max(4, w / 2))} size="sm" />
               <span>{t('liveformats.chat.recording')}</span>
             </span>
           )}
           <textarea id={id} value={c.draft} onChange={e => c.onDraft(e.target.value)} onKeyDown={onKey} rows={1}
             aria-describedby={hint} placeholder={t('liveformats.chat.draft.placeholder')}
-            className="w-full resize-none rounded-12 border-0 bg-transparent p-2 text-15 text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
+            className="w-full resize-none rounded-4 border-0 bg-transparent p-2 text-15 text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
         </div>
         {c.onRecord && <DictateButton on={!!c.recording} label={t('liveformats.chat.record', { state: c.recording ? 'on' : 'off' })} onPress={c.onRecord} />}
         <button type="button" onClick={c.onSend} disabled={!canSend} aria-label={t('liveformats.chat.send')}
-          className={`flex size-10 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-brand-deep-space disabled:cursor-not-allowed ${canSend ? 'bg-(image:--il-fill-brand)' : 'bg-track'} ${FOCUS}`}>
+          className={`flex size-10 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-button-on-solid disabled:cursor-not-allowed ${canSend ? 'bg-(image:--il-fill-brand)' : 'bg-track'} ${FOCUS}`}>
           <SendGlyph />
         </button>
       </div>
@@ -118,12 +118,12 @@ export function ChatStage({ npc, turns, ended, periodUnit, subPeriodUnit, compos
       <header className="flex items-center border-b border-line-default gap-3 px-4.5 py-3">
         <Portrait img={npc.img} size="sm" mood={npc.mood} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <h2 className="m-0 truncate text-15 font-700">{npc.name}</h2>
+          <h2 className="m-0 truncate text-15 font-600">{npc.name}</h2>
         </div>
         <MoodPill name={npc.firstName} mood={npc.mood} />
         {onClose && !ended && (
           <button type="button" onClick={onClose}
-            className={`h-8.5 flex-none cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 text-fg-primary ${FOCUS}`}>
+            className={`h-8.5 flex-none cursor-pointer rounded-4 border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-600 text-fg-primary ${FOCUS}`}>
             {t('liveformats.chat.close')}
           </button>
         )}

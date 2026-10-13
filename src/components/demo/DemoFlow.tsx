@@ -25,7 +25,7 @@ export interface DemoFlowProps {
   fit?: boolean;
 }
 
-const EYEBROW = 'text-12 font-700 tracking-(--il-onboarding-eyebrow-tracking) text-accent-secondary uppercase';
+const EYEBROW = 'text-12 font-600 tracking-(--il-onboarding-eyebrow-tracking) text-accent-secondary uppercase';
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
@@ -56,7 +56,7 @@ export default function DemoFlow({ onDone, onPause, onSettings, paused, minHeigh
     <main className="flex flex-1 items-center justify-center p-8" style={{ minHeight }}>
       <div className="flex w-160 max-w-full flex-col gap-5">
         <span className={EYEBROW}>{t(offer ? 'demo.offer.eyebrow' : 'demo.done.eyebrow')}</span>
-        <h1 ref={heading} tabIndex={-1} className="m-0 text-40 font-700 tracking-(--il-onboarding-display-tracking) outline-none">{t(offer ? 'demo.offer.title' : 'demo.done.title')}</h1>
+        <h1 ref={heading} tabIndex={-1} className="m-0 text-40 font-600 tracking-(--il-onboarding-display-tracking) outline-none">{t(offer ? 'demo.offer.title' : 'demo.done.title')}</h1>
         <p className="m-0 text-17 text-pretty text-fg-secondary">{t(offer ? 'demo.offer.body' : 'demo.done.body')}</p>
         {offer && <p className="m-0 text-14 text-fg-secondary">{t('demo.offer.once')}</p>}
         <div className="flex flex-wrap gap-3">
@@ -104,10 +104,10 @@ function DemoRun({ fit, paused, onPause, onSettings, onFinish, onLeave }: { fit?
     (focusable ?? el)?.focus();
   };
   const banner = (
-    <div className="mx-6 mt-3 flex flex-wrap items-center gap-3 rounded-16 border border-accent-default bg-accent-soft py-2 pe-2 ps-4 text-13 font-600">
+    <div className="mx-6 mt-3 flex flex-wrap items-center gap-3 rounded-6 border border-accent-default bg-accent-soft py-2 pe-2 ps-4 text-13 font-600">
       <span className="flex-1">{t('demo.banner')}</span>
       <button ref={exitButton} type="button" onClick={() => setConfirmExit(true)}
-        className={`min-h-8 cursor-pointer rounded-pill border border-line-strong bg-surface-raised px-3.5 text-13 font-700 text-fg-primary ${FOCUS}`}>{t('demo.exit')}</button>
+        className={`min-h-8 cursor-pointer rounded-4 border border-line-strong bg-surface-raised px-3.5 text-13 font-600 text-fg-primary ${FOCUS}`}>{t('demo.exit')}</button>
     </div>
   );
   return (
@@ -127,7 +127,7 @@ function DemoRun({ fit, paused, onPause, onSettings, onFinish, onLeave }: { fit?
       )}
       {confirmExit && (
         <AppDialog onDismiss={() => setConfirmExit(false)} returnFocus={() => exitButton.current} described className="flex w-110 flex-col gap-4 p-7">
-          <DialogTitle className="m-0 text-24 font-700">{t('demo.exit.title')}</DialogTitle>
+          <DialogTitle className="m-0 text-24 font-600">{t('demo.exit.title')}</DialogTitle>
           <DialogDescription className="m-0 text-pretty text-fg-secondary">{t('demo.exit.body')}</DialogDescription>
           <div className="flex flex-wrap justify-end gap-2.5">
             <NoWrapButton variant="secondary" size="md" onClick={() => setConfirmExit(false)}>{t('demo.exit.stay')}</NoWrapButton>

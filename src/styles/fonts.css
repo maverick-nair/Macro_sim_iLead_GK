@@ -1,4 +1,15 @@
-/* Manrope, the Genie typeface. From the GenieKreator Guidelines design system. */
+/* The approved canvas's type (D227), self hosted, latin subsets (fontsource builds, SIL Open Font License,
+   public/fonts/OFL-*.txt). A face downloads only when text uses it.
+   Geist: the interface, one variable file for every weight. Geist Mono: numbers. Newsreader: headlines
+   (Display, its 72 optical size) and quotes and people's words (Text, its 18 optical size), weight 400 only,
+   as the canvas sets it. */
+@font-face{font-family:'Geist';src:url('/fonts/Geist.woff2') format('woff2');font-weight:100 900;font-style:normal;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-Medium.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-SemiBold.woff2') format('woff2');font-weight:600 700;font-style:normal;font-display:swap}
+@font-face{font-family:'Newsreader Display';src:url('/fonts/Newsreader-Display.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Newsreader';src:url('/fonts/Newsreader-Text.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+/* Manrope, the Genie typeface: GenieKreator's own, and a font a client theme may name (src/theme/schema.ts). */
 @font-face{font-family:'Manrope';src:url('/fonts/Manrope-ExtraLight.woff2') format('woff2');font-weight:200;font-style:normal;font-display:swap}
 @font-face{font-family:'Manrope';src:url('/fonts/Manrope-Light.woff2') format('woff2');font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:'Manrope';src:url('/fonts/Manrope-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}

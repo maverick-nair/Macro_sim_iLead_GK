@@ -16,7 +16,7 @@ export interface MicStatusProps {
 export function MicStatus({ status, speaker = '' }: MicStatusProps) {
   const { t } = useI18n();
   return (
-    <span aria-live="polite" className={`px-2 text-12 font-700 ${status === 'listening' ? 'text-status-gain' : 'text-fg-secondary'}`}>
+    <span aria-live="polite" className={`px-2 text-12 font-600 ${status === 'listening' ? 'text-status-gain' : 'text-fg-secondary'}`}>
       {t('live.mic.status', { status, name: speaker })}
     </span>
   );

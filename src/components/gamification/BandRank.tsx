@@ -19,7 +19,7 @@ export default function BandRank({ view, onOpen }: BandRankProps) {
   const values = you && board ? { known: 'yes', rank: number(you.rank), total: number(board.total) } : { known: 'no', rank: '', total: '' };
   return (
     <button type="button" onClick={onOpen} aria-label={t('desk.rank.aria', values)} data-band-rank=""
-      className="inline-flex min-h-6 cursor-pointer items-center self-start rounded-4 border-0 bg-transparent p-0 text-13 font-700 whitespace-nowrap text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+      className="inline-flex min-h-6 cursor-pointer items-center self-start rounded-4 border-0 bg-transparent p-0 text-13 font-600 whitespace-nowrap text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
       {t('desk.rank', values)}
     </button>
   );
