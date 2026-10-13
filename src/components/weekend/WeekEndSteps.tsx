@@ -10,7 +10,7 @@ import type { PeriodUnit, WeekEndBadge, WeekEndNews, WeekEndReward } from './typ
 import './messages';
 import { ILeadLogo } from '../shell/Logo';
 
-export const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+export const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const EYEBROW = 'text-12 font-600 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase';
 /** Step headings take focus when the step changes, so keyboard and screen reader users start at the top. */
 const HEADING = 'm-0 font-600 outline-none';

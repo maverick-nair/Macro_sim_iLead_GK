@@ -3,7 +3,7 @@ import { useId, useRef, useState } from 'react';
 import type { EngineView } from '../../engine/contract';
 import { Button } from '../../ds/Button';
 import { useI18n } from '../../i18n';
-import { EVENT_ART } from '../board/EventCard';
+import { EVENT_TAG, EventPortrait } from '../board/EventCard';
 import './messages';
 
 type OpenChoice = EngineView['openChoices'][number];
@@ -29,8 +29,7 @@ export interface DecisionDialogProps {
   onCloseFocus?: () => void;
 }
 
-const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const chip = 'relative flex min-h-6.5 items-center rounded-4 bg-event-tag px-3 text-12 font-600 tracking-(--il-event-card-tag-tracking) text-event-on-tag uppercase';
+const focusRing = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
  * A choice event (D137) as a decision over the board, in the event card's language: the art for its kind, the
@@ -54,39 +53,39 @@ export function DecisionDialog({ choice, result, busy, img, due, changes, onDeci
           onOpenAutoFocus={e => { e.preventDefault(); title.current?.focus({ preventScroll: true }); }}
           onCloseAutoFocus={e => { if (onCloseFocus) { e.preventDefault(); onCloseFocus(); } }}
           onPointerDownOutside={e => e.preventDefault()}
-          className="flex max-h-full w-full max-w-(--il-board-panel-max-width) animate-(--il-event-card-enter) flex-col overflow-auto rounded-6 border border-line-strong bg-surface-solid shadow-(--il-event-card-shadow) outline-0">
-          <div className={`relative flex h-(--il-event-card-art-height) flex-none items-end gap-2 px-5 py-4 ${EVENT_ART[choice.card]}`}>
-            {img && <img src={img} alt="" className="absolute end-5 bottom-0 size-(--il-event-card-portrait) rounded-t-round object-cover object-top mix-blend-multiply" />}
-            <span className={chip}>{t('decision.tag')}</span>
-            {!done && <span className={chip}>{due}</span>}
-          </div>
-          <div className="flex flex-col gap-3 px-5.5 pt-5 pb-5.5">
-            <Dialog.Title ref={title} tabIndex={-1} className="m-0 text-22 font-600 tracking-(--il-tracking-title) text-balance outline-0">{choice.title}</Dialog.Title>
-            <p id={`${id}body`} className="m-0 text-14 text-pretty text-fg-secondary">{choice.body}</p>
+          className={`grid max-h-full w-full animate-(--il-event-card-enter) overflow-auto rounded-4 bg-surface-card shadow-(--il-event-card-shadow) outline-0 ${img ? 'max-w-(--il-event-card-width) grid-cols-[340px_minmax(0,1fr)] tablet:max-w-(--il-board-panel-max-width) tablet:grid-cols-1' : 'max-w-(--il-board-panel-max-width) grid-cols-1'}`}>
+          {img && <EventPortrait img={img} />}
+          <div className="flex min-w-0 flex-col gap-3.5 px-7.5 pt-7 pb-6">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <span className={EVENT_TAG}>{t('decision.tag')}</span>
+              {!done && <span className="text-13 font-600 text-status-attention">{due}</span>}
+            </div>
+            <Dialog.Title ref={title} tabIndex={-1} className="m-0 font-display text-36 leading-[1.1] font-400 text-balance outline-0">{choice.title}</Dialog.Title>
+            <p id={`${id}body`} className="m-0 text-15 leading-normal text-pretty text-fg-body">{choice.body}</p>
             {!done && choice.known.length > 0 && (
               <div className="flex flex-col gap-1">
-                <b className="text-13">{t('decision.known')}</b>
-                <ul className="m-0 flex list-disc flex-col gap-0.5 ps-5 text-13">{choice.known.map((k, i) => <li key={i}>{k}</li>)}</ul>
+                <b className="text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-fg-body">{t('decision.known')}</b>
+                <ul className="m-0 flex list-[square] flex-col gap-1 ps-4 text-14 text-fg-body">{choice.known.map((k, i) => <li key={i}>{k}</li>)}</ul>
               </div>
             )}
             {!done ? (
               <div className="flex flex-col gap-3">
                 <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
-                  <legend className="mb-1.5 p-0 text-13 font-600">{t('decision.legend')}</legend>
+                  <legend className="mb-1.5 p-0 font-serif text-21">{t('decision.legend')}</legend>
                   {choice.options.map(o => (
-                    <label key={o.key} className={`flex cursor-pointer items-start gap-2.5 rounded-6 border px-3.5 py-2.5 text-14 ${picked === o.key ? 'border-accent-secondary bg-accent-soft' : 'border-line-default'}`}>
-                      <input type="radio" name={`${id}option`} value={o.key} checked={picked === o.key} onChange={() => setPicked(o.key)} className={`mt-1 ${focusRing}`} />
-                      <span className="flex flex-col gap-0.5"><b>{o.label}</b>{o.detail && <span className="text-13 text-fg-secondary">{o.detail}</span>}</span>
+                    <label key={o.key} className={`flex cursor-pointer items-start gap-3 px-4 py-3.5 text-15 ${picked === o.key ? 'border-2 border-accent-default bg-surface-card px-3.75 py-3.25' : 'border border-line-strong bg-surface-material'}`}>
+                      <input type="radio" name={`${id}option`} value={o.key} checked={picked === o.key} onChange={() => setPicked(o.key)} className={`mt-1 size-4 accent-(--il-color-accent-default) ${focusRing}`} />
+                      <span className="flex flex-col gap-1"><b className="font-600">{o.label}</b>{o.detail && <span className="text-14 text-fg-body">{o.detail}</span>}</span>
                     </label>
                   ))}
                 </fieldset>
-                <p className="m-0 text-12 text-fg-secondary">{t('decision.noRight')}</p>
-                <div className="flex flex-wrap items-center justify-end gap-2 pt-1">
+                <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line-default pt-3.5">
+                  <p className="m-0 w-full text-13 text-fg-body">{t('decision.noRight')}</p>
                   <button type="button" disabled={busy} onClick={onLater}
-                    className={`min-h-9 cursor-pointer rounded-4 border border-solid border-line-strong bg-transparent px-4 py-0 text-13 font-600 text-fg-primary ${focusRing}`}>
+                    className={`min-h-11 cursor-pointer rounded-4 border border-solid border-line-strong bg-surface-card px-4 py-0 text-14 font-500 text-fg-primary ${focusRing}`}>
                     {t('decision.later')}
                   </button>
-                  <Button variant="primary" size="md" disabled={busy || !picked} onClick={() => { if (picked) onDecide(picked); }}>{t('decision.decide')}</Button>
+                  <Button variant="primary" size="lg" disabled={busy || !picked} onClick={() => { if (picked) onDecide(picked); }}>{t('decision.decide')}</Button>
                 </div>
               </div>
             ) : (
@@ -97,7 +96,7 @@ export function DecisionDialog({ choice, result, busy, img, due, changes, onDeci
                   <div className="flex flex-col gap-1">
                     <b className="text-13">{t('decision.changed')}</b>
                     <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
-                      {lines.map((l, i) => <li key={i} className="rounded-4 border border-line-default px-2.5 py-0.5 text-12 font-600">{l}</li>)}
+                      {lines.map((l, i) => <li key={i} className="bg-surface-raised px-2 py-0.5 text-13 font-500">{l}</li>)}
                     </ul>
                   </div>
                 )}

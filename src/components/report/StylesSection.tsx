@@ -103,7 +103,7 @@ export function ConsistencySection({ data }: { data: ConsistencyData }) {
       {data.members.length > 0 && (
         <div className="flex flex-col gap-1.5">
           <h3 className="m-0 text-15 font-600">{t('report.consistency.membersTitle')}</h3>
-          <div role="region" aria-label={t('report.consistency.membersTitle')} tabIndex={0} className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+          <div role="region" aria-label={t('report.consistency.membersTitle')} tabIndex={0} className="overflow-x-auto focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
             <table className="w-full border-collapse text-13">
               <caption className="sr-only">{t('report.consistency.membersTitle')}</caption>
               <thead>

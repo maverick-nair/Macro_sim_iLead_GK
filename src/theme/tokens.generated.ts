@@ -120,6 +120,11 @@ export const PAIRS: ContrastPair[] = [
  },
  {
   "min": 4.5,
+  "fg": "color.fg.body",
+  "bg": "color.surface.solid"
+ },
+ {
+  "min": 4.5,
   "fg": "color.fg.secondary",
   "bg": "color.surface.solid"
  },
@@ -156,6 +161,7 @@ export const PAIRS: ContrastPair[] = [
  {
   "fg": "color.fg.primary",
   "bg": [
+   "color.surface.page",
    "color.surface.card",
    "color.surface.raised",
    "color.surface.material",
@@ -172,10 +178,22 @@ export const PAIRS: ContrastPair[] = [
   "bg": [
    "color.surface.card",
    "color.surface.raised",
-   "color.surface.material"
+   "color.surface.material",
+   "color.surface.page"
   ],
   "min": 4.5,
   "why": "Labels and metadata"
+ },
+ {
+  "fg": "color.fg.body",
+  "bg": [
+   "color.surface.card",
+   "color.surface.raised",
+   "color.surface.material",
+   "color.surface.page"
+  ],
+  "min": 4.5,
+  "why": "Running text and labels (D227)"
  },
  {
   "fg": "color.accent.secondary",
@@ -675,6 +693,9 @@ export const NODES: Record<string, TokenNode> = {
  "color.canvas.orange-800": {
   "$value": "#9A3412"
  },
+ "color.canvas.paper": {
+  "$value": "#F6F4EF"
+ },
  "color.canvas.paper-light": {
   "$value": "#FBFAF7"
  },
@@ -695,6 +716,9 @@ export const NODES: Record<string, TokenNode> = {
  },
  "color.canvas.slate-600": {
   "$value": "#4B5563"
+ },
+ "color.canvas.slate-700": {
+  "$value": "#374151"
  },
  "color.celebration.star": {
   "light": "{color.canvas.button}",
@@ -720,6 +744,10 @@ export const NODES: Record<string, TokenNode> = {
    "ref": "color.portrait.shade",
    "alpha": 0.8
   }
+ },
+ "color.fg.body": {
+  "light": "{color.canvas.slate-700}",
+  "dark": "{color.canvas.mist}"
  },
  "color.fg.inverse": {
   "light": "{color.white}",
@@ -897,6 +925,10 @@ export const NODES: Record<string, TokenNode> = {
   "light": "{color.canvas.paper-light}",
   "dark": "{color.canvas.charcoal-950}",
   "themable": true
+ },
+ "color.surface.page": {
+  "light": "{color.canvas.paper}",
+  "dark": "{color.canvas.navy}"
  },
  "color.surface.raised": {
   "light": "{color.canvas.sand-200}",

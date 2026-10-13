@@ -22,12 +22,12 @@
     },
     "md": {
       "height": {
-        "value": "max(calc({space.unit} * 10), calc({font.size.14} * 1.6))",
-        "$description": "40px; grows with the text size"
+        "value": "max(calc({space.unit} * 11), calc({font.size.14} * 1.6))",
+        "$description": "44px, the canvas's control height and a full touch target (D227); grows with the text size"
       },
       "padding-x": {
-        "value": "calc({space.unit} * 5)",
-        "$description": "20px"
+        "value": "calc({space.unit} * 4)",
+        "$description": "16px"
       },
       "font-size": {
         "value": "{font.size.14}"
@@ -35,15 +35,15 @@
     },
     "lg": {
       "height": {
-        "value": "max(calc({space.unit} * 12), calc({font.size.15} * 1.6))",
-        "$description": "48px; grows with the text size"
+        "value": "max(calc({space.unit} * 13), calc({font.size.16} * 1.6))",
+        "$description": "52px, the canvas's call to action (D227); grows with the text size"
       },
       "padding-x": {
-        "value": "calc({space.unit} * 6.5)",
-        "$description": "26px"
+        "value": "calc({space.unit} * 5.5)",
+        "$description": "22px"
       },
       "font-size": {
-        "value": "{font.size.15}"
+        "value": "{font.size.16}"
       }
     },
     "primary": {

@@ -69,7 +69,7 @@ export function EmailStage(p: EmailStageProps) {
             </div>
           ) : (
             <input value={p.subject} onChange={e => p.onSubject(e.target.value)} aria-label={t('liveshell.email.subjectAria')}
-              className="h-9 flex-1 rounded-4 border-0 bg-transparent px-0.5 py-0.25 text-15 font-600 text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
+              className="h-9 flex-1 rounded-4 border-0 bg-transparent px-0.5 py-0.25 text-15 font-600 text-fg-primary outline-0 focus-visible:outline-3 focus-visible:outline-accent-secondary" />
           )}
           <button type="button" onClick={() => p.onDictate(field)} aria-label={t('liveshell.email.dictate', { field })} aria-pressed={p.dictating === field}
             className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border border-solid border-line-default bg-surface-raised p-0 text-fg-secondary ${FOCUS}`}>
@@ -79,7 +79,7 @@ export function EmailStage(p: EmailStageProps) {
       ))}
       <div className="relative flex flex-1">
         <textarea value={p.body} onChange={e => p.onBody(e.target.value)} aria-label={t('liveshell.email.bodyAria')}
-          className="min-h-65 flex-1 resize-none border-0 bg-transparent p-4 text-15 leading-(--il-liveshell-email-leading) text-fg-primary outline-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary" />
+          className="min-h-65 flex-1 resize-none border-0 bg-transparent p-4 text-15 leading-(--il-liveshell-email-leading) text-fg-primary outline-0 focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary" />
         {p.dictating && (
           <div role="status" className="absolute end-4 bottom-3 start-4 flex items-center gap-2.5 rounded-6 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
             <Waveform levels={p.levels} size="sm" />

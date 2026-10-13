@@ -52,6 +52,11 @@ export interface StyleControlProps {
   disabledReason?: string;
   /** A letter was picked (click, Enter or Space) while disabled, so the page can say why, for example in a toast. */
   onDisabledPick?: () => void;
+  /**
+   * `letters` (the default) is the segmented control of letters; `names` is the style setting screen's grid of buttons,
+   * two to a row, each with the style's full name (the approved canvas, D227). The same radio group either way.
+   */
+  variant?: 'letters' | 'names';
 }
 
 /**
@@ -70,7 +75,11 @@ const columns = (n: number) => COLUMNS[n] ?? 'grid-cols-4';
  * in single mode: a radiogroup with one tab stop, arrow keys move between letters (showing each tooltip
  * on focus), Enter or Space picks. Picking never clears the choice, and clicks never reach a parent card.
  */
-export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip, onTooltipChange, disabled = false, disabledReason, onDisabledPick }: StyleControlProps) {
+export function StyleControl(props: StyleControlProps) {
+  return props.variant === 'names' ? <StyleNames value={props.value} onChange={props.onChange} memberName={props.memberName} /> : <StyleLetters {...props} />;
+}
+
+function StyleLetters({ value, onChange, memberName, size = 'sm', tooltip, onTooltipChange, disabled = false, disabledReason, onDisabledPick }: StyleControlProps) {
   const { t } = useI18n();
   const lens = useLens();
   const n = lens.styles.length;
@@ -115,7 +124,7 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
               onFocus={show(k)}
               onBlur={hide(k)}
               onKeyDown={onKey}
-              className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-4 border-0 p-0 font-600 [transition:var(--il-style-segment-transition)] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${n > 4 ? SIZES[size].many : SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary'}`}
+              className={`w-full ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-4 border-0 p-0 font-600 [transition:var(--il-style-segment-transition)] focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-accent-secondary ${n > 4 ? SIZES[size].many : SIZES[size].segment} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary'}`}
             >
               {letter}
             </ToggleGroup.Item>
@@ -124,6 +133,31 @@ export function StyleControl({ value, onChange, memberName, size = 'sm', tooltip
         );
       })}
       {described && <span id={reasonId} className="sr-only">{disabledReason}</span>}
+    </ToggleGroup.Root>
+  );
+}
+
+/**
+ * The style setting screen's control on the canvas (D227): one button per lens style with its full name, two to a row,
+ * 44px tall. The chosen one is filled with the accent. A Radix toggle group in single mode, as the letters are; the
+ * description is the button's accessible description, as the letters' tooltip says it.
+ */
+function StyleNames({ value, onChange, memberName }: Pick<StyleControlProps, 'value' | 'onChange' | 'memberName'>) {
+  const { t } = useI18n();
+  const lens = useLens();
+  const stop = (e: MouseEvent) => e.stopPropagation();
+  return (
+    <ToggleGroup.Root type="single" value={value ?? ''} onValueChange={v => { if (v && v !== value) onChange(v as StyleKey); }}
+      aria-label={t('style.group.aria', { name: memberName })} onClick={stop} className="grid grid-cols-2 gap-1">
+      {lens.styles.map(({ key: k, name, description }) => {
+        const on = value === k;
+        return (
+          <ToggleGroup.Item key={k} value={k} aria-label={t('style.option.aria', { style: name, description })} title={description}
+            className={`min-h-11 min-w-0 cursor-pointer rounded-3 border px-1 text-13 font-500 [transition:var(--il-style-segment-transition)] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${on ? 'border-transparent bg-(image:--il-fill-brand) text-button-on-solid' : 'border-line-strong bg-surface-card text-fg-primary hover:border-line-control'}`}>
+            <span className="block truncate">{name}</span>
+          </ToggleGroup.Item>
+        );
+      })}
     </ToggleGroup.Root>
   );
 }

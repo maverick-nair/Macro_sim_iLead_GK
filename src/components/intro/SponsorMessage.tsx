@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { clockText } from '../../app/sessionClock';
 import { useI18n } from '../../i18n';
-import { Arrow, EYEBROW, FOCUS, LINK, PRIMARY } from './IntroHeader';
+import { Arrow, DISPLAY, EYEBROW, FOCUS, LINK, PRIMARY } from './IntroHeader';
 import { chapterAt, type IntroMessage } from './intro';
 
 export interface SponsorMessageProps {
@@ -23,10 +23,11 @@ const PlayIcon = ({ playing }: { playing: boolean }) => (
 );
 
 /**
- * The sponsor's video message (D219, the canvas's Sponsor): the storyline's video when it has one, else the
- * sponsor's portrait with the welcome letter as the message, timed line by line. Captions are on by default
- * and read out politely; Play and Pause, a position slider, CC, and three chapters to jump to (the challenge,
- * what I expect, your goal). At the end a card offers the products (or the objectives) and Watch again.
+ * The sponsor's video message (D219, the canvas's Sponsor, D227): the storyline's video when it has one, else the
+ * sponsor's portrait with the welcome letter as the message, timed line by line. Captions are on by default and read
+ * out politely; Play and Pause, a position slider, CC, and three chapters to jump to (the challenge, what I expect,
+ * your goal). The controls sit on the video, as a player's do. At the end a card offers the products (or the
+ * objectives) and Watch again.
  */
 export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, secondsPerCaption = 6, autoPlay = true }: SponsorMessageProps) {
   const { t } = useI18n();
@@ -70,10 +71,10 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
   const again = () => { seek(0); setPlaying(true); };
 
   return (
-    <main className="grid min-h-0 flex-1 grid-cols-(--il-intro-message-columns) gap-8 overflow-y-auto px-12 py-6 tablet:grid-cols-1 tablet:px-6">
+    <main className="grid min-h-0 flex-1 grid-cols-(--il-intro-message-columns) gap-8 overflow-y-auto px-12 pt-2 pb-10 short:pb-6 tablet:grid-cols-1 tablet:px-8">
       <h1 className="sr-only">{t('intro.message.title', { name: sponsor.name })}</h1>
-      <section aria-label={t('intro.message.title', { name: sponsor.name })} className="relative flex min-h-110 flex-col overflow-hidden rounded-6 border border-line-default bg-surface-solid">
-        <div className="relative flex min-h-0 flex-1 items-center justify-center bg-surface-raised">
+      <section aria-label={t('intro.message.title', { name: sponsor.name })} className="relative flex min-h-110 flex-col overflow-hidden rounded-6 bg-[#000]">
+        <div className="relative flex min-h-0 flex-1 items-center justify-center">
           {message.video ? (
             // The captions show over the video from the transcript (aria-live below); the storyline's track, when it has one, goes along.
             // eslint-disable-next-line jsx-a11y/media-has-caption
@@ -83,51 +84,53 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
               {message.video.track && <track kind="captions" src={message.video.track} default />}
             </video>
           ) : sponsor.img
-            ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-top opacity-90" />
-            : <span aria-hidden="true" className="flex size-40 items-center justify-center rounded-round bg-brand text-48 font-600 text-button-on-solid">{sponsor.initials}</span>}
-          <span className="absolute start-4 top-4 rounded-4 bg-surface-material px-3 py-1.5 text-13"><b>{sponsor.name}</b> <span className="text-fg-secondary">{sponsor.title}</span></span>
+            ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-[50%_25%]" />
+            : <span aria-hidden="true" className="flex size-40 items-center justify-center rounded-round bg-(--il-color-canvas-navy-800) font-display text-60 text-(--il-color-canvas-mist-light)">{sponsor.initials}</span>}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[45%] bg-[linear-gradient(0deg,rgb(0_0_0/0.85),rgb(0_0_0/0))]" />
+          <span className="absolute start-4 top-4 flex items-center gap-2 rounded-4 bg-[rgb(11_18_32/0.78)] px-2.5 py-1.5 text-13"><b className="font-600">{sponsor.name}</b> <span className="text-fg-secondary">{sponsor.title}</span></span>
           {/* Captions, on by default and read out politely; off, the region stays and says nothing. */}
-          <div role="region" aria-label={t('intro.message.captions')} className="absolute inset-x-6 bottom-6 flex justify-center">
-            <p aria-live="polite" className={`m-0 max-w-180 rounded-4 bg-surface-material px-4 py-2.5 text-center text-18 leading-snug ${cc && !ended ? '' : 'hidden'}`}>{cc && !ended ? message.captions[line] : ''}</p>
+          <div role="region" aria-label={t('intro.message.captions')} className="absolute inset-x-[9%] bottom-18.5 flex justify-center">
+            <p aria-live="polite" className={`m-0 text-center text-20 leading-[1.45] text-(--il-color-white) [text-shadow:0_1px_3px_rgb(0_0_0/0.9)] ${cc && !ended ? '' : 'hidden'}`}>{cc && !ended ? message.captions[line] : ''}</p>
           </div>
           {ended && (
-            <div data-intro-end="" className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-surface-material px-6 text-center ">
-              <p className={EYEBROW}>{t('intro.message.end')}</p>
-              <h2 ref={endHeading} tabIndex={-1} className="m-0 text-34 font-600 outline-0">{t('intro.message.endTitle', { products: hasProducts ? 'yes' : 'no' })}</h2>
-              <button type="button" onClick={onNext} className={PRIMARY}>{hasProducts ? t('intro.message.explore') : t('intro.message.objectives')}<Arrow /></button>
-              <button type="button" onClick={again} className={LINK}>{t('intro.message.again')}</button>
+            <div data-intro-end="" className="absolute inset-0 flex flex-col items-center justify-center gap-4.5 bg-[rgb(11_18_32/0.86)] px-6 text-center">
+              <p className={`${EYEBROW} text-13 tracking-[0.14em]`}>{t('intro.message.end')}</p>
+              <h2 ref={endHeading} tabIndex={-1} className={`${DISPLAY} max-w-[30ch] text-40 leading-[1.2] outline-0`}>{t('intro.message.endTitle', { products: hasProducts ? 'yes' : 'no' })}</h2>
+              <button type="button" onClick={onNext} className={`${PRIMARY} min-h-14 px-7 text-17`}>{hasProducts ? t('intro.message.explore') : t('intro.message.objectives')}<Arrow /></button>
+              <button type="button" onClick={again} className={`${LINK} text-14`}>{t('intro.message.again')}</button>
             </div>
           )}
-        </div>
-        <div className="flex flex-none items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => (ended ? again() : setPlaying(p => !p))} aria-label={t('intro.message.play', { playing: playing && !ended ? 'yes' : 'no' })}
-            className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-round border border-line-strong bg-surface-raised text-fg-primary ${FOCUS}`}>
-            <PlayIcon playing={playing && !ended} />
-          </button>
-          <input type="range" min={0} max={duration} step={1} value={Math.round(at)} onChange={e => seek(Number(e.target.value))}
-            aria-label={t('intro.message.seek')} aria-valuetext={t('intro.message.time', { at: clockText(Math.round(at)), total: clockText(duration) })}
-            className={`h-11 min-w-0 flex-1 cursor-pointer accent-(--il-color-accent-default) ${FOCUS}`} />
-          <span aria-hidden="true" className="flex-none text-13 tabular-nums text-fg-secondary">{clockText(Math.round(at))} / {clockText(duration)}</span>
-          <button type="button" onClick={() => setCc(c => !c)} aria-pressed={cc} aria-label={t('intro.message.cc')}
-            className={`flex min-h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-4 border px-2 text-13 font-600 ${cc ? 'border-accent-secondary text-fg-primary' : 'border-line-strong text-fg-secondary'} bg-transparent ${FOCUS}`}>
-            <span aria-hidden="true">{t('intro.message.ccShort')}</span>
-          </button>
+          <div className={`absolute inset-x-0 bottom-0 flex items-center gap-3 px-4 py-3 ${ended ? 'hidden' : ''}`}>
+            <button type="button" onClick={() => (ended ? again() : setPlaying(p => !p))} aria-label={t('intro.message.play', { playing: playing && !ended ? 'yes' : 'no' })}
+              className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-(--il-color-canvas-paper-light) text-(--il-color-canvas-navy) ${FOCUS}`}>
+              <PlayIcon playing={playing && !ended} />
+            </button>
+            <input type="range" min={0} max={duration} step={1} value={Math.round(at)} onChange={e => seek(Number(e.target.value))}
+              aria-label={t('intro.message.seek')} aria-valuetext={t('intro.message.time', { at: clockText(Math.round(at)), total: clockText(duration) })}
+              className={`h-11 min-w-0 flex-1 cursor-pointer accent-(--il-color-canvas-mint) ${FOCUS}`} />
+            <span aria-hidden="true" className="flex-none font-mono text-13 text-(--il-color-canvas-mist-light)">{clockText(Math.round(at))} / {clockText(duration)}</span>
+            <button type="button" onClick={() => setCc(c => !c)} aria-pressed={cc} aria-label={t('intro.message.cc')}
+              className={`flex min-h-11 min-w-11 flex-none cursor-pointer items-center justify-center rounded-4 border bg-transparent px-3 text-13 font-600 ${cc ? 'border-(--il-color-white) text-(--il-color-white)' : 'border-(--il-color-canvas-steel) text-(--il-color-canvas-mist)'} ${FOCUS}`}>
+              <span aria-hidden="true">{t('intro.message.ccShort')}</span>
+            </button>
+          </div>
         </div>
       </section>
-      <section aria-labelledby={chaptersId} className="flex flex-col gap-2">
-        <h2 id={chaptersId} className={EYEBROW}>{t('intro.message.chapters')}</h2>
+      <section aria-labelledby={chaptersId} className="flex flex-col gap-3">
+        <h2 id={chaptersId} className="m-0 text-12 font-600 uppercase tracking-[0.14em] text-fg-secondary">{t('intro.message.chapters')}</h2>
         <ol className="m-0 flex list-none flex-col gap-2 p-0">
           {message.chapters.map((c, i) => {
             const title = t('intro.message.chapter', { key: c.key });
             const start = Math.round(c.start * per);
+            const on = i === chapter && !ended;
             return (
               <li key={c.key}>
-                <button type="button" onClick={() => { seek(start); setPlaying(true); }} aria-current={i === chapter && !ended ? 'step' : undefined}
+                <button type="button" onClick={() => { seek(start); setPlaying(true); }} aria-current={on ? 'step' : undefined}
                   aria-label={t('intro.message.chapterAria', { n: i + 1, title, at: clockText(start) })}
-                  className={`flex w-full cursor-pointer flex-col gap-1 rounded-4 border bg-surface-card p-4 text-start text-fg-primary ${i === chapter && !ended ? 'border-accent-secondary' : 'border-line-default'} ${FOCUS}`}>
-                  <span className="flex justify-between text-13 text-fg-secondary"><span>{t('intro.message.part', { n: i + 1 })}</span><span className="tabular-nums">{clockText(start)}</span></span>
-                  <b className="text-16">{title}</b>
-                  <span className="text-14 text-fg-secondary">{c.summary}</span>
+                  className={`flex w-full cursor-pointer flex-col gap-1.5 rounded-4 border px-4 py-3.5 text-start text-fg-primary ${on ? 'border-accent-secondary bg-(--il-color-canvas-navy-800)' : 'border-(--il-color-canvas-navy-750) bg-transparent'} ${FOCUS}`}>
+                  <span className="flex justify-between gap-2 text-13 text-fg-secondary"><span>{t('intro.message.part', { n: i + 1 })}</span><span className="font-mono">{clockText(start)}</span></span>
+                  <b className="text-16 font-600">{title}</b>
+                  <span className="text-14 leading-normal text-(--il-color-canvas-mist-light)">{c.summary}</span>
                 </button>
               </li>
             );

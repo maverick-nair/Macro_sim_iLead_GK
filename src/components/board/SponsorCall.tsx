@@ -23,17 +23,17 @@ export interface SponsorCallProps {
 export function SponsorCall({ name, initials, img, line, laterLabel, onAnswer, onLater }: SponsorCallProps) {
   const { t } = useI18n();
   return (
-    <div role="alert" className="mx-6 mt-0 mb-3 flex animate-(--il-event-call-enter) items-center gap-3.5 rounded-6 border border-accent-default bg-surface-material py-2.5 pe-3 ps-2.5 shadow-(--il-event-call-shadow)">
+    <div role="alert" className="mx-8 mt-3 flex animate-(--il-event-call-enter) items-center gap-3.5 border-2 border-accent-default bg-surface-card py-2.5 pe-3 ps-2.5 tablet:mx-5 tablet-portrait:mx-6">
       <div className="relative size-11">
         <div className="absolute -inset-1 animate-(--il-event-call-ring) rounded-round border-2 border-accent-default" />
         <div className="flex size-11 items-center justify-center overflow-hidden rounded-round bg-(image:--il-fill-brand) font-600 text-button-on-solid">
           {img ? <img src={img} alt="" className="size-full object-cover object-top mix-blend-multiply" /> : initials}
         </div>
       </div>
-      <div className="flex flex-col"><b>{t('events.call.title', { name })}</b><span className="text-12 text-fg-secondary">{line}</span></div>
+      <div className="flex flex-col"><b className="text-15 font-600">{t('events.call.title', { name })}</b><span className="text-13 text-fg-body">{line}</span></div>
       <span className="flex-1" />
-      <NoWrapButton variant="secondary" size="sm" onClick={onLater}>{laterLabel}</NoWrapButton>
-      <NoWrapButton variant="primary" size="sm" onClick={onAnswer}>{t('events.call.answer')}</NoWrapButton>
+      <NoWrapButton variant="secondary" size="md" onClick={onLater}>{laterLabel}</NoWrapButton>
+      <NoWrapButton variant="primary" size="md" onClick={onAnswer}>{t('events.call.answer')}</NoWrapButton>
     </div>
   );
 }

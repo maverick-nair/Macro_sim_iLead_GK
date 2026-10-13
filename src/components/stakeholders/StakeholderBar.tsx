@@ -22,7 +22,7 @@ export interface StakeholderBarProps {
   disabled?: boolean;
 }
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 /** The ring round a stakeholder's initials: how the relationship stands. */
 export const LEVEL_RING: Record<RelationLevel, string> = {
   strained: 'border-status-decline', cool: 'border-status-attention', steady: 'border-line-strong', good: 'border-status-gain', strong: 'border-status-gain'

@@ -26,7 +26,7 @@ const InboxIcon = () => (
   </svg>
 );
 
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
  * The rail left of the board: the inbox button with its unread count, then one round button per

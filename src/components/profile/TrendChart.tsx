@@ -33,7 +33,7 @@ export function TrendChart({ title, points }: TrendChartProps) {
       <div className="flex items-baseline justify-between gap-2">
         <h3 id={id} className="m-0 text-13 font-600">{title}</h3>
         <button type="button" aria-pressed={table} onClick={() => setTable(v => !v)}
-          className="cursor-pointer border-0 bg-transparent px-1 text-12 font-600 text-accent-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+          className="cursor-pointer border-0 bg-transparent px-1 text-12 font-600 text-accent-secondary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
           {t('profile.trend.table', { on: String(table) })}
         </button>
       </div>

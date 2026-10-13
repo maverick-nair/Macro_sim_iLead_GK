@@ -57,7 +57,7 @@ export function OptionCards({ options, value, onChange, label, size = 'md' }: Op
         return (
           <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
             aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-6 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-6 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
+            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-6 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-6 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
             <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
               <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
             </span>
@@ -161,7 +161,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
       {/* The details scroll on a short window; the summary and Confirm stay in view below them (D101). */}
       <ScrollArea label={p.name}>
       <div className="flex flex-col gap-3.5 px-4.5 pt-4 pb-3 short:gap-2.5 short:pt-3">
-      <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
+      <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-1.5"><span className={`${pill} bg-accent-soft`}>{t('action.kind', { kind: p.kind })}</span><span className={`${pill} bg-surface-raised`}>{fmt(p.days)}</span></div>
         <Heading ref={heading} tabIndex={-1} level={p.headingLevel ?? 2} className="m-0 text-22 font-600 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</Heading>

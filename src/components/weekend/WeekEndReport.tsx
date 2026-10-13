@@ -10,7 +10,7 @@ const CARD = 'flex flex-col rounded-6 border border-line-default bg-surface-card
 const SMALL_BOX = 'flex flex-col rounded-6 border p-4.5';
 const SMALL_CARD = `${SMALL_BOX} border-line-default bg-surface-card`;
 const H2 = 'm-0 text-20 font-600';
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 /** Arrow glyphs beside a change. Decorative: the words say up or down. */
 const UP = '▲';
 const DOWN = '▼';

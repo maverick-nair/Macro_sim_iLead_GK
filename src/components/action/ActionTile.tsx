@@ -28,8 +28,11 @@ export interface ActionTileProps {
   /** A sponsor reward that applies to this action now ("No days, one seat past a full team"). Shown in place of the sub line, unless blocked. */
   perk?: string;
   onPick: () => void;
-  /** `panel`: the Actions panel, with the live, instant or lock icon. `compact`: the profile's "Take an action" column. */
-  layout?: 'panel' | 'compact';
+  /**
+   * `row`: a row of the desk's actions panel, as the canvas lists them (D227). `panel`: a tile with the live, instant or
+   * lock icon (the design frames, the tablet). `compact`: the profile's "Take an action" column.
+   */
+  layout?: 'row' | 'panel' | 'compact';
   /** The engine's action key, on the tile as `data-action` for the demo's tips (D92). */
   actionKey?: string;
 }
@@ -78,7 +81,7 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
   const pick = () => { if (!disabled) onPick(); };
 
   const tone = disabled ? 'text-fg-secondary cursor-default' : 'text-fg-primary cursor-pointer';
-  const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+  const focus = 'focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-accent-secondary';
   const text = (
     <>
       <span className={`flex flex-col ${layout === 'panel' ? 'min-w-0' : ''}`}>
@@ -89,10 +92,23 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
     </>
   );
 
+  if (layout === 'row') {
+    return (
+      <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip} data-action={actionKey} data-trace={actionKey ? `actions.${actionKey}` : undefined}
+        className={`flex min-h-11 w-full items-center gap-2.5 border-0 border-b border-solid border-line-default bg-transparent px-3.5 py-0.25 text-start ${tone} ${disabled ? '' : 'hover:bg-surface-raised'} ${focus}`}>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-14 font-500">{name}</span>
+          <span id={reasonId} className={`truncate text-12 ${perk && !block ? 'font-600 text-status-gain' : 'text-fg-body'}`}>{sub}</span>
+        </span>
+        <span data-tour="action-cost" className="font-mono text-12 whitespace-nowrap text-fg-body">{fmt(days)}</span>
+      </button>
+    );
+  }
+
   if (layout === 'compact') {
     return (
       <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip}
-        className={`grid grid-cols-(--il-action-tile-compact-columns) items-center gap-2 rounded-6 border border-line-default bg-surface-raised p-3 text-start ${tone} ${focus}`}>
+        className={`grid grid-cols-(--il-action-tile-compact-columns) items-center gap-2 rounded-0 border border-line-strong bg-surface-card px-3.5 py-3 text-start ${tone} ${disabled ? '' : 'hover:border-line-control'} ${focus}`}>
         {text}
       </button>
     );

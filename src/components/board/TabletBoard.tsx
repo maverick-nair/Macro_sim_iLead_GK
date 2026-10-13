@@ -20,7 +20,7 @@ import './tabletMessages';
  * right), the bottom dock and the bar that stands in for the drawer while people are picked.
  */
 
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const eyebrow = 'text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
 const primary = `min-h-14 cursor-pointer rounded-6 border-0 bg-transparent bg-(image:--il-button-primary-bg) px-4 py-0 text-16 font-600 text-(--il-button-primary-fg) disabled:cursor-not-allowed disabled:opacity-40 ${focus}`;
 const footer = 'sticky bottom-0 mt-auto flex flex-col gap-2 border-x-0 border-b-0 border-t border-solid border-line-default bg-surface-solid pt-3';

@@ -57,11 +57,11 @@ export interface DeskFeedProps {
   onAll: () => void;
 }
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const EYEBROW = 'm-0 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
-const CARD = 'flex h-full flex-col gap-1.5 rounded-6 border bg-surface-card p-3 text-13 short:gap-1 short:p-2.5';
-const LINK = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary ${FOCUS}`;
-const QUIET = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary hover:text-fg-primary ${FOCUS}`;
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const EYEBROW = 'm-0 text-12 font-600 whitespace-nowrap uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-body';
+const CARD = 'flex h-full min-h-27 flex-col gap-1.25 border bg-surface-card px-3 py-2.5 text-14 short:min-h-24 short:gap-1 short:py-2';
+const LINK = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-link hover:text-fg-link-hover hover:underline ${FOCUS}`;
+const QUIET = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-500 text-fg-body hover:text-fg-primary ${FOCUS}`;
 
 const Flag = () => (
   <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M4 22V4" /><path d="M4 4h12l-2 4 2 4H4" /></svg>
@@ -71,7 +71,8 @@ const Spark = () => (
 );
 
 function Card({ children, urgent = false, kind }: { children: ReactNode; urgent?: boolean; kind: string }) {
-  return <li data-feed={kind} className="flex w-(--il-desk-feed-card-width) flex-none"><div className={`${CARD} w-full ${urgent ? 'border-status-attention' : 'border-line-default'}`}>{children}</div></li>;
+  // Four to a row as the canvas lays them out (D227); more scroll sideways. Wider with larger text.
+  return <li data-feed={kind} className="flex w-[calc((100%-1.5rem)/4)] min-w-(--il-desk-feed-card-width) flex-none"><div className={`${CARD} w-full ${urgent ? 'border-status-attention' : 'border-line-strong'}`}>{children}</div></li>;
 }
 
 /**
@@ -85,24 +86,24 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
   const id = useId();
   const empty = !feedback && !milestones.length && !messages.length;
   return (
-    <section aria-labelledby={id} data-tour="feed" data-desk-feed="" className="flex min-w-0 flex-none flex-col gap-1.5 px-5 pt-1 pb-4 short:pb-3">
+    <section aria-labelledby={id} data-tour="feed" data-desk-feed="" className="flex min-w-0 flex-none flex-col gap-1.5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
         <h2 id={id} className={EYEBROW}>{t('desk.feed.title')}</h2>
-        <span className="min-w-0 flex-1 text-12 text-fg-secondary">{t('desk.feed.hint', { unit: subPeriodUnit })}</span>
+        <span className="min-w-0 flex-1 text-end text-12 text-fg-body">{t('desk.feed.hint', { unit: subPeriodUnit })}</span>
         <button type="button" onClick={onAll} className={LINK}>{t('inbox.open', { count: messages.length })}</button>
       </div>
       {empty ? <p className="m-0 text-13 text-fg-secondary">{t('desk.feed.empty')}</p> : (
         <ul aria-label={t('desk.feed.aria')} className="m-0 flex list-none gap-2 overflow-x-auto overscroll-x-contain p-0 pb-0.5">
           {feedback && (
             <Card kind="feedback">
-              <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary"><Spark />{t('desk.feed.feedback', { when: feedback.when })}</span>
-              <span className="line-clamp-2 leading-snug">{feedback.title}</span>
-              <span className="flex flex-wrap gap-x-2 text-12 text-fg-secondary">
+              <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow) text-status-gain"><Spark />{t('desk.feed.feedback', { when: feedback.when })}</span>
+              <span className="line-clamp-2 leading-[1.4]">{feedback.title}</span>
+              <span className="flex flex-wrap gap-x-2 text-12 text-fg-body">
                 {feedback.changes.length === 0 && <span>{t('desk.feed.noChange')}</span>}
                 {feedback.changes.map((c, i) => (
                   <span key={i} className="whitespace-nowrap">
                     {c.label}{' '}
-                    <b aria-hidden="true" className={`tabular-nums ${c.dir === 'up' ? 'text-status-gain' : 'text-status-decline'}`}>{c.dir === 'up' ? '↑' : '↓'}{c.n}</b>
+                    <b aria-hidden="true" className={`font-mono font-400 ${c.dir === 'up' ? 'text-status-gain' : 'text-status-decline'}`}>{c.dir === 'up' ? '↑' : '↓'}{c.n}</b>
                     <span className="sr-only">{t('desk.feed.changeSr', { dir: c.dir, n: c.n })}</span>
                   </span>
                 ))}
@@ -113,8 +114,8 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
           )}
           {milestones.map(m => (
             <Card key={m.key} kind="milestone">
-              <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-primary"><Flag />{t('desk.feed.milestone')}</span>
-              <span className="leading-snug">{m.text}</span>
+              <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow) text-accent-secondary"><Flag />{t('desk.feed.milestone')}</span>
+              <span className="leading-[1.4]">{m.text}</span>
               <span className="mt-auto flex flex-wrap gap-x-3">
                 {m.onResults && <button type="button" onClick={m.onResults} className={LINK}>{t('desk.feed.results')}</button>}
                 {m.onLeaderboard && <button type="button" onClick={m.onLeaderboard} className={LINK}>{t('board.notice.leaderboard')}</button>}
@@ -126,10 +127,10 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
             <Card key={x.id} kind="message" urgent={x.urgent}>
               <span className="flex min-w-0 items-center gap-2">
                 <span className={`flex size-6 flex-none items-center justify-center overflow-hidden rounded-round text-11 text-large:size-auto text-large:min-h-6 text-large:min-w-6 text-large:p-0.5 font-600 text-button-on-solid ${SENDER_TONE[x.sender.kind]}`}><SenderFace sender={x.sender} /></span>
-                <b className="min-w-0 flex-1 truncate text-13 text-large:whitespace-normal text-large:break-words">{x.from || t('desk.feed.message', { kind: x.kind })}</b>
-                {x.due && <span className={`text-12 whitespace-nowrap ${x.urgent ? 'font-600 text-status-attention' : 'text-fg-secondary'}`}>{x.due}</span>}
+                <b className="min-w-0 flex-1 truncate text-13 font-600 text-large:whitespace-normal text-large:break-words">{x.from || t('desk.feed.message', { kind: x.kind })}</b>
+                {x.due && <span className={`text-12 whitespace-nowrap ${x.urgent ? 'font-600 text-status-attention' : 'text-fg-body'}`}>{x.due}</span>}
               </span>
-              <span className="line-clamp-2 leading-snug text-fg-secondary">{x.title}</span>
+              <span className="line-clamp-2 leading-[1.4] text-fg-body">{x.title}</span>
               <span className="mt-auto flex flex-wrap gap-x-3">
                 <button type="button" onClick={x.onOpen} className={LINK}>{t('inbox.cta', { cta: x.cta })}<span className="sr-only">: {x.title}</span></button>
                 {x.onLater && <button type="button" onClick={x.onLater} className={QUIET}>{t('inbox.later')}<span className="sr-only">: {x.title}</span></button>}

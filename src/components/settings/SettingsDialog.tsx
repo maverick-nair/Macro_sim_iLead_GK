@@ -29,7 +29,7 @@ export interface SettingsDialogProps {
 
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 export const TEXT_SIZES = [100, 125, 150, 200];
 const INPUTS: InputMode[] = ['text', 'ptt', 'open'];
 

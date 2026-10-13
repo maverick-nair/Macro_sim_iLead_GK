@@ -137,7 +137,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   );
   const sponsorTile = (cls: string) => (
     <button type="button" onClick={sponsor.onToggle} aria-expanded={sponsor.open} aria-controls={sponsor.open ? popId : undefined}
-      className={`${tile} ${cls} cursor-pointer text-start text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
+      className={`${tile} ${cls} cursor-pointer text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
       <span className="text-12 text-fg-secondary">{t('metrics.sponsor.title')}</span>
       <b className="text-16">{meter ? t('metrics.sponsor.levelValue', { level: sponsor.level, value: number(meter.value) }) : t('metrics.sponsor.level', { level: sponsor.level })}</b>
       <div className="flex w-full gap-0.75">

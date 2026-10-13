@@ -134,7 +134,7 @@ export function MemberCard(props: MemberCardProps) {
       data-tour="member"
       data-member-id={memberId}
       data-trace={memberId ? `members.${memberId}` : undefined}
-      className={`relative flex flex-col rounded-6 border-2 bg-surface-card outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-2 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
+      className={`relative flex flex-col rounded-6 border-2 bg-surface-card outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-3 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
     >
       <button type="button" aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} onClick={e => { e.stopPropagation(); onSelect(); }} className="il-select sr-only" />
       <div className={`relative h-29.5 overflow-hidden rounded-t-6 short:h-21 shorter:h-17 ${backdrop(mood, away)}`}>
@@ -172,7 +172,7 @@ export function MemberCard(props: MemberCardProps) {
             type="button"
             onClick={profile}
             aria-label={t('member.profile.open', { name })}
-            className="ms-auto flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
+            className="ms-auto flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
           >
             <External />
           </button>

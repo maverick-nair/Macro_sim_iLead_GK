@@ -26,7 +26,7 @@ export interface DemoFlowProps {
 }
 
 const EYEBROW = 'text-12 font-600 tracking-(--il-onboarding-eyebrow-tracking) text-accent-secondary uppercase';
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
  * The demo round (D92): offered after onboarding, before the real run. Play the demo opens the board on

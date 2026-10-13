@@ -11,6 +11,15 @@
         },
         "$description": "Names, values, headings"
       },
+      "body": {
+        "light": "{color.canvas.slate-700}",
+        "dark": "{color.canvas.mist}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 4.5
+        },
+        "$description": "Running text and labels on the canvas: a step softer than names and numbers, a step stronger than metadata (D227)"
+      },
       "secondary": {
         "light": "{color.canvas.slate-600}",
         "dark": "{color.canvas.mist}",
@@ -27,6 +36,11 @@
       }
     },
     "surface": {
+      "page": {
+        "light": "{color.canvas.paper}",
+        "dark": "{color.canvas.navy}",
+        "$description": "The page itself: paper, or navy on dark (D227). Sheets and panels that stand in for a page (the menu, the report) use it"
+      },
       "card": {
         "light": "{color.white}",
         "dark": "{color.canvas.charcoal-900}",

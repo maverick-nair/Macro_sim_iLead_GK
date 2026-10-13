@@ -71,7 +71,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
           <section aria-labelledby="overview-people" className="flex flex-col gap-2">
             <PanelHeading id="overview-people">{t('panels.overview.people')}</PanelHeading>
             {/* The table scrolls sideways inside the panel late in a long run; it takes focus so the keyboard can scroll it. */}
-            <div role="region" aria-labelledby="overview-people" tabIndex={0} className="overflow-x-auto rounded-4 focus-visible:outline-2 focus-visible:outline-accent-secondary">
+            <div role="region" aria-labelledby="overview-people" tabIndex={0} className="overflow-x-auto rounded-4 focus-visible:outline-3 focus-visible:outline-accent-secondary">
               <table className="w-full border-collapse text-13">
                 <caption className="sr-only">{t('panels.overview.peopleCaption', { unit: clock.periodUnit })}</caption>
                 <thead><tr className="border-b border-line-default">
@@ -115,7 +115,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
           </section>
           <section aria-labelledby="overview-stages" className="flex flex-col gap-2">
             <PanelHeading id="overview-stages">{t('panels.overview.byWeek', { unit: clock.periodUnit })}</PanelHeading>
-            <div role="region" aria-labelledby="overview-stages" tabIndex={0} className="overflow-x-auto rounded-4 focus-visible:outline-2 focus-visible:outline-accent-secondary">
+            <div role="region" aria-labelledby="overview-stages" tabIndex={0} className="overflow-x-auto rounded-4 focus-visible:outline-3 focus-visible:outline-accent-secondary">
               <table className="w-full border-collapse text-13">
                 <caption className="sr-only">{t('panels.overview.stagesCaption', { unit: clock.periodUnit })}</caption>
                 <thead><tr className="border-b border-line-default">

@@ -49,7 +49,7 @@ export function LiveTranscript({ turns, onReplay, captionsAnnounce = false, fill
         <span>{t('liveshell.transcript.saved')}</span>
       </div>
       <div ref={list} role="log" aria-live="off" tabIndex={0}
-        className="flex flex-1 flex-col gap-2.5 overflow-auto p-3.5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
+        className="flex flex-1 flex-col gap-2.5 overflow-auto p-3.5 focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
         {turns.map(turn => {
           const npc = turn.speaker !== 'you';
           return (

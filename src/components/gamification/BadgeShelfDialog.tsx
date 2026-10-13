@@ -66,7 +66,7 @@ export function BadgeShelfDialog({ badges, periodUnit, onClose, returnFocus }: B
           </div>
           {earned === 0 && <p className="m-0 text-13 text-fg-secondary">{t('badges.none')}</p>}
           {/* The list scrolls inside the dialog on a short window; it is focusable so the keyboard can scroll it. */}
-          <div role="region" aria-label={t('badges.title')} tabIndex={0} className="-mx-1 min-h-0 overflow-auto px-1 focus-visible:outline-2 focus-visible:outline-accent-secondary">
+          <div role="region" aria-label={t('badges.title')} tabIndex={0} className="-mx-1 min-h-0 overflow-auto px-1 focus-visible:outline-3 focus-visible:outline-accent-secondary">
             <BadgeList badges={badges} periodUnit={periodUnit} />
           </div>
           <div className="flex justify-end">

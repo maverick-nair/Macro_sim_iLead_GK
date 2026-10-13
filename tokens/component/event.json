@@ -3,7 +3,8 @@
     "card": {
       "shadow": { "value": "0 16px 48px {color.event.shadow}" },
       "enter": { "value": "ilIn {duration.slow} {easing.settle}", "$description": "The design's 280ms, snapped to duration.slow (D24)" },
-      "art-height": { "value": "170px", "$description": "The art band at the top of an event card" },
+      "width": { "value": "1040px", "$description": "An event card or a decision about someone: their photo beside the card, as on the canvas (D227)" },
+      "art-height": { "value": "170px", "$description": "The art band at the top of an event card (the design frames)" },
       "portrait": { "value": "150px", "$description": "The NPC cut out on the art band" },
       "tag-tracking": { "value": "{tracking.label}" }
     },

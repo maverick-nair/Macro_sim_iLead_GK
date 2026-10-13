@@ -1,8 +1,9 @@
 {
   "$description": "WCAG 2.2 AA contrast pairs checked by the token build, on top of the `contrast` declared on semantic tokens (those are all against surface.solid). Every pair runs in light and dark. Text needs 4.5:1 (1.4.3; the app's 12px and 13px labels are never large text); controls, focus rings and graphics need 3:1 (1.4.11). `bg` may be a list. The theme loader corrects a client theme against these same pairs at runtime (src/theme, D71). Translucent backgrounds are composited over `over`, by default surface.solid. Gradients are checked at every stop.",
   "pairs": [
-    { "fg": "color.fg.primary", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.accent.soft", "color.status.attention-soft", "color.status.gain-soft", "color.status.decline-soft"], "min": 4.5, "why": "Body text on every surface, selected rows and status chips" },
-    { "fg": "color.fg.secondary", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material"], "min": 4.5, "why": "Labels and metadata" },
+    { "fg": "color.fg.primary", "bg": ["color.surface.page", "color.surface.card", "color.surface.raised", "color.surface.material", "color.accent.soft", "color.status.attention-soft", "color.status.gain-soft", "color.status.decline-soft"], "min": 4.5, "why": "Body text on every surface, selected rows and status chips" },
+    { "fg": "color.fg.secondary", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.surface.page"], "min": 4.5, "why": "Labels and metadata" },
+    { "fg": "color.fg.body", "bg": ["color.surface.card", "color.surface.raised", "color.surface.material", "color.surface.page"], "min": 4.5, "why": "Running text and labels (D227)" },
 
     { "fg": "color.accent.secondary", "bg": ["color.surface.card", "color.surface.material", "color.surface.raised"], "min": 4.5, "why": "Accent text: eyebrows, Add a reason, Hide, See why, award count, Changed, also on raised rows and chips (D61: Halden's second accent was 4.03:1 there)" },
     { "fg": "color.live.replay", "bg": ["color.surface.card", "color.surface.raised"], "min": 4.5, "why": "Replay link under NPC turns" },

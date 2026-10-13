@@ -64,12 +64,12 @@ export default function MicCheck({ onHeard, onText }: MicCheckProps) {
         <button type="button" onClick={() => void toggle()} aria-pressed={listening} className={QUIET_BUTTON}><MicIcon />{listening ? t('intro.mic.stop') : t('intro.mic.start')}</button>
         <span role="meter" aria-label={t('intro.mic.level')} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(level * 100)} className="flex h-6 items-end gap-0.75">
           {Array.from({ length: BARS }, (_, i) => (
-            <span key={i} className={`w-1.5 rounded-2 ${listening && level * BARS > i ? 'bg-accent-secondary' : 'bg-track'}`} style={{ height: `${30 + i * 14}%` }} />
+            <span key={i} className={`w-1 ${listening && level * BARS > i ? 'bg-accent-secondary' : 'bg-track'}`} style={{ height: `${30 + i * 14}%` }} />
           ))}
         </span>
       </div>
-      <p role="status" className="m-0 min-h-5 text-13 text-fg-secondary">{shown === 'idle' ? '' : t('intro.mic.status', { state: shown })}</p>
-      <span><button type="button" onClick={() => { setState('text'); onText(); }} className={`${LINK} text-13 ${FOCUS}`}>{t('intro.mic.text')}</button></span>
+      <p role="status" className={`m-0 min-h-5 text-14 leading-[1.4] ${shown === 'heard' ? 'text-accent-secondary' : 'text-fg-secondary'}`}>{shown === 'idle' ? '' : t('intro.mic.status', { state: shown })}</p>
+      <span><button type="button" onClick={() => { setState('text'); onText(); }} className={`${LINK} text-14 ${FOCUS}`}>{t('intro.mic.text')}</button></span>
     </div>
   );
 }

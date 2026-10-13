@@ -26,7 +26,7 @@ export interface PanelShellProps<K extends string = string> {
 
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
-export const PANEL_FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+export const PANEL_FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const BODY = `flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto overscroll-contain px-6 py-5 short:px-5 short:py-4 ${PANEL_FOCUS} focus-visible:-outline-offset-2`;
 
 /**

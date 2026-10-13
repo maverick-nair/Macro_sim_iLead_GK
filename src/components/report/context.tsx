@@ -25,7 +25,7 @@ export function ReportProvider({ value, children }: { value: ReportSettings; chi
 
 export const useReport = () => useContext(ReportContext);
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
  * Chart or table. In the web view the button switches between them, for everyone, keyboard included.

@@ -108,7 +108,7 @@ export function LiveInputBar(p: LiveInputBarProps) {
             </div>
           ) : (
             <textarea value={draft} onChange={e => p.onDraft(e.target.value)} onKeyDown={onKey} placeholder={placeholder} aria-label={t('liveshell.reply.aria')} rows={2}
-              className="w-full resize-none rounded-4 border-0 bg-transparent p-2 text-15 leading-normal text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
+              className="w-full resize-none rounded-4 border-0 bg-transparent p-2 text-15 leading-normal text-fg-primary outline-0 focus-visible:outline-3 focus-visible:outline-accent-secondary" />
           )}
         </div>
         {canRedo && <RecordAgainButton onPress={p.onRecordAgain!} />}

@@ -42,7 +42,7 @@ function VoiceNoteBar({ npc, playing = false, onPlay }: { npc: boolean; playing?
     <span className="mb-1.5 flex items-center gap-2 text-12 font-600">
       {onPlay && (
         <button type="button" onClick={onPlay} aria-pressed={playing} aria-label={t('live.turn.play', { playing: String(playing) })}
-          className={`flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 ${tone} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
+          className={`flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 ${tone} focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
           <PlayGlyph playing={playing} />
         </button>
       )}
@@ -72,7 +72,7 @@ export function TranscriptBubble({ speaker, text, name = '', streaming = false, 
                 type="button"
                 onClick={onReplay}
                 aria-label={t('live.turn.replayAria')}
-                className="cursor-pointer rounded-4 border-0 bg-transparent p-0 text-12 font-600 text-live-replay focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
+                className="cursor-pointer rounded-4 border-0 bg-transparent p-0 text-12 font-600 text-live-replay focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
               >
                 {t('live.turn.replay')}
               </button>

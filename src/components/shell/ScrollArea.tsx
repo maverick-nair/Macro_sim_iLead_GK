@@ -33,7 +33,7 @@ export function ScrollArea({ label, className = '', children }: ScrollAreaProps)
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <div ref={ref} {...(scrolls ? { role: 'region', 'aria-label': label, tabIndex: 0 } : {})}
-        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary ${className}`}>
+        className={`min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary ${className}`}>
         {children}
       </div>
       {more && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-(image:--il-board-scroll-fade)" />}

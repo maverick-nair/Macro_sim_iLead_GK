@@ -5,7 +5,7 @@ import { onRovingKey } from '../roving';
 import type { EndReflection as Reflection } from './types';
 import './messages';
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const RATINGS = [1, 2, 3, 4, 5];
 
 export interface EndReflectionProps extends Reflection {

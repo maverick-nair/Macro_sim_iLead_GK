@@ -22,16 +22,16 @@ export function ReasonDetail({ cause, rule, evidence, judgedByAI, layout = 'colu
   const quote = t('common.quote', { text: evidence });
   if (layout === 'stack') {
     return (
-      <div className="flex flex-col gap-2 rounded-6 bg-surface-raised p-3 text-13">
+      <div className="flex flex-col gap-2 border-s-2 border-accent-default bg-surface-page p-3 text-13">
         <span><b className="font-600">{t('reason.why.causeInline')}</b> {cause}</span>
         <span><b className="font-600">{t('reason.why.ruleInline')}</b> {rule}</span>
         <span><b className="font-600">{t('reason.why.evidenceInline')}</b> {quote}</span>
       </div>
     );
   }
-  const label = 'text-12 font-600 text-fg-secondary';
+  const label = 'text-12 font-600 uppercase tracking-(--il-tracking-eyebrow) text-fg-body';
   return (
-    <div className="grid grid-cols-3 gap-3 rounded-6 bg-surface-raised p-3 text-13">
+    <div className="grid grid-cols-3 gap-3 border-s-2 border-accent-default bg-surface-page p-3 text-13">
       <div className="flex flex-col gap-0.5"><b className={label}>{t('reason.why.cause')}</b><span>{cause}</span></div>
       <div className="flex flex-col gap-0.5"><b className={label}>{t('reason.why.rule')}</b><span>{rule}</span></div>
       <div className="flex flex-col gap-0.5">

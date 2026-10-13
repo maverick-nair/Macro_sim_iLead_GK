@@ -34,7 +34,7 @@ export interface CompareViewProps {
   decided?: CompareDecision | null;
 }
 
-const FOCUS_WITHIN = 'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary';
+const FOCUS_WITHIN = 'has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary';
 const MARK_ON: Record<HireMark, string> = {
   hire: 'has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-button-on-solid',
   pass: 'has-checked:border-transparent has-checked:bg-fg-primary has-checked:text-surface-solid'

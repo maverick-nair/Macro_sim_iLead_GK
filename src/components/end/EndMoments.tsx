@@ -4,7 +4,7 @@ import { useStyleName } from '../style/lens';
 import type { EndMoment, PeriodUnit } from './types';
 import './messages';
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 export interface EndMomentsProps {
   moments: EndMoment[];

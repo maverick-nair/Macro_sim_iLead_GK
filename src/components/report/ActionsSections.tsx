@@ -77,7 +77,7 @@ export function DistributionSection({ data }: { data: DistributionData }) {
   const tableTitle = t('report.distribution.tableTitle');
   const matrix = (
     // Scrolls sideways when narrow, so it takes focus (arrow keys scroll it); the matrix is one image, its table is the alternative.
-    <div role="region" aria-label={tableTitle} tabIndex={0} className="overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+    <div role="region" aria-label={tableTitle} tabIndex={0} className="overflow-x-auto focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
       <div role="img" aria-label={t('report.distribution.matrixAria', { n: data.members.length })} className="grid min-w-max gap-1" style={{ gridTemplateColumns: columns }}>
         <span></span>
         {data.actions.map(a => (

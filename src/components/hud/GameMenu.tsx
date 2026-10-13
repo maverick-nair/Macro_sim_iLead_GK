@@ -35,8 +35,8 @@ export interface GameMenuProps {
   defaultOpen?: boolean;
 }
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const INSET = 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const INSET = 'focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary';
 const EYEBROW = 'm-0 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
@@ -65,14 +65,14 @@ const ICONS: Record<GameMenuKey | 'pause' | 'save' | 'signOut', ReactNode> = {
 };
 
 /** One row: the icon tile, the name (the button's name), a line saying what it is (its description), a chevron. */
-function Row({ icon, name, sub, extra, onSelect, pressed, tight = false }: { icon: ReactNode; name: string; sub?: string; extra?: ReactNode; onSelect: () => void; pressed?: boolean; tight?: boolean }) {
+function Row({ icon, name, sub, extra, onSelect, pressed, tight = false, boxed = false }: { icon: ReactNode; name: string; sub?: string; extra?: ReactNode; onSelect: () => void; pressed?: boolean; tight?: boolean; boxed?: boolean }) {
   const id = useId();
   return (
     <button type="button" data-menu-item="" onClick={onSelect} aria-labelledby={`${id}n`} aria-describedby={sub ? `${id}s` : undefined} aria-pressed={pressed}
-      className={`grid min-h-13 w-full cursor-pointer grid-cols-(--il-desk-menu-row-columns) items-center gap-3.5 border-0 bg-transparent px-6 py-1.5 short:min-h-11 short:py-1 text-start text-fg-primary hover:bg-surface-raised ${INSET}`}>
-      <span className="flex size-10 items-center justify-center rounded-4 bg-accent-soft short:size-8 text-fg-primary">{icon}</span>
+      className={`grid min-h-13 cursor-pointer grid-cols-(--il-desk-menu-row-columns) items-center gap-3.5 py-1.5 short:min-h-11 short:py-1 text-start text-fg-primary ${boxed ? 'mx-6 rounded-4 border border-line-strong bg-surface-card px-2.5 hover:border-line-control' : 'w-full border-0 bg-transparent px-6 hover:bg-surface-card'} ${INSET}`}>
+      <span className="flex size-10 items-center justify-center bg-accent-soft short:size-8 text-accent-default">{icon}</span>
       <span className="flex min-w-0 flex-col gap-0.5">
-        <b id={`${id}n`} className="text-15 font-600">{name}</b>
+        <b id={`${id}n`} className="text-16 font-600">{name}</b>
         {sub && <span id={`${id}s`} className={`text-13 text-fg-secondary ${tight ? 'shorter:hidden' : ''}`}>{sub}</span>}
       </span>
       {extra ?? <svg className="size-4.5 text-fg-secondary rtl:-scale-x-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>}
@@ -105,32 +105,32 @@ export function GameMenu({ items, where, periodUnit = 'week', scope = 'cohort', 
   return (
     <div data-tour="menu">
       <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Trigger className={`flex min-h-8 cursor-pointer items-center gap-1.5 rounded-4 border border-line-default bg-surface-raised px-3 py-0 text-13 font-600 text-fg-primary hover:bg-surface-card tablet-portrait:min-h-11 tablet-portrait:rounded-4 tablet-portrait:min-w-11 tablet-portrait:justify-center tablet-portrait:px-0 ${FOCUS}`}>
+        <Dialog.Trigger className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-4 border-0 bg-transparent ps-1 pe-2.5 py-0 text-14 font-400 text-fg-primary hover:bg-surface-raised tablet-portrait:min-h-11 tablet-portrait:rounded-4 tablet-portrait:min-w-11 tablet-portrait:justify-center tablet-portrait:px-0 ${FOCUS}`}>
           {/* On an upright tablet the HUD keeps the icon; the word stays for screen readers (D101). */}
           <MenuIcon /><span className="tablet-portrait:sr-only">{t('hud.menu.button')}</span>
         </Dialog.Trigger>
           <Dialog.Overlay className="fixed inset-0 z-48 bg-surface-scrim " />
           <Dialog.Content aria-describedby={undefined} data-game-menu="" onKeyDown={onKeyDown}
-            className="fixed inset-y-0 end-0 z-49 flex w-(--il-desk-menu-width) max-w-full animate-(--il-event-card-enter) flex-col border-s border-line-strong bg-surface-solid text-14 text-fg-primary shadow-(--il-event-card-shadow) outline-0">
-            <div className="flex flex-none items-center gap-3 border-b border-line-strong px-6 pt-4 pb-3.5 short:pt-2.5 short:pb-2">
+            className="fixed inset-y-0 end-0 z-49 flex w-(--il-desk-menu-width) max-w-full animate-(--il-event-card-enter) flex-col border-s border-fg-primary bg-surface-page text-14 text-fg-primary outline-0">
+            <div className="flex flex-none items-center gap-3 border-b border-fg-primary px-6 pt-4 pb-3.5 short:pt-2.5 short:pb-2">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <Dialog.Title className="m-0 text-26 font-600 tracking-(--il-tracking-title)">{t('menu.title')}</Dialog.Title>
+                <Dialog.Title className="m-0 font-serif text-30 leading-[1.1] font-400">{t('menu.title')}</Dialog.Title>
                 {where && <span className="text-13 text-fg-secondary">{where}</span>}
               </div>
-              <Dialog.Close aria-label={t('menu.close')} className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-primary ${FOCUS}`}>
-                <span aria-hidden="true">{CLOSE_GLYPH}</span>
+              <Dialog.Close aria-label={t('menu.close')} className={`flex min-h-11 flex-none cursor-pointer items-center gap-2 rounded-4 border border-line-strong bg-surface-card px-3 text-14 font-500 text-fg-primary ${FOCUS}`}>
+                <span aria-hidden="true">{CLOSE_GLYPH}</span><span aria-hidden="true">{t('menu.closeShort')}</span>
               </Dialog.Close>
             </div>
             {session && (
-              <div role="group" aria-labelledby={sessionId} className="flex flex-none flex-col gap-1 border-b border-line-strong py-2">
+              <div role="group" aria-labelledby={sessionId} className="flex flex-none flex-col gap-1 border-b border-fg-primary py-2">
                 <div className="flex min-h-6 items-center justify-between gap-3 px-6">
                   <h2 id={sessionId} className={EYEBROW}>{t('session.title')}</h2>
                   <p role="status" className="m-0 text-13 text-fg-secondary">{session.note ?? ''}</p>
                 </div>
-                <Row icon={ICONS.pause} name={t('session.pause', { paused: 'no' })} onSelect={() => choose(session.onPause)} />
-                <Row icon={ICONS.save} name={session.saving ? t('session.saving') : t('session.save')} onSelect={() => { if (!session.saving) session.onSave(); }}
+                <Row boxed icon={ICONS.pause} name={t('session.pause', { paused: 'no' })} onSelect={() => choose(session.onPause)} />
+                <Row boxed icon={ICONS.save} name={session.saving ? t('session.saving') : t('session.save')} onSelect={() => { if (!session.saving) session.onSave(); }}
                   sub={t('session.saved', { known: session.savedAt !== null ? 'yes' : 'no', at: session.savedAt ?? 0 })} extra={<span />} />
-                <Row icon={ICONS.signOut} name={t('session.signOut')} sub={t('session.signOut.note')} onSelect={() => choose(session.onSignOut)} />
+                <Row boxed icon={ICONS.signOut} name={t('session.signOut')} sub={t('session.signOut.note')} onSelect={() => choose(session.onSignOut)} />
               </div>
             )}
             <ul aria-label={t('hud.menu.aria')} className="m-0 flex min-h-0 flex-1 list-none flex-col overflow-y-auto overscroll-contain p-0">

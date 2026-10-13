@@ -68,11 +68,11 @@ export function CommandPalette({ open, onClose, query, onQueryChange, results }:
             <Dialog.Description className="sr-only">{t('palette.hint')}</Dialog.Description>
             <input value={query} onChange={e => onQueryChange(e.target.value)} onKeyDown={onKeyDown}
               placeholder={t('palette.placeholder')} aria-label={t('palette.placeholder')}
-              className="h-14 w-full border-0 border-b border-solid border-line-default bg-transparent px-4.5 py-0 text-15 text-fg-primary outline-0 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary" />
+              className="h-14 w-full border-0 border-b border-solid border-line-default bg-transparent px-4.5 py-0 text-15 text-fg-primary outline-0 focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary" />
             <div className="flex max-h-(--il-palette-results-max-height) flex-col gap-0.5 overflow-auto p-2">
               {results.map((r, i) => (
                 <button key={r.id} type="button" onClick={r.onRun}
-                  className={`flex cursor-pointer items-center gap-3 rounded-4 border-0 px-3 py-2 text-start text-fg-primary hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-accent-secondary ${i === 0 && searching ? 'bg-surface-raised' : 'bg-transparent'}`}>
+                  className={`flex cursor-pointer items-center gap-3 rounded-4 border-0 px-3 py-2 text-start text-fg-primary hover:bg-surface-raised focus-visible:outline-3 focus-visible:outline-accent-secondary ${i === 0 && searching ? 'bg-surface-raised' : 'bg-transparent'}`}>
                   <span className={`size-7.5 flex-none overflow-hidden rounded-round ${TONE[r.tone]}`}>
                     {r.img && <img src={r.img} alt="" className="size-full object-cover object-top mix-blend-multiply" />}
                   </span>

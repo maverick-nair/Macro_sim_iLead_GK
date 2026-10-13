@@ -71,6 +71,8 @@
   "intro.objectives.win.3b": "Sponsors notice when you go quiet.",
   "intro.objectives.start": "Start simulation",
   "intro.objectives.startNote": "Your progress saves as you go.",
+  "intro.objectives.wait": "Take a moment with your objectives. {period} opens shortly.",
+  "intro.objectives.quote": "“{quote}”",
   "intro.mic.title": "Microphone (optional)",
   "intro.mic.start": "Test your microphone",
   "intro.mic.stop": "Stop test",

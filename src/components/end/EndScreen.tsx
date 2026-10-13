@@ -11,7 +11,7 @@ import type { EndScreenProps } from './types';
 import './messages';
 import { ILeadLogo } from '../shell/Logo';
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const TILE = 'flex flex-col rounded-6 border border-line-default bg-surface-card p-4';
 /** Stands in for the tier's name in the headline, so the name can carry the spectrum fill. */
 const MARK = '\u0001';

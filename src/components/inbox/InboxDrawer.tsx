@@ -37,7 +37,7 @@ export interface InboxDrawerProps {
 
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const pill = `h-7.5 cursor-pointer rounded-4 px-3 py-0 text-12 font-600 ${focus}`;
 
 function Item({ it, onOpen, onLater }: { it: InboxDrawerItem; onOpen: () => void; onLater: () => void }) {

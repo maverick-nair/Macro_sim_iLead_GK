@@ -19,7 +19,7 @@ export interface PreviewBarProps {
 type Jump = 'onboarding' | 'styles' | 'board' | 'weekend' | 'report';
 const JUMPS: Jump[] = ['onboarding', 'styles', 'board', 'weekend', 'report'];
 const TRACE_KEY = previewKey('trace');
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 const control = `flex min-h-8 cursor-pointer items-center gap-1.5 rounded-4 border border-line-default bg-surface-raised px-3 py-0 text-13 font-600 text-fg-primary hover:bg-surface-card disabled:cursor-wait disabled:opacity-60 ${focus}`;
 
 const readTrace = () => { try { return localStorage.getItem(TRACE_KEY) === '1'; } catch { return false; } };

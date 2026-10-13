@@ -30,7 +30,7 @@
  */
 @layer base {
   .il-scheme-dark { color-scheme: dark; }
-  .il-chrome { color-scheme: dark; background-color: var(--il-color-canvas-navy); color: var(--il-color-fg-primary); }
+  .il-chrome { color-scheme: dark; background-color: var(--il-color-canvas-navy); color: var(--il-color-fg-primary); border-bottom: 1px solid var(--il-color-canvas-navy-800); }
 }
 
 /* A preview from GenieKreator (D191): its bar sits above the app, so the play screens that fit the window fit
@@ -71,6 +71,12 @@
  */
 @keyframes il-reveal-later { from { visibility: hidden; opacity: 0; } to { visibility: visible; opacity: 1; } }
 .il-reveal-later { animation: il-reveal-later 0.4s ease-out 5s backwards; }
+/* While Start simulation waits, the canvas shows a line and a filling bar in its place (D227): shown only for the
+   animation's run (the hidden state is the element's own), so where animation is off it never shows. */
+.il-wait { visibility: hidden; animation: il-wait 5s linear backwards; }
+@keyframes il-wait { from { visibility: visible; } to { visibility: visible; } }
+.il-wait-bar { width: 100%; animation: il-wait-bar 5s linear backwards; }
+@keyframes il-wait-bar { from { width: 0; } to { width: 100%; } }
 @keyframes il-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .il-slide-in { animation: il-slide-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 

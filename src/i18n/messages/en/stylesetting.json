@@ -1,5 +1,9 @@
 {
   "stylesetting.where": "{period} of {total} · Style setting",
+  "stylesetting.eyebrow": "Set styles",
+  "stylesetting.question": "How will you lead each person this {unit, select, year {year} month {month} week {week} day {day} other {period}}?",
+  "stylesetting.defs.title": "{count, plural, =2 {The two styles} =3 {The three styles} =4 {The four styles} =5 {The five styles} =6 {The six styles} other {The # styles}}",
+  "stylesetting.member.line": "{title} · {mood}",
   "stylesetting.view.aria": "View",
   "stylesetting.view": "{view, select, list {List} other {Cards}}",
   "stylesetting.review": "Review and confirm",
@@ -21,7 +25,7 @@
   "stylesetting.choice": "{style}.",
   "stylesetting.unset": "No style yet. Pick one for this {unit, select, year {year} month {month} week {week} day {day} other {period}}.",
   "stylesetting.away.note": "Applies when {pronoun, select, he {he is} she {she is} other {they are}} back from {reason, select, leave {leave} other {training}}.",
-  "stylesetting.rationale.add": "Add a reason",
+  "stylesetting.rationale.add": "Add a reason (optional)",
   "stylesetting.rationale.note": "Note: {text}…",
   "stylesetting.rationale.addAria": "Add a reason for {name}",
   "stylesetting.rationale.editAria": "Edit the reason for {name}: {text}",

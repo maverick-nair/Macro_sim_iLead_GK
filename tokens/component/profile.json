@@ -1,7 +1,7 @@
 {
   "profile": {
     "panel": {
-      "columns": { "value": "minmax(0,1.1fr) minmax(0,1fr) minmax(0,0.9fr)", "$description": "Profile, your interactions, take an action" },
+      "columns": { "value": "minmax(0,508px) minmax(0,1fr) minmax(0,1fr)", "$description": "Profile (the canvas's 420px column with its padding, D227), your interactions, take an action" },
       "shadow": { "value": "0 24px 64px {color.elevation.panel}" },
       "enter": { "value": "ilIn {duration.base} ease", "$description": "The design's 260ms, snapped to duration.base (D24)" }
     },

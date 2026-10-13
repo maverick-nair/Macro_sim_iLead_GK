@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n';
 import type { PeriodUnit } from '../action/days';
 import { Heading, type HeadingLevel } from '../Heading';
 import { MemberCard, type MemberCardProps } from '../member/MemberCard';
+import { DeskCard, type DeskCardInfo } from '../desk/DeskCard';
 import { useLens } from '../style/lens';
 
 /** The line beside the heading: nobody selected, one person selected, or picking people for an action. */
@@ -26,7 +27,8 @@ export interface StageColumn {
    * shown as words and a bar. Left out on the design frames, which show the headcount and its ideal.
    */
   output?: { n: number; ideal: number };
-  cards: Array<MemberCardProps & { id: string }>;
+  /** On the desk (D227) each card also carries its style by name, a flag and the time spent this period. */
+  cards: Array<MemberCardProps & { id: string; desk?: DeskCardInfo }>;
 }
 
 export interface TeamBoardProps {
@@ -41,6 +43,11 @@ export interface TeamBoardProps {
   headingLevel?: HeadingLevel;
   /** Opens the result and stage overviews (D96, 1.0's two buttons on the board). Left out on the design frames. */
   onOverview?: () => void;
+  /**
+   * The desk as the approved canvas draws it (D227): a quiet heading with what the funnel shows, and the compact
+   * desk cards. The design frames keep the member cards and the legend.
+   */
+  desk?: boolean;
 }
 
 /** Tailwind needs whole class names in the source; storylines have 3 to 6 stages. */
@@ -94,7 +101,7 @@ function StageInfo({ name, about, suits, alignEnd }: { name: string; about?: str
       <button type="button" aria-expanded={info} aria-controls={info ? infoId : undefined} aria-label={t('team.stage.info', { stage: name })} onClick={() => setInfo(v => !v)}
         onKeyDown={e => { if (e.key === 'Escape' && info) { e.stopPropagation(); setInfo(false); } }}
         data-tour="stage-info"
-        className="flex size-6 flex-none cursor-pointer items-center justify-center self-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+        className="flex size-6 flex-none cursor-pointer items-center justify-center self-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
         <InfoIcon />
       </button>
       {info && (
@@ -120,19 +127,19 @@ function FunnelHeader({ name, count, ideal, bottleneck, periodUnit, about, suits
   const share = goal > 0 ? Math.max(0, Math.min(1, output.n / output.ideal)) : 0;
   return (
     <div data-tour="stage" data-bottleneck={bottleneck ? '' : undefined}
-      className={`relative flex flex-col gap-1 rounded-4 px-3 py-2 short:gap-0.5 short:py-1.5 ${bottleneck ? 'border-2 border-status-attention bg-status-attention-soft' : 'border border-line-default bg-surface-card'}`}>
+      className={`relative flex flex-col gap-1 px-2.5 py-1.75 short:gap-0.5 short:py-1.5 ${bottleneck ? 'border-2 border-(--il-color-canvas-orange-700) bg-status-attention-soft' : 'border border-line-strong bg-surface-card'}`}>
       <span className="sr-only">{t('desk.stage.outputAria', { stage: name, n, ideal: goal, unit: periodUnit, bottleneck: bottleneck ? 'yes' : 'no', people: count, ideal2: ideal })}</span>
       <div className="flex min-h-6 items-center gap-1.5">
-        <b aria-hidden="true" title={name} className={`min-w-0 flex-1 truncate text-13 text-large:whitespace-normal text-large:break-words ${bottleneck ? 'text-status-attention' : ''}`}>{name}</b>
+        <b aria-hidden="true" title={name} className={`min-w-0 flex-1 truncate text-13 font-600 text-large:whitespace-normal text-large:break-words ${bottleneck ? 'text-status-attention' : ''}`}>{name}</b>
         {bottleneck && <span aria-hidden="true" className="flex flex-none items-center gap-0.5 text-12 font-600 text-status-attention"><b>!</b>{t('desk.stage.bottleneck')}</span>}
         <StageInfo name={name} about={about} suits={suits} alignEnd={alignEnd} />
       </div>
-      <span aria-hidden="true" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-12 text-fg-secondary">
-        <span className="whitespace-nowrap text-large:whitespace-normal text-large:break-words">{t('desk.stage.output', { n: number(n), ideal: number(goal) })}</span>
+      <span aria-hidden="true" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-12 text-fg-body">
+        <span className="whitespace-nowrap font-mono text-16 text-fg-primary text-large:whitespace-normal">{number(n)} <span className="text-12 text-fg-body">{t('desk.stage.of', { ideal: number(goal) })}</span></span>
         <span className="whitespace-nowrap text-large:whitespace-normal text-large:break-words">{t('desk.stage.people', { n: count })}</span>
       </span>
-      <span aria-hidden="true" className="block h-1.25 rounded-3 bg-track">
-        <span className={`block h-full rounded-3 ${bottleneck ? 'bg-status-attention' : 'bg-meter'}`} style={{ width: `${Math.round(share * 100)}%` }} />
+      <span aria-hidden="true" className="block h-1.25 bg-track">
+        <span className={`block h-full ${bottleneck ? 'bg-(--il-color-canvas-orange-700)' : 'bg-accent-default'}`} style={{ width: `${Math.round(share * 100)}%` }} />
       </span>
     </div>
   );
@@ -158,7 +165,7 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
             <button type="button" aria-expanded={info} aria-controls={info ? infoId : undefined} aria-label={t('team.stage.info', { stage: name })} onClick={() => setInfo(v => !v)}
               onKeyDown={e => { if (e.key === 'Escape' && info) { e.stopPropagation(); setInfo(false); } }}
               data-tour="stage-info"
-              className="flex size-6 cursor-pointer items-center justify-center self-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+              className="flex size-6 cursor-pointer items-center justify-center self-center rounded-round border-0 bg-transparent p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
               <InfoIcon />
             </button>
           )}
@@ -183,7 +190,7 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
  * "Your team": the heading with what a click does now, the style legend, and one column of member
  * cards per funnel stage. The grid has as many equal columns as the storyline has stages.
  */
-export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2, onOverview }: TeamBoardProps) {
+export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2, onOverview, desk = false }: TeamBoardProps) {
   const { t } = useI18n();
   const lens = useLens();
   const legendId = useId();
@@ -192,6 +199,23 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
   const letters = ls.length < 2 ? ls.join('') : ls.slice(0, -1).join(t('team.legend.listSeparator')) + t('team.legend.listAnd') + ls[ls.length - 1];
   const hintText = t('team.hint', { kind: hint.kind, name: hint.kind === 'selected' ? hint.name : '' });
 
+  if (desk) return (
+    <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex items-baseline justify-between gap-3 text-large:flex-wrap">
+        <Heading level={headingLevel} className="m-0 text-12 font-600 whitespace-nowrap uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-body">{t('team.title')}</Heading>
+        <span className="text-end text-12 text-fg-body">{t('desk.funnel.note', { unit: periodUnit })}</span>
+        <span aria-live="polite" className="sr-only">{hintText}</span>
+      </div>
+      <div className={`grid gap-2 ${GRID_COLS[columns.length] ?? 'grid-cols-6'}`}>
+        {columns.map(({ key, cards, ...col }, i) => (
+          <div key={key} className="flex min-w-0 flex-col gap-1.5">
+            <StageHeader {...col} periodUnit={periodUnit} alignEnd={i >= columns.length / 2} />
+            {cards.map(({ id, desk: info, ...card }) => <DeskCard key={id} memberId={id} {...card} desk={info ?? { style: null, flag: null, time: null }} />)}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
   return (
     <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-3 px-5 pt-1 pb-6 short:gap-2 short:pb-3">
       <div className="flex items-center justify-between gap-3 text-large:flex-wrap">
@@ -202,12 +226,12 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
         <div className="relative flex items-center gap-2 text-large:flex-wrap">
           {onOverview && (
             <button type="button" onClick={onOverview} data-tour="overview"
-              className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+              className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
               <ChartIcon />{t('team.overview')}
             </button>
           )}
           <button type="button" onClick={onToggleLegend} aria-expanded={legendOpen} aria-controls={legendOpen ? legendId : undefined}
-            className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+            className="flex min-h-7.5 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-default bg-surface-card px-3 py-0 text-13 font-600 whitespace-nowrap text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
             <HelpIcon />{t('team.legend.button', { letters })}
           </button>
           {legendOpen && <StyleLegend id={legendId} periodUnit={periodUnit} />}

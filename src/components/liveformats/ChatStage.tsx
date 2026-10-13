@@ -86,7 +86,7 @@ function Composer({ c, npcName }: { c: ChatComposer; npcName: string }) {
           )}
           <textarea id={id} value={c.draft} onChange={e => c.onDraft(e.target.value)} onKeyDown={onKey} rows={1}
             aria-describedby={hint} placeholder={t('liveformats.chat.draft.placeholder')}
-            className="w-full resize-none rounded-4 border-0 bg-transparent p-2 text-15 text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
+            className="w-full resize-none rounded-4 border-0 bg-transparent p-2 text-15 text-fg-primary outline-0 focus-visible:outline-3 focus-visible:outline-accent-secondary" />
         </div>
         {c.onRecord && <DictateButton on={!!c.recording} label={t('liveformats.chat.record', { state: c.recording ? 'on' : 'off' })} onPress={c.onRecord} />}
         <button type="button" onClick={c.onSend} disabled={!canSend} aria-label={t('liveformats.chat.send')}

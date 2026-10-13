@@ -14,7 +14,7 @@ export interface TourProps {
   onEnd: (how: TourEnd) => void;
 }
 
-const BUTTON = 'min-h-9 cursor-pointer rounded-4 px-3.5 text-13 font-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const BUTTON = 'min-h-9 cursor-pointer rounded-4 px-3.5 text-13 font-600 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
  * A guided tour (D94): one tip at a time over what it explains, Back and Next, Skip, and "Do not show tips
