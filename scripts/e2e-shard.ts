@@ -1,5 +1,5 @@
 /**
- * Runs one shard of the end to end suite: `node scripts/e2e-shard.mjs <shard> <of> [playwright args]`.
+ * Runs one shard of the end to end suite: `npx tsx scripts/e2e-shard.ts <shard> <of> [playwright args]`.
  *
  * Playwright 1.56 shards in contiguous chunks of the test list, so the slow specs at the start of the
  * alphabet (a11y, board, ...) all land in shard 1. This splits by weight instead: tests that share a
@@ -14,8 +14,9 @@ if (!(Number(shard) >= 1 && Number(of) >= Number(shard))) { console.error('usage
 const list = spawnSync('npx', ['playwright', 'test', '--list', '--reporter=json'], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 });
 if (list.status !== 0) { process.stderr.write(list.stderr); process.exit(list.status ?? 1); }
 
-const weight = new Map();
-const walk = (suite, dir) => {
+const weight = new Map<string, number>();
+type Suite = { specs?: { file: string; line: number; tests: unknown[] }[]; suites?: Suite[] };
+const walk = (suite: Suite, dir: string): void => {
   for (const spec of suite.specs ?? []) {
     const key = `${dir}/${spec.file}:${spec.line}`;
     weight.set(key, (weight.get(key) ?? 0) + spec.tests.length);
@@ -27,7 +28,7 @@ if (report.errors?.length) { for (const e of report.errors) console.error(e.mess
 for (const s of report.suites) walk(s, report.config.rootDir.replace(`${process.cwd()}/`, ''));
 
 const units = [...weight].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
-const load = Array.from({ length: Number(of) }, () => ({ w: 0, keys: [] }));
+const load = Array.from({ length: Number(of) }, () => ({ w: 0, keys: [] as string[] }));
 for (const [key, w] of units) {
   const lightest = load.reduce((m, s) => (s.w < m.w ? s : m));
   lightest.w += w;
