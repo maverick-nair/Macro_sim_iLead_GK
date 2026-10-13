@@ -7,11 +7,16 @@ import { defineConfig } from '@playwright/test';
  */
 const port = Number(process.env.E2E_SERVER_PORT ?? 5741);
 export const E2E_SECRET = 'e2e-launch-secret-0123456789-abcdefghijklmnop';
+/**
+ * As in the app's own end to end flows (`playwright.config.ts`, D94, D99): the participant has turned tours and
+ * tips off, so the first-time tour never covers the controls a flow clicks. A new browser context passes it too.
+ */
+export const GUIDE_OFF = { cookies: [], origins: [{ origin: `http://localhost:${port}`, localStorage: [{ name: 'ilead.guide', value: JSON.stringify({ never: true }) }] }] };
 
 export default defineConfig({
   testDir: 'e2e',
   timeout: 120_000,
-  use: { baseURL: `http://localhost:${port}`, viewport: { width: 1440, height: 1000 } },
+  use: { baseURL: `http://localhost:${port}`, viewport: { width: 1440, height: 1000 }, storageState: GUIDE_OFF },
   webServer: {
     command: 'npm run build:server-app && node --import tsx server/src/index.ts',
     cwd: '..',

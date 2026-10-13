@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Hono } from 'hono';
@@ -43,6 +44,24 @@ const TYPES: Record<string, string> = {
   '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.avif': 'image/avif', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.ico': 'image/x-icon',
   '.txt': 'text/plain; charset=utf-8', '.webmanifest': 'application/manifest+json', '.mp3': 'audio/mpeg', '.wav': 'audio/wav'
 };
+
+/**
+ * The CSP sources (`'sha256-...'`) for the inline scripts in the app's index.html, so the policy can stay
+ * `script-src 'self'` and still run index.html's early first view (D87) without `'unsafe-inline'`.
+ * Empty when there is no static build. The browser hashes the script's text exactly as served.
+ */
+export function inlineScriptHashes(dir: string | undefined): string[] {
+  if (!dir) return [];
+  const index = path.join(path.resolve(dir), 'index.html');
+  if (!fs.existsSync(index)) return [];
+  const html = fs.readFileSync(index, 'utf8');
+  const out: string[] = [];
+  for (const m of html.matchAll(/<script(?![^>]*\bsrc\s*=)[^>]*>([\s\S]*?)<\/script>/gi)) {
+    if (!m[1].trim()) continue;
+    out.push(`'sha256-${createHash('sha256').update(m[1], 'utf8').digest('base64')}'`);
+  }
+  return out;
+}
 
 /** Prefixes that are never the app: the SPA fallback leaves them to 404. */
 const API = /^\/(api|engine|speech|genie|auth|launch|healthz|readyz|openapi\.json)(\/|$)/;
