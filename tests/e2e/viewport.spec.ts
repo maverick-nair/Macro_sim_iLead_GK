@@ -307,7 +307,8 @@ test.describe('style setting and the board', () => {
     await expect(page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' })).toBeVisible({ timeout: 15_000 });
   }, page => [page.getByRole('button', { name: 'Take the call' })]);
 
-  both('week end', 'play', async page => {
+  /** Ends the week and waits for See your week: event cards can still arrive after the week ends, so each is dismissed as it shows. */
+  async function toWeekEnd(page: Page) {
     await toBoard(page);
     await endWeek(page).click();
     const see = page.getByRole('button', { name: /^See your week$/ });
@@ -316,13 +317,15 @@ test.describe('style setting and the board', () => {
       if (!(await gotIt(page).count())) break;
       await dismissCards(page);
     }
+    return see;
+  }
+
+  both('week end', 'play', async page => {
+    await toWeekEnd(page);
   }, page => [page.getByRole('button', { name: /^See your week$/ })]);
 
   both('week end report', 'document', async page => {
-    await toBoard(page);
-    await endWeek(page).click();
-    await dismissCards(page);
-    await page.getByRole('button', { name: /^See your week$/ }).click();
+    await (await toWeekEnd(page)).click();
   }, page => [page.getByRole('button', { name: /^(Continue|Nice|Next)$/ })]);
 });
 
