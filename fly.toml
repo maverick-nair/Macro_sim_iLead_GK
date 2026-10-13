@@ -1,0 +1,38 @@
+# Staging on Fly.io (docs/STAGING.md). One machine, because SQLite lives on one volume (docs/SERVER.md section 9).
+# Change `app` to your own name, and PUBLIC_URL to match it. Secrets are not here: `fly secrets set` (docs/STAGING.md).
+app = "ilead-staging"
+primary_region = "bom"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  PUBLIC_URL = "https://ilead-staging.fly.dev"
+  TRUST_PROXY = "true"
+  # No model key on staging: the server runs on its mocks (docs/AI.md). Set ANTHROPIC_API_KEY as a secret to change that.
+  AI_PROVIDER = "mock"
+  LOG_LEVEL = "info"
+
+[mounts]
+  source = "ilead_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8787
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    method = "GET"
+    path = "/readyz"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
+
+# Chromium renders the report PDFs, so the machine needs more than the smallest size.
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"
