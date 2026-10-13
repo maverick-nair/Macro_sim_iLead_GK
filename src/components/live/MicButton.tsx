@@ -44,7 +44,7 @@ export function MicButton({ state, mode, onPress, layout = 'desk' }: MicButtonPr
   const listening = state === 'listening';
   const voice = mode === 'voice' && !denied;
   const box = layout === 'tablet' ? 'size-13' : 'size-11';
-  // The canvas's outlined control (D227): mint while voice is the way in, filled while it listens.
+  // The canvas's outlined control (D232): mint while voice is the way in, filled while it listens.
   const look = denied
     ? 'border-line-default bg-track text-fg-secondary'
     : listening

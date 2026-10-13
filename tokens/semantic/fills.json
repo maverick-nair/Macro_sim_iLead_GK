@@ -1,5 +1,5 @@
 {
   "fill": {
-    "meter": { "value": "linear-gradient({color.accent.default}, {color.accent.default})", "$description": "Metric bars and progress: flat accent (D227)" }
+    "meter": { "value": "linear-gradient({color.accent.default}, {color.accent.default})", "$description": "Metric bars and progress: flat accent (D232)" }
   }
 }

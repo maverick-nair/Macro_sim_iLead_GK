@@ -93,7 +93,7 @@ function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange
   );
 }
 
-/** The lens's styles, named in Newsreader with what each means, then the sponsor's word for the week (D227). */
+/** The lens's styles, named in Newsreader with what each means, then the sponsor's word for the week (D232). */
 function Definitions({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine: string }) {
   const { t } = useI18n();
   const lens = useLens();
@@ -119,7 +119,7 @@ function Definitions({ sponsorName, sponsorLine }: { sponsorName: string; sponso
 
 /**
  * The weekly (or monthly, or yearly) style setting screen, before any action in the period, as the approved canvas
- * draws it (D227): the navy header, the question in Newsreader with how many are chosen, every member as a column with
+ * draws it (D232): the navy header, the question in Newsreader with how many are chosen, every member as a column with
  * their photo and the styles by name (or the list), and beside them the styles' meanings, the sponsor's word, and
  * Review and confirm, which opens the summary to confirm. Data in, intents out: the engine owns the styles, the reasons
  * and the period. Standalone the screen is the page's main landmark, headed by its "Week 2 of 8 · Style setting" line.
@@ -174,7 +174,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
               <LayoutToggle value={layout} onChange={p.onViewChange} />
             </span>
           </div>
-          {/* Said once for the team rather than on every card (D227). */}
+          {/* Said once for the team rather than on every card (D232). */}
           {layout === 'cards' && members.some(statsHidden) && <p className="m-0 text-13 text-fg-body">{t('stylesetting.stats.hidden')}</p>}
           {/* The team scrolls inside the screen when it does not fit the window (D101); the header and Review stay put. */}
           <ScrollArea label={t('stylesetting.team.aria')} className="-mx-2 px-2 pb-1">

@@ -66,7 +66,7 @@ export interface LiveShellProps {
   /** The stage shows the brief itself (the 1:1 on a tablet, beside the portrait). */
   briefInStage?: boolean;
   /**
-   * The 1:1 on a desk (D227): the person's portrait fills the left column, with the brief over it,
+   * The 1:1 on a desk (D232): the person's portrait fills the left column, with the brief over it,
    * and the conversation and reply bar take the right. Leave it out for the brief beside the stage.
    */
   portrait?: ReactNode;
@@ -145,7 +145,7 @@ export function LiveShell(p: LiveShellProps) {
   const replyBar = p.input && <LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} layout={p.layout} />;
   return (
     // Escape anywhere in the shell interrupts the NPC; the controls inside stay the interactive elements.
-    // The live screens are the canvas's navy room in both modes (D227).
+    // The live screens are the canvas's navy room in both modes (D232).
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
     <div onKeyDown={onKeyDown} className="il-scheme-dark flex flex-1 flex-col bg-(--il-color-canvas-navy) text-fg-primary">
       <header className="il-chrome flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 px-8 py-2.5 tablet:px-5 tablet-portrait:min-h-18 tablet-portrait:gap-3 tablet-portrait:px-6">

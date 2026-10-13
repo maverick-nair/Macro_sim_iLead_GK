@@ -33,7 +33,7 @@ export interface WeekEndFlowProps {
   newsArtLabel?: string;
   /** The design gallery's shortcut to the end of the run. */
   onShortcut?: () => void;
-  /** The storyline's organisation and the desk's numbers, in the navy bar (D227). */
+  /** The storyline's organisation and the desk's numbers, in the navy bar (D232). */
   organisation?: string | null;
   status?: ReactNode;
   /** Takes the reward. Resolves false when the engine refused it, so the flow stays put. */

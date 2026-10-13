@@ -6,7 +6,7 @@ import { paginate, splitAt } from './paginate';
 import type { ReportBlock } from './types';
 import './messages';
 
-/** Web: square white pages on the canvas's sand desk (D227). */
+/** Web: square white pages on the canvas's sand desk (D232). */
 const WEB_PAGE = 'flex flex-col gap-7 border border-line-default bg-surface-card';
 /** A letter page: light colours whatever the theme, shown at 0.8 so it is 8.5 by 11 inches on screen and on paper. */
 const PRINT_PAGE = 'flex flex-col gap-7 overflow-hidden bg-surface-solid px-16 pt-16 pb-12 text-fg-primary shadow-(--il-report-print-shadow) scheme-light w-(--il-report-print-page-width) [zoom:var(--il-report-print-zoom)] print:shadow-none print:[zoom:1] print:origin-top-left print:scale-(--il-report-print-scale)';

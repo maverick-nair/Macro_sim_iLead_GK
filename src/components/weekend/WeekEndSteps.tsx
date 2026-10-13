@@ -23,7 +23,7 @@ export interface WeekEndHeaderProps {
   periodUnit: PeriodUnit;
   /** The prototype's shortcut to the end of the run, in the design gallery only. */
   onShortcut?: () => void;
-  /** The flow's steps and the one showing, as the canvas's row of tabs (D227). Not links: the flow moves on with its own buttons. */
+  /** The flow's steps and the one showing, as the canvas's row of tabs (D232). Not links: the flow moves on with its own buttons. */
   steps?: WeekEndStep[];
   step?: WeekEndStep;
   /** The storyline's organisation, as on the desk; the iLead logo without one. */
@@ -70,11 +70,11 @@ export interface BannerStepProps {
   onNext: () => void;
 }
 
-/** The canvas's lounge at the end of the day (D227), behind the banner on the right. */
+/** The canvas's lounge at the end of the day (D232), behind the banner on the right. */
 export const LOUNGE = '/assets/lounge.webp';
 
 /**
- * "End of week 2": the canvas's navy hero (D227), in both modes. The engine's headline in the
+ * "End of week 2": the canvas's navy hero (D232), in both modes. The engine's headline in the
  * display serif, the stars earned and one line on how it went, left aligned, with the lounge
  * photo fading in on the right.
  */

@@ -11,7 +11,7 @@ export interface StarMeterProps {
 
 /**
  * The week end banner's stars: earned ones solid in the star colour (the canvas's mint on navy,
- * D227), the rest outlined. They rise in one after another (instant under reduced motion).
+ * D232), the rest outlined. They rise in one after another (instant under reduced motion).
  */
 export function StarMeter({ earned, total = 3 }: StarMeterProps) {
   const { t } = useI18n();

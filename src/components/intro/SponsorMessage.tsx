@@ -23,7 +23,7 @@ const PlayIcon = ({ playing }: { playing: boolean }) => (
 );
 
 /**
- * The sponsor's video message (D219, the canvas's Sponsor, D227): the storyline's video when it has one, else the
+ * The sponsor's video message (D219, the canvas's Sponsor, D232): the storyline's video when it has one, else the
  * sponsor's portrait with the welcome letter as the message, timed line by line. Captions are on by default and read
  * out politely; Play and Pause, a position slider, CC, and three chapters to jump to (the challenge, what I expect,
  * your goal). The controls sit on the video, as a player's do. At the end a card offers the products (or the

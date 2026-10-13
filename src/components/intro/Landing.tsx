@@ -19,7 +19,7 @@ export interface LandingProps {
 const Play = () => <svg className="size-2.75" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4l13 8-13 8z" /></svg>;
 
 /**
- * The landing (D219, the canvas's Main, D227): the photo with the navy wash across it, what the simulation is in one
+ * The landing (D219, the canvas's Main, D232): the photo with the navy wash across it, what the simulation is in one
  * paragraph and three facts, and, a moment later, a video message from the sponsor sliding in (no slide under reduced
  * motion), on paper. The notification lands in a polite live region, so screen readers hear it arrive. The heading
  * takes focus on arrival.

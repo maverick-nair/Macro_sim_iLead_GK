@@ -6,7 +6,7 @@ import { barPercent, funnelNumber, funnelRow, levelSteps } from './display';
 import type { FunnelView, PeriodUnit, WeekEndReport as Report } from './types';
 import './messages';
 
-// The canvas's report language (D227): square white tiles on paper, small capital headings,
+// The canvas's report language (D232): square white tiles on paper, small capital headings,
 // numbers in the mono, bars in the accent on a sand track.
 const CARD = 'flex flex-col border border-line-default bg-surface-card p-5';
 const SMALL_BOX = 'flex flex-col border p-4.5';

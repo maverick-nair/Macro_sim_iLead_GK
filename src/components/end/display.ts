@@ -22,7 +22,7 @@ export function toneOf(delta: number): Tone {
   return delta > 0 ? 'gain' : delta < 0 ? 'decline' : 'neutral';
 }
 
-/** Section headings in small capitals, as the canvas sets them (D227). */
+/** Section headings in small capitals, as the canvas sets them (D232). */
 export const EYEBROW = 'm-0 text-13 font-600 tracking-(--il-tracking-eyebrow-wide) text-fg-body uppercase';
 
 export const TONE_TEXT: Record<Tone, string> = { gain: 'text-status-gain', decline: 'text-status-decline', neutral: 'text-fg-secondary' };

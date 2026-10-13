@@ -21,7 +21,7 @@ export interface LiveTranscriptProps {
   /** Fills the height it is given (the tablet's 1:1, D73) instead of the desktop's maximum. */
   fill?: boolean;
   /**
-   * `line`: the canvas's conversation (D227): no card, the person's lines set large in the serif,
+   * `line`: the canvas's conversation (D232): no card, the person's lines set large in the serif,
    * yours right aligned, and `tail` (thinking, slow) as the next line.
    */
   look?: 'card' | 'line';
@@ -120,7 +120,7 @@ export interface RolePlayPortraitProps {
 }
 
 /**
- * The left column of the canvas's 1:1 (D227): the person's photo filling it, the brief over the top,
+ * The left column of the canvas's 1:1 (D232): the person's photo filling it, the brief over the top,
  * their name in the display serif and how they seem at the foot. A mint mark beside the name while
  * they speak.
  */

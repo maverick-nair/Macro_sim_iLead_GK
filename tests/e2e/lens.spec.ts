@@ -39,7 +39,7 @@ for (const width of [1440, 1024]) {
     await expect(styles(page)).toHaveCount(10, { timeout: 20000 });
 
     // Style setting: the five definitions, five letters per person, nothing of the default lens.
-    // The definitions are a description list in the aside (D227): one term per style.
+    // The definitions are a description list in the aside (D232): one term per style.
     const defs = page.locator('[data-tour="style-definitions"] dt');
     await expect(defs).toHaveCount(5);
     for (const name of SIX) await expect(defs.filter({ hasText: name })).toHaveCount(1);
@@ -68,7 +68,7 @@ for (const width of [1440, 1024]) {
     await expect(all[0].getByRole('radio').nth(1)).toBeFocused();
     await page.keyboard.press('Space');
     await expect(all[0].getByRole('radio').nth(1)).toHaveAttribute('aria-checked', 'true');
-    // The card names the chosen style on its control (D227); the definitions sit in the aside.
+    // The card names the chosen style on its control (D232); the definitions sit in the aside.
     await expect(all[0].getByRole('radio', { name: /^Coach\b/ })).toHaveAttribute('aria-checked', 'true');
 
     await page.getByRole('button', { name: 'Review and confirm' }).click();
@@ -85,7 +85,7 @@ for (const width of [1440, 1024]) {
       await expect(page.getByRole('heading', { name: title ?? '' })).toHaveCount(0);
     }
 
-    // The board: every card names the week's style in the lens's words (D227); the letters stay in style setting.
+    // The board: every card names the week's style in the lens's words (D232); the letters stay in style setting.
     await expect(page.getByRole('heading', { name: 'Your team', exact: true })).toBeVisible();
     await expect(styles(page)).toHaveCount(0);
     await expect(page.getByText(/^Style: (Vision Setter|Coach|Harmonizer|Collaborator|Drive)$/)).toHaveCount(10);

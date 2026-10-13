@@ -107,7 +107,7 @@ const rolePlay = (p: RolePlay = {}) => (
   <RolePlayStage person={KENT} mood="frustrated" conversation="yourTurn" turns={[npc(0)]} onReplay={noop}
     caption={{ name: 'Kent', text: KENT_LINES[0], aiGenerated: true }} {...p} />
 );
-/** The desk 1:1 as the canvas draws it (D227): the portrait with the brief over it, then the conversation. */
+/** The desk 1:1 as the canvas draws it (D232): the portrait with the brief over it, then the conversation. */
 const RolePlayFrame = ({ st = {}, stage = {} }: { st?: ShellState; stage?: RolePlay }) => (
   <Frame>
     <LiveShell {...shell(st, rolePlay({ layout: 'split', conversation: st.conversation, ...stage }))} briefInStage

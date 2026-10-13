@@ -113,7 +113,7 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   await dismissEvents(page);
 
   // Opening a profile reveals stats on the card.
-  // The desk opens a profile from the person's actions (D227): select them first.
+  // The desk opens a profile from the person's actions (D232): select them first.
   if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
   await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
   await expect(page.getByRole('button', { name: /^Kent Goldberg.*Skill \d+/ })).toBeVisible();
@@ -156,7 +156,7 @@ test('toasts hide on time, even when the board changes underneath', async ({ pag
   await setStyles(page);
   await dismissOutcome(page);
   await dismissEvents(page);
-  // Later on a message: a toast says when it comes back (the desk names styles in words, D227, so the
+  // Later on a message: a toast says when it comes back (the desk names styles in words, D232, so the
   // locked style letters that used to raise this toast are not on the board). Selecting people changes the UI store meanwhile.
   await page.getByRole('button', { name: /^Inbox/ }).first().click();
   await page.getByRole('dialog', { name: 'Inbox' }).getByRole('button', { name: 'Later' }).first().click();
@@ -307,7 +307,7 @@ test('a whole week by keyboard only', async ({ page }) => {
     await expect(group.getByRole('radio', { checked: true })).toHaveCount(1);
   }
   await expect(page.getByText('10 of 10 styles set')).toBeAttached();
-  // Review and confirm sits after the cards, in the aside (D227).
+  // Review and confirm sits after the cards, in the aside (D232).
   await tabTo(/Review and confirm/);
   await page.keyboard.press('Enter');
   await tabTo(/^BUTTON\|\|Confirm styles/);

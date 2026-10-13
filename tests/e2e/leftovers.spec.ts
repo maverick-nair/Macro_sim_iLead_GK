@@ -44,7 +44,7 @@ async function toBoard(page: Page, q = '') {
 test('Pause in the HUD stops the session clock until Resume', async ({ page }) => {
   await toBoard(page);
   const pause = page.getByRole('button', { name: 'Pause the simulation' });
-  // The session clock reads beside Pause in the navy bar (D227).
+  // The session clock reads beside Pause in the navy bar (D232).
   const clock = page.locator('[data-session-clock]');
   await expect(clock).toHaveText(/^\d+:\d\d$/);
   const start = await clock.textContent();

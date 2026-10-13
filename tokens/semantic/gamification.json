@@ -26,7 +26,7 @@
       "star": {
         "light": "{color.canvas.button}",
         "dark": "{color.canvas.mint}",
-        "$description": "An earned star: navy on paper, mint on dark (D227)"
+        "$description": "An earned star: navy on paper, mint on dark (D232)"
       }
     }
   }

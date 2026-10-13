@@ -4,7 +4,7 @@ import { ClientLogo } from '../../theme/brand';
 import { ILeadLogo } from '../shell/Logo';
 
 /*
- * The pre-game flow's shared styles, as the approved canvas draws them (D219, D227): navy screens, 4px corners, outlined
+ * The pre-game flow's shared styles, as the approved canvas draws them (D219, D232): navy screens, 4px corners, outlined
  * quiet buttons, the paper button for the way forward, small uppercase eyebrows in mint, Newsreader for the headlines.
  * The flow sits in a dark scheme (`il-scheme-dark`), so every token reads its dark value here, in either theme.
  */

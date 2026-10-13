@@ -14,7 +14,7 @@ export interface DeskStatusProps {
 
 /**
  * Where the run stands, at the end of the navy header on the screens that are not the desk (style setting, the week's
- * end), as the approved canvas shows it (D227): the revenue against the target and the score, numbers in Geist Mono.
+ * end), as the approved canvas shows it (D232): the revenue against the target and the score, numbers in Geist Mono.
  */
 export function DeskStatus({ value, target, score, delta }: DeskStatusProps) {
   const { t, number, delta: signed } = useI18n();

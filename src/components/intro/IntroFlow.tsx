@@ -26,7 +26,7 @@ export interface IntroFlowProps {
   onText: () => void;
 }
 
-/** The canvas's arrival photo behind the landing when the storyline has no office image of its own (D227). */
+/** The canvas's arrival photo behind the landing when the storyline has no office image of its own (D232). */
 const ARRIVAL = '/assets/arrival.webp';
 
 const initials = (name: string) => { const p = name.trim().split(/\s+/); return (p[0][0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase(); };

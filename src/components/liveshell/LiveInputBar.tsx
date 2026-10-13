@@ -79,7 +79,7 @@ export function LiveInputBar(p: LiveInputBarProps) {
     }
   };
   const tablet = p.layout === 'tablet';
-  // The canvas's reply area (D227): the state line with the mode switch, the field, then the hint,
+  // The canvas's reply area (D232): the state line with the mode switch, the field, then the hint,
   // the mic and Send.
   return (
     <div className="flex flex-col gap-2.5">

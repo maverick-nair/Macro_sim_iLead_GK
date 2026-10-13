@@ -44,7 +44,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
   const lens = useLens();
   const id = useId();
   if (layout === 'overlay') {
-    // Over the 1:1 portrait (D227): the goal in one line on navy, the rest of the brief opening under it.
+    // Over the 1:1 portrait (D232): the goal in one line on navy, the rest of the brief opening under it.
     const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
     return (
       <aside aria-label={t('liveshell.brief.title')} className="flex flex-col gap-2.5 bg-(--il-canvas-veil-soft) px-3 py-2.5 text-13 text-(--il-color-white)">

@@ -244,7 +244,7 @@ test.describe('the menu and its panels', () => {
 
   test('the result trend in the profile, with a table version', async ({ page }) => {
     await toBoard(page, '/?start=board&period=3');
-    // The desk opens a profile from the person's actions (D227): select them first.
+    // The desk opens a profile from the person's actions (D232): select them first.
     if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
     await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
     await expect(page.getByRole('heading', { name: 'Result trend' })).toBeVisible();

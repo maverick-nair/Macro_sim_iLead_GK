@@ -2,7 +2,7 @@ import type { MoodKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 import { backdrop, type MemberCardProps } from '../member/MemberCard';
 
-/** What the desk card adds to a member card (D227): the period's style by name, a flag, and the time spent with them. */
+/** What the desk card adds to a member card (D232): the period's style by name, a flag, and the time spent with them. */
 export interface DeskCardInfo {
   /** The style set for this period, by the lens's name; null before one is set. */
   style: string | null;
@@ -24,7 +24,7 @@ function MoodMark({ mood }: { mood: MoodKey }) {
 }
 
 /**
- * A person on the desk, as the approved canvas draws them (D227): their face, name and this period's style, their mood
+ * A person on the desk, as the approved canvas draws them (D232): their face, name and this period's style, their mood
  * as a word and a shape, a flag when something needs you, and whether you have spent time with them this period. The
  * whole card is one button that selects them (pressed while selected or picked); their profile opens from the actions
  * panel. While an action is being planned, someone who cannot take part is dimmed and says why.

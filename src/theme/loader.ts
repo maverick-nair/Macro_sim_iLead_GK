@@ -53,7 +53,7 @@ export function slotsOf(theme: ThemeConfig): { slots: Map<string, Record<Mode, S
   if (c.brand) {
     const from = perMode(c.brand.from), to = perMode(c.brand.to);
     slots.set('fill.brand', Object.fromEntries(MODES.map(m => [m, [slotFor('fill.brand', m, 0, from[m]), slotFor('fill.brand', m, 1, to[m])]])) as Record<Mode, Slot[]>);
-    // The label on the brand fill (D227): the default's is white on navy and ink on paper; a client's own fill gets deep
+    // The label on the brand fill (D232): the default's is white on navy and ink on paper; a client's own fill gets deep
     // space or white, whichever reads better on both of its stops, so a light brand keeps its dark label as before.
     slots.set('color.button.on-solid', Object.fromEntries(MODES.map(m => [m, [slotFor('color.button.on-solid', m, 0, labelOn([from[m], to[m]]))]])) as Record<Mode, Slot[]>);
   }
@@ -93,7 +93,7 @@ export function resolveTheme(raw: unknown): AppliedTheme | null {
     for (const [v, px] of Object.entries(RADII)) vars[v] = `${Math.round(px * theme.radiusScale * 100) / 100}px`;
   }
   const font = theme.font ? FONTS[theme.font] : null;
-  // The default face is the canvas's Geist (D227); any font the theme names, Manrope included, replaces it.
+  // The default face is the canvas's Geist (D232); any font the theme names, Manrope included, replaces it.
   if (font) vars['--il-font-family-sans'] = font.stack;
 
   return report({

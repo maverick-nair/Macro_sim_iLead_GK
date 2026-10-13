@@ -1,7 +1,7 @@
 import { useI18n } from '../../i18n';
 
 /**
- * The iLead logo as the approved canvas draws it (D227): the mark, a mint rounded square with the I and the arrow, then the
+ * The iLead logo as the approved canvas draws it (D232): the mark, a mint rounded square with the I and the arrow, then the
  * wordmark in the text colour. The mark is decorative; the wordmark is the name.
  */
 export function ILeadLogo({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {

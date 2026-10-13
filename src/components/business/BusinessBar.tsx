@@ -76,7 +76,7 @@ export function BusinessBar({ items, decisions, onDecide, aside }: BusinessBarPr
           {aside}
         </div>
       )}
-      {/* A decision still waiting: the canvas's navy strip, its deadline in words, Decide (D227). */}
+      {/* A decision still waiting: the canvas's navy strip, its deadline in words, Decide (D232). */}
       {decisions.map(d => (
         <div key={d.id} data-decision-due="" className="il-chrome flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 border-b-0 px-3.5 py-1.5 text-14">
           <span className="text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) whitespace-nowrap text-status-attention">{t('board.business.decision')} · {d.due}</span>

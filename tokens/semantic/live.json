@@ -26,7 +26,7 @@
       "listening": {
         "light": "{color.canvas.red-400}",
         "dark": "{color.canvas.red-400}",
-        "$description": "The listening dot and the mic while it listens, as on the canvas (D227)"
+        "$description": "The listening dot and the mic while it listens, as on the canvas (D232)"
       },
       "listening-glow": {
         "light": {

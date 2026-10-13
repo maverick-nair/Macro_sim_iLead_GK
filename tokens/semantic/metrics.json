@@ -10,7 +10,7 @@
       "popover-shadow": { "light": { "ref": "color.member-elevation.ink", "alpha": 0.35 }, "dark": { "ref": "color.member-elevation.ink", "alpha": 0.35 }, "$description": "Drop shadow of the score tooltip and the sponsor popover" }
     },
     "hud": {
-      "capacity-full": { "light": "{color.canvas.mint}", "dark": "{color.canvas.mint}", "$description": "A whole sub period of capacity left, in the navy header (D227)" },
+      "capacity-full": { "light": "{color.canvas.mint}", "dark": "{color.canvas.mint}", "$description": "A whole sub period of capacity left, in the navy header (D232)" },
       "capacity-half": { "light": { "ref": "color.canvas.mint", "alpha": 0.45 }, "dark": { "ref": "color.canvas.mint", "alpha": 0.45 }, "$description": "Half a sub period of capacity left: bolt fill" },
       "capacity-empty": { "light": "{color.line.strong}", "dark": "{color.line.strong}", "$description": "Spent capacity: bolt outline" },
       "streak": { "light": "{color.orange.800}", "dark": "{color.orange.800}", "$description": "Streak flame" }

@@ -32,7 +32,7 @@ const STAT = 'font-mono text-34 leading-none font-500 tracking-(--il-canvas-trac
 const AVATARS = 6;
 
 /**
- * The objectives (D219, the canvas's Ready, D227): the run's length with a track of its periods, the target, the team
+ * The objectives (D219, the canvas's Ready, D232): the run's length with a track of its periods, the target, the team
  * with their faces, how you win, the sponsor's word, then Start simulation, which shows after five seconds (hidden
  * until then, so it cannot be reached early; at once where motion is reduced; a line and a bar say the first period
  * opens shortly meanwhile), and an optional microphone test with Use text instead. The canvas no longer has How you
@@ -107,7 +107,7 @@ export function Objectives(p: ObjectivesProps) {
           </figcaption>
         </figure>
         <div className="relative grid min-h-30 border-t border-line-default tablet:min-h-0 tablet:border-t-0">
-          {/* Until Start simulation shows: a line and a bar filling up. Where motion is reduced it never shows (D227). */}
+          {/* Until Start simulation shows: a line and a bar filling up. Where motion is reduced it never shows (D232). */}
           <div aria-hidden="true" className="il-wait col-start-1 row-start-1 flex flex-col justify-center gap-3.5 pt-6 short:pt-4 tablet:pt-0">
             <span className="text-15 leading-normal text-fg-secondary">{t('intro.objectives.wait', { period: t('time.period', { unit: p.periodUnit, n: 1 }) })}</span>
             <span className="block h-1 bg-(--il-color-canvas-charcoal-800)"><span className="il-wait-bar block h-1 bg-accent-secondary" /></span>

@@ -75,7 +75,7 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
   /** Words written here and not sent come back after a reload (D86). */
   const [saved] = useState(() => loadDraft(lv.id));
   const [draft, setDraft] = useState(saved.draft ?? '');
-  // Over the 1:1 portrait the brief starts at the goal (D227); beside the other stages it starts open.
+  // Over the 1:1 portrait the brief starts at the goal (D232); beside the other stages it starts open.
   const [briefOpen, setBriefOpen] = useState(layout !== 'tablet' && lv.format !== 'roleplay');
   const [paused, setPaused] = useState(false);
   const startSeconds = Math.round(lv.minutes * 60);

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_MODE, pickMode } from './mode';
 
-describe('the mode the player opens in (D227)', () => {
+describe('the mode the player opens in (D232)', () => {
   it('is the canvas paper by default', () => {
     expect(DEFAULT_MODE).toBe('light');
     expect(pickMode(null, null, false)).toBe('light');

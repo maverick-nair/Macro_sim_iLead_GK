@@ -38,7 +38,7 @@ export interface HudScore {
 }
 
 export interface HudProps {
-  /** The storyline's organisation, beside the menu as the canvas puts it (D227); the iLead logo without one. */
+  /** The storyline's organisation, beside the menu as the canvas puts it (D232); the iLead logo without one. */
   organisation?: string | null;
   /** The game menu (D89): Objectives, Tutorial and video, History and the rest. Left out on the design frames. */
   menu?: ReactNode;
@@ -155,7 +155,7 @@ export function Hud(p: HudProps) {
   const amount = t('time.amountHalves', { unit: clock.subPeriodUnit, whole, half: left % 1 ? 'yes' : 'no' });
   const capAria = t('time.capacityAria', { left, total: clock.capacity, unit: clock.subPeriodUnit, period: clock.periodUnit });
   const pulse = left > 0 && left <= 1;
-  // One bar a sub period, as the canvas draws the days (D227): spent ones first, then what is left.
+  // One bar a sub period, as the canvas draws the days (D232): spent ones first, then what is left.
   const slots = Array.from({ length: Math.ceil(clock.capacity) }, (_, i) => Math.max(0, Math.min(1, left - (Math.ceil(clock.capacity) - 1 - i))));
 
   const periodText = t('time.period', { unit: clock.periodUnit, n: clock.period });
@@ -169,7 +169,7 @@ export function Hud(p: HudProps) {
       {p.menu && <div className="flex-none tablet-portrait:-order-3">{p.menu}</div>}
       <div className="flex items-center gap-2.5 tablet-portrait:-order-3">
         <ClientLogo />
-        {/* An upright tablet keeps the bar to one row: the organisation gives way (D227). */}
+        {/* An upright tablet keeps the bar to one row: the organisation gives way (D232). */}
         {p.organisation ? <span className="font-serif text-22 leading-none tablet-portrait:hidden">{p.organisation}</span> : <ILeadLogo size="sm" />}
       </div>
       {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden tablet-portrait:hidden">
@@ -236,7 +236,7 @@ export function Hud(p: HudProps) {
         </ScoreDisclosure>
       )}
       {score && p.streak !== undefined && <span role="img" aria-label={streak} title={streak} className="flex items-center gap-1 font-mono text-15 font-500 tablet-portrait:-order-1"><Flame />{number(p.streak)}</span>}
-      {/* The canvas leaves search and settings to the keyboard and the menu (D227); the upright tablet keeps them here (D73). */}
+      {/* The canvas leaves search and settings to the keyboard and the menu (D232); the upright tablet keeps them here (D73). */}
       <button type="button" onClick={p.onPalette} aria-label={t('hud.palette.aria')}
         className={`hidden min-h-11 cursor-pointer rounded-4 border border-line-strong bg-transparent px-2.5 py-0 text-12 font-600 text-fg-secondary ${focus}`}>
         {t('hud.palette.key')}

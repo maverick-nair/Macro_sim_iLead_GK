@@ -29,7 +29,7 @@ export interface ActionTileProps {
   perk?: string;
   onPick: () => void;
   /**
-   * `row`: a row of the desk's actions panel, as the canvas lists them (D227). `panel`: a tile with the live, instant or
+   * `row`: a row of the desk's actions panel, as the canvas lists them (D232). `panel`: a tile with the live, instant or
    * lock icon (the design frames, the tablet). `compact`: the profile's "Take an action" column.
    */
   layout?: 'row' | 'panel' | 'compact';

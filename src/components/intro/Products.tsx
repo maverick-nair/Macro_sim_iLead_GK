@@ -22,7 +22,7 @@ const Tick = ({ on }: { on: boolean }) => (
 );
 
 /**
- * The product portfolio (D219, the canvas's Portfolio, D227): the models in a list with an explored tick and how many
+ * The product portfolio (D219, the canvas's Portfolio, D232): the models in a list with an explored tick and how many
  * have been explored; the model's kind and number, short code, name, tagline and who it is for; its features as tabs
  * with their panel, and the same features as numbered spots on its photo, where the storyline places them (D221); its
  * specs and typical deal in a strip; Next model and See your objectives, which turns to paper once every model has been

@@ -5,7 +5,7 @@
       "link": {
         "light": "{color.canvas.button}",
         "dark": "{color.white}",
-        "$description": "Ghost buttons and plain text actions: navy on paper, white on dark (D227)"
+        "$description": "Ghost buttons and plain text actions: navy on paper, white on dark (D232)"
       },
       "link-hover": {
         "light": "{color.canvas.navy-900}",

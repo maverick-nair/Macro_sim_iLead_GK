@@ -12,7 +12,7 @@ import './messages';
 import { ILeadLogo } from '../shell/Logo';
 
 const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-/** The canvas's results grid (D227): square tiles sharing their borders. */
+/** The canvas's results grid (D232): square tiles sharing their borders. */
 const TILE = 'flex flex-col border-e border-b border-line-default bg-surface-card px-4 py-3.5';
 
 /** Stands in for the tier's name in the headline, so the name can carry the spectrum fill. */
@@ -47,7 +47,7 @@ export function EndScreen(p: EndScreenProps) {
 
   return (
     <div className="relative flex w-full flex-1 flex-col bg-surface-page text-fg-primary" style={{ minHeight: p.minHeight }}>
-      {/* The canvas's navy hero (D227), in both modes: the headline in the display serif, the score in the mono, the tiers as chips. */}
+      {/* The canvas's navy hero (D232), in both modes: the headline in the display serif, the score in the mono, the tiers as chips. */}
       <section className="il-scheme-dark bg-(--il-color-canvas-navy) text-fg-primary">
         <div className="mx-auto flex w-full max-w-(--il-end-max-width) flex-col gap-6 px-11 pt-5 pb-8 tablet:px-8">
           <header className="flex min-h-11 items-center gap-5">

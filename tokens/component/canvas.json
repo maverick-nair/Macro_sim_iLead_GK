@@ -1,7 +1,7 @@
 {
   "canvas": {
     "leading": {
-      "display": { "value": "1.05", "$description": "Display serif headlines (D227)" },
+      "display": { "value": "1.05", "$description": "Display serif headlines (D232)" },
       "heading": { "value": "1.1", "$description": "Serif titles of dialogs, panels and cards" },
       "title": { "value": "1.2", "$description": "Serif titles that wrap to two lines" },
       "snug": { "value": "1.3", "$description": "Card lines on the desk" },

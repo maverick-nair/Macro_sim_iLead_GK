@@ -22,7 +22,7 @@
     },
     "code-size": {
       "value": "calc(120px * var(--il-text-scale, 1))",
-      "$description": "The model's big short code, as on the canvas (D227)"
+      "$description": "The model's big short code, as on the canvas (D232)"
     }
   }
 }

@@ -134,7 +134,7 @@ describe('token pipeline', () => {
     });
 
     it('reproduce the values the design renders', () => {
-      // The approved canvas (D227): paper and navy, white and charcoal cards, navy and mint accents, Geist.
+      // The approved canvas (D232): paper and navy, white and charcoal cards, navy and mint accents, Geist.
       expect(out.tokensCss).toContain('--il-color-canvas-paper: #F6F4EF;');
       expect(out.tokensCss).toContain('--il-color-surface-card: var(--il-theme-color-surface-card, light-dark(var(--il-color-white), var(--il-color-canvas-charcoal-900)));');
       expect(out.tokensCss).toContain('--il-color-accent-default: var(--il-theme-color-accent-default, light-dark(var(--il-color-canvas-button), var(--il-color-canvas-mint)));');

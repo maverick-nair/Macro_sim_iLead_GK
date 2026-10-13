@@ -97,7 +97,7 @@ export const ThemeConfigSchema = z.strictObject({
   mode: z.enum(['dark', 'light', 'system']).optional(),
   colors: ThemeColors.optional(),
   logo: ThemeLogo.optional(),
-  /** From the allowlist only (FONTS). Left out, the canvas's Geist (D227). */
+  /** From the allowlist only (FONTS). Left out, the canvas's Geist (D232). */
   font: z.enum(FONT_NAMES).optional(),
   /** Multiplies every radius token: 0 is square, 1 is the iLead default, 2 is twice as round. */
   radiusScale: z.number().min(0).max(2).optional()

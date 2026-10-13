@@ -27,7 +27,7 @@ export interface StageColumn {
    * shown as words and a bar. Left out on the design frames, which show the headcount and its ideal.
    */
   output?: { n: number; ideal: number };
-  /** On the desk (D227) each card also carries its style by name, a flag and the time spent this period. */
+  /** On the desk (D232) each card also carries its style by name, a flag and the time spent this period. */
   cards: Array<MemberCardProps & { id: string; desk?: DeskCardInfo }>;
 }
 
@@ -44,7 +44,7 @@ export interface TeamBoardProps {
   /** Opens the result and stage overviews (D96, 1.0's two buttons on the board). Left out on the design frames. */
   onOverview?: () => void;
   /**
-   * The desk as the approved canvas draws it (D227): a quiet heading with what the funnel shows, and the compact
+   * The desk as the approved canvas draws it (D232): a quiet heading with what the funnel shows, and the compact
    * desk cards. The design frames keep the member cards and the legend.
    */
   desk?: boolean;

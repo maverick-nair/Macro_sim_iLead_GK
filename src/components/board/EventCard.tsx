@@ -37,9 +37,9 @@ export const EVENT_ART: Record<EventCardKind, string> = {
 };
 
 const focusRing = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-/** The card's type tag, as the canvas sets it (D227): small capitals on the selected tint. */
+/** The card's type tag, as the canvas sets it (D232): small capitals on the selected tint. */
 export const EVENT_TAG = 'relative flex min-h-6.5 items-center bg-accent-soft px-2 text-13 font-600 tracking-(--il-tracking-eyebrow) text-accent-default uppercase';
-/** The card's portrait column when the event is about someone (D227): their photo down the side. */
+/** The card's portrait column when the event is about someone (D232): their photo down the side. */
 export function EventPortrait({ img }: { img: string }) {
   return (
     <div aria-hidden="true" className="relative min-h-60 overflow-hidden bg-(image:--il-fill-portrait-calm) tablet:hidden">

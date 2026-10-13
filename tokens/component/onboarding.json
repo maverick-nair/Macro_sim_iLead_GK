@@ -23,7 +23,7 @@
     },
     "sponsor": {
       "columns": { "value": "minmax(0,1fr) minmax(0,1.1fr)", "$description": "Sponsor media, then the welcome tabs" },
-      "fill": { "value": "linear-gradient({color.canvas.navy-800},{color.canvas.navy-800})", "$description": "Behind the sponsor portrait or initials: flat navy (D227)" },
+      "fill": { "value": "linear-gradient({color.canvas.navy-800},{color.canvas.navy-800})", "$description": "Behind the sponsor portrait or initials: flat navy (D232)" },
       "leading": { "value": "1.65", "$description": "Welcome letter paragraphs" }
     },
     "consent": {

@@ -71,7 +71,7 @@ test('swap roles: different stages only, assess nudge, then the conversation', a
 
 test('profile: stats revealed, timeline from the engine, actions for that person', async ({ page }) => {
   await toBoard(page);
-  // The desk opens a profile from the person's actions (D227): select them first.
+  // The desk opens a profile from the person's actions (D232): select them first.
   if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
   await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
   const dialog = page.getByRole('dialog', { name: /Profile for Kent Goldberg/ });

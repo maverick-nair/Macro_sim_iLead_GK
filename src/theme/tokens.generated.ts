@@ -193,7 +193,7 @@ export const PAIRS: ContrastPair[] = [
    "color.surface.page"
   ],
   "min": 4.5,
-  "why": "Running text and labels (D227)"
+  "why": "Running text and labels (D232)"
  },
  {
   "fg": "color.accent.secondary",
@@ -404,7 +404,7 @@ export const PAIRS: ContrastPair[] = [
   "fg": "color.fg.on-accent",
   "bg": "fill.spectrum",
   "min": 3,
-  "why": "Icon of an earned badge on its medal (D227: the medal is the flat accent)"
+  "why": "Icon of an earned badge on its medal (D232: the medal is the flat accent)"
  },
  {
   "fg": "color.accent.default",

@@ -23,7 +23,7 @@
 }
 
 /*
- * The approved canvas's look (D227). Its header is navy on every screen, and the screens it draws on navy (the
+ * The approved canvas's look (D232). Its header is navy on every screen, and the screens it draws on navy (the
  * pre-game flow, the live conversation, the week's end) stay navy in the light theme too: `il-scheme-dark` turns
  * the subtree's color-scheme to dark, so every light-dark() token resolves to its dark value there, a client
  * theme's included. In the dark theme it changes nothing.
@@ -74,7 +74,7 @@
  */
 @keyframes il-reveal-later { from { visibility: hidden; opacity: 0; } to { visibility: visible; opacity: 1; } }
 .il-reveal-later { animation: il-reveal-later 0.4s ease-out 5s backwards; }
-/* While Start simulation waits, the canvas shows a line and a filling bar in its place (D227): shown only for the
+/* While Start simulation waits, the canvas shows a line and a filling bar in its place (D232): shown only for the
    animation's run (the hidden state is the element's own), so where animation is off it never shows. */
 .il-wait { visibility: hidden; animation: il-wait 5s linear backwards; }
 @keyframes il-wait { from { visibility: visible; } to { visibility: visible; } }

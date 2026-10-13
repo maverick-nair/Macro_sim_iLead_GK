@@ -1,8 +1,8 @@
 {
   "$description": "App shell backdrops and the design frame sizes. Raw values: `office` is the dark theme's office photo over Deep Space, `daylight` the light theme's glow.",
   "backdrop": {
-    "office": { "$value": "#0B1220", "$description": "The dark ground: flat navy (D227). A storyline office image replaces it" },
-    "daylight": { "$value": "#F6F4EF", "$description": "The light ground: paper (D227)" }
+    "office": { "$value": "#0B1220", "$description": "The dark ground: flat navy (D232). A storyline office image replaces it" },
+    "daylight": { "$value": "#F6F4EF", "$description": "The light ground: paper (D232)" }
   },
   "frame": {
     "desktop-min-height": { "$value": "900px", "$description": "Minimum app height in the design's desktop frames" }

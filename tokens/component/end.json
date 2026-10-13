@@ -1,7 +1,7 @@
 {
   "end": {
     "glow": {
-      "fill": { "value": "none", "$description": "No glow behind the headline (D227)" }
+      "fill": { "value": "none", "$description": "No glow behind the headline (D232)" }
     },
     "logo": {
       "tracking": { "value": "-0.03em" }

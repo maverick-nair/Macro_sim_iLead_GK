@@ -98,7 +98,7 @@ export const SignedOutScreen: Story = {
 const card = { title: 'Account Executive', img: '/assets/npc/kent.webp', skill: 53, morale: 48, result: 55, trust: 50, style: null, onSelect: noop, onOpenProfile: noop, onStyleChange: noop } as const;
 const cards = (S: () => React.ReactNode) => <div style={{ width: 1100, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}><S /></div>;
 
-/** The team as the canvas draws it (D227): the style in words, the mood as a word and a shape, a flag, time this period. */
+/** The team as the canvas draws it (D232): the style in words, the mood as a word and a shape, a flag, time this period. */
 export const Cards: Story = {
   decorators: [cards],
   render: () => (
@@ -111,7 +111,7 @@ export const Cards: Story = {
   )
 };
 
-/** Revenue against the target and the score with today's change, in the navy bar (D227). */
+/** Revenue against the target and the score with today's change, in the navy bar (D232). */
 export const Status: Story = {
   decorators: [S => <div className="il-chrome" style={{ width: 600, padding: 16 }}><S /></div>],
   render: () => <DeskStatus value={60000} target={240000} score={412} delta={33} />

@@ -16,7 +16,7 @@
     },
     "rows": {
       "value": "minmax(0, max-content) minmax(max-content, 1fr)",
-      "$description": "The desk's grid (D212): the team in the first row, scrolling when it does not fit, the feedback and inbox feed right under it taking what is left, as on the canvas (D227); the actions panel spans both"
+      "$description": "The desk's grid (D212): the team in the first row, scrolling when it does not fit, the feedback and inbox feed right under it taking what is left, as on the canvas (D232); the actions panel spans both"
     },
     "feed": {
       "card-width": {

@@ -32,7 +32,7 @@
     },
     "black": {
       "$value": "oklch(0 0 0)",
-      "$description": "Behind video, and its shade (D227)"
+      "$description": "Behind video, and its shade (D232)"
     },
     "ink": {
       "200": {
@@ -153,7 +153,7 @@
     "family": {
       "sans": {
         "$value": "'Geist', system-ui, sans-serif",
-        "$description": "Geist, the interface face of the approved canvas (D227). A client theme may name another (src/theme/schema.ts FONTS)"
+        "$description": "Geist, the interface face of the approved canvas (D232). A client theme may name another (src/theme/schema.ts FONTS)"
       }
     },
     "weight": {

@@ -85,7 +85,7 @@ for (const theme of ['dark', 'light'] as const) {
     await expect(page.getByText('Mid rise offices, clinics, hotels and mixed use buildings.')).toBeVisible();
     await expect(page.getByRole('img', { name: 'Levo B10: a steel and glass passenger lift car in a grey studio' })).toBeVisible();
     const panel = page.getByRole('tabpanel');
-    // The panel names the point, then says it (D227).
+    // The panel names the point, then says it (D232).
     await expect(panel).toHaveText(/Built modular\s*Ships in modules and installs in nine days/);
     await expect(page.getByRole('tab', { name: /Built modular$/ })).toHaveAttribute('aria-selected', 'true');
     await press(page, page.getByRole('tab', { name: /Built modular$/ }), 'ArrowRight');

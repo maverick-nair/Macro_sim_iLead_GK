@@ -1,5 +1,5 @@
 {
-  "$description": "The approved design canvas's palette (D227): navy and paper, a mint accent used on dark only, warm sand lines. Raw values as the canvas writes them; colours a semantic token puts an alpha on are OKLCH.",
+  "$description": "The approved design canvas's palette (D232): navy and paper, a mint accent used on dark only, warm sand lines. Raw values as the canvas writes them; colours a semantic token puts an alpha on are OKLCH.",
   "color": {
     "canvas": {
       "navy": { "$value": "oklch(0.1831 0.0309 263.38)", "$description": "#0B1220. The page and the header on dark screens; the header on every screen" },

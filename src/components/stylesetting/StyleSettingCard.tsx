@@ -47,7 +47,7 @@ export function useStyleNote(member: StyleSettingMember, periodUnit: PeriodUnit)
 const Plus = () => <svg className="size-3 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>;
 
 /**
- * One member on the style setting screen, as the approved canvas draws it (D227): the photo across the column, the
+ * One member on the style setting screen, as the approved canvas draws it (D232): the photo across the column, the
  * name, their stage and mood, last period's style and how it landed when there was one, the stats once revealed, the
  * styles as named buttons two to a row, and an optional reason behind a dashed button. Away, a line says when the
  * style applies. Not boxed: the columns stand on the page.

@@ -54,7 +54,7 @@ export interface StyleControlProps {
   onDisabledPick?: () => void;
   /**
    * `letters` (the default) is the segmented control of letters; `names` is the style setting screen's grid of buttons,
-   * two to a row, each with the style's full name (the approved canvas, D227). The same radio group either way.
+   * two to a row, each with the style's full name (the approved canvas, D232). The same radio group either way.
    */
   variant?: 'letters' | 'names';
 }
@@ -138,7 +138,7 @@ function StyleLetters({ value, onChange, memberName, size = 'sm', tooltip, onToo
 }
 
 /**
- * The style setting screen's control on the canvas (D227): one button per lens style with its full name, two to a row,
+ * The style setting screen's control on the canvas (D232): one button per lens style with its full name, two to a row,
  * 44px tall. The chosen one is filled with the accent. A Radix toggle group in single mode, as the letters are; the
  * description is the button's accessible description, as the letters' tooltip says it.
  */

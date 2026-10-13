@@ -1,5 +1,5 @@
 /**
- * Which mode the player opens in (D227). The launch's `?theme=light|dark` wins, then the theme's own mode (a client theme or
+ * Which mode the player opens in (D232). The launch's `?theme=light|dark` wins, then the theme's own mode (a client theme or
  * the storyline's brand, `system` following the device), else the default: the approved canvas's paper, light. In both
  * modes the header stays navy and the screens the canvas draws on navy stay navy (`il-scheme-dark`, src/styles/global.css).
  */

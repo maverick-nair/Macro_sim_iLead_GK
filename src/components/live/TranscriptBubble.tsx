@@ -21,7 +21,7 @@ export interface TranscriptBubbleProps {
    */
   voiceNote?: { playing?: boolean; onPlay?: () => void };
   /**
-   * `line`: the canvas's 1:1 (D227): no bubble. The person's lines in the serif under a small name,
+   * `line`: the canvas's 1:1 (D232): no bubble. The person's lines in the serif under a small name,
    * yours right aligned under "You".
    */
   look?: 'bubble' | 'line';

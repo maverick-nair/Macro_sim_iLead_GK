@@ -2,12 +2,12 @@
   "$description": "Event cards and the incoming sponsor call. The art is light in both modes, as the design draws it; the type tag sits on the portrait shade.",
   "fill": {
     "event": {
-      "impact": { "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})", "$description": "Impact event art: flat, as the canvas draws (D227)" },
-      "signal": { "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})", "$description": "Signal event art: flat, as the canvas draws (D227)" },
-      "capacity": { "value": "linear-gradient({color.canvas.sand-200},{color.canvas.sand-200})", "$description": "Capacity event art: flat, as the canvas draws (D227)" },
-      "diagnostic": { "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})", "$description": "Diagnostic event art: flat, as the canvas draws (D227)" },
-      "opportunity": { "value": "linear-gradient({color.canvas.green-100},{color.canvas.green-100})", "$description": "Opportunity event art: not in the design, built in its language: flat, as the canvas draws (D227)" },
-      "crisis": { "value": "linear-gradient({color.canvas.orange-50},{color.canvas.orange-50})", "$description": "Crisis event art: not in the design, built in its language: flat, as the canvas draws (D227)" }
+      "impact": { "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})", "$description": "Impact event art: flat, as the canvas draws (D232)" },
+      "signal": { "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})", "$description": "Signal event art: flat, as the canvas draws (D232)" },
+      "capacity": { "value": "linear-gradient({color.canvas.sand-200},{color.canvas.sand-200})", "$description": "Capacity event art: flat, as the canvas draws (D232)" },
+      "diagnostic": { "value": "linear-gradient({color.canvas.sky-100},{color.canvas.sky-100})", "$description": "Diagnostic event art: flat, as the canvas draws (D232)" },
+      "opportunity": { "value": "linear-gradient({color.canvas.green-100},{color.canvas.green-100})", "$description": "Opportunity event art: not in the design, built in its language: flat, as the canvas draws (D232)" },
+      "crisis": { "value": "linear-gradient({color.canvas.orange-50},{color.canvas.orange-50})", "$description": "Crisis event art: not in the design, built in its language: flat, as the canvas draws (D232)" }
     }
   },
   "color": {

@@ -267,7 +267,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(drawer(page)).toHaveCount(0);
           } else {
-            // The desk opens a profile from the person's actions (D227): select them first.
+            // The desk opens a profile from the person's actions (D232): select them first.
             if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
             await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
             await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeVisible();
@@ -289,7 +289,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(page.getByRole('dialog', { name: 'Badges' })).toHaveCount(0);
           }
-          // Settings (from the menu: the desk's navy bar keeps only the session controls, D227) and pause.
+          // Settings (from the menu: the desk's navy bar keeps only the session controls, D232) and pause.
           await page.getByRole('button', { name: /^Menu/ }).first().click();
           await page.getByRole('list', { name: 'Game menu' }).getByRole('button', { name: 'Settings', exact: true }).click();
           await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();

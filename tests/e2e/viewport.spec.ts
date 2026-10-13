@@ -254,7 +254,7 @@ test.describe('style setting and the board', () => {
       await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
       await drawer(page).getByRole('tab', { name: 'Profile' }).click();
     } else {
-      // The desk opens a profile from the person's actions (D227): select them first.
+      // The desk opens a profile from the person's actions (D232): select them first.
       await page.getByText('Kent Goldberg', { exact: true }).click();
       await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
     }

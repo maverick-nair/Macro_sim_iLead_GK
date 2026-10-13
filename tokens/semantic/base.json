@@ -18,7 +18,7 @@
           "against": "color.surface.solid",
           "min": 4.5
         },
-        "$description": "Running text and labels on the canvas: a step softer than names and numbers, a step stronger than metadata (D227)"
+        "$description": "Running text and labels on the canvas: a step softer than names and numbers, a step stronger than metadata (D232)"
       },
       "secondary": {
         "light": "{color.canvas.slate-600}",
@@ -39,13 +39,13 @@
       "page": {
         "light": "{color.canvas.paper}",
         "dark": "{color.canvas.navy}",
-        "$description": "The page itself: paper, or navy on dark (D227). Sheets and panels that stand in for a page (the menu, the report) use it"
+        "$description": "The page itself: paper, or navy on dark (D232). Sheets and panels that stand in for a page (the menu, the report) use it"
       },
       "card": {
         "light": "{color.white}",
         "dark": "{color.canvas.charcoal-900}",
         "themable": true,
-        "$description": "Cards: white on paper, charcoal on navy (D227)"
+        "$description": "Cards: white on paper, charcoal on navy (D232)"
       },
       "solid": {
         "light": "{color.white}",
@@ -63,7 +63,7 @@
         "light": "{color.canvas.paper-light}",
         "dark": "{color.canvas.charcoal-950}",
         "themable": true,
-        "$description": "Overlays and drawers. Opaque in the canvas look: no glass (D227)"
+        "$description": "Overlays and drawers. Opaque in the canvas look: no glass (D232)"
       },
       "scrim": {
         "light": {
@@ -108,7 +108,7 @@
           "against": "color.surface.solid",
           "min": 3
         },
-        "$description": "Bars, selected state, links. Navy on paper, mint on dark (D227)"
+        "$description": "Bars, selected state, links. Navy on paper, mint on dark (D232)"
       },
       "secondary": {
         "light": "{color.canvas.button}",
@@ -118,7 +118,7 @@
           "against": "color.surface.solid",
           "min": 4.5
         },
-        "$description": "Eyebrows, text links, icons, focus rings: navy on paper, mint on dark (D227). Used as 12px text, so it needs 4.5:1 (D8)"
+        "$description": "Eyebrows, text links, icons, focus rings: navy on paper, mint on dark (D232). Used as 12px text, so it needs 4.5:1 (D8)"
       },
       "soft": {
         "light": "{color.canvas.sky-100}",
@@ -184,12 +184,12 @@
       "solid": {
         "light": "{color.canvas.button}",
         "dark": "{color.canvas.paper-light}",
-        "$description": "The primary button's fill: navy on paper, paper on dark (D227)"
+        "$description": "The primary button's fill: navy on paper, paper on dark (D232)"
       },
       "on-solid": {
         "light": "{color.white}",
         "dark": "{color.canvas.ink}",
-        "$description": "The primary button's label: white on navy, ink on paper (D227). A client theme's brand fill brings its own (the loader picks deep space or white, whichever reads better on it)",
+        "$description": "The primary button's label: white on navy, ink on paper (D232). A client theme's brand fill brings its own (the loader picks deep space or white, whichever reads better on it)",
         "themable": true
       },
       "quiet": {
@@ -198,7 +198,7 @@
           "ref": "color.white",
           "alpha": 0.04
         },
-        "$description": "The outlined button: white on paper, nearly clear on dark (D227)"
+        "$description": "The outlined button: white on paper, nearly clear on dark (D232)"
       }
     }
   },
@@ -206,15 +206,15 @@
     "brand": {
       "value": "linear-gradient({color.button.solid}, {color.button.solid})",
       "themable": true,
-      "$description": "The primary button: flat navy on paper, flat paper on dark (D227, no gradients). A client theme sets its own brand gradient"
+      "$description": "The primary button: flat navy on paper, flat paper on dark (D232, no gradients). A client theme sets its own brand gradient"
     },
     "product": {
       "value": "linear-gradient({color.accent.default}, {color.accent.default})",
-      "$description": "Progress fills: flat (D227)"
+      "$description": "Progress fills: flat (D232)"
     },
     "spectrum": {
       "value": "linear-gradient({color.accent.default}, {color.accent.default})",
-      "$description": "Celebration: flat (D227)"
+      "$description": "Celebration: flat (D232)"
     }
   }
 }

@@ -7,7 +7,7 @@ import { SubPeriodUnitContext, useDays, type PeriodUnit, type SubPeriodUnit } fr
 export interface ActionsPanelMember {
   /** First name of the selected person: "For Kent". */
   firstName: string;
-  /** Their full name and face, over their actions (D227). */
+  /** Their full name and face, over their actions (D232). */
   name?: string;
   img?: string;
   /** Opens their profile, from the panel's header as the canvas has it. */
@@ -46,7 +46,7 @@ export interface ActionsPanelProps {
    * out for the fixed card (1440 and the design frames).
    */
   collapse?: ActionsPanelCollapse;
-  /** Live conversations used this period against the cap (D227: the canvas shows it over the actions). */
+  /** Live conversations used this period against the cap (D232: the canvas shows it over the actions). */
   live?: { used: number; cap: number };
 }
 

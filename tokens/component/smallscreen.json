@@ -1,6 +1,6 @@
 {
   "smallscreen": {
-    "glow": { "value": "none", "$description": "No glow on the small screen notice (D227)" },
+    "glow": { "value": "none", "$description": "No glow on the small screen notice (D232)" },
     "title": {
       "leading": { "value": "1.2", "$description": "The notice's title, which wraps to two or three lines" }
     }

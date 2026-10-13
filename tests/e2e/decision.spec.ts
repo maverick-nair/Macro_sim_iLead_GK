@@ -109,7 +109,7 @@ test('decide later: the decision waits on the board with its deadline, and opens
   await dialog.getByRole('button', { name: 'Decide later' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const bar = page.getByRole('region', { name: 'The business' });
-  // The navy strip names the deadline, then the decision (D227).
+  // The navy strip names the deadline, then the decision (D232).
   await expect(bar.locator('[data-decision-due]').filter({ hasText: 'A deep discount to close this week' })).toContainText(/2 days left/);
   await bar.getByRole('button', { name: 'Decide A deep discount to close this week' }).click();
   await expect(dialog).toBeVisible();

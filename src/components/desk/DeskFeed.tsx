@@ -71,7 +71,7 @@ const Spark = () => (
 );
 
 function Card({ children, urgent = false, kind }: { children: ReactNode; urgent?: boolean; kind: string }) {
-  // Four to a row as the canvas lays them out (D227); more scroll sideways. Wider with larger text.
+  // Four to a row as the canvas lays them out (D232); more scroll sideways. Wider with larger text.
   return <li data-feed={kind} className="flex w-(--il-canvas-feed-card-width) min-w-(--il-desk-feed-card-width) flex-none text-large:w-full text-large:min-w-0"><div className={`${CARD} w-full ${urgent ? 'border-status-attention' : 'border-line-strong'}`}>{children}</div></li>;
 }
 

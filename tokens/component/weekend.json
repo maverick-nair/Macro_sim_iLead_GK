@@ -5,7 +5,7 @@
       "tracking": { "value": "-0.03em" }
     },
     "glow": {
-      "fill": { "value": "none", "$description": "No halo behind the banner headline (D227)" },
+      "fill": { "value": "none", "$description": "No halo behind the banner headline (D232)" },
       "top": { "value": "45%", "$description": "The halo sits a little above the middle" }
     },
     "display": {
@@ -18,7 +18,7 @@
       "columns": { "value": "minmax(0,1.3fr) minmax(0,1fr)", "$description": "Funnel and team, then stars and the small cards" }
     },
     "funnel": {
-      "columns": { "value": "minmax(130px, max-content) minmax(0,1fr) minmax(96px, max-content)", "$description": "Stage, bar, value. The text columns grow for large text (D56); at 100% they stay 130px and 96px (the mono value, D227)" },
+      "columns": { "value": "minmax(130px, max-content) minmax(0,1fr) minmax(96px, max-content)", "$description": "Stage, bar, value. The text columns grow for large text (D56); at 100% they stay 130px and 96px (the mono value, D232)" },
       "tick": { "value": "2px", "$description": "The ideal marker on a funnel bar" }
     },
     "kpi": {

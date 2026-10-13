@@ -518,7 +518,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
 
   const styleOf = (m: MemberView) => (styling ? draft[m.id] ?? null : m.style);
   /**
-   * What the desk card says about someone (D227): their style by name, one flag (away, a message waiting, past the
+   * What the desk card says about someone (D232): their style by name, one flag (away, a message waiting, past the
    * neglect window, a promise), and the last time spent with them this period, from the engine's history.
    */
   const deskInfo = (m: MemberView): DeskCardInfo => {
