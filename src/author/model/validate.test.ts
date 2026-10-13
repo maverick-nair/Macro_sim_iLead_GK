@@ -5,7 +5,7 @@ import type { AuthorDraft } from './draft';
 import { toStoryline } from './export';
 import { effectText, emptyChat, seedDraft } from './seed';
 import { newStakeholder } from './stakeholders';
-import { MIN_ACTIONS, readiness, recordCalibration, syntheticGate, validateDraft, validationOf } from './validate';
+import { MIN_ACTIONS, readiness, recordCalibration, sampleAgreement, syntheticGate, validateDraft, validationOf } from './validate';
 
 const chat = (): AuthorDraft['chat'] => ({
   ...emptyChat(),
@@ -109,7 +109,8 @@ describe('the publish gate (D131)', () => {
     d.team[1].first = d.team[0].first;
     d.team[1].last = ` ${d.team[0].last.toUpperCase()} `;
     d.lens.styles[1].name = d.lens.styles[0].name;
-    d.lens.styles[2].letter = d.lens.styles[3].letter;
+    d.lens.styles[2].letter = 'X';
+    d.lens.styles[3].letter = 'x';
     d.scoring.framework = { file: 'f.md', pages: 1, step: 3, confirmed: true, rows: [
       { skill: 'Coaching', behaviors: 'Asks questions', levels: null, page: 1, include: true },
       { skill: 'Coaching', behaviors: 'Gives time', levels: null, page: 1, include: true },
@@ -120,7 +121,7 @@ describe('the publish gate (D131)', () => {
     expect(b.map(i => i.title)).toEqual(expect.arrayContaining([
       `Two characters are called "${d.team[0].first} ${d.team[0].last}"`,
       `Two styles are called "${d.lens.styles[0].name}"`,
-      `Two styles share the tag "${d.lens.styles[3].letter}"`,
+      'Two styles share the tag "X"',
       'Two skills are called "Coaching"',
       'Two skills would be scored as one'
     ]));
@@ -154,6 +155,30 @@ describe('the publish gate (D131)', () => {
     const f = ready();
     f.scoring.samples[0].call = f.scoring.samples[0].scored === 'strong' ? 'weak' : 'strong';
     expect(blockedBy(f, /^scoring/)[0].title).toBe('You agree with only 5 of 6 scoring samples');
+  });
+
+  /** D229: an honest disagreement, with its reason, is resolved; the gate still counts every sample. */
+  it('counts a disagreement with a reason toward the gate, and keeps it in the checks as a note', () => {
+    const f = ready();
+    const x = f.scoring.samples[2];
+    x.call = x.scored === 'harmful' ? 'weak' : 'harmful';
+    x.reason = 'Too short';
+    expect(blockedBy(f, /^scoring/)[0].title).toBe('You agree with only 5 of 6 scoring samples');
+    expect(blockedBy(f, /^scoring/)[0].detail).toMatch(/counting a disagreement you give a reason for/);
+    x.reason = 'Demanding two deals from someone already slipping, with no help offered, harms trust.';
+    expect(blockedBy(f, /^scoring/)).toEqual([]);
+    const note = validateDraft(f).advisories.find(i => i.id === `scoring.reason.${x.id}`)!;
+    expect(note).toMatchObject({ area: 'scoring', tab: 'scoring' });
+    expect(note.detail).toMatch(/Your reason: Demanding two deals/);
+    x.resolution = 'rubric';
+    expect(validateDraft(f).advisories.find(i => i.id === `scoring.reason.${x.id}`)!.detail).toMatch(/You changed the rubric: /);
+    // Two disagreements with reasons still pass (4 agreed and 2 reasoned of 6); the gate counts reasoned ones only.
+    const y = f.scoring.samples[4];
+    y.call = y.scored === 'strong' ? 'weak' : 'strong';
+    expect(blockedBy(f, /^scoring/).length).toBe(1);
+    y.reason = 'It invites them in, which this lens rewards.';
+    expect(blockedBy(f, /^scoring/)).toEqual([]);
+    expect(sampleAgreement(f.scoring.samples)).toMatchObject({ agreed: 4, share: 1 });
   });
 
   it('puts the export\'s event issues on the Events tab, each named, and says a gone person once', () => {

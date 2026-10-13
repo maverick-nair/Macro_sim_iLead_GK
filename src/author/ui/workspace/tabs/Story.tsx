@@ -8,6 +8,7 @@ import { Avatar, BUTTON, CARD, CardHead, EYEBROW, Field, MarkOf, Segmented, SubT
 import { TabBody, TabHead } from '../Workspace';
 import { useRenameOffer } from '../UpdatePrompt';
 import { useRegenerate } from './regenerate';
+import { RevenueReach, unitOf } from './Reach';
 
 type Sub = 'company' | 'market' | 'sponsor';
 
@@ -78,11 +79,18 @@ export default function Story() {
               <CardHead id="product" title="Product"><MarkOf path="story.product.name" /></CardHead>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Product name" required need={!p.name.trim()}>{id => <TextInput id={id} {...renameProduct} tone={tone('story.product.name')} value={p.name} onChange={e => edit(x => { x.story.product.name = e.target.value; }, 'story.product.name')} />}</Field>
-                <Field label="Average deal value" need={!p.dealValue} mark="story.product.dealValue">{id => (
+                <Field label={`Average ${unitOf(d).one} value`} need={!p.dealValue} mark="story.product.dealValue">{id => (
                   <TextInput id={id} inputMode="decimal" tone={tone('story.product.dealValue', !p.dealValue)} placeholder="For example 30,000" value={p.dealValue ?? ''}
                     onChange={e => { const v = Number(e.target.value.replace(/[^\d.]/g, '')); edit(x => { x.story.product.dealValue = v > 0 ? v : null; }, 'story.product.dealValue'); }} />
                 )}</Field>
+                <Field label="What one deal is called" optional mark="story.product.unit" hint={'For example "outlet order" or "distributor bill". Participants read it wherever deals are counted: the first deal badge, the end screen, the week end, the product screen and the report. Left empty, "deal".'}>{id => (
+                  <TextInput id={id} maxLength={40} tone={tone('story.product.unit')} placeholder="deal" value={p.unit} onChange={e => edit(x => { x.story.product.unit = e.target.value.slice(0, 40); }, 'story.product.unit')} />
+                )}</Field>
+                <Field label="Plural" optional mark="story.product.unit" hint="Left empty, the name with an s.">{id => (
+                  <TextInput id={id} maxLength={40} tone={tone('story.product.unit')} placeholder={unitOf(d).many} value={p.units} onChange={e => edit(x => { x.story.product.units = e.target.value.slice(0, 40); }, 'story.product.unit')} />
+                )}</Field>
               </div>
+              <RevenueReach compact />
               <Field label="In one line">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={tone('story.product.oneLine')} value={p.oneLine} onChange={e => edit(x => { x.story.product.oneLine = e.target.value; }, 'story.product.oneLine')} />}</Field>
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between gap-2"><span className="text-13 font-700 text-author-label">Selling points</span><span className="text-12 font-600 text-author-muted">Shown as hotspots on the product</span></div>

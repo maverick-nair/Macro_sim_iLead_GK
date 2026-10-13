@@ -685,6 +685,7 @@
                           "type": "string",
                           "enum": [
                             "you",
+                            "kept",
                             "default"
                           ]
                         }
@@ -985,6 +986,7 @@
                           "type": "string",
                           "enum": [
                             "you",
+                            "kept",
                             "default"
                           ]
                         }

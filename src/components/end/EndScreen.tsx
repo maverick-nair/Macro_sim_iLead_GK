@@ -43,7 +43,7 @@ export function EndScreen(p: EndScreenProps) {
     const end = Math.round(k.end), change = end - Math.round(k.start);
     return { key: k.metric, label: t('metric.team', { metric: t('metric.nameLower', { metric: k.metric }) }), value: number(end), note: delta(change), tone: toneOf(change) };
   });
-  const tiles = [{ key: 'conversions', label: t('end.results.conversions'), value: number(r.conversions), note: r.conversionsNote, tone: r.conversionsTone }, ...kpis];
+  const tiles = [{ key: 'conversions', label: r.conversionsLabel ?? t('end.results.conversions', { custom: 'no', UnitMany: '' }), value: number(r.conversions), note: r.conversionsNote, tone: r.conversionsTone }, ...kpis];
 
   return (
     <div className="relative flex w-full flex-1 flex-col bg-surface-page text-fg-primary" style={{ minHeight: p.minHeight }}>

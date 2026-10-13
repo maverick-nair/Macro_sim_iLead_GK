@@ -1,14 +1,15 @@
-import { NEEDS } from '../../engine/lens';
+import { NEEDS, styleLetters } from '../../engine/lens';
 import { configHash } from '../calibrate/logic/hash';
 import type { CalibrationPublishCheck } from '../calibrate/logic/publish';
 import { fitTable, LENS_BY_ID } from '../lenses';
 import type { AuthorDraft, Tab } from './draft';
-import { toStoryline, type Exported } from './export';
+import { hiringOf, toStoryline, type Exported } from './export';
 import { ENGINE_TEMPLATES } from './library';
 import { needsOf } from './needs';
 import { parseEffect } from './seed';
 import { consequenceKey, flagsSet } from './choices';
 import { hasInteraction } from './stakeholders';
+import { auditStoryline, type AuditEntry } from './audit';
 
 /**
  * The publish gate (D131): every reason a draft cannot be published yet, and the advice that does not block,
@@ -19,7 +20,7 @@ import { hasInteraction } from './stakeholders';
  * draft path). Blocking issues stop Publish; advisories never do.
  */
 
-export type IssueArea = 'required' | 'engine' | 'mechanics' | 'names' | 'links' | 'scoring' | 'copy' | 'synthetic' | 'play';
+export type IssueArea = 'required' | 'engine' | 'mechanics' | 'names' | 'links' | 'scoring' | 'copy' | 'trace' | 'synthetic' | 'play';
 
 export interface Issue {
   id: string;
@@ -46,6 +47,20 @@ export const MIN_ACTIONS = 4;
 /** The scoring samples a draft must have, and the share the author must agree with (D110). */
 export const MIN_SAMPLES = 6;
 export const SCORING_AGREEMENT = 0.85;
+/** A disagreement with a scoring sample counts for the gate with a reason at least this long (D229). */
+export const REASON_MIN = 10;
+const BAND_NAME = { strong: 'Strong', adequate: 'Adequate', weak: 'Weak', harmful: 'Harmful' } as const;
+
+/**
+ * The scoring samples' agreement (D110, D229): the samples the author agrees with, and the disagreements they gave a
+ * reason for, kept with the draft. Both count toward the publish gate; a disagreement without a reason does not.
+ */
+export function sampleAgreement(samples: AuthorDraft['scoring']['samples']) {
+  const agreed = samples.filter(x => x.call !== null && x.call === x.scored);
+  const disagreed = samples.filter(x => x.call !== null && x.call !== x.scored);
+  const reasoned = disagreed.filter(x => x.reason.trim().length >= REASON_MIN);
+  return { agreed: agreed.length, reasoned, unreasoned: disagreed.filter(x => !reasoned.includes(x)), share: samples.length ? (agreed.length + reasoned.length) / samples.length : 0 };
+}
 /** The core actions (D108), by the engine template they play as: a draft without one of them is not iLead. */
 export const CORE_TEMPLATES = ENGINE_TEMPLATES.filter(t => t.inNew === 'core').map(t => ({ key: t.template, name: t.name }));
 /** Templates whose static form is a choice between options, beside every style based action. */
@@ -196,6 +211,11 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   });
   exported.copy.forEach((c, k) => block({ id: `copy.${k}`, area: 'copy', title: `Copy rule: ${c.rule.replace(/_/g, ' ')}`, detail: `"${c.text.slice(0, 80)}"`, tab: 'story' }));
 
+  // The export audit (D228): every text participants read has a field in GenieKreator that owns it.
+  const byPattern = new Map<string, AuditEntry[]>();
+  for (const x of auditStoryline(exported.storyline).ownerless) byPattern.set(x.pattern, [...(byPattern.get(x.pattern) ?? []), x]);
+  for (const [pattern, xs] of byPattern) advise({ id: `trace.${pattern}`, area: 'trace', title: `${xs.length} ${xs.length === 1 ? 'text' : 'texts'} participants read that no tab owns (${pattern})`, detail: `For example "${xs[0].text.slice(0, 80)}". It came from the drafting template, so you cannot see or change it here. Tell the GenieKreator team.`, tab: 'overview' });
+
   // Mechanics: enough actions, the core ones, choices that differ, styles that matter.
   const inUse = d.actions.filter(a => a.core || a.enabled);
   const styleKeys = d.lens.styles.map(s => s.key);
@@ -245,9 +265,12 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   // Stakeholders (D160): their own names, apart from the team's; and something to do with each (advice).
   const shNames = d.stakeholders.map(s => s.name);
   for (const n of new Set([...duplicates(shNames), ...shNames.filter(n => n.trim() && fullNames.some(f => norm(f) === norm(n)))])) block({ id: `names.stakeholder.${norm(n)}`, area: 'names', title: `Two people are called ${quote(n)}`, detail: 'A stakeholder shares a name with another stakeholder or a character. Give each their own.', tab: 'team' });
+  // Hire candidates (D228): their own names, apart from the team's and each other's.
+  const candNames = hiringOf(d).map(c => [c.first, c.last].filter(s => s.trim()).join(' '));
+  for (const n of new Set([...duplicates(candNames), ...candNames.filter(n => n.trim() && fullNames.some(f => norm(f) === norm(n)))])) block({ id: `names.candidate.${norm(n)}`, area: 'names', title: `Two people are called ${quote(n)}`, detail: 'A hire candidate shares a name with another candidate or a character. Give each their own in Team, Hiring.', tab: 'team' });
   for (const s of d.stakeholders) if (!hasInteraction(s)) advise({ id: `mechanics.stakeholder.${s.key}`, area: 'mechanics', title: `Participants cannot do anything with ${quote(s.name || s.key)}`, detail: 'No way to engage them is switched on: they can still write and be moved by decisions, but never be met. Switch on a meeting, a presentation, a negotiation or an email in Team.', tab: 'team', target: `stakeholders.${s.key}` });
   for (const n of duplicates(d.lens.styles.map(s => s.name))) block({ id: `names.style.${norm(n)}`, area: 'names', title: `Two styles are called ${quote(n)}`, detail: 'Each style needs its own name.', tab: 'lens' });
-  for (const n of duplicates(d.lens.styles.map(s => (s.letter || s.name.charAt(0)).toUpperCase()))) block({ id: `names.tag.${norm(n)}`, area: 'names', title: `Two styles share the tag ${quote(n)}`, detail: 'Tags label styles on the board and in actions. Give each style its own.', tab: 'lens' });
+  for (const n of duplicates(styleLetters(d.lens.styles).map(l => l.toUpperCase()))) block({ id: `names.tag.${norm(n)}`, area: 'names', title: `Two styles share the tag ${quote(n)}`, detail: 'Tags label styles on the board and in actions. Give each style its own.', tab: 'lens' });
   const skillNames = d.scoring.framework?.confirmed ? d.scoring.framework.rows.filter(r => r.include && r.behaviors.trim()).map(r => r.skill) : d.scoring.skills.map(s => s.name);
   const skillKeys = d.scoring.framework?.confirmed ? skillNames.map(s => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')) : d.scoring.skills.map(s => s.key);
   const dupNames = duplicates(skillNames);
@@ -272,10 +295,12 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   // Scoring matches the author's judgment, on all the samples: none is not a pass.
   const s = d.scoring.samples;
   const answered = s.filter(x => x.call !== null);
-  const agreed = s.filter(x => x.call === x.scored).length;
+  const ag = sampleAgreement(s);
   if (s.length < MIN_SAMPLES) block({ id: 'scoring.samples.missing', area: 'scoring', title: s.length ? `Only ${s.length} scoring ${s.length === 1 ? 'sample' : 'samples'} to check` : 'There are no scoring samples to check', detail: `Check ${MIN_SAMPLES} sample answers, so scoring is known to match your judgment. Regenerate the Scoring and report tab to get them back.`, tab: 'scoring', target: 'scoring.samples' });
   else if (answered.length < s.length) block({ id: 'scoring.samples', area: 'scoring', title: `${s.length - answered.length} of ${s.length} scoring samples still need your call`, detail: 'Agree or disagree with each sample\'s band.', tab: 'scoring', target: 'scoring.samples' });
-  else if (agreed / s.length < SCORING_AGREEMENT) block({ id: 'scoring.agreement', area: 'scoring', title: `You agree with only ${agreed} of ${s.length} scoring samples`, detail: `Publishing needs ${Math.round(SCORING_AGREEMENT * 100)}% agreement. Look at the rubric for the samples you disagreed with.`, tab: 'scoring', target: 'scoring.samples' });
+  else if (ag.share < SCORING_AGREEMENT) block({ id: 'scoring.agreement', area: 'scoring', title: `You agree with only ${ag.agreed} of ${s.length} scoring samples`, detail: `Publishing needs ${Math.round(SCORING_AGREEMENT * 100)}% agreement, counting a disagreement you give a reason for. Open the rubric behind each sample you disagree with: change what it looks for, or say why you disagree.`, tab: 'scoring', target: 'scoring.samples' });
+  // A reasoned disagreement is resolved, and stays in the checks as a note (D229).
+  for (const x of ag.reasoned) advise({ id: `scoring.reason.${x.id}`, area: 'scoring', title: `You rate a sample ${BAND_NAME[x.call!]}, not ${BAND_NAME[x.scored]}`, detail: `"${x.answer.slice(0, 70)}". ${x.resolution === 'rubric' ? 'You changed the rubric' : 'Your reason'}: ${x.reason.trim()}`, tab: 'scoring', target: 'scoring.samples' });
 
   // Synthetic players, and playing it yourself.
   const synthetic = syntheticGate(d.calibration, configHash(exported.storyline), d.publish.skipTest);

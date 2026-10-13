@@ -1,6 +1,6 @@
 import { Brief, type QuestionId } from '../../api/author';
 import type { StorylineInput } from '../../engine/config';
-import { needOf, NEEDS, type NeedKey } from '../../engine/lens';
+import { needOf, NEEDS, styleLetters, type NeedKey } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 import { DURATION_MODES, industryOf, REGIONS, TONE_LABELS } from '../context';
 import { LENS_BY_ID } from '../lenses';
@@ -10,6 +10,7 @@ import { draftContext, draftStoryline } from '../storyline';
 import { AuthorDraft, DEFAULT_LMS_DRAFT, type ActionDraft, type Chat, type Character, type DraftStyle, type EventDraft, type Mark } from './draft';
 import { ACTION_TEMPLATES, canPlay, ENGINE_TEMPLATES } from './library';
 import { mapWeek } from './run';
+import { candidateFrom } from './candidates';
 import type { ChoiceOptionDraft, VariableDraft } from './draft';
 
 /**
@@ -249,7 +250,9 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
   const ind = industryOf(brief.industry);
   const seed = hash(`${ctx.company}|${ind.id}`);
   const lens = sl.lens!;
-  const styles: DraftStyle[] = lens.styles.map(s => ({ key: s.key, letter: s.letter, name: s.name, short: s.short, description: s.description }));
+  // A tag that is just the name's first letter stays empty, so it follows the name when the style is renamed (D230).
+  const auto = styleLetters(lens.styles.map(s => ({ ...s, letter: '' })));
+  const styles: DraftStyle[] = lens.styles.map((s, i) => ({ key: s.key, letter: s.letter === auto[i] ? '' : s.letter ?? '', name: s.name, short: s.short, description: s.description }));
   const pressure = pressureOf(brief.challenge, sl.stages);
   const pressureName = sl.stages.find(s => s.key === pressure)!.name;
   const input = sl.money.inputPerSubPeriod[0] * 5;
@@ -271,6 +274,8 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     return actionFrom(a, { key: a.key, name: t.name, description: t.description, group: t.group, core: t.inNew === 'core', enabled: t.inNew !== 'off', template: a.key, origin: 'library' }, styles, linked.length ? linked : skills.filter(s => !s.reportOnly).map(s => s.name).slice(0, 2));
   });
   const team = sl.members.map((m, i) => character(m, i, sl, seed));
+  // Hire candidates (D228): drafted from the brief and the region, edited in Team.
+  const candidates = (sl.candidates ?? []).map(candidateFrom);
   const intro = sl.intro!;
   const words = { company: ctx.company, product: ctx.product, work: ind.work, customers: ind.customers };
   const draft: AuthorDraft = {
@@ -285,7 +290,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     },
     story: {
       company: { name: ctx.company, hq: HQ[brief.region ?? 'global'], about: `${ctx.company} offers ${ctx.product}, ${ind.productLine}, to ${ind.customers} across the region.`, team: `${pressureName} and the stages around it`, office: OFFICES[0].src, logo: ctx.company.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(), logoImage: '' },
-      product: { name: ctx.product, dealValue: null, oneLine: `${ctx.product}: ${ind.productLine}.`, points: [`Built for ${words.customers} who need it to work first time`, 'Support that answers within four hours', `Pricing that scales with each ${words.work}`], view: 'none', image: '', code: '', kind: '', tagline: '', audience: '', imageAlt: '', features: [] },
+      product: { name: ctx.product, dealValue: null, oneLine: `${ctx.product}: ${ind.productLine}.`, points: [`Built for ${words.customers} who need it to work first time`, 'Support that answers within four hours', `Pricing that scales with each ${words.work}`], view: 'none', image: '', code: '', kind: '', tagline: '', audience: '', imageAlt: '', features: [], unit: '', units: '' },
       market: { customers: ind.customers, rivals: [{ name: ctx.rival, angle: 'Competes on service and reach' }] },
       sponsor: { name: sl.sponsor.name, title: sl.sponsor.title, voice: 'Warm, measured' },
       screens: [
@@ -300,6 +305,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     // Stakeholders outside the team (D160): none until the author adds them, or creates the brief's.
     stakeholders: [],
     team,
+    candidates,
     lens: { id: lens.id, title: lens.title, secondary: lens.secondary?.id ?? null, styles, library: structuredClone(styles), needs: structuredClone(lens.needs), fit: structuredClone(lens.fit) as AuthorDraft['lens']['fit'] },
     actions: actions.filter(a => used.has(a.key)),
     // The template storyline carries the seeded decisions too (for the model to word); here they come as the author edits them.
@@ -307,8 +313,8 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       ...(seeded.length ? seeded.map(choiceDraft) : defaultChoices(sl.time.period.count, sl.money.target, skills.filter(x => !x.reportOnly).map(x => x.name), ind.work, pressureName))],
     scoring: {
       skills,
-      samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null })),
-      framework: null, levels: (sl.report?.scale ?? DEFAULT_SCALE).map(l => l.name), reportSections: null
+      samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null, reason: '', resolution: null })),
+      framework: null, levels: (sl.report?.scale ?? DEFAULT_SCALE).map(l => l.name), reportSections: null, rubric: [], anchors: {}
     },
     brand: { from: 'knolskape', name: ctx.company, logo: '', main: '#249DFF', second: '#43D6E8', font: 'Manrope', look: 'dark', preview: 'board' },
     lms: { ...DEFAULT_LMS_DRAFT },

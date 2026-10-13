@@ -28,6 +28,28 @@
               "type": "null"
             }
           ]
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "one": {
+                  "$ref": "#/$defs/Text"
+                },
+                "other": {
+                  "$ref": "#/$defs/Text"
+                }
+              },
+              "required": [
+                "one",
+                "other"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [
@@ -1393,6 +1415,7 @@
             "type": "string",
             "enum": [
               "you",
+              "kept",
               "default"
             ]
           },

@@ -68,7 +68,11 @@ export async function playToEnd(s: TestServer, cookie: string, participant: stri
   let v = await s.json<EngineView>(`${base}/view`, { cookie });
   for (let guard = 0; v.phase !== 'ended' && guard < 100; guard++) {
     if (v.phase === 'style') v = (await send({ type: 'confirmStyles', styles: Object.fromEntries(v.members.map(m => [m.id, v.lens.styles[Math.min(styleIndex, v.lens.styles.length - 1)].key])) })).view;
-    else if (v.phase === 'board') v = (await send({ type: 'endPeriod' })).view;
+    else if (v.phase === 'board' && v.endingWeek) {
+      // A decision holds the week end (D231): its default stands, then End week again.
+      for (const c of v.openChoices.filter(x => x.holdsWeekEnd)) v = (await send({ type: 'keepDefault', choiceId: c.id })).view;
+      v = (await send({ type: 'endPeriod' })).view;
+    } else if (v.phase === 'board') v = (await send({ type: 'endPeriod' })).view;
     else if (v.phase === 'periodEnd') {
       if (v.pendingReward?.length) v = (await send({ type: 'chooseReward', reward: v.pendingReward[0] })).view;
       if (v.phase === 'periodEnd') v = (await send({ type: 'startNextPeriod' })).view;

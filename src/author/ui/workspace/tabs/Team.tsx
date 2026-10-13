@@ -9,6 +9,7 @@ import { CharacterEditor } from '../CharacterEditor';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate, useRegenerateItem } from './regenerate';
 import TeamStakeholders from './TeamStakeholders';
+import TeamHiring from './TeamHiring';
 
 /** Removes a character; their events go where the author picked (`to`), or are removed with them (D128). */
 function removeCharacter(x: AuthorDraft, id: string, to: string) {
@@ -150,6 +151,7 @@ export default function Team() {
         )}
       </div>
       <TeamStakeholders />
+      <TeamHiring />
       {editingChar && (
         <CharacterEditor key={editingChar.id} draft={d} character={editingChar} open onOpenChange={o => { if (!o) setEditing(null); }}
           onSave={(next, changed) => {

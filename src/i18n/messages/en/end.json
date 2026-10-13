@@ -12,7 +12,7 @@
   "end.results.aria": "Results",
   "end.results.target": "Target achieved",
   "end.results.of": "of {target}",
-  "end.results.conversions": "Conversions",
+  "end.results.conversions": "{custom, select, yes {{UnitMany}} other {Conversions}}",
   "end.results.conversionsNote": "{same, select, true {On ideal pace} other {{delta} on ideal pace}}",
   "end.moments.title": "Moments from your {periods, plural, =1 {one} =2 {two} =3 {three} =4 {four} =5 {five} =6 {six} =7 {seven} =8 {eight} =9 {nine} =10 {ten} other {#}} {unit, select, year {{periods, plural, one {year} other {years}}} month {{periods, plural, one {month} other {months}}} week {{periods, plural, one {week} other {weeks}}} other {{periods, plural, one {day} other {days}}}}",
   "end.moments.when": "{unit, select, year {Year} month {Month} week {Week} other {Day}} {n} · {kind, select, best {Best moment} other {Worth revisiting}}",

@@ -2,13 +2,15 @@ import { Brief } from '../../api/author';
 import { isImageRef } from '../../engine/assets';
 import { BRAND_FONTS, parseStoryline, type StorylineInput } from '../../engine/config';
 import { NEEDS } from '../../engine/lens';
+import { DEFAULT_RUBRIC, RUBRIC_LABELS } from '../../engine/sim/evaluator';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 import { regionOf } from '../context';
 import { guardDraft, type CopyIssue } from '../copyGuard';
 import { buildModule } from '../module';
 import { capabilityLow, draftStoryline } from '../storyline';
-import type { AuthorDraft, EventDraft } from './draft';
+import type { AuthorDraft, CandidateDraft, EventDraft } from './draft';
 import { mapWeek } from './run';
+import { candidatesOf } from './candidates';
 import { kindOf, parseEffect } from './seed';
 import { usableImage } from './images';
 import { clauseHolds, eventStakeholder, exportStakeholders, optionStakeholders, type StakeholderCtx } from './exportStakeholders';
@@ -323,13 +325,39 @@ function lmsOf(d: AuthorDraft, issues: string[]): SL['lms'] {
   };
 }
 
+/** A sales unit's plural in English: order, orders; batch, batches; delivery, deliveries. */
+export function pluralOf(one: string): string {
+  const w = one.trim();
+  if (!w) return '';
+  if (/(s|x|z|ch|sh)$/i.test(w)) return `${w}es`;
+  if (/[^aeiou]y$/i.test(w)) return `${w.slice(0, -1)}ies`;
+  return `${w}s`;
+}
+
+/** The sales unit the author named (D227), singular and plural, or nothing: participants then read the catalog's word (deal). */
+function salesUnit(d: AuthorDraft): { unit?: { one: string; other: string } } {
+  const one = d.story.product.unit.trim();
+  return one ? { unit: { one, other: d.story.product.units.trim() || pluralOf(one) } } : {};
+}
+
 export interface Exported { storyline: SL; issues: string[]; copy: CopyIssue[] }
+
+/** The drafting module for a draft: its lens, secondary lens and the client's framework dimensions. */
+const moduleOf = (d: AuthorDraft, brief: Brief) => buildModule(brief, { primary: d.lens.id, secondary: d.lens.secondary, clientDimensions: d.chat.clientDimensions }, true);
+
+/**
+ * The draft's hire candidates (D228): its own, or for a draft saved before them the ones its brief drafts, as Team,
+ * Hiring shows them and the export plays them.
+ */
+export function hiringOf(d: AuthorDraft): CandidateDraft[] {
+  return candidatesOf(d, () => { const brief = briefOf(d); return draftStoryline(brief, moduleOf(d, brief)).candidates ?? []; });
+}
 
 /** The draft as a StorylineConfig, with the issues it has (the schema's and the references') and the copy guard's. */
 export function toStoryline(d: AuthorDraft): Exported {
   const issues: string[] = [];
   const brief = briefOf(d);
-  const module = buildModule(brief, { primary: d.lens.id, secondary: d.lens.secondary, clientDimensions: d.chat.clientDimensions }, true);
+  const module = moduleOf(d, brief);
   const base = draftStoryline(brief, module);
   const stageKey = new Map(d.process.stages.map((s, i) => [s.key, base.stages[i]?.key ?? s.key]));
   const styleKeys = new Set(d.lens.styles.map(s => s.key));
@@ -337,7 +365,8 @@ export function toStoryline(d: AuthorDraft): Exported {
   const pace = PACING[d.process.pacing];
 
   // Lens: the author's styles (renamed, a fifth added) and fit; the report names follow them.
-  const lens = { ...base.lens!, styles: d.lens.styles.map(s => ({ ...s, letter: s.letter || s.name.charAt(0).toUpperCase() })), fit: structuredClone(d.lens.fit), needs: structuredClone(d.lens.needs) };
+  // A tag the author wrote is kept; one left empty is the name's first letter, which the engine derives (D230).
+  const lens = { ...base.lens!, styles: d.lens.styles.map(({ letter, ...s }) => ({ ...s, ...(letter.trim() ? { letter: letter.trim() } : null) })), fit: structuredClone(d.lens.fit), needs: structuredClone(d.lens.needs) };
   for (const n of NEEDS) for (const k of styleKeys) lens.fit[n][k] ??= 1;
 
   // Team: by position over the drafted members, so each keeps calibrated per stage values.
@@ -375,6 +404,24 @@ export function toStoryline(d: AuthorDraft): Exported {
       npc: npcOf(c, styleKeys)
     };
   });
+  // Hire candidates (D228): the author's, or for a draft saved before them the brief's, over the drafted ones by position.
+  const baseCandidates = base.candidates ?? [];
+  const candidates = candidatesOf(d, () => baseCandidates).map((c, i) => {
+    const src = baseCandidates[i % Math.max(1, baseCandidates.length)] ?? { ...base.members[i % base.members.length], profile: { ...base.members[0].profile } };
+    const who = [c.first, c.last].filter(Boolean).join(' ') || c.id;
+    const home = stageKey.get(c.stage);
+    if (!home) issues.push(`The candidate ${who} would start in a stage that is no longer in the work process. Pick their stage in Team, Hiring.`);
+    const homeKey = home ?? base.stages[0].key;
+    const byStage = Object.fromEntries(base.stages.map(s => [s.key, { ...(src.byStage[s.key] ?? src.start) }]));
+    byStage[homeKey] = { skill: src.start.skill, morale: src.start.morale, result: src.start.result };
+    const photo = c.photo.trim() && usableImage(c.photo, `${who}'s photo`, issues) ? c.photo.trim() : undefined;
+    return {
+      id: c.id, name: who, title: c.title.trim() || src.title, pronoun: pronounOf(c.gender, c.pronouns), homeStage: homeKey,
+      start: { ...src.start }, byStage,
+      profile: { previous: c.background.trim(), tenure: src.profile.tenure || 'New joiner', experience: c.experience.trim(), skills: c.strengths.trim(), remarks: c.remarks.trim(), relations: '' },
+      ...(photo ? { portrait: photo } : null)
+    };
+  });
   const memberIds = new Set(members.map(m => m.id));
   const perStage = new Map<string, number>();
   for (const m of members) perStage.set(m.homeStage, (perStage.get(m.homeStage) ?? 0) + 1);
@@ -384,6 +431,19 @@ export function toStoryline(d: AuthorDraft): Exported {
   const actions = d.actions.filter(a => a.core || a.enabled).map(a => overlayAction(templates.get(a.template) ?? templates.get('f2f')!, a, styleKeys));
   const actionKeys = new Set(actions.map(a => a.key));
   for (const a of actions) if (a.prerequisite && !actionKeys.has(a.prerequisite)) delete a.prerequisite;
+  // The rubric in the author's words (D229): every conversation rated on a dimension they worded carries it.
+  const rubricBy = new Map(d.scoring.rubric.map(r => [r.key, r]));
+  if (rubricBy.size) for (const a of actions) {
+    if (a.kind === 'static' || !a.format) continue;
+    const old = a.live?.rubric;
+    const keys = old?.map(r => r.key) ?? DEFAULT_RUBRIC[a.format] ?? DEFAULT_RUBRIC.roleplay;
+    if (!keys.some(k => rubricBy.has(k))) continue;
+    a.live = { ...(a.live ?? {}), rubric: keys.map(k => {
+      const mine = rubricBy.get(k), was = old?.find(r => r.key === k);
+      const cues = mine ? mine.cues.map(c => c.trim()).filter(c => c.length >= 2) : was?.cues ?? [];
+      return { key: k, label: mine?.label.trim() || was?.label || RUBRIC_LABELS[k] || k, ...(cues.length ? { cues } : null) };
+    }) } as Action['live'];
+  }
 
   // Events (D128): timing, response and escalation as authored; references checked, never retargeted.
   const baseEvents = new Map((base.events ?? []).map(e => [e.key, e]));
@@ -431,7 +491,11 @@ export function toStoryline(d: AuthorDraft): Exported {
   if (levels.some(l => !l)) issues.push('Name every level of the rating scale in Scoring and report.');
   const mins = scaleMins(levels.length);
   report.scale = levels.map((name, i) => ({ name: name || `Level ${i + 1}`, min: mins[i] }));
-  report.skills = (report.skills ?? []).map(s => ({ ...s, anchors: resample(s.anchors, levels.length) }));
+  // What each level looks like, in the author's words where they wrote them (D229).
+  report.skills = (report.skills ?? []).map(s => {
+    const mine = (d.scoring.anchors[s.key] ?? []).map(a => a.trim());
+    return { ...s, anchors: mine.length && mine.every(Boolean) ? resample(mine, levels.length) : resample(s.anchors, levels.length) };
+  });
   if (d.scoring.reportSections) report.sections = [...d.scoring.reportSections];
   const skillKey = new Map((report.skills ?? []).map(s => [s.name.trim().toLowerCase(), s.key]));
   const linkage = { ...(report.linkage ?? {}) };
@@ -472,12 +536,13 @@ export function toStoryline(d: AuthorDraft): Exported {
     lms: lmsOf(d, issues),
     lens,
     // Language (D128): the participant's number formats and the AI characters' language and region.
-    money: { ...base.money, locale: region?.locale ?? base.money.locale, valuePerConversion: d.story.product.dealValue ?? base.money.valuePerConversion, target: d.process.revenue ?? base.money.target, inputPerSubPeriod },
+    money: { ...base.money, locale: region?.locale ?? base.money.locale, valuePerConversion: d.story.product.dealValue ?? base.money.valuePerConversion, target: d.process.revenue ?? base.money.target, inputPerSubPeriod, ...salesUnit(d) },
     time: { ...base.time, period: { unit: 'week', count: weeks }, subPeriod: { unit: 'day', perPeriod: days } },
     stages: base.stages.map((s, i) => ({ ...s, name: d.process.stages[i]?.name || s.name, conversionRatio: clamp((d.process.stages[i]?.passesOn ?? s.conversionRatio * 100) / 100, 0.05, 1), ideal: d.process.stages[i]?.people ?? s.ideal })),
     sponsor: { ...base.sponsor, name: d.story.sponsor.name || base.sponsor.name, title: d.story.sponsor.title || base.sponsor.title },
     intro,
     members,
+    candidates,
     actions,
     events,
     report,

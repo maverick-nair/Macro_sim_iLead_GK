@@ -86,7 +86,8 @@ const Evidence = { recordIds: z.array(Id), quotes: z.array(Quote), review: Revie
 export const ReportView = z.object({
   available: z.boolean(),
   purpose: Purpose,
-  storyline: z.object({ name: Text, organisation: Text.nullable() }),
+  /** `unit`: the sales unit the storyline names (D227), or null for the catalog's word. */
+  storyline: z.object({ name: Text, organisation: Text.nullable(), unit: z.object({ one: Text, other: Text }).nullable().default(null) }),
   /** The lens, and the secondary lens whose skills are report only. */
   lens: LensView.extend({ secondary: z.object({ id: Id, title: Text }).nullable() }),
   periods: Int, periodUnit: PeriodUnit,
@@ -149,7 +150,7 @@ export const ReportView = z.object({
    * leadership it showed (`band` is the author's read, worded on the client, never shown as a band name).
    */
   decisions: z.array(z.object({
-    id: Id, period: Int, title: Text, option: Text.nullable(), by: z.enum(['you', 'default']), outcome: Text.nullable(), impact: Text,
+    id: Id, period: Int, title: Text, option: Text.nullable(), by: z.enum(['you', 'kept', 'default']), outcome: Text.nullable(), impact: Text,
     variables: z.array(z.object({ key: Id, name: Text, format: z.enum(['money', 'percent', 'points']), delta: Num })), revenue: Num, sponsor: Num,
     triggered: z.array(z.object({ key: Id, title: Text, period: Int })), read: z.array(z.object({ skill: Text, band: z.enum(['strong', 'adequate', 'weak', 'harmful']) }))
   })).default([]),

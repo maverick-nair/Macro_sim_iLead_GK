@@ -22,8 +22,13 @@ export interface DecisionDialogProps {
   /** A change as a line: "Arjun morale −3", "Budget −$10K", "Revenue +$15K". */
   changes: (result: ChoiceView) => string[];
   onDecide: (option: string) => void;
-  /** Decide later: the choice stays open on the board until its deadline. */
+  /** Decide later: the choice stays open on the board until its deadline; while the week is ending, the default is kept. */
   onLater: () => void;
+  /**
+   * End week was pressed with this decision still open (D231): the participant decides now or lets the default stand
+   * (Decide later becomes Let the default stand, and Escape no longer puts it off). The period's unit words the line.
+   */
+  ending?: { periodUnit: string } | null;
   /** Close after reading what happened. */
   onDone: () => void;
   onCloseFocus?: () => void;
@@ -38,7 +43,7 @@ const focusRing = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-
  * modal dialog (Radix): focus moves to its title and stays inside; Escape is Decide later, then Continue.
  * Loaded on demand, with its copy.
  */
-export function DecisionDialog({ choice, result, busy, img, due, changes, onDecide, onLater, onDone, onCloseFocus }: DecisionDialogProps) {
+export function DecisionDialog({ choice, result, busy, img, due, changes, onDecide, onLater, onDone, onCloseFocus, ending }: DecisionDialogProps) {
   const { t } = useI18n();
   const [picked, setPicked] = useState<string | null>(null);
   const title = useRef<HTMLHeadingElement>(null);
@@ -46,7 +51,7 @@ export function DecisionDialog({ choice, result, busy, img, due, changes, onDeci
   const done = result !== null;
   const lines = result ? changes(result) : [];
   return (
-    <Dialog.Root open onOpenChange={o => { if (o || busy) return; if (done) onDone(); else onLater(); }}>
+    <Dialog.Root open onOpenChange={o => { if (o || busy) return; if (done) onDone(); else if (!ending) onLater(); }}>
       <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 ">
         <Dialog.Content
           aria-describedby={`${id}body`} aria-modal="true" data-decision={choice.eventKey}
@@ -75,15 +80,16 @@ export function DecisionDialog({ choice, result, busy, img, due, changes, onDeci
                   {choice.options.map(o => (
                     <label key={o.key} className={`flex cursor-pointer items-start gap-3 px-4 py-3.5 text-15 ${picked === o.key ? 'border-2 border-accent-default bg-surface-card px-3.75 py-3.25' : 'border border-line-strong bg-surface-material'}`}>
                       <input type="radio" name={`${id}option`} value={o.key} checked={picked === o.key} onChange={() => setPicked(o.key)} className={`mt-1 size-4 accent-(--il-color-accent-default) ${focusRing}`} />
-                      <span className="flex flex-col gap-1"><b className="font-600">{o.label}</b>{o.detail && <span className="text-14 text-fg-body">{o.detail}</span>}</span>
+                      <span className="flex flex-col gap-1"><b className="font-600">{o.label}{ending && choice.default === o.key && <span className="font-400 text-fg-body"> {t('decision.default')}</span>}</b>{o.detail && <span className="text-14 text-fg-body">{o.detail}</span>}</span>
                     </label>
                   ))}
                 </fieldset>
                 <div className="flex flex-wrap items-center justify-end gap-2 border-t border-line-default pt-3.5">
                   <p className="m-0 w-full text-13 text-fg-body">{t('decision.noRight')}</p>
+                  {ending && <p data-decision-ending className="m-0 w-full text-14 font-600 text-fg-primary">{t('decision.ending', { unit: ending.periodUnit })}</p>}
                   <button type="button" disabled={busy} onClick={onLater}
                     className={`min-h-11 cursor-pointer rounded-4 border border-solid border-line-strong bg-surface-card px-4 py-0 text-14 font-500 text-fg-primary ${focusRing}`}>
-                    {t('decision.later')}
+                    {ending ? t('decision.keep') : t('decision.later')}
                   </button>
                   <Button variant="primary" size="lg" disabled={busy || !picked} onClick={() => { if (picked) onDecide(picked); }}>{t('decision.decide')}</Button>
                 </div>

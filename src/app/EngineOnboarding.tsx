@@ -11,6 +11,7 @@ import { useEngineView } from '../engine/react';
 import { useI18n, type I18n } from '../i18n';
 import { MoneyProvider } from '../i18n/money';
 import type { AppActions } from './types';
+import { unitWords } from '../engine/units';
 
 /** Initials for the sponsor's placeholder when the storyline has no portrait: first and last name. */
 export function initials(name: string): string {
@@ -29,11 +30,11 @@ export function engineLetter({ t, locale }: I18n, view: EngineView): OnboardingS
   return {
     welcome: [
       t('onboarding.sponsor.welcome.1', { organisation: view.storyline.organisation ?? 'none' }),
-      t('onboarding.sponsor.welcome.2', { size: words(view.members.length) }),
+      t('onboarding.sponsor.welcome.2', { size: words(view.members.length), ...unitWords(t, money.unit) }),
       t('onboarding.sponsor.welcome.3')
     ],
     product: [
-      t('onboarding.sponsor.product.1', { count: words(funnel.length), stages: new Intl.ListFormat(locale, { type: 'conjunction' }).format(funnel.map(f => f.name)) }),
+      t('onboarding.sponsor.product.1', { ...unitWords(t, money.unit), count: words(funnel.length), stages: new Intl.ListFormat(locale, { type: 'conjunction' }).format(funnel.map(f => f.name)) }),
       t('onboarding.sponsor.product.2', { max: view.maxPerStage, maxWords: words(view.maxPerStage) })
     ],
     targets: [

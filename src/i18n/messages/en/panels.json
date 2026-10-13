@@ -65,7 +65,7 @@
   "panels.overview.periodCol": "{unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}}",
   "panels.overview.soFarThis": "{unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}} {n} so far",
   "panels.overview.soFar": "Run so far",
-  "panels.overview.stagesNote": "Output is what a stage passed on: leads qualified, proposals sent, deals closed. The ideal is what it would pass on with everyone performing well. This {unit, select, year {year} month {month} week {week} day {day} other {period}}'s ideal counts in the total once it ends.",
+  "panels.overview.stagesNote": "Output is what a stage passed on: leads qualified, proposals sent, {unitMany} closed. The ideal is what it would pass on with everyone performing well. This {unit, select, year {year} month {month} week {week} day {day} other {period}}'s ideal counts in the total once it ends.",
   "panels.leaderboard.title": "Leaderboard",
   "panels.leaderboard.intro": "{scope, select, cohort {Your cohort} unit {Your business unit} other {Everyone who has played}}, ranked by Leadership Score.",
   "panels.leaderboard.loading": "Loading the leaderboard.",

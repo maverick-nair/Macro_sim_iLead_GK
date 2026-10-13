@@ -4,11 +4,14 @@ import { useMoney } from '../../i18n/money';
 import { onRovingKey } from '../roving';
 import { Arrow, FOCUS, QUIET_BUTTON } from './IntroHeader';
 import type { IntroProduct } from './intro';
+import { unitWords, type SalesUnit } from '../../engine/units';
 
 export interface ProductsProps {
   products: IntroProduct[];
   /** The organisation, over the list. */
   organisation: string | null;
+  /** The storyline's sales unit (D227): "Know it well enough to coach an outlet order", "Typical outlet order". Left out, deal. */
+  unit?: SalesUnit;
   onNext: () => void;
 }
 
@@ -29,8 +32,9 @@ const Tick = ({ on }: { on: boolean }) => (
  * seen. Every word and image is the storyline's; a storyline without named features shows its first four specs as the
  * features, as before.
  */
-export function Products({ products, organisation, onNext }: ProductsProps) {
+export function Products({ products, organisation, unit, onNext }: ProductsProps) {
   const { t, number } = useI18n();
+  const units = unitWords(t, unit);
   const money = useMoney();
   const [at, setAt] = useState(0);
   const [point, setPoint] = useState(0);
@@ -52,7 +56,7 @@ export function Products({ products, organisation, onNext }: ProductsProps) {
         <div className="flex flex-col gap-2.5 px-3 pb-1.5">
           {organisation && <p className="m-0 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-fg-secondary">{organisation}</p>}
           <h2 id={ids.list} className="m-0 font-serif text-26 font-400">{t('intro.products.title')}</h2>
-          <p className="m-0 text-14 leading-normal text-fg-secondary">{t('intro.products.intro')}</p>
+          <p className="m-0 text-14 leading-normal text-fg-secondary">{t('intro.products.intro', units)}</p>
         </div>
         <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
           {products.map((x, i) => (
@@ -120,7 +124,7 @@ export function Products({ products, organisation, onNext }: ProductsProps) {
           {(p.specs.length > 0 || p.dealValue !== null) && (
             <ul className="m-0 flex min-w-0 flex-1 list-none flex-wrap gap-x-10 gap-y-1 p-0 text-15 text-(--il-color-canvas-mist-light)">
               {p.specs.map(s => <li key={s}>{s}</li>)}
-              {p.dealValue !== null && <li>{t('intro.products.deal')} <b className="font-mono font-500 text-accent-secondary">{money.compact(p.dealValue)}</b></li>}
+              {p.dealValue !== null && <li>{t('intro.products.deal', units)} <b className="font-mono font-500 text-accent-secondary">{money.compact(p.dealValue)}</b></li>}
             </ul>
           )}
           <span className="ms-auto flex flex-wrap gap-3">

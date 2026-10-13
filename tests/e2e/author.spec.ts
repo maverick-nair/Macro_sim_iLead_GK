@@ -103,6 +103,80 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await expect(page.getByText('Ascent Lifts', { exact: false }).first()).toBeVisible();
 });
 
+/** D227: the revenue a run can make, next to the deal value and the target, as the author types; the sales unit named. */
+test('what a run can make: a target out of reach warns as you type, the fix applies, and the sales unit has its own name', async ({ page }) => {
+  await workspace(page, 'Story and world');
+  await page.getByRole('textbox', { name: 'Average deal value' }).fill('300');
+  const story = page.locator('[data-reach]');
+  await expect(story).toHaveAttribute('data-reach', 'unreachable');
+  await expect(story.getByRole('status')).toContainText('Out of reach, even for an Expert');
+  await page.getByRole('textbox', { name: 'What one deal is called' }).fill('outlet order');
+  await expect(page.getByRole('textbox', { name: 'Average outlet order value' })).toHaveValue('300');
+  await expect(story.getByRole('status')).toContainText('outlet orders a week');
+
+  await openTab(page, 'Work process');
+  const reach = page.locator('[data-reach]');
+  await expect(reach.getByText('What a run can make')).toBeVisible();
+  await expect(reach.getByRole('status')).toContainText('Out of reach');
+  await expect(page.getByRole('textbox', { name: 'Ideal per week' }).last()).toHaveValue(/ outlet orders$/);
+  await reach.getByRole('button', { name: /^Set the target to / }).click();
+  await expect(reach).toHaveAttribute('data-reach', 'fits');
+  await expect(reach.getByRole('status')).toContainText('A Proficient player typically makes about');
+});
+
+/** D228: the hire candidates in Team, Hiring, edited and owned; Review and publish checks every text has a home. */
+test('hire candidates are listed and edited in Team, and Review and publish finds every text a home', async ({ page }) => {
+  await workspace(page, 'Team');
+  const hiring = page.getByRole('region', { name: 'Hiring' });
+  const list = hiring.getByRole('list', { name: 'Hire candidates' });
+  await expect(list.getByRole('listitem')).toHaveCount(10);
+  await expect(hiring).not.toContainText('Urban Basket');
+  await list.getByRole('listitem').first().getByRole('button', { name: /^Edit / }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox', { name: 'First name' }).fill('Kavita');
+  await dialog.getByRole('textbox', { name: 'Last name' }).fill('Rane');
+  await dialog.getByRole('textbox', { name: 'Background' }).fill('Sales officer at a regional distributor');
+  await dialog.getByRole('textbox', { name: 'Remarks' }).fill('Knows every kirana on the Nashik beats.');
+  await dialog.getByRole('radio', { name: 'Portrait 2' }).click();
+  await dialog.getByRole('button', { name: 'Done' }).click();
+  await expect(list.getByRole('listitem').first()).toContainText('Kavita Rane');
+  await expect(list.getByRole('listitem').first()).toContainText('Knows every kirana on the Nashik beats.');
+
+  await openTab(page, 'Review and publish');
+  const checks = page.getByRole('region', { name: 'Checks' });
+  await expect(checks.getByRole('listitem').filter({ hasText: 'Every text has a home' })).toContainText('Passed');
+});
+
+/** D229: an honest disagreement with a scoring sample: the rubric behind it, and a reason that resolves it. */
+test('a scoring sample disagreed with shows its rubric; a reasoned disagreement resolves the gate and stays as a note', async ({ page }) => {
+  await workspace(page, 'Scoring and report');
+  const samples = page.getByRole('table', { name: /^Sample answers/ });
+  const calls = samples.getByRole('combobox', { name: /^Your call on:/ });
+  await expect(calls).toHaveCount(6);
+  const n = await calls.count();
+  for (let i = 0; i < n; i++) {
+    const call = calls.nth(i);
+    const agree = await call.locator('option', { hasText: ', agree' }).getAttribute('value');
+    await call.selectOption(i === 2 ? (agree === 'harmful' ? 'weak' : 'harmful') : agree!);
+  }
+  await openTab(page, 'Review and publish');
+  const scoring = page.getByRole('region', { name: 'Checks' }).getByRole('listitem').filter({ hasText: 'Scoring matches your judgment' });
+  await expect(scoring).toContainText('counting a disagreement you give a reason for');
+  await expect(scoring).toContainText('Fix');
+
+  await openTab(page, 'Scoring and report');
+  await samples.getByRole('button', { name: /^You disagree: see the rubric and say why/ }).click();
+  const rubric = page.getByRole('region', { name: 'Rubric for sample 3' });
+  await expect(rubric.getByRole('textbox', { name: 'What Listening looks for' })).toHaveValue(/^Listening: /);
+  await expect(rubric.getByText(/make it Harmful, whatever else is said/)).toBeVisible();
+  await rubric.getByRole('textbox', { name: 'Why you disagree' }).fill('Demanding two deals from someone already slipping, with no help, harms trust.');
+  await expect(page.getByText(/5 of 6 agreed, 1 disagreed with your reason/)).toBeVisible();
+
+  await openTab(page, 'Review and publish');
+  await expect(scoring).not.toContainText('counting a disagreement');
+  await expect(scoring).toContainText('Your reason: Demanding two deals');
+});
+
 test('renamed and added styles flow into actions and the played storyline; edits mark Edited; publish once nothing needs you', async ({ page, context }) => {
   await workspace(page, 'Leadership lens');
   const styles = page.getByRole('table', { name: 'Your styles' });

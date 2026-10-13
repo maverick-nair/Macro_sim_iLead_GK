@@ -129,7 +129,8 @@ export interface ChoiceRecord {
   option: string | null;
   label: Copy | null;
   outcome: Copy | null;
-  by: 'you' | 'default';
+  /** `you`: the participant picked it; `kept`: they let the default stand when the week was ending (D231); `default`: nobody decided in time. */
+  by: 'you' | 'kept' | 'default';
   period: number;
   sub: number;
   changes: Change[];
@@ -414,7 +415,7 @@ export interface PeriodSummary {
   /** Business variables at the start and end of the period, the shown ones only (D136). Left out when the storyline has none. */
   variables?: Array<{ key: string; start: number; end: number }>;
   /** Choices made or defaulted this period (D137). Left out when the storyline has none. */
-  choices?: Array<{ id: string; title: Copy; label: Copy | null; by: 'you' | 'default' }>;
+  choices?: Array<{ id: string; title: Copy; label: Copy | null; by: 'you' | 'kept' | 'default' }>;
   /** People off sick or gone because morale stayed low (D135). Left out without dynamics. */
   attrition?: Array<{ memberId: string; name: string; kind: 'sick' | 'resigned' }>;
   /** Each stakeholder's relationship at the start and end of the period (D160). Left out without stakeholders. */
@@ -484,6 +485,11 @@ export interface Sim {
   counters: Record<string, number>;
   /** Choices waiting for the participant (D137). */
   openChoices: PendingChoice[];
+  /**
+   * The participant pressed End week and the week is ending (D231): conversations are closed and the idle days counted,
+   * and only a decision still to come this week stands between them and the week end. Nothing else can be planned.
+   */
+  ending?: boolean;
   /** Choices made or defaulted, in order (D137). */
   choices: ChoiceRecord[];
   /** Business variables at the start of the period (D136). */

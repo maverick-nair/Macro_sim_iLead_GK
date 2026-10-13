@@ -1,6 +1,6 @@
 import { remapReads } from '../../../model/choices';
 import { useState } from 'react';
-import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS, type LensId } from '../../../../engine/lens';
+import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS, styleLetters, type LensId } from '../../../../engine/lens';
 import { LENS_BY_ID } from '../../../lenses';
 import type { AuthorDraft } from '../../../model/draft';
 import { freshKey, seedDraft } from '../../../model/seed';
@@ -43,8 +43,11 @@ export default function Lens() {
   const [next, setNext] = useState<LensId>(d.lens.id);
   const lens = d.lens;
   const lib = (key: string) => lens.library.find(s => s.key === key);
-  const renamed = (key: string) => { const l = lib(key), s = lens.styles.find(x => x.key === key)!; return !l || l.name !== s.name || l.letter !== s.letter || l.short !== s.short; };
-  const letters = lens.styles.map(s => s.letter.toUpperCase());
+  // A tag left empty is the name's first letter, unique within the lens (D230): what participants see is `shown`.
+  const shown = styleLetters(lens.styles);
+  const libShown = styleLetters(lens.library);
+  const renamed = (key: string) => { const l = lib(key), i = lens.styles.findIndex(x => x.key === key), s = lens.styles[i]; return !l || l.name !== s.name || libShown[lens.library.indexOf(l)] !== shown[i] || l.short !== s.short; };
+  const letters = shown.map(l => l.toUpperCase());
   const setStyle = (i: number, patch: Partial<AuthorDraft['lens']['styles'][number]>) => edit(x => { Object.assign(x.lens.styles[i], patch); }, `lens.styles.${lens.styles[i].key}`);
 
   return (
@@ -56,20 +59,20 @@ export default function Lens() {
       <div className="flex flex-col gap-4">
         <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="styles-title">
           <CardHead id="styles-title" title="Your styles"><span className="text-13 text-author-body"><b className="text-author-ink">{lens.styles.length} styles</b> &middot; a simulation always has {MIN_STYLES} or {MAX_STYLES}</span></CardHead>
-          <p className="m-0 text-14 text-author-body">Rename them in your organization&rsquo;s words. The letter is the tag participants see on the board and in style setting. New names flow into every action, the report and Kora&rsquo;s drafts.</p>
+          <p className="m-0 text-14 text-author-body">Rename them in your organization&rsquo;s words. The tag is the letter participants see on the board and in style setting; left empty, it is the first letter of the name. New names flow into every action, the report and Kora&rsquo;s drafts.</p>
           <div role="table" aria-label="Your styles" className="flex flex-col gap-2">
             <div role="row" className="grid grid-cols-[4rem_12rem_minmax(0,1fr)_6.5rem] gap-3 text-11 font-800 tracking-[0.1em] text-author-label uppercase max-[1100px]:grid-cols-[3.5rem_9rem_minmax(0,1fr)_6rem]">
               <span role="columnheader">Tag</span><span role="columnheader">Name</span><span role="columnheader">What the participant reads</span><span role="columnheader"><span className="sr-only">Mark</span></span>
             </div>
             {lens.styles.map((s, i) => {
-              const dup = letters.filter(l => l === s.letter.toUpperCase()).length > 1;
+              const dup = !!s.letter.trim() && letters.filter(l => l === s.letter.trim().toUpperCase()).length > 1;
               return (
                 <div role="row" key={s.key} className="grid grid-cols-[4rem_12rem_minmax(0,1fr)_6.5rem] items-center gap-3 max-[1100px]:grid-cols-[3.5rem_9rem_minmax(0,1fr)_6rem]">
-                  <span role="cell"><TextInput aria-label={`Tag letter for ${s.name || `style ${i + 1}`}`} aria-invalid={dup || !s.letter.trim()} maxLength={2} className="text-center font-800" tone={!s.letter.trim() || dup ? toneOf(undefined, true) : ''} value={s.letter} onChange={e => setStyle(i, { letter: e.target.value.slice(0, 2) })} /></span>
+                  <span role="cell"><TextInput aria-label={`Tag letter for ${s.name || `style ${i + 1}`}`} aria-invalid={dup} maxLength={2} className="text-center font-800" tone={dup ? toneOf(undefined, true) : ''} placeholder={shown[i]} value={s.letter} onChange={e => setStyle(i, { letter: e.target.value.slice(0, 2) })} /></span>
                   <span role="cell"><TextInput aria-label={`Name of style ${i + 1}`} className="font-700" tone={!s.name.trim() ? toneOf(undefined, true) : ''} value={s.name} onChange={e => setStyle(i, { name: e.target.value })} /></span>
                   <span role="cell"><TextInput aria-label={`What the participant reads for ${s.name || `style ${i + 1}`}`} tone={toneOf(renamed(s.key) ? 'edited' : 'ai')} value={s.short} onChange={e => setStyle(i, { short: e.target.value, description: e.target.value })} /></span>
                   <span role="cell" className="flex items-center gap-1">
-                    {!s.name.trim() || !s.letter.trim() ? <Badge kind="need" /> : renamed(s.key) ? <Badge kind="edited">{lib(s.key) ? 'Renamed' : 'Added'}</Badge> : <Badge kind="ai">From lens</Badge>}
+                    {!s.name.trim() ? <Badge kind="need" /> : renamed(s.key) ? <Badge kind="edited">{lib(s.key) ? 'Renamed' : 'Added'}</Badge> : <Badge kind="ai">From lens</Badge>}
                     {!lib(s.key) && lens.styles.length > MIN_STYLES && <button type="button" className={BUTTON.link} onClick={() => edit(x => { x.lens.styles.splice(i, 1); for (const n of NEEDS) delete x.lens.fit[n][s.key]; })}>Remove<span className="sr-only"> {s.name}</span></button>}
                   </span>
                 </div>
@@ -98,7 +101,7 @@ export default function Lens() {
               <caption className="sr-only">Fit of each style for each need: Best, Close or Wrong</caption>
               <thead><tr className="bg-author-track text-11 font-800 tracking-[0.08em] text-author-label uppercase">
                 <th scope="col" className="w-[24%] px-3 py-2 text-start">Person&rsquo;s need</th>
-                {lens.styles.map(s => <th key={s.key} scope="col" className="px-2 py-2 text-center">{s.letter || '?'} &middot; {s.name || 'New style'}</th>)}
+                {lens.styles.map(s => <th key={s.key} scope="col" className="px-2 py-2 text-center">{shown[lens.styles.indexOf(s)]} &middot; {s.name || 'New style'}</th>)}
               </tr></thead>
               <tbody>
                 {NEEDS.map(n => (

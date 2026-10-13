@@ -14,6 +14,7 @@ import { cohortRows } from '../end/cohort';
 import { CohortPanel } from '../end/CohortPanel';
 import type { BadgeChipProps } from '../gamification/Badge';
 import '../end/messages';
+import { unitWords } from '../../engine/units';
 
 const PLACEHOLDER = '/assets/npc/placeholder.svg';
 type Report = ReportView;
@@ -44,6 +45,7 @@ export function endScreenProps({ t, delta }: Pick<I18n, 't' | 'delta'>, view: En
     scoreMax: Math.round(report.score.max),
     results: {
       revenue: r.revenue, target: r.target, share: r.share, conversions: r.conversions,
+      conversionsLabel: t('end.results.conversions', unitWords(t, report.storyline.unit)),
       conversionsNote: diff === null ? '' : t('end.results.conversionsNote', { same: String(diff === 0), delta: delta(diff) }),
       conversionsTone: diff === null ? 'neutral' : toneOf(diff),
       kpis: r.kpis.map(k => ({ metric: k.metric, start: k.start, end: k.end }))

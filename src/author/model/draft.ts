@@ -3,6 +3,7 @@ import { Brief, Clarify, Dilemma, FrameworkDimension, QUESTION_IDS, Stakeholder 
 import { IMAGE_REF_MAX } from '../../engine/assets';
 import { BRAND_FONTS, CONDITION_METRICS, DEFAULT_LMS, EVENT_CONDITIONS, LMS_COMPLETION, LMS_PACKAGES, LMS_PASS, MAX_MEMBERS, MAX_PERIODS, MAX_PRODUCT_FEATURES, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
+import { libraryTag } from '../lenses';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
 /**
@@ -94,7 +95,20 @@ export const DraftStyle = z.object({
 });
 export type DraftStyle = z.infer<typeof DraftStyle>;
 
-export const DraftLens = z.object({
+/**
+ * Drafts saved before D230 kept the library's tag ("D") on a style the tone or the author renamed ("Show the Way"):
+ * it reads back empty, so the tag shows the name's first letter.
+ */
+function migrateLens(v: unknown): unknown {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return v;
+  const l = v as { id?: unknown; styles?: unknown };
+  if (typeof l.id !== 'string' || !(LENS_IDS as readonly string[]).includes(l.id) || !Array.isArray(l.styles)) return v;
+  const id = l.id as (typeof LENS_IDS)[number];
+  const styles = l.styles.map(s => (s && typeof s === 'object' && typeof s.letter === 'string' && typeof s.name === 'string' && typeof s.key === 'string' && libraryTag(id, s) ? { ...s, letter: '' } : s));
+  return { ...l, styles };
+}
+
+export const DraftLens = z.preprocess(migrateLens, z.object({
   id: z.enum(LENS_IDS),
   title: Short,
   secondary: z.enum(LENS_IDS).nullable(),
@@ -103,7 +117,7 @@ export const DraftLens = z.object({
   library: z.array(DraftStyle),
   needs: z.record(z.enum(NEEDS), z.object({ label: Short, short: Short })),
   fit: z.record(z.enum(NEEDS), z.record(z.string(), Fit))
-});
+}));
 export type DraftLens = z.infer<typeof DraftLens>;
 
 export const GENDERS = ['woman', 'man', 'nonbinary', 'unstated'] as const;
@@ -142,6 +156,31 @@ export const Character = z.object({
   custom: z.array(z.object({ label: Short, value: Text }))
 });
 export type Character = z.infer<typeof Character>;
+
+/**
+ * A hire candidate (D228), edited in Team, Hiring: who the participant interviews from the hiring action, as the CV
+ * card shows them. `background` is where they work now (the CV's previous role), `strengths` the skills they bring.
+ * Their numbers by stage are the drafted ones, by position, as the team's are.
+ */
+export const CandidateDraft = z.object({
+  id: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  first: Short,
+  last: Short,
+  gender: z.enum(GENDERS),
+  pronouns: Short,
+  title: Short,
+  /** A stage key of the work process: where they would start. */
+  stage: z.string(),
+  /** A library portrait, an uploaded photo, or empty for none. */
+  photo: Image,
+  background: Short,
+  experience: Short,
+  strengths: Short,
+  remarks: Text
+});
+export type CandidateDraft = z.infer<typeof CandidateDraft>;
+/** At most this many candidates, the bundled storylines' count. */
+export const MAX_CANDIDATES = 10;
 
 export const PLAYS = ['static', 'live', 'hybrid'] as const;
 export type Plays = (typeof PLAYS)[number];
@@ -445,12 +484,14 @@ export const AuthorDraft = z.object({
      * For the portfolio scene (D221): `code` (a short code such as B10), `kind`, `tagline`, `audience` (who it is for),
      * `imageAlt` (the photo described for screen readers) and up to four `features`, each a title, a sentence or two
      * and, when placed, its spot on the photo (`x`, `y`: percent from the left and the top). The deal value is the
-     * product's typical deal too.
+     * product's typical deal too. `unit` names what one deal is ("outlet order", D227) and `units` its plural (empty: the
+     * singular with an s); left empty, participants read "deal".
      */
     product: z.object({
       name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']), image: Image.default(''),
       code: Short.default(''), kind: Short.default(''), tagline: Short.default(''), audience: Text.default(''), imageAlt: Short.default(''),
-      features: z.array(z.object({ title: Short, text: Text, x: Pct.nullable(), y: Pct.nullable() })).max(MAX_PRODUCT_FEATURES).default([])
+      features: z.array(z.object({ title: Short, text: Text, x: Pct.nullable(), y: Pct.nullable() })).max(MAX_PRODUCT_FEATURES).default([]),
+      unit: z.string().max(40).default(''), units: z.string().max(40).default('')
     }),
     market: z.object({ customers: Short, rivals: z.array(z.object({ name: Short, angle: Text })) }),
     sponsor: z.object({ name: Short, title: Short, voice: Short }),
@@ -476,12 +517,26 @@ export const AuthorDraft = z.object({
   /** Stakeholders outside the team (D160), 0 to 8, edited in Team. */
   stakeholders: z.array(StakeholderDraft).max(MAX_STAKEHOLDERS).default([]),
   team: z.array(Character).min(MIN_TEAM).max(MAX_TEAM),
+  /** Hire candidates (D228), edited in Team. Left out (drafts saved before), they are drafted from the brief until the author edits one. */
+  candidates: z.array(CandidateDraft).max(MAX_CANDIDATES).optional(),
   lens: DraftLens,
   actions: z.array(ActionDraft),
   events: z.array(EventDraft),
   scoring: z.object({
     skills: z.array(z.object({ key: z.string(), name: Short, reportOnly: z.boolean() })),
-    samples: z.array(z.object({ id: z.string(), with: Short, answer: Text, scored: z.enum(BANDS), call: z.enum(BANDS).nullable() })),
+    /**
+     * `reason`: why the author disagrees with the band GenieKreator gave (D229), kept with the draft; a disagreement
+     * with a reason counts as resolved for the publish gate. `resolution`: how they resolved it, by changing the
+     * rubric or by recording the reason alone.
+     */
+    samples: z.array(z.object({ id: z.string(), with: Short, answer: Text, scored: z.enum(BANDS), call: z.enum(BANDS).nullable(), reason: Text.default(''), resolution: z.enum(['reason', 'rubric']).nullable().default(null) })),
+    /**
+     * The conversations' rubric in the author's words (D229): per dimension key (listening, clarity, involvement for a
+     * 1:1), what it looks for and phrases that count as evidence. Exported to every conversation rated on it.
+     */
+    rubric: z.array(z.object({ key: z.string().regex(/^[a-z][a-z0-9_]*$/), label: Short, cues: z.array(z.string().max(80)).max(12) })).default([]),
+    /** What each level looks like for a skill (D229), lowest first, by skill key: the anchors the report and the evaluator read. */
+    anchors: z.record(z.string(), z.array(Text)).default({}),
     framework: z.object({ file: Short, pages: z.number().int().min(0), step: z.union([z.literal(1), z.literal(2), z.literal(3)]), rows: z.array(FrameworkRow), confirmed: z.boolean() }).nullable(),
     /** The rating scale's level names, lowest first: 3 to 7 (the report's scale, D128). */
     levels: z.array(Short).min(3).max(7).default(() => DEFAULT_SCALE.map(l => l.name)),

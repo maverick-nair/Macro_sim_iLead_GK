@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { PeriodUnit } from '../action/days';
+import type { UnitWords } from '../../engine/units';
 
 export type { PeriodUnit };
 /** A lens style key (D70); names come with the report's lens. */
@@ -138,7 +139,7 @@ export interface DecisionData {
   title: string;
   /** The option taken, or null when nothing applied. */
   option: string | null;
-  by: 'you' | 'default';
+  by: 'you' | 'kept' | 'default';
   outcome: string | null;
   /** What it changed: people, then business variables and revenue, as display lines. */
   changes: string[];
@@ -197,6 +198,8 @@ export interface BusinessData {
   funnel: Array<{ key: string; name: string; value: number; ideal: number; bottleneck: boolean }>;
   bottleneck: { name: string; periods: number; why: string | null } | null;
   conversions: number;
+  /** The sales unit's words (D227), for the conversions line; left out, the catalog's (deals). */
+  units?: UnitWords;
   /** Revenue against target, formatted: the engine's business line. */
   line: string;
 }
@@ -271,6 +274,8 @@ export interface ObjectivesData {
   /** "112%". */
   share: string;
   conversions: number;
+  /** The sales unit's words (D227), for the conversions line; left out, the catalog's (conversions). */
+  units?: UnitWords;
   team: Array<{ key: 'skill' | 'morale' | 'result'; label: string; start: number; end: number }>;
   narrative: string;
 }

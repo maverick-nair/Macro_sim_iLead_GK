@@ -2,13 +2,15 @@ import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, PRACTICE, practiceAvailable, practicePartner, speakerFor, turnLimit } from './live';
 import { purposeOf } from '../config';
 import { buildReport } from '../report/build';
-import { finalScore } from './period';
+import { finalScore, holdingChoices } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, fill, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import { bestStyle, lensView, NEEDS } from '../lens';
 import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
 import type { StorylineConfig } from '../config';
-import { msg, type Copy } from '../copy';
+import { msg, template, type Copy } from '../copy';
+import { unitParams } from '../units';
+import { FIRST_CLOSE_DEFAULT } from '../config';
 import { choiceBody, varName } from './business';
 import { engagedNow, interactionLabel, interactionOf, offered, stakeholderBlock, stakeholderMood } from './stakeholders';
 import { relationLevel, stakeholderConfig } from './stakeholderState';
@@ -85,7 +87,7 @@ function liveView(sim: Sim) {
         : a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
       // An interview's brief is its structured questions, the same for every candidate (D85). A stakeholder's: who they are and where you stand.
       known: it.format === 'interview'
-        ? a?.live.questions ?? [msg('engine.interview.q1'), msg('engine.interview.q2'), msg('engine.interview.q3')]
+        ? a?.live.questions ?? [msg('engine.interview.q1', { aUnit: unitParams(c.money.unit).aUnit }), msg('engine.interview.q2'), msg('engine.interview.q3')]
         : sh ? [msg('engine.stakeholder.known', { role: sh.role, kind: sh.kind, level: relationLevel(sim.stakeholders[sh.key]) }), sh.about, sim.stakeholders[sh.key]?.concernShared ? sh.hiddenConcern : undefined].filter((x): x is NonNullable<typeof x> => !!x && (typeof x !== 'string' || !!x.trim()))
         : [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
       mood: main ? moodOf(main, sim) : sh ? stakeholderMood(sim, sh.key) : null,
@@ -111,6 +113,7 @@ function liveView(sim: Sim) {
 
 export function buildView(sim: Sim) {
   const c = sim.config;
+  const holding = new Set(sim.ending ? holdingChoices(sim).map(h => h.id) : []);
   const ideal = idealThroughput(sim);
   const ratios = sim.funnel.stageOutPeriod.map((v, i) => (ideal[i] ? v / ideal[i] : 1));
   const bottleneck = sim.sub > 0 ? ratios.indexOf(Math.min(...ratios)) : -1;
@@ -166,7 +169,7 @@ export function buildView(sim: Sim) {
       /** How far through the run we are, 0 to 1: where the pace marker sits. */
       runShare: Math.min(1, ((sim.period - 1) * perPeriod(sim) + sim.sub) / (c.time.period.count * perPeriod(sim)))
     },
-    money: { currency: c.money.currency, locale: c.money.locale, display: c.money.display, target: c.money.target, value: Math.round(sim.funnel.value), valueThisPeriod: Math.round(sim.funnel.periodValue) },
+    money: { currency: c.money.currency, locale: c.money.locale, display: c.money.display, target: c.money.target, value: Math.round(sim.funnel.value), valueThisPeriod: Math.round(sim.funnel.periodValue), unit: c.money.unit ?? null },
     members: sim.members.map(member),
     kpis: (['skill', 'morale', 'result', 'trust'] as const).map(k => {
       const value = teamAverage(sim, k), start = sim.periodStart.kpis[k];
@@ -222,7 +225,9 @@ export function buildView(sim: Sim) {
     periods: sim.periods,
     badges: c.gamification.badges.map(b => {
       const got = sim.badges.find(x => x.key === b.key);
-      return { key: b.key, rule: b.rule, name: b.name, description: b.description, earned: !!got, period: got?.period ?? null, reason: got?.reason ?? null };
+      // The first close badge's default description names the storyline's sales unit when it has one (D227).
+      const description = b.rule === 'first_close' && c.money.unit && b.description === FIRST_CLOSE_DEFAULT ? template('Your team converts its first {unit}.', { unit: c.money.unit.one }) : b.description;
+      return { key: b.key, rule: b.rule, name: b.name, description, earned: !!got, period: got?.period ?? null, reason: got?.reason ?? null };
     }),
     sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, styleLine: c.sponsor.styleLine, value: sim.sponsor.value,
       unlockAt: c.gamification.sponsor.unlockAt, checkInBelow: c.gamification.sponsor.checkInBelow, level: sponsorLevel(sim), causes: sim.sponsor.causes,
@@ -257,8 +262,11 @@ export function buildView(sim: Sim) {
       const ev = c.events.find(e => e.key === oc.eventKey)!;
       const f = (t: string) => fill(t, sim, oc.memberId);
       return { id: oc.id, eventKey: ev.key, card: ev.card, title: f(ev.title), body: choiceBody(sim, ev, oc.memberId), memberId: oc.memberId, known: ev.choice!.known.map(f),
-        options: ev.choice!.options.map(o => ({ key: o.key, label: f(o.label), detail: o.detail ? f(o.detail) : null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub) };
+        options: ev.choice!.options.map(o => ({ key: o.key, label: f(o.label), detail: o.detail ? f(o.detail) : null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub),
+        default: ev.choice!.default ?? null, holdsWeekEnd: !!sim.ending && holding.has(oc.id) };
     }),
+    /** End week was pressed and a decision holds the week end (D231): it is shown before the week ends. */
+    endingWeek: !!sim.ending,
     /** Choices made or defaulted (D137), with what they changed: the decision's "what happened" and the History. */
     choices: sim.choices.map(r => ({ id: r.id, eventKey: r.eventKey, title: r.title, option: r.option, label: r.label, outcome: r.outcome, by: r.by, period: r.period, sub: r.sub,
       changes: r.changes, variables: r.variables.filter(x => c.variables.find(v => v.key === x.key)?.shown).map(x => ({ ...x, name: varName(sim, x.key) })), revenue: Math.round(r.revenue),

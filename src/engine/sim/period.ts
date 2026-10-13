@@ -3,26 +3,75 @@ import { IntentError } from './actions';
 import { upcomingNews } from './events';
 import { sponsorLevel } from './view';
 import { advanceStreak, checkBadges, leadershipScore, nextStreakBonus, pulse, roundHalfUp, tierFor, weekScore } from './score';
-import { addMessage, capacityLeft, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
-import type { Change, PeriodSummary, Sim } from './types';
+import { addMessage, capacityLeft, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, runSubPeriod, sponsorChange, teamAverage, trustChange, firstName } from './sim';
+import type { Change, PendingChoice, PeriodSummary, Sim } from './types';
 import { msg, type Copy } from '../copy';
 import { attrition } from './dynamics';
-import { moveVar } from './business';
+import { conditionsHold, moveVar } from './business';
 import { stakeholdersPeriodEnd, stakeholderSummary } from './stakeholders';
 import { idleDays } from './realism';
 import { realismWeekEnd, sponsorReaction, sponsorSilence } from './realismPeriod';
 
 /** Period end, gamification and the move to the next period (docs/SIMULATION.md section 7). */
 
-export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
-  if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
-  // Conversations left open when the period ends are closed unfinished: they never score later.
+/**
+ * End week, pressed (D231): conversations left open are closed unfinished (they never score later) and, with realism
+ * (D174), the days left unused are counted, once, from the moment the participant ended the week.
+ */
+function beginWeekEnd(sim: Sim) {
+  if (sim.ending) return;
+  sim.ending = true;
   for (const [id, it] of Object.entries(sim.interactions)) {
     delete sim.interactions[id];
     log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: sim.config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [], action: it.actionKey });
   }
-  // Realism (D174): days left unused deliver less.
   if (sim.realism) idleDays(sim, capacityLeft(sim), perPeriod(sim) - sim.sub);
+}
+
+/** The absolute sub-period the period ends on. */
+const periodEndAbs = (sim: Sim) => sim.absSub + perPeriod(sim) - sim.sub;
+
+/**
+ * The decisions that hold the week end (D231): every choice still open. One whose deadline falls this week would take
+ * its default unseen as the remaining days run; one whose deadline is next week is shown now too, so the participant
+ * decides it, or keeps its default, knowingly.
+ */
+export function holdingChoices(sim: Sim): PendingChoice[] {
+  return [...sim.openChoices];
+}
+
+/** A choice event still to come this period, on its own day or as a follow up (D231). */
+function choiceAhead(sim: Sim): boolean {
+  const end = periodEndAbs(sim);
+  const isChoice = (key: string) => !!sim.config.events.find(e => e.key === key)?.choice;
+  const fired = (key: string) => sim.events.fired.includes(key) || sim.events.skipped.includes(key);
+  return sim.config.events.some(ev => {
+    if (!ev.choice || fired(ev.key)) return false;
+    const at = sim.events.schedule[ev.key];
+    return !!at && at.period === sim.period && at.sub > sim.sub && conditionsHold(sim, ev.if);
+  }) || sim.events.delayed.some(d => d.at > sim.absSub && d.at <= end && isChoice(d.key) && !fired(d.key));
+}
+
+/**
+ * A decision is never resolved unseen (D231). When End week is pressed, the week's remaining days run up to the next
+ * decision still to come this week, on the day it was authored for (never earlier), and stop there; a decision already
+ * open whose deadline falls this week stops it too. True while one waits: the participant decides it, or lets its
+ * default stand (`keepDefault`), and presses End week again. False when the week can end.
+ */
+export function holdForDecisions(sim: Sim, rng: Rng): boolean {
+  if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
+  beginWeekEnd(sim);
+  for (;;) {
+    if (holdingChoices(sim).length) return true;
+    if (sim.sub >= perPeriod(sim) || !choiceAhead(sim)) return false;
+    runSubPeriod(sim, rng);
+  }
+}
+
+export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
+  if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
+  beginWeekEnd(sim);
+  sim.ending = false;
   runRemaining(sim, rng);
   drift(sim);
   // Realism (D173, D174): neglect, stakeholders left alone, and the sponsor's silence.

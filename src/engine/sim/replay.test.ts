@@ -24,7 +24,8 @@ async function digest(policy: Policy, seed: number) {
   // A log entry's `action` (D95) labels where it came from for the History filter; it decides nothing, so it is left out.
   const history = view.history.map(({ action: _action, ...entry }) => entry);
   const r = view.report!;
-  const facts = { members, money, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
+  // The sales unit (D227) is copy the view carries, not a decision: left out, as it was before it existed.
+  const facts = { members, money: { ...money, unit: undefined }, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
     skills: r.skills.map(s => ({ key: s.key, observations: s.observations, score: s.score, level: s.level, quotes: s.quotes })), summary: r.summary };
   // Portraits moved to WebP (D78), an asset change, not a decision: hashed as the PNGs they were recorded with.
   const json = JSON.stringify(wordAll(facts)).replace(/\/assets\/npc\/(\w+)\.webp/g, '/assets/npc/$1.png');

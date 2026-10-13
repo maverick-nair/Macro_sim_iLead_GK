@@ -1,5 +1,6 @@
 import type { StorylineConfig } from './config';
 import { bestStyle, needOf } from './lens';
+import { endWeek } from './sim/endWeek';
 
 /**
  * Where a preview from GenieKreator opens (D192): the engine played forward to that point with no actions,
@@ -58,6 +59,9 @@ export function weekOf(t: JumpTarget, config: Pick<StorylineConfig, 'time' | 'ev
 /** What a jump reads of the view. */
 export interface JumpView {
   phase: 'style' | 'board' | 'periodEnd' | 'ended';
+  /** A decision holds the week end (D231): a jump lets its default stand. */
+  endingWeek?: boolean;
+  openChoices?: Array<{ id: string; eventKey: string; holdsWeekEnd?: boolean }>;
   clock: { period: number };
   pendingReward: string[] | null;
   members: Array<{ id: string; statsRevealed: boolean; skill: number | null; morale: number | null }>;
@@ -67,6 +71,8 @@ export type JumpIntent =
   | { type: 'openProfile'; memberId: string }
   | { type: 'confirmStyles'; styles: Record<string, string> }
   | { type: 'endPeriod' }
+  | { type: 'keepDefault'; choiceId: string }
+  | { type: 'decide'; choiceId: string; option: string }
   | { type: 'chooseReward'; reward: string }
   | { type: 'startNextPeriod' };
 
@@ -92,7 +98,7 @@ export async function fastForward(d: JumpDriver, config: Pick<StorylineConfig, '
     const v = await d.view();
     if (v.clock.period >= period || v.phase === 'ended') return;
     if (v.phase === 'style') await d.dispatch({ type: 'confirmStyles', styles: await fittingStyles(d, config) });
-    if ((await d.view()).phase === 'board') await d.dispatch({ type: 'endPeriod' });
+    if ((await d.view()).phase === 'board') await endWeek(d);
     const after = await d.view();
     if (after.pendingReward?.length) await d.dispatch({ type: 'chooseReward', reward: after.pendingReward[0] });
     if ((await d.view()).phase === 'periodEnd') await d.dispatch({ type: 'startNextPeriod' });
@@ -107,6 +113,6 @@ export async function jumpTo(d: JumpDriver, config: Pick<StorylineConfig, 'thres
   if (target.to === 'styles') return;
   if ((await d.view()).phase === 'style') await d.dispatch({ type: 'confirmStyles', styles: await fittingStyles(d, config) });
   if (target.to === 'weekend' || target.to === 'end' || target.to === 'report') {
-    if ((await d.view()).phase === 'board') await d.dispatch({ type: 'endPeriod' });
+    if ((await d.view()).phase === 'board') await endWeek(d);
   }
 }

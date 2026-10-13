@@ -1,14 +1,16 @@
 import { remapReads } from '../../../model/choices';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { extractFramework } from '../../../extract';
 import { BANDS, type AuthorDraft, type Band } from '../../../model/draft';
 import { seedDraft } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
+import { REASON_MIN, sampleAgreement } from '../../../model/validate';
 import { DEFAULT_SECTIONS, REPORT_SECTIONS } from '../../../../engine/config';
 import { SECTION_NAMES } from '../../../storyline';
 import { Badge, BUTTON, CARD, CardHead, Icon, MarkOf, Modal, Segmented, Select, SHORT_MAX, TEXT_MAX, TextInput } from '../../kit';
 import { navigate } from '../../route';
 import { TabBody, TabHead } from '../Workspace';
+import { SampleRubric } from './ScoringRubric';
 
 const BAND: Record<Band, string> = { strong: 'Strong', adequate: 'Adequate', weak: 'Weak', harmful: 'Harmful' };
 type Framework = NonNullable<AuthorDraft['scoring']['framework']>;
@@ -124,9 +126,12 @@ export default function Scoring() {
   const edit = useAuthor(s => s.edit);
   const [sheet, setSheet] = useState(false);
   const [open, setOpen] = useState<string | null>(null);
+  /** The sample whose rubric is open (D229). */
+  const [rubricOf, setRubricOf] = useState<string | null>(null);
   const s = d.scoring;
   const answered = s.samples.filter(x => x.call !== null);
   const agreed = s.samples.filter(x => x.call === x.scored).length;
+  const reasoned = sampleAgreement(s.samples).reasoned.length;
   const who = s.samples[0]?.with ?? '';
   const sections = s.reportSections ?? DEFAULT_SECTIONS[d.brief.purpose];
   return (
@@ -149,15 +154,23 @@ export default function Scoring() {
         <section aria-labelledby="samples" className={`flex flex-col gap-3 rounded-16 border border-solid p-5 ${answered.length < s.samples.length ? 'border-author-need-line bg-author-need-field' : 'border-author-line bg-author-surface'}`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 id="samples" className={`m-0 text-17 font-800 ${answered.length < s.samples.length ? 'text-author-need' : ''}`}>{answered.length < s.samples.length ? `Needs you: check ${s.samples.length} sample answers` : 'Sample answers checked'}</h2>
-            <span className="text-14 text-author-body">So scoring matches your judgment. {agreed} of {s.samples.length} agreed.</span>
+            <span className="text-14 text-author-body">So scoring matches your judgment. {agreed} of {s.samples.length} agreed{reasoned ? `, ${reasoned} disagreed with your reason` : ''}.</span>
           </div>
           <table className="w-full border-collapse text-14">
             <caption className="sr-only">Sample answers, how GenieKreator scored each, and your call</caption>
             <thead><tr className="text-11 font-800 tracking-[0.08em] text-author-label uppercase"><th scope="col" className="px-2 py-2 text-start">Sample answer in the 1:1 with {who}</th><th scope="col" className="w-32 px-2 py-2 text-start">GenieKreator scored</th><th scope="col" className="w-44 px-2 py-2 text-start">Your call</th></tr></thead>
             <tbody>
-              {s.samples.map(x => (
-                <tr key={x.id} className="border-t border-solid border-author-rule">
-                  <td className="px-2 py-2">&ldquo;{x.answer}&rdquo;</td>
+              {s.samples.map((x, i) => (
+                <Fragment key={x.id}>
+                <tr className="border-t border-solid border-author-rule">
+                  <td className="px-2 py-2">
+                    <span className="flex flex-col items-start gap-1">
+                      <span>&ldquo;{x.answer}&rdquo;</span>
+                      <button type="button" className={`${BUTTON.link} text-13`} aria-expanded={rubricOf === x.id} onClick={() => setRubricOf(rubricOf === x.id ? null : x.id)}>
+                        {rubricOf === x.id ? 'Hide the rubric' : x.call !== null && x.call !== x.scored && x.reason.trim().length < REASON_MIN ? 'You disagree: see the rubric and say why' : 'Show the rubric'}<span className="sr-only"> for sample {i + 1}</span>
+                      </button>
+                    </span>
+                  </td>
                   <td className="px-2 py-2"><Badge kind="ai">{BAND[x.scored]}</Badge></td>
                   <td className="px-2 py-2">
                     <Select aria-label={`Your call on: ${x.answer}`} value={x.call ?? ''} tone={x.call === null ? 'border-author-need-line bg-author-surface' : ''} onChange={e => edit(y => { const t = y.scoring.samples.find(z => z.id === x.id); if (t) t.call = (e.target.value || null) as Band | null; }, 'scoring.samples')}>
@@ -166,6 +179,8 @@ export default function Scoring() {
                     </Select>
                   </td>
                 </tr>
+                {rubricOf === x.id && <tr><td colSpan={3} className="px-2 pb-3"><SampleRubric sample={x} index={i} /></td></tr>}
+                </Fragment>
               ))}
             </tbody>
           </table>
