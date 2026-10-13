@@ -509,6 +509,9 @@ test.describe('/author', () => {
 test.describe('baselines', () => {
   async function still(page: Page, name: string) {
     await page.waitForLoadState('networkidle');
+    // A status band's rank loads on demand and reads Leaderboard until the cohort answers.
+    const rank = page.locator('[data-band-rank]');
+    if (await rank.count()) await expect(rank).toHaveText(/^Rank \d+ of \d+$/);
     await page.evaluate(async () => {
       await document.fonts.ready;
       await Promise.all(Array.from(document.images).map(i => (i.complete ? null : new Promise(r => { i.onload = i.onerror = r; }))));
@@ -533,6 +536,11 @@ test.describe('baselines', () => {
       test(`board with the outcome at ${at}`, async ({ page }) => {
         await page.goto('/?start=board');
         await confirmStyles(page);
+        // The pointer stays where Confirm styles was, over a team card once the band has pushed the board down; whether
+        // that card shows its hover depends on when the browser rechecks it. Parked on the page's empty gutter instead.
+        await page.mouse.move(8, height - 8);
+        // The rank in the status band loads on demand and reads Leaderboard until the cohort answers: wait for it.
+        await expect(page.locator('[data-band-rank]')).toHaveText(/^Rank \d+ of \d+$/);
         await still(page, `fit-${at}-outcome`);
       });
       test(`action drawer at ${at}`, async ({ page }) => {
