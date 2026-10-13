@@ -27,10 +27,12 @@
     },
     "card": {
       "shadow": {
-        "value": "0 6px 20px {color.member.shadow-rest}"
+        "value": "none",
+        "$description": "Flat cards with a hairline, as on the canvas (D232)"
       },
       "shadow-selected": {
-        "value": "0 0 0 1px {color.accent.secondary}, 0 12px 36px {color.member.glow}"
+        "value": "0 0 0 1px {color.accent.default}",
+        "$description": "The selected card: a 2px edge in the accent (its 1px border plus this ring), no glow (D232)"
       },
       "transition": {
         "value": "translate {duration.base} {easing.settle}, box-shadow {duration.base} {easing.brand}, opacity {duration.base} {easing.brand}",

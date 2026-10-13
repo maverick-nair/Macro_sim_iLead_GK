@@ -57,7 +57,7 @@ export function OptionCards({ options, value, onChange, label, size = 'md' }: Op
         return (
           <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
             aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-16 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-14 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
+            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-4 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-4 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
             <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
               <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
             </span>
@@ -123,7 +123,7 @@ export function PickedChips({ picks }: { picks: PickedPerson[] }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {picks.map(pk => (
-        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised py-0 pe-2.5 ps-0.75 text-13 font-600 whitespace-nowrap">
+        <span key={pk.id} className="flex h-7.5 items-center gap-1.5 rounded-4 border border-line-default bg-surface-raised py-0 pe-2.5 ps-0.75 text-13 font-600 whitespace-nowrap">
           <img src={pk.img} alt="" className="size-6 rounded-round bg-brand-pale-lavender object-cover object-top" />{pk.name}
         </span>
       ))}
@@ -136,7 +136,7 @@ export function NudgeNote({ nudge }: { nudge: ActionNudge }) {
   const { t } = useI18n();
   const fmt = useDays();
   return (
-    <div role="note" className="flex flex-col gap-2 rounded-14 border border-status-attention bg-status-attention-soft p-3 text-13">
+    <div role="note" className="flex flex-col gap-2 rounded-4 border border-status-attention bg-status-attention-soft p-3 text-13">
       <span className="text-pretty">{t('action.drawer.nudge', { name: nudge.name, area: nudge.area, cost: fmt(nudge.days) })}</span>
       <div className="flex gap-2">
         <NoWrapButton variant="secondary" size="sm" onClick={nudge.onAssess}>{t('action.drawer.assessFirst')}</NoWrapButton>
@@ -153,7 +153,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
   // Focus moves to the drawer's heading when it opens, so keyboard and screen reader users land in the flow.
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
-  const pill = 'flex h-5.5 items-center rounded-pill px-2 text-12 font-700';
+  const pill = 'flex h-5.5 items-center rounded-4 px-2 text-12 font-600';
   const who = p.people.mode === 'pick' ? t('action.drawer.people', { count: p.picks.length, max: p.people.max })
     : p.people.mode === 'with' ? t('action.drawer.with') : t('action.drawer.who');
   return (
@@ -161,17 +161,17 @@ export function ActionDrawer(p: ActionDrawerProps) {
       {/* The details scroll on a short window; the summary and Confirm stay in view below them (D101). */}
       <ScrollArea label={p.name}>
       <div className="flex flex-col gap-3.5 px-4.5 pt-4 pb-3 short:gap-2.5 short:pt-3">
-      <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
+      <button type="button" onClick={p.onBack} className="cursor-pointer self-start border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">{t('action.drawer.back')}</button>
       <div className="flex flex-col gap-1.5">
         <div className="flex gap-1.5"><span className={`${pill} bg-accent-soft`}>{t('action.kind', { kind: p.kind })}</span><span className={`${pill} bg-surface-raised`}>{fmt(p.days)}</span></div>
-        <Heading ref={heading} tabIndex={-1} level={p.headingLevel ?? 2} className="m-0 text-22 font-700 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</Heading>
+        <Heading ref={heading} tabIndex={-1} level={p.headingLevel ?? 2} className="m-0 text-22 font-600 tracking-(--il-action-drawer-title-tracking) outline-0">{p.name}</Heading>
         <span className="text-13 text-pretty text-fg-secondary">{p.description}</span>
-        {p.perk && <span role="note" className="text-13 font-700 text-pretty text-status-gain">{p.perk}</span>}
+        {p.perk && <span role="note" className="text-13 font-600 text-pretty text-status-gain">{p.perk}</span>}
         {p.notes?.map(n => <span key={n} role="note" className="text-13 text-pretty text-status-decline">{n}</span>)}
       </div>
       {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} />}
       <div className="flex flex-col gap-2">
-        <span className="text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
+        <span className="text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{who}</span>
         {p.people.mode === 'pick' && <span className="text-13 text-fg-secondary">{t('action.drawer.pickHint', { limit: p.people.limit })}</span>}
         <PickedChips picks={p.picks} />
       </div>
@@ -179,7 +179,7 @@ export function ActionDrawer(p: ActionDrawerProps) {
       </div>
       </ScrollArea>
       <div className="flex flex-none flex-col gap-3.5 px-4.5 pb-4 short:gap-2.5 short:pb-3">
-        <div aria-live="polite" className="rounded-14 bg-surface-raised p-3 text-13 text-pretty short:p-2.5">{p.summary}</div>
+        <div aria-live="polite" className="rounded-4 bg-surface-raised p-3 text-13 text-pretty short:p-2.5">{p.summary}</div>
         <div data-tour="drawer-confirm" className="w-full"><Button variant="primary" size="lg" disabled={!p.canConfirm} onClick={p.onConfirm}>{t('action.drawer.cta', { cta: p.cta })}</Button></div>
       </div>
     </div>

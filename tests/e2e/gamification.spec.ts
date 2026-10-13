@@ -155,7 +155,7 @@ test('a sponsor call: Later leaves it in the inbox, pinned with its due', async 
   await expect(page.getByRole('status').filter({ hasText: "Paula's call is waiting in your inbox" })).toBeVisible();
   await page.getByRole('button', { name: /^Inbox/ }).click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
-  const item = inbox.locator('div.rounded-16').filter({ hasText: 'Recession strikes' });
+  const item = inbox.locator('[data-inbox-item]').filter({ hasText: 'Recession strikes' });
   await expect(item.getByText('Pinned · Due in 2 days')).toBeVisible();
   await expect(item.getByRole('button', { name: 'Reply now' })).toBeVisible();
   expect(await axe(page)).toEqual([]);

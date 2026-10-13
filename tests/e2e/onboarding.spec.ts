@@ -85,13 +85,14 @@ for (const theme of ['dark', 'light'] as const) {
     await expect(page.getByText('Mid rise offices, clinics, hotels and mixed use buildings.')).toBeVisible();
     await expect(page.getByRole('img', { name: 'Levo B10: a steel and glass passenger lift car in a grey studio' })).toBeVisible();
     const panel = page.getByRole('tabpanel');
-    await expect(panel).toHaveText(/^Ships in modules and installs in nine days/);
+    // The panel names the point, then says it (D232).
+    await expect(panel).toHaveText(/Built modular\s*Ships in modules and installs in nine days/);
     await expect(page.getByRole('tab', { name: /Built modular$/ })).toHaveAttribute('aria-selected', 'true');
     await press(page, page.getByRole('tab', { name: /Built modular$/ }), 'ArrowRight');
     await expect(page.getByRole('tab', { name: /Made to last$/ })).toBeFocused();
-    await expect(panel).toHaveText(/^A 25 year structural warranty/);
+    await expect(panel).toHaveText(/Made to last\s*A 25 year structural warranty/);
     await press(page, page.getByRole('button', { name: 'Point 4: Winning the deal' }));
-    await expect(panel).toHaveText(/^Clients buy uptime, not steel\./);
+    await expect(panel).toHaveText(/Winning the deal\s*Clients buy uptime, not steel\./);
     await expect(page.getByText('Rated load 1,000 kg')).toBeVisible();
     await expect(page.getByRole('listitem').filter({ hasText: 'Typical deal' })).toHaveText('Typical deal $30K');
     await expect(page.getByRole('img', { name: 'Explored 1 of 4 models' })).toBeAttached();

@@ -5,6 +5,7 @@ import { funnelNumber, funnelScale, streakNote } from '../weekend/display';
 import type { WeekEndBadge, WeekEndNews, WeekEndReport, WeekEndReward } from '../weekend/types';
 import { WeekEndFlow, type WeekEndFlowProps } from '../weekend/WeekEndFlow';
 import '../weekend/messages';
+import { DeskStatus } from '../desk/DeskStatus';
 import { moneyFormatter } from '../../engine/money';
 import { formatVariable, variableTrend } from '../business/format';
 
@@ -116,6 +117,8 @@ export function EngineWeekEnd({ view, busy, send, minHeight, initial, onResults 
       busy={busy}
       onChooseReward={reward => send({ type: 'chooseReward', reward })}
       onFinish={() => { if (ended) onResults(); else void send({ type: 'startNextPeriod' }); }}
+      organisation={view.storyline.organisation}
+      status={<DeskStatus value={view.money.value} target={view.money.target} score={view.score.total} />}
     />
   );
 }

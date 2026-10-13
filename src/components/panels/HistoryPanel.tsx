@@ -14,7 +14,7 @@ export interface HistoryPanelProps {
   returnFocus?: () => HTMLElement | null | undefined;
 }
 
-const SELECT = `min-h-9 rounded-10 border border-line-control bg-surface-card px-2.5 text-13 text-fg-primary ${PANEL_FOCUS}`;
+const SELECT = `min-h-9 rounded-4 border border-line-control bg-surface-card px-2.5 text-13 text-fg-primary ${PANEL_FOCUS}`;
 
 /**
  * The team wide History (D95): every week, newest first, with each entry's people and what changed for
@@ -46,7 +46,7 @@ export function HistoryPanel({ view, nameOf, initial, onClose, returnFocus }: Hi
         </select>
       </label>
       {(filter.person || filter.what) && (
-        <button type="button" onClick={() => setFilter({ person: null, what: null })} className={`min-h-9 cursor-pointer rounded-pill border-0 bg-transparent px-2 text-13 font-700 text-accent-secondary ${PANEL_FOCUS}`}>
+        <button type="button" onClick={() => setFilter({ person: null, what: null })} className={`min-h-9 cursor-pointer rounded-4 border-0 bg-transparent px-2 text-13 font-600 text-accent-secondary ${PANEL_FOCUS}`}>
           {t('panels.history.clear')}
         </button>
       )}
@@ -57,8 +57,8 @@ export function HistoryPanel({ view, nameOf, initial, onClose, returnFocus }: Hi
       <p role="status" className="sr-only">{t('panels.history.count', { n: weeks.reduce((s, w) => s + w.entries.length, 0) })}</p>
       {weeks.length === 0 && <p className="m-0 text-14 text-fg-secondary">{filter.person || filter.what ? t('panels.history.noneFiltered') : t('panels.history.none')}</p>}
       {weeks.map((w, i) => (
-        <details key={w.period} open={i === 0} className="group flex flex-col rounded-16 border border-line-default bg-surface-card">
-          <summary className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 rounded-16 px-4 text-15 font-700 ${PANEL_FOCUS}`}>
+        <details key={w.period} open={i === 0} className="group flex flex-col border border-line-default bg-surface-card">
+          <summary className={`flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 text-15 font-600 ${PANEL_FOCUS}`}>
             <span>{t('time.period', { unit: view.clock.periodUnit, n: w.period })}</span>
             <span className="text-12 font-600 text-fg-secondary">{t('panels.history.entries', { n: w.entries.length })}</span>
           </summary>
@@ -78,7 +78,7 @@ function Entry({ entry: e, view }: { entry: HistoryEntry; view: HistoryPanelProp
     <li className="flex flex-col gap-1.5 border-b border-line-default px-4 py-3 last:border-b-0">
       <span className="text-12 text-fg-secondary">{t('profile.timeline.when', { period: t('time.period', { unit: view.clock.periodUnit, n: e.when.period }), sub: t('time.subPeriod', { unit: view.clock.subPeriodUnit, n: e.when.sub }) })}</span>
       <b className="text-14">{e.title}</b>
-      {e.quote && <span className="rounded-10 bg-surface-raised px-2.5 py-2 text-13">{t('common.quote', { text: e.quote })}</span>}
+      {e.quote && <span className="rounded-4 bg-surface-raised px-2.5 py-2 text-13">{t('common.quote', { text: e.quote })}</span>}
       {e.people.length > 0 && (
         <ul className="m-0 flex list-none flex-col gap-1 p-0">
           {e.people.map(p => (

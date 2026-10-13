@@ -12,5 +12,5 @@ export default function CohortRank({ view }: { view: Pick<EngineView, 'gamificat
   const board = useLeaderboard(view);
   const you = board?.entries.find(e => e.you);
   if (!board || !you) return null;
-  return <b className="text-12 font-700">{t('score.rank', { rank: you.rank, total: board.total, scope: view.gamification.leaderboard.scope })}</b>;
+  return <b className="text-12 font-600">{t('score.rank', { rank: you.rank, total: board.total, scope: view.gamification.leaderboard.scope })}</b>;
 }

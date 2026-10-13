@@ -9,3 +9,6 @@
 
 /* Every /author page fills the frame below the safety notices (D123). Unlayered, so it wins over a page's h-dvh. */
 .author-frame > * { height: 100%; min-height: 0; }
+
+/* GenieKreator keeps the Genie typeface, Manrope (D4). The participant's default face is the canvas's Geist (D232). */
+.il-genie { --il-font-family-sans: 'Manrope', system-ui, sans-serif; }

@@ -19,8 +19,8 @@ export function BadgeChip({ name, status, detail, icon }: BadgeChipProps) {
   const { t } = useI18n();
   const locked = status === 'locked';
   return (
-    <span title={detail} className={`relative flex min-h-9 items-center gap-2 rounded-pill border border-line-default bg-surface-card py-0 pe-3.5 ps-1 text-13 font-700 ${locked ? 'text-fg-secondary' : 'text-fg-primary'}`}>
-      <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-round ${locked ? 'bg-track text-fg-secondary' : 'bg-(image:--il-fill-spectrum) text-brand-deep-space'}`}>
+    <span title={detail} className={`relative flex min-h-9 items-center gap-2 rounded-4 border border-line-default bg-surface-card py-0 pe-3.5 ps-1 text-13 font-600 ${locked ? 'text-fg-secondary' : 'text-fg-primary'}`}>
+      <span aria-hidden="true" className={`flex size-7 items-center justify-center rounded-round border-2 border-solid ${locked ? 'border-line-strong text-fg-secondary' : 'border-accent-default text-accent-default'}`}>
         {icon && <span className="flex size-4">{icon}</span>}
       </span>
       <span>{name}</span>
@@ -59,11 +59,11 @@ export interface BadgeAwardProps {
 export function BadgeAward({ name, reason, icon, index, total, onSkip, onContinue }: BadgeAwardProps) {
   const { t } = useI18n();
   return (
-    <div role="dialog" aria-label={t('gamification.badge.awardAria')} className="flex w-115 max-w-full animate-(--il-gamification-badge-award-enter) flex-col items-center gap-3.5 rounded-30 border border-line-strong bg-surface-material p-8 text-center shadow-(--il-gamification-badge-award-shadow)">
-      <div aria-hidden="true" className="il-burst flex size-35 items-center justify-center rounded-round bg-(image:--il-fill-spectrum) text-brand-deep-space shadow-(--il-gamification-badge-medal-ring)">{icon}</div>
-      <span className="text-12 font-700 tracking-(--il-gamification-eyebrow-tracking) text-accent-secondary uppercase">{t('gamification.badge.awardCount', { index, total })}</span>
-      <h2 tabIndex={-1} className="m-0 text-30 font-700 outline-none">{name}</h2>
-      <p className="m-0 text-fg-secondary">{reason}</p>
+    <div role="dialog" aria-label={t('gamification.badge.awardAria')} className="flex w-115 max-w-full animate-(--il-gamification-badge-award-enter) flex-col items-center gap-3.5 rounded-4 border border-line-default bg-surface-card p-8 text-center">
+      <div aria-hidden="true" className="il-burst flex size-35 items-center justify-center rounded-round border-3 border-solid border-accent-default text-accent-default">{icon}</div>
+      <span className="text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-accent-secondary uppercase">{t('gamification.badge.awardCount', { index, total })}</span>
+      <h2 tabIndex={-1} className="m-0 font-display text-36 leading-tight font-400 outline-none">{name}</h2>
+      <p className="m-0 text-15 text-fg-body">{reason}</p>
       <div className="flex gap-2.5">
         <NoWrapButton variant="ghost" size="md" onClick={onSkip}>{t('gamification.badge.skip')}</NoWrapButton>
         <NoWrapButton variant="primary" size="md" onClick={onContinue}>{t('gamification.badge.continue')}</NoWrapButton>

@@ -14,7 +14,7 @@ import { Workspace } from './workspace/Workspace';
 
 /** The authoring tool's root: the canvas's light look, whatever the participant theme (D105). */
 export function AuthorRoot({ children }: { children: ReactNode }) {
-  return <div className="il-theme min-h-dvh bg-author-canvas font-sans text-14 leading-[1.4] text-author-ink [color-scheme:light]">{children}</div>;
+  return <div className="il-theme il-genie min-h-dvh bg-author-canvas font-sans text-14 leading-[1.4] text-author-ink [color-scheme:light]">{children}</div>;
 }
 
 export function AuthorRoutes({ route, drafters }: { route: Route; drafters?: Drafter[] }) {

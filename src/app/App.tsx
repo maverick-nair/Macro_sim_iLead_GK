@@ -19,6 +19,7 @@ import { useEngineView, useOptionalEngineClient } from '../engine/react';
 import { runInProgress, showsRecap } from './resume';
 import { useSessionClock } from './sessionClock';
 import { useUi } from './uiStore';
+import { DEFAULT_MODE } from '../theme/mode';
 /** The welcome back recap on the engine loads only when a run is resumed. */
 const EngineResume = lazy(() => import('./EngineResume'));
 /** Screens past onboarding load on demand, so the board's first load stays inside its budget. */
@@ -309,12 +310,12 @@ export function App(p: AppProps) {
   }), [api, go, persist, say, set]);
 
   const D = s.scenario;
-  const dark = (p.theme ?? 'dark') === 'dark';
+  const dark = (p.theme ?? DEFAULT_MODE) === 'dark';
   const minH = p.minHeight ?? 'var(--il-frame-desktop-min-height)';
   // Text size scales every font size token (and the ported screens' pixel sizes) from the app root,
   // so text grows and wraps while the layout keeps its size. CSS zoom scaled the layout too.
   const rootVars: CSSProperties & Record<string, string | number> = {
-    colorScheme: dark ? 'dark' : 'light', minHeight: minH, '--il-text-scale': s.settings.text / 100,
+    colorScheme: dark ? 'dark' : 'light', '--il-page-scheme': dark ? 'dark' : 'light', minHeight: minH, '--il-text-scale': s.settings.text / 100,
     background: dark ? 'var(--il-backdrop-office)' : 'var(--il-backdrop-daylight)',
     ...p.clientTheme?.vars
   };

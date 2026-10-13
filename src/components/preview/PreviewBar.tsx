@@ -19,8 +19,8 @@ export interface PreviewBarProps {
 type Jump = 'onboarding' | 'styles' | 'board' | 'weekend' | 'report';
 const JUMPS: Jump[] = ['onboarding', 'styles', 'board', 'weekend', 'report'];
 const TRACE_KEY = previewKey('trace');
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const control = `flex min-h-8 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-surface-raised px-3 py-0 text-13 font-700 text-fg-primary hover:bg-surface-card disabled:cursor-wait disabled:opacity-60 ${focus}`;
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const control = `flex min-h-8 cursor-pointer items-center gap-1.5 rounded-4 border border-line-default bg-surface-raised px-3 py-0 text-13 font-600 text-fg-primary hover:bg-surface-card disabled:cursor-wait disabled:opacity-60 ${focus}`;
 
 const readTrace = () => { try { return localStorage.getItem(TRACE_KEY) === '1'; } catch { return false; } };
 const writeTrace = (on: boolean) => { try { if (on) localStorage.setItem(TRACE_KEY, '1'); else localStorage.removeItem(TRACE_KEY); } catch { /* storage blocked: on for this page only */ } };
@@ -129,10 +129,10 @@ export default function PreviewBar({ meta, jump, previewId, theme }: PreviewBarP
     <>
       <div ref={bar} role="region" aria-label={t('preview.bar.aria')} data-preview-bar="" style={{ colorScheme: theme }}
         className="il-theme sticky top-0 z-60 flex flex-wrap items-center gap-x-3 gap-y-2 border-b-2 border-status-attention bg-surface-solid px-4 py-2 font-sans text-13 text-fg-primary">
-        <strong className="rounded-pill bg-status-attention-soft px-3 py-1 text-13 font-800 text-fg-primary">{t('preview.bar.notice')}</strong>
+        <strong className="rounded-4 bg-status-attention-soft px-3 py-1 text-13 font-700 text-fg-primary">{t('preview.bar.notice')}</strong>
         <span className="text-fg-secondary">{shown && saved ? t('preview.bar.draft', { version: shown.version, at: saved }) : t('preview.bar.draftLocal')}</span>
         <span className="flex-1" />
-        <div role="status" className={latest ? 'flex items-center gap-2 rounded-pill bg-status-attention-soft px-3 py-1' : 'sr-only'}>
+        <div role="status" className={latest ? 'flex items-center gap-2 rounded-4 bg-status-attention-soft px-3 py-1' : 'sr-only'}>
           {latest && <><b>{t('preview.updated')}</b><span className="text-fg-secondary">{t('preview.updated.detail')}</span>
             <button type="button" className={control} disabled={busy} onClick={() => void go(jump ?? 'onboarding', { reload: true })}>{t('preview.reload')}</button></>}
         </div>
@@ -143,10 +143,10 @@ export default function PreviewBar({ meta, jump, previewId, theme }: PreviewBarP
             {t('preview.jump.button')}
           </button>
           {open && (
-            <div id={menuId} role="group" aria-label={t('preview.jump.aria')} className="absolute end-0 top-full z-60 mt-2 flex w-max min-w-60 flex-col gap-1 rounded-16 border border-line-strong bg-surface-solid p-2 shadow-(--il-hud-score-shadow)">
-              <label htmlFor={weekId} className="flex items-center justify-between gap-3 px-2 py-1 text-13 font-700">
+            <div id={menuId} role="group" aria-label={t('preview.jump.aria')} className="absolute end-0 top-full z-60 mt-2 flex w-max min-w-60 flex-col gap-1 rounded-4 border border-line-strong bg-surface-solid p-2 shadow-(--il-hud-score-shadow)">
+              <label htmlFor={weekId} className="flex items-center justify-between gap-3 px-2 py-1 text-13 font-600">
                 {t('preview.jump.week', { unit })}
-                <select id={weekId} value={w} onChange={e => setWeek(Number(e.target.value))} className={`min-h-8 rounded-10 border border-line-control bg-surface-raised px-2 text-13 text-fg-primary ${focus}`}>
+                <select id={weekId} value={w} onChange={e => setWeek(Number(e.target.value))} className={`min-h-8 rounded-4 border border-line-control bg-surface-raised px-2 text-13 text-fg-primary ${focus}`}>
                   {Array.from({ length: periods }, (_, i) => <option key={i} value={i + 1}>{i + 1}</option>)}
                 </select>
               </label>
@@ -154,7 +154,7 @@ export default function PreviewBar({ meta, jump, previewId, theme }: PreviewBarP
                 {JUMPS.map(k => (
                   <li key={k}>
                     <button type="button" data-menu-item="" onClick={() => { setOpen(false); void go(k === 'onboarding' || k === 'report' ? k : `${k}:${w}`); }}
-                      className={`flex min-h-9 w-full cursor-pointer items-center rounded-10 border-0 bg-transparent px-3 text-start text-14 font-600 text-fg-primary hover:bg-surface-raised ${focus}`}>
+                      className={`flex min-h-9 w-full cursor-pointer items-center rounded-4 border-0 bg-transparent px-3 text-start text-14 font-600 text-fg-primary hover:bg-surface-raised ${focus}`}>
                       {t('preview.jump.item', { key: k, unit, n: w })}
                     </button>
                   </li>

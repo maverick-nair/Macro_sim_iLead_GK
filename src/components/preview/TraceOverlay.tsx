@@ -41,9 +41,9 @@ export function TraceOverlay({ onCount, theme }: { onCount?: (n: number) => void
   return (
     <div aria-hidden="true" data-preview-trace="" style={{ colorScheme: theme }} className="il-theme pointer-events-none fixed inset-0 z-55 overflow-hidden">
       {boxes.map((b, i) => (
-        <div key={i} className="absolute rounded-8 outline-2 outline-offset-1 outline-accent-secondary outline-dashed" style={{ top: b.top, left: b.left, width: b.width, height: b.height }}>
+        <div key={i} className="absolute rounded-4 outline-2 outline-offset-1 outline-accent-secondary outline-dashed" style={{ top: b.top, left: b.left, width: b.width, height: b.height }}>
           {/* Above the outline where there is room, so the label does not cover what it names. */}
-          <span className={`absolute start-0 ${b.top > 24 ? 'bottom-full mb-0.5' : 'top-0'} rounded-6 whitespace-nowrap bg-accent-secondary px-1.5 py-0.5 text-11 font-700 text-fg-on-accent`}>{b.text}</span>
+          <span className={`absolute start-0 ${b.top > 24 ? 'bottom-full mb-0.5' : 'top-0'} rounded-4 whitespace-nowrap bg-accent-secondary px-1.5 py-0.5 text-11 font-600 text-fg-on-accent`}>{b.text}</span>
         </div>
       ))}
     </div>

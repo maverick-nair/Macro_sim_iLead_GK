@@ -18,7 +18,7 @@ export interface LastPeriodTagProps {
 export function LastPeriodTag({ periodUnit, style, reaction }: LastPeriodTagProps) {
   const { t } = useI18n();
   const styleName = useStyleName();
-  const box = 'flex h-5.5 items-center gap-1.25 self-start rounded-pill px-2 text-12 font-600';
+  const box = 'flex h-5.5 items-center gap-1.25 self-start rounded-4 px-2 text-12 font-600';
   const neutral = `${box} bg-surface-raised text-fg-secondary`;
   if (style === null) return <span className={neutral}>{t('stylesetting.last.none', { unit: periodUnit })}</span>;
   const text = rich(t('stylesetting.last.tag', { unit: periodUnit, style: mark(0) }), [<span key="s">{styleName(style)}</span>]);

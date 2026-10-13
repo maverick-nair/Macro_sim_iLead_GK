@@ -1,7 +1,7 @@
 {
   "liveshell": {
     "header": {
-      "blur": { "value": "16px", "$description": "Backdrop blur behind the live header" }
+      "blur": { "value": "0px", "$description": "No blur behind the live header: it is opaque navy (D232)" }
     },
     "body": {
       "columns-brief": { "value": "300px minmax(0,1fr)", "$description": "Brief card, then the stage" },
@@ -19,7 +19,7 @@
       "halo-frustrated": { "value": "conic-gradient(from 200deg, {color.liveshell.mood.frustrated}, transparent 40%, {color.liveshell.mood.frustrated} 70%, transparent)" },
       "halo-guarded": { "value": "conic-gradient(from 200deg, {color.liveshell.mood.guarded}, transparent 40%, {color.liveshell.mood.guarded} 70%, transparent)" },
       "halo-open": { "value": "conic-gradient(from 200deg, {color.liveshell.mood.open}, transparent 40%, {color.liveshell.mood.open} 70%, transparent)" },
-      "halo-filter": { "value": "blur(10px)", "$description": "Soft mood ring behind the portrait" },
+      "halo-filter": { "value": "none", "$description": "No glow around the portrait (D232)" },
       "halo-transition": { "value": "background {duration.slow} ease", "$description": "Mood ring colour change (the design's 600ms, snapped to duration.slow)" },
       "portrait-transition": { "value": "border-color {duration.slow} ease" },
       "speaking-ring": { "value": "ilRing 1.6s ease-out infinite", "$description": "Pulse around the portrait while the NPC speaks" },
@@ -28,13 +28,13 @@
       "dot-3": { "value": "ilDot 1.2s infinite .3s" }
     },
     "meeting": {
-      "tile-glow": { "value": "0 0 30px {color.liveshell.speaking-glow}", "$description": "Active speaker halo" },
+      "tile-glow": { "value": "0 0 0 2px {color.liveshell.speaking}", "$description": "Active speaker: a solid ring, no halo (D232)" },
       "tile-transition": { "value": "border-color {duration.base} ease, box-shadow {duration.base} ease" },
       "tile-overlay": { "value": "linear-gradient(180deg, transparent 55%, {color.liveshell.tile-shade})" },
       "tile-position": { "value": "center 15%", "$description": "Keeps faces in frame in the 4:3 tile" }
     },
     "sponsor": {
-      "fill": { "value": "linear-gradient(160deg,{color.brand.electric-blue},{color.brand.cyber-cyan} 60%,{color.brand.mint-green})", "$description": "Sponsor avatar backdrop" },
+      "fill": { "value": "linear-gradient({color.canvas.navy-800},{color.canvas.navy-800})", "$description": "Sponsor avatar backdrop: flat navy (D232)" },
       "funnel-columns": { "value": "110px 1fr 54px", "$description": "Stage name, bar, count of ideal" }
     },
     "email": {

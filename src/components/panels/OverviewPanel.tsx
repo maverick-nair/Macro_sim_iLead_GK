@@ -40,10 +40,10 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
         <>
           <section aria-labelledby="overview-targets" className="flex flex-col gap-2">
             <PanelHeading id="overview-targets">{t('panels.overview.targets')}</PanelHeading>
-            <div className="flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card p-4">
+            <div className="flex flex-col gap-1.5 border border-line-default bg-surface-card p-4">
               <span className="text-14">{t('panels.overview.money', { value: money.format(view.money.value), target: money.format(view.money.target) })}</span>
               <div role="img" aria-label={t('panels.overview.moneyAria', { pct: Math.round(share(view.money.value, view.money.target) * 100), pace: Math.round(clock.runShare * 100) })} className="relative h-2.5 overflow-hidden rounded-5 bg-track">
-                <div className="h-full rounded-5 bg-(image:--il-fill-brand)" style={{ width: `${share(view.money.value, view.money.target) * 100}%` }} />
+                <div className="h-full bg-accent-default" style={{ width: `${share(view.money.value, view.money.target) * 100}%` }} />
                 <div aria-hidden="true" className="absolute top-0 h-full w-0.5 bg-fg-primary" style={{ insetInlineStart: `${clock.runShare * 100}%` }} />
               </div>
               <span className="text-12 text-fg-secondary">{t('panels.overview.pace', { pace: money.format(pace), unit: clock.periodUnit, n: clock.period })}</span>
@@ -62,7 +62,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
                     <th scope="row" className="px-2.5 py-1.5 text-start font-600">{t('panels.overview.teamMetric', { metric: t('metric.nameLower', { metric: m.metric }) })}</th>
                     <td className={CELL}>{number(m.runStart)}</td>
                     <td className={CELL}>{number(m.periodStart)}</td>
-                    <td className={`${CELL} font-700`}>{number(m.now)}{m.now !== m.runStart && <span className="ms-1.5 text-12 font-600 text-fg-secondary">{t('panels.overview.since', { delta: delta(m.now - m.runStart) })}</span>}</td>
+                    <td className={`${CELL} font-600`}>{number(m.now)}{m.now !== m.runStart && <span className="ms-1.5 text-12 font-600 text-fg-secondary">{t('panels.overview.since', { delta: delta(m.now - m.runStart) })}</span>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -71,7 +71,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
           <section aria-labelledby="overview-people" className="flex flex-col gap-2">
             <PanelHeading id="overview-people">{t('panels.overview.people')}</PanelHeading>
             {/* The table scrolls sideways inside the panel late in a long run; it takes focus so the keyboard can scroll it. */}
-            <div role="region" aria-labelledby="overview-people" tabIndex={0} className="overflow-x-auto rounded-12 focus-visible:outline-2 focus-visible:outline-accent-secondary">
+            <div role="region" aria-labelledby="overview-people" tabIndex={0} className="overflow-x-auto rounded-4 focus-visible:outline-3 focus-visible:outline-accent-secondary">
               <table className="w-full border-collapse text-13">
                 <caption className="sr-only">{t('panels.overview.peopleCaption', { unit: clock.periodUnit })}</caption>
                 <thead><tr className="border-b border-line-default">
@@ -89,8 +89,8 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
                   ))}
                 </tbody>
                 <tfoot><tr>
-                  <th scope="row" className="px-2.5 py-1.5 text-start font-700">{t('panels.overview.average')}</th>
-                  {avg.map((v, i) => <td key={i} className={`${CELL} font-700`}>{v === null ? t('panels.overview.notYet') : number(v)}</td>)}
+                  <th scope="row" className="px-2.5 py-1.5 text-start font-600">{t('panels.overview.average')}</th>
+                  {avg.map((v, i) => <td key={i} className={`${CELL} font-600`}>{v === null ? t('panels.overview.notYet') : number(v)}</td>)}
                 </tr></tfoot>
               </table>
             </div>
@@ -106,7 +106,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
                 <li key={f.key} className="grid grid-cols-(--il-panel-funnel-columns) items-center gap-3 text-13">
                   <b className="truncate text-large:whitespace-normal">{f.name}</b>
                   <div role="img" aria-label={t('panels.overview.stageAria', { stage: f.name, output: number(f.throughput), ideal: number(f.idealThroughput) })} className="h-2.5 overflow-hidden rounded-5 bg-track">
-                    <div className={`h-full rounded-5 ${f.bottleneck ? 'bg-status-attention' : 'bg-(image:--il-fill-brand)'}`} style={{ width: `${share(f.throughput, f.idealThroughput) * 100}%` }} />
+                    <div className={`h-full rounded-5 ${f.bottleneck ? 'bg-status-attention' : 'bg-accent-default'}`} style={{ width: `${share(f.throughput, f.idealThroughput) * 100}%` }} />
                   </div>
                   <span className="text-end text-fg-secondary tabular-nums">{t('panels.overview.of', { output: number(f.throughput), ideal: number(f.idealThroughput) })}</span>
                 </li>
@@ -115,7 +115,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
           </section>
           <section aria-labelledby="overview-stages" className="flex flex-col gap-2">
             <PanelHeading id="overview-stages">{t('panels.overview.byWeek', { unit: clock.periodUnit })}</PanelHeading>
-            <div role="region" aria-labelledby="overview-stages" tabIndex={0} className="overflow-x-auto rounded-12 focus-visible:outline-2 focus-visible:outline-accent-secondary">
+            <div role="region" aria-labelledby="overview-stages" tabIndex={0} className="overflow-x-auto rounded-4 focus-visible:outline-3 focus-visible:outline-accent-secondary">
               <table className="w-full border-collapse text-13">
                 <caption className="sr-only">{t('panels.overview.stagesCaption', { unit: clock.periodUnit })}</caption>
                 <thead><tr className="border-b border-line-default">
@@ -131,8 +131,8 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
                   ))}
                 </tbody>
                 <tfoot><tr>
-                  <th scope="row" className="px-2.5 py-1.5 text-start font-700">{t('panels.overview.soFar')}</th>
-                  {stages.total.map((c, i) => <td key={i} className={`${CELL} font-700`}>{t('panels.overview.of', { output: number(c.output), ideal: number(c.ideal) })}</td>)}
+                  <th scope="row" className="px-2.5 py-1.5 text-start font-600">{t('panels.overview.soFar')}</th>
+                  {stages.total.map((c, i) => <td key={i} className={`${CELL} font-600`}>{t('panels.overview.of', { output: number(c.output), ideal: number(c.ideal) })}</td>)}
                 </tr></tfoot>
               </table>
             </div>

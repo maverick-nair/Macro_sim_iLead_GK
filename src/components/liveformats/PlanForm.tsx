@@ -84,7 +84,7 @@ export function PlanForm(props: PlanFormProps) {
   };
 
   const error = (f: PlanField) => missing.includes(f) && (
-    <span id={id(f, 'error')} className="text-12 font-700 text-status-attention">{t('liveformats.plan.missing', { field: f === 'due' ? 'due' : 'text', label: label(f) })}</span>
+    <span id={id(f, 'error')} className="text-12 font-600 text-status-attention">{t('liveformats.plan.missing', { field: f === 'due' ? 'due' : 'text', label: label(f) })}</span>
   );
 
   const rowShell = (f: PlanField, labelEl: React.ReactNode, body: React.ReactNode) => (
@@ -113,7 +113,7 @@ export function PlanForm(props: PlanFormProps) {
       <div className="flex min-w-0 flex-col gap-1.5">
         {input}
         {on && (
-          <div id={id(f, 'live')} role="status" className="flex items-center gap-2.5 rounded-14 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
+          <div id={id(f, 'live')} role="status" className="flex items-center gap-2.5 rounded-4 border border-accent-default bg-surface-material px-3.5 py-2.5 text-13">
             <Waveform levels={levels.slice(0, 12).map(w => Math.max(4, w / 2))} size="sm" />
             <span>{t('liveformats.plan.dictating', { field: label(f) })}</span>
           </div>
@@ -132,7 +132,7 @@ export function PlanForm(props: PlanFormProps) {
       <div className="flex min-w-0 flex-col gap-1.5">
         <div role="radiogroup" aria-labelledby={id('due', 'label')} aria-describedby={describedBy} aria-invalid={missing.includes('due') || undefined} className="flex flex-wrap gap-2">
           {dueOptions.map(n => (
-            <label key={n} className="flex h-8.5 cursor-pointer items-center rounded-pill border border-solid border-line-control px-3.5 text-13 font-700 has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-brand-deep-space has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary">
+            <label key={n} className="flex h-8.5 cursor-pointer items-center rounded-4 border border-solid border-line-control px-3.5 text-13 font-600 has-checked:border-transparent has-checked:bg-(image:--il-fill-brand) has-checked:text-button-on-solid has-focus-visible:outline-3 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent-secondary">
               <input type="radio" name={id('due')} value={n} checked={fields.due === n} onChange={() => onChange('due', n)} className="sr-only" />
               {t('time.subPeriod', { unit: subPeriodUnit, n })}
             </label>
@@ -149,7 +149,7 @@ export function PlanForm(props: PlanFormProps) {
       <form ref={formRef} aria-label={t('liveformats.plan.aria')} noValidate onSubmit={e => { e.preventDefault(); submit(); }}
         className={`flex size-full min-h-0 flex-col overflow-hidden ${CARD}`}>
         <div className="flex flex-col gap-1 border-b border-line-default px-4 py-3.5">
-          <h2 className="m-0 text-17 font-700">{t('liveformats.plan.title')}</h2>
+          <h2 className="m-0 text-17 font-600">{t('liveformats.plan.title')}</h2>
           <span className="text-13 text-fg-secondary">{t('liveformats.plan.intro', { name: reviewer.firstName })}</span>
         </div>
         <div className="min-h-0 flex-1 overflow-auto">
@@ -168,15 +168,15 @@ export function PlanForm(props: PlanFormProps) {
   const summary = (
     <section aria-labelledby={`${uid}-summary`} className={`flex min-h-0 flex-col overflow-hidden ${CARD}`}>
       <div className="flex items-center justify-between gap-2 border-b border-line-default px-4 py-3">
-        <h2 id={`${uid}-summary`} className="m-0 text-15 font-700">{t('liveformats.plan.title')}</h2>
-        <span className="rounded-pill bg-status-gain-soft px-2.5 py-0.5 text-12 font-700">{t('liveformats.plan.submitted')}</span>
+        <h2 id={`${uid}-summary`} className="m-0 text-15 font-600">{t('liveformats.plan.title')}</h2>
+        <span className="rounded-4 bg-status-gain-soft px-2.5 py-0.5 text-12 font-600">{t('liveformats.plan.submitted')}</span>
       </div>
       <dl className="m-0 flex flex-col gap-3 overflow-auto p-4">
         {ORDER.map(f => {
           const v = f === 'due' ? (fields.due === null ? '' : t('time.subPeriod', { unit: subPeriodUnit, n: fields.due })) : fields[f].trim();
           return (
             <div key={f} className="flex flex-col gap-0.5 text-13">
-              <dt className="text-12 font-700 text-fg-secondary">{f === 'due' ? dueLabel : label(f)}</dt>
+              <dt className="text-12 font-600 text-fg-secondary">{f === 'due' ? dueLabel : label(f)}</dt>
               <dd className={`m-0 whitespace-pre-line text-pretty ${v ? '' : 'text-fg-secondary'}`}>{v || t('liveformats.cv.empty')}</dd>
             </div>
           );
@@ -192,7 +192,7 @@ export function PlanForm(props: PlanFormProps) {
         <div className="flex items-center gap-3 border-b border-line-default px-4 py-3">
           <Portrait img={reviewer.img} size="sm" mood={reviewer.mood} />
           <div className="flex min-w-0 flex-1 flex-col">
-            <h2 className="m-0 truncate text-15 font-700">{t('liveformats.plan.checkIn.title', { name: reviewer.name })}</h2>
+            <h2 className="m-0 truncate text-15 font-600">{t('liveformats.plan.checkIn.title', { name: reviewer.name })}</h2>
             <span className="text-12 text-fg-secondary">{t('liveformats.plan.checkIn.sub')}</span>
           </div>
           <span className="text-12 text-fg-secondary">{t('liveformats.transcript.saved')}</span>

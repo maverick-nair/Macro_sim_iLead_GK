@@ -114,7 +114,7 @@ A client theme is GenieKreator configuration (Configuration Spec, "Brand and the
 | `colors.brand` | `{ from, to, angle? }` | `fill.brand`: the primary button, wordmark, on switch and progress. |
 | `colors.surface` | `{ solid?, card?, raised?, material? }` | The surface tokens. |
 | `logo` | `{ src?, alt?, text? }` | The brand mark beside the iLead wordmark: an image (https, a site path or a data:image URI), or a text mark. With neither, the design's placeholder names the client. |
-| `font` | allowlist | Manrope (default), Inter, IBM Plex Sans, Source Sans 3, Nunito Sans, Work Sans, Lato, Open Sans, System. Web fonts load from Google Fonts. |
+| `font` | allowlist | Left out: Geist, the canvas's face (D232). Manrope, Inter, IBM Plex Sans, Source Sans 3, Nunito Sans, Work Sans, Lato, Open Sans, System. Web fonts load from Google Fonts. |
 | `radiusScale` | 0 to 2 | Multiplies every numbered radius token; pills stay pills. |
 
 A colour is `oklch()`, `#hex` or `rgb()`, either one value or `{ "light": …, "dark": … }`. Theme text follows the copy rules (no dashes as punctuation, no emoji).

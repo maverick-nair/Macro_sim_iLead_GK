@@ -26,7 +26,7 @@ export function ObjectivesSection({ data }: { data: ObjectivesData }) {
   const teamTitle = t('report.objectives.teamTitle', { purpose });
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.objectives.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.objectives.title')}</h2>
       <p className="m-0 text-14 text-pretty">{data.narrative}</p>
       <div className="grid gap-5 grid-cols-(--il-report-halves-columns)">
         <div className="flex flex-col gap-2">
@@ -44,7 +44,7 @@ export function ObjectivesSection({ data }: { data: ObjectivesData }) {
             }}
           />
           <SeriesLegend series={revenueSeries} />
-          <p className="m-0 text-14 font-700">{t('report.objectives.conversions', { n: data.conversions })}</p>
+          <p className="m-0 text-14 font-600">{t('report.objectives.conversions', { n: data.conversions })}</p>
           <p className="m-0 text-12 text-fg-secondary">{t('report.objectives.revenueNote')}</p>
         </div>
         <div className="flex flex-col gap-2">
@@ -71,12 +71,12 @@ export function AdaptabilitySection({ data }: { data: AdaptabilityData }) {
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.adaptability.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.adaptability.title')}</h2>
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <div className="flex flex-col gap-1.5">
-          <b className="text-40 font-700">{t('report.adaptability.value', { pct: data.pct })}</b>
-          <div role="img" aria-label={t('report.adaptability.aria', { pct: data.pct })} className="h-(--il-report-meter-height) w-60 overflow-hidden rounded-pill bg-track">
-            <div className="h-full rounded-pill bg-accent-default" style={{ inlineSize: `${data.pct}%` }}></div>
+          <b className="text-40 font-600">{t('report.adaptability.value', { pct: data.pct })}</b>
+          <div role="img" aria-label={t('report.adaptability.aria', { pct: data.pct })} className="h-(--il-report-meter-height) w-60 overflow-hidden rounded-4 bg-track">
+            <div className="h-full rounded-4 bg-accent-default" style={{ inlineSize: `${data.pct}%` }}></div>
           </div>
         </div>
         <p className="m-0 min-w-0 flex-1 basis-80 text-14 text-pretty">{data.narrative}</p>

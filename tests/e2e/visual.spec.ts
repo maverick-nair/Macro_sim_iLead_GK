@@ -11,7 +11,8 @@ const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
  * intents give the same pixels. `npx playwright test visual --update-snapshots` refreshes the baselines.
  */
 
-const THEMES = { dark: '', light: 'theme=light', client: 'client=halden' } as const;
+// Light is the default mode since D232; dark is asked for.
+const THEMES = { dark: 'theme=dark', light: 'theme=light', client: 'client=halden' } as const;
 const url = (...q: string[]) => `/?${q.filter(Boolean).join('&')}`;
 const DESK = [1440, 1024] as const;
 
@@ -25,8 +26,8 @@ async function settle(page: Page) {
 
 async function shot(page: Page, name: string, fullPage = false) {
   await settle(page);
-  // The session clock in the HUD's Pause button counts real seconds: masked, so the shot is stable.
-  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, fullPage, mask: [page.getByRole('button', { name: 'Pause the simulation' })] });
+  // The session clock beside the HUD's Pause button counts real seconds: masked, so the shot is stable.
+  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, fullPage, mask: [page.getByRole('button', { name: 'Pause the simulation' }), page.locator('[data-session-clock]')] });
 }
 
 async function confirmStyles(page: Page) {
@@ -87,7 +88,7 @@ async function fixDate(page: Page) {
 async function still(page: Page, name: string, extraMask: Locator[] = []) {
   await settle(page);
   await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))));
-  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ }), ...extraMask] });
+  await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ }), page.locator('[data-session-clock]'), ...extraMask] });
 }
 
 /** Spends three days of week 3 (a team activity and an assessment): the sponsor rings. */
@@ -227,6 +228,8 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
             await page.getByRole('dialog', { name: 'Actions for Kent Goldberg' }).getByRole('tab', { name: 'Profile' }).click();
           } else {
+            // The desk opens a profile from the person's actions (D232): select them first.
+            if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
             await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
           }
           await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeVisible();

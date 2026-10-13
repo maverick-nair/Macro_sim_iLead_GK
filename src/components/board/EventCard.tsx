@@ -36,8 +36,17 @@ export const EVENT_ART: Record<EventCardKind, string> = {
   crisis: 'bg-event-crisis'
 };
 
-const focusRing = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const chip = 'relative flex min-h-6.5 items-center rounded-pill bg-event-tag px-3 text-12 font-700 tracking-(--il-event-card-tag-tracking) text-event-on-tag uppercase';
+const focusRing = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+/** The card's type tag, as the canvas sets it (D232): small capitals on the selected tint. */
+export const EVENT_TAG = 'relative flex min-h-6.5 items-center bg-accent-soft px-2 text-13 font-600 tracking-(--il-tracking-eyebrow) text-accent-default uppercase';
+/** The card's portrait column when the event is about someone (D232): their photo down the side. */
+export function EventPortrait({ img }: { img: string }) {
+  return (
+    <div aria-hidden="true" className="relative min-h-60 overflow-hidden bg-(image:--il-fill-portrait-calm) tablet:hidden">
+      <img src={img} alt="" className="absolute inset-0 size-full object-cover object-top mix-blend-multiply" />
+    </div>
+  );
+}
 
 /**
  * An event over the board: the art band for its type with the type tag (and the storyline's label,
@@ -56,7 +65,7 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
   const changes = teamChips(card.changes.filter((c): c is typeof c & { metric: MetricKey } => c.metric !== 'confidence'), everyone);
   return (
     <Dialog.Root open onOpenChange={o => { if (!o && !busy) onDismiss(); }}>
-      <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 backdrop-blur-12">
+      <Dialog.Overlay className="fixed inset-0 z-48 flex items-center justify-center bg-surface-scrim p-6 ">
       <Dialog.Content
         aria-describedby={undefined} aria-modal="true"
         onOpenAutoFocus={e => { e.preventDefault(); title.current?.focus({ preventScroll: true }); }}
@@ -64,15 +73,15 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
         // A stray click on the scrim does not count as Got it.
         onPointerDownOutside={e => e.preventDefault()}
         data-card={card.card} data-trace={`events.${card.key}`}
-        className="flex max-h-full w-full max-w-(--il-board-panel-max-width) animate-(--il-event-card-enter) flex-col overflow-auto rounded-26 border border-line-strong bg-surface-solid shadow-(--il-event-card-shadow) outline-0">
-        <div className={`relative flex h-(--il-event-card-art-height) flex-none items-end gap-2 px-5 py-4 ${EVENT_ART[card.card]}`}>
-          {img && <img src={img} alt="" className="absolute end-5 bottom-0 size-(--il-event-card-portrait) rounded-t-round object-cover object-top mix-blend-multiply" />}
-          <span className={chip}>{t('board.card.label', { card: card.card })}</span>
-          {card.label && <span className={chip}>{card.label}</span>}
-        </div>
-        <div className="flex flex-col gap-3 px-5.5 pt-5 pb-5.5">
-          <Dialog.Title ref={title} tabIndex={-1} className="m-0 text-22 font-700 tracking-(--il-tracking-title) text-balance outline-0">{card.title}</Dialog.Title>
-          <p className="m-0 text-14 text-pretty text-fg-secondary">{card.body}</p>
+        className={`grid max-h-full w-full animate-(--il-event-card-enter) overflow-auto rounded-4 bg-surface-card shadow-(--il-event-card-shadow) outline-0 ${img ? 'max-w-(--il-event-card-width) grid-cols-(--il-canvas-event-columns) tablet:max-w-(--il-board-panel-max-width) tablet:grid-cols-1' : 'max-w-(--il-board-panel-max-width) grid-cols-1'}`}>
+        {img && <EventPortrait img={img} />}
+        <div className="flex min-w-0 flex-col gap-3.5 px-7.5 pt-7 pb-6">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className={EVENT_TAG}>{t('board.card.label', { card: card.card })}</span>
+            {card.label && <span className="text-13 text-fg-body">{card.label}</span>}
+          </div>
+          <Dialog.Title ref={title} tabIndex={-1} className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400 text-balance outline-0">{card.title}</Dialog.Title>
+          <p className="m-0 text-15 leading-normal text-pretty text-fg-body">{card.body}</p>
           {changes.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {changes.map((c, i) => (
@@ -81,14 +90,14 @@ export function EventCard({ card, busy, nameOf, everyone, img, onDismiss, onClos
             </div>
           )}
           {why && <div id={whyId} className="contents">{reasons.map((r, i) => <ReasonDetail key={i} cause={r.cause} rule={r.rule} evidence={r.evidence.map(e => e.quote).join(' ')} judgedByAI={r.evidence.some(e => e.judgedByAI)} layout="stack" />)}</div>}
-          <div className="flex items-center justify-end gap-2 pt-1.5">
+          <div className="mt-1 flex items-center justify-end gap-2 border-t border-line-default pt-3.5">
             {reasons.length > 0 && (
               <button type="button" onClick={() => setWhy(w => !w)} aria-expanded={why} aria-controls={why ? whyId : undefined}
-                className={`min-h-9 cursor-pointer px-4 text-13 rounded-pill border border-solid border-line-strong bg-transparent py-0 font-700 text-fg-primary ${focusRing}`}>
+                className={`min-h-11 cursor-pointer rounded-4 border border-solid border-line-strong bg-surface-card px-4 py-0 text-14 font-500 text-fg-primary ${focusRing}`}>
                 {t('outcome.why', { open: String(why) })}
               </button>
             )}
-            <Button variant="primary" size="md" disabled={busy} onClick={onDismiss}>{t('board.card.dismiss')}</Button>
+            <Button variant="primary" size="lg" disabled={busy} onClick={onDismiss}>{t('board.card.dismiss')}</Button>
           </div>
         </div>
       </Dialog.Content>

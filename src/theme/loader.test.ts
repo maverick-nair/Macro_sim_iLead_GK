@@ -21,7 +21,9 @@ describe('theme loader', () => {
       '--il-theme-color-accent-default': 'light-dark(oklch(0.5 0.17 0), oklch(0.72 0.17 0))',
       '--il-theme-color-accent-secondary': 'light-dark(oklch(0.54 0.15 30), oklch(0.8 0.12 30))',
       '--il-theme-color-accent-soft': 'light-dark(oklch(0.95 0.025 0), oklch(0.6 0.18 0 / 0.18))',
-      '--il-theme-fill-brand': 'linear-gradient(135deg, oklch(0.66 0.19 2), oklch(0.78 0.13 30))'
+      '--il-theme-fill-brand': 'linear-gradient(135deg, oklch(0.66 0.19 2), oklch(0.78 0.13 30))',
+      // Its light brand fill keeps the dark label it always had (D232: the default's label is white on navy).
+      '--il-theme-color-button-on-solid': '#0A081B'
     });
     expect(t.brand).toEqual({ name: 'Halden Group', logo: { kind: 'placeholder', name: 'Halden Group' } });
     expect(t.mode).toBeNull();

@@ -31,13 +31,13 @@ export interface StatusBandProps {
   onOverview?: () => void;
 }
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const EYEBROW = 'm-0 text-12 font-700 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
-const GROUP = 'flex min-w-0 flex-col gap-1.5 px-4 py-2.5 short:gap-1 short:py-2';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const EYEBROW = 'm-0 text-12 font-600 uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-secondary';
+const GROUP = 'flex min-w-0 flex-col gap-1.5 px-6 py-2.5 short:gap-1 short:py-2 tablet:px-3.5';
 const tone = (d: Dir) => (d === 'up' ? 'text-status-gain' : d === 'down' ? 'text-status-decline' : 'text-fg-secondary');
 const pct = (n: number) => `${Math.round(Math.max(0, Math.min(1, n)) * 100)}%`;
 /** A text button that reads as part of the band: underlined on hover, the focus ring on the keyboard. */
-const LINK = `inline-flex min-h-6 cursor-pointer items-center gap-1 rounded-4 border-0 bg-transparent p-0 text-13 font-700 text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary ${FOCUS}`;
+const LINK = `inline-flex min-h-6 cursor-pointer items-center gap-1 rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-link underline underline-offset-3 hover:text-fg-link-hover ${FOCUS}`;
 
 /**
  * A disclosure that opens a small popover under its button: what a business variable means and what moved
@@ -54,7 +54,7 @@ function Pop({ label, children, content, className, buttonClassName }: { label: 
       onKeyDown={e => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false); button.current?.focus(); } }}>
       <button ref={button} type="button" aria-label={label} aria-expanded={open} aria-controls={open ? id : undefined} onClick={() => setOpen(o => !o)} className={buttonClassName}>{children}</button>
       {open && (
-        <div id={id} className="absolute end-0 top-full z-40 mt-2 flex w-72 flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 whitespace-normal shadow-(--il-metrics-popover-shadow)">
+        <div id={id} className="absolute end-0 top-full z-40 mt-2 flex w-72 flex-col gap-2 rounded-4 border border-line-strong bg-surface-card p-3.5 text-13 whitespace-normal shadow-(--il-metrics-popover-shadow)">
           {content}
         </div>
       )}
@@ -68,7 +68,7 @@ function Delta({ delta, unit, className = '' }: { delta: number; unit: PeriodUni
   const dir = dirOf(delta);
   const n = number(Math.abs(delta));
   return (
-    <span className={`text-12 font-700 tabular-nums whitespace-nowrap ${tone(dir)} ${className}`}>
+    <span className={`font-mono text-12 whitespace-nowrap ${tone(dir)} ${className}`}>
       <span aria-hidden="true">{t('desk.delta', { dir, n })}</span>
       <span className="sr-only">{t('desk.deltaSr', { dir, n, unit })}</span>
     </span>
@@ -102,17 +102,17 @@ export function StatusBand(p: StatusBandProps) {
 
   return (
     <section aria-label={t('desk.band.aria')} data-status-band=""
-      className="relative z-30 mx-6 mb-3 grid flex-none grid-cols-(--il-desk-band-columns) rounded-16 border border-line-default bg-surface-card backdrop-blur-12 short:mb-2 text-large:grid-cols-1">
+      className="relative z-30 grid flex-none grid-cols-(--il-desk-band-columns) border-b border-line-strong bg-surface-card text-large:grid-cols-1">
       {/* Team health */}
       <div role="group" aria-labelledby={ids.team} data-tour="kpis" className={`${GROUP} border-e border-line-default text-large:border-e-0 text-large:border-b`}>
         <h2 id={ids.team} className={EYEBROW}>{t('desk.team.title')}</h2>
         <dl className="m-0 grid grid-cols-4 gap-3 text-large:grid-cols-2">
           {m.kpis.map(k => (
             <div key={k.metric} className="flex min-w-0 flex-col gap-1">
-              <dt className="truncate text-12 text-fg-secondary text-large:whitespace-normal">{t('metric.name', { metric: k.metric })}</dt>
+              <dt className="truncate text-12 text-fg-body text-large:whitespace-normal">{t('metric.name', { metric: k.metric })}</dt>
               <dd className="m-0 flex flex-col gap-1">
-                <span className="flex items-baseline gap-1.5">
-                  <b className="text-22 leading-none font-700 tabular-nums short:text-20">{number(k.value)}</b>
+                <span className="flex flex-wrap items-baseline gap-x-1.5 pb-0.5">
+                  <b className="font-mono text-22 leading-(--il-canvas-leading-heading) font-400 short:text-20">{number(k.value)}</b>
                   <Delta delta={k.delta} unit={unit} />
                 </span>
                 <MetricTrack value={k.value} />
@@ -127,14 +127,14 @@ export function StatusBand(p: StatusBandProps) {
         <h2 id={ids.business} className={EYEBROW}>{t('desk.business.title')}</h2>
         <div data-tour="target" className="flex flex-col gap-1.5">
           <span className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-13">
-            <span className="min-w-0"><span className="text-fg-secondary">{p.targetLabel}</span>{' '}<b className="text-15 tabular-nums">{money.format(mo.value)}</b>{' '}<span className="text-fg-secondary">{t('metrics.target.of', { target: money.format(mo.target) })}</span></span>
-            <b data-pace={mo.state} className={`text-13 font-700 whitespace-nowrap ${mo.state === 'behind' ? 'text-status-decline' : mo.state === 'ahead' ? 'text-status-gain' : 'text-fg-secondary'}`}>
+            <span className="min-w-0"><span>{p.targetLabel}</span>{' '}<b className="font-mono text-15 font-600">{money.compact(mo.value)}</b>{' '}<span>{t('metrics.target.of', { target: money.compact(mo.target) })}</span></span>
+            <b data-pace={mo.state} className={`text-13 font-600 whitespace-nowrap ${mo.state === 'behind' ? 'text-status-decline' : mo.state === 'ahead' ? 'text-status-gain' : 'text-fg-secondary'}`}>
               {t('desk.money.pace', { state: mo.state, amount: gapText })}
             </b>
           </span>
-          <span role="img" aria-label={t('desk.money.barAria', { label: p.targetLabel, share: Math.round(mo.share * 100), pace: Math.round(mo.pace * 100) })} className="relative block h-2 rounded-3 bg-track">
-            <span className="absolute inset-y-0 start-0 rounded-3 bg-meter" style={{ width: pct(mo.share) }} />
-            <span className="absolute -top-1 -bottom-1 w-0.75 rounded-2 bg-fg-primary" style={{ insetInlineStart: pct(mo.pace) }} />
+          <span role="img" aria-label={t('desk.money.barAria', { label: p.targetLabel, share: Math.round(mo.share * 100), pace: Math.round(mo.pace * 100) })} className="relative block h-2 bg-track">
+            <span className="absolute inset-y-0 start-0 bg-accent-default" style={{ width: pct(mo.share) }} />
+            <span className="absolute -top-1 -bottom-1 w-0.75 bg-fg-primary" style={{ insetInlineStart: pct(mo.pace) }} />
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -147,8 +147,8 @@ export function StatusBand(p: StatusBandProps) {
                 {v.causes.length === 0 && <span className="text-fg-secondary">{t('board.business.noCauses')}</span>}
                 {v.causes.map((c, i) => <span key={i}><b className={c.dir === 'up' ? 'text-status-gain' : 'text-status-decline'}>{c.change}</b> {c.text}</span>)}
               </>}>
-              {v.name} <b className="text-fg-primary tabular-nums">{v.value}</b>
-              {v.dir !== 'flat' && <span aria-hidden="true" className={`text-12 font-700 ${v.better === null ? 'text-fg-secondary' : v.better ? 'text-status-gain' : 'text-status-decline'}`}>{v.dir === 'up' ? '↑' : '↓'}</span>}
+              {v.name} <b className="font-mono font-500 text-fg-primary">{v.value}</b>
+              {v.dir !== 'flat' && <span aria-hidden="true" className={`text-12 font-600 ${v.better === null ? 'text-fg-secondary' : v.better ? 'text-status-gain' : 'text-status-decline'}`}>{v.dir === 'up' ? '↑' : '↓'}</span>}
             </Pop>
           ))}
           {p.onOverview && <button type="button" onClick={p.onOverview} data-tour="overview" className={LINK}>{t('team.overview')}</button>}
@@ -163,10 +163,10 @@ export function StatusBand(p: StatusBandProps) {
             <ScoreDisclosure label={t('desk.score.aria', { total: number(p.score.total), tier: m.tier?.name ?? 'none' })} rich open={p.scoreOpen} onOpenChange={p.onScoreOpenChange} content={p.breakdown}
               popoverClassName="top-full start-0 mt-2" className="self-start"
               buttonClassName={`inline-flex min-h-6 cursor-pointer items-baseline gap-1 rounded-4 border-0 bg-transparent p-0 text-13 whitespace-nowrap text-fg-primary underline decoration-line-control underline-offset-3 hover:decoration-fg-primary ${FOCUS}`}>
-              <span>{t('desk.score.label')}</span><b className="text-15 tabular-nums">{number(p.score.total)}</b>{m.tier && <span>· {m.tier.name}</span>}
+              <span>{t('desk.score.label')}</span><b className="font-mono text-15 font-600">{number(p.score.total)}</b>{m.tier && <span>· {m.tier.name}</span>}
             </ScoreDisclosure>
             {m.tier && <>
-              <span aria-hidden="true" className="block h-1.5 rounded-3 bg-track"><span className="block h-full rounded-3 bg-meter" style={{ width: pct(m.tier.progress) }} /></span>
+              <span aria-hidden="true" className="block h-1.5 bg-track"><span className="block h-full bg-accent-default" style={{ width: pct(m.tier.progress) }} /></span>
               <span className="text-12 text-fg-secondary">{m.tier.next ? t('desk.tier.next', { n: number(m.tier.next.toGo), tier: m.tier.next.name }) : t('desk.tier.top')}</span>
             </>}
           </div>
@@ -192,16 +192,16 @@ export function StatusBand(p: StatusBandProps) {
                 <span>{t('metrics.sponsor.unlock', { at: lines.at, name: p.sponsorName })}</span>
                 <span>{t('metrics.sponsor.checkIn', { below: lines.below, unit: p.subPeriodUnit })}</span>
               </>}>
-              <span>{p.sponsorName}</span><b className="text-15 tabular-nums">{number(sp.value)}</b>
-              {sp.delta !== null && <span aria-hidden="true" className={`text-12 font-700 ${tone(spDir!)}`}>{t('desk.delta', { dir: spDir, n: number(Math.abs(sp.delta)) })}</span>}
+              <span>{p.sponsorName}</span><b className="font-mono font-600">{number(sp.value)}</b>
+              {sp.delta !== null && <span aria-hidden="true" className={`font-mono text-12 ${tone(spDir!)}`}>{t('desk.delta', { dir: spDir, n: number(Math.abs(sp.delta)) })}</span>}
             </Pop>
-            <span role="img" aria-label={t('desk.sponsor.meterAria', { name: p.sponsorName, value: number(sp.value), ...lines })} className="relative block h-1.5 rounded-3 bg-track">
-              <span className="absolute inset-y-0 start-0 rounded-3 bg-meter" style={{ width: pct(sp.value / 100) }} />
+            <span role="img" aria-label={t('desk.sponsor.meterAria', { name: p.sponsorName, value: number(sp.value), ...lines })} className="relative block h-1.5 bg-track">
+              <span className="absolute inset-y-0 start-0 bg-accent-default" style={{ width: pct(sp.value / 100) }} />
               {/* The check in line hangs below the meter and the reward line stands above it: told apart by place, not colour. */}
               <span className="absolute top-0 -bottom-1.5 w-0.5 bg-status-decline" style={{ insetInlineStart: pct(sp.checkInBelow / 100) }} />
               <span className="absolute -top-1.5 bottom-0 w-0.5 bg-status-gain" style={{ insetInlineStart: pct(sp.unlockAt / 100) }} />
             </span>
-            <span className={`text-12 ${sp.state === 'checkIn' ? 'font-700 text-status-decline' : sp.state === 'reward' ? 'font-700 text-status-gain' : 'text-fg-secondary'}`}>
+            <span className={`text-12 ${sp.state === 'checkIn' ? 'font-600 text-status-decline' : sp.state === 'reward' ? 'font-600 text-status-gain' : 'text-fg-secondary'}`}>
               {t('desk.sponsor.line', { state: sp.state, ...lines })}
             </span>
           </div>

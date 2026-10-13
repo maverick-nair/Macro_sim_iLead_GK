@@ -25,7 +25,7 @@ export function ActionsListPanel({ view, availability, onClose, returnFocus }: A
     <PanelShell title={t('panels.actions.title')} intro={t('panels.actions.intro', { unit: clock.subPeriodUnit, n: clock.capacity, period: clock.periodUnit })} onClose={onClose} returnFocus={returnFocus}>
       {groups.map(g => (
         <section key={g.scope} aria-labelledby={`actions-${g.scope}`} className="flex flex-col gap-2.5">
-          <h3 id={`actions-${g.scope}`} className="m-0 text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{t('panels.actions.scope', { scope: g.scope })}</h3>
+          <h3 id={`actions-${g.scope}`} className="m-0 text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{t('panels.actions.scope', { scope: g.scope })}</h3>
           <ul className="m-0 flex list-none flex-col gap-2.5 p-0">
             {g.actions.map(a => {
               const facts = [
@@ -37,10 +37,10 @@ export function ActionsListPanel({ view, availability, onClose, returnFocus }: A
               ].filter((x): x is string => !!x);
               const options = a.options.length > 1 ? a.options : [];
               return (
-                <li key={a.key} className="flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card p-4">
+                <li key={a.key} className="flex flex-col gap-1.5 border border-line-default bg-surface-card p-4">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <b className="text-15">{a.name}</b>
-                    <span className="text-12 font-700 text-fg-secondary">{availability[a.key] ?? ''}</span>
+                    <span className="text-12 font-600 text-fg-secondary">{availability[a.key] ?? ''}</span>
                   </div>
                   <p className="m-0 text-14 text-pretty">{a.description}</p>
                   <p className="m-0 text-13 text-fg-secondary">{facts.join(' · ')}</p>

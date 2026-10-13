@@ -1,4 +1,6 @@
 {
+  "weekend.steps.aria": "Week end steps",
+  "weekend.step": "{step, select, banner {Your {unit, select, year {year} month {month} week {week} day {day} other {period}}} report {Report} badge {Badges} unlock {Reward} other {Next {unit, select, year {year} month {month} week {week} day {day} other {period}}}}",
   "weekend.header": "{unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}} {n} of {total} · {unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}} end",
   "weekend.shortcut": "Prototype shortcut: jump to the end of the simulation",
   "weekend.banner.eyebrow": "End of {unit, select, year {year} month {month} week {week} day {day} other {period}} {n}",

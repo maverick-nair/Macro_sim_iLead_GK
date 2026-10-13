@@ -37,11 +37,11 @@ export function ReactingScreen({ people, slow = false, onKeepWaiting, onRetry }:
         ))}
       </div>
       <div className="flex flex-col gap-1.5">
-        <h2 className="m-0 text-28 font-700 tracking-(--il-liveshell-reacting-title-tracking)">{t('liveshell.reacting.title')}</h2>
+        <h2 className="m-0 text-28 font-600 tracking-(--il-liveshell-reacting-title-tracking)">{t('liveshell.reacting.title')}</h2>
         <span className="text-15 text-fg-secondary">{lead}</span>
       </div>
       {slow && (
-        <div className="flex flex-col items-center gap-3 rounded-16 border border-line-default bg-surface-card px-5 py-4">
+        <div className="flex flex-col items-center gap-3 rounded-4 border border-line-default bg-surface-card px-5 py-4">
           <span className="text-13 text-fg-secondary">{t('liveshell.reacting.slow')}</span>
           <div className="flex gap-2">
             <NoWrapButton variant="secondary" size="sm" onClick={onKeepWaiting}>{t('liveshell.reacting.wait')}</NoWrapButton>

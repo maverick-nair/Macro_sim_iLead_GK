@@ -267,6 +267,8 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(drawer(page)).toHaveCount(0);
           } else {
+            // The desk opens a profile from the person's actions (D232): select them first.
+            if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
             await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
             await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeVisible();
             await scan(page, 'profile');
@@ -287,8 +289,9 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(page.getByRole('dialog', { name: 'Badges' })).toHaveCount(0);
           }
-          // Settings and pause.
-          await page.getByRole('button', { name: 'Settings' }).click();
+          // Settings (from the menu: the desk's navy bar keeps only the session controls, D232) and pause.
+          await page.getByRole('button', { name: /^Menu/ }).first().click();
+          await page.getByRole('list', { name: 'Game menu' }).getByRole('button', { name: 'Settings', exact: true }).click();
           await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
           await scan(page, 'settings');
           await page.keyboard.press('Escape');
@@ -305,7 +308,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await quiet(page);
           await scan(page, 'live: 1:1');
           await say(page, 'I am sorry it has been rough. What is on your mind?');
-          await page.getByRole('button', { name: 'Hint' }).click();
+          await page.getByRole('button', { name: 'Ask for a hint' }).click();
           await scan(page, 'live: 1:1 with a hint');
           await endLive(page);
           await expect(page.getByText('The team is reacting')).toBeVisible();

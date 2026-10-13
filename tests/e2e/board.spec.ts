@@ -113,6 +113,8 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   await dismissEvents(page);
 
   // Opening a profile reveals stats on the card.
+  // The desk opens a profile from the person's actions (D232): select them first.
+  if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
   await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
   await expect(page.getByRole('button', { name: /^Kent Goldberg.*Skill \d+/ })).toBeVisible();
 
@@ -150,12 +152,17 @@ test('style summary: focus is trapped, the page behind is inert, Go back returns
 });
 
 test('toasts hide on time, even when the board changes underneath', async ({ page }) => {
-  await page.goto('/?start=board');
+  await page.goto('/?start=board&period=3');
   await setStyles(page);
-  // Styles are locked on the board: a toast says so. Selecting people changes the UI store meanwhile.
-  await page.getByRole('radiogroup', { name: /^Leadership style for Kent/ }).getByRole('radio').nth(2).click({ force: true }); // Locked letters are aria-disabled; picking one still explains why.
-  const toast = page.getByRole('status').filter({ hasText: /Styles are set until the next week/ });
+  await dismissOutcome(page);
+  await dismissEvents(page);
+  // Later on a message: a toast says when it comes back (the desk names styles in words, D232, so the
+  // locked style letters that used to raise this toast are not on the board). Selecting people changes the UI store meanwhile.
+  await page.getByRole('button', { name: /^Inbox/ }).first().click();
+  await page.getByRole('dialog', { name: 'Inbox' }).getByRole('button', { name: 'Later' }).first().click();
+  const toast = page.getByRole('status').filter({ hasText: /Back in your inbox next/ });
   await expect(toast).toBeVisible();
+  await page.keyboard.press('Escape');
   await page.getByText('Beth Killiney', { exact: true }).click();
   await page.getByText('Justin Keel', { exact: true }).click();
   await expect(toast).toHaveCount(0, { timeout: 6000 });
@@ -236,7 +243,7 @@ test('palette: Ctrl K on the plain board only', async ({ page }) => {
   await page.keyboard.press('Control+k');
   await expect(page.getByRole('dialog')).toHaveCount(1);
   // The board behind is inert while the palette is open (D23, D84), and comes back after.
-  const behind = page.getByRole('button', { name: 'Settings' });
+  const behind = page.getByText('Menu', { exact: true }).first();
   expect(await behind.evaluate(b => !!b.closest('[inert]'))).toBe(true);
   expect(await axe(page)).toEqual([]);
   await page.keyboard.press('Escape');
@@ -300,7 +307,8 @@ test('a whole week by keyboard only', async ({ page }) => {
     await expect(group.getByRole('radio', { checked: true })).toHaveCount(1);
   }
   await expect(page.getByText('10 of 10 styles set')).toBeAttached();
-  await tabTo(/Review and confirm/, true);
+  // Review and confirm sits after the cards, in the aside (D232).
+  await tabTo(/Review and confirm/);
   await page.keyboard.press('Enter');
   await tabTo(/^BUTTON\|\|Confirm styles/);
   await page.keyboard.press('Enter');

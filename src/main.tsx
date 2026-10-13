@@ -13,6 +13,7 @@ import { retryImport } from './lib/lazyRetry';
 import { useMediaQuery } from './lib/useMediaQuery';
 import { RootBoundary } from './app/RootBoundary';
 import { startTheme, useThemeState } from './theme/bootstrap';
+import { pickMode } from './theme/mode';
 import { appLocale, dirOf, setAppLocale } from './i18n/core';
 import { loadEngineCopy, loadLocale } from './i18n/locales';
 import './styles/global.css';
@@ -93,9 +94,7 @@ function Play({ launched }: { launched: ReturnType<typeof launch> }) {
   const { q, api, engine, preview } = launched;
   const { theme: applied } = useThemeState();
   const systemLight = useMediaQuery('(prefers-color-scheme: light)');
-  const param = q.get('theme');
-  const preferred = applied?.mode === 'system' ? (systemLight ? 'light' : 'dark') : applied?.mode;
-  const theme = param === 'light' || param === 'dark' ? param : preferred === 'light' ? 'light' : 'dark';
+  const theme = pickMode(q.get('theme'), applied?.mode, systemLight);
   return (
     <ApiContext.Provider value={api}>
       <EngineProvider client={engine}>

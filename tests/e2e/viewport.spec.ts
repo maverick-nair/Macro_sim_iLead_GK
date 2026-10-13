@@ -253,7 +253,11 @@ test.describe('style setting and the board', () => {
     if (tablet(page)) {
       await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
       await drawer(page).getByRole('tab', { name: 'Profile' }).click();
-    } else await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
+    } else {
+      // The desk opens a profile from the person's actions (D232): select them first.
+      await page.getByText('Kent Goldberg', { exact: true }).click();
+      await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
+    }
     await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeAttached();
   }, page => [page.getByRole('heading', { name: 'Kent Goldberg' }).first()]);
 
@@ -510,7 +514,7 @@ test.describe('baselines', () => {
       await Promise.all(Array.from(document.images).map(i => (i.complete ? null : new Promise(r => { i.onload = i.onerror = r; }))));
       await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined)));
     });
-    await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ })] });
+    await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ }), page.locator('[data-session-clock]')] });
   }
   for (const [width, height] of [[1513, 745], [1366, 768]] as const) {
     test.describe(`${width}x${height}`, () => {

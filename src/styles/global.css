@@ -15,11 +15,25 @@
 
 /* App globals, from the iLeadApp design component helmet. In the base layer so utilities win. */
 @layer base {
-  body { margin: 0; background: var(--il-color-brand-deep-space); }
+  body { margin: 0; background: var(--il-color-canvas-navy); }
   *, *::before, *::after { box-sizing: border-box; }
   button, input, textarea, select { font: inherit; }
-  a { color: var(--il-color-brand-electric-blue); }
-  a:hover { color: var(--il-color-brand-cyber-cyan); }
+  a { color: var(--il-color-fg-link, var(--il-color-canvas-button)); }
+  a:hover { color: var(--il-color-fg-link-hover, var(--il-color-canvas-navy-900)); }
+}
+
+/*
+ * The approved canvas's look (D232). Its header is navy on every screen, and the screens it draws on navy (the
+ * pre-game flow, the live conversation, the week's end) stay navy in the light theme too: `il-scheme-dark` turns
+ * the subtree's color-scheme to dark, so every light-dark() token resolves to its dark value there, a client
+ * theme's included. In the dark theme it changes nothing.
+ */
+@layer base {
+  .il-scheme-dark { color-scheme: dark; }
+  .il-chrome { color-scheme: dark; background-color: var(--il-color-canvas-navy); color: var(--il-color-fg-primary); border-bottom: 1px solid var(--il-color-canvas-navy-800); }
+  /* A dialog opened from the navy bar (the menu, pause, settings) is the page's, not the bar's: it takes the
+     theme's scheme back (the app root sets --il-page-scheme). */
+  .il-chrome :is([role='dialog'], [role='alertdialog'], [data-radix-popper-content-wrapper]) { color-scheme: var(--il-page-scheme, light); }
 }
 
 /* A preview from GenieKreator (D191): its bar sits above the app, so the play screens that fit the window fit
@@ -60,6 +74,12 @@
  */
 @keyframes il-reveal-later { from { visibility: hidden; opacity: 0; } to { visibility: visible; opacity: 1; } }
 .il-reveal-later { animation: il-reveal-later 0.4s ease-out 5s backwards; }
+/* While Start simulation waits, the canvas shows a line and a filling bar in its place (D232): shown only for the
+   animation's run (the hidden state is the element's own), so where animation is off it never shows. */
+.il-wait { visibility: hidden; animation: il-wait 5s linear backwards; }
+@keyframes il-wait { from { visibility: visible; } to { visibility: visible; } }
+.il-wait-bar { width: 100%; animation: il-wait-bar 5s linear backwards; }
+@keyframes il-wait-bar { from { width: 0; } to { width: 100%; } }
 @keyframes il-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .il-slide-in { animation: il-slide-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
 

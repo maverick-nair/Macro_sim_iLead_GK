@@ -75,7 +75,7 @@ export interface MetricsStripProps {
   sponsor: SponsorConfidence;
 }
 
-const tile = 'flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12 short:gap-1 short:py-1.5';
+const tile = 'flex flex-col gap-1.5 rounded-4 border border-line-default bg-surface-card px-3.5 py-2.5 short:gap-1 short:py-1.5';
 const PULSE = [
   { group: 'upbeat', bg: 'bg-metrics-pulse-upbeat' },
   { group: 'steady', bg: 'bg-metrics-pulse-steady' },
@@ -119,8 +119,8 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
       aria-label={t('metrics.pulse.valueAria', { value: number(pulse.value), dir: pulseDir, unit: pulse.periodUnit ?? 'week', ...counts })} className={tile}>
       <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
       <div className="flex items-baseline gap-2">
-        <b className="text-22 font-700 short:text-18">{number(pulse.value)}</b>
-        <span className={`text-12 font-700 ${pulseTone}`}><span aria-hidden="true">{t('metric.trend.glyph', { dir: pulseDir })}</span>{' '}{t('metric.trend.word', { dir: pulseDir })}</span>
+        <b className="text-22 font-600 short:text-18">{number(pulse.value)}</b>
+        <span className={`text-12 font-600 ${pulseTone}`}><span aria-hidden="true">{t('metric.trend.glyph', { dir: pulseDir })}</span>{' '}{t('metric.trend.word', { dir: pulseDir })}</span>
       </div>
       {moodBar}
     </div>
@@ -137,7 +137,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   );
   const sponsorTile = (cls: string) => (
     <button type="button" onClick={sponsor.onToggle} aria-expanded={sponsor.open} aria-controls={sponsor.open ? popId : undefined}
-      className={`${tile} ${cls} cursor-pointer text-start text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
+      className={`${tile} ${cls} cursor-pointer text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
       <span className="text-12 text-fg-secondary">{t('metrics.sponsor.title')}</span>
       <b className="text-16">{meter ? t('metrics.sponsor.levelValue', { level: sponsor.level, value: number(meter.value) }) : t('metrics.sponsor.level', { level: sponsor.level })}</b>
       <div className="flex w-full gap-0.75">
@@ -146,7 +146,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
     </button>
   );
   const causes = (cls: string) => (
-    <div id={popId} className={`${cls} flex flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)`}>
+    <div id={popId} className={`${cls} flex flex-col gap-2 rounded-4 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)`}>
       <b>{t('metrics.sponsor.causes')}</b>
       {meter && sponsor.causes.length === 0 && <span className="text-fg-secondary">{t('metrics.sponsor.none')}</span>}
       {sponsor.causes.map((c, i) => {

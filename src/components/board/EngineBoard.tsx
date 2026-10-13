@@ -12,6 +12,9 @@ import { useI18n } from '../../i18n';
 import { Hud, type HudProps } from '../hud/Hud';
 import { MetricsStrip, type MetricsStripProps } from '../metrics/MetricsStrip';
 import { StatusBand } from '../desk/StatusBand';
+import { DeskStatus } from '../desk/DeskStatus';
+import type { DeskCardInfo } from '../desk/DeskCard';
+import { useStyleName } from '../style/lens';
 import { bandModel } from '../desk/band';
 import { DeskFeed, type FeedFeedback, type FeedMessage, type FeedMilestone } from '../desk/DeskFeed';
 import { feedbackChanges, lastFeedback } from '../desk/feed';
@@ -226,7 +229,7 @@ function TeamScroll({ stages, label, children }: { stages: number; label: string
   return (
     <div className={base}>
       {scrolls
-        ? <div ref={ref} role="region" aria-label={label} tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">{inner}</div>
+        ? <div ref={ref} role="region" aria-label={label} tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">{inner}</div>
         : <div ref={ref} className="flex min-h-0 flex-1 flex-col overflow-auto">{inner}</div>}
       {more && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-(image:--il-board-scroll-fade)" />}
     </div>
@@ -245,6 +248,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   /** The stakeholders panel (D162), open on one of them or on all. */
   const [stakeholdersOpen, setStakeholdersOpen] = useState<{ focus: string | null } | null>(null);
   const ui = useUi();
+  const styleName = useStyleName();
   const intent = useIntent();
   const unit = v.clock.subPeriodUnit, periodUnit = v.clock.periodUnit;
   const amount = useDays(unit);
@@ -513,6 +517,23 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
 
   const styleOf = (m: MemberView) => (styling ? draft[m.id] ?? null : m.style);
+  /**
+   * What the desk card says about someone (D232): their style by name, one flag (away, a message waiting, past the
+   * neglect window, a promise), and the last time spent with them this period, from the engine's history.
+   */
+  const deskInfo = (m: MemberView): DeskCardInfo => {
+    const st = styleOf(m);
+    const flag = m.away > 0 ? t('board.block.away', { kind: m.awayReason ?? 'leave', amount: amount(m.away) })
+      : m.unread ? t('desk.card.unread')
+      : m.neglected ? t('desk.card.neglected', { n: m.unattended ?? 0, unit: periodUnit })
+      : m.promise ?? null;
+    const last = [...v.history].reverse().find(l => l.period === v.clock.period && (l.kind === 'action' || l.kind === 'interaction') && l.memberIds.includes(m.id) && l.action);
+    const act = last?.action ? action(last.action) : undefined;
+    return {
+      style: st ? styleName(st) : null, flag,
+      time: last ? t('desk.card.time', { unit: periodUnit, action: act?.name ?? last.title, sub: t('time.subPeriod', { unit, n: Math.min(last.sub + 1, v.clock.capacity) }) }) : null
+    };
+  };
   const columns: StageColumn[] = v.funnel.map(st => ({
     key: st.key, name: st.name, count: st.members, ideal: st.ideal, bottleneck: st.bottleneck, about: st.about, suits: st.suits,
     // The stage's output this period against its ideal (D216).
@@ -530,7 +551,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       // Outside style setting the letters stay focusable but read as locked, with the reason.
       styleDisabled: !styling,
       styleDisabledReason: styling ? undefined : t('board.style.locked', { unit: periodUnit }),
-      onStyleDisabledPick: () => say(t('board.style.locked', { unit: periodUnit }))
+      onStyleDisabledPick: () => say(t('board.style.locked', { unit: periodUnit })),
+      desk: deskInfo(m)
     }))
   }));
 
@@ -756,6 +778,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     />
   );
   const hud: HudProps = {
+    organisation: v.storyline.organisation,
     menu,
     nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, periods: v.clock.periods, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
@@ -1117,6 +1140,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         embedded
         periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
         sponsorName={v.sponsor.name} sponsorLine={v.sponsor.styleLine}
+        organisation={v.storyline.organisation}
+        status={<DeskStatus value={v.money.value} target={v.money.target} score={v.score.total} />}
         view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
         onViewChange={m => setStyleView(x => (m === 'summary' ? { ...x, summary: true } : { layout: m, summary: false }))}
         members={v.members.map(m => ({
@@ -1156,7 +1181,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         <BoardNotices notices={boardNotices} view={v} onDismiss={dismissNotice}
           onLeaderboard={() => openPanel({ kind: 'leaderboard' })} onUpdateSponsor={() => { void updateSponsor(); }} />
         {ended && lastWeekSeen && endView === 'board' && (
-          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
+          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-4 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
             <span className="flex-1">{t('board.ended.readOnly')}</span>
             <Button variant="secondary" size="sm" onClick={() => setEndView('end')}>{t('board.ended.reopen')}</Button>
           </div>
@@ -1194,21 +1219,22 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <>
             {top}
             {outcome}
-            <div className={`relative grid min-h-0 flex-1 grid-rows-(--il-desk-rows) ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
+            <div className={`relative grid min-h-0 flex-1 grid-rows-(--il-desk-rows) gap-x-4.5 gap-y-2.5 px-8 pt-3 pb-3.5 short:gap-y-2 short:pt-2.5 short:pb-2.5 tablet:gap-x-3 tablet:px-5 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
               {/* Tab order follows the spec: HUD, team board, actions, then the feedback and inbox feed. The grid places the feed under the team (D212). */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
-                <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
+                <TeamBoard desk hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns} />
               </TeamScroll>
               {/*
                 * The board's first render is split (D87): the HUD, the KPIs and the team (where the largest
                 * paint is) come first; the actions panel and the inbox follow once that has painted, built
                 * in their own render inside a transition, so the board is not one long task.
                 */}
-              <div data-trace="actions" className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <ActionsPanel
+              <div data-trace="actions" className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col [contain:size]"><Deferred>{() => <ActionsPanel
                 capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
                 notes={actionNotes}
                 team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
-                member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
+                member={sm ? { firstName: first(sm.name), name: sm.name, img: img(sm), onProfile: () => openProfile(sm.id), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
+                live={v.liveCap.cap > 0 ? { used: v.liveCap.used, cap: v.liveCap.cap } : undefined}
                 drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
                 onAbout={demo ? undefined : () => openPanel({ kind: 'actions' })}
                 collapse={foldable ? {

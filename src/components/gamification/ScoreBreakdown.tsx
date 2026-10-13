@@ -30,7 +30,7 @@ export interface ScoreBreakdownProps {
   rank?: ReactNode;
 }
 
-const section = 'text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
+const section = 'text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
 
 /**
  * What the Leadership Score is made of, inside the HUD score popover: the three pillars with their
@@ -72,11 +72,11 @@ export function ScoreBreakdown(p: ScoreBreakdownProps) {
           {p.tiers.map(x => {
             const on = x.key === here;
             return (
-              <li key={x.key} aria-current={on || undefined} className={`flex items-center gap-2 rounded-6 px-1.5 py-0.5 ${on ? 'bg-accent-soft text-fg-primary' : 'text-fg-secondary'}`}>
+              <li key={x.key} aria-current={on || undefined} className={`flex items-center gap-2 rounded-4 px-1.5 py-0.5 ${on ? 'bg-accent-soft text-fg-primary' : 'text-fg-secondary'}`}>
                 <span aria-hidden="true" className={`size-1.5 flex-none rounded-round ${on ? 'bg-accent-default' : 'bg-track'}`} />
-                <span className={on ? 'font-700' : ''}>{x.name}</span>
+                <span className={on ? 'font-600' : ''}>{x.name}</span>
                 <span className="flex-1" />
-                {on && <span className="font-700">{t('score.tier.here', { final: String(!!p.tier) })}</span>}
+                {on && <span className="font-600">{t('score.tier.here', { final: String(!!p.tier) })}</span>}
                 <span>{t('score.tier.from', { min: number(x.min) })}</span>
               </li>
             );
