@@ -8,7 +8,7 @@ import { StyleSettingCard } from './StyleSettingCard';
 import { ScrollArea } from '../shell/ScrollArea';
 import { StyleSettingList } from './StyleSettingList';
 import { StyleSummary } from './StyleSummary';
-import type { PeriodUnit, StyleSettingMember } from './types';
+import { statsHidden, type PeriodUnit, type StyleSettingMember } from './types';
 import { ILeadLogo } from '../shell/Logo';
 
 export type StyleSettingLayout = 'cards' | 'list';
@@ -174,6 +174,8 @@ export function StyleSettingView(p: StyleSettingViewProps) {
               <LayoutToggle value={layout} onChange={p.onViewChange} />
             </span>
           </div>
+          {/* Said once for the team rather than on every card (D227). */}
+          {layout === 'cards' && members.some(statsHidden) && <p className="m-0 text-13 text-fg-body">{t('stylesetting.stats.hidden')}</p>}
           {/* The team scrolls inside the screen when it does not fit the window (D101); the header and Review stay put. */}
           <ScrollArea label={t('stylesetting.team.aria')} className="-mx-2 px-2 pb-1">
             {layout === 'cards' && (

@@ -148,7 +148,7 @@ function StyleNames({ value, onChange, memberName }: Pick<StyleControlProps, 'va
   const stop = (e: MouseEvent) => e.stopPropagation();
   return (
     <ToggleGroup.Root type="single" value={value ?? ''} onValueChange={v => { if (v && v !== value) onChange(v as StyleKey); }}
-      aria-label={t('style.group.aria', { name: memberName })} onClick={stop} className="grid grid-cols-2 gap-1">
+      aria-label={t('style.group.aria', { name: memberName })} onClick={stop} className="grid grid-cols-1 gap-1 wide:grid-cols-2 text-large:grid-cols-1">
       {lens.styles.map(({ key: k, name, description }) => {
         const on = value === k;
         return (

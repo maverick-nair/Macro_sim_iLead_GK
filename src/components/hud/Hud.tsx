@@ -169,7 +169,8 @@ export function Hud(p: HudProps) {
       {p.menu && <div className="flex-none tablet-portrait:-order-3">{p.menu}</div>}
       <div className="flex items-center gap-2.5 tablet-portrait:-order-3">
         <ClientLogo />
-        {p.organisation ? <span className="font-serif text-22 leading-none">{p.organisation}</span> : <ILeadLogo size="sm" />}
+        {/* An upright tablet keeps the bar to one row: the organisation gives way (D227). */}
+        {p.organisation ? <span className="font-serif text-22 leading-none tablet-portrait:hidden">{p.organisation}</span> : <ILeadLogo size="sm" />}
       </div>
       {p.nav.length > 0 && <nav aria-label={t('hud.nav.aria')} aria-hidden={p.nav.every(n => !n.label) || undefined} className="flex min-w-0 flex-initial gap-0 overflow-hidden tablet-portrait:hidden">
         {p.nav.map(n => (n.label ? (
