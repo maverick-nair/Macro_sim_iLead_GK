@@ -11,6 +11,8 @@ export const GUIDE_OFF = { cookies: [], origins: [{ origin: baseURL, localStorag
 export default defineConfig({
   testDir: 'tests/e2e',
   timeout: 60_000,
+  // On CI the suite is split in shards. By test, not by file, so one long file cannot make one shard the slowest (no suite relies on the order of its tests).
+  fullyParallel: !!process.env.CI,
   // On CI each failure also becomes a check annotation, readable where the job's log is not.
   reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: { baseURL, viewport: { width: 1440, height: 1000 }, storageState: GUIDE_OFF },
