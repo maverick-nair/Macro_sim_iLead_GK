@@ -24,7 +24,7 @@ import { registerAuthor } from './routes/author';
 import { registerCalibrate } from './routes/calibrate';
 import { registerEngine } from './routes/engine';
 import { registerLaunch } from './routes/launch';
-import { registerOps, serveStatic } from './routes/ops';
+import { inlineScriptHashes, registerOps, serveStatic } from './routes/ops';
 import { registerSpeech } from './routes/speech';
 import type { Repository } from './store';
 
@@ -80,7 +80,7 @@ export function createApp(deps: AppDeps) {
 
   app.use(secureHeaders({
     contentSecurityPolicy: {
-      defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      defaultSrc: ["'self'"], scriptSrc: ["'self'", ...inlineScriptHashes(config.STATIC_DIR)], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], imgSrc: ["'self'", 'data:', 'blob:', 'https:'], mediaSrc: ["'self'", 'blob:'],
       connectSrc: ["'self'", ...config.CORS_ORIGINS], objectSrc: ["'none'"], baseUri: ["'self'"], formAction: ["'self'"],
       frameAncestors: config.FRAME_ANCESTORS.length ? config.FRAME_ANCESTORS : ["'self'"]
