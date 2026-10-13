@@ -71,7 +71,7 @@
   "board.business.itemAria": "{name} {value}{dir, select, up {, up this period} down {, down this period} other {}}{better, select, true {, good news} false {, bad news} other {}}. Show what moved it",
   "board.business.causes": "What moved it",
   "board.business.noCauses": "Nothing yet this run.",
-  "board.business.decision": "Decision:",
+  "board.business.decision": "Decision",
   "board.business.decide": "Decide",
   "board.business.due": "{n, plural, =0 {due today} one {# {unit, select, quarter {quarter} month {month} week {week} day {day} hour {hour} other {step}} left} other {# {unit, select, quarter {quarters} month {months} week {weeks} day {days} hour {hours} other {steps}} left}}",
   "board.stakeholders.title": "Stakeholders",

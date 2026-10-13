@@ -81,7 +81,7 @@ export function RevenueReach({ compact = false }: { compact?: boolean }) {
     <div data-reach={reach.verdict} className="flex flex-col gap-2 rounded-12 border border-solid border-author-line p-3 text-13">
       <b className="text-14 text-author-ink">What a run can make</b>
       <p className="m-0 text-author-body">
-        Your process passes on about {num.format(reach.perWeek)} {u.many} a week at full pace (everyone in every stage performing well), times {money(reach.value)} a {u.one}{drafted ? ' (the drafted value until you set yours)' : ''}: about {money(reach.capacity)} over {reach.weeks} weeks.
+        Your process passes on about {num.format(reach.perWeek)} {u.many} a week at full pace (everyone in every stage performing well), times {money(reach.value)} per {u.one}{drafted ? ' (the drafted value until you set yours)' : ''}: about {money(reach.capacity)} over {reach.weeks} weeks.
         {' '}Typically a Beginner makes about {pctOf(beg.share)} of the target, a Proficient player {pctOf(pro.share)}, an Expert {pctOf(exp.share)}.
       </p>
       <p role="status" className={`m-0 font-700 ${warn ? 'rounded-10 bg-author-need-field p-2 text-author-need' : 'text-author-ink'}`}>{verdict}</p>
