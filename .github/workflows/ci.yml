@@ -1,41 +1,103 @@
 name: CI
 
-# Every push and pull request: tokens, lint, unit tests, types, build with the bundle budget, the
-# calibration and the synthetic players' checks (about 5 seconds),
-# Storybook smoke, end to end flows with axe, design parity against the Claude Design prototype, and the
-# Web Vitals budgets on a throttled production build; the reference server's tests and its end to end run.
+# Independent jobs run side by side, and the end to end suite is split in four shards, so a run takes the
+# time of its slowest shard instead of the sum of every step. A new push cancels the run it replaces.
+# Jobs: static (tokens, lint, unit tests, types, build with the bundle budget, calibration, synthetic
+# players, the reference server's tests), storybook (smoke), e2e (four shards, with axe), e2e-server,
+# parity (design parity against the Claude Design prototype) and vitals (Web Vitals budgets on a
+# throttled production build, alone on its runner so nothing else competes for the CPU).
 on:
   push:
+    branches: [main, ilead-participant, genie-authoring-calibration]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  check:
+  static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
+        with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npm run tokens:check
       - run: npm run lint
       - run: npm run build
       - run: npm run calibrate -- sales-elevator --check
       - run: npm run synthetic -- --check
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:server
+
+  storybook:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run storybook:smoke
-      - run: npx playwright test
+
+  e2e:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --shard=${{ matrix.shard }}/4
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failures-${{ matrix.shard }}
+          path: test-results
+          if-no-files-found: ignore
+
+  e2e-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run e2e:server
+
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run parity
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-diff
+          path: .visual-cache/diff
+          if-no-files-found: ignore
+
+  vitals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
       - run: npm run vitals -- --json vitals.json
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: failures
-          path: |
-            test-results
-            vitals.json
-            .visual-cache/diff
+          name: vitals
+          path: vitals.json
           if-no-files-found: ignore
