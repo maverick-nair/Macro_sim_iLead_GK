@@ -4,7 +4,9 @@ import { ScoreBreakdown } from '../gamification/ScoreBreakdown';
 import { StageHeader } from '../team/TeamBoard';
 import { SignedOut } from '../session/SignedOut';
 import { bandModel, type BandView } from './band';
+import { DeskCard } from './DeskCard';
 import { DeskFeed, type DeskFeedProps } from './DeskFeed';
+import { DeskStatus } from './DeskStatus';
 import { StatusBand, type StatusBandProps } from './StatusBand';
 
 /**
@@ -91,4 +93,26 @@ export const SignedOutScreen: Story = {
   decorators: [S => <div style={{ width: 1440, height: 900, display: 'flex' }}><S /></div>],
   render: () => <SignedOut at={new Date('2026-10-06T11:06:00').getTime()} where={{ period: 'Week 1', sub: 'Day 3', left: '3 days left' }} score={{ total: 412, tier: 'Bronze' }}
     money={{ label: '8 week target', value: 60000, target: 240000 }} live={{ used: 1, cap: 2 }} onBack={noop} />
+};
+
+const card = { title: 'Account Executive', img: '/assets/npc/kent.webp', skill: 53, morale: 48, result: 55, trust: 50, style: null, onSelect: noop, onOpenProfile: noop, onStyleChange: noop } as const;
+const cards = (S: () => React.ReactNode) => <div style={{ width: 1100, padding: 16, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}><S /></div>;
+
+/** The team as the canvas draws it (D227): the style in words, the mood as a word and a shape, a flag, time this period. */
+export const Cards: Story = {
+  decorators: [cards],
+  render: () => (
+    <>
+      <DeskCard {...card} name="Kent Goldberg" mood="frustrated" selected desk={{ style: 'Guiding', flag: 'Wants to talk', time: null }} />
+      <DeskCard {...card} name="Beth Killiney" mood="happy" desk={{ style: 'Directing', flag: null, time: 'This week: Coach member, Day 2' }} />
+      <DeskCard {...card} name="Green Bell" mood="neutral" away desk={{ style: null, flag: 'On leave for 2 days', time: null }} />
+      <DeskCard {...card} name="Derick Kaynes" mood="concerned" unavailableReason="Same stage as Justin" desk={{ style: 'Partnering', flag: null, time: null }} />
+    </>
+  )
+};
+
+/** Revenue against the target and the score with today's change, in the navy bar (D227). */
+export const Status: Story = {
+  decorators: [S => <div className="il-chrome" style={{ width: 600, padding: 16 }}><S /></div>],
+  render: () => <DeskStatus value={60000} target={240000} score={412} delta={33} />
 };

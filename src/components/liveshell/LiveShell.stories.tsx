@@ -6,7 +6,7 @@ import { LiveBriefCard } from './LiveBriefCard';
 import { LiveShell, type LiveShellProps } from './LiveShell';
 import { MeetingStage, type MeetingAttendee } from './MeetingStage';
 import { ReactingScreen } from './ReactingScreen';
-import { RolePlayStage, type RolePlayStageProps } from './RolePlayStage';
+import { RolePlayPortrait, RolePlayStage, type RolePlayStageProps } from './RolePlayStage';
 import { SponsorStage, type SponsorStageProps } from './SponsorStage';
 import type { LiveBrief, LiveConversation, LiveFormat, LiveMode, LivePerson, LiveTurn } from './types';
 
@@ -107,8 +107,13 @@ const rolePlay = (p: RolePlay = {}) => (
   <RolePlayStage person={KENT} mood="frustrated" conversation="yourTurn" turns={[npc(0)]} onReplay={noop}
     caption={{ name: 'Kent', text: KENT_LINES[0], aiGenerated: true }} {...p} />
 );
+/** The desk 1:1 as the canvas draws it (D227): the portrait with the brief over it, then the conversation. */
 const RolePlayFrame = ({ st = {}, stage = {} }: { st?: ShellState; stage?: RolePlay }) => (
-  <Frame><LiveShell {...shell(st, rolePlay({ conversation: st.conversation, ...stage }))} /></Frame>
+  <Frame>
+    <LiveShell {...shell(st, rolePlay({ layout: 'split', conversation: st.conversation, ...stage }))} briefInStage
+      portrait={<RolePlayPortrait person={KENT} mood="frustrated" conversation={st.conversation ?? 'yourTurn'}
+        brief={<LiveBriefCard layout="overlay" format="roleplay" brief={BRIEFS.roleplay} pronoun={KENT.pronoun} tip={st.hintUsed ? TIPS.roleplay : null} open={st.briefOpen ?? false} onToggle={noop} />} />} />
+  </Frame>
 );
 
 const BODY = "Hi Kent,\n\nThanks for being honest with me today. You're right that we changed the territory split without asking you, and I'm sorry.\n\nCan we sit down Thursday at 10 to look at routing together? I'd also like your help getting Beth up to speed on the older accounts.\n\n";
