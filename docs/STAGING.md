@@ -1,5 +1,24 @@
 # Staging
 
+Two ways to stage. **Vercel** hosts the app alone, on its in browser mock engine: fastest, nothing to run, and enough for people to judge the screens and the flow. **Fly.io** hosts the real server too. Pick Vercel for a design and flow playtest, Fly for anything that needs sign in links, saved progress, the group report across people, or report PDFs.
+
+## Vercel: the app on its mock engine
+
+`vercel.json` builds the app with `npx vite build` (no server addresses set, so the app uses its in browser mock engine and GenieKreator drafts from templates), serves `dist/`, falls back to `index.html` on every route and caches hashed assets for a year.
+
+1. Sign in at vercel.com, choose **Add New, Project**, import the GitHub repository and pick the branch to stage (for example `eco-integration`). Leave the framework as **Other**: `vercel.json` sets the commands. Or from a terminal: `npx vercel` in the repository root, then `npx vercel --prod`.
+2. Every push to that branch redeploys it; Vercel gives each push its own preview address as well.
+3. Open the address. The participant app is at `/`, the group report at `/group` and GenieKreator at `/author`.
+
+What this staging cannot do, because there is no server behind it:
+
+- **No sign in links, no roles.** Anyone with the address gets in as the demo participant.
+- **Progress stays in the browser** it was played in: a tester cannot resume on another device, and the group report shows only demo data, not your testers.
+- **No report PDFs or email, no model.** The mock engine and mock voice run in the browser.
+- Vercel runs short lived functions, not a long running process, so the real server (live connections for the conversations, an in memory engine cache, a Chromium for PDFs, a database file) does not run there. Put the server on Fly.io below, or on any container host, and keep Vercel for the app only if you wish.
+
+## Fly.io: the real server
+
 A staging copy of the participant app, the group report and GenieKreator, on Fly.io, for real people to play and author on before any client sees it. It runs the real server on its mock models, so it costs nothing per playtest and needs no model key. `fly.toml` is the config; the image is the repository's `Dockerfile` (docs/SERVER.md section 9).
 
 ## One time setup
