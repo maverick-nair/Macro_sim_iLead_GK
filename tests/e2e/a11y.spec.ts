@@ -553,9 +553,16 @@ async function cardsByKeyboard(page: Page) {
 
 /** Presses Tab until the target has focus (so it is reachable), then a key. */
 async function tabTo(page: Page, target: Locator, max = 120) {
+  const gotIt = page.getByRole('button', { name: 'Got it' });
   for (let i = 0; i < max; i++) {
     // A short timeout: a locator waits for its element, and a card can close while we look for it.
     if (await target.evaluate(el => el === document.activeElement, undefined, { timeout: 1000 }).catch(() => false)) return;
+    // An event card can open a moment after the board settles and keeps focus inside it: close it by
+    // keyboard (as a participant would), unless the target is itself in a dialog.
+    if ((await gotIt.count()) && !(await target.evaluate(el => !!el.closest('[role="dialog"]'), undefined, { timeout: 1000 }).catch(() => false))) {
+      await cardsByKeyboard(page);
+      continue;
+    }
     await page.keyboard.press('Tab');
   }
   throw new Error(`Not reachable by Tab: ${target.toString()}`);
