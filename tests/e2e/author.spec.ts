@@ -103,6 +103,27 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await expect(page.getByText('Ascent Lifts', { exact: false }).first()).toBeVisible();
 });
 
+/** D227: the revenue a run can make, next to the deal value and the target, as the author types; the sales unit named. */
+test('what a run can make: a target out of reach warns as you type, the fix applies, and the sales unit has its own name', async ({ page }) => {
+  await workspace(page, 'Story and world');
+  await page.getByRole('textbox', { name: 'Average deal value' }).fill('300');
+  const story = page.locator('[data-reach]');
+  await expect(story).toHaveAttribute('data-reach', 'unreachable');
+  await expect(story.getByRole('status')).toContainText('Out of reach, even for an Expert');
+  await page.getByRole('textbox', { name: 'What one deal is called' }).fill('outlet order');
+  await expect(page.getByRole('textbox', { name: 'Average outlet order value' })).toHaveValue('300');
+  await expect(story.getByRole('status')).toContainText('outlet orders a week');
+
+  await openTab(page, 'Work process');
+  const reach = page.locator('[data-reach]');
+  await expect(reach.getByText('What a run can make')).toBeVisible();
+  await expect(reach.getByRole('status')).toContainText('Out of reach');
+  await expect(page.getByRole('textbox', { name: 'Ideal per week' }).last()).toHaveValue(/ outlet orders$/);
+  await reach.getByRole('button', { name: /^Set the target to / }).click();
+  await expect(reach).toHaveAttribute('data-reach', 'fits');
+  await expect(reach.getByRole('status')).toContainText('A Proficient player typically makes about');
+});
+
 test('renamed and added styles flow into actions and the played storyline; edits mark Edited; publish once nothing needs you', async ({ page, context }) => {
   await workspace(page, 'Leadership lens');
   const styles = page.getByRole('table', { name: 'Your styles' });

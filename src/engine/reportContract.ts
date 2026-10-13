@@ -86,7 +86,8 @@ const Evidence = { recordIds: z.array(Id), quotes: z.array(Quote), review: Revie
 export const ReportView = z.object({
   available: z.boolean(),
   purpose: Purpose,
-  storyline: z.object({ name: Text, organisation: Text.nullable() }),
+  /** `unit`: the sales unit the storyline names (D227), or null for the catalog's word. */
+  storyline: z.object({ name: Text, organisation: Text.nullable(), unit: z.object({ one: Text, other: Text }).nullable().default(null) }),
   /** The lens, and the secondary lens whose skills are report only. */
   lens: LensView.extend({ secondary: z.object({ id: Id, title: Text }).nullable() }),
   periods: Int, periodUnit: PeriodUnit,

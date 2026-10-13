@@ -7,6 +7,7 @@ import type {
   StyleKey, StylesData, SummaryExtras, TeamSeries, ThoughtData, VerdictData
 } from './types';
 import './messages';
+import { unitWords } from '../../engine/units';
 
 /**
  * The engine's report (`view.report`, parsed with `parseReport`) shaped into the report components' props.
@@ -191,7 +192,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       case 'objectives': {
         const o3 = r.run.objectives;
         return { key, data: {
-          revenue: o3.revenue, target: o3.target, money: money.compact, share: t('report.percent', { pct: pct(o3.share) }), conversions: o3.conversions,
+          revenue: o3.revenue, target: o3.target, money: money.compact, share: t('report.percent', { pct: pct(o3.share) }), conversions: o3.conversions, units: unitWords(t, r.storyline.unit),
           team: (['skill', 'morale', 'result'] as const).map(k => ({ key: k, label: t('report.team.metric', { metric: k }), start: o3.team[k].start, end: o3.team[k].end })),
           narrative: r.objectives.narrative
         } };
@@ -286,6 +287,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
             funnel: b.funnel.map(f => ({ key: f.stage, name: f.name, value: f.cumulative, ideal: f.cumulativeIdeal, bottleneck: f.stage === b.bottleneck?.stage })),
             bottleneck: b.bottleneck ? { name: b.bottleneck.name, periods: b.bottleneck.periods, why: b.bottleneck.why } : null,
             conversions: b.conversions,
+            units: unitWords(t, r.storyline.unit),
             line: r.summary.business
           }
         };

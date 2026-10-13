@@ -21,7 +21,7 @@
   "weekend.stars.partsAria": "What made your score",
   "weekend.stars.fit": "Style fit: {correct} of {total} people got the style they needed.",
   "weekend.stars.live": "{count, plural, =0 {No live conversations this {unit, select, year {year} month {month} week {week} day {day} other {period}}, so style fit counted for more.} one {One live conversation, scored {mean}.} other {# live conversations, scored {mean} on average.}}",
-  "weekend.stars.funnel": "Deals closed: {output} of an ideal {ideal}.",
+  "weekend.stars.funnel": "{UnitMany} closed: {output} of an ideal {ideal}.",
   "weekend.streak.title": "Streak",
   "weekend.streak.count": "{unit, select, year {{n, plural, one {# year} other {# years}}} month {{n, plural, one {# month} other {# months}}} week {{n, plural, one {# week} other {# weeks}}} day {{n, plural, one {# day} other {# days}}} other {#}}",
   "weekend.streak.rule": "{unit, select, year {Years} month {Months} week {Weeks} day {Days} other {Periods}} in a row at {min, plural, one {# star} other {# stars}} or more.",

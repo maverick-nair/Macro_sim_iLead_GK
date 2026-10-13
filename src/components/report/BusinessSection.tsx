@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
+import { unitWords } from '../../engine/units';
 import { ChartBlock } from './ChartBlock';
 import { FunnelChart, RevenueChart } from './charts';
 import type { BusinessData, PeriodUnit } from './types';
@@ -43,7 +44,7 @@ export function BusinessSection({ data, unit, periods }: { data: BusinessData; u
           {data.bottleneck.why && ` ${data.bottleneck.why}`}
         </p>
       )}
-      <p className="m-0 text-13 text-fg-secondary">{t('report.business.conversions', { n: data.conversions })}</p>
+      <p className="m-0 text-13 text-fg-secondary">{t('report.business.conversions', { n: data.conversions, ...(data.units ?? unitWords(t, null)) })}</p>
     </section>
   );
 }

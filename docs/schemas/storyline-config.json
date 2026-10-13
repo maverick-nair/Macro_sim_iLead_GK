@@ -794,6 +794,25 @@
             "type": "number",
             "minimum": 0
           }
+        },
+        "unit": {
+          "type": "object",
+          "properties": {
+            "one": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            },
+            "other": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 40
+            }
+          },
+          "required": [
+            "one",
+            "other"
+          ]
         }
       },
       "required": [

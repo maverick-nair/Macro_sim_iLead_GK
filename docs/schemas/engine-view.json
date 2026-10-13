@@ -593,6 +593,28 @@
         },
         "valueThisPeriod": {
           "type": "number"
+        },
+        "unit": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "one": {
+                  "$ref": "#/$defs/Text"
+                },
+                "other": {
+                  "$ref": "#/$defs/Text"
+                }
+              },
+              "required": [
+                "one",
+                "other"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [

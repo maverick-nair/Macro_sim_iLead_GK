@@ -323,6 +323,21 @@ function lmsOf(d: AuthorDraft, issues: string[]): SL['lms'] {
   };
 }
 
+/** A sales unit's plural in English: order, orders; batch, batches; delivery, deliveries. */
+export function pluralOf(one: string): string {
+  const w = one.trim();
+  if (!w) return '';
+  if (/(s|x|z|ch|sh)$/i.test(w)) return `${w}es`;
+  if (/[^aeiou]y$/i.test(w)) return `${w.slice(0, -1)}ies`;
+  return `${w}s`;
+}
+
+/** The sales unit the author named (D227), singular and plural, or nothing: participants then read the catalog's word (deal). */
+function salesUnit(d: AuthorDraft): { unit?: { one: string; other: string } } {
+  const one = d.story.product.unit.trim();
+  return one ? { unit: { one, other: d.story.product.units.trim() || pluralOf(one) } } : {};
+}
+
 export interface Exported { storyline: SL; issues: string[]; copy: CopyIssue[] }
 
 /** The draft as a StorylineConfig, with the issues it has (the schema's and the references') and the copy guard's. */
@@ -473,7 +488,7 @@ export function toStoryline(d: AuthorDraft): Exported {
     lms: lmsOf(d, issues),
     lens,
     // Language (D128): the participant's number formats and the AI characters' language and region.
-    money: { ...base.money, locale: region?.locale ?? base.money.locale, valuePerConversion: d.story.product.dealValue ?? base.money.valuePerConversion, target: d.process.revenue ?? base.money.target, inputPerSubPeriod },
+    money: { ...base.money, locale: region?.locale ?? base.money.locale, valuePerConversion: d.story.product.dealValue ?? base.money.valuePerConversion, target: d.process.revenue ?? base.money.target, inputPerSubPeriod, ...salesUnit(d) },
     time: { ...base.time, period: { unit: 'week', count: weeks }, subPeriod: { unit: 'day', perPeriod: days } },
     stages: base.stages.map((s, i) => ({ ...s, name: d.process.stages[i]?.name || s.name, conversionRatio: clamp((d.process.stages[i]?.passesOn ?? s.conversionRatio * 100) / 100, 0.05, 1), ideal: d.process.stages[i]?.people ?? s.ideal })),
     sponsor: { ...base.sponsor, name: d.story.sponsor.name || base.sponsor.name, title: d.story.sponsor.title || base.sponsor.title },

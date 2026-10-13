@@ -4,6 +4,7 @@ import { useI18n } from '../../i18n';
 import { useMoney } from '../../i18n/money';
 import { averageRow, resultColumns, resultRows, share, stageWeeks, teamMetrics, type ResultColumn } from './overview';
 import { PanelHeading, PanelShell } from './PanelShell';
+import { unitWords } from '../../engine/units';
 
 export type OverviewTab = 'results' | 'stages';
 
@@ -136,7 +137,7 @@ export function OverviewPanel({ view, tab: initial = 'results', onClose, returnF
                 </tr></tfoot>
               </table>
             </div>
-            <p className="m-0 text-12 text-fg-secondary">{t('panels.overview.stagesNote', { unit: clock.periodUnit })}</p>
+            <p className="m-0 text-12 text-fg-secondary">{t('panels.overview.stagesNote', { unit: clock.periodUnit, ...unitWords(t, view.money.unit) })}</p>
           </section>
         </>
       )}

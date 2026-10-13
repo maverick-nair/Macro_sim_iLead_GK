@@ -287,7 +287,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     },
     story: {
       company: { name: ctx.company, hq: HQ[brief.region ?? 'global'], about: `${ctx.company} offers ${ctx.product}, ${ind.productLine}, to ${ind.customers} across the region.`, team: `${pressureName} and the stages around it`, office: OFFICES[0].src, logo: ctx.company.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(), logoImage: '' },
-      product: { name: ctx.product, dealValue: null, oneLine: `${ctx.product}: ${ind.productLine}.`, points: [`Built for ${words.customers} who need it to work first time`, 'Support that answers within four hours', `Pricing that scales with each ${words.work}`], view: 'none', image: '', code: '', kind: '', tagline: '', audience: '', imageAlt: '', features: [] },
+      product: { name: ctx.product, dealValue: null, oneLine: `${ctx.product}: ${ind.productLine}.`, points: [`Built for ${words.customers} who need it to work first time`, 'Support that answers within four hours', `Pricing that scales with each ${words.work}`], view: 'none', image: '', code: '', kind: '', tagline: '', audience: '', imageAlt: '', features: [], unit: '', units: '' },
       market: { customers: ind.customers, rivals: [{ name: ctx.rival, angle: 'Competes on service and reach' }] },
       sponsor: { name: sl.sponsor.name, title: sl.sponsor.title, voice: 'Warm, measured' },
       screens: [

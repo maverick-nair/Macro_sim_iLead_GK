@@ -41,7 +41,13 @@ export const Money = z.object({
   target: z.number().positive(),
   valuePerConversion: z.number().positive(),
   /** New leads entering the first stage each sub-period, one value per period. */
-  inputPerSubPeriod: z.array(z.number().nonnegative()).min(1)
+  inputPerSubPeriod: z.array(z.number().nonnegative()).min(1),
+  /**
+   * The sales unit (D227): what one conversion at the last stage is called, singular and plural ("outlet order",
+   * "outlet orders"), in the storyline's language. Participant facing copy that counts conversions uses it: the first
+   * close badge, the end screen, the week end, the products screen, the report. Left out, the catalog's own word (deal).
+   */
+  unit: z.object({ one: z.string().trim().min(1).max(40).transform(sanitizeCopy), other: z.string().trim().min(1).max(40).transform(sanitizeCopy) }).optional()
 });
 
 export const PERIOD_UNITS = ['year', 'month', 'week', 'day'] as const;
@@ -271,8 +277,10 @@ export const Badge = z.object({
 /** Rewards offered when sponsor confidence crosses its unlock line (Configuration Spec, Unlock rewards). */
 export const UNLOCK_KINDS = ['bonus_day', 'hire_budget', 'team_activity'] as const;
 
+/** The first close badge's default description (D227: a storyline that names its sales unit says it instead). */
+export const FIRST_CLOSE_DEFAULT = 'Your team converts its first deal.';
 const DEFAULT_BADGES: Array<z.input<typeof Badge>> = [
-  { key: 'first_close', rule: 'first_close', name: 'First Close', description: 'Your team converts its first deal.' },
+  { key: 'first_close', rule: 'first_close', name: 'First Close', description: FIRST_CLOSE_DEFAULT },
   { key: 'read_the_room', rule: 'read_the_room', name: 'Read the Room', description: 'Give at least 9 in 10 people the style they need in one week.' },
   { key: 'flex_master', rule: 'flex_master', name: 'Flex Master', description: 'Use every style correctly at least twice.' },
   { key: 'concern_uncovered', rule: 'concern_uncovered', name: 'Concern Uncovered', description: 'Help five people open up about what is bothering them.' },

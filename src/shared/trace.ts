@@ -113,6 +113,8 @@ export const TRACE: Record<string, TraceEntry> = {
   'world.products[].features[].text': e('story', 'Feature text', 'onboarding.portfolio'),
   'world.products[].features[].spot': e('story', 'Feature spot on the photo', 'onboarding.portfolio'),
   'money.valuePerConversion': e('story', 'Average deal value', 'board.funnel', 'board.hud', 'report.business'),
+  // The sales unit (D227): what one deal is called, wherever conversions are counted.
+  'money.unit': e('story', 'What one deal is called', 'onboarding.portfolio', 'onboarding.sponsor', 'weekend.summary', 'end.screen', 'report.business', 'live.brief'),
   'sponsor.name': e('story', 'Sponsor', 'onboarding.sponsor', 'board.sponsor', 'live.npc'),
   'sponsor.title': e('story', 'Sponsor title', 'onboarding.sponsor', 'board.sponsor'),
   // Work process.

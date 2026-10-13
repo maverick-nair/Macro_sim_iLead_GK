@@ -7,6 +7,7 @@ import { WeekEndFlow, type WeekEndFlowProps } from '../weekend/WeekEndFlow';
 import '../weekend/messages';
 import { moneyFormatter } from '../../engine/money';
 import { formatVariable, variableTrend } from '../business/format';
+import { unitWords } from '../../engine/units';
 
 type Summary = EngineView['periods'][number];
 const METRICS = ['skill', 'morale', 'result', 'trust'] as const;
@@ -38,7 +39,7 @@ export function engineReport({ t, number }: Pick<I18n, 't' | 'number'>, view: En
     scoreParts: [
       ...(week.styleFit.total ? [t('weekend.stars.fit', { correct: week.styleFit.correct, total: week.styleFit.total })] : []),
       t('weekend.stars.live', { count: week.live?.count ?? 0, mean: week.live?.mean ?? 0, unit }),
-      t('weekend.stars.funnel', { output: deals(week.funnel.output), ideal: deals(week.funnel.ideal) })
+      t('weekend.stars.funnel', { output: deals(week.funnel.output), ideal: deals(week.funnel.ideal), ...unitWords(t, view.money.unit) })
     ],
     streak: { count: s.streak.count, unit, note: streakNote({ t }, s.streak, g.streak, unit) },
     sponsor: { from: s.sponsor.fromLevel, to: s.sponsor.toLevel, values: { from: s.sponsor.from, to: s.sponsor.to } },

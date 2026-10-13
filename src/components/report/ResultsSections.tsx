@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
+import { unitWords } from '../../engine/units';
 import { ChartBlock } from './ChartBlock';
 import { BarsChart, BarSwatch, type BarSeries } from './charts';
 import { usePurpose } from './context';
@@ -44,8 +45,8 @@ export function ObjectivesSection({ data }: { data: ObjectivesData }) {
             }}
           />
           <SeriesLegend series={revenueSeries} />
-          <p className="m-0 text-14 font-700">{t('report.objectives.conversions', { n: data.conversions })}</p>
-          <p className="m-0 text-12 text-fg-secondary">{t('report.objectives.revenueNote')}</p>
+          <p className="m-0 text-14 font-700">{t('report.objectives.conversions', { n: data.conversions, ...(data.units ?? unitWords(t, null)) })}</p>
+          <p className="m-0 text-12 text-fg-secondary">{t('report.objectives.revenueNote', data.units ?? unitWords(t, null))}</p>
         </div>
         <div className="flex flex-col gap-2">
           <ChartBlock

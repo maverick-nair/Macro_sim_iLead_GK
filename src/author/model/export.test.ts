@@ -104,6 +104,9 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['story.product.dealValue', d => { d.story.product.dealValue = 41000; }, 'money.valuePerConversion'],
   ['story.product.dealValue', d => { d.story.product.dealValue = 41000; }, 'world.products.0.dealValue'],
   ['story.product.oneLine', d => { d.story.product.oneLine = 'Quiet lifts.'; }, 'world.product.line'],
+  // The sales unit (D227).
+  ['story.product.unit', d => { d.story.product.unit = 'lift order'; }, 'money.unit'],
+  ['story.product.units', d => { d.story.product.unit = 'lift order'; d.story.product.units = 'orders for lifts'; }, 'money.unit'],
   ['story.product.points', d => { d.story.product.points.push('Ten year warranty'); }, 'world.product.points'],
   ['story.market.customers', d => { d.story.market.customers = 'Hospital groups'; }, 'world.customers'],
   ['story.market.rivals[].name', d => { d.story.market.rivals[0].name = 'Beta Lifts'; }, 'world.rivals'],

@@ -459,12 +459,14 @@ export const AuthorDraft = z.object({
      * For the portfolio scene (D221): `code` (a short code such as B10), `kind`, `tagline`, `audience` (who it is for),
      * `imageAlt` (the photo described for screen readers) and up to four `features`, each a title, a sentence or two
      * and, when placed, its spot on the photo (`x`, `y`: percent from the left and the top). The deal value is the
-     * product's typical deal too.
+     * product's typical deal too. `unit` names what one deal is ("outlet order", D227) and `units` its plural (empty: the
+     * singular with an s); left empty, participants read "deal".
      */
     product: z.object({
       name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']), image: Image.default(''),
       code: Short.default(''), kind: Short.default(''), tagline: Short.default(''), audience: Text.default(''), imageAlt: Short.default(''),
-      features: z.array(z.object({ title: Short, text: Text, x: Pct.nullable(), y: Pct.nullable() })).max(MAX_PRODUCT_FEATURES).default([])
+      features: z.array(z.object({ title: Short, text: Text, x: Pct.nullable(), y: Pct.nullable() })).max(MAX_PRODUCT_FEATURES).default([]),
+      unit: z.string().max(40).default(''), units: z.string().max(40).default('')
     }),
     market: z.object({ customers: Short, rivals: z.array(z.object({ name: Short, angle: Text })) }),
     sponsor: z.object({ name: Short, title: Short, voice: Short }),

@@ -1,5 +1,6 @@
 import type { Rng } from './rng';
 import { msg } from '../copy';
+import { unitParams } from '../units';
 import type { Change, Reason, Sim } from './types';
 import { applyBusiness } from './business';
 import { fireEvent } from './events';
@@ -76,7 +77,7 @@ export function sponsorReaction(sim: Sim, rng: Rng, from: number) {
   if (!(from >= line && sim.sponsor.value < line)) return;
   st.evidence.reactions += 1;
   const first = sim.config.sponsor.name.split(' ')[0];
-  const cause = msg('engine.real.reaction', { name: first });
+  const cause = msg('engine.real.reaction', { name: first, aUnit: unitParams(sim.config.money.unit).aUnit });
   const lost = reactionRevenue(sim);
   const b = applyBusiness(sim, { variables: {}, revenue: lost, sponsor: 0, set: [], clear: [], count: {}, followUps: [] }, cause);
   st.evidence.escalationRevenue += -b.revenue;

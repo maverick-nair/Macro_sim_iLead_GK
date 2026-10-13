@@ -68,7 +68,7 @@ export function IntroFlow({ view, letter, start = 'landing', noticeAfter, autoPl
             sponsor={person} noticeAfter={noticeAfter} onWatch={() => setScreen('message')} onSkip={() => setScreen('objectives')} />
         )}
         {screen === 'message' && <SponsorMessage message={message} sponsor={person} muted={muted} hasProducts={products.length > 0} onNext={afterMessage} autoPlay={autoPlay} />}
-        {screen === 'products' && <Products products={products} organisation={storyline.organisation} onNext={() => setScreen('objectives')} />}
+        {screen === 'products' && <Products products={products} organisation={storyline.organisation} unit={view.money.unit} onNext={() => setScreen('objectives')} />}
         {screen === 'objectives' && (
           <Objectives organisation={storyline.organisation} length={length} periods={clock.periods} periodUnit={clock.periodUnit}
             target={money.target} start={money.value} team={view.members.map(m => ({ id: m.id, name: m.name, img: m.img }))} liveCap={view.liveCap.cap}

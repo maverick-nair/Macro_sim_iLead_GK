@@ -9,6 +9,7 @@ import { summarizeRun, type RunSummary } from './summary';
 import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
 import { narrativeOf, type BottleneckFact } from './narrative';
 import { stakeholdersOf, withStakeholders } from './stakeholders';
+import { unitParams } from '../units';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -77,7 +78,7 @@ export function buildReport(sim: Sim) {
   } : null;
   const bottleneckFact: BottleneckFact | null = bottleneck ? { name: bottleneck.name, periods: bottleneck.periods, owner: low && stat ? { id: low.id, stat, value: low[stat] } : null } : null;
   const share = sim.funnel.value / c.money.target;
-  const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions) };
+  const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions), ...unitParams(c.money.unit) };
   const businessLine = bottleneck
     ? msg('engine.report.businessStage', { ...businessBase, stage: bottleneck.name, periods: bottleneck.periods, total: sim.periods.length, unit })
     : msg('engine.report.business', businessBase);
@@ -206,7 +207,7 @@ export function buildReport(sim: Sim) {
   return {
     available: sim.phase === 'ended',
     purpose,
-    storyline: { name: c.name, organisation: c.organisation ?? null },
+    storyline: { name: c.name, organisation: c.organisation ?? null, unit: c.money.unit ?? null },
     lens: { ...lensView(c.lens), secondary: c.lens.secondary ? { id: c.lens.secondary.id, title: c.lens.secondary.title } : null },
     periods: sim.periods.length, periodUnit: unit,
     sections: r.sections ?? withStakeholders(withDecisions(DEFAULT_SECTIONS[purpose], sim), sim),

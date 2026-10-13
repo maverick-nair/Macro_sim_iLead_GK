@@ -1,6 +1,7 @@
 import { firstName, idealThroughput, teamAverage } from './sim';
 import type { Band, Sim } from './types';
 import { msg, type Msg } from '../copy';
+import { unitParams } from '../units';
 
 /**
  * Game scores on the GenieKreator formulas (docs/genie/scoring-and-report.md section 6). Every input is
@@ -187,7 +188,7 @@ function rule(sim: Sim, r: string, moment: BadgeMoment): Msg | null {
   const unit = sim.config.time.period.unit;
   switch (r) {
     case 'first_close':
-      return moment === 'conversion' && sim.funnel.conversions >= 1 ? msg('engine.badge.firstClose') : null;
+      return moment === 'conversion' && sim.funnel.conversions >= 1 ? msg('engine.badge.firstClose', unitParams(sim.config.money.unit)) : null;
     case 'read_the_room': {
       if (moment !== 'periodEnd') return null;
       const w = sim.decisions.period.filter(d => d.source === 'weeklyStyle');

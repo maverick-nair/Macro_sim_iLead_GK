@@ -330,7 +330,8 @@ export const EngineView = z.object({
     ...StorylineLook.shape }),
   lens: LensView,
   clock: Clock,
-  money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
+  /** `unit`: the sales unit the storyline names (D227), or null for the catalog's word (deal). */
+  money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num, unit: z.object({ one: Text, other: Text }).nullable().default(null) }),
   members: z.array(MemberView),
   kpis: z.array(z.object({ metric: MetricKey, value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']) })),
   /** Team Pulse (scoring-and-report.md 6): the mean of team morale and trust, its trend this period, and the mood counts. */
