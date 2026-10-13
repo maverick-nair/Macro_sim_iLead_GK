@@ -1,0 +1,90 @@
+{
+  "title": "author-edit-response",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "patch"
+        },
+        "reply": {
+          "type": "string",
+          "maxLength": 1000
+        },
+        "ops": {
+          "minItems": 1,
+          "maxItems": 120,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 4000
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "maxItems": 12,
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 400
+                    }
+                  }
+                ]
+              }
+            },
+            "required": [
+              "path",
+              "value"
+            ]
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "reply",
+        "ops"
+      ]
+    },
+    {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "const": "reply"
+        },
+        "reply": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "options": {
+          "default": [],
+          "maxItems": 4,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          }
+        }
+      },
+      "required": [
+        "kind",
+        "reply"
+      ]
+    }
+  ]
+}

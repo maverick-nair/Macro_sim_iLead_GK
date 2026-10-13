@@ -1,0 +1,305 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "ActionAdd.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "6c. Add an action",
+      "w": 1440,
+      "x": 4560,
+      "y": 2040
+    },
+    "ActionStatic.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "6b. Actions: a static decision",
+      "w": 1440,
+      "x": 3040,
+      "y": 2040
+    },
+    "Actions.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "6. Actions: an AI conversation",
+      "w": 1440,
+      "x": 1520,
+      "y": 2040
+    },
+    "Brand.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "9. Brand and theme",
+      "w": 1440,
+      "x": 4560,
+      "y": 3060
+    },
+    "Brief.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "1. Brief",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "ChatLens.dc.html": {
+      "h": 900,
+      "page": "journey",
+      "title": "2. Chat: GenieKreator recommends a leadership lens",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "ChatStart.dc.html": {
+      "h": 900,
+      "page": "journey",
+      "title": "1. Co-creator chat: type or record, the draft fills in as you answer",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "DraftReady.dc.html": {
+      "h": 900,
+      "page": "journey",
+      "title": "3. First draft ready: what is done, what needs you",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "Events.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "7. Events",
+      "w": 1440,
+      "x": 0,
+      "y": 3060
+    },
+    "Framework.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "8b. Use your own skills framework",
+      "w": 1440,
+      "x": 3040,
+      "y": 3060
+    },
+    "Lens.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "5. Leadership lens: rename the styles (4 to 5)",
+      "w": 1440,
+      "x": 0,
+      "y": 2040
+    },
+    "LibraryAdmin.dc.html": {
+      "h": 900,
+      "page": "library",
+      "title": "Library admin: interaction types and action templates",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Main.dc.html": {
+      "h": 900,
+      "page": "journey",
+      "title": "Design language: who wrote what",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Overview.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "Workspace: Overview",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Process.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "3. Work process",
+      "w": 1440,
+      "x": 6080,
+      "y": 0
+    },
+    "Publish.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "11. Review and publish",
+      "w": 1440,
+      "x": 3040,
+      "y": 4080
+    },
+    "Scoring.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "8. Scoring and report",
+      "w": 1440,
+      "x": 1520,
+      "y": 3060
+    },
+    "Story.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "2. Story and world: company and product",
+      "w": 1440,
+      "x": 3040,
+      "y": 0
+    },
+    "StoryIntro.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "2b. Story and world: sponsor and intro screens",
+      "w": 1440,
+      "x": 4560,
+      "y": 0
+    },
+    "Team.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "4. Team",
+      "w": 1440,
+      "x": 0,
+      "y": 1020
+    },
+    "TeamEdit.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "page": "workspace",
+      "title": "4b. Edit a character: Identity (tabs work in Play)",
+      "w": 1440,
+      "x": 1520,
+      "y": 1020
+    },
+    "TeamEditPersonality.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "4d. Edit a character: Personality",
+      "w": 1440,
+      "x": 4560,
+      "y": 1020
+    },
+    "TeamEditStats.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "4e. Edit a character: Starting stats",
+      "w": 1440,
+      "x": 6080,
+      "y": 1020
+    },
+    "TeamEditVoice.dc.html": {
+      "h": 900,
+      "page": "workspace",
+      "title": "4c. Edit a character: Voice",
+      "w": 1440,
+      "x": 3040,
+      "y": 1020
+    },
+    "Calibrate.dc.html": {
+      "x": 0,
+      "y": 4080,
+      "w": 1440,
+      "h": 900,
+      "page": "workspace",
+      "title": "10. Test with synthetic players: setup and results"
+    },
+    "CalibrateRun.dc.html": {
+      "x": 1520,
+      "y": 4080,
+      "w": 1440,
+      "h": 900,
+      "page": "workspace",
+      "title": "10b. Watch a synthetic playthrough"
+    },
+    "ChatVoice.dc.html": {
+      "x": 1520,
+      "y": 1020,
+      "w": 1440,
+      "h": 900,
+      "page": "journey",
+      "title": "1b. Answer by voice: record, then review the transcript before sending"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-07T10:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "page": "journey",
+    "view": "canvas"
+  },
+  "notes": {
+    "t_journey": {
+      "kind": "title1",
+      "maxW": 6000,
+      "page": "journey",
+      "text": "Create with AI: a short conversation builds the first draft",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t_library": {
+      "kind": "title1",
+      "maxW": 1440,
+      "page": "library",
+      "text": "Action library: grows with every new interaction type",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    },
+    "t_workspace": {
+      "kind": "title1",
+      "maxW": 6000,
+      "page": "workspace",
+      "text": "Review and refine: AI creates, the author reviews and refines",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "ChatStart.dc.html",
+    "ChatVoice.dc.html",
+    "ChatLens.dc.html",
+    "DraftReady.dc.html",
+    "Overview.dc.html",
+    "Brief.dc.html",
+    "Story.dc.html",
+    "StoryIntro.dc.html",
+    "Process.dc.html",
+    "Team.dc.html",
+    "TeamEdit.dc.html",
+    "TeamEditVoice.dc.html",
+    "TeamEditPersonality.dc.html",
+    "TeamEditStats.dc.html",
+    "Lens.dc.html",
+    "Actions.dc.html",
+    "ActionStatic.dc.html",
+    "ActionAdd.dc.html",
+    "Events.dc.html",
+    "Scoring.dc.html",
+    "Framework.dc.html",
+    "Brand.dc.html",
+    "Calibrate.dc.html",
+    "CalibrateRun.dc.html",
+    "Publish.dc.html",
+    "LibraryAdmin.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "journey",
+      "name": "Create with AI"
+    },
+    {
+      "id": "workspace",
+      "name": "Review and refine"
+    },
+    {
+      "id": "library",
+      "name": "Action library (admin)"
+    }
+  ],
+  "title": "GenieKreator Authoring"
+}

@@ -1,6 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /** Flow: set styles, run a 1:1 on the engine, read the outcome, end the week and start the next. */
 
 const errors: string[] = [];
@@ -14,8 +18,11 @@ test.afterEach(() => expect(errors).toEqual([]));
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 /** Axe on what is on screen now. @axe-core/playwright is typed against a slightly different Playwright version. */
 async function axe(page: Page) {
+  // Panels enter with an animation (the outcome band, D78): colours are measured once they have finished, not mid fade.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))));
   const r = await new AxeBuilder({ page: page as never }).withTags(TAGS).analyze();
-  return r.violations.map(v => `${v.id}: ${v.nodes.length}`);
+  // Each violation names its nodes and why, so a failure says what to fix.
+  return r.violations.map(v => `${v.id}: ${v.nodes.length}: ${v.nodes.map(n => `${n.target.join(' ')} ${n.html.slice(0, 120)} (${n.failureSummary?.replace(/\s+/g, ' ').trim()})`).join(' | ')}`);
 }
 
 /** Dismisses the outcome panel and waits for it to go (event cards wait behind it). */
@@ -57,7 +64,7 @@ async function throughWeekEnd(page: Page, last: string) {
 
 /** Weekly style setting: pick on every card, a reason for one, review the summary, confirm. */
 async function setStyles(page: Page, index = 1) {
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page), { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(index).click();
   await page.getByRole('button', { name: 'Add a reason' }).first().click();
   await page.keyboard.type('Kent is new and unsure');

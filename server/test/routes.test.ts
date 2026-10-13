@@ -5,6 +5,7 @@ import halden from '../../src/theme/samples/halden.json';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ConfigSchema, loadConfig } from '../src/config';
+import { mockPorts } from '../src/ports';
 import { ADMIN_TOKEN, playToEnd, testServer, type TestServer } from './helpers';
 
 let s: TestServer;
@@ -65,6 +66,32 @@ describe('author chat and storylines', () => {
     expect(version).toMatch(/@1$/);
     const stored = await s.json<Array<{ id: string; status: string }>>('/api/admin/storylines', { cookie });
     expect(stored).toEqual([expect.objectContaining({ id: (draft.storyline as { id: string }).id, status: 'draft' })]);
+  });
+
+  it('takes a brief with stakeholders, objectives, dilemmas and taken questions, and passes a clarifying question through (D146, D147)', async () => {
+    const brief = {
+      roleLevel: 'VPs of Customer Operations', industry: 'Healthcare', client: 'Northstar Health Partners', teamSize: 8, duration: 'standard', region: 'us', tone: 'professional',
+      stakeholders: [{ name: 'Dana Whitfield', role: 'COO', relation: 'boss' }], objectives: ['Retain key talent'],
+      dilemmas: [{ title: 'Short term revenue or customer trust', a: 'Short term revenue', b: 'Customer trust', stake: '' }]
+    };
+    s = await testServer();
+    const cookie = await s.launch({ sub: 'au', roles: ['author'] });
+    const turn = AuthorTurnResponse.parse(await s.json('/genie/author/turn', { method: 'POST', cookie, json: { brief, asked: ['role_level'], answers: { role_level: 'a pasted brief' }, taken: ['industry', 'client', 'team_size', 'duration', 'language', 'tone'] } }));
+    // The taken questions count: only what the brief left open is asked, and not again to reach five.
+    expect(turn).toMatchObject({ kind: 'question', question: { id: 'challenge' }, progress: { n: 2, about: 4 }, brief: { stakeholders: brief.stakeholders, dilemmas: brief.dilemmas } });
+    expect((await s.req('/genie/author/turn', { method: 'POST', cookie, json: { brief: { ...brief, dilemmas: [{ a: 'only one' }] }, asked: [], answers: {} } })).status).toBe(400);
+    await s.close();
+
+    // A drafter that asks a clarifying question: the route checks it against the same shape and passes it on.
+    const clarify = { kind: 'clarify', brief: { documents: [] }, clarify: { id: 'industry', prompt: 'Banking or healthcare?', choices: [{ label: 'Banking and financial services', value: 'Banking and financial services' }, { label: 'Healthcare', value: 'Healthcare' }] } };
+    const ai = mockPorts();
+    s = await testServer({ ai: { ...ai, author: { ...ai.author, turn: async () => clarify as never } } });
+    const c2 = await s.launch({ sub: 'au', roles: ['author'] });
+    expect(AuthorTurnResponse.parse(await s.json('/genie/author/turn', { method: 'POST', cookie: c2, json: { brief: {}, asked: ['industry'], answers: { industry: 'banking but actually a hospital' } } }))).toEqual(clarify);
+    await s.close();
+    s = await testServer({ ai: { ...ai, author: { ...ai.author, turn: async () => ({ ...clarify, clarify: { ...clarify.clarify, choices: [] } }) as never } } });
+    const c3 = await s.launch({ sub: 'au', roles: ['author'] });
+    expect((await s.req('/genie/author/turn', { method: 'POST', cookie: c3, json: { brief: {}, asked: [], answers: {} } })).status).toBe(502);
   });
 
   it('publishes a storyline after the schema and copy checks; new runs play it', async () => {

@@ -87,7 +87,11 @@ export const DEFAULT_RUBRIC: Record<string, string[]> = {
   meeting: ['agenda', 'inclusion', 'clarity'],
   sponsor: ['ownership', 'honesty', 'plan'],
   interview: ['structure', 'probing', 'fairness'],
-  plan: ['specific', 'measurable', 'involvement']
+  plan: ['specific', 'measurable', 'involvement'],
+  // Stakeholders outside the team (D161): a meeting, a presentation and a negotiation.
+  stakeholder: ['listening', 'clarity', 'influence'],
+  present: ['ownership', 'honesty', 'plan'],
+  negotiate: ['interests', 'options', 'agreement']
 };
 
 const BAND_ORDER: Band[] = ['harmful', 'weak', 'adequate', 'strong'];
@@ -124,6 +128,11 @@ const DIM_CUES: Record<string, RegExp[]> = {
   probing: [/\b(?:what happened next|why|how did you|what did you learn|tell me more)\b/i, OPEN_Q_ONE, /\b(?:result|outcome)\b/i],
   specific: [/\b\d+\b/, /\b(?:specifically|exactly|each)\b/i, NEXT_STEP],
   measurable: [/\b\d+\s*(?:%|percent|deals|leads|calls|meetings)\b/i, /\bby (?:day|week|monday|tuesday|wednesday|thursday|friday)\b/i, /\b(?:measure|track|target)\b/i],
+  // Stakeholder conversations (D161).
+  influence: [/\b(?:because|so that|the benefit|for you|for your|it means)\b/i, /\b(?:i propose|i suggest|i recommend|my proposal|what i(?:'d| would) like)\b/i, NEXT_STEP],
+  interests: [OPEN_Q_ONE, /\b(?:what matters|what do you need|your priorit|for you|from your side)\b/i, ACK],
+  options: [/\b(?:option|alternative|we could|what if|either|or we|instead)\b/i, /\b(?:in return|trade|meet (?:you )?halfway|if you can)\b/i, /\b\d+\b/],
+  agreement: [NEXT_STEP, /\b(?:agree|agreed|deal|commit|so we(?:'re| are) clear|to confirm)\b/i, /\b(?:i(?:'ll| will)|we(?:'ll| will))\b/i],
   // Skills of the leadership framework (scoring-and-report.md 5.2).
   situational_flexibility: [ACK, INVITE, /\b(?:right now you need|for now|this week you|given where you are)\b/i],
   coaching_for_growth: [/\b(?:coach|practi[cs]e|learn|grow|develop|try it)\b/i, OPEN_Q_ONE, /\b(?:next (?:call|time)|walk through|together)\b/i],

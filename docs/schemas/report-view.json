@@ -206,6 +206,7 @@
           "actions",
           "distribution",
           "moments",
+          "decisions",
           "people",
           "business",
           "analytics",
@@ -213,7 +214,8 @@
           "takeaways",
           "plan",
           "progress",
-          "methodology"
+          "methodology",
+          "stakeholders"
         ]
       }
     },
@@ -363,6 +365,70 @@
               "type": "null"
             }
           ]
+        },
+        "profile": {
+          "default": null,
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "readNoAction",
+                "absent",
+                "wordsNotChoices",
+                "allRound",
+                "numbersAtCost",
+                "peopleFirst",
+                "bothSlipped",
+                "mixed"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "headline": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Text"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lines": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "drivers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1
+              },
+              "tone": {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "negative"
+                ]
+              },
+              "text": {
+                "$ref": "#/$defs/Text"
+              }
+            },
+            "required": [
+              "key",
+              "tone",
+              "text"
+            ]
+          }
         }
       },
       "required": [
@@ -708,6 +774,49 @@
           },
           "narrative": {
             "$ref": "#/$defs/Text"
+          },
+          "reconciled": {
+            "default": null,
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "signal": {
+                    "type": "string",
+                    "enum": [
+                      "styleFit",
+                      "diagnosis"
+                    ]
+                  },
+                  "pct": {
+                    "type": "number"
+                  },
+                  "from": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "required": [
+                  "signal",
+                  "pct",
+                  "from"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reconciliation": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -1199,6 +1308,488 @@
           "key",
           "name",
           "min"
+        ]
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "period": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "title": {
+            "$ref": "#/$defs/Text"
+          },
+          "option": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "by": {
+            "type": "string",
+            "enum": [
+              "you",
+              "default"
+            ]
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Text"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "impact": {
+            "$ref": "#/$defs/Text"
+          },
+          "variables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "name": {
+                  "$ref": "#/$defs/Text"
+                },
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "money",
+                    "percent",
+                    "points"
+                  ]
+                },
+                "delta": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "key",
+                "name",
+                "format",
+                "delta"
+              ]
+            }
+          },
+          "revenue": {
+            "type": "number"
+          },
+          "sponsor": {
+            "type": "number"
+          },
+          "triggered": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "key": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "title": {
+                  "$ref": "#/$defs/Text"
+                },
+                "period": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "key",
+                "title",
+                "period"
+              ]
+            }
+          },
+          "read": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "skill": {
+                  "$ref": "#/$defs/Text"
+                },
+                "band": {
+                  "type": "string",
+                  "enum": [
+                    "strong",
+                    "adequate",
+                    "weak",
+                    "harmful"
+                  ]
+                }
+              },
+              "required": [
+                "skill",
+                "band"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "period",
+          "title",
+          "option",
+          "by",
+          "outcome",
+          "impact",
+          "variables",
+          "revenue",
+          "sponsor",
+          "triggered",
+          "read"
+        ]
+      }
+    },
+    "businessVariables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "$ref": "#/$defs/Text"
+          },
+          "format": {
+            "type": "string",
+            "enum": [
+              "money",
+              "percent",
+              "points"
+            ]
+          },
+          "start": {
+            "type": "number"
+          },
+          "end": {
+            "type": "number"
+          },
+          "higherIsBetter": {
+            "type": "boolean"
+          },
+          "weight": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "format",
+          "start",
+          "end",
+          "higherIsBetter",
+          "weight"
+        ]
+      }
+    },
+    "stakeholders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "$ref": "#/$defs/Text"
+          },
+          "role": {
+            "$ref": "#/$defs/Text"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "img": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "start": {
+            "type": "object",
+            "properties": {
+              "trust": {
+                "type": "number"
+              },
+              "satisfaction": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "trust",
+              "satisfaction"
+            ]
+          },
+          "end": {
+            "type": "object",
+            "properties": {
+              "trust": {
+                "type": "number"
+              },
+              "satisfaction": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "trust",
+              "satisfaction"
+            ]
+          },
+          "levelStart": {
+            "type": "string",
+            "enum": [
+              "strained",
+              "cool",
+              "steady",
+              "good",
+              "strong"
+            ]
+          },
+          "levelEnd": {
+            "type": "string",
+            "enum": [
+              "strained",
+              "cool",
+              "steady",
+              "good",
+              "strong"
+            ]
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "trust": {
+                  "type": "number"
+                },
+                "satisfaction": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "period",
+                "trust",
+                "satisfaction"
+              ]
+            }
+          },
+          "interactions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "period": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "title": {
+                  "$ref": "#/$defs/Text"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "meet",
+                    "present",
+                    "negotiate",
+                    "email",
+                    "ignored"
+                  ]
+                },
+                "band": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "strong",
+                        "adequate",
+                        "weak",
+                        "harmful"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "option": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "outcome": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "answered": {
+                  "type": "boolean"
+                },
+                "trust": {
+                  "type": "number"
+                },
+                "satisfaction": {
+                  "type": "number"
+                },
+                "variables": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "name": {
+                        "$ref": "#/$defs/Text"
+                      },
+                      "delta": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "name",
+                      "delta"
+                    ]
+                  }
+                },
+                "revenue": {
+                  "type": "number"
+                },
+                "sponsor": {
+                  "type": "number"
+                },
+                "read": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "skill": {
+                        "$ref": "#/$defs/Text"
+                      },
+                      "band": {
+                        "type": "string",
+                        "enum": [
+                          "strong",
+                          "adequate",
+                          "weak",
+                          "harmful"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "skill",
+                      "band"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "period",
+                "title",
+                "type",
+                "band",
+                "option",
+                "outcome",
+                "answered",
+                "trust",
+                "satisfaction",
+                "variables",
+                "revenue",
+                "sponsor",
+                "read"
+              ]
+            }
+          },
+          "moves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "period": {
+                  "type": "integer",
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991
+                },
+                "cause": {
+                  "$ref": "#/$defs/Text"
+                },
+                "trust": {
+                  "type": "number"
+                },
+                "satisfaction": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "period",
+                "cause",
+                "trust",
+                "satisfaction"
+              ]
+            }
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "role",
+          "kind",
+          "img",
+          "start",
+          "end",
+          "levelStart",
+          "levelEnd",
+          "series",
+          "interactions",
+          "moves"
         ]
       }
     },

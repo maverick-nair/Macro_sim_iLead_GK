@@ -7,25 +7,30 @@ import { SmallScreenGate } from './app/SmallScreenGate';
 import { EngineProvider } from './engine/react';
 import { createDefaultClient } from './engine/client';
 import { rememberedRun, rememberRun, resilientClient } from './engine/resilient';
+import { retryImport } from './lib/lazyRetry';
 import { useMediaQuery } from './lib/useMediaQuery';
+import { RootBoundary } from './app/RootBoundary';
 import { startTheme, useThemeState } from './theme/bootstrap';
 import { appLocale, dirOf, setAppLocale } from './i18n/core';
 import { loadEngineCopy, loadLocale } from './i18n/locales';
 import './styles/global.css';
 
 // The galleries are review tools; they stay out of the participant's bundle.
-const ScreensGallery = lazy(() => import('./gallery/ScreensGallery').then(m => ({ default: m.ScreensGallery })));
-// GenieKreator's author chat prototype (D74): for authors, lazy, never in the participant's first load.
-const AuthorPage = lazy(() => import('./author/ui/AuthorPage'));
+// Each lazy page tries once more when its chunk fails to load (offline, or a deploy renamed it), D123.
+const ScreensGallery = lazy(() => retryImport(() => import('./gallery/ScreensGallery')).then(m => ({ default: m.ScreensGallery })));
+// GenieKreator's authoring tool (D74, D105): for authors, lazy, never in the participant's first load.
+const AuthorPage = lazy(() => retryImport(() => import('./author/ui/AuthorPage')));
+// GenieKreator's synthetic player calibration on its own page (D118), until /author mounts CalibrateSlot. Lazy.
+const CalibratePage = lazy(() => retryImport(() => import('./author/calibrate/ui/CalibratePage')));
 // The organization's group report (D77): not for participants, lazy, never in the participant's first load.
 // Its report is requested as soon as a small launch chunk lands, while the page's own code still loads (D78).
 const GroupPage = lazy(() => {
-  const started = import('./group/launch').then(m => m.startGroup(m.groupLaunch()));
-  return Promise.all([import('./group/GroupPage'), started]).then(([m, s]) => ({ default: () => <m.default started={s} /> }));
+  const started = retryImport(() => import('./group/launch')).then(m => m.startGroup(m.groupLaunch()));
+  return Promise.all([retryImport(() => import('./group/GroupPage')), started]).then(([m, s]) => ({ default: () => <m.default started={s} /> }));
 });
 // The report alone in its print view, for the server's PDF renderer (server/src/report/pdf.ts). Lazy.
-const PrintReport = lazy(() => import('./app/PrintReport'));
-const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ default: m.StatesGallery })));
+const PrintReport = lazy(() => retryImport(() => import('./app/PrintReport')));
+const StatesGallery = lazy(() => retryImport(() => import('./gallery/StatesGallery')).then(m => ({ default: m.StatesGallery })));
 // Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
 const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
 
@@ -98,13 +103,16 @@ document.documentElement.dir = dirOf(appLocale());
 void loadEngineCopy().catch(() => undefined);
 
 const path = location.pathname.replace(/\/+$/, '');
-const play = !['/screens', '/states', '/author', '/group', '/report/print'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
+/** /author and its workspace and library routes (D105). */
+const author = path === '/author' || path.startsWith('/author/');
+const play = !author && !['/screens', '/states', '/group', '/report/print'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
 const launched = play ? launch() : null;
 
 function Root() {
   if (path === '/screens') return <Suspense><ScreensGallery /></Suspense>;
   if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
-  if (path === '/author') return <Suspense><AuthorPage /></Suspense>;
+  if (path === '/author/calibrate') return <Suspense><CalibratePage /></Suspense>;
+  if (author) return <Suspense><AuthorPage /></Suspense>;
   if (path === '/group') return <Suspense><GroupPage /></Suspense>;
   if (path === '/report/print') return <Suspense><PrintReport /></Suspense>;
   if (ReportDev && new URLSearchParams(location.search).get('report') === '1') return <Suspense><ReportDev /></Suspense>;
@@ -113,7 +121,7 @@ function Root() {
 
 const render = () => createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Root />
+    <RootBoundary><Root /></RootBoundary>
   </StrictMode>
 );
 // English is in the first load; another language's catalog comes first (a failed load renders in English).

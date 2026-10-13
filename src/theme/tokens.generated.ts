@@ -9,6 +9,112 @@ export const THEMABLE = ["color.surface.card","color.surface.solid","color.surfa
 export const PAIRS: ContrastPair[] = [
  {
   "min": 4.5,
+  "fg": "color.author.ink",
+  "bg": [
+   "color.author.canvas",
+   "color.author.surface",
+   "color.author.track",
+   "color.author.ai-field",
+   "color.author.need-field",
+   "color.author.primary-soft",
+   "color.author.ai-badge",
+   "color.author.primary-faint"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.label",
+  "bg": [
+   "color.author.canvas",
+   "color.author.surface",
+   "color.author.track",
+   "color.author.you-badge"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.body",
+  "bg": [
+   "color.author.canvas",
+   "color.author.surface",
+   "color.author.track"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.muted",
+  "bg": [
+   "color.author.canvas",
+   "color.author.surface",
+   "color.author.track",
+   "color.author.ai-field"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.primary",
+  "bg": [
+   "color.author.canvas",
+   "color.author.surface",
+   "color.author.primary-soft",
+   "color.author.need-field",
+   "color.author.track"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.on-primary",
+  "bg": [
+   "color.author.primary",
+   "color.author.kora",
+   "color.author.decline"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.ai",
+  "bg": [
+   "color.author.surface",
+   "color.author.ai-badge",
+   "color.author.ai-field",
+   "color.author.canvas"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.need",
+  "bg": [
+   "color.author.surface",
+   "color.author.need-badge",
+   "color.author.need-field"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.gain",
+  "bg": [
+   "color.author.surface",
+   "color.author.gain-soft"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.decline",
+  "bg": [
+   "color.author.surface",
+   "color.author.decline-soft",
+   "color.author.need-field"
+  ]
+ },
+ {
+  "min": 4.5,
+  "fg": "color.author.yours",
+  "bg": [
+   "color.author.yours-soft"
+  ]
+ },
+ {
+  "min": 4.5,
   "fg": "color.fg.primary",
   "bg": "color.surface.solid"
  },
@@ -402,6 +508,106 @@ export const NODES: Record<string, TokenNode> = {
  "color.amber.960": {
   "$value": "oklch(0.96 0.04 80)"
  },
+ "color.author.ai": {
+  "light": "{color.gk.teal-700}",
+  "dark": "{color.gk.teal-700}"
+ },
+ "color.author.ai-badge": {
+  "light": "{color.gk.teal-100}",
+  "dark": "{color.gk.teal-100}"
+ },
+ "color.author.ai-field": {
+  "light": "{color.gk.teal-50}",
+  "dark": "{color.gk.teal-50}"
+ },
+ "color.author.body": {
+  "light": "{color.gk.slate-600}",
+  "dark": "{color.gk.slate-600}"
+ },
+ "color.author.canvas": {
+  "light": "{color.gk.canvas}",
+  "dark": "{color.gk.canvas}"
+ },
+ "color.author.decline": {
+  "light": "{color.gk.red-700}",
+  "dark": "{color.gk.red-700}"
+ },
+ "color.author.decline-soft": {
+  "light": "{color.gk.red-50}",
+  "dark": "{color.gk.red-50}"
+ },
+ "color.author.gain": {
+  "light": "{color.gk.green-700}",
+  "dark": "{color.gk.green-700}"
+ },
+ "color.author.gain-soft": {
+  "light": "{color.gk.green-50}",
+  "dark": "{color.gk.green-50}"
+ },
+ "color.author.ink": {
+  "light": "{color.gk.ink}",
+  "dark": "{color.gk.ink}"
+ },
+ "color.author.kora": {
+  "light": "{color.gk.teal-600}",
+  "dark": "{color.gk.teal-600}"
+ },
+ "color.author.label": {
+  "light": "{color.gk.slate-700}",
+  "dark": "{color.gk.slate-700}"
+ },
+ "color.author.muted": {
+  "light": "{color.gk.slate-500}",
+  "dark": "{color.gk.slate-500}"
+ },
+ "color.author.need": {
+  "light": "{color.gk.amber-800}",
+  "dark": "{color.gk.amber-800}"
+ },
+ "color.author.need-badge": {
+  "light": "{color.gk.amber-200}",
+  "dark": "{color.gk.amber-200}"
+ },
+ "color.author.need-field": {
+  "light": "{color.gk.amber-50}",
+  "dark": "{color.gk.amber-50}"
+ },
+ "color.author.on-primary": {
+  "light": "{color.gk.white}",
+  "dark": "{color.gk.white}"
+ },
+ "color.author.primary": {
+  "light": "{color.gk.blue-600}",
+  "dark": "{color.gk.blue-600}"
+ },
+ "color.author.primary-faint": {
+  "light": "{color.gk.blue-25}",
+  "dark": "{color.gk.blue-25}"
+ },
+ "color.author.primary-soft": {
+  "light": "{color.gk.blue-50}",
+  "dark": "{color.gk.blue-50}"
+ },
+ "color.author.surface": {
+  "light": "{color.gk.white}",
+  "dark": "{color.gk.white}"
+ },
+ "color.author.track": {
+  "light": "{color.gk.mist}",
+  "dark": "{color.gk.mist}"
+ },
+ "color.author.you-badge": {
+  "light": "{color.gk.mist-2}",
+  "dark": "{color.gk.mist-2}"
+ },
+ "color.author.yours": {
+  "light": "{color.gk.purple-700}",
+  "dark": "{color.gk.purple-700}"
+ },
+ "color.author.yours-soft": {
+  "light": "{color.gk.purple-50}",
+  "dark": "{color.gk.purple-50}"
+ },
  "color.blue.450": {
   "$value": "oklch(0.45 0.17 252)"
  },
@@ -498,6 +704,78 @@ export const NODES: Record<string, TokenNode> = {
  "color.fg.secondary": {
   "light": "{color.ink.450}",
   "dark": "{color.lavender.780}"
+ },
+ "color.gk.amber-200": {
+  "$value": "#FCEBC8"
+ },
+ "color.gk.amber-50": {
+  "$value": "#FFF8EB"
+ },
+ "color.gk.amber-800": {
+  "$value": "#7A5300"
+ },
+ "color.gk.blue-25": {
+  "$value": "#F5F8FF"
+ },
+ "color.gk.blue-50": {
+  "$value": "#EEF2FD"
+ },
+ "color.gk.blue-600": {
+  "$value": "#1F4FD1"
+ },
+ "color.gk.canvas": {
+  "$value": "#F6F7FB"
+ },
+ "color.gk.green-50": {
+  "$value": "#E2F3E8"
+ },
+ "color.gk.green-700": {
+  "$value": "#1E6B3E"
+ },
+ "color.gk.ink": {
+  "$value": "#141A2E"
+ },
+ "color.gk.mist": {
+  "$value": "#F0F2F8"
+ },
+ "color.gk.mist-2": {
+  "$value": "#EEF0F6"
+ },
+ "color.gk.purple-50": {
+  "$value": "#F3E8FB"
+ },
+ "color.gk.purple-700": {
+  "$value": "#6B2C91"
+ },
+ "color.gk.red-50": {
+  "$value": "#FDECEA"
+ },
+ "color.gk.red-700": {
+  "$value": "#B42318"
+ },
+ "color.gk.slate-500": {
+  "$value": "#5F6784"
+ },
+ "color.gk.slate-600": {
+  "$value": "#4B5470"
+ },
+ "color.gk.slate-700": {
+  "$value": "#3E4763"
+ },
+ "color.gk.teal-100": {
+  "$value": "#DDF1F3"
+ },
+ "color.gk.teal-50": {
+  "$value": "#EEF8F9"
+ },
+ "color.gk.teal-600": {
+  "$value": "#0D7F8B"
+ },
+ "color.gk.teal-700": {
+  "$value": "#0B6670"
+ },
+ "color.gk.white": {
+  "$value": "#FFFFFF"
  },
  "color.ink.200": {
   "$value": "oklch(0.2 0.03 280)"

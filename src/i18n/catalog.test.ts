@@ -56,6 +56,25 @@ describe('string catalog lint', () => {
     });
   }
 
+  // A pronoun select reads the person's pronoun itself (he, she, they) and says they when it is not stated (D145).
+  it('selects pronouns on he and she, with they for anything else', () => {
+    const selects = (els: MessageFormatElement[]): string[][] => els.flatMap(el => {
+      if (el.type === TYPE.select) return [...(el.value === 'pronoun' ? [Object.keys(el.options)] : []), ...Object.values(el.options).flatMap(o => selects(o.value))];
+      if (el.type === TYPE.plural) return Object.values(el.options).flatMap(o => selects(o.value));
+      return el.type === TYPE.tag ? selects(el.children) : [];
+    });
+    const found = Object.entries(catalogs.en).flatMap(([k, m]) => selects(parse(m)).map(keys => [k, keys] as const));
+    expect(found.length).toBeGreaterThan(0);
+    for (const [k, keys] of found) {
+      expect(keys, k).toEqual(expect.arrayContaining(['he', 'she', 'other']));
+      expect(keys.filter(x => !['he', 'she', 'they', 'other'].includes(x)), k).toEqual([]);
+    }
+    const { tk } = createI18n('en');
+    expect(tk('engine.report.bottleneckWhy', { name: 'Beth', stat: 'morale', value: 3, pronoun: 'she' })).toMatch(/of her numbers\.$/);
+    expect(tk('engine.report.bottleneckWhy', { name: 'Sam', stat: 'morale', value: 3, pronoun: 'they' })).toMatch(/of their numbers\.$/);
+    expect(tk('engine.erratic.cause', { name: 'Sam', pronoun: 'unknown' })).toMatch(/what they need had not changed/);
+  });
+
   // The pseudo locales (D83) are built from English at run time: the same rules hold for what they show.
   for (const tag of ['en-XA', 'ar-XB']) {
     it(`${tag} parses and keeps to the copy rules`, () => {

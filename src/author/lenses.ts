@@ -51,7 +51,7 @@ export interface LibraryLens {
   /** Null for the Client Leadership Model: its styles come from the confirmed framework. */
   styles: LibraryStyle[] | null;
   needs: Record<NeedKey, LensNeed>;
-  /** A fit table that is not the home rule (Six Leadership Styles keeps the engine's tested table). */
+  /** A fit table that is not the home rule (Six Leadership Styles keeps the engine's tested five style table, D104). */
   fit?: Record<NeedKey, Record<string, Fit>>;
   /** The sponsor's line over weekly style setting. */
   styleLine: string;
@@ -103,16 +103,16 @@ export const LENS_LIBRARY: LibraryLens[] = [
     bestFor: 'Managers who default to one style', basedOn: 'Goleman, "Leadership That Gets Results"', worksWith: 'readiness_based',
     npcDesign: 'Members react to the style used and carry that reaction into later interactions.',
     eventDesign: 'Crises, strategy shifts, conflict, low morale, tight deadlines, idea generation moments.',
-    actionClassification: ['Visionary', 'Coaching', 'Affiliative', 'Democratic', 'Pacesetting', 'Commanding'],
+    actionClassification: ['Visionary', 'Coaching', 'Affiliative', 'Democratic', 'Drive (Pacesetting and Commanding)'],
     dimensions: [
-      dim('style_range', 'Style range', 'a range of styles, chosen on purpose', 'List the six styles and the last time you used each.', 'Use one style you rarely use, in a moment where it fits, this week.'),
+      dim('style_range', 'Style range', 'a range of styles, chosen on purpose', 'List the five styles and the last time you used each.', 'Use one style you rarely use, in a moment where it fits, this week.'),
       dim('contextual_fit', 'Contextual fit', 'a style that suits the moment and the person', 'Replay a crisis and a calm moment from the simulation and name the style each needed.', 'Before each meeting, name the moment and the style it needs.'),
-      dim('team_climate', 'Team climate impact', 'choices that lift how the team feels about its work', 'Ask two people what made last week easier or harder.', 'Hold back on pushing pace outside a real crisis for one week and notice the team.')
+      dim('team_climate', 'Team climate impact', 'choices that lift how the team feels about its work', 'Ask two people what made last week easier or harder.', 'Hold back on Drive outside a real crisis for one week and notice the team.')
     ],
     styles: SIX_STYLES_LENS.styles.map((s, i) => ({
-      ...s, source: ['Visionary', 'Coaching', 'Affiliative', 'Democratic', 'Pacesetting', 'Commanding'][i],
-      home: (['highSkill_highMorale', 'lowSkill_highMorale', 'highSkill_lowMorale', 'highSkill_lowMorale', 'highSkill_highMorale', 'lowSkill_lowMorale'] as NeedKey[])[i],
-      names: { professional: s.name, warm: ['Vision Sharer', 'Coach', 'Bridge Builder', 'Collaborator', 'Bar Raiser', 'Steady Hand'][i], direct: s.name }
+      ...s, source: ['Visionary', 'Coaching', 'Affiliative', 'Democratic', 'Pacesetting and Commanding'][i],
+      home: (['highSkill_highMorale', 'lowSkill_highMorale', 'highSkill_lowMorale', 'highSkill_lowMorale', 'lowSkill_lowMorale'] as NeedKey[])[i],
+      names: { professional: s.name, warm: ['Vision Sharer', 'Coach', 'Bridge Builder', 'Collaborator', 'Set the Pace'][i], direct: s.name }
     })),
     needs: SIX_STYLES_LENS.needs,
     fit: SIX_STYLES_LENS.fit,
@@ -128,7 +128,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
     bestFor: 'Leaders owning both delivery and morale', basedOn: 'Transformational and Transactional Leadership, Burns and Bass', worksWith: 'adaptive',
     npcDesign: 'Each member has an engagement level and an output level.',
     eventDesign: 'Target pressure, recognition moments, underperformance, career conversations, vision setting.',
-    actionClassification: ['Inspiring vision', 'Intellectual challenge', 'Individual attention', 'Role modeling', 'Goal setting', 'Outcome based recognition', 'Corrective action'],
+    actionClassification: ['Inspiring vision', 'Intellectual challenge', 'Individual attention and recognition', 'Role modeling', 'Goal setting', 'Corrective action'],
     dimensions: [
       dim('team_engagement', 'Team engagement', 'a link between the work and what each person cares about', 'Write what each person cares about most at work, and how this quarter connects to it.', 'Open one 1:1 this week with the person\'s goals before the numbers.'),
       dim('delivery_performance', 'Delivery performance', 'clear actions against the target, followed through', 'Rewrite this week\'s plan as three actions with owners and dates.', 'Check progress on one target midweek, not at the end.'),
@@ -137,8 +137,7 @@ export const LENS_LIBRARY: LibraryLens[] = [
     styles: [
       style('goals', 'SG', 'Goal setting', 'lowSkill_lowMorale', ['Set Clear Goals', 'Plan It Together', 'Set Clear Goals'], 'You agree the target and the steps to it.', 'You agree a clear target for each {work} and the steps that get there.'),
       style('correct', 'CC', 'Corrective action', 'lowSkill_highMorale', ['Correct Course', 'Fix It Together', 'Correct Course'], 'You give direct feedback and fix the approach.', 'You give direct, specific feedback and fix the approach while they learn.'),
-      style('attend', 'PA', 'Individual attention', 'highSkill_lowMorale', ['Personal Attention', 'Check In', 'Personal Attention'], 'You give time to the person, not only the task.', 'You give time to the person and what they need, not only the task.'),
-      style('recognize', 'RR', 'Outcome based recognition', 'highSkill_lowMorale', ['Recognize Results', 'Celebrate Wins', 'Recognize Results'], 'You name what they achieved, specifically.', 'You recognize specific results, so effort feels seen.'),
+      style('attend', 'PA', 'Individual attention and outcome based recognition', 'highSkill_lowMorale', ['Personal Attention', 'Check In', 'Personal Attention'], 'You give time to the person and name what they achieved.', 'You give time to the person, not only the task, and recognize specific results so effort feels seen.'),
       style('inspire', 'IV', 'Inspiring vision', 'highSkill_highMorale', ['Inspire the Vision', 'Share the Why', 'Inspire the Vision'], 'You connect the work to a bigger purpose.', 'You connect each {work} to where {company} is heading and why it matters.'),
       style('challenge', 'CT', 'Intellectual challenge', 'highSkill_highMorale', ['Challenge Thinking', 'Spark Ideas', 'Challenge Thinking'], 'You ask them to rethink how it is done.', 'You question the usual way and ask them to find a better one.')
     ],

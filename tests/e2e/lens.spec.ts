@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 /**
  * The lens drives the simulation (D70). `?lens=six_styles` plays Sales Elevator with the Six Leadership
- * Styles test lens: six styles in every style control, style setting and the board, a week played to its
+ * Styles test lens: its five styles (D104) in every style control, style setting and the board, a week played to its
  * end. Nothing names Directing, Guiding, Partnering or Entrusting; nothing scrolls sideways at 1440 or
  * 1024; every letter is a 44px target on a touch screen; axe finds nothing.
  */
@@ -23,7 +23,7 @@ async function axe(page: Page) {
   return r.violations.map(v => `${v.id}: ${v.nodes.length} ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
 }
 
-const SIX = ['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Pace Setter', 'Commander'];
+const SIX = ['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Drive'];
 const OLD = /Directing|Guiding|Partnering|Entrusting/;
 const styles = (page: Page) => page.getByRole('radiogroup', { name: /^Leadership style for/ });
 const sideways = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -33,16 +33,16 @@ const smallLetters = (page: Page) => page.evaluate(() => Array.from(document.que
   .filter(b => { const r = b.getBoundingClientRect(); return r.height < 44 || r.width < 44; }).length);
 
 for (const width of [1440, 1024]) {
-  test(`six styles at ${width}: set styles with the six letter control and end the week`, async ({ page }) => {
+  test(`Six Leadership Styles at ${width}: set styles with the five letter control and end the week`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto('/?start=board&lens=six_styles');
     await expect(styles(page)).toHaveCount(10, { timeout: 20000 });
 
-    // Style setting: the six definitions, six letters per person, nothing of the default lens.
+    // Style setting: the five definitions, five letters per person, nothing of the default lens.
     const defs = page.getByRole('list', { name: /style/i }).getByRole('listitem');
-    await expect(defs).toHaveCount(6);
+    await expect(defs).toHaveCount(5);
     for (const name of SIX) await expect(defs.filter({ hasText: name })).toHaveCount(1);
-    for (const g of await styles(page).all()) await expect(g.getByRole('radio')).toHaveCount(6);
+    for (const g of await styles(page).all()) await expect(g.getByRole('radio')).toHaveCount(5);
     await expect(styles(page).first().getByRole('radio').first()).toHaveAccessibleName(/^Vision Setter\. /);
     expect(await page.locator('main').innerText()).not.toMatch(OLD);
     expect(await sideways(page)).toBe(0);
@@ -53,7 +53,7 @@ for (const width of [1440, 1024]) {
     await page.getByRole('radio', { name: 'List' }).click();
     const table = page.getByRole('table', { name: 'Styles for every team member' });
     await expect(table.getByRole('columnheader', { name: 'Harmonizer' })).toBeVisible();
-    await expect(table.getByRole('radio', { name: 'Pace Setter for Kent Goldberg' })).toBeVisible();
+    await expect(table.getByRole('radio', { name: 'Drive for Kent Goldberg' })).toBeVisible();
     expect(await sideways(page)).toBe(0);
     expect(await axe(page)).toEqual([]);
     await page.getByRole('radio', { name: 'Cards' }).click();
@@ -61,7 +61,7 @@ for (const width of [1440, 1024]) {
 
     // Pick a different letter for different people, by click and by keyboard.
     const all = await styles(page).all();
-    for (const [i, g] of all.entries()) await g.getByRole('radio').nth(i % 6).click();
+    for (const [i, g] of all.entries()) await g.getByRole('radio').nth(i % 5).click();
     await all[0].getByRole('radio').nth(0).focus();
     await page.keyboard.press('ArrowRight');
     await expect(all[0].getByRole('radio').nth(1)).toBeFocused();
@@ -71,7 +71,7 @@ for (const width of [1440, 1024]) {
 
     await page.getByRole('button', { name: 'Review and confirm' }).click();
     const summary = page.getByRole('dialog');
-    await expect(summary.getByText('Commander').first()).toBeVisible();
+    await expect(summary.getByText('Drive').first()).toBeVisible();
     expect(await axe(page)).toEqual([]);
     await summary.getByRole('button', { name: 'Confirm styles' }).click();
     await expect(page.getByText(/Styles are set for week 1/)).toBeVisible();
@@ -83,10 +83,10 @@ for (const width of [1440, 1024]) {
       await expect(page.getByRole('heading', { name: title ?? '' })).toHaveCount(0);
     }
 
-    // The board: the six letter control on every card, locked for the week, with the lens's names.
+    // The board: the five letter control on every card, locked for the week, with the lens's names.
     await expect(page.getByRole('heading', { name: 'Your team', exact: true })).toBeVisible();
     await expect(styles(page)).toHaveCount(10);
-    for (const g of await styles(page).all()) await expect(g.getByRole('radio')).toHaveCount(6);
+    for (const g of await styles(page).all()) await expect(g.getByRole('radio')).toHaveCount(5);
     await expect(styles(page).first().getByRole('radio', { checked: true })).toHaveText('CO');
     expect(await sideways(page)).toBe(0);
     expect(await axe(page)).toEqual([]);
@@ -108,13 +108,13 @@ for (const width of [1440, 1024]) {
 test.describe('on a touch screen', () => {
   test.use({ hasTouch: true });
 
-  test('six letters wrap to rows of three, each a 44px target', async ({ page }) => {
+  test('five letters stay 44px targets on a touch screen', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 768 });
     await page.goto('/?start=board&lens=six_styles');
     await expect(styles(page)).toHaveCount(10, { timeout: 20000 });
     expect(await smallLetters(page)).toBe(0);
     expect(await sideways(page)).toBe(0);
-    for (const g of await styles(page).all()) await g.getByRole('radio').nth(5).tap();
+    for (const g of await styles(page).all()) await g.getByRole('radio').nth(4).tap();
     await page.getByRole('button', { name: 'Review and confirm' }).tap();
     await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).tap();
     await page.getByRole('button', { name: 'Dismiss outcome' }).tap();

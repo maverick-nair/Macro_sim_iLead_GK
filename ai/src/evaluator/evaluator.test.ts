@@ -55,7 +55,9 @@ describe('evaluator prompt assembly', () => {
   });
 
   it('uses the format guide for each format and versions it', () => {
-    for (const f of ['roleplay', 'chat', 'email', 'meeting', 'sponsor', 'interview', 'plan']) expect(evaluatorPromptVersion(f)).toMatch(new RegExp(`^evaluator@1#\\w{8}\\+evaluator\\.${f}@1#\\w{8}$`));
+    // Email names stakeholders since D161 (version 2); stakeholder meetings, presentations and negotiations have their own guides.
+    const versions: Record<string, number> = { roleplay: 1, chat: 1, email: 2, meeting: 1, sponsor: 1, interview: 1, plan: 1, stakeholder: 1, present: 1, negotiate: 1 };
+    for (const [f, n] of Object.entries(versions)) expect(evaluatorPromptVersion(f)).toMatch(new RegExp(`^evaluator@1#\\w{8}\\+evaluator\\.${f}@${n}#\\w{8}$`));
   });
 });
 

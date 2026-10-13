@@ -103,6 +103,41 @@ export interface MemberSim {
   lowestResult: number;
   /** Lowest morale seen, for the Turnaround badge. */
   lowestMorale: number;
+  /** Morale at each completed sub-period, for the dynamics' rolling average (D135). */
+  moraleHistory: number[];
+  /** Times sustained low morale has kept this person off sick (D135). */
+  strikes: number;
+}
+
+/** A choice waiting for the participant (D137). */
+export interface PendingChoice {
+  id: string;
+  eventKey: string;
+  /** The person the event is about, when it is about one. */
+  memberId: string | null;
+  firedAbsSub: number;
+  dueAbsSub: number;
+}
+
+/** A choice made, or left to its default, with what it changed and what it led to (D137, D138). */
+export interface ChoiceRecord {
+  id: string;
+  eventKey: string;
+  title: Copy;
+  memberId: string | null;
+  option: string | null;
+  label: Copy | null;
+  outcome: Copy | null;
+  by: 'you' | 'default';
+  period: number;
+  sub: number;
+  changes: Change[];
+  variables: Array<{ key: string; delta: number }>;
+  revenue: number;
+  flags: { set: string[]; clear: string[] };
+  /** Events this choice scheduled or made possible, with when they played (filled in as they do). */
+  triggered: Array<{ key: string; title: Copy; period: number; sub: number }>;
+  read: Array<{ skill: string; band: Band }>;
 }
 
 export interface Turn {
@@ -140,6 +175,65 @@ export interface Interaction {
   recordId?: string;
   /** Written plan: the fields as submitted, evaluated on their own like an email (D52, D85). */
   plan?: PlanFields;
+  /** A conversation with a stakeholder (D161): who, which of their interactions, how it is evaluated, and the request it answers. */
+  stakeholder?: { key: string; interaction: string; format: StakeholderFormat; requestId?: string };
+}
+
+/** How a stakeholder conversation is evaluated and voiced (D161): a meeting, a presentation, a negotiation or an email. */
+export type StakeholderFormat = 'stakeholder' | 'present' | 'negotiate' | 'email' | 'chat';
+
+/** A stakeholder's relationship with the participant (D160): trust and satisfaction, and what moved them. */
+export interface StakeholderState {
+  trust: number;
+  satisfaction: number;
+  /** At the start of the period, for the board's trend and the week end. */
+  atStart: { trust: number; satisfaction: number };
+  /** Periods in which the participant engaged them (an interaction or an answered request). */
+  engaged: number[];
+  /** Every move, oldest first, with its cause (the board shows the last three, the report the largest). */
+  moves: Array<{ period: number; sub: number; cause: Copy; trust: number; satisfaction: number }>;
+  /** Their hidden concern surfaced in a conversation. */
+  concernShared: boolean;
+}
+
+/** A request from a stakeholder (D162), open until answered or past its deadline. */
+export interface StakeholderRequestState {
+  id: string;
+  eventKey: string;
+  stakeholder: string;
+  messageId: string;
+  kind: 'message' | 'meeting';
+  interaction: string | null;
+  dueAbsSub: number;
+  state: 'open' | 'answered' | 'ignored';
+}
+
+/** One stakeholder interaction or request, for the report (D164). */
+export interface StakeholderRecord {
+  id: string;
+  period: number;
+  sub: number;
+  stakeholder: string;
+  /** The interaction's key, or null for a request left unanswered. */
+  interaction: string | null;
+  type: 'meet' | 'present' | 'negotiate' | 'email' | 'ignored';
+  title: Copy;
+  /** A live interaction's band, or null. */
+  band: Band | null;
+  /** A static decision's option label, or null. */
+  option: Copy | null;
+  outcome: Copy | null;
+  trust: number;
+  satisfaction: number;
+  variables: Array<{ key: string; delta: number }>;
+  revenue: number;
+  sponsor: number;
+  /** Skill, morale and result changes to team members. */
+  changes: Change[];
+  /** A static option's leadership read. */
+  read: Array<{ skill: string; band: Band }>;
+  /** The request it answered on time, if any. */
+  answered: boolean;
 }
 
 /** A written plan's fields (spec, Written plan): goals, how they are measured, who owns them, the due sub-period, support. */
@@ -176,6 +270,10 @@ export interface EventCard {
   label: string | null;
   /** The message to answer, when the event expects a reply. */
   messageId: string | null;
+  /** The choice to make, when the event is a choice (D137). Only set on a choice's card. */
+  choiceId?: string;
+  /** The stakeholder the event comes from (D162). */
+  stakeholder?: string;
 }
 
 /** An event waiting for its expected response (Configuration Spec, Expected response and Response window). */
@@ -211,6 +309,8 @@ export interface LiveRecord {
   reviewed?: boolean;
   /** Sum of absolute changes to people, and the largest changes. */
   impact?: number;
+  /** A conversation with a stakeholder (D161): their key. */
+  stakeholder?: string;
   changes?: Array<{ subject: string; metric: string; delta: number }>;
 }
 
@@ -306,6 +406,14 @@ export interface PeriodSummary {
   checkIn: boolean;
   /** Bulletins for the next period. */
   news: NewsItem[];
+  /** Business variables at the start and end of the period, the shown ones only (D136). Left out when the storyline has none. */
+  variables?: Array<{ key: string; start: number; end: number }>;
+  /** Choices made or defaulted this period (D137). Left out when the storyline has none. */
+  choices?: Array<{ id: string; title: Copy; label: Copy | null; by: 'you' | 'default' }>;
+  /** People off sick or gone because morale stayed low (D135). Left out without dynamics. */
+  attrition?: Array<{ memberId: string; name: string; kind: 'sick' | 'resigned' }>;
+  /** Each stakeholder's relationship at the start and end of the period (D160). Left out without stakeholders. */
+  stakeholders?: Array<{ key: string; name: string; trust: { start: number; end: number }; satisfaction: { start: number; end: number } }>;
 }
 
 export interface Sim {
@@ -356,7 +464,31 @@ export interface Sim {
     schedule: Record<string, { period: number; sub: number } | null>;
     fired: string[];
     pending: PendingResponse[];
+    /** Follow ups waiting for their absolute sub-period (D138), with the choice that scheduled them, if any. */
+    delayed: Array<{ key: string; at: number; cause: string | null }>;
+    /** Events whose conditions did not hold when they were due (D138): they never play. */
+    skipped: string[];
   };
+  /** Business variables by key (D136). */
+  vars: Record<string, number>;
+  /** The last three causes of each variable's moves, newest first (the board's tooltip, D136). */
+  varCauses: Record<string, Array<{ text: Copy; delta: number }>>;
+  /** Flags set by choices, actions and events (D138). */
+  flags: string[];
+  /** Counters by key (D138). */
+  counters: Record<string, number>;
+  /** Choices waiting for the participant (D137). */
+  openChoices: PendingChoice[];
+  /** Choices made or defaulted, in order (D137). */
+  choices: ChoiceRecord[];
+  /** Business variables at the start of the period (D136). */
+  varsAtStart: Record<string, number>;
+  /** Revenue added or taken by choices and events, beyond the funnel (D136). */
+  extraRevenue: number;
+  /** The dynamics' own random stream's state (D135), so attrition never moves the run's other draws. */
+  dynState: number;
+  /** Attrition this period (D135), for the week end. */
+  attrition: Array<{ memberId: string; name: string; kind: 'sick' | 'resigned' }>;
   pendingReward: string[] | null;
   promises: PromiseRecord[];
   inbox: InboxMessage[];
@@ -389,6 +521,10 @@ export interface Sim {
   periodStartResults: Array<Record<string, number>>;
   /** Progress milestones reached, in order (D93). Read only by the view: no rule depends on them. */
   milestones: Milestone[];
+  /** Stakeholder relationships by key (D160), their requests (D162) and every interaction with them (D164). */
+  stakeholders: Record<string, StakeholderState>;
+  stakeholderRequests: StakeholderRequestState[];
+  stakeholderRecords: StakeholderRecord[];
 }
 
 export type { Mismatch, NeedKey, Style, Triple };

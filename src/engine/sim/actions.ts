@@ -1,12 +1,15 @@
 import { blank, UNTAGGED } from './live';
+import { IntentError } from './errors';
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
 import { needOf } from '../lens';
 import { mismatchType, trainingMismatch, type Mismatch, type Style, type Triple } from './rules';
 import { respond } from './events';
+import { applyActionBusiness } from './business';
 import { checkBadges } from './score';
+import { finishStakeholder } from './stakeholders';
 import {
-  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
+  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, netChanges, nextId, person, record, spend, sponsorChange,
   styleName, stageName, trustChange, YOU
 } from './sim';
 import { msg, type Copy, type Msg } from '../copy';
@@ -17,9 +20,7 @@ import type { ActionRecord, Band, Change, Evaluation, Interaction, LiveRecord, M
 type Action = StorylineConfig['actions'][number];
 type Option = Action['options'][number];
 
-export class IntentError extends Error {
-  constructor(message: string, readonly code: string) { super(message); this.name = 'IntentError'; }
-}
+export { IntentError };
 
 const action = (sim: Sim, key: string) => {
   const a = sim.config.actions.find(x => x.key === key);
@@ -93,6 +94,13 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
 }
 
 const pr = (sim: Sim, id: string) => { const p = person(sim, id).pronoun; return p === 'she' ? 'she' : p === 'they' ? 'they' : 'he'; };
+
+/** The most common fit among people, ties to the worse fit: how an approach landed overall. */
+function typical(fits: Mismatch[]): Mismatch {
+  const n = [0, 1, 2].map(k => fits.filter(f => f === k).length);
+  const top = Math.max(...n);
+  return ([2, 1, 0] as const).find(k => n[k] === top)!;
+}
 
 // ---------------------------------------------------------------- availability
 
@@ -209,17 +217,21 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   const o = validate(sim, a, input.memberIds, input.option, input.stage);
   const targets = input.memberIds.map(id => member(sim, id)!);
   const changes: Change[] = [];
+  /** How well the approach fitted each person, for the option's business effects by fit (D136). */
+  const fits: Mismatch[] = [];
 
   switch (a.rule) {
     case 'weeklyStyle':
       for (const m of sim.members.filter(x => x.away === 0)) {
         const mt = mismatchType(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng, misread(sim, m));
+        fits.push(mt);
         changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: msg('engine.team.cause', { option: o.label, name: firstName(sim, m.id), style: m.style ? styleName(sim, m.style) : msg('engine.noStyle'), fit: mt === 0 ? 'yes' : 'no' }), rule: ruleText(sim, a, o), evidence: [] }));
       }
       break;
     case 'training':
       for (const m of targets) {
         const mt = trainingMismatch(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng);
+        fits.push(mt);
         changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: msg('engine.training.label'), cause: msg('engine.training.cause', { name: firstName(sim, m.id), option: o.label.toLowerCase() }), rule: ruleText(sim, a, o), evidence: [] }));
         m.away = o.away; m.awayReason = o.away ? 'training' : null; m.awaySetAt = sim.absSub; m.trainedInPeriod = sim.period;
         if (m.trainingRequestedPeriod === sim.period) changes.push(...trustChange(m, 4, { label: msg('engine.training.heard'), cause: msg('engine.training.heard.cause', { name: firstName(sim, m.id) }), rule: msg('engine.training.heard.rule', { n: 4 }), evidence: [] }));
@@ -240,6 +252,9 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     default:
       break;
   }
+
+  // Business variables, flags and follow ups (D136): a static or hybrid decision's now; a conversation's when it ends.
+  if (a.kind !== 'live') changes.push(...(applyActionBusiness(sim, o, a.kind === 'static' && fits.length ? typical(fits) : null, a.options.length > 1 ? msg('engine.choice', { action: a.name, option: o.label }) : a.name)?.changes ?? []));
 
   // Evidence for decisions with no words: the choice itself, as the participant made it (rule 5).
   const choice = { quote: a.options.length > 1 ? msg('engine.choice', { action: a.name, option: o.label }) : a.name, by: YOU, judgedByAI: false };
@@ -364,6 +379,8 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   if (sim.phase !== 'board') throw new IntentError('Conversations happen on the board', 'wrongPhase');
   const replyMsg = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
   if (it.replyTo && (!replyMsg || replyMsg.state !== 'open')) { delete sim.interactions[interactionId]; throw new IntentError('That message is closed', 'closedMessage'); }
+  // A conversation with a stakeholder (D161) resolves on their relationship, not a team member's.
+  if (it.stakeholder) return finishStakeholder(sim, rng, interactionId, ev, npcReply);
   delete sim.interactions[interactionId];
   for (const id of it.memberIds) sim.touched.push(id);
   if (it.format === 'meeting') sim.touchedTeam = true;
@@ -378,6 +395,9 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
 
   const useRecord = it.recordId ? sim.actionRecords.find(r => r.id === it.recordId) : undefined;
   const table = a?.live.consequences?.[ev.band];
+  /** How well the approach fitted each person, and the option it played as, for the option's business effects (D136). */
+  const liveFits: Mismatch[] = [];
+  let liveOption: Option | undefined = a?.options.find(o => o.key === it.optionKey);
   let sponsorLine: Copy | null = null;
   let hireLine: Copy | null = null;
   if (it.actionKey === 'sponsor') {
@@ -413,6 +433,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     }
   } else if (a && a.rule === 'styleOption') {
     const option = a.options.find(o => o.style === ev.styleUsed) ?? a.options[0];
+    liveOption = option;
     // Meetings, briefings, interviews and multi person conversations carry no style (scoring-and-report.md 3).
     const tagged = targets.length === 1 && !UNTAGGED.has(it.format);
     for (const m of targets) {
@@ -421,6 +442,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       const diff = tagged ? record(sim, m, ev.styleUsed, a.key) : fit(sim, ev.styleUsed, n);
       if (tagged) changes.push(...intentGap(sim, m, ev));
       const mt = adjust(mismatchType(diff, rng, misread(sim, m)), ev.band);
+      liveFits.push(mt);
       const reason: Reason = {
         label: label(firstName(sim, m.id)),
         cause: msg('engine.approach.cause', { mostly: ev.confidence < 0.5 ? 'yes' : 'no', style: styleName(sim, ev.styleUsed), fit: mt === 0 ? 'yes' : 'no', name: firstName(sim, m.id) }),
@@ -439,6 +461,8 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       const o = a.options.find(x => x.intent === (intent === 'warn' ? 'warn' : 'congratulate')) ?? a.options[0];
       const base: Mismatch = intent === 'warn' ? (trend < 0 ? 0 : 1) : trend >= 0 ? 0 : 1;
       const mt = adjust(base, ev.band);
+      liveFits.push(mt);
+      liveOption = o;
       const reason: Reason = {
         label: msg('engine.email.label', { name: firstName(sim, m.id), band: ev.band }),
         cause: msg('engine.email.cause', { intent, name: firstName(sim, m.id), trend: trend >= 0 ? 'up' : 'down' }),
@@ -487,6 +511,9 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       changes.push(...trustChange(m, BAND_TRUST[ev.band], reason));
     }
   }
+
+  // A conversation's business effects (D136), by how the approach landed; hybrid decisions applied theirs when locked.
+  if (a && a.kind === 'live' && liveOption) changes.push(...(applyActionBusiness(sim, liveOption, liveFits.length ? typical(liveFits) : null, a.name)?.changes ?? []));
 
   // Promises, hidden concerns, badges (3.4, 5.4, 7.3). Earlier promises are checked before this
   // conversation's own promise is recorded, so a promise is never kept by the talk that made it.
@@ -546,7 +573,8 @@ function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[]
     talk: { you: words(said), npc: theirs.reduce((n, t) => n + (typeof t.text === 'string' ? words(t.text) : 0), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition, spoken: mine.some(t => t.voice) },
     concern: !!ev.flags.concernSurfaced,
     impact: [...people.values()].reduce((a, b) => a + b, 0),
-    changes: [...changes].filter(c => c.subject !== 'sponsor').sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta)).slice(0, 4).map(c => ({ subject: c.subject, metric: c.metric, delta: c.delta }))
+    // Net per person and metric, so the report never lists "trust +3, trust −3" (D145).
+    changes: netChanges(changes.filter(c => c.subject !== 'sponsor')).slice(0, 4)
   };
 }
 
@@ -580,7 +608,7 @@ function createMemberFrom(sim: Sim, id: string): MemberSim {
     id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? sim.config.trustRules.start, trustCap: sim.config.trustRules.capPerSubPeriod, trustMovedThisSub: 0, style: null, lastStyle: null, lastReaction: null,
     neededAtStart: needOf(p.start, sim.config.thresholds.high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: sim.period, revealed: false, concernShared: false, lastChange: 0,
-    recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale
+    recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale, moraleHistory: [], strikes: 0
   };
 }
 

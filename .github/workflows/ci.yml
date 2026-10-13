@@ -1,6 +1,7 @@
 name: CI
 
-# Every push and pull request: tokens, lint, unit tests, types, build with the bundle budget,
+# Every push and pull request: tokens, lint, unit tests, types, build with the bundle budget, the
+# calibration and the synthetic players' checks (about 5 seconds),
 # Storybook smoke, end to end flows with axe, design parity against the Claude Design prototype, and the
 # Web Vitals budgets on a throttled production build; the reference server's tests and its end to end run.
 on:
@@ -20,6 +21,8 @@ jobs:
       - run: npm run tokens:check
       - run: npm run lint
       - run: npm run build
+      - run: npm run calibrate -- sales-elevator --check
+      - run: npm run synthetic -- --check
       - run: npx playwright install --with-deps chromium
       - run: npm run test:server
       - run: npm run storybook:smoke

@@ -29,12 +29,15 @@ describe('lens schema (D70)', () => {
     expect(parse(withLens(DEFAULT_LENS)).lens).toEqual(c.lens);
   });
 
-  it('takes 2 to 6 styles with unique keys and letters', () => {
-    const two = { ...DEFAULT_LENS, examples: undefined, styles: DEFAULT_LENS.styles.slice(0, 2), fit: Object.fromEntries(NEEDS.map(n => [n, { D: 0, G: 1 }])) };
-    expect(issues({ ...withLens(two), actions: raw.actions.map(a => ({ ...a, options: a.options.map(o => ({ ...o, style: undefined })) })) })).toEqual([]);
-    expect(issues(withLens({ ...two, styles: DEFAULT_LENS.styles.slice(0, 1), fit: Object.fromEntries(NEEDS.map(n => [n, { D: 0 }])) })).join()).toMatch(/lens\.styles/);
-    const seven = [...SIX_STYLES_LENS.styles, { key: 'extra', letter: 'X', name: 'Extra', short: 'One more.', description: 'One more.' }];
-    expect(issues(withLens({ ...SIX_STYLES_LENS, styles: seven })).join()).toMatch(/lens\.styles/);
+  it('takes 4 or 5 styles (D104) with unique keys and letters', () => {
+    const noTags = (input: StorylineInput) => ({ ...input, actions: raw.actions.map(a => ({ ...a, options: a.options.map(o => ({ ...o, style: undefined })) })) });
+    const three = { ...DEFAULT_LENS, examples: undefined, styles: DEFAULT_LENS.styles.slice(0, 3), fit: Object.fromEntries(NEEDS.map(n => [n, { D: 0, G: 1, P: 1 }])) };
+    expect(issues(noTags(withLens(three) as StorylineInput))).toEqual(['lens.styles: A lens has 4 or 5 styles']);
+    expect(issues(withLens(DEFAULT_LENS))).toEqual([]);
+    expect(issues(withSixStyles(raw))).toEqual([]);
+    const six = [...SIX_STYLES_LENS.styles, { key: 'extra', letter: 'X', name: 'Extra', short: 'One more.', description: 'One more.' }];
+    const sixFit = Object.fromEntries(NEEDS.map(n => [n, { ...SIX_STYLES_LENS.fit[n], extra: 1 }]));
+    expect(issues(withLens({ ...SIX_STYLES_LENS, styles: six, fit: sixFit })).join()).toMatch(/lens\.styles: A lens has 4 or 5 styles/);
     const dup = { ...DEFAULT_LENS, styles: DEFAULT_LENS.styles.map(s => ({ ...s, letter: 'D' })) };
     expect(issues(withLens(dup)).join()).toMatch(/letters must be unique/);
     expect(issues(withLens({ ...DEFAULT_LENS, styles: DEFAULT_LENS.styles.map((s, i) => ({ ...s, letter: i ? 'ABC' : s.letter })) })).join()).toMatch(/One or two characters/);
@@ -76,12 +79,12 @@ describe('Six Leadership Styles, end to end (D70)', () => {
     expect((heuristicEvaluator.evaluate({ format: 'roleplay', text: 'I trust you, it is your call.', styles: DEFAULT_LENS.styles }) as { styleUsed: string }).styleUsed).toBe('E');
   });
 
-  it('plays a full mock run with six styles: style setting, conversations, week ends and the report', async () => {
+  it('plays a full mock run with its five styles: style setting, conversations, week ends and the report', async () => {
     const good = await play(config, 'good', 3);
     const random = await play(config, 'random', 3);
     const v = EngineView.parse(good.view);
     expect(v.phase).toBe('ended');
-    expect(v.lens.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Pace Setter', 'Commander']);
+    expect(v.lens.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Drive']);
     expect(v.lens.needs.map(n => n.key)).toEqual([...NEEDS]);
     // The good player reads every need through the fit table and gets every weekly style right.
     expect(v.periods.every(p => p.week.styleFit.correct === p.week.styleFit.total)).toBe(true);
@@ -91,7 +94,7 @@ describe('Six Leadership Styles, end to end (D70)', () => {
     const r = v.report!;
     expect(Object.keys(r.style.shares)).toEqual(SIX_STYLES_LENS.styles.map(s => s.key));
     expect(r.style.grid).toHaveLength(4);
-    expect(r.style.grid.every(row => row.length === 6)).toBe(true);
+    expect(r.style.grid.every(row => row.length === 5)).toBe(true);
     expect(en(r.methodology.lines[0])).toBe('This simulation looks at leadership through the Six Leadership Styles lens.');
     expect(en(r.methodology.lines[1])).toMatch(/Inspire and Deliver/);
     // Report only skills: in the skills section, never in the summary or the plan.

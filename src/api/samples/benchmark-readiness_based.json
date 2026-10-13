@@ -46,11 +46,11 @@
       "key": "situational_flexibility",
       "reportOnly": false,
       "rated": 234,
-      "score": 60.73,
+      "score": 58.62,
       "levels": [
-        35,
-        96,
-        37,
+        36,
+        132,
+        0,
         66
       ],
       "unrated": 33
@@ -58,52 +58,53 @@
     {
       "key": "coaching_for_growth",
       "reportOnly": false,
-      "rated": 232,
-      "score": 62.01,
+      "rated": 233,
+      "score": 61.21,
       "levels": [
-        39,
-        41,
-        110,
-        42
+        42,
+        47,
+        127,
+        15,
+        2
       ],
-      "unrated": 35
+      "unrated": 34
     },
     {
       "key": "difficult_conversations",
       "reportOnly": false,
       "rated": 233,
-      "score": 85.29,
+      "score": 85.07,
       "levels": [
         0,
         0,
-        75,
-        57,
-        101
+        82,
+        51,
+        100
       ],
       "unrated": 34
     },
     {
       "key": "goal_setting",
       "reportOnly": false,
-      "rated": 233,
-      "score": 69.7,
+      "rated": 229,
+      "score": 70.51,
       "levels": [
-        1,
-        9,
+        0,
+        8,
         217,
-        6
+        4
       ],
-      "unrated": 34
+      "unrated": 38
     },
     {
       "key": "giving_feedback",
       "reportOnly": false,
       "rated": 134,
-      "score": 66.78,
+      "score": 66.94,
       "levels": [
         0,
-        8,
-        126
+        6,
+        128
       ],
       "unrated": 133
     },
@@ -111,10 +112,10 @@
       "key": "recognition_fairness",
       "reportOnly": false,
       "rated": 134,
-      "score": 46.68,
+      "score": 46.57,
       "levels": [
-        39,
-        86,
+        42,
+        83,
         9
       ],
       "unrated": 133
@@ -122,117 +123,117 @@
     {
       "key": "communicating_change",
       "reportOnly": false,
-      "rated": 130,
-      "score": 45.36,
+      "rated": 131,
+      "score": 45.56,
       "levels": [
-        56,
-        58,
-        16
+        52,
+        60,
+        19
       ],
-      "unrated": 137
+      "unrated": 136
     },
     {
       "key": "results_ownership",
       "reportOnly": false,
-      "rated": 204,
-      "score": 69.58,
+      "rated": 209,
+      "score": 68.57,
       "levels": [
-        63,
-        40,
+        69,
+        39,
         1,
         0,
         100
       ],
-      "unrated": 63
+      "unrated": 58
     }
   ],
   "overall": {
     "rated": 234,
-    "score": 68.26,
+    "score": 67.69,
     "levels": [
       0,
-      116,
-      18,
+      118,
+      16,
       100
     ],
     "unrated": 33
   },
   "objectives": {
     "target": 240000,
-    "revenue": 172373.82,
-    "conversions": 5.21,
-    "share": 71.82,
-    "beatTarget": 68,
+    "revenue": 171266.34,
+    "conversions": 5.15,
+    "share": 71.36,
+    "beatTarget": 70,
     "team": {
       "skill": {
         "start": 56,
-        "end": 62.79
+        "end": 65.92
       },
       "morale": {
         "start": 54,
-        "end": 30.31
+        "end": 34.78
       },
       "result": {
         "start": 59,
-        "end": 56.53
+        "end": 54.51
       },
       "trust": {
         "start": 50,
-        "end": 55.69
+        "end": 55.76
       }
     }
   },
   "styles": {
-    "adaptability": 41.81,
+    "adaptability": 41.8,
     "preferred": {
-      "D": 92.67,
-      "G": 97,
-      "P": 20.67,
-      "E": 56.67
+      "D": 97.83,
+      "G": 95.83,
+      "P": 15.5,
+      "E": 57.83
     },
     "perStyle": [
       {
         "key": "D",
-        "count": 6689,
-        "fitted": 4856,
-        "needed": 10861,
-        "proportion": 28.85,
-        "accuracy": 72.6,
-        "neededShare": 46.85
+        "count": 6598,
+        "fitted": 4762,
+        "needed": 10167,
+        "proportion": 29.4,
+        "accuracy": 72.17,
+        "neededShare": 45.31
       },
       {
         "key": "G",
-        "count": 4489,
-        "fitted": 853,
-        "needed": 1834,
-        "proportion": 19.36,
-        "accuracy": 19,
-        "neededShare": 7.91
+        "count": 4284,
+        "fitted": 832,
+        "needed": 1797,
+        "proportion": 19.09,
+        "accuracy": 19.42,
+        "neededShare": 8.01
       },
       {
         "key": "P",
-        "count": 5121,
-        "fitted": 3247,
-        "needed": 8507,
-        "proportion": 22.09,
-        "accuracy": 63.41,
-        "neededShare": 36.7
+        "count": 4887,
+        "fitted": 3162,
+        "needed": 8472,
+        "proportion": 21.78,
+        "accuracy": 64.7,
+        "neededShare": 37.76
       },
       {
         "key": "E",
-        "count": 6883,
-        "fitted": 1163,
-        "needed": 1980,
-        "proportion": 29.69,
-        "accuracy": 16.9,
-        "neededShare": 8.54
+        "count": 6670,
+        "fitted": 1194,
+        "needed": 2003,
+        "proportion": 29.73,
+        "accuracy": 17.9,
+        "neededShare": 8.93
       }
     ]
   },
   "consistency": {
-    "neededUsed": 63.13,
-    "intendedUsed": 42.95,
-    "neededIntended": 57.37
+    "neededUsed": 63,
+    "intendedUsed": 42.64,
+    "neededIntended": 57.34
   },
   "funnel": [
     {
@@ -241,28 +242,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 51.18,
-          "ideal": 61.93
+          "actual": 65.16,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 19.01,
-          "ideal": 25.78
+          "actual": 23.38,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 4.6,
-          "ideal": 6.44
+          "actual": 5.54,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 1.69,
-          "ideal": 2.68
+          "actual": 1.95,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.68,
-          "ideal": 1.11
+          "actual": 0.78,
+          "ideal": 1.48
         }
       ]
     },
@@ -272,28 +273,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 50.89,
-          "ideal": 61.93
+          "actual": 63.83,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 18.52,
-          "ideal": 25.78
+          "actual": 22.33,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 4.32,
-          "ideal": 6.44
+          "actual": 5.07,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 1.5,
-          "ideal": 2.68
+          "actual": 1.68,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.59,
-          "ideal": 1.11
+          "actual": 0.65,
+          "ideal": 1.48
         }
       ]
     },
@@ -303,28 +304,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 51.11,
-          "ideal": 61.93
+          "actual": 63.32,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 17.86,
-          "ideal": 25.78
+          "actual": 21.08,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 3.69,
-          "ideal": 6.44
+          "actual": 4.15,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 1.5,
-          "ideal": 2.68
+          "actual": 1.69,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.58,
-          "ideal": 1.11
+          "actual": 0.63,
+          "ideal": 1.48
         }
       ]
     },
@@ -334,28 +335,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 52.14,
-          "ideal": 61.93
+          "actual": 64.22,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 19.04,
-          "ideal": 25.78
+          "actual": 21.99,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 4.42,
-          "ideal": 6.44
+          "actual": 4.76,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 1.89,
-          "ideal": 2.68
+          "actual": 2,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.74,
-          "ideal": 1.11
+          "actual": 0.75,
+          "ideal": 1.48
         }
       ]
     },
@@ -365,28 +366,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 53.77,
-          "ideal": 61.93
+          "actual": 66.37,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 20.05,
-          "ideal": 25.78
+          "actual": 23.18,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 4.81,
-          "ideal": 6.44
+          "actual": 5.07,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 2.09,
-          "ideal": 2.68
+          "actual": 2.16,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.84,
-          "ideal": 1.11
+          "actual": 0.82,
+          "ideal": 1.48
         }
       ]
     },
@@ -396,28 +397,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 53.32,
-          "ideal": 61.93
+          "actual": 66.47,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 19.57,
-          "ideal": 25.78
+          "actual": 22.74,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 4.69,
-          "ideal": 6.44
+          "actual": 4.84,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 2.02,
-          "ideal": 2.68
+          "actual": 2.03,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.81,
-          "ideal": 1.11
+          "actual": 0.76,
+          "ideal": 1.48
         }
       ]
     },
@@ -427,28 +428,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 51.99,
-          "ideal": 61.93
+          "actual": 64.64,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 18.7,
-          "ideal": 25.78
+          "actual": 21.69,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 4.43,
-          "ideal": 6.44
+          "actual": 4.46,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 1.89,
-          "ideal": 2.68
+          "actual": 1.82,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.74,
-          "ideal": 1.11
+          "actual": 0.67,
+          "ideal": 1.48
         }
       ]
     },
@@ -458,28 +459,28 @@
       "stages": [
         {
           "stage": "leads",
-          "actual": 52.03,
-          "ideal": 61.93
+          "actual": 64.03,
+          "ideal": 84.56
         },
         {
           "stage": "qualify",
-          "actual": 18.84,
-          "ideal": 25.78
+          "actual": 21.43,
+          "ideal": 34.95
         },
         {
           "stage": "proposal",
-          "actual": 4.47,
-          "ideal": 6.44
+          "actual": 4.34,
+          "ideal": 8.67
         },
         {
           "stage": "negotiation",
-          "actual": 1.92,
-          "ideal": 2.68
+          "actual": 1.76,
+          "ideal": 3.58
         },
         {
           "stage": "conversion",
-          "actual": 0.77,
-          "ideal": 1.11
+          "actual": 0.65,
+          "ideal": 1.48
         }
       ]
     }
@@ -487,31 +488,31 @@
   "actions": [
     {
       "key": "meet",
-      "frequency": 0.81,
-      "used": 121,
-      "reached": 1967,
-      "mean": 5.33
+      "frequency": 0.83,
+      "used": 126,
+      "reached": 1880,
+      "mean": 4.22
     },
     {
       "key": "energize",
-      "frequency": 2.4,
+      "frequency": 2.36,
       "used": 134,
-      "reached": 5667,
-      "mean": 2.41
+      "reached": 5220,
+      "mean": 1.58
     },
     {
       "key": "email",
-      "frequency": 1.28,
-      "used": 128,
-      "reached": 342,
-      "mean": 0.9
+      "frequency": 1.24,
+      "used": 126,
+      "reached": 330,
+      "mean": 0.52
     },
     {
       "key": "training",
-      "frequency": 2.87,
+      "frequency": 2.7,
       "used": 134,
-      "reached": 767,
-      "mean": 5.16
+      "reached": 721,
+      "mean": 5.74
     },
     {
       "key": "swap",
@@ -536,10 +537,10 @@
     },
     {
       "key": "f2f",
-      "frequency": 2.28,
-      "used": 185,
-      "reached": 608,
-      "mean": 7.56
+      "frequency": 2.34,
+      "used": 188,
+      "reached": 626,
+      "mean": 6.12
     },
     {
       "key": "assess",
@@ -550,45 +551,45 @@
     },
     {
       "key": "reward",
-      "frequency": 1.1,
-      "used": 121,
-      "reached": 548,
-      "mean": -5.88
+      "frequency": 1.07,
+      "used": 125,
+      "reached": 540,
+      "mean": -7.13
     },
     {
       "key": "goals",
-      "frequency": 1.14,
-      "used": 121,
-      "reached": 305,
-      "mean": -4.85
+      "frequency": 1.12,
+      "used": 124,
+      "reached": 299,
+      "mean": -4.77
     },
     {
       "key": "coach",
-      "frequency": 6.05,
+      "frequency": 5.99,
       "used": 225,
-      "reached": 1615,
-      "mean": 9.3
+      "reached": 1600,
+      "mean": 7.4
     },
     {
       "key": "feedback",
-      "frequency": 1.16,
-      "used": 125,
-      "reached": 311,
-      "mean": 1.05
+      "frequency": 1.24,
+      "used": 124,
+      "reached": 330,
+      "mean": -0.15
     }
   ],
   "attention": {
-    "top": 20.53,
-    "average": 31.4,
-    "bottom": 48.07
+    "top": 19.48,
+    "average": 30.52,
+    "bottom": 50
   },
   "verdicts": {
     "assessed": 150,
     "counts": {
-      "exceeds": 37,
-      "meets": 10,
+      "exceeds": 0,
+      "meets": 45,
       "approaching": 56,
-      "below": 8,
+      "below": 10,
       "none": 39
     }
   }

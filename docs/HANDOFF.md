@@ -1,6 +1,6 @@
 # iLead 2.0 participant app: handoff to the server and GenieKreator teams
 
-This is the M8 handoff (DECISIONS D78), kept current since (D79 to D88). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
+This is the M8 handoff (DECISIONS D78), kept current since (D79 to D166). It says what the app is, what it expects from a server, and how to run, test and release it. The root `HANDOFF.md` only points here.
 
 Sources of truth, in order: the code's Zod schemas (generated into `docs/schemas/*.json`, see below), `docs/SIMULATION.md` (the rules), `docs/DECISIONS.md` (every conflict and choice), `docs/SPEECH.md` (voice and streamed text), and the GenieKreator docs in `docs/genie/`.
 
@@ -14,14 +14,15 @@ Browser (this repo, Vite + React 19 + TypeScript strict)
   src/api                                   IleadApi: the app shell's other calls (HTTP adapter or mock)
   src/speech, src/ai                        Voice capture with server transcription; streamed AI text (SSE)
   src/theme                                 Runtime client theme loader (GenieKreator theme JSON)
-  src/author                                /author: GenieKreator's author chat prototype (lazy)
+  src/author                                /author: GenieKreator's authoring tool, chat, workspace and library (lazy, D105)
+  src/author/calibrate                      GenieKreator's synthetic player calibration: CalibrateSlot (lazy, engine in a Web Worker)
   src/group                                 /group: the organization's group report (lazy)
 
 Server (built: server/, docs/SERVER.md, D81; the base paths of .env.server)
   Engine        /engine/sessions/{session}/view, /intents, /interactions/.../stream   (VITE_ILEAD_ENGINE_URL=/engine)
   App API       /api/profile, /theme, /history, /report.pdf, /report/email, /cohort/...  (VITE_ILEAD_API_URL=/api)
   Speech        /speech/transcriptions...                                             (VITE_ILEAD_SPEECH_URL=/speech)
-  GenieKreator  /genie/author/turn, /genie/author/draft                               (VITE_GENIE_URL=/genie)
+  GenieKreator  /genie/author/turn, /genie/author/draft, /genie/author/edit, /genie/calibrations          (VITE_GENIE_URL=/genie)
   Sign in       /launch?token=<signed launch link>, /auth/me, /auth/logout
   Operations    /healthz, /readyz, /openapi.json
 ```
@@ -57,8 +58,11 @@ Schema: `src/engine/contract.ts`. JSON Schemas: `docs/schemas/engine-view.json`,
 - **Retries and idempotency** (D86): the client keeps intents in order and, while offline or after a network failure, holds them (in local storage, for a server run) and sends them again on reconnect, each with the same `Idempotency-Key` header. The server answers a repeated key with the stored result instead of applying the intent twice (D100; a key is 1 to 200 characters, otherwise 400 `badIdempotencyKey`). 5xx answers are retried three times (1, 3 and 8 seconds), then reported.
 - **The first view early** (D87): `index.html` asks for `GET {engine}/sessions/{session}/view` in an inline script before the app's code arrives; a strict CSP needs that script's hash.
 - **View additions for the original flow gaps** (D89 to D99): `storyline.video` (welcome video and transcript), `lens.examples` (worked examples), each stage's `about` and `suits`, each action's `cooldown` and `unlockPeriod`, `trends` (each revealed person's result by period), `milestones` (progress milestones reached, D93), `guide` (`tour.enabled`, `demo: { enabled, with, action }`), optional profile `attitude`, `awareness` and `responsibilities`, and the history log's `action` key. All have defaults in the contract, so an older server's view still parses.
+- **Consequences that carry forward** (D135 to D142): a new intent, `decide` (`{ type: 'decide', choiceId, option }`, board phase only; an unknown or closed choice is refused). The view adds `variables` (the shown business variables: key, name, format, value, the period's start, range, whether more is better, what it means, the last three causes), `openChoices` (decisions waiting: what is known and the options' labels, never their consequences, with the days left) and `choices` (decisions made or left to their default, with what they changed); an event card that opens a decision carries its `choiceId`. The week end's summary adds `variables`, `choices` and `attrition` (who went off sick or resigned) when the storyline uses them. The report adds `decisions` and `businessVariables` and the `decisions` section. All have defaults, so an older server's payload still parses. The mock plays the Client Trust demo with `?storyline=client-trust`; the server lists `client_trust` as a built in storyline.
+- **Stakeholders outside the team** (D160 to D165): a new intent, `engageStakeholder` (`{ type: 'engageStakeholder', stakeholder, interaction, option? }`, board phase only; a live interaction opens a conversation like a team one, a static one takes its `option`; refused when it is not offered, already used this week, or the days are not there). The view adds `stakeholders` (each one's key, name, role, kind, pronoun, portrait, what is known, trust and satisfaction with their start of period and level, the interactions on offer with their cost and why one is not, and the open request with its deadline); a live view of a stakeholder conversation carries `stakeholder` (who, the type and the goal); an event card from a stakeholder carries `stakeholder`. The week end's summary adds `stakeholders` (how each relationship moved). The report adds `stakeholders` and the `stakeholders` section. All have defaults, so an older server's payload still parses. The AI service's NPC prompt (v3) reads a stakeholder's character sheet and the evaluator has `stakeholder`, `present` and `negotiate` formats (email v2).
 - **The view never includes a member's needed style**, the fit table, raw model scores or the lens's source. Members' stats are `null` until the profile is opened (D39).
 - **Streaming:** abort the request to stop a line, then send `interruptTurn`. A body that ends without `done` or `error` is read as a retryable error. Details: `src/ai/sse.ts`, `docs/SPEECH.md`.
+- **The report's summary** (D143 to D145) adds `profile`, `headline`, `lines` and `drivers` (what drove the results, which also names decisions and business variables that moved, D152), and a reconciled skill carries `reconciled`; all defaulted, so reports stored before still parse.
 - **The report** (`EngineView.report`) is null until the run ends, then a `ReportView` (`src/engine/reportContract.ts`, `docs/schemas/report-view.json`). The first load checks only that it is an object; the end screen and the report (both lazy) parse it.
 
 ## 3. The app API (proposed endpoints)
@@ -87,16 +91,29 @@ Base `VITE_ILEAD_SPEECH_URL`. Chunked uploads, one request at a time, transcript
 
 On the server, `createTranscriber(config)` from `ai/` (D82, `docs/AI.md` 7) forwards the chunks to a speech to text service configured by `SPEECH_URL` and `SPEECH_KEY` (vendor neutral, the same chunked contract; a mock without them). NPC replies stream from `createNpcModel(config)`; `docs/AI.md` 2 shows how to wire them to the stream endpoint.
 
-## 5. The author chat (GenieKreator)
+## 5. GenieKreator's authoring tool (/author)
+
+Built to the approved canvas in `docs/design/genie` (D105 to D111): the co-creator chat (typed or voice answers, a live "Your simulation so far", the lens recommendation), First draft ready, the workspace with twelve tabs and Ask Kora, and the library admin page. Routes `/author`, `/author/workspace/<tab>`, `/author/library`; all lazy, light only, laptops and tablets to 834 wide.
+
+- **The draft** is one Zod model (`src/author/model/draft.ts`) kept in local storage (`ilead.author.workspace`) and parsed back on load; a stored draft that does not parse is repaired field by field and the author is told what changed (D124). Every change is a step of undo with a name, and changes that replace or remove work save a named version first (`ilead.author.workspace.versions`, History in the header, D122). Saves happen when the page is hidden or closed too, another tab's change pauses saving until the author picks a version, and full or blocked storage is said in view (D123). `seedDraft` fills it offline from the chat; `toStoryline` turns it into the engine's StorylineConfig (checked with the schema and the copy guard). Provenance marks: AI, You, Edited, Needs you (computed), Suggestion (Kora's dashed ideas).
+- **Voice answers** use the participant app's speech client (MediaRecorder and the chunked transcription endpoints served with `createTranscriber` from `ai/`), at `VITE_GENIE_SPEECH_URL` or else `VITE_ILEAD_SPEECH_URL`; without either, an offline mock voice (`src/author/voice.ts`).
+- **Ask Kora** turns an instruction into structured changes shown as a diff to apply or discard, never words appended to the content (D125): offline by rules (`src/author/model/intents.ts`), with a server by the model (`POST /author/edit`, D127), which falls back to the rules and says so. **Regenerate** drafts from the draft as it is now and keeps every field the author wrote (D126).
+- **Test with synthetic players** renders `CalibrateSlot` from `src/author/calibrate/index.ts` when it exists (props in `src/author/ui/workspace/tabs/Calibrate.tsx`), else a coming soon panel.
+- **Every field reaches the storyline** (D128 to D130): events export their timing, response, escalation and lead flow; pacing and days per week move real levers; a character's persona and the Story tab's world go to the AI character (`Person.npc`, `StorylineConfig.world`). Missing references are issues, never retargeted. `src/author/model/export.test.ts` guards it field by field. Not yet: the Brand tab's theme export and the Story tab's visuals (D128). Publishing offline records the version and offers the configuration to download; a server publishes it.
+
+### The drafting endpoints
 
 Base `VITE_GENIE_URL`. Schemas in `src/api/author.ts`; prompts the server must follow in `docs/genie/prompts/author-chat.md` and `leadership-lens.md`. A 404 or 501 falls back to the templates turn by turn.
 
 | Method and path | Request | Response |
 |---|---|---|
-| `POST /author/turn` | `AuthorTurnRequest`: `{ brief, asked, answers }` | `AuthorTurnResponse`: `{ kind: 'question', brief, question, progress }` or `{ kind: 'lens', brief, recommendation, framework }` |
-| `POST /author/draft` | `AuthorDraftRequest`: `{ brief, leadership_lens }` (the locked Leadership Lens module) | `AuthorDraftResponse`: `{ storyline, preview }` |
+| `POST /author/turn` | `AuthorTurnRequest`: `{ brief, asked, answers, taken }` | `AuthorTurnResponse`: `{ kind: 'question', brief, question, progress }`, `{ kind: 'clarify', brief, clarify }` (D147) or `{ kind: 'lens', brief, recommendation, framework }`. The brief carries `stakeholders`, `objectives` and `dilemmas` (D146). The app waits 30 seconds; the server reads a turn in 25 (D148) |
+| `POST /author/draft` | `AuthorDraftRequest`: `{ brief, leadership_lens }` (the locked Leadership Lens module) | `AuthorDraftResponse`: `{ storyline, preview }`. With dilemmas in the brief, the storyline has decisions seeded from them and business variables from the objectives, worded by the model (`author-draft` version 3, D153). The app waits 120 seconds |
+| `POST /author/edit` | `AuthorEditRequest` (`src/api/authorEdit.ts`): `{ instruction, tab, view: { context, fields } }`, the whitelisted fields Kora may change | `AuthorEditResponse`: `{ kind: 'patch', reply, ops: [{ path, value }] }` or `{ kind: 'reply', reply, options }`; the app checks the patch against the draft (D127) and falls back to its rules on 404, 501, 502 or after 30 seconds |
 
 The client checks every draft against the storyline schema and the copy guard (`src/author/copyGuard.ts`) and uses the templates when either fails. JSON Schemas: `docs/schemas/author-*.json`.
+
+**Test with synthetic players** (D112 to D118, `docs/CALIBRATION-SYNTHETIC.md`): `src/author/calibrate` exports `CalibrateSlot` (props: the draft `config`, an optional `apiBase`, `results`, `onResults`, `onAsk`) for the /author workspace's tab, and `calibrationPublishCheck(results, { draft })` for its publish checks. It runs on the server (`POST /genie/calibrations` and friends, an in process job) or, without one, in a Web Worker in the browser; `/author/calibrate` shows it on the bundled draft.
 
 The server implementation is `createAuthorDrafter(config)` in `ai/` (D82, `docs/AI.md`): the model reads answers, uploads and frameworks and writes the draft's copy; the question policy, the lens precedence and the template's mechanics stay rules; every draft passes the schema and the copy guard on the server too, or the templates draft is returned.
 
@@ -104,7 +121,7 @@ The server implementation is `createAuthorDrafter(config)` in `ai/` (D82, `docs/
 
 | Config | Schema | JSON Schema | Docs |
 |---|---|---|---|
-| Storyline (GenieKreator's simulation config): money, time, stages, people, thresholds, lens, actions, live settings, events, triggers, gamification, report | `StorylineConfig` in `src/engine/config.ts`; `parseStoryline()` | `docs/schemas/storyline-config.json` | SIMULATION 1 to 8, `docs/genie/GenieKreator Configuration Spec iLead Simulation.md`. The sample is `src/engine/storylines/sales-elevator.json`. |
+| Storyline (GenieKreator's simulation config): money, time, stages, people, thresholds, lens, actions, live settings, events, triggers, gamification, report; optional people dynamics (`dynamics`), business variables (`variables`), and on events conditions (`if`), business effects (`business`) and decisions (`choice`) (D135 to D138) | `StorylineConfig` in `src/engine/config.ts`; `parseStoryline()` | `docs/schemas/storyline-config.json` | SIMULATION 1 to 8 (3.5, 6.6 to 6.8 for the new blocks), `docs/genie/GenieKreator Configuration Spec iLead Simulation.md`. The samples are `src/engine/storylines/sales-elevator.json` and `client-trust.json` (every new block). |
 | Leadership lens (inside the storyline) | `Lens` in `src/engine/config.ts`; the library in `src/engine/lensLibrary.ts` | (part of the storyline schema) | D70, D71, `docs/genie/leadership-lens-module.md` |
 | Client theme | `ThemeConfigSchema` in `src/theme/schema.ts`; `resolveTheme()` | `docs/schemas/theme-config.json` | README "Themes", D72. Samples: `src/theme/samples/halden.json`, `brightwater.json`. |
 
@@ -133,7 +150,10 @@ npm run storybook:smoke     # every story in four themes, fails on render or con
 npm run parity              # every design frame against the Claude Design prototype (60 frames)
 npm run e2e                 # Playwright on the mock engine, axe on every route (tests/e2e/a11y.spec.ts) and visual baselines
 npm run vitals              # Web Vitals budgets on a production build, throttled (section 9)
-npm run calibrate -- sales-elevator --check   # a storyline still plays well
+npm run calibrate -- sales-elevator --check   # a storyline still plays well (exits 1 when a band fails)
+npm run calibrate -- client-trust --check     # the consequences demo (D141)
+npm run calibrate -- sales-elevator --check --lens six_styles   # the same on the five style test lens (D104)
+npm run synthetic -- --check                  # synthetic players at four levels on every bundled storyline (docs/CALIBRATION-SYNTHETIC.md)
 npm run benchmark -- --check                  # the cached group report benchmark matches the engine
 ```
 
@@ -149,7 +169,7 @@ npm run server:mint -- --sub p-1 --name "Ana Ruiz" --cohort spring   # a launch 
 docker compose up --build   # the production image
 ```
 
-**Release.** CI (`.github/workflows/ci.yml`) runs every check above on each push and pull request. A release is `npm run build`: static files in `dist/` (an `index.html` and hashed assets), served from any static host or CDN with gzip or brotli, long cache headers on `/assets/*` and no cache on `index.html`. Every route (`/`, `/group`, `/author`) is the same `index.html` (SPA fallback). `/author` and `/group` are not for participants; put them behind GenieKreator's and the organization's sign in. The app is meant to move into the GenieKreator monorepo as `apps/participant` with the engine as a shared package (D48).
+**Release.** CI (`.github/workflows/ci.yml`) runs every check above on each push and pull request. A release is `npm run build`: static files in `dist/` (an `index.html` and hashed assets), served from any static host or CDN with gzip or brotli, long cache headers on `/assets/*` and no cache on `index.html`. Every route (`/`, `/group`, `/author` and its `/author/...` paths) is the same `index.html` (SPA fallback). `/author` and `/group` are not for participants; put them behind GenieKreator's and the organization's sign in. The app is meant to move into the GenieKreator monorepo as `apps/participant` with the engine as a shared package (D48).
 
 **Visual baselines** live in `tests/e2e/visual.spec.ts-snapshots`. Refresh only after reviewing the diff: `npx playwright test visual --update-snapshots`. Parity baselines are rendered from the prototype on each run (`.visual-cache/`).
 
@@ -157,7 +177,7 @@ docker compose up --build   # the production image
 
 | Budget | Value | Enforced by |
 |---|---|---|
-| Initial JS (gzipped) | 250 KB | `npm run build` (`scripts/budget.ts`) |
+| Initial JS (gzipped) | 250 KB (214.6 KB with the new /author, D105; 217.6 KB with the business bar, D136; the decision dialog is lazy) | `npm run build` (`scripts/budget.ts`) |
 | LCP | 2.5 s (board and group report 3 s) | `npm run vitals` |
 | CLS | 0.1 | `npm run vitals` |
 | TBT (stands in for INP) | 300 ms (board 400 ms, D87) | `npm run vitals` |
@@ -169,14 +189,14 @@ docker compose up --build   # the production image
 
 `npm run vitals` measures a production build served by `vite preview` (gzipped, as a CDN would), in Chromium with the CPU 4x slower and a Fast 3G like network (150 ms latency per request, 1.44 Mbps down and 675 Kbps up: Lighthouse's 1.6 Mbps and 750 Kbps at the 90% DevTools applies), 3 runs per page, the median against the budget. The build talks to a stub of the server over the HTTP adapters, running the same engine code in Node, so the numbers are the app's, not the mock engine's.
 
-Measured on 7 Oct 2026 after the original flow gaps and viewport fit (medians of 3; D78, D87 and D101 have the numbers before). Initial JS 214.3 KB of 250.
+Measured on 7 Oct 2026 after the new /author (D105; medians of 3; D78, D87, D101 have the numbers before). Initial JS 214.6 KB of 250.
 
 | Page | LCP | CLS | TBT | INP | Transfer |
 |---|---|---|---|---|---|
-| First load (onboarding) | 2432 ms / 2500 | 0.002 / 0.1 | 255 ms / 300 | | 368 KB / 450 |
-| Board | 2872 ms / 3000 | 0 / 0.1 | 367 ms / 400 | 136 ms / 200 | 400 KB / 450 |
-| Report, opened from the end screen (click to title painted) | 1136 ms / 2500 | 0 / 0.1 | 194 ms / 300 | | 46 KB / 100 |
-| Group report | 2732 ms / 3000 | 0.007 / 0.1 | 280 ms / 300 | | 401 KB / 450 |
+| First load (onboarding) | 2468 ms / 2500 | 0.002 / 0.1 | 241 ms / 300 | | 372 KB / 450 |
+| Board | 2868 ms / 3000 | 0 / 0.1 | 336 ms / 400 | 136 ms / 200 | 404 KB / 450 |
+| Report, opened from the end screen (click to title painted) | 1075 ms / 2500 | 0 / 0.1 | 168 ms / 300 | | 46 KB / 100 |
+| Group report | 2756 ms / 3000 | 0.007 / 0.1 | 240 ms / 300 | | 405 KB / 450 |
 
 The board and group report keep LCP 3 s: at this network the first load's bytes take about 2 s, and the board's largest paint is a portrait after them. Their first renders are split (D87), so TBT is held at 400 ms on the board and 300 ms on the group report.
 
@@ -191,6 +211,9 @@ The board and group report keep LCP 3 s: at this network the first load's bytes 
 - **Original flow gaps** (D89 to D103): built except Help and Support and Logout (dropped by the product owner) and the org chart (decide with the next storyline). The panels, tours and demo load on demand. Every play screen fits the window at the laptop and tablet sizes in D101 (`tests/e2e/viewport.spec.ts`).
 - **Not built:** a design for the interview, the written plan and the Week 0 practice (functional in the shared shell, D52, D84, D85, awaiting the canvas, D80); phones (D69); playing offline (the client holds actions while offline and sends them on reconnect, D86, but the mock engine is the only offline engine).
 - **The design prototype** (`?engine=off`, `/screens`, `/states`) stays for parity only; it is not a product surface.
+- **Lens styles** (D104): every lens has 4 or 5 styles; Six Leadership Styles plays five (Drive merges Pacesetting and Commanding) and keeps its library title, which the product owner may rename. Authors rename styles per lens; report lines name a style with `{style}`.
+- **Consequences** (D135 to D142, D152, D153): the run summary and the group report do not carry choices or business variables yet; decisions seeded from a brief's dilemmas are not seeded again when the author edits the dilemmas in the Brief tab; /author does not edit business effects on actions, counters, or an ignored decision's consequence without a default (the engine plays all three).
+- **/author** (D105 to D111, D128 to D130): offline it drafts with rules and templates; the model drafter, Kora on the model, PDF reading, the persona check on publish and publishing itself are the server's. What the export does not carry yet (the theme, the Story tab's visuals) is in section 5. The calibration tab's feature lands separately (`src/author/calibrate`).
 
 ## 11. What the engineer configures (server)
 

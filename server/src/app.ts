@@ -21,9 +21,10 @@ import { Reports } from './reports';
 import { purge, registerAdmin } from './routes/admin';
 import { registerApi } from './routes/api';
 import { registerAuthor } from './routes/author';
+import { registerCalibrate } from './routes/calibrate';
 import { registerEngine } from './routes/engine';
 import { registerLaunch } from './routes/launch';
-import { registerOps, serveStatic } from './routes/ops';
+import { inlineScriptHashes, registerOps, serveStatic } from './routes/ops';
 import { registerSpeech } from './routes/speech';
 import type { Repository } from './store';
 
@@ -79,7 +80,7 @@ export function createApp(deps: AppDeps) {
 
   app.use(secureHeaders({
     contentSecurityPolicy: {
-      defaultSrc: ["'self'"], scriptSrc: ["'self'"], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      defaultSrc: ["'self'"], scriptSrc: ["'self'", ...inlineScriptHashes(config.STATIC_DIR)], styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'data:', 'https://fonts.gstatic.com'], imgSrc: ["'self'", 'data:', 'blob:', 'https:'], mediaSrc: ["'self'", 'blob:'],
       connectSrc: ["'self'", ...config.CORS_ORIGINS], objectSrc: ["'none'"], baseUri: ["'self'"], formAction: ["'self'"],
       frameAncestors: config.FRAME_ANCESTORS.length ? config.FRAME_ANCESTORS : ["'self'"]
@@ -119,6 +120,7 @@ export function createApp(deps: AppDeps) {
   registerEngine(ctx);
   registerApi(ctx);
   registerAuthor(ctx);
+  const calibrations = registerCalibrate(ctx);
   const stopSpeech = registerSpeech(ctx);
   registerAdmin(ctx);
   if (config.STATIC_DIR) serveStatic(app, config.STATIC_DIR);
@@ -133,7 +135,7 @@ export function createApp(deps: AppDeps) {
   };
 
   return {
-    app, ctx,
+    app, ctx, calibrations,
     /** Starts the schedules: benchmarks every BENCHMARK_REFRESH_HOURS, retention daily, both once soon after start. */
     schedule() {
       every(config.BENCHMARK_REFRESH_HOURS, () => reports.refreshBenchmarks(), 'benchmark refresh');
@@ -147,6 +149,7 @@ export function createApp(deps: AppDeps) {
     },
     async close() {
       for (const t of timers) clearInterval(t);
+      calibrations.close();
       stopSpeech();
       await deps.pdf?.close();
       deps.mailer?.close();

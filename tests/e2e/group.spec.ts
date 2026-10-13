@@ -125,11 +125,11 @@ test('light theme at 1440, the client theme at 1024: axe clean, nothing sideways
   expect(await axe(page)).toEqual([]);
 });
 
-test('six styles at 834 in the light theme and in dark: six style rows, axe clean, nothing sideways', async ({ page }) => {
+test('Six Leadership Styles at 834 in the light theme and in dark: five style rows, axe clean, nothing sideways', async ({ page }) => {
   await page.setViewportSize({ width: 834, height: 1194 });
   await open(page, '?lens=six_styles&theme=light');
   await expect(page.getByText('Sales Elevator, Innov8 Elevators · Six Leadership Styles lens')).toBeVisible();
-  await expect(page.getByRole('article', { name: 'Pace Setter' })).toBeVisible();
+  await expect(page.getByRole('article', { name: 'Drive', exact: true })).toBeVisible();
   await expect(page.getByRole('article', { name: 'Harmonizer' })).toBeVisible();
   expect(await noSideways(page)).toBe(true);
   expect(await axe(page)).toEqual([]);

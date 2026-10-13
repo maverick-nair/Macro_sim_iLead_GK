@@ -6,6 +6,7 @@ import { loadEngineCopy } from '../i18n/locales';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
+import clientTrust from './storylines/client-trust.json';
 import { withSixStyles } from './storylines/sixStyles';
 import { neededStyles, play, type Policy } from './sim/policies';
 import { DEMO_SEED, demoRefusal } from './demo';
@@ -46,10 +47,12 @@ export function defaultStoryline(lens?: string | null): StorylineConfig {
     const draft = draftStoryline();
     if (draft) return draft;
   }
-  // `?lens=six_styles` plays Sales Elevator with the Six Leadership Styles test lens (D70), for demos and tests.
-  const base = lens === 'six_styles' ? withSixStyles(salesElevator as unknown as StorylineInput) : salesElevator as unknown as StorylineInput;
-  // `?purpose=assessment` plays it as an assessment, so the report carries verdicts (D75).
   const q = new URLSearchParams(globalThis.location?.search ?? '');
+  // `?storyline=client-trust` plays the Client Trust demo (D141): dynamics, business variables and choice events.
+  const sample = (q.get('storyline') === 'client-trust' ? clientTrust : salesElevator) as unknown as StorylineInput;
+  // `?lens=six_styles` plays it with the Six Leadership Styles test lens (D70), for demos and tests.
+  const base = lens === 'six_styles' ? withSixStyles(sample) : sample;
+  // `?purpose=assessment` plays it as an assessment, so the report carries verdicts (D75).
   const purpose = q.get('purpose');
   // `?video=1` adds the sample welcome video and its transcript (D90), for demos and tests: no storyline ships one yet.
   const video = q.get('video') === '1' ? { video: SAMPLE_VIDEO } : {};

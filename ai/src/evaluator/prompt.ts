@@ -14,7 +14,8 @@ import { modelEvaluationJsonSchema } from './schema';
  * breakpoint, and last the transcript, which is different every time.
  */
 
-export const FORMATS = ['roleplay', 'chat', 'email', 'meeting', 'sponsor', 'interview', 'plan'] as const;
+/** The formats with a rubric guide; stakeholder conversations (D161) have three of their own. */
+export const FORMATS = ['roleplay', 'chat', 'email', 'meeting', 'sponsor', 'interview', 'plan', 'stakeholder', 'present', 'negotiate'] as const;
 export const DEFAULT_PROMISE_ACTIONS = ['f2f', 'goals', 'coach', 'feedback', 'reward', 'training', 'swap'];
 
 export function formatPrompt(format: string): Prompt {

@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { mintLaunchToken } from '../src/auth/launch';
 import type { LaunchInput } from '../src/auth/principal';
-import { E2E_SECRET } from '../playwright.config';
+import { E2E_SECRET, GUIDE_OFF } from '../playwright.config';
 
 /**
  * The app against the real server: launched by a minted link, a week played through the UI (styles, a 1:1
@@ -96,7 +96,7 @@ test('launches from a signed link and plays a week on the server, then resumes a
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/week 2/, { timeout: 30_000 });
 
   // A new browser (the old one closed): without a session the server refuses; a new launch resumes the same run.
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, storageState: GUIDE_OFF });
   const fresh = await context.newPage();
   const res = await fresh.request.get('/engine/sessions/e2e-1/view');
   expect(res.status()).toBe(401);

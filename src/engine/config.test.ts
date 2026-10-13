@@ -74,6 +74,23 @@ describe('storyline config', () => {
     expect(out).toMatch(/Unknown action nope/);
   });
 
+  it('refuses duplicate event keys and duplicate option keys within an action (D128)', () => {
+    const events = [...base().events!, { ...base().events![0] }];
+    expect(issues(storyline({ events })).join()).toMatch(new RegExp(`events.${events.length - 1}.key: Duplicate event ${events[0].key}`));
+    const a = base().actions.map(x => ({ ...x }));
+    a[0] = { ...a[0], options: [...a[0].options, { ...a[0].options[0] }] };
+    expect(issues(storyline({ actions: a })).join()).toMatch(/actions.0.options.\d+.key: Duplicate option/);
+  });
+
+  it('takes an optional AI character block per person, with reactions keyed by lens style (D130)', () => {
+    const m = base().members.map(p => ({ ...p }));
+    const style = base().lens?.styles[0].key ?? 'D';
+    m[0] = { ...m[0], npc: { age: '35 to 44', motivatedBy: 'Recognition', avoid: 'Salary', reactions: { [style]: 'Opens up.' }, speech: { pace: 30, warmth: 80, formality: 20, replyLength: 'short' }, notes: [{ label: 'Hobby', value: 'Cycling' }] } };
+    expect(issues(storyline({ members: m }))).toEqual([]);
+    m[0] = { ...m[0], npc: { reactions: { nope: 'Shrugs.' } } };
+    expect(issues(storyline({ members: m })).join()).toMatch(/members.0.npc.reactions.nope: No style called nope/);
+  });
+
   it('wants one lead input, or one per period', () => {
     expect(issues(storyline({ money: { ...base().money, inputPerSubPeriod: [8, 9, 10] } })).join()).toMatch(/one per period \(8\)/);
     expect(issues(storyline({ money: { ...base().money, inputPerSubPeriod: [6, 7, 8, 8, 9, 9, 10, 10] } }))).toEqual([]);

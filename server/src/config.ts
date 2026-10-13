@@ -59,6 +59,14 @@ export const ConfigSchema = z.object({
   STREAM_TOKENS_PER_SEC: int(40),
   DEFAULT_STORYLINE: z.string().default('sales_elevator'),
 
+  // Synthetic player calibrations (D117): jobs run in this process, this many at a time, with at most this many waiting.
+  CALIBRATION_CONCURRENCY: int(2),
+  CALIBRATION_QUEUE: int(20),
+  /** Calibrations one author may have queued or running at once (D120). */
+  CALIBRATION_PER_OWNER: int(2),
+  /** How long one calibration may run before it is stopped (D120). */
+  CALIBRATION_TIME_LIMIT_MS: int(600000),
+
   // AI (the ai/ module reads its own tuning variables through configFromEnv: docs/AI.md section 8)
   /** Default: `anthropic` when ANTHROPIC_API_KEY is set, else `mock`. */
   AI_PROVIDER: z.enum(['mock', 'anthropic']).optional(),

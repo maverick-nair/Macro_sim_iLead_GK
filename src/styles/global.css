@@ -8,25 +8,10 @@
 @import './tokens.generated.css';
 @import './celebration.css';
 
-/* A container that draws the focus ring of its visually hidden control (member card selection). */
-@custom-variant focus-within-select (&:has(> .il-select:focus-visible));
-/* Text larger than 100% (D56): the app root carries `data-text-large`, so layouts can reflow for big text
-   (grids drop columns, names wrap instead of truncating) without changing anything at 100%. */
-@custom-variant text-large (&:where([data-text-large], [data-text-large] *));
-/* A window or tablet narrower than the 1024 design (744 to 1023, D69): rows that hold a line at 1024 may wrap. */
-@custom-variant tablet (@media (max-width: 1023.98px));
-/* The portrait tablet layouts (D73): inside a root marked `data-tablet` (the board sets it when the window is
-   744 to 1023 wide and upright, `TABLET` in useMediaQuery; stories set it to show the tablet layout at any size). */
-@custom-variant tablet-portrait (&:where([data-tablet], [data-tablet] *));
-/* 1280 and wider: the design's full width layouts (a lens's style definitions in one row). */
-@custom-variant wide (@media (min-width: 1280px));
-/* Density steps for short windows (D101): laptops 900 tall and under (1440x800, 1366x768, 1513x745,
-   1280x720) take the compact sizes, so play screens fit without page scroll. At 200% text the page may scroll. */
-@custom-variant short (@media (max-height: 900px));
-@custom-variant shorter (@media (max-height: 780px));
-/* A live stage narrower than 560, as beside the open brief on a tablet (D69): its columns stack. The
-   stage section is the container; at 1024 and up it is wider, so nothing changes there. */
-@custom-variant stage-narrow (@container (max-width: 559.98px));
+@import './variants.css';
+/* The authoring tool (src/author) is lazy and brings its own utilities (src/author/author.css, D121),
+   so its classes stay out of the participant's render blocking stylesheet. */
+@source not '../author';
 
 /* App globals, from the iLeadApp design component helmet. In the base layer so utilities win. */
 @layer base {

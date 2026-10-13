@@ -70,6 +70,8 @@ Sales Elevator default [M][W]:
 | `candidates` | Hire pool, same shape. |
 | `hiddenConcern` | Optional per member: text that only surfaces in conversation (section 3.4). |
 | `attitude`, `awareness`, `responsibilities` | Optional profile rows (1.0's profile fields, D97); the profile shows the ones set. |
+| `npc` | Optional per person (D130): age, what motivates them, topics they will not discuss, reactions by lens style, how they talk (language, accent, pace, warmth, formality, reply length) and the author's own notes. Only the AI character reads it; the engine never does. |
+| `world` | Optional, on the storyline (D130): the company, product, market and the sponsor's voice, for the AI characters' small talk. The engine never reads it. |
 
 Sales Elevator default: the 10 active actors and 10 candidates from the workbook, after calibration (section 9).
 
@@ -86,7 +88,7 @@ Sales Elevator default: the 10 active actors and 10 candidates from the workbook
 
 **Scale.** Skill, morale, result and trust are integers clamped to 0 to 100.
 
-**The leadership lens** (D70, *config* `lens`) brings the styles a participant leads with: 2 to 6, each with a key, a letter of 1 or 2 characters for the segmented control, a name, a one line short and a description. The participant UI reads every style name from the view's `lens`; nothing in the client names a style. The default is Readiness Based Leadership with Directing (D), Guiding (G), Partnering (P) and Entrusting (E), the Sales Elevator storyline. `basedOn` (the source) is author only and never sent to participants.
+**The leadership lens** (D70, *config* `lens`) brings the styles a participant leads with: 4 or 5 (D104), each with a key, a letter of 1 or 2 characters for the segmented control, a name, a one line short and a description. The participant UI reads every style name from the view's `lens`; nothing in the client names a style. The default is Readiness Based Leadership with Directing (D), Guiding (G), Partnering (P) and Entrusting (E), the Sales Elevator storyline. `basedOn` (the source) is author only and never sent to participants.
 
 **A member's need** comes from their current skill and morale, High at or above `thresholds.high` (70). There are always four needs, one per quadrant; the lens names them:
 
@@ -167,6 +169,21 @@ Trust is how much a member believes in you as their leader. It is the 2.0 metric
 - The profile then shows "Shared: ...", and Trust rises +4.
 - The member's unanswered request then stops lowering morale.
 
+### 3.5 People dynamics (D135)
+*Config* `dynamics`, optional; left out, none of this applies and a storyline plays exactly as before (the same numbers and random draws). Sales Elevator and Client Trust enable it with the defaults (`"dynamics": {}`). Code: `src/engine/sim/dynamics.ts`.
+
+| Rule | Default | What it does |
+|---|---|---|
+| Rolling morale (`window`) | 5 days | Each person's morale at the end of each of the last 5 days, averaged (the current morale while there is less history). How people feel reaches their work with a lag, and so does a recovery. |
+| Output (`output.full`, `output.floor`) | 50, 0.5 | A person's result counts in the funnel in full at rolling morale 50 or more; below it the share falls in a line to half at 0. |
+| Growth (`growth.full`, `growth.floor`) | 50, 0.3 | Result gains from actions scale the same way, down to 30%: pushing a worn out team for result buys little. |
+| Trust (`trust.full`, `trust.floor`) | 50, 0.5 | Below trust 50 the positive skill, morale and result changes your actions make land at a share that falls to half at trust 0 (on top of 3.3's multiplier). Events and setbacks are not softened. |
+| Attrition (`attrition.below`, `chance`, `sickDays`, `resignAfter`) | 20, 0.2, 2, 2 | At each period end, someone whose rolling morale is under 20 goes off sick for 2 days with probability 0.2 plus 0.01 for each point under 20 (at most 0.95). The second time, they resign, unless they are the last person in their stage (then they go off sick again). A message and a history entry say why; the week end lists them. |
+
+Attrition draws on its own stream (`dynamicsSeed(seed)`), so it never moves another draw and replays exactly.
+
+**The burnout experiment** (`src/engine/sim/burnout.ts`, `dynamics.test.ts`): Sales Elevator with every fitting effect set to morale −8 and result +14, played by the good policy over 20 seeds. Without dynamics (the pre D135 values), burnout reached 223% of target against balanced play's 113% (scores 755 and 891), with team morale 0 and nobody leaving. With dynamics and the recalibrated values, burnout reaches 88% against balanced play's 111% (scores 729 and 890), morale 2, and 4.5 people leave on average. The test fails if burnout beats balanced play on revenue or score again.
+
 ---
 
 ## 4. Actions [M][W]
@@ -238,7 +255,7 @@ Skill / morale / result change for mismatch 0, 1 and 2 [W]:
 
 ### 4.4 Weekly style setting [M]
 
-At the start of each period you set a style per member, one of the lens's 2 to 6 styles; the Model doc calls these the actions a leader takes at the start of the week. When you confirm, each member's difference comes from the lens's fit table (their set style against their need, section 2), becomes a mismatch with the usual randomness, and applies this change once:
+At the start of each period you set a style per member, one of the lens's 4 or 5 styles (D104); the Model doc calls these the actions a leader takes at the start of the week. When you confirm, each member's difference comes from the lens's fit table (their set style against their need, section 2), becomes a mismatch with the usual randomness, and applies this change once:
 
 | Mismatch | Skill / morale / result per period |
 |---|---|
@@ -386,6 +403,8 @@ Every event setting is *config* (Configuration Spec, Events and NPC initiated mo
 | Expected response | Actions that count, the window in sub-periods, a bonus when on time | Replying to the event's message, or taking a listed action with the target, answers it. In time, the bonus applies to the target |
 | Escalation | A follow up event, and whether the sponsor hears of it | Past the window, the sponsor loses confidence (escalation, −10) and the follow up event fires |
 
+Event keys are unique in a storyline, and option keys are unique within an action (D128): the schema refuses duplicates.
+
 Sales Elevator: the 12 workbook events, mapped from 12 weeks to 8 as `round(period × 8 / 12)` with up to two a period (first and third sub-period), plus two that GenieKreator would generate from the context:
 
 | Event | Period | Impact (S / M / R) | Delivery and response |
@@ -426,6 +445,30 @@ Every event and trigger pauses the clock while its card is open [S].
 ### 6.5 Progress milestones (D93)
 After each funnel run the engine records a milestone, once each, when revenue first reaches each share of the run's target in `milestones.target` (default 25, 50, 75 and 100%) and when a stage's output so far first reaches each share in `milestones.stages` (default 50 and 100%) of its ideal output for the whole run (the sum of every period's ideal throughput). The view lists them (`milestones`: key, kind, stage, percent, period, sub-period). Nothing reads them back: no rule, draw or score changes, so replays and calibration are unchanged.
 
+### 6.6 Business variables (D136)
+*Config* `variables`, 0 to 6 (default none). Each: `key`, `name`, `format` (money in the storyline's currency, percent, points), `start`, `min`, `max`, `drift` (added at each period end), `shown` (on the participant's board), `weight` (share of the Business pillar, 7.1; all weights 0.8 at most), `higherIsBetter`, `about`. A value never leaves its range.
+
+A **business effect** (`Business`) can sit on an action's option (`business.always`, or `m0`, `m1`, `m2` by how well the approach fitted; a static or hybrid action applies the typical fit of the people it reached, a live one the conversation's), on an event (applied when it plays) or on a choice option (7 below). It holds variable deltas by key, a one off `revenue` change (added to the run's revenue, never below 0), `sponsor` confidence, flags to `set` and `clear`, counters to `count`, and `followUps` (an event after `days` and `weeks`). Each variable keeps its last three causes, which the board shows on its pill. The view sends `variables` (shown ones only: key, name, format, value, start of the period, range, causes) and the week end's summary their start and end.
+
+### 6.7 Choice events (D137)
+*Config* `event.choice`: `known` (up to 4 lines), `options` (2 to 4), `within` (days to decide, default 2), `default` (the option that applies if nobody decides) and `ignored` (what happens with no default). A choice is a board card (`delivery: 'modal'`) with no expected response. Each option: `label`, `detail`, `outcome` (shown after it is chosen, and in the report), `who` (the event's target, `team`, `stage:<key>` or a member id), `people` (skill, morale, result, through the usual effect rules), `trust`, `business` (6.6) and `read` (up to 4 skills, each with a band: what the decision shows about leading, apart from its business outcome).
+
+When the event plays, its card opens the decision (`openChoices` in the view, the card's `choiceId`). The participant decides with the `decide` intent (`choiceId`, `option`), in the board phase, or leaves it: past the deadline the default applies (`by: 'default'`), checked every day. Every resolution is a `ChoiceRecord`: the option, who decided, the changes to people, variables and revenue, flags, the follow ups it scheduled and the later events its flags made possible.
+
+### 6.8 Flags, counters, conditions and delays (D138)
+- **Flags and counters** are set, cleared and counted by business effects and live for the run.
+- **Conditions** (`event.if`): 1 to 3 clauses that must all hold. A clause tests a flag (set or not), a counter, a business variable or a metric (`teamMorale`, `teamTrust`, `teamSkill`, `teamResult` over the available team, `revenuePace` in percent of the pace so far, `sponsor`) against a value, `below` or `atLeast`. On a fixed, random or follow up event the condition is checked when it is due, and the event is skipped (recorded, never played later) when it fails. An event with a condition and no other timing is checked every day and plays the first time it holds.
+- **Delays.** `followUps` schedule an event after days and weeks; `escalation.delay` holds an ignored event's follow up. A follow up plays on the people its source event named.
+- **The worked example** (`business.test.ts`): week 2's "cut the training budget" sets `budget_cut` and lowers Budget; week 4's "Two people ask for the training you cut" has `if: [{ kind: 'flag', flag: 'budget_cut' }, { kind: 'metric', metric: 'teamMorale', op: 'below', value: 60 }]` and plays only when both hold.
+
+### 6.9 Stakeholders outside the team (D160 to D165)
+*Config* `stakeholders`, 0 to 8 (default none). Each: `key`, `name`, `role`, `kind` (manager, peer, customer, executive, board, union, partner, other), `pronoun` (they unless stated), `portrait`, `about`, `hiddenConcern` and `concernLine`, `npc` (the persona fields team members have: motivated by, avoid, speech, reactions, notes), `start` (trust and satisfaction, 0 to 100, default 50 each), `drift` (what each loses at a period end in which nobody engaged them, 0 or less) and `interactions` (up to 4). A stakeholder is never in the funnel and never a result: they act on the business through their interactions' effects, events and conditions.
+- **Relationship.** Trust (in the participant) and satisfaction persist for the run, move only through effects, and read on the board as a level: strained under 30, cool under 45, steady under 60, good under 75, strong from 75. Gains scale with trust (1 + 0.25 × (trust − 50) / 50 from 50 up, 0.5 + 0.5 × trust / 50 below), losses with its lack (1 + 0.5 × (50 − trust) / 50 below 50). The week end's summary has each relationship's start and end.
+- **Interactions.** `meet`, `present`, `negotiate` or `email`, each `live` (a conversation through the same AI character and evaluator as the team's, formats `stakeholder`, `present`, `negotiate` and `email`, with the stakeholder's character sheet in the prompt) or `static` (2 to 4 options). Each costs `cost` days (never the live cap), opens `from` a period and while `if` holds, and each stakeholder is engaged once a period, except to answer a meeting they asked for. A live interaction's `consequences` are by band (default strong 8 trust and 8 satisfaction, adequate 3 and 3, weak −3 and −4, harmful −8 and −10); a static option has an `effect` and a leadership `read`. An effect moves trust and satisfaction, the `business` (variables, revenue, sponsor confidence, flags, follow ups, other stakeholders), and `people` on `who`; with `needs`, it lands only while the relationship is there, else `otherwise` applies.
+- **Skills.** A live interaction rates its `skills` (left out, the type's defaults that the framework has: meet and negotiate on difficult conversations and results ownership, present and email on results ownership and communicating change) and counts in the Leadership pillar and the report's ratings like a team conversation; a static option's read counts like a choice's.
+- **Requests.** An event with `stakeholder` comes from them (their face and name on the card or message); with `request` (`kind` message or meeting, the answering `interaction`, `within` days, `onTime`, `ifIgnored`) it waits on the board with its deadline. A reply to their message moves half a band and costs no days; a meeting is answered by that interaction. Past the deadline, `ifIgnored` applies, then the event's escalation.
+- **Effects elsewhere.** Choice options, events (`business.stakeholders`) and follow ups move stakeholders by key; a condition clause `{ kind: 'stakeholder', stakeholder, measure, op, value }` tests one. The report's `stakeholders` part shows each relationship from start to end and the key interactions.
+
 ---
 
 ## 7. 2.0 gamification [G]
@@ -437,9 +480,9 @@ The GenieKreator rules (`docs/genie/scoring-and-report.md` section 6, D62). Form
 
 | Pillar | 0 to 100 |
 |---|---|
-| Business (B) | min(100, revenue ÷ target × 100) |
+| Business (B) | min(100, revenue ÷ target × 100); with weighted business variables (6.6, D139), (1 − Σ weights) × that + Σ weight × the variable's position in its range (0 at the bottom, 100 at the top; inverted when less is better) |
 | People (P) | 50 + change in team morale + 0.5 × change in team trust, since the start of the run, kept in 0 to 100 |
-| Leadership (L) | 0.5 × contextual capability % + 0.5 × the mean band score of all live interactions; with no live interaction, the capability % |
+| Leadership (L) | 0.5 × contextual capability % + 0.5 × the mean band score of all live interactions and of every choice the participant decided that has a read (each at its read's mean band score, D139); with neither, the capability % |
 
 - **Contextual capability %** = style tagged choices that matched what the person needed ÷ all style tagged choices, whole run. Style tagged: weekly style setting, and live conversations with one person (meetings, briefings, interviews and multi person emails carry no style).
 - **Band scores:** Strong 100, Adequate 70, Weak 35, Harmful 0.
@@ -526,22 +569,25 @@ Report 2.0 (`docs/genie/scoring-and-report.md` sections 5 and 7). The engine bui
 ### 8.2 Ratings
 - **Enough evidence:** 2 observations from 2 different interactions (`minObservations`, default 2); otherwise "Not enough evidence". Report only skills always need at least 2 from 2, whatever `minObservations` says.
 - **Skill score:** the mean of band scores (Strong 100, Adequate 70, Weak 35, Harmful 0). Level by threshold: Novice 0, Developing 40, Proficient 60, Advanced 75, Role Model 90. Any Harmful observation caps the skill at Developing.
+- **Reconciled with behaviour (D144):** a skill about adapting style or reading needs is rated from the words, then capped by what the participant chose (*config* `report.reconcile`). Signals: `styleFit`, the share of every style choice that fit (overall leadership adaptability), and `diagnosis`, the share of weekly style settings that fit; with several, the lowest counts. Default caps: under 40% at most Developing, under 70% at most Proficient. Default skills: Situational flexibility (both signals), and the Readiness Based dimensions Diagnosing readiness (`diagnosis`), Style fit, Style flexibility and Contextual fit (`styleFit`). The score is held under the next level, so the score out of 10, the level and the overall level agree, and the skill says why ("Your words in conversation rated Role Model, but your style choices fit what people needed 31% of the time, so this is rated Developing.").
 - **Overall level:** from the mean of rated skills, shown only when at least half the skills are rated.
 - **Evidence quotes:** up to 2 per skill, verbatim from the participant's own turns, highest band first, then the most recent.
 
 ### 8.3 Sections
 | # | Section | From |
 |---|---|---|
-| 1 | Executive summary | Overall level and its authored narrative; 3 strengths (top rated skills); 3 priorities (lowest rated, not already strengths); one business sentence (share of target, deals, the most frequent bottleneck) |
+| 1 | Executive summary | The headline and factual lines the run's evidence gives (D143, 8.6); the overall level, and its authored narrative when the data does not contradict it; 3 strengths (top rated skills); 3 priorities (lowest rated, not already strengths); one business sentence (share of target, deals, the most frequent bottleneck); what drove the results (D145, 8.6) |
 | 2 | Style flexibility and fit | Style shares over the lens's styles, dominant style, contextual capability %, the grid of the four needs (rows) against the style used (columns, one per lens style) with the fitting cells outlined from the fit table (sent with the report only, once the run has ended), weekly fit per person per period, narratives by capability band and dominant style (keyed by lens style; a style without a line adds none) |
 | 3 | Intent vs action | Per person: dominant weekly style, dominant style shown in conversations, aligned or gap, a quote from the latest conversation that differed, the participant's own reason from style setting, trust lost to mixed signals |
 | 4 | Skills profile | Level, anchor, observation count, quotes, or "Not enough evidence" |
-| 5 | Key moments | 5 to 7: conversations with a Strong, Weak or Harmful band, escalations, promises kept or broken, unanswered messages; ranked by the size of the changes to people, then shown in order. Each in SBI form with the intent declared that week |
+| 5 | Key moments | 5 to 7: conversations with a Strong, Weak or Harmful band, escalations, promises kept or broken, unanswered messages; ranked by the size of the changes to people, then shown in order. Each in SBI form with the intent declared that week; its impact lists the 3 largest net changes, one per person and metric (D145) |
 | 6 | People outcomes | Per person: morale, trust and result at each period end, actions taken and days spent with them, result change |
 | 7 | Business outcomes | Revenue against target pace per period, the funnel against the cumulative ideal, deals, the bottleneck in most periods and why (its lowest result owner's weakest number) |
 | 8 | Conversation analytics | Descriptive, never scored: participant words per NPC word in spoken and role play formats, open questions, recognition statements (authored phrase list) |
 | 9 | Development plan | The 3 lowest rated skills (then skills without enough evidence), each with an authored practice activity and on the job action, and a check in date |
 | 10 | Methodology | First the lens, in participant language: "This simulation looks at leadership through the {title} lens.", and with a secondary lens a line naming it and saying its skills are Report only. Then the authored copy, and the facts: conversations, observations, review status. The lens's source is never printed. |
+
+**Decisions and consequences** (`decisions`, D137, D139): each choice in order, the option taken or left to its default, its outcome, what it changed for people, the business variables and revenue, the later events it led to and the leadership it showed; and each shown variable at the start and end of the run (`decisions`, `businessVariables` in the report). It follows Key moments in the default sections whenever the storyline has choices or shown variables. A decided choice's read is also a skill observation (one interaction), so it counts toward a skill's evidence.
 
 The end screen collects up to 3 reflection answers (authored questions, by voice or text) and a 1 to 5 experience rating (`submitReflection`). The plan quotes the first answer.
 
@@ -553,7 +599,7 @@ The end screen collects up to 3 reflection answers (authored questions, by voice
 - **Consistency** (*config* `report.consistencyActions`, default the 1.0 report's Meet the Team, Meet Face to Face, Set Goals, Coach Member, Give Feedback: `meet`, `f2f`, `goals`, `coach`, `feedback`): needed against used is the share of uses whose style does not fit the person's need then (the fit table); intended against used the share of uses whose style differs from the style set for that person that period; needed against intended the share of weekly settings that did not fit. Per member: the predominant need (and the first style that fits it), style set and style used, ties in lens order.
 - **Verdicts** (assessment; *config* `report.assessment`): the bar is an overall level (default Proficient) and a floor (default Developing). Exceeds: above the bar overall and no rated skill below the bar's level. Meets: at the bar and no rated skill under the floor. Approaching: one level short at most and at most one skill under the floor. Below: anything else. No overall level, no verdict. Per skill: Strength above the bar's level, Meets at it, Development need below. Each verdict lists its live records, up to 3 quotes, and whether an assessor reviewed all, some or none of them. Report only skills get none.
 - **Sections** (`report.sections`; left out, the purpose's default): about (the simulation, how to read, confidentiality), summary (assessment: the verdict first), skills (score out of 10, what the skill means, the purpose's narrative, assessment: its verdict), objectives, adaptability, styles, the weekly style fit, consistency, intent, actions, distribution, moments, people, business, analytics, food for thought, takeaways, plan (development: practice per skill, a 30, 60 and 90 day path, check ins at `checkInDays`, 30, 60 and 90 days; assessment: development needs against the bar), progress (earlier attempts from `getHistory`, hidden when none) and methodology. Assessment leaves out the weekly style fit, intent, food for thought and takeaways by default.
-- **Narratives** come from `report.purposeCopy` (per purpose), `report.actionCopy`, `report.thought`, `report.takeaways` and `report.path`, defaults in `src/engine/report/defaults.ts`; GenieKreator replaces them.
+- **Narratives** come from `report.purposeCopy` (per purpose), `report.actionCopy`, `report.thought`, `report.takeaways` and `report.path`, defaults in `src/engine/report/defaults.ts`; GenieKreator replaces them. Food for thought and takeaways start with the run's own (8.6), then the authored ones.
 
 ### 8.5 The group report (D75, D77)
 For the organization, not the participant: aggregates of a cohort's run summaries. `buildGroupReport({ runs, names?, benchmark?, cohort: { name, date, purpose, storyline, lens? } })` in `src/engine/report/group.ts`, pure and deterministic, so the server runs the same code; schema `GroupReport` in `src/engine/groupContract.ts`.
@@ -561,11 +607,20 @@ For the organization, not the participant: aggregates of a cohort's run summarie
 - **Which runs** (*config* `report.group.completeAt`, default 100): the completion rate counts every participant (50% or less, over 50 to under 80, 80 to under 100, 100); every other average reads only runs completed to `completeAt`%. Verdicts count every assessment run, finished or not.
 - **Skills**: the group's mean score out of 10 (one decimal) and the level it reaches on the storyline's scale, beside the benchmark's; "in line" within 0.5, else "N points above or below". The share of the group at each level per skill, with "No level" for runs without enough evidence.
 - **Business**: best revenue against the target, average revenue, conversions and share of target against the benchmark, the share who beat the target, and the team's skill, morale, result and trust at the end against the benchmark. Narrative by the average share: under 60%, under 100%, reached.
-- **Styles** (lens aware, 2 to 6 styles): mean adaptability against the benchmark ("in line" within 3 points), the share of participants whose most used style each was, per style the pooled proportion, accuracy and need with the individual report's rules (accuracy under 40, under 70, 70 and up; used 10 points more or less than needed), and the three consistency deviations (under 25, under 50, 50 and up).
+- **Styles** (lens aware, 4 or 5 styles): mean adaptability against the benchmark ("in line" within 3 points), the share of participants whose most used style each was, per style the pooled proportion, accuracy and need with the individual report's rules (accuracy under 40, under 70, 70 and up; used 10 points more or less than needed), and the three consistency deviations (under 25, under 50, 50 and up).
 - **Funnel**: the last stage's (conversions) mean throughput per period against its mean ideal and the benchmark's. **Actions**: mean times taken per participant, the share who used each, the pooled mean change per person reached and its impact band (`report.impact`). **Management style**: mean shares of one to one actions with top, average and bottom performers; "evenly" when they are within 10 points.
 - **Purpose.** Development: no verdicts, no names, no ranking; below `report.group.minimumCohort` participants who completed (default 5) every aggregate and the takeaways are withheld with a message, and below it in all the completion rate too. Assessment: the minimum does not apply (its table names people by design); it adds the verdict distribution against the benchmark and a participant table in name order (completion, overall level, verdict, review status: assessor, mixed, AI only, from the run summary's `review`).
 - **Sections** in order: about (how to read, the benchmark line, confidentiality by purpose), verdicts (assessment), skills, distribution, completion, business, adaptability and preferred styles, styles, consistency, funnel, actions, management style, key takeaways (organizational questions by section). Sections without data are left out.
 - **Narratives** come from `report.group.copy` (replaced as a whole), defaults in `src/engine/report/groupDefaults.ts`, adapted from the 1.0 group report's intent.
+
+### 8.6 The narrative from the evidence (D143 to D145)
+`src/engine/report/evidence.ts` and `narrative.ts`. Deterministic: the same run words the same.
+- **Evidence.** Business (share of target), people (team skill, morale, result and trust change, resignations, departures), style fit (share of style choices that fit), diagnosis (weekly settings that fit), conversations (mean band score, with at least two), activity (actions per period, distinct actions), the sponsor's confidence change, and messages, briefings and events left unanswered (a choice left to its default counts as one, a decided choice as answered, D152). Each dimension is strong, weak or in between by *config* `report.evidence`: business strong from 100%, weak under 80%; people weak when morale fell 10 or more, trust 5 or more, or anyone resigned, strong when two of the four rose 5 or more; style fit and conversations strong from 70 and 75, weak under 40 and 60; activity weak under 1 action a period, strong from 2; the sponsor strong from +10, weak at −10; events weak from 2 unanswered.
+- **Contradiction guard.** Every claim names its dimension and tone; praise of a weak dimension, or criticism of a strong one, is refused, and a dimension with no evidence takes only neutral claims (`contradicts`, unit tested). The authored level line is praise of the whole run in the upper half of the scale, so it shows then only when conversations, style fit, people and business are none of them weak.
+- **Profile and headline.** First match: read people well but rarely acted (activity weak, style fit strong); little leadership reached the team (activity weak); words and choices did not match (conversations not weak, style fit weak); team and numbers grew together (business and people strong); numbers at the team's expense (business not weak, people weak); strong with people, numbers lagged (people strong, business not strong); both slipped (people and business weak); mixed. The headline's own claims pass the guard. Assessment words each neutrally.
+- **Summary lines.** Factual, with the run's numbers: the team averages that moved, who left, style fit, one style used for 60% or more of choices (unless fit was strong), conversations that went well or landed, activity when low or the profile is about acting, unanswered items, the sponsor when the change was strong or weak. Development ends with the profile's next step; assessment states findings only.
+- **What drove the results.** 3 to 5 decisions and patterns ranked by the size of what they moved: one action with one person (the net change it made, its weeks), team actions, the weekly style fits and misses, weeks without attention (drift), unanswered messages (trust), escalations (sponsor confidence), mixed signals (trust), resignations, the bottleneck stage with its owner's weakest number, and (D152) each choice decided or left to its default, weighed by what it moved (people points, a shown variable's move in points of its range, revenue in points of a period's target; the tone is their net, a variable counted for or against as more is better or not), and each shown business variable that moved 5 points of its range or more over the run.
+- **Food for thought and takeaways.** Up to 3 questions that name the run (the person given least one to one time, the actions not taken, the person whose style missed most, words against choices, the hardest week, the first unanswered message, the person whose morale fell most, the bottleneck stage, the best conversation), in the order the profile makes most useful, then the authored questions. Takeaways: the profile's two, one about a person in the run, then the authored ones, up to 6.
 
 ## 9. Calibration ("make it playable")
 
@@ -583,7 +638,14 @@ The funnel numbers are tuned per storyline by `npm run calibrate -- <storyline>`
 
 The authored `target` is the client's number and stays as it is. Starting member values are never changed: the script only reports the starting mix, which passes when all four needs are present (the report names each by the first style that fits it) and at least two members start under the low threshold in some metric, so there is someone to help.
 
-It then plays 200 runs per policy and checks every band. The output is a report (`calibration/<storyline>.md`) with the before and after values. The tuned values are written back to the storyline with `calibrated` set to whether every band and the member mix pass; when one fails, the script also exits with an error. `--check` only measures and reports. The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
+It then plays 200 runs per policy and checks every band. The output is a report (`calibration/<storyline>.md`) with the before and after values. The tuned values are written back to the storyline with `calibrated` set to whether every band and the member mix pass; when one fails, the script also exits with an error. `--check` only measures and reports, and exits with an error when a band fails (D140).
+
+**Choice events** (D140): good play picks the option with the best leadership read, then the best for people; random play any option; passive play leaves each to its default. A storyline can widen a band for itself (`STORYLINE_BANDS`): Client Trust's random band runs to 75%, because random play decides every choice (half the time well) while passive play leaves each to its default and meets every later event the defaults bring (D141).
+
+| Storyline | Threshold, leads a day | Passive | Random | Good | Scores (passive, random, good) |
+|---|---|---|---|---|---|
+| Sales Elevator (dynamics on, D135) | 73, 33 | 54% | 63% | 110% | 310, 382, 889 |
+| Client Trust (D141) | 111, 21 | 56% | 66% | 113% | 307, 435, 904 | The engine does not read the `calibrated` flag yet, so an uncalibrated storyline still plays.
 
 For the Sales Elevator default, calibration starts from the workbook's starting values; the prototype's on-screen numbers are only design fixtures for the `/screens` gallery.
 

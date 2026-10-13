@@ -53,5 +53,9 @@
   "weekend.news.previous": "Previous",
   "weekend.news.next": "Next",
   "weekend.next": "Set styles for {unit, select, year {year} month {month} week {week} day {day} other {period}} {n}",
-  "weekend.results": "See your results"
+  "weekend.results": "See your results",
+  "weekend.business.title": "The business this {unit, select, year {year} month {month} week {week} day {day} other {period}}",
+  "weekend.business.move": "{dir, select, flat {held at {end}} other {{start} to {end}}}",
+  "weekend.business.choice": "{by, select, you {You decided {title}: {option}.} other {Nobody decided {title} in time: {option} applied.}}",
+  "weekend.business.attrition": "{kind, select, sick {{name} is off sick: morale has been low for days.} other {{name} resigned: morale stayed low for too long.}}"
 }

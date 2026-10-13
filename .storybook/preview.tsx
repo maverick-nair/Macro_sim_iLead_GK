@@ -6,6 +6,7 @@ import { resolveTheme } from '../src/theme/loader';
 import brightwater from '../src/theme/samples/brightwater.json';
 import halden from '../src/theme/samples/halden.json';
 import '../src/styles/global.css';
+import '../src/author/author.css';
 import './preview.css';
 
 /**

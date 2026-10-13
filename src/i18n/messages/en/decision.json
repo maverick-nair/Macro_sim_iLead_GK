@@ -1,0 +1,16 @@
+{
+  "decision.tag": "Decision",
+  "decision.known": "What you know",
+  "decision.legend": "What do you do?",
+  "decision.noRight": "There is no one right answer. Each option helps something and costs something.",
+  "decision.later": "Decide later",
+  "decision.decide": "Decide",
+  "decision.chose": "{by, select, you {You chose:} other {Nobody chose in time, so this applied:}}",
+  "decision.changed": "What it changed",
+  "decision.done": "Continue",
+  "decision.person": "{name} {metric, select, skill {skill} morale {morale} result {result} trust {trust} other {{metric}}} {delta}",
+  "decision.team": "The team {metric, select, skill {skill} morale {morale} result {result} trust {trust} other {{metric}}} {delta}",
+  "decision.variable": "{name} {value}",
+  "decision.revenue": "Revenue {value}",
+  "decision.sponsor": "Sponsor confidence {delta}"
+}

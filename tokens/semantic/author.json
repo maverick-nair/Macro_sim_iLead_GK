@@ -1,0 +1,303 @@
+{
+  "$description": "GenieKreator authoring (/author, D105). The tool is light only: its root sets color-scheme light, so each token's dark value repeats the light one. Provenance marks: ai (Kora wrote it), you (the author), need (Needs you), and the dashed kora outline for a Suggestion.",
+  "color": {
+    "author": {
+      "canvas": {
+        "light": "{color.gk.canvas}",
+        "dark": "{color.gk.canvas}",
+        "$description": "Page background"
+      },
+      "surface": {
+        "light": "{color.gk.white}",
+        "dark": "{color.gk.white}",
+        "$description": "Cards, fields"
+      },
+      "track": {
+        "light": "{color.gk.mist}",
+        "dark": "{color.gk.mist}",
+        "$description": "Segmented track, quiet rows, skeletons"
+      },
+      "rule": {
+        "light": "{color.gk.mist-2}",
+        "dark": "{color.gk.mist-2}",
+        "$description": "Row rules inside cards"
+      },
+      "line": {
+        "light": "{color.gk.line}",
+        "dark": "{color.gk.line}",
+        "$description": "Card borders"
+      },
+      "line-control": {
+        "light": "{color.gk.line-control}",
+        "dark": "{color.gk.line-control}",
+        "$description": "Field and button borders"
+      },
+      "ink": {
+        "light": "{color.gk.ink}",
+        "dark": "{color.gk.ink}",
+        "$description": "Headings and values",
+        "contrast": {
+          "against": [
+            "color.author.canvas",
+            "color.author.surface",
+            "color.author.track",
+            "color.author.ai-field",
+            "color.author.need-field",
+            "color.author.primary-soft",
+            "color.author.ai-badge",
+            "color.author.primary-faint"
+          ],
+          "min": 4.5
+        }
+      },
+      "label": {
+        "light": "{color.gk.slate-700}",
+        "dark": "{color.gk.slate-700}",
+        "$description": "Field labels",
+        "contrast": {
+          "against": [
+            "color.author.canvas",
+            "color.author.surface",
+            "color.author.track",
+            "color.author.you-badge"
+          ],
+          "min": 4.5
+        }
+      },
+      "body": {
+        "light": "{color.gk.slate-600}",
+        "dark": "{color.gk.slate-600}",
+        "$description": "Secondary body text",
+        "contrast": {
+          "against": [
+            "color.author.canvas",
+            "color.author.surface",
+            "color.author.track"
+          ],
+          "min": 4.5
+        }
+      },
+      "muted": {
+        "light": "{color.gk.slate-500}",
+        "dark": "{color.gk.slate-500}",
+        "$description": "Hints and metadata",
+        "contrast": {
+          "against": [
+            "color.author.canvas",
+            "color.author.surface",
+            "color.author.track",
+            "color.author.ai-field"
+          ],
+          "min": 4.5
+        }
+      },
+      "primary": {
+        "light": "{color.gk.blue-600}",
+        "dark": "{color.gk.blue-600}",
+        "$description": "Primary buttons, links, selection",
+        "contrast": {
+          "against": [
+            "color.author.canvas",
+            "color.author.surface",
+            "color.author.primary-soft",
+            "color.author.need-field",
+            "color.author.track"
+          ],
+          "min": 4.5
+        }
+      },
+      "primary-hover": {
+        "light": "{color.gk.blue-700}",
+        "dark": "{color.gk.blue-700}",
+        "$description": "Primary hover"
+      },
+      "primary-soft": {
+        "light": "{color.gk.blue-50}",
+        "dark": "{color.gk.blue-50}",
+        "$description": "Selected chip, nav row"
+      },
+      "primary-faint": {
+        "light": "{color.gk.blue-25}",
+        "dark": "{color.gk.blue-25}",
+        "$description": "Selected card"
+      },
+      "on-primary": {
+        "light": "{color.gk.white}",
+        "dark": "{color.gk.white}",
+        "$description": "Text on primary and Kora fills",
+        "contrast": {
+          "against": [
+            "color.author.primary",
+            "color.author.kora",
+            "color.author.decline"
+          ],
+          "min": 4.5
+        }
+      },
+      "kora": {
+        "light": "{color.gk.teal-600}",
+        "dark": "{color.gk.teal-600}",
+        "$description": "Kora's buttons, the AI accent"
+      },
+      "ai": {
+        "light": "{color.gk.teal-700}",
+        "dark": "{color.gk.teal-700}",
+        "$description": "AI text",
+        "contrast": {
+          "against": [
+            "color.author.surface",
+            "color.author.ai-badge",
+            "color.author.ai-field",
+            "color.author.canvas"
+          ],
+          "min": 4.5
+        }
+      },
+      "ai-badge": {
+        "light": "{color.gk.teal-100}",
+        "dark": "{color.gk.teal-100}",
+        "$description": "AI badge fill"
+      },
+      "ai-field": {
+        "light": "{color.gk.teal-50}",
+        "dark": "{color.gk.teal-50}",
+        "$description": "A field Kora wrote"
+      },
+      "ai-line": {
+        "light": "{color.gk.teal-200}",
+        "dark": "{color.gk.teal-200}",
+        "$description": "A field Kora wrote, border"
+      },
+      "ai-line-strong": {
+        "light": "{color.gk.teal-300}",
+        "dark": "{color.gk.teal-300}",
+        "$description": "Kora's panels, border"
+      },
+      "you-badge": {
+        "light": "{color.gk.mist-2}",
+        "dark": "{color.gk.mist-2}",
+        "$description": "You and Edited badge fill"
+      },
+      "need": {
+        "light": "{color.gk.amber-800}",
+        "dark": "{color.gk.amber-800}",
+        "$description": "Needs you text",
+        "contrast": {
+          "against": [
+            "color.author.surface",
+            "color.author.need-badge",
+            "color.author.need-field"
+          ],
+          "min": 4.5
+        }
+      },
+      "need-badge": {
+        "light": "{color.gk.amber-200}",
+        "dark": "{color.gk.amber-200}",
+        "$description": "Needs you badge fill"
+      },
+      "need-field": {
+        "light": "{color.gk.amber-50}",
+        "dark": "{color.gk.amber-50}",
+        "$description": "A field that needs you"
+      },
+      "need-line": {
+        "light": "{color.gk.amber-400}",
+        "dark": "{color.gk.amber-400}",
+        "$description": "A field that needs you, border"
+      },
+      "gain": {
+        "light": "{color.gk.green-700}",
+        "dark": "{color.gk.green-700}",
+        "$description": "Passed, gains, best fit",
+        "contrast": {
+          "against": [
+            "color.author.surface",
+            "color.author.gain-soft"
+          ],
+          "min": 4.5
+        }
+      },
+      "gain-soft": {
+        "light": "{color.gk.green-50}",
+        "dark": "{color.gk.green-50}",
+        "$description": "Passed, best fit fill"
+      },
+      "decline": {
+        "light": "{color.gk.red-700}",
+        "dark": "{color.gk.red-700}",
+        "$description": "Required, recording, losses",
+        "contrast": {
+          "against": [
+            "color.author.surface",
+            "color.author.decline-soft",
+            "color.author.need-field"
+          ],
+          "min": 4.5
+        }
+      },
+      "decline-soft": {
+        "light": "{color.gk.red-50}",
+        "dark": "{color.gk.red-50}",
+        "$description": "Recording fill"
+      },
+      "yours": {
+        "light": "{color.gk.purple-700}",
+        "dark": "{color.gk.purple-700}",
+        "$description": "Yours text",
+        "contrast": {
+          "against": [
+            "color.author.yours-soft"
+          ],
+          "min": 4.5
+        }
+      },
+      "yours-soft": {
+        "light": "{color.gk.purple-50}",
+        "dark": "{color.gk.purple-50}",
+        "$description": "Yours fill"
+      },
+      "event-impact": {
+        "light": "{color.gk.coral-500}",
+        "dark": "{color.gk.coral-500}",
+        "$description": "Event kind"
+      },
+      "event-opportunity": {
+        "light": "{color.gk.green-500}",
+        "dark": "{color.gk.green-500}",
+        "$description": "Event kind"
+      },
+      "event-people": {
+        "light": "{color.gk.sky-500}",
+        "dark": "{color.gk.sky-500}",
+        "$description": "Event kind"
+      },
+      "event-sponsor": {
+        "light": "{color.gk.orange-500}",
+        "dark": "{color.gk.orange-500}",
+        "$description": "Event kind"
+      },
+      "preview": {
+        "light": "{color.gk.night}",
+        "dark": "{color.gk.night}",
+        "$description": "Participant preview"
+      },
+      "preview-tile": {
+        "light": "{color.gk.night-2}",
+        "dark": "{color.gk.night-2}",
+        "$description": "Participant preview tiles"
+      },
+      "scrim": {
+        "light": {
+          "ref": "color.gk.ink-scrim",
+          "alpha": 0.45
+        },
+        "dark": {
+          "ref": "color.gk.ink-scrim",
+          "alpha": 0.45
+        },
+        "$description": "Behind a modal"
+      }
+    }
+  }
+}

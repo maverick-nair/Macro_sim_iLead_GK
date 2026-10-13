@@ -1,0 +1,11 @@
+/* The authoring tool's utilities (D121): Tailwind scans only src/author for this sheet, which loads with the
+   lazy /author chunk. Preflight and the tokens come from the participant's global.css, already loaded. */
+@layer theme, base, components, utilities;
+@import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/utilities' layer(utilities) source(none);
+@import '../styles/tailwind-theme.generated.css' theme(reference);
+@import '../styles/variants.css';
+@source '.';
+
+/* Every /author page fills the frame below the safety notices (D123). Unlayered, so it wins over a page's h-dvh. */
+.author-frame > * { height: 100%; min-height: 0; }

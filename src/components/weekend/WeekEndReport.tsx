@@ -93,6 +93,24 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
           )}
         </section>
 
+        {r.business && (
+          <section aria-labelledby={`${id}business`} className={`${CARD} gap-2.5`}>
+            <h2 id={`${id}business`} className={H2}>{t('weekend.business.title', { unit })}</h2>
+            {r.business.rows.length > 0 && (
+              <ul className="m-0 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0 text-14">
+                {r.business.rows.map(b => (
+                  <li key={b.key}>
+                    <span className="text-fg-secondary">{b.name}</span>{' '}
+                    {t('weekend.business.move', { start: b.start, end: b.end, dir: b.dir })}
+                    {b.dir !== 'flat' && <span aria-hidden="true" className={`ms-1 text-12 ${b.better ? 'text-status-gain' : 'text-status-decline'}`}>{b.dir === 'up' ? UP : DOWN}</span>}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {r.business.notes.length > 0 && <ul className="m-0 flex list-none flex-col gap-1 p-0 text-13">{r.business.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>}
+          </section>
+        )}
+
         <section aria-labelledby={`${id}team`} className={`${CARD} gap-2.5`}>
           <h2 id={`${id}team`} className={H2}>{t('weekend.team.title', { unit })}</h2>
           <div role="table" aria-labelledby={`${id}team`} className="flex flex-col gap-2.5">
