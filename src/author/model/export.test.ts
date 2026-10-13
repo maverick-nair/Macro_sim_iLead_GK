@@ -74,6 +74,8 @@ const DISCOUNT = 'discount_decision';
 const opt = (d: AuthorDraft, i = 0) => ev(d, DISCOUNT).choice!.options[i];
 const CH = `events.key=${DISCOUNT}.choice`;
 const M = 'members.1';
+const cand = (d: AuthorDraft) => d.candidates![1];
+const C = 'candidates.1';
 const sh = (d: AuthorDraft) => d.stakeholders[0];
 const ix = (d: AuthorDraft, type: string) => sh(d).interactions.find(i => i.type === type)!;
 const SH = 'stakeholders.0';
@@ -192,6 +194,18 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['team[].shown.previousCompany', d => { member(d).shown.previousCompany = true; member(d).previousCompany ||= 'Beta Lifts'; }, `${M}.profile.previous`],
   ['team[].shown.careerGoal', d => { member(d).shown.careerGoal = false; }, `${M}.careerGoal`],
   ['team[].custom', d => { member(d).custom.push({ label: 'Hobby', value: 'Cycling' }); }, `${M}.npc.notes`],
+  // Hire candidates (D228).
+  ['candidates[].first', d => { cand(d).first = 'Rohan'; }, `${C}.name`],
+  ['candidates[].last', d => { cand(d).last = 'Gupta'; }, `${C}.name`],
+  ['candidates[].gender', d => { cand(d).gender = 'nonbinary'; cand(d).pronouns = pronounsOf('nonbinary'); }, `${C}.pronoun`],
+  ['candidates[].pronouns', d => { cand(d).pronouns = cand(d).pronouns.startsWith('he') ? 'she, her' : 'he, him'; }, `${C}.pronoun`],
+  ['candidates[].title', d => { cand(d).title = 'Senior Closer'; }, `${C}.title`],
+  ['candidates[].stage', d => { cand(d).stage = d.process.stages.find(s => s.key !== cand(d).stage)!.key; }, `${C}.homeStage`],
+  ['candidates[].photo', d => { cand(d).photo = PORTRAITS[2]; }, `${C}.portrait`],
+  ['candidates[].background', d => { cand(d).background = 'Area lead at a distributor'; }, `${C}.profile.previous`],
+  ['candidates[].experience', d => { cand(d).experience = '9 years'; }, `${C}.profile.experience`],
+  ['candidates[].strengths', d => { cand(d).strengths = 'Beat planning, claims'; }, `${C}.profile.skills`],
+  ['candidates[].remarks', d => { cand(d).remarks = 'Knows every outlet on the rural beats.'; }, `${C}.profile.remarks`],
   ['lens.id', d => { changeLens(d, 'six_styles'); }, 'lens.id'],
   ['lens.secondary', d => { d.lens.secondary = 'servant'; }, 'lens.secondary'],
   ['lens.styles[].letter', d => { d.lens.styles[0].letter = 'X'; }, 'lens.styles'],
@@ -350,7 +364,7 @@ const INTERNAL = new Set([
   'v', 'stage', 'savedAt', 'chat', 'marks', 'suggestions[].id', 'suggestions[].tab', 'suggestions[].text', 'suggestions[].action', 'suggestions[].done', 'calibration',
   // No longer shown (D128): nothing played them. Kept so drafts saved earlier read back.
   'brief.conversationBy', 'brief.minutesPerWeek', 'brief.targetSkills', 'brief.saveAndResume',
-  'story.screens[].key', 'process.stages[].key', 'process.stages[].perWeek', 'team[].id',
+  'story.screens[].key', 'process.stages[].key', 'process.stages[].perWeek', 'team[].id', 'candidates[].id',
   'lens.title', 'lens.needs', 'lens.styles[].key', 'lens.library[].key', 'lens.library[].letter', 'lens.library[].name', 'lens.library[].short', 'lens.library[].description',
   'actions[].key', 'actions[].template', 'actions[].group', 'actions[].core', 'actions[].canPlay', 'actions[].forWhom', 'actions[].format', 'actions[].decides', 'actions[].origin', 'actions[].options[].key',
   'events[].key', 'events[].origin',

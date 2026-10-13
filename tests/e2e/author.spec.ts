@@ -124,6 +124,29 @@ test('what a run can make: a target out of reach warns as you type, the fix appl
   await expect(reach.getByRole('status')).toContainText('A Proficient player typically makes about');
 });
 
+/** D228: the hire candidates in Team, Hiring, edited and owned; Review and publish checks every text has a home. */
+test('hire candidates are listed and edited in Team, and Review and publish finds every text a home', async ({ page }) => {
+  await workspace(page, 'Team');
+  const hiring = page.getByRole('region', { name: 'Hiring' });
+  const list = hiring.getByRole('list', { name: 'Hire candidates' });
+  await expect(list.getByRole('listitem')).toHaveCount(10);
+  await expect(hiring).not.toContainText('Urban Basket');
+  await list.getByRole('listitem').first().getByRole('button', { name: /^Edit / }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox', { name: 'First name' }).fill('Kavita');
+  await dialog.getByRole('textbox', { name: 'Last name' }).fill('Rane');
+  await dialog.getByRole('textbox', { name: 'Background' }).fill('Sales officer at a regional distributor');
+  await dialog.getByRole('textbox', { name: 'Remarks' }).fill('Knows every kirana on the Nashik beats.');
+  await dialog.getByRole('radio', { name: 'Portrait 2' }).click();
+  await dialog.getByRole('button', { name: 'Done' }).click();
+  await expect(list.getByRole('listitem').first()).toContainText('Kavita Rane');
+  await expect(list.getByRole('listitem').first()).toContainText('Knows every kirana on the Nashik beats.');
+
+  await openTab(page, 'Review and publish');
+  const checks = page.getByRole('region', { name: 'Checks' });
+  await expect(checks.getByRole('listitem').filter({ hasText: 'Every text has a home' })).toContainText('Passed');
+});
+
 test('renamed and added styles flow into actions and the played storyline; edits mark Edited; publish once nothing needs you', async ({ page, context }) => {
   await workspace(page, 'Leadership lens');
   const styles = page.getByRole('table', { name: 'Your styles' });

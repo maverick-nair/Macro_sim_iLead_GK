@@ -157,6 +157,31 @@ export const Character = z.object({
 });
 export type Character = z.infer<typeof Character>;
 
+/**
+ * A hire candidate (D228), edited in Team, Hiring: who the participant interviews from the hiring action, as the CV
+ * card shows them. `background` is where they work now (the CV's previous role), `strengths` the skills they bring.
+ * Their numbers by stage are the drafted ones, by position, as the team's are.
+ */
+export const CandidateDraft = z.object({
+  id: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  first: Short,
+  last: Short,
+  gender: z.enum(GENDERS),
+  pronouns: Short,
+  title: Short,
+  /** A stage key of the work process: where they would start. */
+  stage: z.string(),
+  /** A library portrait, an uploaded photo, or empty for none. */
+  photo: Image,
+  background: Short,
+  experience: Short,
+  strengths: Short,
+  remarks: Text
+});
+export type CandidateDraft = z.infer<typeof CandidateDraft>;
+/** At most this many candidates, the bundled storylines' count. */
+export const MAX_CANDIDATES = 10;
+
 export const PLAYS = ['static', 'live', 'hybrid'] as const;
 export type Plays = (typeof PLAYS)[number];
 
@@ -492,6 +517,8 @@ export const AuthorDraft = z.object({
   /** Stakeholders outside the team (D160), 0 to 8, edited in Team. */
   stakeholders: z.array(StakeholderDraft).max(MAX_STAKEHOLDERS).default([]),
   team: z.array(Character).min(MIN_TEAM).max(MAX_TEAM),
+  /** Hire candidates (D228), edited in Team. Left out (drafts saved before), they are drafted from the brief until the author edits one. */
+  candidates: z.array(CandidateDraft).max(MAX_CANDIDATES).optional(),
   lens: DraftLens,
   actions: z.array(ActionDraft),
   events: z.array(EventDraft),

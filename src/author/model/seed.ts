@@ -10,6 +10,7 @@ import { draftContext, draftStoryline } from '../storyline';
 import { AuthorDraft, DEFAULT_LMS_DRAFT, type ActionDraft, type Chat, type Character, type DraftStyle, type EventDraft, type Mark } from './draft';
 import { ACTION_TEMPLATES, canPlay, ENGINE_TEMPLATES } from './library';
 import { mapWeek } from './run';
+import { candidateFrom } from './candidates';
 import type { ChoiceOptionDraft, VariableDraft } from './draft';
 
 /**
@@ -273,6 +274,8 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     return actionFrom(a, { key: a.key, name: t.name, description: t.description, group: t.group, core: t.inNew === 'core', enabled: t.inNew !== 'off', template: a.key, origin: 'library' }, styles, linked.length ? linked : skills.filter(s => !s.reportOnly).map(s => s.name).slice(0, 2));
   });
   const team = sl.members.map((m, i) => character(m, i, sl, seed));
+  // Hire candidates (D228): drafted from the brief and the region, edited in Team.
+  const candidates = (sl.candidates ?? []).map(candidateFrom);
   const intro = sl.intro!;
   const words = { company: ctx.company, product: ctx.product, work: ind.work, customers: ind.customers };
   const draft: AuthorDraft = {
@@ -302,6 +305,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     // Stakeholders outside the team (D160): none until the author adds them, or creates the brief's.
     stakeholders: [],
     team,
+    candidates,
     lens: { id: lens.id, title: lens.title, secondary: lens.secondary?.id ?? null, styles, library: structuredClone(styles), needs: structuredClone(lens.needs), fit: structuredClone(lens.fit) as AuthorDraft['lens']['fit'] },
     actions: actions.filter(a => used.has(a.key)),
     // The template storyline carries the seeded decisions too (for the model to word); here they come as the author edits them.

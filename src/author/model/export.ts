@@ -7,8 +7,9 @@ import { regionOf } from '../context';
 import { guardDraft, type CopyIssue } from '../copyGuard';
 import { buildModule } from '../module';
 import { capabilityLow, draftStoryline } from '../storyline';
-import type { AuthorDraft, EventDraft } from './draft';
+import type { AuthorDraft, CandidateDraft, EventDraft } from './draft';
 import { mapWeek } from './run';
+import { candidatesOf } from './candidates';
 import { kindOf, parseEffect } from './seed';
 import { usableImage } from './images';
 import { clauseHolds, eventStakeholder, exportStakeholders, optionStakeholders, type StakeholderCtx } from './exportStakeholders';
@@ -340,11 +341,22 @@ function salesUnit(d: AuthorDraft): { unit?: { one: string; other: string } } {
 
 export interface Exported { storyline: SL; issues: string[]; copy: CopyIssue[] }
 
+/** The drafting module for a draft: its lens, secondary lens and the client's framework dimensions. */
+const moduleOf = (d: AuthorDraft, brief: Brief) => buildModule(brief, { primary: d.lens.id, secondary: d.lens.secondary, clientDimensions: d.chat.clientDimensions }, true);
+
+/**
+ * The draft's hire candidates (D228): its own, or for a draft saved before them the ones its brief drafts, as Team,
+ * Hiring shows them and the export plays them.
+ */
+export function hiringOf(d: AuthorDraft): CandidateDraft[] {
+  return candidatesOf(d, () => { const brief = briefOf(d); return draftStoryline(brief, moduleOf(d, brief)).candidates ?? []; });
+}
+
 /** The draft as a StorylineConfig, with the issues it has (the schema's and the references') and the copy guard's. */
 export function toStoryline(d: AuthorDraft): Exported {
   const issues: string[] = [];
   const brief = briefOf(d);
-  const module = buildModule(brief, { primary: d.lens.id, secondary: d.lens.secondary, clientDimensions: d.chat.clientDimensions }, true);
+  const module = moduleOf(d, brief);
   const base = draftStoryline(brief, module);
   const stageKey = new Map(d.process.stages.map((s, i) => [s.key, base.stages[i]?.key ?? s.key]));
   const styleKeys = new Set(d.lens.styles.map(s => s.key));
@@ -389,6 +401,24 @@ export function toStoryline(d: AuthorDraft): Exported {
       portrait: c.photo.trim() && usableImage(c.photo, `${who}'s photo`, issues) ? c.photo.trim() : src.portrait,
       voice: c.voice.id,
       npc: npcOf(c, styleKeys)
+    };
+  });
+  // Hire candidates (D228): the author's, or for a draft saved before them the brief's, over the drafted ones by position.
+  const baseCandidates = base.candidates ?? [];
+  const candidates = candidatesOf(d, () => baseCandidates).map((c, i) => {
+    const src = baseCandidates[i % Math.max(1, baseCandidates.length)] ?? { ...base.members[i % base.members.length], profile: { ...base.members[0].profile } };
+    const who = [c.first, c.last].filter(Boolean).join(' ') || c.id;
+    const home = stageKey.get(c.stage);
+    if (!home) issues.push(`The candidate ${who} would start in a stage that is no longer in the work process. Pick their stage in Team, Hiring.`);
+    const homeKey = home ?? base.stages[0].key;
+    const byStage = Object.fromEntries(base.stages.map(s => [s.key, { ...(src.byStage[s.key] ?? src.start) }]));
+    byStage[homeKey] = { skill: src.start.skill, morale: src.start.morale, result: src.start.result };
+    const photo = c.photo.trim() && usableImage(c.photo, `${who}'s photo`, issues) ? c.photo.trim() : undefined;
+    return {
+      id: c.id, name: who, title: c.title.trim() || src.title, pronoun: pronounOf(c.gender, c.pronouns), homeStage: homeKey,
+      start: { ...src.start }, byStage,
+      profile: { previous: c.background.trim(), tenure: src.profile.tenure || 'New joiner', experience: c.experience.trim(), skills: c.strengths.trim(), remarks: c.remarks.trim(), relations: '' },
+      ...(photo ? { portrait: photo } : null)
     };
   });
   const memberIds = new Set(members.map(m => m.id));
@@ -494,6 +524,7 @@ export function toStoryline(d: AuthorDraft): Exported {
     sponsor: { ...base.sponsor, name: d.story.sponsor.name || base.sponsor.name, title: d.story.sponsor.title || base.sponsor.title },
     intro,
     members,
+    candidates,
     actions,
     events,
     report,

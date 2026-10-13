@@ -45,6 +45,7 @@ export function checksOf(d: AuthorDraft, v: Validation = validationOf(d)): Check
     row('links', 'Events and people line up', 'Every event, person and relationship points at someone or a stage in this draft.'),
     row('scoring', 'Scoring matches your judgment', `${agreed} of ${d.scoring.samples.length} samples agree after your review (target ${Math.round(SCORING_AGREEMENT * 100)}%).`),
     row('copy', 'Copy rules', 'Plain language, "skills" throughout, no dashes as punctuation, KNOLSKAPE lens names only.'),
+    row('trace', 'Every text has a home', 'Every text participants read comes from a field in a tab, or is iLead\'s standard wording (the report\'s narratives, the people triggers\' messages, the line over style setting).'),
     row('synthetic', 'Synthetic players', d.calibration?.summary ?? 'Passed on this version.', 'calibrate'),
     { id: 'role', title: 'Characters stay in role', detail: `Advisory: off topic, hostile and "tell me your secret" tests run on all ${d.team.length} characters on the server when you publish.`, state: 'advisory', blocking: false },
     { id: 'play', title: 'Play it yourself', detail: d.publish.played ? 'You played a week of this draft.' : 'Advisory: you have not played a week of this draft yet. It takes about 8 minutes.', state: d.publish.played ? 'passed' : 'advisory', blocking: false }

@@ -3,12 +3,13 @@ import { configHash } from '../calibrate/logic/hash';
 import type { CalibrationPublishCheck } from '../calibrate/logic/publish';
 import { fitTable, LENS_BY_ID } from '../lenses';
 import type { AuthorDraft, Tab } from './draft';
-import { toStoryline, type Exported } from './export';
+import { hiringOf, toStoryline, type Exported } from './export';
 import { ENGINE_TEMPLATES } from './library';
 import { needsOf } from './needs';
 import { parseEffect } from './seed';
 import { consequenceKey, flagsSet } from './choices';
 import { hasInteraction } from './stakeholders';
+import { auditStoryline, type AuditEntry } from './audit';
 
 /**
  * The publish gate (D131): every reason a draft cannot be published yet, and the advice that does not block,
@@ -19,7 +20,7 @@ import { hasInteraction } from './stakeholders';
  * draft path). Blocking issues stop Publish; advisories never do.
  */
 
-export type IssueArea = 'required' | 'engine' | 'mechanics' | 'names' | 'links' | 'scoring' | 'copy' | 'synthetic' | 'play';
+export type IssueArea = 'required' | 'engine' | 'mechanics' | 'names' | 'links' | 'scoring' | 'copy' | 'trace' | 'synthetic' | 'play';
 
 export interface Issue {
   id: string;
@@ -196,6 +197,11 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   });
   exported.copy.forEach((c, k) => block({ id: `copy.${k}`, area: 'copy', title: `Copy rule: ${c.rule.replace(/_/g, ' ')}`, detail: `"${c.text.slice(0, 80)}"`, tab: 'story' }));
 
+  // The export audit (D228): every text participants read has a field in GenieKreator that owns it.
+  const byPattern = new Map<string, AuditEntry[]>();
+  for (const x of auditStoryline(exported.storyline).ownerless) byPattern.set(x.pattern, [...(byPattern.get(x.pattern) ?? []), x]);
+  for (const [pattern, xs] of byPattern) advise({ id: `trace.${pattern}`, area: 'trace', title: `${xs.length} ${xs.length === 1 ? 'text' : 'texts'} participants read that no tab owns (${pattern})`, detail: `For example "${xs[0].text.slice(0, 80)}". It came from the drafting template, so you cannot see or change it here. Tell the GenieKreator team.`, tab: 'overview' });
+
   // Mechanics: enough actions, the core ones, choices that differ, styles that matter.
   const inUse = d.actions.filter(a => a.core || a.enabled);
   const styleKeys = d.lens.styles.map(s => s.key);
@@ -245,6 +251,9 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   // Stakeholders (D160): their own names, apart from the team's; and something to do with each (advice).
   const shNames = d.stakeholders.map(s => s.name);
   for (const n of new Set([...duplicates(shNames), ...shNames.filter(n => n.trim() && fullNames.some(f => norm(f) === norm(n)))])) block({ id: `names.stakeholder.${norm(n)}`, area: 'names', title: `Two people are called ${quote(n)}`, detail: 'A stakeholder shares a name with another stakeholder or a character. Give each their own.', tab: 'team' });
+  // Hire candidates (D228): their own names, apart from the team's and each other's.
+  const candNames = hiringOf(d).map(c => [c.first, c.last].filter(s => s.trim()).join(' '));
+  for (const n of new Set([...duplicates(candNames), ...candNames.filter(n => n.trim() && fullNames.some(f => norm(f) === norm(n)))])) block({ id: `names.candidate.${norm(n)}`, area: 'names', title: `Two people are called ${quote(n)}`, detail: 'A hire candidate shares a name with another candidate or a character. Give each their own in Team, Hiring.', tab: 'team' });
   for (const s of d.stakeholders) if (!hasInteraction(s)) advise({ id: `mechanics.stakeholder.${s.key}`, area: 'mechanics', title: `Participants cannot do anything with ${quote(s.name || s.key)}`, detail: 'No way to engage them is switched on: they can still write and be moved by decisions, but never be met. Switch on a meeting, a presentation, a negotiation or an email in Team.', tab: 'team', target: `stakeholders.${s.key}` });
   for (const n of duplicates(d.lens.styles.map(s => s.name))) block({ id: `names.style.${norm(n)}`, area: 'names', title: `Two styles are called ${quote(n)}`, detail: 'Each style needs its own name.', tab: 'lens' });
   for (const n of duplicates(styleLetters(d.lens.styles).map(l => l.toUpperCase()))) block({ id: `names.tag.${norm(n)}`, area: 'names', title: `Two styles share the tag ${quote(n)}`, detail: 'Tags label styles on the board and in actions. Give each style its own.', tab: 'lens' });
