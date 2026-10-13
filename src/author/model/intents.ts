@@ -431,7 +431,11 @@ function tone(d: AuthorDraft, to: Tone): Step {
   const lib = LENS_BY_ID[d.lens.id].styles;
   for (const st of d.lens.styles) {
     const l = lib?.find(x => x.key === st.key);
-    if (l && Object.values(l.names).includes(st.name) && st.name !== l.names[to]) ops.push(set(`lens.styles.${st.key}.name`, l.names[to]));
+    if (l && Object.values(l.names).includes(st.name) && st.name !== l.names[to]) {
+      ops.push(set(`lens.styles.${st.key}.name`, l.names[to]));
+      // The tag follows the name when it was the library's (D230): left empty, it shows the new name's first letter.
+      if (st.letter.trim() && (st.letter.trim() === l.letter || st.letter.trim() === st.name.trim().charAt(0).toUpperCase())) ops.push(set(`lens.styles.${st.key}.letter`, l.names[to] === l.names.professional ? l.letter : ''));
+    }
   }
   return { ops, said: `The tone becomes ${label.toLowerCase()}: the welcome letter's opening, the closing line and the style names follow it.`, none: `The tone is already ${label.toLowerCase()}.` };
 }

@@ -113,16 +113,17 @@ export function firstPerson(line: string): string {
 const kits = new WeakMap<object, Map<string, { full: string[]; blunt: string[] }>>();
 
 /**
- * Each style's lines, once per lens: the written lines when the style is one of Readiness Based Leadership's
- * (by name), else the style's own short line and description from the lens, in the first person and in a
- * few frames. Never the evaluator's cues.
+ * Each style's lines, once per lens: the written lines when the style is one of Readiness Based Leadership's, by
+ * name or by key (D230: a lens that renames the styles, Show the Way for Directing, keeps the keys, and the evaluator
+ * reads its cues by key, so the lines are found the same way), else the style's own short line and description from
+ * the lens, in the first person and in a few frames. Never the evaluator's cues.
  */
 function styleLines(lens: SpeakerContext['lens']): Map<string, { full: string[]; blunt: string[] }> {
   const cached = kits.get(lens);
   if (cached) return cached;
   const out = new Map<string, { full: string[]; blunt: string[] }>();
   for (const s of lens.styles) {
-    const written = P.STYLE_LINES[s.name];
+    const written = P.STYLE_LINES[s.name] ?? (Object.hasOwn(P.STYLE_KEYS, s.key) ? P.STYLE_LINES[P.STYLE_KEYS[s.key]] : undefined);
     if (written) { out.set(s.key, written); continue; }
     const own = [firstPerson(s.short), firstPerson(s.description)];
     const lower = (t: string) => t.charAt(0).toLowerCase() + t.slice(1);

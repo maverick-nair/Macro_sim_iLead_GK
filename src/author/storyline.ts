@@ -1,6 +1,6 @@
 import type { AuthorDraftResponse, Brief, FrameworkDimension, LeadershipLensModule } from '../api/author';
 import { DEFAULT_SECTIONS, REPORT_SECTIONS, type StorylineInput } from '../engine/config';
-import { bestStyle, NEEDS, type Lens, type LensStyle, type NeedKey } from '../engine/lens';
+import { bestStyle, NEEDS, styleLetters, type Lens, type LensStyle, type NeedKey } from '../engine/lens';
 import { DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE } from '../engine/report/defaults';
 import salesElevator from '../engine/storylines/sales-elevator.json';
 import { sanitizeCopy } from '../i18n/copy';
@@ -86,7 +86,9 @@ export function draftContext(brief: Brief): DraftContext {
 export function fitStyles(lib: LibraryLens, ctx: DraftContext): Array<LensStyle & { home: NeedKey }> {
   const source: LibraryStyle[] = lib.styles ?? LENS_BY_ID.readiness_based.styles!;
   const v = { work: ctx.industry.work, company: ctx.company, product: ctx.product };
-  return source.map(s => ({ key: s.key, letter: s.letter, name: s.names[ctx.tone], short: fill(s.short, v), description: fill(s.description, v), home: s.home }));
+  // The library's tag stands for its own (professional) name; renamed for the tone, a style shows its name's first letter (D230).
+  const letters = styleLetters(source.map(s => ({ key: s.key, name: s.names[ctx.tone], letter: s.names[ctx.tone] === s.names.professional ? s.letter : '' })));
+  return source.map((s, i) => ({ key: s.key, letter: letters[i], name: s.names[ctx.tone], short: fill(s.short, v), description: fill(s.description, v), home: s.home }));
 }
 
 export function draftLens(module: LeadershipLensModule, ctx: DraftContext): Lens {

@@ -1,4 +1,4 @@
-import { NEEDS } from '../../engine/lens';
+import { NEEDS, styleLetters } from '../../engine/lens';
 import { configHash } from '../calibrate/logic/hash';
 import type { CalibrationPublishCheck } from '../calibrate/logic/publish';
 import { fitTable, LENS_BY_ID } from '../lenses';
@@ -247,7 +247,7 @@ export function validateDraft(d: AuthorDraft, exported: Exported = toStoryline(d
   for (const n of new Set([...duplicates(shNames), ...shNames.filter(n => n.trim() && fullNames.some(f => norm(f) === norm(n)))])) block({ id: `names.stakeholder.${norm(n)}`, area: 'names', title: `Two people are called ${quote(n)}`, detail: 'A stakeholder shares a name with another stakeholder or a character. Give each their own.', tab: 'team' });
   for (const s of d.stakeholders) if (!hasInteraction(s)) advise({ id: `mechanics.stakeholder.${s.key}`, area: 'mechanics', title: `Participants cannot do anything with ${quote(s.name || s.key)}`, detail: 'No way to engage them is switched on: they can still write and be moved by decisions, but never be met. Switch on a meeting, a presentation, a negotiation or an email in Team.', tab: 'team', target: `stakeholders.${s.key}` });
   for (const n of duplicates(d.lens.styles.map(s => s.name))) block({ id: `names.style.${norm(n)}`, area: 'names', title: `Two styles are called ${quote(n)}`, detail: 'Each style needs its own name.', tab: 'lens' });
-  for (const n of duplicates(d.lens.styles.map(s => (s.letter || s.name.charAt(0)).toUpperCase()))) block({ id: `names.tag.${norm(n)}`, area: 'names', title: `Two styles share the tag ${quote(n)}`, detail: 'Tags label styles on the board and in actions. Give each style its own.', tab: 'lens' });
+  for (const n of duplicates(styleLetters(d.lens.styles).map(l => l.toUpperCase()))) block({ id: `names.tag.${norm(n)}`, area: 'names', title: `Two styles share the tag ${quote(n)}`, detail: 'Tags label styles on the board and in actions. Give each style its own.', tab: 'lens' });
   const skillNames = d.scoring.framework?.confirmed ? d.scoring.framework.rows.filter(r => r.include && r.behaviors.trim()).map(r => r.skill) : d.scoring.skills.map(s => s.name);
   const skillKeys = d.scoring.framework?.confirmed ? skillNames.map(s => s.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '')) : d.scoring.skills.map(s => s.key);
   const dupNames = duplicates(skillNames);

@@ -1,6 +1,6 @@
 import { Brief, type QuestionId } from '../../api/author';
 import type { StorylineInput } from '../../engine/config';
-import { needOf, NEEDS, type NeedKey } from '../../engine/lens';
+import { needOf, NEEDS, styleLetters, type NeedKey } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 import { DURATION_MODES, industryOf, REGIONS, TONE_LABELS } from '../context';
 import { LENS_BY_ID } from '../lenses';
@@ -249,7 +249,9 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
   const ind = industryOf(brief.industry);
   const seed = hash(`${ctx.company}|${ind.id}`);
   const lens = sl.lens!;
-  const styles: DraftStyle[] = lens.styles.map(s => ({ key: s.key, letter: s.letter, name: s.name, short: s.short, description: s.description }));
+  // A tag that is just the name's first letter stays empty, so it follows the name when the style is renamed (D230).
+  const auto = styleLetters(lens.styles.map(s => ({ ...s, letter: '' })));
+  const styles: DraftStyle[] = lens.styles.map((s, i) => ({ key: s.key, letter: s.letter === auto[i] ? '' : s.letter ?? '', name: s.name, short: s.short, description: s.description }));
   const pressure = pressureOf(brief.challenge, sl.stages);
   const pressureName = sl.stages.find(s => s.key === pressure)!.name;
   const input = sl.money.inputPerSubPeriod[0] * 5;

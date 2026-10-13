@@ -502,7 +502,6 @@
             },
             "required": [
               "key",
-              "letter",
               "name",
               "short",
               "description"

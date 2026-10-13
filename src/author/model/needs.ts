@@ -21,7 +21,7 @@ export function needsOf(d: AuthorDraft): Need[] {
   if (!d.story.sponsor.name.trim()) add('story.sponsor.name', 'story', 'Sponsor', 'Story and world');
   if (!d.process.revenue) add('process.revenue', 'process', 'Revenue target', 'Work process');
   for (const c of d.team) if (!c.first.trim()) add(`team.${c.id}.identity`, 'team', 'A character\'s first name', 'Team');
-  for (const s of d.lens.styles) if (!s.name.trim() || !s.letter.trim()) add(`lens.styles.${s.key}`, 'lens', 'A style\'s name and tag', 'Leadership lens');
+  for (const s of d.lens.styles) if (!s.name.trim()) add(`lens.styles.${s.key}`, 'lens', 'A style\'s name', 'Leadership lens');
   if (d.scoring.samples.some(s => s.call === null)) add('scoring.samples', 'scoring', 'Approve the scoring samples', 'Scoring and report');
   if (d.scoring.framework && !d.scoring.framework.confirmed) add('scoring.framework', 'scoring', 'Confirm your skills framework', 'Scoring and report');
   return out;

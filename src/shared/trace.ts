@@ -163,6 +163,8 @@ export const TRACE: Record<string, TraceEntry> = {
   'lens.id': e('lens', 'Leadership lens', 'onboarding.lens', 'style.setting', 'report.styles'),
   'lens.title': e('lens', 'Leadership lens', 'onboarding.lens', 'report.styles'),
   'lens.styles[]': e('lens', 'Styles: letter, name, line and description', 'onboarding.lens', 'style.setting', 'live.brief', 'report.styles'),
+  // The tag (D230): the author's, or the name's first letter when left empty.
+  'lens.styles[].letter': e('lens', 'Tag letter', 'board.team', 'style.setting', 'onboarding.lens', 'report.styles'),
   'lens.needs': e('lens', 'What people need', 'onboarding.lens', 'style.setting', 'report.styles'),
   'lens.fit': e('lens', 'Fit rules', 'style.setting', 'live.outcome', 'weekend.summary', 'report.styles'),
   'lens.secondary': e('lens', 'Secondary lens', 'report.skills'),

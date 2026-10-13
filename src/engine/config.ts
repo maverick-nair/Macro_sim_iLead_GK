@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
-import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
+import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS, styleLetters } from './lens';
 import { DEFAULT_LENS } from './lensLibrary';
 import { IMAGE_BUDGET_BYTES, ImageRef, imageBytes, IMAGES_BUDGET_BYTES, kb } from './assets';
 import {
@@ -535,7 +535,11 @@ export const Lens = z.object({
   basedOn: z.string().optional(),
   styles: z.array(z.object({
     key: StyleKey,
-    letter: z.string().regex(/^\S{1,2}$/, 'One or two characters'),
+    /**
+     * The style's tag (D230): one or two characters on the board, in style setting and on the style cards. Left out,
+     * the first letter of its name, unique within the lens (`styleLetters`), so renamed styles show their own initials.
+     */
+    letter: z.string().regex(/^\S{1,2}$/, 'One or two characters').optional(),
     name: Copy,
     short: Copy,
     description: Copy
@@ -552,7 +556,7 @@ export const Lens = z.object({
 }).superRefine((l, ctx) => {
   const keys = l.styles.map(s => s.key);
   if (new Set(keys).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style keys must be unique' });
-  if (new Set(l.styles.map(s => s.letter.toUpperCase())).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style letters must be unique' });
+  if (new Set(styleLetters(l.styles).map(t => t.toUpperCase())).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style letters must be unique' });
   for (const need of NEEDS) {
     const row = l.fit[need];
     for (const k of keys) if (row[k] === undefined) ctx.addIssue({ code: 'custom', path: ['fit', need, k], message: `Give ${k} a fit for this need (0, 1 or 2)` });
@@ -561,6 +565,9 @@ export const Lens = z.object({
   }
   for (const [i, ex] of (l.examples ?? []).entries()) if (!keys.includes(ex.style)) ctx.addIssue({ code: 'custom', path: ['examples', i, 'style'], message: `No style called ${ex.style}` });
   if (l.secondary && l.secondary.id === l.id) ctx.addIssue({ code: 'custom', path: ['secondary', 'id'], message: 'The secondary lens must differ from the primary' });
+}).transform(l => {
+  const letters = styleLetters(l.styles);
+  return { ...l, styles: l.styles.map((s, i) => ({ ...s, letter: letters[i] })) };
 });
 
 /** Skill, morale and result change. */

@@ -109,7 +109,8 @@ describe('the publish gate (D131)', () => {
     d.team[1].first = d.team[0].first;
     d.team[1].last = ` ${d.team[0].last.toUpperCase()} `;
     d.lens.styles[1].name = d.lens.styles[0].name;
-    d.lens.styles[2].letter = d.lens.styles[3].letter;
+    d.lens.styles[2].letter = 'X';
+    d.lens.styles[3].letter = 'x';
     d.scoring.framework = { file: 'f.md', pages: 1, step: 3, confirmed: true, rows: [
       { skill: 'Coaching', behaviors: 'Asks questions', levels: null, page: 1, include: true },
       { skill: 'Coaching', behaviors: 'Gives time', levels: null, page: 1, include: true },
@@ -120,7 +121,7 @@ describe('the publish gate (D131)', () => {
     expect(b.map(i => i.title)).toEqual(expect.arrayContaining([
       `Two characters are called "${d.team[0].first} ${d.team[0].last}"`,
       `Two styles are called "${d.lens.styles[0].name}"`,
-      `Two styles share the tag "${d.lens.styles[3].letter}"`,
+      'Two styles share the tag "X"',
       'Two skills are called "Coaching"',
       'Two skills would be scored as one'
     ]));

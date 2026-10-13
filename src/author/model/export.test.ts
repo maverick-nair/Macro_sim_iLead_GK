@@ -673,3 +673,32 @@ describe('the brand, the Story tab\'s visuals, uploads and the LMS export as aut
     expect([back.story.company.logoImage, back.story.product.image]).toEqual(['', '']);
   });
 });
+
+describe('style tags follow the names (D230)', () => {
+  const parsed = (d: AuthorDraft) => { const p = parseStoryline(toStoryline(d).storyline); if (!p.ok) throw new Error(p.issues.join('\n')); return p.config; };
+
+  it('shows a renamed style\'s first letter, and keeps a tag the author wrote', () => {
+    const d = fixture();
+    expect(d.lens.styles.map(s => s.letter)).toEqual(['', '', '', '']);
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['D', 'G', 'P', 'E']);
+    ['Show the Way', 'Coach Along', 'Work Together', 'Hand Over'].forEach((n, i) => { d.lens.styles[i].name = n; });
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['S', 'C', 'W', 'H']);
+    d.lens.styles[1].letter = 'CA';
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['S', 'CA', 'W', 'H']);
+  });
+
+  it('falls back to the key, then the first two letters, when two names start alike', () => {
+    const d = fixture();
+    ['Guide', 'Grow', 'Partner', 'Entrust'].forEach((n, i) => { d.lens.styles[i].name = n; });
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['G', 'GR', 'P', 'E']);
+  });
+
+  it('reads a stored draft whose library tag no longer fits its renamed style back empty', async () => {
+    const { AuthorDraft } = await import('./draft');
+    const raw = JSON.parse(JSON.stringify(fixture())) as AuthorDraft;
+    raw.lens.styles[0] = { ...raw.lens.styles[0], name: 'Show the Way', letter: 'D' };
+    raw.lens.styles[1] = { ...raw.lens.styles[1], name: 'Coach Along', letter: 'Q' };
+    const back = AuthorDraft.parse(raw);
+    expect(back.lens.styles.map(s => s.letter)).toEqual(['', 'Q', '', '']);
+  });
+});

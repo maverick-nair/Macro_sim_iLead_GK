@@ -12,6 +12,12 @@ import type { Heard } from './syntheticListen';
 
 type ByLevel = [string[], string[], string[], string[]];
 
+/**
+ * Readiness Based Leadership's style keys and the names its written lines are kept under (D230). A lens that keeps
+ * a key keeps its written lines, whatever it calls the style, as the evaluator keeps the key's cues.
+ */
+export const STYLE_KEYS: Readonly<Record<string, string>> = { D: 'Directing', G: 'Guiding', P: 'Partnering', E: 'Entrusting' };
+
 /** Readiness Based Leadership's styles, by name: a full line and a blunt one, several ways each. */
 export const STYLE_LINES: Record<string, { full: string[]; blunt: string[] }> = {
   Directing: {

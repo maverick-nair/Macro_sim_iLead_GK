@@ -337,7 +337,8 @@ export function toStoryline(d: AuthorDraft): Exported {
   const pace = PACING[d.process.pacing];
 
   // Lens: the author's styles (renamed, a fifth added) and fit; the report names follow them.
-  const lens = { ...base.lens!, styles: d.lens.styles.map(s => ({ ...s, letter: s.letter || s.name.charAt(0).toUpperCase() })), fit: structuredClone(d.lens.fit), needs: structuredClone(d.lens.needs) };
+  // A tag the author wrote is kept; one left empty is the name's first letter, which the engine derives (D230).
+  const lens = { ...base.lens!, styles: d.lens.styles.map(({ letter, ...s }) => ({ ...s, ...(letter.trim() ? { letter: letter.trim() } : null) })), fit: structuredClone(d.lens.fit), needs: structuredClone(d.lens.needs) };
   for (const n of NEEDS) for (const k of styleKeys) lens.fit[n][k] ??= 1;
 
   // Team: by position over the drafted members, so each keeps calibrated per stage values.

@@ -3,6 +3,7 @@ import { Brief, Clarify, Dilemma, FrameworkDimension, QUESTION_IDS, Stakeholder 
 import { IMAGE_REF_MAX } from '../../engine/assets';
 import { BRAND_FONTS, CONDITION_METRICS, DEFAULT_LMS, EVENT_CONDITIONS, LMS_COMPLETION, LMS_PACKAGES, LMS_PASS, MAX_MEMBERS, MAX_PERIODS, MAX_PRODUCT_FEATURES, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
+import { libraryTag } from '../lenses';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
 /**
@@ -94,7 +95,20 @@ export const DraftStyle = z.object({
 });
 export type DraftStyle = z.infer<typeof DraftStyle>;
 
-export const DraftLens = z.object({
+/**
+ * Drafts saved before D230 kept the library's tag ("D") on a style the tone or the author renamed ("Show the Way"):
+ * it reads back empty, so the tag shows the name's first letter.
+ */
+function migrateLens(v: unknown): unknown {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return v;
+  const l = v as { id?: unknown; styles?: unknown };
+  if (typeof l.id !== 'string' || !(LENS_IDS as readonly string[]).includes(l.id) || !Array.isArray(l.styles)) return v;
+  const id = l.id as (typeof LENS_IDS)[number];
+  const styles = l.styles.map(s => (s && typeof s === 'object' && typeof s.letter === 'string' && typeof s.name === 'string' && typeof s.key === 'string' && libraryTag(id, s) ? { ...s, letter: '' } : s));
+  return { ...l, styles };
+}
+
+export const DraftLens = z.preprocess(migrateLens, z.object({
   id: z.enum(LENS_IDS),
   title: Short,
   secondary: z.enum(LENS_IDS).nullable(),
@@ -103,7 +117,7 @@ export const DraftLens = z.object({
   library: z.array(DraftStyle),
   needs: z.record(z.enum(NEEDS), z.object({ label: Short, short: Short })),
   fit: z.record(z.enum(NEEDS), z.record(z.string(), Fit))
-});
+}));
 export type DraftLens = z.infer<typeof DraftLens>;
 
 export const GENDERS = ['woman', 'man', 'nonbinary', 'unstated'] as const;
