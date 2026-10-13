@@ -44,10 +44,12 @@ async function toBoard(page: Page, q = '') {
 test('Pause in the HUD stops the session clock until Resume', async ({ page }) => {
   await toBoard(page);
   const pause = page.getByRole('button', { name: 'Pause the simulation' });
-  await expect(pause).toHaveText(/^\d+:\d\d$/);
-  const start = await pause.textContent();
+  // The session clock reads beside Pause in the navy bar (D227).
+  const clock = page.locator('[data-session-clock]');
+  await expect(clock).toHaveText(/^\d+:\d\d$/);
+  const start = await clock.textContent();
   // The clock ticks once a second; a loaded machine can be slow to paint a tick, so allow a few.
-  await expect.poll(() => pause.textContent(), { timeout: 10_000 }).not.toBe(start);
+  await expect.poll(() => clock.textContent(), { timeout: 10_000 }).not.toBe(start);
 
   await pause.click();
   const dialog = page.getByRole('dialog', { name: 'Take your time.' });
@@ -55,14 +57,14 @@ test('Pause in the HUD stops the session clock until Resume', async ({ page }) =
   expect(await axe(page)).toEqual([]);
   // A tick already on its way when Pause was pressed may still land: read the held time after it.
   await page.waitForTimeout(1200);
-  const held = await pause.textContent();
+  const held = await clock.textContent();
   await page.waitForTimeout(2500);
-  expect(await pause.textContent()).toBe(held);
+  expect(await clock.textContent()).toBe(held);
 
   await dialog.getByRole('button', { name: 'Resume' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(pause).toBeFocused();
-  await expect.poll(() => pause.textContent(), { timeout: 10_000 }).not.toBe(held);
+  await expect.poll(() => clock.textContent(), { timeout: 10_000 }).not.toBe(held);
 });
 
 test('with the clock hidden the HUD keeps a Pause button', async ({ page }) => {
@@ -135,9 +137,9 @@ test('at 1024 the Actions panel folds to a rail, opens for a selected person, an
   expect(await axe(page)).toEqual([]);
 
   // Selecting someone opens the panel for them; deselecting folds it again.
-  await page.getByText('Kent Goldberg', { exact: true }).click();
-  await expect(page.getByText('For Kent', { exact: true })).toBeVisible();
-  await page.getByText('Kent Goldberg', { exact: true }).click();
+  await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
+  await expect(page.getByRole('list', { name: 'For Kent' })).toBeVisible();
+  await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
   await expect(rail).toBeVisible();
 
   // The choice is a setting, kept per participant.

@@ -75,7 +75,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
         <span className="truncate text-12 text-fg-secondary text-large:whitespace-normal">{t('stylesetting.member.line', { title: m.title, mood: m.away ? t('member.mood.away') : mood })}</span>
       </div>
       {m.lastStyle !== null && <LastPeriodTag periodUnit={periodUnit} style={m.lastStyle} reaction={m.lastReaction} />}
-      {!statsHidden(m) && <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>}
+      <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>
       <div data-tour="style-control"><StyleControl variant="names" size="md" value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} /></div>
       {m.away && <span className="text-12 text-pretty text-fg-secondary">{note.text}</span>}
       {editing ? (

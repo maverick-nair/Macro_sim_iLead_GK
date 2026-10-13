@@ -144,11 +144,18 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
                   <span className="text-fg-body">{t('actions.out.body', { period: periodUnit, unit: subPeriodUnit })}</span>
                 </div>
               )}
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                {member
-                  ? <ul aria-label={t('actions.member', { name: member.firstName })} className="m-0 list-none p-0">{member.tiles.map(subRow)}</ul>
-                  : <p className="m-0 px-3.5 py-3 text-13 text-fg-body">{t('actions.member.empty')}</p>}
-              </div>
+              {member ? (
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                  <ul aria-label={t('actions.member', { name: member.firstName })} className="m-0 list-none p-0">{member.tiles.map(subRow)}</ul>
+                </div>
+              ) : (
+                // Nothing to press here: when the outcome band leaves the panel short, the words scroll, and the
+                // keyboard can scroll them (WCAG 2.1.1).
+                <div role="region" aria-label={t('actions.title')} tabIndex={0}
+                  className="min-h-0 flex-1 overflow-y-auto overscroll-contain focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-accent-secondary">
+                  <p className="m-0 px-3.5 py-3 text-13 text-fg-body">{t('actions.member.empty')}</p>
+                </div>
+              )}
               <div className="flex-none border-t border-line-strong bg-surface-material pb-1">
                 <span aria-hidden="true" className={`block px-3.5 pt-2 pb-0.5 ${section}`}>{t('actions.team')}</span>
                 <ul aria-label={t('actions.team.aria')} className="m-0 list-none p-0">{team.map(subRow)}</ul>

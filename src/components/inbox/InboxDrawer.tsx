@@ -43,7 +43,7 @@ const pill = `min-h-9 cursor-pointer rounded-4 px-3.5 py-0 text-13 font-600 ${fo
 function Item({ it, onOpen, onLater }: { it: InboxDrawerItem; onOpen: () => void; onLater: () => void }) {
   const { t } = useI18n();
   return (
-    <div className={`flex flex-col gap-2.5 border-b border-s-2 border-b-line-default py-3.5 pe-4 ps-3.5 ${it.urgent ? 'border-s-status-attention bg-surface-card' : 'border-s-transparent'}`}>
+    <div data-inbox-item="" className={`flex flex-col gap-2.5 border-b border-s-2 border-b-line-default py-3.5 pe-4 ps-3.5 ${it.urgent ? 'border-s-status-attention bg-surface-card' : 'border-s-transparent'}`}>
       <div className="flex gap-2.5">
         <span className={`flex size-10 flex-none items-center justify-center overflow-hidden rounded-round text-12 font-600 text-button-on-solid ${SENDER_TONE[it.sender.kind]}`}>
           <SenderFace sender={it.sender} />

@@ -62,7 +62,7 @@ export function EndScreen(p: EndScreenProps) {
               </>
             )}
           </header>
-          <div className="grid grid-cols-(--il-end-hero-columns) items-end gap-x-12 gap-y-6 tablet-portrait:grid-cols-1">
+          <div className="grid grid-cols-(--il-end-hero-columns) items-end gap-x-12 gap-y-6 tablet:grid-cols-1 text-large:grid-cols-1">
             <div className="flex flex-col gap-3">
               <span className="text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-accent-secondary uppercase">
                 {t('end.eyebrow', { periods: p.periods, unit, people: p.people })}

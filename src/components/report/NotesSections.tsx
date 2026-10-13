@@ -22,7 +22,7 @@ export function AnalyticsSection({ data }: { data: AnalyticsData }) {
         {stats.map(([key, value]) => (
           <div key={key} className="flex flex-col gap-1 border border-line-default px-3.5 py-3">
             <dt className="text-12 text-fg-secondary">{t('report.analytics.stat', { stat: key })}</dt>
-            <dd className="m-0 font-display text-36 leading-tight font-400">{value}</dd>
+            <dd className="m-0 font-mono text-22 font-500 wrap-anywhere">{value}</dd>
           </div>
         ))}
       </dl>

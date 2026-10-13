@@ -289,8 +289,9 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(page.getByRole('dialog', { name: 'Badges' })).toHaveCount(0);
           }
-          // Settings and pause.
-          await page.getByRole('button', { name: 'Settings' }).click();
+          // Settings (from the menu: the desk's navy bar keeps only the session controls, D227) and pause.
+          await page.getByRole('button', { name: /^Menu/ }).first().click();
+          await page.getByRole('list', { name: 'Game menu' }).getByRole('button', { name: 'Settings', exact: true }).click();
           await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
           await scan(page, 'settings');
           await page.keyboard.press('Escape');

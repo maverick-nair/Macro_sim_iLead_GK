@@ -44,13 +44,13 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
           <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
         </span>
         <span className="flex min-w-0 flex-col">
-          <b className="truncate text-14 font-600 text-large:whitespace-normal">{name}</b>
+          <b className="truncate text-14 font-600 text-large:overflow-visible text-large:whitespace-normal text-large:wrap-anywhere">{name}</b>
           <span className="truncate text-12 text-fg-body text-large:whitespace-normal">{desk.style ? t('desk.card.style', { style: desk.style }) : t('desk.card.noStyle')}</span>
         </span>
       </span>
-      <span className="flex min-w-0 items-center gap-1.5 text-13 text-fg-body"><MoodMark mood={away ? 'neutral' : mood} /><span className="truncate">{moodName}</span></span>
+      <span className="flex min-w-0 items-center gap-1.5 text-13 text-fg-body text-large:flex-wrap"><MoodMark mood={away ? 'neutral' : mood} /><span className="truncate text-large:overflow-visible text-large:whitespace-normal">{moodName}</span></span>
       {desk.flag && <span className="text-12 leading-(--il-canvas-leading-snug) text-status-attention">{desk.flag}</span>}
-      <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>
+      <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body text-large:overflow-visible text-large:whitespace-normal ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>
     </button>
   );
 }

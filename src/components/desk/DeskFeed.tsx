@@ -72,7 +72,7 @@ const Spark = () => (
 
 function Card({ children, urgent = false, kind }: { children: ReactNode; urgent?: boolean; kind: string }) {
   // Four to a row as the canvas lays them out (D227); more scroll sideways. Wider with larger text.
-  return <li data-feed={kind} className="flex w-(--il-canvas-feed-card-width) min-w-(--il-desk-feed-card-width) flex-none"><div className={`${CARD} w-full ${urgent ? 'border-status-attention' : 'border-line-strong'}`}>{children}</div></li>;
+  return <li data-feed={kind} className="flex w-(--il-canvas-feed-card-width) min-w-(--il-desk-feed-card-width) flex-none text-large:w-full text-large:min-w-0"><div className={`${CARD} w-full ${urgent ? 'border-status-attention' : 'border-line-strong'}`}>{children}</div></li>;
 }
 
 /**
@@ -89,11 +89,11 @@ export function DeskFeed({ feedback, milestones, messages, subPeriodUnit, onAll 
     <section aria-labelledby={id} data-tour="feed" data-desk-feed="" className="flex min-w-0 flex-none flex-col gap-1.5">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
         <h2 id={id} className={EYEBROW}>{t('desk.feed.title')}</h2>
-        <span className="min-w-0 flex-1 text-end text-12 text-fg-body">{t('desk.feed.hint', { unit: subPeriodUnit })}</span>
+        <span className="min-w-48 flex-1 text-end text-12 text-fg-body text-large:text-start">{t('desk.feed.hint', { unit: subPeriodUnit })}</span>
         <button type="button" onClick={onAll} className={LINK}>{t('inbox.open', { count: messages.length })}</button>
       </div>
       {empty ? <p className="m-0 text-13 text-fg-secondary">{t('desk.feed.empty')}</p> : (
-        <ul aria-label={t('desk.feed.aria')} className="m-0 flex list-none gap-2 overflow-x-auto overscroll-x-contain p-0 pb-0.5">
+        <ul aria-label={t('desk.feed.aria')} className="m-0 flex min-w-0 list-none gap-2 overflow-x-auto overscroll-x-contain p-0 pb-0.5 text-large:flex-wrap">
           {feedback && (
             <Card kind="feedback">
               <span className="flex items-center gap-1.5 text-12 font-600 uppercase tracking-(--il-tracking-eyebrow) text-status-gain"><Spark />{t('desk.feed.feedback', { when: feedback.when })}</span>
