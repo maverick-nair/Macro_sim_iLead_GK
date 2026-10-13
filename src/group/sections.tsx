@@ -19,8 +19,8 @@ import { ILeadLogo } from '../components/shell/Logo';
 
 type R = GroupReport;
 type Money = (n: number) => string;
-const CARD = 'flex flex-col gap-1.5 rounded-6 border border-line-default px-3.5 py-3 text-13';
-const H2 = 'm-0 text-20 font-600';
+const CARD = 'flex flex-col gap-1.5 border border-line-default px-3.5 py-3 text-13';
+const H2 = 'm-0 font-display text-36 leading-tight font-400';
 const INTRO = 'm-0 text-13 text-fg-secondary text-pretty';
 const BODY = 'm-0 text-14 text-pretty';
 
@@ -40,7 +40,7 @@ export function Prompts({ lines }: { lines: string[] }) {
   const { t } = useI18n();
   if (!lines.length) return null;
   return (
-    <div className="flex flex-col gap-1 rounded-6 bg-surface-raised px-3.5 py-3">
+    <div className="flex flex-col gap-1 bg-surface-raised px-3.5 py-3">
       <h3 className="m-0 text-13 font-600">{t('group.prompts')}</h3>
       <ul className="m-0 flex list-disc flex-col gap-1 ps-5 text-13">
         {lines.map(l => <li key={l} className="text-pretty">{l}</li>)}
@@ -74,12 +74,12 @@ export function GroupCover({ report }: { report: R }) {
             <ILeadLogo size="md" className="self-start" />
           </WithClientLogo>
           <span className="text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-fg-secondary uppercase">{t('group.eyebrow', { purpose: report.cohort.purpose })}</span>
-          <h1 tabIndex={-1} className="m-0 font-600 outline-0 leading-(--il-report-title-leading) tracking-(--il-report-title-tracking) text-48 text-balance">{report.cohort.name}</h1>
+          <h1 tabIndex={-1} className="m-0 font-display text-58 leading-(--il-report-title-leading) font-400 outline-0 text-balance">{report.cohort.name}</h1>
           <span className="text-14 text-fg-secondary">{t('group.cover.line', { storyline: report.cohort.storyline.name, lens: report.cohort.lens.title })}</span>
         </div>
         <dl className="m-0 flex flex-wrap gap-2.5">
           {boxes.map(b => (
-            <div key={b.key} className="flex flex-col rounded-6 border border-line-default px-4 py-3">
+            <div key={b.key} className="flex flex-col border border-line-default px-4 py-3">
               <dt className="text-12 text-fg-secondary">{t('group.cover.box', { box: b.key })}</dt>
               <dd className="m-0 text-24 font-600">{b.value}</dd>
             </div>
@@ -96,7 +96,7 @@ export function WithheldNotice({ message }: { message: string }) {
   const { t } = useI18n();
   const id = useId();
   return (
-    <section aria-labelledby={`${id}h`} className="flex flex-col gap-1.5 rounded-6 border-2 border-status-attention px-4 py-3.5">
+    <section aria-labelledby={`${id}h`} className="flex flex-col gap-1.5 border-2 border-status-attention px-4 py-3.5">
       <h2 id={`${id}h`} className="m-0 text-17 font-600">{t('group.withheld.title')}</h2>
       <p className={BODY}>{message}</p>
     </section>

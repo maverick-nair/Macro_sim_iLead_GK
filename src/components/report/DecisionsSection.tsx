@@ -13,7 +13,7 @@ export function DecisionsSection({ decisions, variables }: { decisions: Decision
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.decisions.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.decisions.title')}</h2>
       {variables.length > 0 && (
         <table className="w-full border-collapse text-13">
           <caption className="mb-1.5 text-start text-14 font-600">{t('report.decisions.variablesTitle')}</caption>
@@ -40,14 +40,14 @@ export function DecisionsSection({ decisions, variables }: { decisions: Decision
       {decisions.length === 0 && <p className="m-0 text-14 text-fg-secondary">{t('report.decisions.none')}</p>}
       <div className="grid grid-cols-(--il-report-cards-columns) gap-2.5">
         {decisions.map(d => (
-          <article key={d.key} aria-labelledby={`${id}${d.key}`} className="flex flex-col gap-2 rounded-6 border border-line-default px-3.5 py-3 text-13">
+          <article key={d.key} aria-labelledby={`${id}${d.key}`} className="flex flex-col gap-2 border border-line-default px-3.5 py-3 text-13">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className={`rounded-4 border px-2 py-0.5 text-12 font-600 ${d.by === 'you' ? 'border-line-strong text-fg-primary' : 'border-status-attention text-status-attention'}`}>
                 {t('report.decisions.by', { by: d.by })}
               </span>
               <span className="text-12 text-fg-secondary">{d.when}</span>
             </div>
-            <h3 id={`${id}${d.key}`} className="m-0 text-15 font-600 text-pretty">{d.title}</h3>
+            <h3 id={`${id}${d.key}`} className="m-0 font-serif text-21 leading-snug font-400 text-pretty">{d.title}</h3>
             <dl className="m-0 flex flex-col gap-1.5">
               <div><dt className="text-12 font-600 text-fg-secondary">{t('report.decisions.term', { term: 'option' })}</dt><dd className="m-0 text-pretty">{d.option ?? t('report.decisions.nothing')}</dd></div>
               {d.outcome && <div><dt className="text-12 font-600 text-fg-secondary">{t('report.decisions.term', { term: 'outcome' })}</dt><dd className="m-0 text-pretty">{d.outcome}</dd></div>}

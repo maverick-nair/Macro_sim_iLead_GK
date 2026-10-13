@@ -47,15 +47,15 @@ export function TeamOverRun({ periods, unit, series }: TeamOverRunProps) {
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
       {alt.button ? (
         <div className="flex flex-wrap items-baseline justify-between gap-3">
-          <h2 id={`${id}h`} className="m-0 text-20 font-600">{title}</h2>
+          <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{title}</h2>
           {alt.button}
         </div>
-      ) : <h2 id={`${id}h`} className="m-0 text-20 font-600">{title}</h2>}
+      ) : <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{title}</h2>}
       {alt.showTable ? table : (
         <>
           <div className="grid gap-2.5 grid-cols-(--il-report-team-columns) text-large:grid-cols-(--il-report-team-columns-large)">
             {series.map(s => (
-              <div key={s.key} className="flex flex-col gap-1.5 rounded-6 border border-line-default p-3">
+              <div key={s.key} className="flex flex-col gap-1.5 border border-line-default p-3">
                 <div className="flex justify-between text-12">
                   <span className="text-fg-secondary">{s.label}</span>
                   <b>{s.end}</b>

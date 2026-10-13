@@ -6,7 +6,7 @@ import { SeriesLegend } from './ResultsSections';
 import type { ConsistencyData, StylesData } from './types';
 import './messages';
 
-const CARD = 'flex flex-col gap-1.5 rounded-6 border border-line-default px-3.5 py-3 text-13';
+const CARD = 'flex flex-col gap-1.5 border border-line-default px-3.5 py-3 text-13';
 
 /**
  * "Leadership styles summary" (the 1.0 report's styles page, lens aware, D70): proportion and accuracy per
@@ -22,7 +22,7 @@ export function StylesSection({ data }: { data: StylesData }) {
   const pctText = (n: number) => t('report.percent', { pct: n });
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.styles.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.styles.title')}</h2>
       <p className="m-0 text-13 text-fg-secondary text-pretty">{t('report.styles.intro')}</p>
       <div className="grid gap-5 grid-cols-(--il-report-halves-columns)">
         <div className="flex flex-col gap-2">
@@ -50,7 +50,7 @@ export function StylesSection({ data }: { data: StylesData }) {
       <div className="grid gap-2.5 grid-cols-(--il-report-tiles-columns)">
         {data.styles.map(s => (
           <article key={s.key} aria-labelledby={`${id}${s.key}`} className={CARD}>
-            <h3 id={`${id}${s.key}`} className="m-0 text-15 font-600">{s.name}</h3>
+            <h3 id={`${id}${s.key}`} className="m-0 font-serif text-21 leading-snug font-400">{s.name}</h3>
             <span className="flex flex-wrap gap-x-3 text-12 font-600 text-fg-secondary">
               <span>{t('report.styles.proportion', { pct: s.proportion })}</span>
               <span>{t('report.styles.accuracy', { used: String(s.accuracy !== null), pct: s.accuracy ?? 0 })}</span>
@@ -77,12 +77,12 @@ export function ConsistencySection({ data }: { data: ConsistencyData }) {
   const none = t('report.consistency.none');
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.consistency.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.consistency.title')}</h2>
       <p className="m-0 text-13 text-fg-secondary text-pretty">{t('report.consistency.intro', { actions: data.actions.join(t('report.listSeparator')) })}</p>
       <div className="grid gap-2.5 grid-cols-(--il-report-tiles-columns)">
         {data.deviations.map(d => (
           <article key={d.key} aria-labelledby={`${id}${d.key}`} className={CARD}>
-            <h3 id={`${id}${d.key}`} className="m-0 text-15 font-600">{measure(d.key)}</h3>
+            <h3 id={`${id}${d.key}`} className="m-0 font-serif text-21 leading-snug font-400">{measure(d.key)}</h3>
             <b className="text-22">{t('report.consistency.deviation', { has: String(d.value !== null), pct: d.value ?? 0 })}</b>
             <span className="text-12 text-fg-secondary text-pretty">{t('report.consistency.explain', { key: d.key })}</span>
             {d.narrative && <p className="m-0 text-pretty">{d.narrative}</p>}
@@ -102,7 +102,7 @@ export function ConsistencySection({ data }: { data: ConsistencyData }) {
       />
       {data.members.length > 0 && (
         <div className="flex flex-col gap-1.5">
-          <h3 className="m-0 text-15 font-600">{t('report.consistency.membersTitle')}</h3>
+          <h3 className="m-0 font-serif text-21 leading-snug font-400">{t('report.consistency.membersTitle')}</h3>
           <div role="region" aria-label={t('report.consistency.membersTitle')} tabIndex={0} className="overflow-x-auto focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
             <table className="w-full border-collapse text-13">
               <caption className="sr-only">{t('report.consistency.membersTitle')}</caption>

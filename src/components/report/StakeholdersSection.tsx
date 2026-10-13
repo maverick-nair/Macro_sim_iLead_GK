@@ -13,13 +13,13 @@ export function StakeholdersSection({ stakeholders }: { stakeholders: Stakeholde
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.stakeholders.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.stakeholders.title')}</h2>
       <p className="m-0 text-14 text-fg-secondary">{t('report.stakeholders.intro')}</p>
       <div className="grid grid-cols-(--il-report-cards-columns) gap-2.5">
         {stakeholders.map(s => (
-          <article key={s.key} aria-labelledby={`${id}${s.key}`} className="flex flex-col gap-2 rounded-6 border border-line-default px-3.5 py-3 text-13">
+          <article key={s.key} aria-labelledby={`${id}${s.key}`} className="flex flex-col gap-2 border border-line-default px-3.5 py-3 text-13">
             <div className="flex flex-col gap-0.5">
-              <h3 id={`${id}${s.key}`} className="m-0 text-15 font-600 text-pretty">{s.name}</h3>
+              <h3 id={`${id}${s.key}`} className="m-0 font-serif text-21 leading-snug font-400 text-pretty">{s.name}</h3>
               <span className="text-12 text-fg-secondary">{s.role}</span>
               <span className="text-13 font-600">{s.relationship}</span>
             </div>

@@ -30,7 +30,7 @@ export function SkillsSection({ rows, levels }: SkillsSectionProps) {
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-2.5">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.skills.title')}</h2>
+        <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.skills.title')}</h2>
         <span className="text-12 text-fg-secondary">{t('report.skills.note')}</span>
       </div>
       {rows.map(k => {

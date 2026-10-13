@@ -16,13 +16,13 @@ export function AnalyticsSection({ data }: { data: AnalyticsData }) {
   ] as const;
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.analytics.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.analytics.title')}</h2>
       <p className="m-0 text-13 text-fg-secondary">{t('report.analytics.note')}</p>
       <dl className="m-0 grid gap-2.5 grid-cols-5 text-large:grid-cols-(--il-report-stats-large)">
         {stats.map(([key, value]) => (
-          <div key={key} className="flex flex-col gap-1 rounded-6 border border-line-default px-3.5 py-3">
+          <div key={key} className="flex flex-col gap-1 border border-line-default px-3.5 py-3">
             <dt className="text-12 text-fg-secondary">{t('report.analytics.stat', { stat: key })}</dt>
-            <dd className="m-0 text-20 font-600">{value}</dd>
+            <dd className="m-0 font-display text-36 leading-tight font-400">{value}</dd>
           </div>
         ))}
       </dl>
@@ -36,7 +36,7 @@ export function MethodologySection({ data }: { data: MethodologyData }) {
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-2">
-      <h2 id={`${id}h`} className="m-0 text-20 font-600">{t('report.method.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.method.title')}</h2>
       {data.lines.map(l => <p key={l} className="m-0 text-13 text-pretty">{l}</p>)}
       <p className="m-0 text-13 text-fg-secondary">{t('report.method.facts', { conversations: data.conversations, observations: data.observations })}</p>
       <p className="m-0 text-13 font-600">{t('report.method.reviewed', { reviewed: String(data.reviewed), count: data.reviewedCount ?? 0, total: data.conversations })}</p>

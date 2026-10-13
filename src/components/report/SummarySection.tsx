@@ -6,7 +6,7 @@ import type { SummaryExtras, VerdictData } from './types';
 import './messages';
 
 const LEDE = 'm-0 text-16 leading-(--il-report-lede-leading) text-pretty';
-const BOX = 'flex flex-col gap-1 rounded-6 border border-line-default px-3.5 py-3';
+const BOX = 'flex flex-col gap-1 border border-line-default px-3.5 py-3';
 
 export interface SummarySectionProps {
   /** The authored narrative for the overall level: the design's opening paragraph. */
@@ -19,7 +19,7 @@ export interface SummarySectionProps {
 export function VerdictCard({ verdict }: { verdict: VerdictData }) {
   const { t } = useI18n();
   return (
-    <div className="flex flex-col gap-2 rounded-6 border-2 border-line-control px-4 py-3.5">
+    <div className="flex flex-col gap-2 border-2 border-line-control px-4 py-3.5">
       <span className="text-12 text-fg-secondary">{t('report.verdict.title')}</span>
       <b className={`text-24 font-600 ${TONE_TEXT[verdict.tone]}`}>{verdict.label}</b>
       {verdict.why && <span className="text-14 text-pretty">{verdict.why}</span>}
@@ -71,7 +71,7 @@ export function SummarySection({ narrative, extras }: SummarySectionProps) {
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-4">
       <h2 id={`${id}h`} className="sr-only">{t('report.summary.title')}</h2>
       {extras.verdict && <VerdictCard verdict={extras.verdict} />}
-      {extras.headline && <p className="m-0 text-20 font-600 text-pretty">{extras.headline}</p>}
+      {extras.headline && <p className="m-0 font-display text-36 leading-tight font-400 text-pretty">{extras.headline}</p>}
       {narrative && <p className={LEDE}>{narrative}</p>}
       {extras.lines && extras.lines.length > 0 && <p className={LEDE}>{extras.lines.join(' ')}</p>}
       <div className="grid gap-2.5 grid-cols-3 text-large:grid-cols-(--il-report-tiles-columns)">
