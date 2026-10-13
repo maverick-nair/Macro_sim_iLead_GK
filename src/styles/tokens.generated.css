@@ -698,7 +698,7 @@
   --il-weekend-display-tracking: -0.03em;
   --il-weekend-title-tracking: -0.02em;
   --il-weekend-report-columns: minmax(0,1.3fr) minmax(0,1fr);
-  --il-weekend-funnel-columns: minmax(130px, max-content) minmax(0,1fr) minmax(70px, max-content);
+  --il-weekend-funnel-columns: minmax(130px, max-content) minmax(0,1fr) minmax(96px, max-content);
   --il-weekend-funnel-tick: 2px;
   --il-weekend-kpi-columns: minmax(0,1fr) repeat(3, minmax(70px, max-content));
   --il-weekend-reward-columns: repeat(3,280px);

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import { WeekEndReport } from './WeekEndReport';
 import { BadgeStep, BannerStep, NewsStep, UnlockStep, WeekEndHeader } from './WeekEndSteps';
@@ -33,6 +33,9 @@ export interface WeekEndFlowProps {
   newsArtLabel?: string;
   /** The design gallery's shortcut to the end of the run. */
   onShortcut?: () => void;
+  /** The storyline's organisation and the desk's numbers, in the navy bar (D227). */
+  organisation?: string | null;
+  status?: ReactNode;
   /** Takes the reward. Resolves false when the engine refused it, so the flow stays put. */
   onChooseReward: (key: string) => void | boolean | Promise<boolean>;
   /** The last step's button: start the next period, or see the results once the run is over. */
@@ -91,9 +94,10 @@ export function WeekEndFlow(p: WeekEndFlowProps) {
   };
 
   return (
-    <div ref={root} className="relative flex flex-1 flex-col gap-5 px-8 pt-5 pb-8" style={{ minHeight: p.minHeight }}>
-      <WeekEndHeader period={p.period} periods={p.periods} periodUnit={unit} onShortcut={p.onShortcut} />
+    <div ref={root} className="relative flex flex-1 flex-col bg-surface-page text-fg-primary" style={{ minHeight: p.minHeight }}>
+      <WeekEndHeader period={p.period} periods={p.periods} periodUnit={unit} onShortcut={p.onShortcut} steps={steps} step={step} organisation={p.organisation} status={p.status} />
       {step === 'banner' && <BannerStep period={p.period} periodUnit={unit} headline={p.headline} line={p.line} stars={p.stars} onNext={() => next()} />}
+      {step !== 'banner' && <div className="flex flex-1 flex-col gap-5 px-8 pt-6 pb-8 tablet:px-5">
       {step === 'report' && (
         <>
           <h1 tabIndex={-1} className="sr-only">{t('weekend.report.heading', { unit, n: p.period })}</h1>
@@ -117,6 +121,7 @@ export function WeekEndFlow(p: WeekEndFlowProps) {
           onPrevious={() => { setPage(x => Math.max(0, x - 1)); setImpact(false); }}
           onNext={() => { if (page < news.length - 1) { setPage(page + 1); setImpact(false); } else p.onFinish(); }} />
       )}
+      </div>}
     </div>
   );
 }
