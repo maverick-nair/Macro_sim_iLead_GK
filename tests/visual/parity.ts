@@ -50,6 +50,16 @@ const ACCEPTED: Record<string, { maxDiff: number; reason: string }> = {
  */
 const RETIRED = new Set(['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7']);
 
+/**
+ * Frames whose layout a logged decision changed on purpose, so the prototype is no longer their
+ * reference. They are not compared; every run names them and the decision. Add one only with a
+ * decision in docs/DECISIONS.md that changes that frame's layout.
+ */
+const REDESIGNED: Record<string, string> = {
+  e1: 'D101: the end screen keeps its report actions in reach, in a bar along the bottom',
+  e2: 'D101: the report keeps its toolbar in reach, pinned to the top'
+};
+
 const args = process.argv.slice(2);
 const refresh = args.includes('--refresh');
 const prod = args.includes('--prod');
@@ -114,17 +124,24 @@ function diff(a: string, b: string, out: string, limit: number): { frac: number;
     }
     return false;
   };
+  // With a 1px rounding difference in size (below), the frame's outer edge row or column is half covered
+  // in one capture and not the other: that 1px edge is left out of the count.
+  const edge = A.width !== B.width || A.height !== B.height ? 1 : 0;
   let bad = 0;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const ia = (y * A.width + x) * 4, ib = (y * B.width + x) * 4, id = (y * w + x) * 4;
-    const hit = !same(ia, ib) && !near(x, y);
+    const inEdge = edge > 0 && (y < edge || x < edge || y >= h - edge || x >= w - edge);
+    const hit = !inEdge && !same(ia, ib) && !near(x, y);
     if (hit) bad++;
     D.data[id] = hit ? 255 : B.data[ib] / 4; D.data[id + 1] = hit ? 0 : B.data[ib + 1] / 4; D.data[id + 2] = hit ? 0 : B.data[ib + 2] / 4; D.data[id + 3] = 255;
   }
-  const sizeMismatch = A.width !== B.width || A.height !== B.height;
+  // A frame whose box sits on a half pixel captures 1px taller or shorter, in either page from run to
+  // run: that is rounding, and the shared area is compared. A larger difference is a layout change.
+  const dw = Math.abs(A.width - B.width), dh = Math.abs(A.height - B.height);
+  const sizeMismatch = dw > 1 || dh > 1;
   const frac = sizeMismatch ? 1 : bad / (w * h);
   if (frac > limit) fs.writeFileSync(out, PNG.sync.write(D));
-  return { frac, size: sizeMismatch ? `size ${A.width}x${A.height} vs ${B.width}x${B.height}` : '' };
+  return { frac, size: sizeMismatch ? `size ${A.width}x${A.height} vs ${B.width}x${B.height}` : dw || dh ? `compared ${w}x${h}, 1px rounding` : '' };
 }
 
 async function main() {
@@ -160,7 +177,7 @@ async function main() {
   for (const pg of PAGES) {
     const protoDir = path.join(cache, 'proto', pg.key), appDir = path.join(cache, 'app', pg.key);
     if (refresh || !fs.existsSync(protoDir)) await shoot(page, `http://localhost:${proto.port}/${encodeURIComponent(pg.proto)}`, protoDir, null);
-    const known = fs.readdirSync(protoDir).map(f => f.replace('.png', '')).filter(id => !RETIRED.has(id));
+    const known = fs.readdirSync(protoDir).map(f => f.replace('.png', '')).filter(id => !RETIRED.has(id) && !REDESIGNED[id]);
     for (const id of known) allIds.add(id);
     const ids = only.size ? known.filter(id => only.has(id)) : known;
     if (!ids.length) continue;
@@ -179,6 +196,8 @@ async function main() {
       console.log(`${ok ? 'ok  ' : 'FAIL'} ${id.padEnd(4)} ${(r.frac * 100).toFixed(2)}% ${r.size}${note ? ` (${note})` : ''}`);
     }
   }
+  const redesigned = Object.entries(REDESIGNED).filter(([id]) => !only.size || only.has(id));
+  if (redesigned.length) console.log(`Not compared, redesigned by a decision:\n${redesigned.map(([id, why]) => `  ${id.padEnd(4)} ${why}`).join('\n')}`);
   if (used.length) console.log(`Accepted deviations (every other frame is held to ${(THRESHOLD * 100).toFixed(2)}%):\n${used.join('\n')}`);
   const stale = Object.keys(ACCEPTED).filter(id => allIds.size && !allIds.has(id));
   if (stale.length) console.log(`Allowances for frames that do not exist: ${stale.join(', ')}. Remove them from ACCEPTED.`);

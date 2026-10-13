@@ -16,6 +16,7 @@ export const GUIDE_OFF = { cookies: [], origins: [{ origin: `http://localhost:${
 export default defineConfig({
   testDir: 'e2e',
   timeout: 120_000,
+  reporter: process.env.CI ? [['github'], ['list']] : 'list',
   use: { baseURL: `http://localhost:${port}`, viewport: { width: 1440, height: 1000 }, storageState: GUIDE_OFF },
   webServer: {
     command: 'npm run build:server-app && node --import tsx server/src/index.ts',
