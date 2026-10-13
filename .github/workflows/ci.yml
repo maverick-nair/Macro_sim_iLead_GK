@@ -3,7 +3,7 @@ name: CI
 # Independent jobs run side by side, and the end to end suite is split in four shards, so a run takes the
 # time of its slowest shard instead of the sum of every step. A new push cancels the run it replaces.
 # Jobs: static (tokens, lint, unit tests, types, build with the bundle budget, calibration, synthetic
-# players, the reference server's tests), storybook (smoke), e2e (four shards, with axe), e2e-server,
+# players), storybook (smoke), e2e (four shards, with axe), e2e-server,
 # parity (design parity against the Claude Design prototype) and vitals (Web Vitals budgets on a
 # throttled production build, alone on its runner so nothing else competes for the CPU).
 on:
@@ -28,7 +28,6 @@ jobs:
       - run: npm run build
       - run: npm run calibrate -- sales-elevator --check
       - run: npm run synthetic -- --check
-      - run: npm run test:server
 
   storybook:
     runs-on: ubuntu-latest
@@ -68,6 +67,7 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:server
       - run: npm run e2e:server
 
   parity:
@@ -94,7 +94,10 @@ jobs:
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npm run vitals -- --json vitals.json
+      - run: npm run vitals -- --json vitals.json 2>&1 | tee vitals.log
+      # The job's log is not readable from outside, so a failure also becomes an annotation.
+      - if: failure()
+        run: echo "::error title=vitals::$(tail -n 40 vitals.log | tr '\n' '|' | head -c 3000)"
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
