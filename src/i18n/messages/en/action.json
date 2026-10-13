@@ -29,5 +29,7 @@
   "action.summary.reward": "Reward {list}, then tell them why. {cost}.",
   "action.summary.other": "{action}: {list}. {cost}.",
   "action.toast.planned": "{summary} You'll see how it lands at day end.",
-  "action.toast.assessed": "{name} assessed for {area}. {cost} used."
+  "action.toast.assessed": "{name} assessed for {area}. {cost} used.",
+  "action.drawer.repeat": "{who, select, team {The team had this} other {You did this with {names}}} {ago, plural, =0 {just now} other {{agoText} ago}}, so it lands at {pct}% of its effect this time. The full effect comes back {window} after the last time.{tires, select, yes { Repeating it this soon also tires everyone.} other {}}",
+  "action.drawer.teamTime": "It takes the team off its work: {pct}% less gets done on each {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} it takes."
 }

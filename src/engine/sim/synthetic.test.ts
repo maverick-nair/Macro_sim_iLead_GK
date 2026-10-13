@@ -252,6 +252,28 @@ describe('synthetic speech (D151)', () => {
     }
   });
 
+  /**
+   * A lens that renames Readiness Based Leadership's styles keeps the keys (Kora's warm words: Show the Way, Coach Along,
+   * Work Together, Hand Over), and the evaluator keeps the keys' cues; the written lines are found by key too (D230),
+   * so the players' words read as the style meant as often as on the lens's own names.
+   */
+  it('finds the written lines by key on a lens that renames the styles', () => {
+    const renamed: Record<string, string> = { D: 'Show the Way', G: 'Coach Along', P: 'Work Together', E: 'Hand Over' };
+    const KORA = parse({ ...raw, id: 'sales-elevator-renamed', lens: { ...RBL.lens, styles: RBL.lens.styles.map(s => ({ ...s, name: renamed[s.key], letter: undefined })) } });
+    expect(KORA.lens.styles.map(s => s.letter)).toEqual(['S', 'C', 'W', 'H']);
+    for (const s of KORA.lens.styles) for (const level of [1, 2, 3] as Level[]) {
+      expect(script(ctx(KORA, level, s.key, 'roleplay', { variant: 3 }))).toEqual(script(ctx(RBL, level, s.key, 'roleplay', { variant: 3 })));
+    }
+    for (const level of [1, 2, 3] as Level[]) {
+      let meant = 0, agreed = 0;
+      for (const s of KORA.lens.styles) for (const variant of VARIANTS) {
+        meant++;
+        if (read(KORA, script(ctx(KORA, level, s.key, 'roleplay', { variant })).join('\n')).styleUsed === s.key) agreed++;
+      }
+      expect(agreed / meant, `level ${level}`).toBeGreaterThanOrEqual([0, 0.6, 0.75, 0.75][level]);
+    }
+  });
+
   it('rises in quality with the level', () => {
     const rank = { harmful: 0, weak: 1, adequate: 2, strong: 3 };
     for (const c of [RBL, FIVE]) {

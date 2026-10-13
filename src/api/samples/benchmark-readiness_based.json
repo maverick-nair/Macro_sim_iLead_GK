@@ -149,14 +149,22 @@
   ],
   "overall": {
     "rated": 234,
-    "score": 67.69,
+    "score": 64.34,
     "levels": [
       0,
-      118,
-      16,
-      100
+      168,
+      0,
+      66
     ],
-    "unrated": 33
+    "unrated": 33,
+    "capped": {
+      "count": 50,
+      "gates": {
+        "fit": 50,
+        "people": 46,
+        "business": 36
+      }
+    }
   },
   "objectives": {
     "target": 240000,
@@ -587,9 +595,9 @@
     "assessed": 150,
     "counts": {
       "exceeds": 0,
-      "meets": 45,
-      "approaching": 56,
-      "below": 10,
+      "meets": 0,
+      "approaching": 10,
+      "below": 101,
       "none": 39
     }
   }

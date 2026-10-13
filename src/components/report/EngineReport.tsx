@@ -148,7 +148,7 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
     return (
       <main className="mx-auto flex w-full max-w-(--il-report-width) flex-1 flex-col gap-4 px-8 pt-6 pb-10">
         <ReportToolbar onBack={onBack} />
-        <h1 className="m-0 text-34 font-700">{t('report.unnamed', { purpose: 'development' })}</h1>
+        <h1 className="m-0 text-34 font-600">{t('report.unnamed', { purpose: 'development' })}</h1>
         <p className="m-0 text-14 text-fg-secondary">{t('report.notReady')}</p>
       </main>
     );

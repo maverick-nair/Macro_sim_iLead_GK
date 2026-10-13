@@ -1,0 +1,38 @@
+{
+  "desk": {
+    "band": {
+      "columns": {
+        "value": "minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.3fr)",
+        "$description": "The desk's status band (D211): Team health, Business, Your progress, as the approved canvas weighs them"
+      },
+      "progress-columns": {
+        "value": "minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr)",
+        "$description": "Your progress: score and tier, stars and rank, sponsor confidence"
+      },
+      "eyebrow-tracking": {
+        "value": "{tracking.eyebrow-wide}",
+        "$description": "Group labels in the band and the feed"
+      }
+    },
+    "rows": {
+      "value": "minmax(0, max-content) minmax(max-content, 1fr)",
+      "$description": "The desk's grid (D212): the team in the first row, scrolling when it does not fit, the feedback and inbox feed right under it taking what is left, as on the canvas (D232); the actions panel spans both"
+    },
+    "feed": {
+      "card-width": {
+        "value": "calc(232px * var(--il-text-scale, 1))",
+        "$description": "A card in the feedback and inbox feed (D212); wider with larger text"
+      }
+    },
+    "menu": {
+      "width": {
+        "value": "420px",
+        "$description": "The game menu's side sheet (D214)"
+      },
+      "row-columns": {
+        "value": "2.5rem minmax(0, 1fr) auto",
+        "$description": "A menu row: the icon tile, the name with its line, the chevron"
+      }
+    }
+  }
+}

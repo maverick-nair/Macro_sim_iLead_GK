@@ -1,0 +1,4 @@
+{
+  "action.drawer.repeat": "{who, select, team {El equipo ya hizo esto} other {Ya hiciste esto con {names}}} {ago, plural, =0 {hace un momento} other {hace {agoText}}}, así que esta vez tiene un {pct}% de su efecto. El efecto completo vuelve {window} después de la última vez.{tires, select, yes { Repetirlo tan pronto también cansa a todos.} other {}}",
+  "action.drawer.teamTime": "Aparta al equipo de su trabajo: se hace un {pct}% menos cada {unit, select, quarter {trimestre} month {mes} week {semana} hour {hora} other {día}} que dura."
+}

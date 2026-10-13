@@ -3,10 +3,10 @@ import { retryImport } from '../../../lib/lazyRetry';
 import { useMediaQuery } from '../../../lib/useMediaQuery';
 import type { Tab } from '../../model/draft';
 import { tabStatus } from '../../model/needs';
-import { useAuthor } from '../../model/store';
+import { useAuthor, useAuthorStore } from '../../model/store';
 import { readiness } from '../../model/validate';
 import { Badge, BUTTON, FOCUS, Icon, savedText, Scroll } from '../kit';
-import { playDraft } from '../play';
+import { previewDraft, usePreviewSync } from '../play';
 import { navigate } from '../route';
 import { NAV } from '../sections';
 import { AuthorBoundary } from '../safety/Boundary';
@@ -83,6 +83,9 @@ export function Workspace({ tab }: { tab: Tab }) {
   const draft = useAuthor(s => s.draft);
   const saved = useAuthor(s => savedText(s.savedAt, s.saveFailed));
   const edit = useAuthor(s => s.edit);
+  const store = useAuthorStore();
+  // Saves go on to an open preview, and other tabs can preview at a point (`previewAt`, D194, D196).
+  usePreviewSync();
   const wide = useMediaQuery('(min-width: 1280px)');
   const tablet = !useMediaQuery('(min-width: 1024px)');
   const [kora, setKora] = useState(false);
@@ -96,8 +99,9 @@ export function Workspace({ tab }: { tab: Tab }) {
   useEffect(() => { if (draft.stage !== 'workspace') edit(d => { d.stage = 'workspace'; }); }, [draft.stage, edit]);
   useEffect(() => { document.title = `${NAV.find(n => n.tab === tab)!.label}, ${draft.title}: GenieKreator`; }, [tab, draft.title]);
 
-  const play = () => {
-    const r = playDraft(draft);
+  /** Preview (D194): the latest saved draft, as a participant sees it, in the one preview tab. */
+  const play = async () => {
+    const r = await previewDraft(store, 'onboarding');
     if (r.ok) edit(d => { d.publish.played = true; }, { history: false });
     setProblem(r.ok ? null : r.reason === 'storage' ? { text: r.issues[0], checks: false } : { text: `This draft does not play yet. ${r.issues[0]}`, checks: true });
   };
@@ -140,7 +144,7 @@ export function Workspace({ tab }: { tab: Tab }) {
         <span className="shrink-0 text-13 text-author-muted max-[1180px]:sr-only" role="status">{saved}</span>
         <UndoControls />
         {!wide && showKora && <button type="button" className={BUTTON.koraOutline} aria-expanded={kora} onClick={() => setKora(!kora)}>{Icon.chat(14)} Ask Kora</button>}
-        <button type="button" className={BUTTON.secondary} onClick={play}>Play a week</button>
+        <button type="button" className={BUTTON.secondary} onClick={() => void play()} title="Play the latest saved draft as a participant, in a test run that saves nothing to reports">Preview</button>
         <button type="button" className={BUTTON.primary} onClick={() => navigate({ page: 'workspace', tab: 'publish' })}>Review and publish</button>
       </header>
       {problem && <p role="alert" className="m-0 flex-none bg-author-need-field px-6 py-2 text-14 font-700 text-author-need">{problem.text} {problem.checks && <button type="button" className={BUTTON.link} onClick={() => navigate({ page: 'workspace', tab: 'publish' })}>See the checks</button>}</p>}

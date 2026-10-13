@@ -1,0 +1,6 @@
+{
+  "report.decisions.by": "{by, select, you {Tu decisión} kept {Dejaste la opción por defecto} other {Quedó en la opción por defecto}}",
+  "report.business.conversions": "{n, plural, =0 {Sin {unitMany}} one {# {unitOne}} other {# {unitMany}}}",
+  "report.objectives.conversions": "{custom, select, yes {{n, plural, =0 {Sin {unitMany}} one {# {unitOne}} other {# {unitMany}}}} other {{n, plural, =0 {Ninguna conversión} one {# conversión} other {# conversiones}}}}",
+  "report.objectives.revenueNote": "Los ingresos salen de lo que el equipo cerró: {unitMany}."
+}

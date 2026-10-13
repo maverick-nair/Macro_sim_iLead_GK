@@ -113,6 +113,10 @@ const RULES: Rule[] = [
   { re: new RegExp(`^actions\\.${KEY}\\.options\\.${OPT}\\.away$`), schema: z.number().int().min(0).max(10), mark: m => `actions.${m[1]}` },
   { re: new RegExp(`^lens\\.styles\\.${STYLE}\\.(name|short)$`), schema: st.name, mark: m => `lens.styles.${m[1]}` },
   { re: new RegExp(`^lens\\.styles\\.${STYLE}\\.description$`), schema: st.description, mark: m => `lens.styles.${m[1]}` },
+  // The style's tag follows a renamed style (D230): empty shows the name's first letter.
+  { re: new RegExp(`^lens\\.styles\\.${STYLE}\\.letter$`), schema: st.letter, mark: m => `lens.styles.${m[1]}` },
+  // The style's tag follows a renamed style (D230): empty shows the name's first letter.
+  { re: new RegExp(`^lens\\.styles\\.${STYLE}\\.letter$`), schema: st.letter, mark: m => `lens.styles.${m[1]}` },
   // Stakeholders outside the team (D165): who they are, how they start and drift, what each interaction does, and the events from or about them.
   { re: new RegExp(`^stakeholders\\.${KEY}\\.(name|role)$`), schema: sh.name, mark: m => `stakeholders.${m[1]}.${SH_MARK[m[2]]}` },
   { re: new RegExp(`^stakeholders\\.${KEY}\\.(about|persona|motivatedBy|noTopics|hiddenConcern|concernLine)$`), schema: sh.about, mark: m => `stakeholders.${m[1]}.${SH_MARK[m[2]]}` },

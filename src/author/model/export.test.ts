@@ -10,6 +10,7 @@ import { createEngine } from '../../engine/sim/engine';
 import { neededStyles } from '../../engine/sim/policies';
 import { emptyChat, PORTRAITS, pronounsOf, seedDraft } from './seed';
 import { blankEffect, newStakeholder } from './stakeholders';
+import { IMAGE_BUDGET_BYTES } from '../../engine/assets';
 
 /**
  * The principle (D128): every field the author sees reaches the simulation, or is an author note
@@ -45,8 +46,18 @@ function fixture(): AuthorDraft {
     respondWith: [], within: 2, onTime: [0, 2, 0], ifIgnored: { sponsor: true, followUp: null }, stakeholder: s.key,
     request: { kind: 'meeting', interaction: 'meet', within: 2, onTime: { trust: 3, satisfaction: 3 }, ifIgnored: { trust: -6, satisfaction: -8 } }, moves: { [s.key]: { trust: 0, satisfaction: -2 } }, origin: 'yours' });
   d.events.find(e => e.key === DISCOUNT)!.choice!.options[0].stakeholders = { [s.key]: { trust: -2, satisfaction: 3 } };
+  // A client brand and a product shown with its photo (D181, D182).
+  Object.assign(d.brand, { from: 'client', name: 'Ascent Group', main: '#0B5FFF', second: '#00A3A3', font: 'Manrope' });
+  d.story.product.view = 'photos';
+  // A named feature placed on the photo (D221).
+  d.story.product.features = [{ title: 'Quiet ride', text: 'Under 50 dB, with a soft start and stop.', x: 40, y: 50 }];
+  // The rubric in the author's words (D229).
+  d.scoring.rubric = [{ key: 'involvement', label: 'Involvement: asks for their plan first', cues: ['your plan'] }];
   return d;
 }
+
+/** A one pixel PNG, as an upload is embedded (D183). */
+const PIXEL = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 
 /** Reads a dotted path; a segment `key=value` picks the array element with that key. */
 function at(v: unknown, path: string): unknown {
@@ -65,6 +76,8 @@ const DISCOUNT = 'discount_decision';
 const opt = (d: AuthorDraft, i = 0) => ev(d, DISCOUNT).choice!.options[i];
 const CH = `events.key=${DISCOUNT}.choice`;
 const M = 'members.1';
+const cand = (d: AuthorDraft) => d.candidates![1];
+const C = 'candidates.1';
 const sh = (d: AuthorDraft) => d.stakeholders[0];
 const ix = (d: AuthorDraft, type: string) => sh(d).interactions.find(i => i.type === type)!;
 const SH = 'stakeholders.0';
@@ -93,7 +106,11 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['story.company.team', d => { d.story.company.team = 'The closing desk'; }, 'world.team'],
   ['story.product.name', d => { d.story.product.name = 'Ascent Quiet'; }, 'world.product.name'],
   ['story.product.dealValue', d => { d.story.product.dealValue = 41000; }, 'money.valuePerConversion'],
+  ['story.product.dealValue', d => { d.story.product.dealValue = 41000; }, 'world.products.0.dealValue'],
   ['story.product.oneLine', d => { d.story.product.oneLine = 'Quiet lifts.'; }, 'world.product.line'],
+  // The sales unit (D227).
+  ['story.product.unit', d => { d.story.product.unit = 'lift order'; }, 'money.unit'],
+  ['story.product.units', d => { d.story.product.unit = 'lift order'; d.story.product.units = 'orders for lifts'; }, 'money.unit'],
   ['story.product.points', d => { d.story.product.points.push('Ten year warranty'); }, 'world.product.points'],
   ['story.market.customers', d => { d.story.market.customers = 'Hospital groups'; }, 'world.customers'],
   ['story.market.rivals[].name', d => { d.story.market.rivals[0].name = 'Beta Lifts'; }, 'world.rivals'],
@@ -102,6 +119,38 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['story.sponsor.title', d => { d.story.sponsor.title = 'Chief Revenue Officer'; }, 'sponsor.title'],
   ['story.sponsor.voice', d => { d.story.sponsor.voice = 'Brisk and dry'; }, 'world.sponsorVoice'],
   ['story.screens[].body', d => { d.story.screens.find(s => s.key === 'welcome')!.body = 'Welcome aboard.'; }, 'intro.welcome'],
+  // The player's look and the onboarding's scenes (D181 to D183).
+  ['story.screens[].title', d => { d.story.screens.find(s => s.key === 'team')!.title = 'Your people'; }, 'intro.screens'],
+  ['story.company.office', d => { d.story.company.office = '/assets/bg-2.webp'; }, 'world.office'],
+  ['story.company.logo', d => { d.story.company.logo = 'XY'; }, 'world.logo'],
+  ['story.company.logoImage', d => { d.story.company.logoImage = PIXEL; }, 'world.logo'],
+  ['story.product.view', d => { d.story.product.view = 'model'; }, 'world.products'],
+  ['story.product.image', d => { d.story.product.image = PIXEL; }, 'world.products'],
+  // The portfolio scene's words and features (D221).
+  ['story.product.code', d => { d.story.product.code = 'AQ1'; }, 'world.products.0.code'],
+  ['story.product.kind', d => { d.story.product.kind = 'Commercial'; }, 'world.products.0.kind'],
+  ['story.product.tagline', d => { d.story.product.tagline = 'Quiet enough for home.'; }, 'world.products.0.tagline'],
+  ['story.product.audience', d => { d.story.product.audience = 'Hospitals and clinics.'; }, 'world.products.0.audience'],
+  ['story.product.imageAlt', d => { d.story.product.image = PIXEL; d.story.product.imageAlt = 'A quiet lift car'; }, 'world.products.0.imageAlt'],
+  ['story.product.features[].title', d => { d.story.product.features[0].title = 'Soft start'; }, 'world.products.0.features.0.title'],
+  ['story.product.features[].text', d => { d.story.product.features[0].text = 'It starts and stops softly.'; }, 'world.products.0.features.0.text'],
+  ['story.product.features[].x', d => { d.story.product.features[0].x = 10; }, 'world.products.0.features.0.spot'],
+  ['story.product.features[].y', d => { d.story.product.features[0].y = 10; }, 'world.products.0.features.0.spot'],
+  ['brand.from', d => { d.brand.from = 'knolskape'; }, 'brand'],
+  ['brand.name', d => { d.brand.name = 'Halden Group'; }, 'brand.name'],
+  ['brand.logo', d => { d.brand.logo = PIXEL; }, 'brand.logo'],
+  ['brand.main', d => { d.brand.main = '#112233'; }, 'brand.colors'],
+  ['brand.second', d => { d.brand.second = '#445566'; }, 'brand.colors'],
+  ['brand.font', d => { d.brand.font = 'Inter'; }, 'brand.font'],
+  ['brand.look', d => { d.brand.look = 'light'; }, 'brand.mode'],
+  // What the LMS records (D184).
+  ['lms.completion', d => { d.lms.completion = 'weeks'; }, 'lms.completion'],
+  ['lms.completionWeeks', d => { d.lms.completionWeeks = 2; }, 'lms.completion'],
+  ['lms.pass', d => { d.lms.pass = 'score'; }, 'lms.pass'],
+  ['lms.passScore', d => { d.lms.passScore = 85; }, 'lms.pass'],
+  ['lms.passLevel', d => { d.lms.passLevel = d.scoring.levels[2]; }, 'lms.pass'],
+  ['lms.package', d => { d.lms.package = 'scorm2004'; }, 'lms.package'],
+  ['lms.connected', d => { d.lms.connected = true; }, 'lms.connected'],
   ['process.stages[].name', d => { d.process.stages[0].name = 'Prospects'; }, 'stages.0.name'],
   ['process.stages[].people', d => { d.process.stages[0].people = 3; }, 'stages.0.ideal'],
   ['process.stages[].passesOn', d => { d.process.stages[1].passesOn = 35; }, 'stages.1.conversionRatio'],
@@ -147,6 +196,18 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['team[].shown.previousCompany', d => { member(d).shown.previousCompany = true; member(d).previousCompany ||= 'Beta Lifts'; }, `${M}.profile.previous`],
   ['team[].shown.careerGoal', d => { member(d).shown.careerGoal = false; }, `${M}.careerGoal`],
   ['team[].custom', d => { member(d).custom.push({ label: 'Hobby', value: 'Cycling' }); }, `${M}.npc.notes`],
+  // Hire candidates (D228).
+  ['candidates[].first', d => { cand(d).first = 'Rohan'; }, `${C}.name`],
+  ['candidates[].last', d => { cand(d).last = 'Gupta'; }, `${C}.name`],
+  ['candidates[].gender', d => { cand(d).gender = 'nonbinary'; cand(d).pronouns = pronounsOf('nonbinary'); }, `${C}.pronoun`],
+  ['candidates[].pronouns', d => { cand(d).pronouns = cand(d).pronouns.startsWith('he') ? 'she, her' : 'he, him'; }, `${C}.pronoun`],
+  ['candidates[].title', d => { cand(d).title = 'Senior Closer'; }, `${C}.title`],
+  ['candidates[].stage', d => { cand(d).stage = d.process.stages.find(s => s.key !== cand(d).stage)!.key; }, `${C}.homeStage`],
+  ['candidates[].photo', d => { cand(d).photo = PORTRAITS[2]; }, `${C}.portrait`],
+  ['candidates[].background', d => { cand(d).background = 'Area lead at a distributor'; }, `${C}.profile.previous`],
+  ['candidates[].experience', d => { cand(d).experience = '9 years'; }, `${C}.profile.experience`],
+  ['candidates[].strengths', d => { cand(d).strengths = 'Beat planning, claims'; }, `${C}.profile.skills`],
+  ['candidates[].remarks', d => { cand(d).remarks = 'Knows every outlet on the rural beats.'; }, `${C}.profile.remarks`],
   ['lens.id', d => { changeLens(d, 'six_styles'); }, 'lens.id'],
   ['lens.secondary', d => { d.lens.secondary = 'servant'; }, 'lens.secondary'],
   ['lens.styles[].letter', d => { d.lens.styles[0].letter = 'X'; }, 'lens.styles'],
@@ -195,8 +256,14 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['events[].ifIgnored.followUp', d => { ev(d, 'lens_moment').ifIgnored.followUp = 'public_complaint'; }, 'events.key=lens_moment.escalation'],
   ['scoring.framework', d => { d.scoring.framework = { file: 'ours.md', pages: 1, step: 3, confirmed: true, rows: [{ skill: 'Listening', behaviors: 'Asks open questions', levels: 5, page: 1, include: true }, { skill: 'Clarity', behaviors: 'Sets one next step', levels: 5, page: 1, include: true }] }; d.scoring.skills = [{ key: 'listening', name: 'Listening', reportOnly: false }, { key: 'clarity', name: 'Clarity', reportOnly: false }]; d.actions.forEach(a => { a.scoredOn = ['Listening', 'Clarity']; }); remapReads(d); }, 'report.skills'],
   ['scoring.levels', d => { d.scoring.levels = ['Starting', 'Growing', 'Strong']; }, 'report.scale'],
-  // People dynamics and business variables (D135, D136).
+  // The rubric behind the scoring samples, in the author's words (D229).
+  ['scoring.rubric[].key', d => { d.scoring.rubric = [{ key: 'clarity', label: '', cues: [] }]; }, 'actions.key=f2f.live.rubric'],
+  ['scoring.rubric[].label', d => { d.scoring.rubric = [{ key: 'listening', label: 'Listening: asks about their beat first', cues: [] }]; }, 'actions.key=f2f.live.rubric'],
+  ['scoring.rubric[].cues', d => { d.scoring.rubric = [{ key: 'listening', label: '', cues: ['what is getting in the way'] }]; }, 'actions.key=f2f.live.rubric'],
+  ['scoring.anchors', d => { const k = d.scoring.skills[0].key; d.scoring.anchors = { [k]: d.scoring.levels.map((l, i) => `Level ${i + 1} looks like this.`) }; }, 'report.skills'],
+  // People dynamics, real world costs and business variables (D135, D171, D136).
   ['process.dynamics', d => { d.process.dynamics = false; }, 'dynamics'],
+  ['process.realism', d => { d.process.realism = false; }, 'realism'],
   ['variables[].key', d => { d.variables[1].key = 'trust_index'; for (const e of d.events) for (const o of e.choice?.options ?? []) { if (o.variables.customer_trust !== undefined) { o.variables.trust_index = o.variables.customer_trust; delete o.variables.customer_trust; } } }, 'variables.1.key'],
   ['variables[].name', d => { d.variables[0].name = 'Spend'; }, 'variables.0.name'],
   ['variables[].format', d => { d.variables[0].format = 'points'; }, 'variables.0.format'],
@@ -294,6 +361,8 @@ const AUTHOR_NOTES: Record<string, string> = {
   'brief.dilemmas': 'Brief for Kora (D146): kept as title, two options and what is at stake, to seed choice events later',
   'process.pressure': 'Kora leans events and characters on it when drafting',
   'scoring.samples[].call': 'The author\'s check that scoring matches their judgment; Review and publish reads it',
+  'scoring.samples[].reason': 'Why the author disagrees with a sample (D229): kept with the draft, Review and publish reads it',
+  'scoring.samples[].resolution': 'How the author resolved a disagreement (D229): Review and publish reads it',
   'publish.cohort': 'The publishing record',
   'publish.notes': 'The publishing record',
   'publish.skipTest': 'Publish without testing (D132): Review and publish reads it, the simulation never does'
@@ -304,25 +373,21 @@ const INTERNAL = new Set([
   'v', 'stage', 'savedAt', 'chat', 'marks', 'suggestions[].id', 'suggestions[].tab', 'suggestions[].text', 'suggestions[].action', 'suggestions[].done', 'calibration',
   // No longer shown (D128): nothing played them. Kept so drafts saved earlier read back.
   'brief.conversationBy', 'brief.minutesPerWeek', 'brief.targetSkills', 'brief.saveAndResume',
-  'story.screens[].key', 'process.stages[].key', 'process.stages[].perWeek', 'team[].id',
+  'story.screens[].key', 'process.stages[].key', 'process.stages[].perWeek', 'team[].id', 'candidates[].id',
   'lens.title', 'lens.needs', 'lens.styles[].key', 'lens.library[].key', 'lens.library[].letter', 'lens.library[].name', 'lens.library[].short', 'lens.library[].description',
   'actions[].key', 'actions[].template', 'actions[].group', 'actions[].core', 'actions[].canPlay', 'actions[].forWhom', 'actions[].format', 'actions[].decides', 'actions[].origin', 'actions[].options[].key',
   'events[].key', 'events[].origin',
   'stakeholders[].key', 'stakeholders[].interactions[].type', 'stakeholders[].interactions[].options[].key',
   'scoring.skills[].key', 'scoring.skills[].name', 'scoring.skills[].reportOnly', 'scoring.samples[].id', 'scoring.samples[].with', 'scoring.samples[].answer', 'scoring.samples[].scored',
-  'publish.version', 'publish.played'
+  'publish.version', 'publish.played',
+  // The Brand and theme tab's own preview switch (board or report): it changes what the author sees, not the simulation.
+  'brand.preview'
 ]);
 
-/**
- * Known gaps, outside this change (reported in D128): the client theme is not exported yet (Brand and
- * theme), and the Story tab's visuals and extra intro screens have no engine field.
- */
-const KNOWN_GAPS = new Set([
-  'brand.from', 'brand.name', 'brand.logo', 'brand.main', 'brand.second', 'brand.font', 'brand.look', 'brand.preview',
-  'story.company.office', 'story.company.logo', 'story.product.view', 'story.screens[].title'
-]);
+/** Known gaps: none since D181 to D184 exported the brand, the Story tab's visuals, the intro screens' titles and uploaded images. */
+const KNOWN_GAPS = new Set<string>([]);
 
-const RECORDS = new Set(['chat', 'marks', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables',
+const RECORDS = new Set(['chat', 'marks', 'scoring.anchors', 'lens.fit', 'lens.needs', 'team[].reactions', 'actions[].impact', 'scoring.framework', 'calibration', 'events[].onTime', 'events[].choice.options[].variables',
   'events[].moves', 'events[].choice.options[].stakeholders', 'stakeholders[].interactions[].good.variables', 'stakeholders[].interactions[].bad.variables', 'stakeholders[].interactions[].options[].effect.variables']);
 /** Every field path of a draft: arrays as `[]` over all their elements, records as one field. */
 function fieldsOf(v: unknown, path = '', out = new Set<string>()): Set<string> {
@@ -563,5 +628,103 @@ describe('choices, conditions and business variables export as authored (D135 to
     const x = out.storyline.events!.find(y => y.key === 'public_complaint')!;
     expect([x.period, x.window, x.when, x.if]).toEqual([undefined, undefined, undefined, [{ kind: 'variable', variable: 'customer_trust', op: 'below', value: 60 }]]);
     expect(out.storyline.events!.find(y => y.key === 'lens_moment')!.escalation).toEqual({ sponsor: true, event: 'public_complaint', delay: { days: 3, weeks: 0 } });
+  });
+});
+
+describe('the brand, the Story tab\'s visuals, uploads and the LMS export as authored (D181 to D184)', () => {
+  it('a client brand, the office, the logo, the product and the intro screens reach the storyline and parse', () => {
+    const d = fixture();
+    Object.assign(d.brand, { logo: PIXEL, look: 'participant' });
+    Object.assign(d.story.company, { office: PIXEL, logoImage: PIXEL });
+    d.story.product.image = PIXEL;
+    d.team[0].photo = PIXEL;
+    const out = toStoryline(d);
+    expect(out.issues).toEqual([]);
+    const p = parseStoryline(out.storyline);
+    if (!p.ok) throw new Error(p.issues.join('\n'));
+    expect(p.config.brand).toEqual({ name: 'Ascent Group', colors: { main: '#0B5FFF', second: '#00A3A3' }, logo: PIXEL, font: 'Manrope', mode: 'system' });
+    expect(p.config.world?.office).toEqual({ image: PIXEL });
+    expect(p.config.world?.logo).toEqual({ image: PIXEL, text: d.story.company.logo });
+    expect(p.config.world?.products).toEqual([{
+      name: d.story.product.name, line: d.story.product.oneLine, specs: d.story.product.points, image: PIXEL, view: 'photo', dealValue: 30000,
+      features: [{ title: 'Quiet ride', text: 'Under 50 dB, with a soft start and stop.', spot: { x: 40, y: 50 } }]
+    }]);
+    expect(p.config.members[0].portrait).toBe(PIXEL);
+    expect(p.config.intro?.screens?.map(s => s.title)).toEqual(d.story.screens.map(s => s.title));
+    expect(p.config.lms).toEqual({ completion: { rule: 'finish' }, pass: { rule: 'none', score: 70 }, score: 'leadership', package: 'scorm12', connected: false });
+  });
+
+  it('the KNOLSKAPE look exports only the look; a described office goes to the AI characters; no product view, no portfolio', () => {
+    const d = fixture();
+    d.brand.from = 'knolskape';
+    d.story.company.office = 'Glass office, city view';
+    d.story.product.view = 'none';
+    const sl = toStoryline(d).storyline;
+    expect(sl.brand).toEqual({ mode: 'dark' });
+    expect(sl.world?.office).toEqual({ description: 'Glass office, city view' });
+    expect(sl.world?.products).toBeUndefined();
+  });
+
+  it('names an upload over the budget, or a photo the player cannot show, and falls back instead', () => {
+    const d = fixture();
+    const big = `data:image/png;base64,${'A'.repeat(Math.ceil((IMAGE_BUDGET_BYTES + 2048) / 3) * 4)}`;
+    d.team[1].photo = big;
+    d.story.company.office = big;
+    d.brand.logo = 'logo.png';
+    const out = toStoryline(d);
+    const text = out.issues.join('\n');
+    expect(text).toMatch(new RegExp(`${d.team[1].first} ${d.team[1].last}'s photo is \\d+ KB, over the 300 KB an uploaded image may be`));
+    expect(text).toMatch(/The office image is \d+ KB, over the 300 KB/);
+    expect(text).toMatch(/The brand logo is not an image the simulation can show/);
+    expect(out.storyline.members[1].portrait).toMatch(/^\/assets\//);
+    expect(out.storyline.world?.office).toBeUndefined();
+    expect(out.storyline.brand?.logo).toBeUndefined();
+  });
+
+  it('names a pass level that is not on the rating scale and a completion after the last week', () => {
+    const d = fixture();
+    Object.assign(d.lms, { completion: 'weeks', completionWeeks: d.process.weeks + 1, pass: 'level', passLevel: 'Wizard' });
+    const text = toStoryline(d).issues.join('\n');
+    expect(text).toMatch(/completes after \d+ weeks, but it has/);
+    expect(text).toMatch(/the pass level "Wizard" is not one of the rating scale's levels/);
+    expect(text).not.toMatch(/^lms\./m);
+  });
+
+  it('reads a draft saved before D181 to D184 back with the new fields at their defaults', async () => {
+    const { AuthorDraft } = await import('./draft');
+    const raw = JSON.parse(JSON.stringify(fixture())) as Record<string, Record<string, Record<string, unknown>>>;
+    delete raw.lms; delete raw.story.company.logoImage; delete raw.story.product.image;
+    const back = AuthorDraft.parse(raw);
+    expect(back.lms).toEqual({ completion: 'finish', completionWeeks: null, pass: 'none', passScore: 70, passLevel: '', package: 'scorm12', connected: false });
+    expect([back.story.company.logoImage, back.story.product.image]).toEqual(['', '']);
+  });
+});
+
+describe('style tags follow the names (D230)', () => {
+  const parsed = (d: AuthorDraft) => { const p = parseStoryline(toStoryline(d).storyline); if (!p.ok) throw new Error(p.issues.join('\n')); return p.config; };
+
+  it('shows a renamed style\'s first letter, and keeps a tag the author wrote', () => {
+    const d = fixture();
+    expect(d.lens.styles.map(s => s.letter)).toEqual(['', '', '', '']);
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['D', 'G', 'P', 'E']);
+    ['Show the Way', 'Coach Along', 'Work Together', 'Hand Over'].forEach((n, i) => { d.lens.styles[i].name = n; });
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['S', 'C', 'W', 'H']);
+    d.lens.styles[1].letter = 'CA';
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['S', 'CA', 'W', 'H']);
+  });
+
+  it('falls back to the key, then the first two letters, when two names start alike', () => {
+    const d = fixture();
+    ['Guide', 'Grow', 'Partner', 'Entrust'].forEach((n, i) => { d.lens.styles[i].name = n; });
+    expect(parsed(d).lens.styles.map(s => s.letter)).toEqual(['G', 'GR', 'P', 'E']);
+  });
+
+  it('reads a stored draft whose library tag no longer fits its renamed style back empty', async () => {
+    const { AuthorDraft } = await import('./draft');
+    const raw = JSON.parse(JSON.stringify(fixture())) as AuthorDraft;
+    raw.lens.styles[0] = { ...raw.lens.styles[0], name: 'Show the Way', letter: 'D' };
+    raw.lens.styles[1] = { ...raw.lens.styles[1], name: 'Coach Along', letter: 'Q' };
+    const back = AuthorDraft.parse(raw);
+    expect(back.lens.styles.map(s => s.letter)).toEqual(['', 'Q', '', '']);
   });
 });

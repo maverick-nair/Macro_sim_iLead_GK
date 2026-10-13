@@ -1,5 +1,6 @@
-import { hasCode } from '../copy';
+import { hasCode, isMsg } from '../copy';
 import { bandScore, capability } from '../sim/score';
+import { person } from '../sim/sim';
 import type { Sim } from '../sim/types';
 import { mean } from './ratings';
 import type { RunSummary } from './summary';
@@ -22,7 +23,12 @@ export interface Evidence {
   /** Revenue as % of target. */
   share: number;
   change: { skill: number; morale: number; result: number; trust: number };
-  /** People who resigned, and everyone who left (resigned or let go). */
+  /**
+   * The same changes over everyone who was on the team: people away and people who left count at their last
+   * values (D170), so a team that shrank to its happiest members does not look healthy. Left out, `change`.
+   */
+  everyone?: { skill: number; morale: number; result: number; trust: number };
+  /** People who resigned (a resignation trigger or people dynamics, D135), and everyone who left (resigned or let go). */
   resigned: number;
   departed: number;
   /** Share of style choices that fit, %; null without any. */
@@ -49,15 +55,27 @@ export interface Evidence {
 /** Codes of the log entries that mean something went unanswered. */
 export const MISSED = ['engine.log.unanswered', 'engine.escalated', 'engine.log.briefingMissed', 'engine.log.sponsorUnanswered'];
 
-export function gatherEvidence(sim: Sim, run: RunSummary): Evidence {
+/**
+ * The log entries of people who resigned: a resignation trigger, or someone who left after weeks of low morale
+ * (people dynamics, D135). Both count (D170); reading only the trigger undercounted resignations.
+ */
+export function resignations(sim: Sim) {
+  return sim.log.filter(l => (isMsg(l.title) && l.title.code === 'engine.trigger.label' && l.title.params?.kind === 'resignation') || hasCode(l.title, 'engine.dyn.resigned.label'));
+}
+
+export function gatherEvidence(sim: Sim, run: Pick<RunSummary, 'objectives'>): Evidence {
   const t = run.objectives.team;
   const weekly = sim.decisions.run.filter(d => d.source === 'weeklyStyle');
   const recs = sim.liveRecords;
   const decided = sim.choices.filter(c => c.by === 'you').length, defaulted = sim.choices.length - decided;
+  const all = [...sim.members, ...sim.departed];
+  const startOf = (id: string) => person(sim, id)?.start;
+  const moved = (k: 'skill' | 'morale' | 'result' | 'trust') => mean(all.map(m => m[k] - (k === 'trust' ? startOf(m.id)?.trust ?? sim.config.trustRules.start : startOf(m.id)?.[k] ?? m[k])));
   return {
     share: run.objectives.share,
     change: { skill: t.skill.end - t.skill.start, morale: t.morale.end - t.morale.start, result: t.result.end - t.result.start, trust: t.trust.end - t.trust.start },
-    resigned: sim.triggerCount.resignation ?? 0,
+    everyone: all.length ? { skill: moved('skill'), morale: moved('morale'), result: moved('result'), trust: moved('trust') } : undefined,
+    resigned: resignations(sim).length,
     departed: sim.departed.length,
     styleFit: sim.decisions.run.length ? capability(sim) : null,
     diagnosis: weekly.length ? (100 * weekly.filter(d => d.mismatch === 0).length) / weekly.length : null,
@@ -78,8 +96,10 @@ export function gatherEvidence(sim: Sim, run: RunSummary): Evidence {
 /** How strong each dimension was; null where the run gives no evidence (no conversations, no style choices). */
 export function strengths(e: Evidence, t: Thresholds): Record<Dimension, Strength | null> {
   const band = (v: number | null, th: { strong: number; weak: number }): Strength | null => (v === null ? null : v >= th.strong ? 'strong' : v < th.weak ? 'weak' : 'ok');
-  const c = e.change, p = t.people;
-  const peopleWeak = c.morale <= -p.moraleDrop || c.trust <= -p.trustDrop || e.resigned > 0;
+  // People outcomes read everyone who was on the team, leavers and people away included (D170).
+  const c = e.everyone ?? e.change, p = t.people;
+  // Anyone who left, resigned or let go, makes the people outcome weak, as it does for the level's people gate (D170).
+  const peopleWeak = c.morale <= -p.moraleDrop || c.trust <= -p.trustDrop || e.resigned > 0 || e.departed > 0;
   const rises = [c.skill, c.morale, c.result, c.trust].filter(v => v >= p.rise).length;
   const perPeriod = e.actions / e.periods;
   const sponsor = e.sponsor.end - e.sponsor.start;

@@ -33,6 +33,7 @@ export type LevelKey = (typeof LEVELS)[number];
  *   slip          says something that blames, now and then
  *   decide        makes a choice event's decision at all (otherwise its default applies, D137)
  *   weigh         weighs people, leadership and business in a decision (otherwise takes the best short term business)
+ *   manageUp      updates the sponsor before silence costs confidence (with realism, D173)
  *
  * Every trait but `promise` and `turns` is a skill: moving one level's value to the next level's never
  * lowers the score (D151, the monotonicity test in synthetic.test.ts). `promise` and `turns` are habits.
@@ -42,19 +43,21 @@ export interface PersonaTraits {
   keepPromises: number; promise: number; extras: number; waste: number; turns: [number, number]; polish: number; slip: number;
   /** Choice events (D137, D140): makes the decision at all, and weighs people and leadership beside business. */
   decide: number; weigh: number;
+  /** Realism (D173): updates the sponsor before a silence costs confidence. */
+  manageUp: number;
 }
 
 /** The traits that are skills, with the direction that is better. */
 export const SKILL_TRAITS: ReadonlyArray<[keyof PersonaTraits, 1 | -1]> = [
-  ['diagnose', 1], ['oneStyle', -1], ['adapt', 1], ['events', 1], ['focus', 1], ['fitAction', 1], ['keepPromises', 1], ['extras', 1], ['waste', -1], ['polish', 1], ['slip', -1], ['decide', 1], ['weigh', 1]
+  ['diagnose', 1], ['oneStyle', -1], ['adapt', 1], ['events', 1], ['focus', 1], ['fitAction', 1], ['keepPromises', 1], ['extras', 1], ['waste', -1], ['polish', 1], ['slip', -1], ['decide', 1], ['weigh', 1], ['manageUp', 1]
 ];
 
 /** D151: polish rises with the level (Proficient was below Developing). */
 export const PERSONA_TRAITS: Record<LevelKey, PersonaTraits> = {
-  beginner: { diagnose: 0.1, oneStyle: 0.85, adapt: 0.2, events: 0.1, focus: 0.2, fitAction: 0.2, keepPromises: 0, promise: 0.3, extras: 0, waste: 0.9, turns: [1, 1], polish: 0.6, slip: 0.04, decide: 0.5, weigh: 0.05 },
-  developing: { diagnose: 0.6, oneStyle: 0.15, adapt: 0.6, events: 0.5, focus: 0.6, fitAction: 0.6, keepPromises: 0.4, promise: 0.3, extras: 0.4, waste: 0.3, turns: [2, 2], polish: 0.7, slip: 0, decide: 0.8, weigh: 0.5 },
-  proficient: { diagnose: 0.8, oneStyle: 0, adapt: 0.8, events: 0.8, focus: 0.75, fitAction: 0.8, keepPromises: 0.8, promise: 0.4, extras: 0.6, waste: 0.05, turns: [2, 3], polish: 0.85, slip: 0, decide: 0.95, weigh: 0.8 },
-  expert: { diagnose: 0.97, oneStyle: 0, adapt: 1, events: 0.97, focus: 0.95, fitAction: 0.97, keepPromises: 1, promise: 0.5, extras: 0.9, waste: 0, turns: [3, 4], polish: 0.95, slip: 0, decide: 1, weigh: 0.97 }
+  beginner: { diagnose: 0.1, oneStyle: 0.85, adapt: 0.2, events: 0.1, focus: 0.2, fitAction: 0.2, keepPromises: 0, promise: 0.3, extras: 0, waste: 0.9, turns: [1, 1], polish: 0.6, slip: 0.04, decide: 0.5, weigh: 0.05, manageUp: 0.1 },
+  developing: { diagnose: 0.6, oneStyle: 0.15, adapt: 0.6, events: 0.5, focus: 0.6, fitAction: 0.6, keepPromises: 0.4, promise: 0.3, extras: 0.4, waste: 0.3, turns: [2, 2], polish: 0.7, slip: 0, decide: 0.8, weigh: 0.5, manageUp: 0.4 },
+  proficient: { diagnose: 0.8, oneStyle: 0, adapt: 0.8, events: 0.8, focus: 0.75, fitAction: 0.8, keepPromises: 0.8, promise: 0.4, extras: 0.6, waste: 0.05, turns: [2, 3], polish: 0.85, slip: 0, decide: 0.95, weigh: 0.8, manageUp: 0.75 },
+  expert: { diagnose: 0.97, oneStyle: 0, adapt: 1, events: 0.97, focus: 0.95, fitAction: 0.97, keepPromises: 1, promise: 0.5, extras: 0.9, waste: 0, turns: [3, 4], polish: 0.95, slip: 0, decide: 1, weigh: 0.97, manageUp: 0.95 }
 };
 
 export type Member = EngineView['members'][number];

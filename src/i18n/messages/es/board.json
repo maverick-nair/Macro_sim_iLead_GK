@@ -1,0 +1,6 @@
+{
+  "board.alert.title": "Atención.",
+  "board.alert.neglect": "{names} {count, plural, one {lleva} other {llevan}} {weeks, plural, one {# {unit, select, year {año} month {mes} week {semana} day {día} other {periodo}}} other {# {unit, select, year {años} month {meses} week {semanas} day {días} other {periodos}}}} sin tiempo a solas contigo: se desaniman y rinden menos. Una conversación o una acción a solas lo arregla.",
+  "board.alert.silence": "{name} no sabe nada de ti desde hace tiempo. Sin noticias {unit, select, year {este año} month {este mes} week {esta semana} day {hoy} other {este periodo}}, su confianza baja al final.",
+  "board.notice.noted": "Anotado"
+}

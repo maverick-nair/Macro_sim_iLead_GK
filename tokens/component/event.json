@@ -1,14 +1,15 @@
 {
   "event": {
     "card": {
-      "shadow": { "value": "0 30px 80px {color.event.shadow}" },
+      "shadow": { "value": "0 16px 48px {color.event.shadow}" },
       "enter": { "value": "ilIn {duration.slow} {easing.settle}", "$description": "The design's 280ms, snapped to duration.slow (D24)" },
-      "art-height": { "value": "170px", "$description": "The art band at the top of an event card" },
+      "width": { "value": "1040px", "$description": "An event card or a decision about someone: their photo beside the card, as on the canvas (D232)" },
+      "art-height": { "value": "170px", "$description": "The art band at the top of an event card (the design frames)" },
       "portrait": { "value": "150px", "$description": "The NPC cut out on the art band" },
       "tag-tracking": { "value": "{tracking.label}" }
     },
     "call": {
-      "shadow": { "value": "0 0 30px {color.event.call-glow}" },
+      "shadow": { "value": "0 16px 48px {color.event.shadow}", "$description": "The incoming call floats as the canvas notification does, no glow (D232)" },
       "enter": { "value": "ilIn {duration.slow} ease", "$description": "The incoming call slides in (design, 300ms)" },
       "ring": { "value": "ilRing 1.4s ease-out infinite", "$description": "The ring around the caller pulses while the call is waiting" }
     }

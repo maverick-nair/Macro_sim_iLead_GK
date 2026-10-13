@@ -37,7 +37,7 @@ function Card({ opts = DEV, print = false, children }: { opts?: MockGroupOptions
     <Loaded opts={opts}>
       {r => (
         <ReportProvider value={{ print, tables: 'toggle', purpose: r.cohort.purpose }}>
-          <div className="mx-auto my-6 flex max-w-(--il-report-width) flex-col gap-7 rounded-28 border border-line-default bg-surface-card p-8">{children(r)}</div>
+          <div className="mx-auto my-6 flex max-w-(--il-report-width) flex-col gap-7 border border-line-default bg-surface-card p-8">{children(r)}</div>
         </ReportProvider>
       )}
     </Loaded>

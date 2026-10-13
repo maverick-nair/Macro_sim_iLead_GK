@@ -3,11 +3,13 @@ import { roundHalfUp, capability, leadershipScore, tierFor } from '../sim/score'
 import { fitOf, lensView, NEEDS } from '../lens';
 import { firstName, netChanges, person, styleName } from '../sim/sim';
 import type { Sim, Style } from '../sim/types';
-import { overallOf, rateSkills, shortName, when, type SkillRating } from './ratings';
+import { rateSkills, shortName, when, type SkillRating } from './ratings';
+import { contradicted, outcomeOf, reasonFor, reasonsOf, type Cap, type Reason, type RunOutcome } from './outcomes';
 import { summarizeRun, type RunSummary } from './summary';
 import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
 import { narrativeOf, type BottleneckFact } from './narrative';
 import { stakeholdersOf, withStakeholders } from './stakeholders';
+import { unitParams } from '../units';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -56,7 +58,10 @@ export function buildReport(sim: Sim) {
   const byScore = [...rated].sort((a, b) => b.rawScore! - a.rawScore! || b.observations - a.observations || a.order - b.order);
   const strengths = byScore.slice(0, 3).map(s => s.key);
   const priorities = [...rated].sort((a, b) => a.rawScore! - b.rawScore! || b.observations - a.observations || a.order - b.order).filter(s => !strengths.includes(s.key)).slice(0, 3).map(s => s.key);
-  const overall = overallOf(sim, skills).level;
+  const run: RunSummary = summarizeRun(sim);
+  // The overall level capped by what happened, and the verdict on it (D168, D169).
+  const outcome = outcomeOf(sim, skills, run.objectives, purpose === 'assessment');
+  const overall = outcome.overall.level;
 
   // ---- 7. Business outcomes
   const funnel = c.stages.map((st, i) => ({ stage: st.key, name: st.name, cumulative: sim.funnel.stageOut[i], cumulativeIdeal: sim.periods.reduce((a, p) => a + (p.funnel[i]?.ideal ?? 0), 0) }));
@@ -73,7 +78,7 @@ export function buildReport(sim: Sim) {
   } : null;
   const bottleneckFact: BottleneckFact | null = bottleneck ? { name: bottleneck.name, periods: bottleneck.periods, owner: low && stat ? { id: low.id, stat, value: low[stat] } : null } : null;
   const share = sim.funnel.value / c.money.target;
-  const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions) };
+  const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions), ...unitParams(c.money.unit) };
   const businessLine = bottleneck
     ? msg('engine.report.businessStage', { ...businessBase, stage: bottleneck.name, periods: bottleneck.periods, total: sim.periods.length, unit })
     : msg('engine.report.business', businessBase);
@@ -195,15 +200,14 @@ export function buildReport(sim: Sim) {
   // Methodology names the lens in participant language; the source ("based on") is author only (D70).
   const lensLines: Copy[] = [msg('engine.report.lens', { title: c.lens.title }),
     ...(c.lens.secondary ? [msg('engine.report.lensSecondary', { title: c.lens.secondary.title })] : [])];
-  const run: RunSummary = summarizeRun(sim);
-  const v3 = report3(sim, purpose, skills, plan.map(p => p.name), run);
+  const v3 = report3(sim, purpose, skills, plan.map(p => p.name), run, outcome);
   // The headline, summary, drivers and reflections from the evidence, not the level alone (D143, D145).
   const levelLine = overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null;
   const story = narrativeOf(sim, purpose, run, overall, levelLine, bottleneckFact);
   return {
     available: sim.phase === 'ended',
     purpose,
-    storyline: { name: c.name, organisation: c.organisation ?? null },
+    storyline: { name: c.name, organisation: c.organisation ?? null, unit: c.money.unit ?? null },
     lens: { ...lensView(c.lens), secondary: c.lens.secondary ? { id: c.lens.secondary.id, title: c.lens.secondary.title } : null },
     periods: sim.periods.length, periodUnit: unit,
     sections: r.sections ?? withStakeholders(withDecisions(DEFAULT_SECTIONS[purpose], sim), sim),
@@ -211,6 +215,7 @@ export function buildReport(sim: Sim) {
     results: { revenue: Math.round(sim.funnel.value), target: c.money.target, share, conversions: Math.floor(sim.funnel.conversions), kpis },
     summary: {
       level: overall === null ? null : { index: overall, name: r.scale[overall].name },
+      levelCap: levelCapOf(sim, purpose, outcome),
       strengths, priorities, business: businessLine,
       narrative: story.levelLine,
       profile: story.profile, headline: story.headline, lines: story.lines, drivers: story.drivers
@@ -240,7 +245,7 @@ export function buildReport(sim: Sim) {
  * Report 3.0's sections (D75): the run summary's numbers with the narratives the purpose's bank gives
  * them, the assessment verdicts with their evidence, food for thought, takeaways and the plan's path.
  */
-function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[], run: RunSummary) {
+function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[], run: RunSummary, outcome: RunOutcome) {
   const c = sim.config, r = c.report, P = r.purposeCopy[purpose];
   const levels = r.scale.length;
   const bar = r.assessment.bar;
@@ -275,7 +280,7 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
       .filter((q, i, arr) => arr.findIndex(x => x.text === q.text) === i).slice(0, 3);
     const key = run.verdict.overall;
     return {
-      overall: { key, label: key ? r.assessment.labels[key] : r.assessment.labels.insufficient, bar: barWords, recordIds: ids, quotes, ...review(ids) },
+      overall: { key, label: key ? r.assessment.labels[key] : r.assessment.labels.insufficient, bar: barWords, why: verdictWhyOf(sim, outcome), recordIds: ids, quotes, ...review(ids) },
       skills: skills.filter(s => !s.reportOnly).map(s => {
         const k = run.verdict!.skills[s.key] ?? null;
         return { key: s.key, verdict: k, label: k ? r.assessment.skillLabels[k] : null, recordIds: s.recordIds, quotes: s.quotes, ...review(s.recordIds) };
@@ -335,6 +340,47 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
       path, checkIns, needs
     }
   };
+}
+
+/** A reason a level or verdict was held down, worded (D168). */
+const reasonCopy = (purpose: Purpose, x: Reason): Copy => msg('engine.report.capReason', { purpose, pct: 0, n: 0, total: 0, ...x });
+
+/**
+ * The overall level tile's line when outcomes held the level under what the words reached (D168): "Rated
+ * Developing: your words rated Role Model, but 3% of your style choices fit what people needed, 4 people left
+ * and revenue reached 37% of target." Null when nothing held it down.
+ */
+function levelCapOf(sim: Sim, purpose: Purpose, outcome: RunOutcome) {
+  const o = outcome.overall, scale = sim.config.report.scale;
+  if (o.level === null || o.words.level === null || !o.binding.length) return null;
+  const level = { index: o.level, name: scale[o.level].name }, from = { index: o.words.level, name: scale[o.words.level].name };
+  return {
+    from, gates: [...new Set(o.binding.map(c => c.gate))],
+    why: msg('engine.report.levelCap', { purpose, level: level.name, from: from.name, reasons: listOf(reasonsOf(o.binding).map(x => reasonCopy(purpose, x)), 'and') })
+  };
+}
+
+/**
+ * Why the verdict is not what the words alone would reach (D169): the caps and outcome gates behind it, or, when
+ * only exceeding was out of reach, that exceeding takes strong business and people outcomes. Null when the words
+ * and the outcomes agree.
+ */
+function verdictWhyOf(sim: Sim, outcome: RunOutcome): Copy | null {
+  const v = outcome.verdict;
+  if (!v || !v.key || !v.words || v.key === v.words) return null;
+  const t = sim.config.report.evidence, e = outcome.evidence;
+  // What held it: the binding caps, then the outcome gates and the guard that did not lower the level.
+  const held: Cap[] = [...outcome.overall.binding, ...outcome.overall.caps.filter(c => !outcome.overall.binding.includes(c) && c.gate !== 'fit')];
+  // Then the core dimensions the data calls weak (the guard, D170).
+  const reasons = [...reasonsOf(held), ...contradicted(e, t).map(d => reasonFor(d, e, t))].filter((x, i, all) => all.findIndex(y => y.kind === x.kind) === i).slice(0, 3);
+  if (reasons.length) return msg('engine.report.verdictWhy', { words: v.words, reasons: listOf(reasons.map(x => reasonCopy('assessment', x)), 'and') });
+  // Only strong outcomes were missing.
+  const c = e.change, rises = [c.skill, c.morale, c.result, c.trust].filter(d => d >= t.people.rise).length;
+  const weak: Reason[] = [
+    ...(e.share < t.business.strong ? [{ kind: 'revenue' as const, pct: roundHalfUp(e.share) }] : []),
+    ...(rises < 2 ? [{ kind: 'rises' as const, n: rises, total: t.people.rise }] : [])
+  ];
+  return msg('engine.report.verdictStrong', { reasons: listOf(weak.map(x => reasonCopy('assessment', x)), 'and'), count: weak.length });
 }
 
 /** The default sections, with "Decisions and consequences" after the key moments when the storyline has choices or business variables (D137). */

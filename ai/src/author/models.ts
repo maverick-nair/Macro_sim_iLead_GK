@@ -135,15 +135,11 @@ export function mergeCopy(template: StorylineInput, c: DraftCopy): StorylineInpu
   s.sponsor = { ...s.sponsor, name: clean(c.sponsor.name), title: clean(c.sponsor.title), styleLine: clean(c.sponsor.styleLine) };
   s.intro = { welcome: c.intro.welcome.map(clean), product: c.intro.product.map(clean), targets: c.intro.targets.map(clean) };
   if (s.lens) {
-    const letters = new Set<string>();
+    // A renamed style's tag is left to the engine: its name's first letter, unique within the lens (D230).
     s.lens.styles = s.lens.styles.map(st => {
       const n = c.styles.find(x => x.key === st.key);
-      if (!n) { letters.add(st.letter.toUpperCase()); return st; }
-      const name = clean(n.name);
-      const first = name.charAt(0).toUpperCase();
-      const letter = first && /\p{L}/u.test(first) && !letters.has(first) ? first : st.letter;
-      letters.add(letter.toUpperCase());
-      return { ...st, name, short: clean(n.short), description: clean(n.description), letter };
+      if (!n) return st;
+      return { ...st, name: clean(n.name), short: clean(n.short), description: clean(n.description), letter: undefined };
     });
   }
   s.members = s.members.map((m: Member) => {

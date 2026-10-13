@@ -4,10 +4,12 @@ import { parseGroupReport, type GroupReport } from '../engine/groupContract';
 import { I18nProvider, useI18n } from '../i18n';
 import { BrandContext } from '../theme/brand';
 import { useThemeState } from '../theme/bootstrap';
+import { pickMode } from '../theme/mode';
 import type { AppliedTheme } from '../theme/types';
 import { GroupReportView } from './GroupReportView';
 import { groupLaunch, startGroup } from './launch';
 import './messages';
+import { ILeadLogo } from '../components/shell/Logo';
 
 type State = { kind: 'loading' } | { kind: 'ready'; report: GroupReport } | { kind: 'missing' } | { kind: 'failed' };
 
@@ -22,7 +24,7 @@ export default function GroupPage({ started }: { started?: ReturnType<typeof sta
   // Launch parameters, read once.
   const [{ q, report }] = useState(() => started ?? startGroup(groupLaunch()));
   const { theme: applied } = useThemeState();
-  const theme = q.get('theme') === 'light' || (q.get('theme') !== 'dark' && applied?.mode === 'light') ? 'light' : 'dark';
+  const theme = pickMode(q.get('theme'), applied?.mode === 'system' ? null : applied?.mode, false);
   const [state, setState] = useState<State>({ kind: 'loading' });
   useEffect(() => {
     let alive = true;
@@ -54,7 +56,7 @@ function GroupShell({ theme, clientTheme, state, print }: { theme: 'dark' | 'lig
       <div className="il-theme relative flex flex-col font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]">
         {state.kind === 'ready' ? <GroupReportView report={state.report} print={print} /> : (
           <main className="mx-auto flex w-full max-w-(--il-report-width) flex-1 flex-col items-center justify-center gap-4 px-8 py-10 [min-height:inherit]">
-            <span className="bg-(image:--il-fill-brand) bg-clip-text text-28 font-700 tracking-(--il-app-logo-tracking) text-transparent">{t('hud.logo')}</span>
+            <ILeadLogo size="lg" />
             {state.kind === 'loading' && <div className="h-1.5 w-55 animate-(--il-app-loading-shimmer) rounded-3 bg-(image:--il-app-loading-track) bg-size-(--il-app-loading-track-size)" />}
             <h1 role="status" className="m-0 text-15 font-400 text-fg-secondary">{t(state.kind === 'loading' ? 'group.loading' : state.kind === 'missing' ? 'group.missing' : 'group.failed')}</h1>
           </main>

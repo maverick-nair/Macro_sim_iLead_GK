@@ -125,3 +125,16 @@ describe('Six Leadership Styles, end to end (D70)', () => {
     expect(a.view.badges).toEqual(b.view.badges);
   });
 });
+
+describe('style tags (D230)', () => {
+  it('derive a missing tag from the name, unique within the lens, and keep the storyline\'s own', () => {
+    const named = (names: string[], letters: Array<string | undefined> = []) =>
+      parse({ ...raw, lens: { ...DEFAULT_LENS, styles: DEFAULT_LENS.styles.map((s, i) => ({ ...s, name: names[i], letter: letters[i] })) } }).lens.styles.map(s => s.letter);
+    expect(named(['Show the Way', 'Coach Along', 'Work Together', 'Hand Over'])).toEqual(['S', 'C', 'W', 'H']);
+    expect(named(['Show the Way', 'Coach Along', 'Work Together', 'Hand Over'], ['D', 'G', 'P', 'E'])).toEqual(['D', 'G', 'P', 'E']);
+    expect(named(['Steer', 'Support', 'Share', 'Step back'])).toEqual(['S', 'G', 'P', 'E']);
+    expect(named(['Steer', 'Support', 'Share', 'Step back'], [undefined, 'S'])).toEqual(['D', 'S', 'P', 'E']);
+    expect(issues({ ...raw, lens: { ...DEFAULT_LENS, styles: DEFAULT_LENS.styles.map((s, i) => ({ ...s, letter: i < 2 ? 'X' : s.letter })) } }).join()).toMatch(/Style letters must be unique/);
+    expect(parse(raw).lens.styles.map(s => s.letter)).toEqual(['D', 'G', 'P', 'E']);
+  });
+});

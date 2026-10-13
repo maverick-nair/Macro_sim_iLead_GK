@@ -1,3 +1,7 @@
 {
-  "common.quote": "“{text}”"
+  "common.quote": "“{text}”",
+  "unit.one": "deal",
+  "unit.many": "deals",
+  "unit.Many": "Deals",
+  "unit.a": "a deal"
 }

@@ -1,3 +1,4 @@
+import { usableImage } from './images';
 import type { StorylineInput } from '../../engine/config';
 import type { AuthorDraft, ClauseDraft, EventDraft, StakeholderDraft, StakeholderEffectDraft } from './draft';
 import { KIND_LABEL, TYPE_LABEL } from './stakeholders';
@@ -76,7 +77,7 @@ export function exportStakeholders(d: AuthorDraft, c: StakeholderCtx, skillKey: 
     const notes = [...(t(s.persona) ? [{ label: 'Persona', value: s.persona.trim() }] : [])];
     return {
       key: s.key, name, role: s.role.trim() || KIND_LABEL[s.kind], kind: s.kind, pronoun: pronounOf(s),
-      ...(s.photo.startsWith('/') ? { portrait: s.photo } : null),
+      ...(s.photo.trim() && usableImage(s.photo, `${name}'s photo`, c.issues) ? { portrait: s.photo.trim() } : null),
       ...(t(s.about) ? { about: s.about.trim() } : null),
       ...(t(s.hiddenConcern) ? { hiddenConcern: s.hiddenConcern.trim(), concernLine: s.concernLine.trim() || s.hiddenConcern.trim() } : null),
       npc: {

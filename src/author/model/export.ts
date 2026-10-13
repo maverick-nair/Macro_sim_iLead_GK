@@ -1,14 +1,18 @@
 import { Brief } from '../../api/author';
-import { parseStoryline, type StorylineInput } from '../../engine/config';
+import { isImageRef } from '../../engine/assets';
+import { BRAND_FONTS, parseStoryline, type StorylineInput } from '../../engine/config';
 import { NEEDS } from '../../engine/lens';
+import { DEFAULT_RUBRIC, RUBRIC_LABELS } from '../../engine/sim/evaluator';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 import { regionOf } from '../context';
 import { guardDraft, type CopyIssue } from '../copyGuard';
 import { buildModule } from '../module';
 import { capabilityLow, draftStoryline } from '../storyline';
-import type { AuthorDraft, EventDraft } from './draft';
+import type { AuthorDraft, CandidateDraft, EventDraft } from './draft';
 import { mapWeek } from './run';
+import { candidatesOf } from './candidates';
 import { kindOf, parseEffect } from './seed';
+import { usableImage } from './images';
 import { clauseHolds, eventStakeholder, exportStakeholders, optionStakeholders, type StakeholderCtx } from './exportStakeholders';
 
 /**
@@ -229,14 +233,42 @@ function npcOf(c: AuthorDraft['team'][number], styleKeys: Set<string>): Member['
   };
 }
 
-/** The Story and world tab for the AI characters (D130): only what the author filled in. */
-function worldOf(d: AuthorDraft): SL['world'] {
+/**
+ * The Story and world tab (D130, D182): for the AI characters, only what the author filled in; for the player, the office
+ * image, the company logo and the product portfolio. An image the player cannot show is an issue (D183).
+ */
+function worldOf(d: AuthorDraft, issues: string[]): SL['world'] {
   const t = (s: string) => s.trim() || undefined;
   const st = d.story;
   const points = st.product.points.map(x => x.trim()).filter(Boolean);
   const rivals = st.market.rivals.filter(r => r.name.trim()).map(r => ({ name: r.name.trim(), ...(t(r.angle) ? { angle: t(r.angle) } : null) }));
   const product = { ...(t(st.product.name) ? { name: t(st.product.name) } : null), ...(t(st.product.oneLine) ? { line: t(st.product.oneLine) } : null), ...(points.length ? { points } : null) };
+  // The office: an image (a library backdrop or an upload) goes behind the player's screens; words describe it to the AI characters.
+  const office = st.company.office.trim();
+  const officeImage = isImageRef(office) || /^data:/i.test(office);
+  const officeOut = officeImage ? (usableImage(office, 'the office image', issues) ? { image: office } : undefined) : office ? { description: office } : undefined;
+  const logoImage = st.company.logoImage.trim() && usableImage(st.company.logoImage, 'the company logo', issues) ? st.company.logoImage.trim() : undefined;
+  const logo = { ...(logoImage ? { image: logoImage } : null), ...(t(st.company.logo) ? { text: st.company.logo.trim().slice(0, 3) } : null) };
+  const productImage = st.product.image.trim() && usableImage(st.product.image, 'the product photo', issues) ? st.product.image.trim() : undefined;
+  if (st.product.view !== 'none' && !t(st.product.name)) issues.push('The product view shows the product in onboarding, but the product has no name. Name it in Story and world, or set the view to None.');
+  // The portfolio scene's words (D221): each only when the author wrote it; a feature needs its title and text, and
+  // its spot is kept only when both coordinates are set.
+  const pr = st.product;
+  const features = pr.features.filter(f => t(f.title) && t(f.text)).slice(0, 4)
+    .map(f => ({ title: f.title.trim(), text: f.text.trim(), ...(f.x !== null && f.y !== null ? { spot: { x: f.x, y: f.y } } : null) }));
+  const portfolio = {
+    ...(t(pr.code) ? { code: pr.code.trim().slice(0, 8) } : null), ...(t(pr.kind) ? { kind: pr.kind.trim() } : null),
+    ...(t(pr.tagline) ? { tagline: pr.tagline.trim() } : null), ...(t(pr.audience) ? { audience: pr.audience.trim() } : null),
+    ...(pr.dealValue ? { dealValue: pr.dealValue } : null), ...(t(pr.imageAlt) && productImage ? { imageAlt: pr.imageAlt.trim() } : null),
+    ...(features.length ? { features } : null)
+  };
+  const products = st.product.view !== 'none' && t(st.product.name)
+    ? [{ name: st.product.name.trim(), ...(t(st.product.oneLine) ? { line: st.product.oneLine.trim() } : null), specs: points.slice(0, 8), ...(productImage ? { image: productImage } : null), view: st.product.view === 'model' ? 'model' as const : 'photo' as const, ...portfolio }]
+    : undefined;
   return {
+    ...(officeOut ? { office: officeOut } : null),
+    ...(Object.keys(logo).length ? { logo } : null),
+    ...(products ? { products } : null),
     ...(t(st.company.about) ? { about: t(st.company.about) } : null),
     ...(t(st.company.hq) ? { headquarters: t(st.company.hq) } : null),
     ...(t(st.company.team) ? { team: t(st.company.team) } : null),
@@ -254,13 +286,78 @@ function scaleMins(n: number): number[] {
 /** Anchors resampled to `n` levels, lowest and highest kept. */
 const resample = <T,>(list: T[], n: number): T[] => Array.from({ length: n }, (_, i) => list[n === 1 ? 0 : Math.round((i * (list.length - 1)) / (n - 1))]);
 
+/**
+ * The Brand and theme tab as the storyline's brand (D181). A client brand carries its name, colours, logo and font; the look
+ * (dark, light, or the participant's device) applies to the KNOLSKAPE look too.
+ */
+function brandOf(d: AuthorDraft, issues: string[]): SL['brand'] {
+  const b = d.brand;
+  const mode = b.look === 'participant' ? 'system' as const : b.look;
+  if (b.from !== 'client') return { mode };
+  const hex = (v: string, label: string) => {
+    if (/^#[0-9a-f]{6}$/i.test(v.trim())) return v.trim().toUpperCase();
+    issues.push(`Brand and theme: the ${label} is not a colour. Use #RRGGBB, or pick it with the colour picker.`);
+    return null;
+  };
+  const main = hex(b.main, 'main color'), second = hex(b.second, 'second color');
+  const font = (BRAND_FONTS as readonly string[]).includes(b.font) ? b.font as (typeof BRAND_FONTS)[number] : undefined;
+  if (!font) issues.push(`Brand and theme: ${b.font || 'the font'} is not one of the fonts the simulation can load. Pick one from the list.`);
+  const logo = b.logo.trim() && usableImage(b.logo, 'the brand logo', issues) ? b.logo.trim() : undefined;
+  return {
+    ...(b.name.trim() ? { name: b.name.trim().slice(0, 60) } : null),
+    ...(main && second ? { colors: { main, second } } : null),
+    ...(logo ? { logo } : null),
+    ...(font ? { font } : null),
+    mode
+  };
+}
+
+/** Review and publish's LMS settings as the storyline's `lms` (D184). Every value is kept, whichever rule is on, so switching back keeps it. */
+function lmsOf(d: AuthorDraft, issues: string[]): SL['lms'] {
+  const l = d.lms;
+  if (l.completion === 'weeks' && l.completionWeeks && l.completionWeeks > d.process.weeks) issues.push(`Review and publish: the run completes after ${l.completionWeeks} weeks, but it has ${d.process.weeks}. Pick ${d.process.weeks} or fewer.`);
+  const levels = d.scoring.levels.map(x => x.trim());
+  if (l.pass === 'level' && !levels.includes(l.passLevel.trim())) issues.push(`Review and publish: the pass level ${l.passLevel.trim() ? `"${l.passLevel.trim()}" is not` : 'is not set, and must be'} one of the rating scale's levels (${levels.join(', ')}). Pick one.`);
+  return {
+    completion: { rule: l.completion, ...(l.completionWeeks ? { periods: l.completionWeeks } : null) },
+    pass: { rule: l.pass, score: l.passScore, ...(l.passLevel.trim() ? { level: l.passLevel.trim() } : null) },
+    score: 'leadership', package: l.package, connected: l.connected
+  };
+}
+
+/** A sales unit's plural in English: order, orders; batch, batches; delivery, deliveries. */
+export function pluralOf(one: string): string {
+  const w = one.trim();
+  if (!w) return '';
+  if (/(s|x|z|ch|sh)$/i.test(w)) return `${w}es`;
+  if (/[^aeiou]y$/i.test(w)) return `${w.slice(0, -1)}ies`;
+  return `${w}s`;
+}
+
+/** The sales unit the author named (D227), singular and plural, or nothing: participants then read the catalog's word (deal). */
+function salesUnit(d: AuthorDraft): { unit?: { one: string; other: string } } {
+  const one = d.story.product.unit.trim();
+  return one ? { unit: { one, other: d.story.product.units.trim() || pluralOf(one) } } : {};
+}
+
 export interface Exported { storyline: SL; issues: string[]; copy: CopyIssue[] }
+
+/** The drafting module for a draft: its lens, secondary lens and the client's framework dimensions. */
+const moduleOf = (d: AuthorDraft, brief: Brief) => buildModule(brief, { primary: d.lens.id, secondary: d.lens.secondary, clientDimensions: d.chat.clientDimensions }, true);
+
+/**
+ * The draft's hire candidates (D228): its own, or for a draft saved before them the ones its brief drafts, as Team,
+ * Hiring shows them and the export plays them.
+ */
+export function hiringOf(d: AuthorDraft): CandidateDraft[] {
+  return candidatesOf(d, () => { const brief = briefOf(d); return draftStoryline(brief, moduleOf(d, brief)).candidates ?? []; });
+}
 
 /** The draft as a StorylineConfig, with the issues it has (the schema's and the references') and the copy guard's. */
 export function toStoryline(d: AuthorDraft): Exported {
   const issues: string[] = [];
   const brief = briefOf(d);
-  const module = buildModule(brief, { primary: d.lens.id, secondary: d.lens.secondary, clientDimensions: d.chat.clientDimensions }, true);
+  const module = moduleOf(d, brief);
   const base = draftStoryline(brief, module);
   const stageKey = new Map(d.process.stages.map((s, i) => [s.key, base.stages[i]?.key ?? s.key]));
   const styleKeys = new Set(d.lens.styles.map(s => s.key));
@@ -268,7 +365,8 @@ export function toStoryline(d: AuthorDraft): Exported {
   const pace = PACING[d.process.pacing];
 
   // Lens: the author's styles (renamed, a fifth added) and fit; the report names follow them.
-  const lens = { ...base.lens!, styles: d.lens.styles.map(s => ({ ...s, letter: s.letter || s.name.charAt(0).toUpperCase() })), fit: structuredClone(d.lens.fit), needs: structuredClone(d.lens.needs) };
+  // A tag the author wrote is kept; one left empty is the name's first letter, which the engine derives (D230).
+  const lens = { ...base.lens!, styles: d.lens.styles.map(({ letter, ...s }) => ({ ...s, ...(letter.trim() ? { letter: letter.trim() } : null) })), fit: structuredClone(d.lens.fit), needs: structuredClone(d.lens.needs) };
   for (const n of NEEDS) for (const k of styleKeys) lens.fit[n][k] ??= 1;
 
   // Team: by position over the drafted members, so each keeps calibrated per stage values.
@@ -300,9 +398,28 @@ export function toStoryline(d: AuthorDraft): Exported {
       },
       ...(c.hiddenConcern ? { hiddenConcern: c.hiddenConcern, concernLine: c.concernLine || src.concernLine || c.hiddenConcern } : { hiddenConcern: undefined, concernLine: undefined }),
       ...(c.shown.careerGoal && c.careerGoal ? { careerGoal: c.careerGoal } : { careerGoal: undefined }),
-      portrait: c.photo.startsWith('/') ? c.photo : src.portrait,
+      // A library portrait or an upload (D183); one the player cannot show is an issue, and the drafted portrait stands in.
+      portrait: c.photo.trim() && usableImage(c.photo, `${who}'s photo`, issues) ? c.photo.trim() : src.portrait,
       voice: c.voice.id,
       npc: npcOf(c, styleKeys)
+    };
+  });
+  // Hire candidates (D228): the author's, or for a draft saved before them the brief's, over the drafted ones by position.
+  const baseCandidates = base.candidates ?? [];
+  const candidates = candidatesOf(d, () => baseCandidates).map((c, i) => {
+    const src = baseCandidates[i % Math.max(1, baseCandidates.length)] ?? { ...base.members[i % base.members.length], profile: { ...base.members[0].profile } };
+    const who = [c.first, c.last].filter(Boolean).join(' ') || c.id;
+    const home = stageKey.get(c.stage);
+    if (!home) issues.push(`The candidate ${who} would start in a stage that is no longer in the work process. Pick their stage in Team, Hiring.`);
+    const homeKey = home ?? base.stages[0].key;
+    const byStage = Object.fromEntries(base.stages.map(s => [s.key, { ...(src.byStage[s.key] ?? src.start) }]));
+    byStage[homeKey] = { skill: src.start.skill, morale: src.start.morale, result: src.start.result };
+    const photo = c.photo.trim() && usableImage(c.photo, `${who}'s photo`, issues) ? c.photo.trim() : undefined;
+    return {
+      id: c.id, name: who, title: c.title.trim() || src.title, pronoun: pronounOf(c.gender, c.pronouns), homeStage: homeKey,
+      start: { ...src.start }, byStage,
+      profile: { previous: c.background.trim(), tenure: src.profile.tenure || 'New joiner', experience: c.experience.trim(), skills: c.strengths.trim(), remarks: c.remarks.trim(), relations: '' },
+      ...(photo ? { portrait: photo } : null)
     };
   });
   const memberIds = new Set(members.map(m => m.id));
@@ -314,6 +431,19 @@ export function toStoryline(d: AuthorDraft): Exported {
   const actions = d.actions.filter(a => a.core || a.enabled).map(a => overlayAction(templates.get(a.template) ?? templates.get('f2f')!, a, styleKeys));
   const actionKeys = new Set(actions.map(a => a.key));
   for (const a of actions) if (a.prerequisite && !actionKeys.has(a.prerequisite)) delete a.prerequisite;
+  // The rubric in the author's words (D229): every conversation rated on a dimension they worded carries it.
+  const rubricBy = new Map(d.scoring.rubric.map(r => [r.key, r]));
+  if (rubricBy.size) for (const a of actions) {
+    if (a.kind === 'static' || !a.format) continue;
+    const old = a.live?.rubric;
+    const keys = old?.map(r => r.key) ?? DEFAULT_RUBRIC[a.format] ?? DEFAULT_RUBRIC.roleplay;
+    if (!keys.some(k => rubricBy.has(k))) continue;
+    a.live = { ...(a.live ?? {}), rubric: keys.map(k => {
+      const mine = rubricBy.get(k), was = old?.find(r => r.key === k);
+      const cues = mine ? mine.cues.map(c => c.trim()).filter(c => c.length >= 2) : was?.cues ?? [];
+      return { key: k, label: mine?.label.trim() || was?.label || RUBRIC_LABELS[k] || k, ...(cues.length ? { cues } : null) };
+    }) } as Action['live'];
+  }
 
   // Events (D128): timing, response and escalation as authored; references checked, never retargeted.
   const baseEvents = new Map((base.events ?? []).map(e => [e.key, e]));
@@ -340,7 +470,9 @@ export function toStoryline(d: AuthorDraft): Exported {
   const intro = {
     welcome: paragraphs(screen('welcome')).length ? paragraphs(screen('welcome')) : base.intro!.welcome,
     product: paragraphs(screen('product')).length ? paragraphs(screen('product')) : base.intro!.product,
-    targets: paragraphs(screen('targets')).length ? paragraphs(screen('targets')) : base.intro!.targets
+    targets: paragraphs(screen('targets')).length ? paragraphs(screen('targets')) : base.intro!.targets,
+    // Every screen in the author's order with its title (D182), so onboarding shows the ones the author added too.
+    screens: d.story.screens.slice(0, 10).map(s => ({ key: s.key, title: s.title.trim() || s.key, body: paragraphs(s.body, 6) }))
   };
 
   // Report: skills, the rating scale, the sections and which skills each action rates (D128).
@@ -359,7 +491,11 @@ export function toStoryline(d: AuthorDraft): Exported {
   if (levels.some(l => !l)) issues.push('Name every level of the rating scale in Scoring and report.');
   const mins = scaleMins(levels.length);
   report.scale = levels.map((name, i) => ({ name: name || `Level ${i + 1}`, min: mins[i] }));
-  report.skills = (report.skills ?? []).map(s => ({ ...s, anchors: resample(s.anchors, levels.length) }));
+  // What each level looks like, in the author's words where they wrote them (D229).
+  report.skills = (report.skills ?? []).map(s => {
+    const mine = (d.scoring.anchors[s.key] ?? []).map(a => a.trim());
+    return { ...s, anchors: mine.length && mine.every(Boolean) ? resample(mine, levels.length) : resample(s.anchors, levels.length) };
+  });
   if (d.scoring.reportSections) report.sections = [...d.scoring.reportSections];
   const skillKey = new Map((report.skills ?? []).map(s => [s.name.trim().toLowerCase(), s.key]));
   const linkage = { ...(report.linkage ?? {}) };
@@ -395,15 +531,18 @@ export function toStoryline(d: AuthorDraft): Exported {
     ...base,
     name: d.title || base.name,
     organisation: d.story.company.name || base.organisation,
-    world: worldOf(d),
+    world: worldOf(d, issues),
+    brand: brandOf(d, issues),
+    lms: lmsOf(d, issues),
     lens,
     // Language (D128): the participant's number formats and the AI characters' language and region.
-    money: { ...base.money, locale: region?.locale ?? base.money.locale, valuePerConversion: d.story.product.dealValue ?? base.money.valuePerConversion, target: d.process.revenue ?? base.money.target, inputPerSubPeriod },
+    money: { ...base.money, locale: region?.locale ?? base.money.locale, valuePerConversion: d.story.product.dealValue ?? base.money.valuePerConversion, target: d.process.revenue ?? base.money.target, inputPerSubPeriod, ...salesUnit(d) },
     time: { ...base.time, period: { unit: 'week', count: weeks }, subPeriod: { unit: 'day', perPeriod: days } },
     stages: base.stages.map((s, i) => ({ ...s, name: d.process.stages[i]?.name || s.name, conversionRatio: clamp((d.process.stages[i]?.passesOn ?? s.conversionRatio * 100) / 100, 0.05, 1), ideal: d.process.stages[i]?.people ?? s.ideal })),
     sponsor: { ...base.sponsor, name: d.story.sponsor.name || base.sponsor.name, title: d.story.sponsor.title || base.sponsor.title },
     intro,
     members,
+    candidates,
     actions,
     events,
     report,
@@ -412,12 +551,16 @@ export function toStoryline(d: AuthorDraft): Exported {
     ...(balanced ? null : { drift: { morale: pace.drift, result: 0 }, gamification: { ...(base.gamification ?? {}), sponsor: { ...(base.gamification?.sponsor ?? {}), escalation: pace.escalation } } }),
     // People dynamics (D135) at the engine's defaults, and the business variables (D136), with weights as shares.
     ...(d.process.dynamics ? { dynamics: {} } : null),
+    // Real world costs (D171 to D178) at the engine's defaults.
+    ...(d.process.realism ? { realism: {} } : null),
     variables: d.variables.map(v => ({ key: v.key, name: v.name || v.key, format: v.format, start: v.start, min: v.min, max: v.max, drift: v.drift, shown: v.shown, weight: v.weight / 100, higherIsBetter: v.higherIsBetter, ...(v.about.trim() ? { about: v.about.trim() } : null) })),
     ...(stakeholders.length ? { stakeholders } : null),
     ...(hasStatic ? null : { demo: { enabled: false } }),
     calibrated: false
   };
   const parsed = parseStoryline(storyline);
-  const schema = parsed.ok ? [] : parsed.issues.filter(i => ![...suppressed].some(p => i.startsWith(`${p}:`)));
+  // The brand, the LMS settings and the images are checked above in the author's words (D181 to D184); the schema's own wording would repeat them.
+  const said = /^(lms|brand|world\.office|world\.logo|world\.products\.\d+\.image)[.:]/;
+  const schema = parsed.ok ? [] : parsed.issues.filter(i => ![...suppressed].some(p => i.startsWith(`${p}:`)) && !said.test(i));
   return { storyline, issues: [...issues, ...schema], copy: guardDraft(storyline) };
 }

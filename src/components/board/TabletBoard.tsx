@@ -20,9 +20,9 @@ import './tabletMessages';
  * right), the bottom dock and the bar that stands in for the drawer while people are picked.
  */
 
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const eyebrow = 'text-12 font-700 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
-const primary = `min-h-14 cursor-pointer rounded-16 border-0 bg-transparent bg-(image:--il-button-primary-bg) px-4 py-0 text-16 font-700 text-(--il-button-primary-fg) disabled:cursor-not-allowed disabled:opacity-40 ${focus}`;
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const eyebrow = 'text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase';
+const primary = `min-h-14 cursor-pointer rounded-4 border-0 bg-transparent bg-(image:--il-button-primary-bg) px-4 py-0 text-16 font-600 text-(--il-button-primary-fg) disabled:cursor-not-allowed disabled:opacity-40 ${focus}`;
 const footer = 'sticky bottom-0 mt-auto flex flex-col gap-2 border-x-0 border-b-0 border-t border-solid border-line-default bg-surface-solid pt-3';
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
@@ -50,7 +50,7 @@ export function TabletMemberCard(props: MemberCardProps) {
   const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
   return (
     <button type="button" data-member-card="" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
-      className={`relative flex min-h-42 w-full flex-col items-start gap-2.5 rounded-18 border border-solid px-3 py-3.5 text-start text-fg-primary ${focus} ${selected ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
+      className={`relative flex min-h-42 w-full flex-col items-start gap-2.5 rounded-4 border border-solid px-3 py-3.5 text-start text-fg-primary ${focus} ${selected ? 'border-accent-secondary bg-accent-soft' : 'border-line-default bg-surface-card'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
       <img src={img} alt="" className={`size-13 flex-none rounded-round bg-brand-pale-lavender object-cover object-top ring-2 ${MOOD_RING[mood]} ${away ? 'grayscale' : ''}`} />
       {(unread || promise) && (
         <span className="absolute top-2.5 end-2.5 flex gap-1">
@@ -63,8 +63,8 @@ export function TabletMemberCard(props: MemberCardProps) {
         <span className="text-12 break-words text-fg-secondary">{title}</span>
       </span>
       <span className="mt-auto flex flex-wrap items-center gap-1.5">
-        <span className="flex items-center gap-1.25 text-12 font-700"><span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />{away ? t('member.mood.away') : moodName}</span>
-        <span className="flex min-h-5.5 items-center rounded-pill bg-surface-raised px-2 text-11 font-700 text-fg-secondary">{style ? styleName(style) : t('tablet.card.noStyle')}</span>
+        <span className="flex items-center gap-1.25 text-12 font-600"><span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />{away ? t('member.mood.away') : moodName}</span>
+        <span className="flex min-h-5.5 items-center rounded-4 bg-surface-raised px-2 text-11 font-600 text-fg-secondary">{style ? styleName(style) : t('tablet.card.noStyle')}</span>
       </span>
     </button>
   );
@@ -103,7 +103,7 @@ export function TabletFlow(p: ActionDrawerProps & { onPickOnBoard: () => void })
       <div className="flex animate-(--il-action-drawer-enter) flex-col gap-3.5">
         <div className="flex flex-col gap-1">
           <span className="text-13 text-pretty text-fg-secondary">{p.description}</span>
-          {p.perk && <span role="note" className="text-13 font-700 text-pretty text-status-gain">{p.perk}</span>}
+          {p.perk && <span role="note" className="text-13 font-600 text-pretty text-status-gain">{p.perk}</span>}
         </div>
         {p.options && <OptionCards options={p.options} value={p.option ?? null} onChange={i => p.onOption?.(i)} size="lg" />}
         {p.people.mode === 'pick' && (
@@ -213,12 +213,12 @@ export function ActionSheet(p: ActionSheetProps) {
           <div className="flex items-center gap-3.5">
             {person && <img src={person.img} alt="" className={`size-15 flex-none rounded-round bg-brand-pale-lavender object-cover object-top ring-2 ${MOOD_RING[person.mood]} ${person.away ? 'grayscale' : ''}`} />}
             <div className="flex min-w-0 flex-1 flex-col">
-              <Dialog.Title className="m-0 text-20 font-700">{person ? person.name : t('tablet.sheet.teamTitle')}</Dialog.Title>
+              <Dialog.Title className="m-0 text-20 font-600">{person ? person.name : t('tablet.sheet.teamTitle')}</Dialog.Title>
               <span className="text-13 text-fg-secondary">{meta || p.left}</span>
             </div>
             <Dialog.Close asChild>
               <button type="button" aria-label={t('tablet.sheet.close')}
-                className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-12 border border-solid border-line-default bg-surface-raised p-0 text-fg-primary ${focus}`}>{CLOSE_GLYPH}</button>
+                className={`flex size-11 flex-none cursor-pointer items-center justify-center rounded-4 border border-solid border-line-default bg-surface-raised p-0 text-fg-primary ${focus}`}>{CLOSE_GLYPH}</button>
             </Dialog.Close>
           </div>
           {person && (
@@ -228,7 +228,7 @@ export function ActionSheet(p: ActionSheetProps) {
                 return (
                   <button key={k} ref={el => { tabRefs.current[i] = el; }} type="button" role="tab" id={`${ids}-${k}`} aria-selected={on} aria-controls={`${ids}-panel`} tabIndex={on ? 0 : -1}
                     onClick={() => p.onTab(k)} onKeyDown={e => onTabKey(e, i)}
-                    className={`min-h-10 cursor-pointer rounded-pill px-3.5 py-0 text-13 ${on ? 'border-0 bg-accent-soft font-700 text-fg-primary' : 'border border-solid border-line-default bg-transparent font-600 text-fg-secondary'} ${focus}`}>
+                    className={`min-h-10 cursor-pointer rounded-4 px-3.5 py-0 text-13 ${on ? 'border-0 bg-accent-soft font-600 text-fg-primary' : 'border border-solid border-line-default bg-transparent font-600 text-fg-secondary'} ${focus}`}>
                     {t('tablet.sheet.tab', { tab: k, name: first })}
                   </button>
                 );
@@ -243,7 +243,7 @@ export function ActionSheet(p: ActionSheetProps) {
                   : <div role="status" className="text-14 text-fg-secondary">{t('tablet.sheet.profileLoading')}</div>)
                 : <>
                   {due && p.tab === 'member' && (
-                    <div className="flex flex-col items-start gap-2 rounded-14 border border-solid border-status-attention bg-status-attention-soft px-3.5 py-3 text-13 text-pretty">
+                    <div className="flex flex-col items-start gap-2 rounded-4 border border-solid border-status-attention bg-status-attention-soft px-3.5 py-3 text-13 text-pretty">
                       <span>{due}</span>
                       <NoWrapButton variant="secondary" size="sm" onClick={p.due!.onReply}>{t('tablet.sheet.reply')}</NoWrapButton>
                     </div>
@@ -287,14 +287,14 @@ export interface TabletDockProps {
 export function TabletDock({ unread, inboxOpen, onInbox, open, left, onActions }: TabletDockProps) {
   const { t, number } = useI18n();
   return (
-    <nav aria-label={t('tablet.dock.aria')} className="mx-6 mt-4 mb-6 flex gap-2.5 rounded-20 border border-solid border-line-default bg-surface-material p-2.5 shadow-(--il-tablet-dock-shadow) backdrop-blur-20">
+    <nav aria-label={t('tablet.dock.aria')} className="mx-6 mt-4 mb-6 flex gap-2.5 rounded-4 border border-solid border-line-default bg-surface-material p-2.5 shadow-(--il-tablet-dock-shadow) ">
       <button type="button" onClick={onInbox} aria-expanded={inboxOpen} aria-label={t('inbox.open', { count: unread })}
-        className={`flex min-h-14 cursor-pointer items-center gap-2.5 rounded-14 border border-solid border-line-default bg-transparent px-5 py-0 text-15 font-700 text-fg-primary ${focus}`}>
+        className={`flex min-h-14 cursor-pointer items-center gap-2.5 rounded-4 border border-solid border-line-default bg-transparent px-5 py-0 text-15 font-600 text-fg-primary ${focus}`}>
         {t('inbox.title')}
-        {unread > 0 && <span aria-hidden="true" className="flex min-h-6 min-w-6 items-center justify-center rounded-pill bg-brand px-1.5 text-12 font-700 text-brand-deep-space">{number(unread)}</span>}
+        {unread > 0 && <span aria-hidden="true" className="flex min-h-6 min-w-6 items-center justify-center rounded-4 bg-brand px-1.5 text-12 font-600 text-button-on-solid">{number(unread)}</span>}
       </button>
       <button type="button" data-dock="actions" onClick={onActions}
-        className={`min-h-14 flex-1 cursor-pointer rounded-14 border-0 bg-transparent bg-(image:--il-fill-brand) px-4 py-0 text-16 font-700 text-brand-deep-space ${focus}`}>
+        className={`min-h-14 flex-1 cursor-pointer rounded-4 border-0 bg-transparent bg-(image:--il-fill-brand) px-4 py-0 text-16 font-600 text-button-on-solid ${focus}`}>
         {t('tablet.dock.actions', { n: open, left })}
       </button>
     </nav>
@@ -320,7 +320,7 @@ export function PickBar({ action, limit, picks, onDone, onCancel }: PickBarProps
   useEffect(() => { ref.current?.focus({ preventScroll: true }); }, []);
   return (
     <section ref={ref} tabIndex={-1} aria-label={t('tablet.pick.aria', { action })}
-      className="mx-6 mt-4 mb-6 flex items-center gap-3 rounded-20 border border-solid border-accent-secondary bg-surface-material py-2.5 pe-2.5 ps-5 shadow-(--il-tablet-dock-shadow) outline-0 backdrop-blur-20">
+      className="mx-6 mt-4 mb-6 flex items-center gap-3 rounded-4 border border-solid border-accent-secondary bg-surface-material py-2.5 pe-2.5 ps-5 shadow-(--il-tablet-dock-shadow) outline-0 ">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <b className="text-15">{t('tablet.pick.bar', { action, limit })}</b>
         <span aria-live="polite" className="text-13 text-fg-secondary">

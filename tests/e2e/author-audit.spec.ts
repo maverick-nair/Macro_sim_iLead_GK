@@ -8,7 +8,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
  * is named before a draft is made; a conditional event and its "If ignored" follow up are in the exported
  * config; switching to Lite remaps events and says what moved.
  *
- * The exported config is read where Play a week leaves it for the participant tab (`ilead.author.draft`).
+ * The exported config is read where Preview leaves it for the participant tab (`ilead.author.draft`).
  */
 
 const errors: string[] = [];
@@ -45,10 +45,10 @@ async function changeStored(page: Page, change: string) {
   }, [KEY, change] as const);
   await page.reload();
 }
-/** Play a week, and the storyline it handed to the participant tab (the exported config). */
+/** Preview, and the storyline it handed to the participant tab (the exported config). */
 async function exported(page: Page, context: BrowserContext): Promise<Json> {
   const opened = context.waitForEvent('page');
-  await page.getByRole('banner').getByRole('button', { name: 'Play a week' }).click();
+  await page.getByRole('banner').getByRole('button', { name: 'Preview', exact: true }).click();
   const tab = await opened;
   await tab.close();
   return page.evaluate(k => JSON.parse(localStorage.getItem(k) ?? 'null'), DRAFT_KEY);

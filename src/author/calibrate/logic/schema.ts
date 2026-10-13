@@ -90,7 +90,7 @@ export const RunResult = z.object({
   actions: z.record(z.string(), Int),
   events: z.object({ expected: Int, handled: Int }),
   /** Choice events (D137): each choice, the option it ended on and whether the player chose it or it was left to its default. */
-  choices: z.array(z.object({ event: z.string(), option: z.string().nullable(), by: z.enum(['you', 'default']) })).optional(),
+  choices: z.array(z.object({ event: z.string(), option: z.string().nullable(), by: z.enum(['you', 'kept', 'default']) })).optional(),
   /**
    * Where the Leadership Score came from (D149), in points that add up to it: each pillar's weighted share
    * and the streak bonus; `capped` when revenue passed the target, so Business could rise no further.

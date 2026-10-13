@@ -3,6 +3,7 @@ import type { MetricKey } from '../../engine/contract';
 import { useI18n } from '../../i18n';
 import { useMoney } from '../../i18n/money';
 import { KpiTile, type KpiTrend } from '../metric/KpiTile';
+import { NoWrapButton } from '../../ds/Button';
 import type { PeriodUnit, SubPeriodUnit } from '../hud/Hud';
 
 export const SPONSOR_LEVELS = ['low', 'wavering', 'steady', 'confident', 'champion'] as const;
@@ -59,6 +60,12 @@ export interface SponsorConfidence {
    * When given, the tile reads "Confident, 72" and the popover says what the lines mean. The design frames pass none.
    */
   meter?: { value: number; unlockAt: number; checkInBelow: number; sponsorName: string; subPeriodUnit: SubPeriodUnit };
+  /**
+   * Realism (D173), when the storyline has it: whole periods since your last word to the sponsor, the silence at which
+   * confidence starts to slip, and your own update (its cost, why it cannot be given now, and what opens it).
+   */
+  silence?: { weeks: number; costsFrom: number; periodUnit: PeriodUnit };
+  update?: { cost: string; blocked: 'done' | 'capacity' | null; onUpdate: () => void };
 }
 
 export interface MetricsStripProps {
@@ -68,7 +75,7 @@ export interface MetricsStripProps {
   sponsor: SponsorConfidence;
 }
 
-const tile = 'flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12 short:gap-1 short:py-1.5';
+const tile = 'flex flex-col gap-1.5 rounded-4 border border-line-default bg-surface-card px-3.5 py-2.5 short:gap-1 short:py-1.5';
 const PULSE = [
   { group: 'upbeat', bg: 'bg-metrics-pulse-upbeat' },
   { group: 'steady', bg: 'bg-metrics-pulse-steady' },
@@ -112,8 +119,8 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
       aria-label={t('metrics.pulse.valueAria', { value: number(pulse.value), dir: pulseDir, unit: pulse.periodUnit ?? 'week', ...counts })} className={tile}>
       <span className="text-12 text-fg-secondary">{t('metrics.pulse.title')}</span>
       <div className="flex items-baseline gap-2">
-        <b className="text-22 font-700 short:text-18">{number(pulse.value)}</b>
-        <span className={`text-12 font-700 ${pulseTone}`}><span aria-hidden="true">{t('metric.trend.glyph', { dir: pulseDir })}</span>{' '}{t('metric.trend.word', { dir: pulseDir })}</span>
+        <b className="text-22 font-600 short:text-18">{number(pulse.value)}</b>
+        <span className={`text-12 font-600 ${pulseTone}`}><span aria-hidden="true">{t('metric.trend.glyph', { dir: pulseDir })}</span>{' '}{t('metric.trend.word', { dir: pulseDir })}</span>
       </div>
       {moodBar}
     </div>
@@ -130,7 +137,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
   );
   const sponsorTile = (cls: string) => (
     <button type="button" onClick={sponsor.onToggle} aria-expanded={sponsor.open} aria-controls={sponsor.open ? popId : undefined}
-      className={`${tile} ${cls} cursor-pointer text-start text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
+      className={`${tile} ${cls} cursor-pointer text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
       <span className="text-12 text-fg-secondary">{t('metrics.sponsor.title')}</span>
       <b className="text-16">{meter ? t('metrics.sponsor.levelValue', { level: sponsor.level, value: number(meter.value) }) : t('metrics.sponsor.level', { level: sponsor.level })}</b>
       <div className="flex w-full gap-0.75">
@@ -139,7 +146,7 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
     </button>
   );
   const causes = (cls: string) => (
-    <div id={popId} className={`${cls} flex flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)`}>
+    <div id={popId} className={`${cls} flex flex-col gap-2 rounded-4 border border-line-strong bg-surface-material p-3.5 text-13 shadow-(--il-metrics-popover-shadow)`}>
       <b>{t('metrics.sponsor.causes')}</b>
       {meter && sponsor.causes.length === 0 && <span className="text-fg-secondary">{t('metrics.sponsor.none')}</span>}
       {sponsor.causes.map((c, i) => {
@@ -155,11 +162,23 @@ export function MetricsStrip({ kpis, pulse, target, sponsor }: MetricsStripProps
           <span>{t('metrics.sponsor.checkIn', { below: number(meter.checkInBelow), unit: meter.subPeriodUnit })}</span>
         </>
       )}
+      {meter && sponsor.silence && (
+        <>
+          <b className="border-t border-line-default pt-2">{t('metrics.sponsor.keepInTouch')}</b>
+          <span>{t('metrics.sponsor.silence', { name: meter.sponsorName, weeks: sponsor.silence.weeks, from: sponsor.silence.costsFrom, unit: sponsor.silence.periodUnit })}</span>
+          {sponsor.update && (
+            <div className="flex flex-wrap items-center gap-2">
+              <NoWrapButton variant="secondary" size="sm" disabled={!!sponsor.update.blocked} onClick={sponsor.update.onUpdate}>{t('metrics.sponsor.update', { name: meter.sponsorName })}</NoWrapButton>
+              <span className="text-12 text-fg-secondary">{sponsor.update.blocked ? t('metrics.sponsor.updateBlocked', { why: sponsor.update.blocked, unit: sponsor.silence.periodUnit }) : sponsor.update.cost}</span>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 
   return (
-    <section aria-label={t('metrics.strip.aria')} data-tour="kpis" className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 short:pb-2 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
+    <section aria-label={t('metrics.strip.aria')} data-tour="kpis" data-trace="stages" className="grid grid-cols-(--il-metrics-strip-columns) gap-2.5 text-large:grid-cols-(--il-metrics-strip-columns-large) px-6 pt-0 pb-3.5 short:pb-2 tablet-portrait:grid-cols-4 tablet-portrait:pt-4 tablet-portrait:pb-0">
       {kpis.map(k => <KpiTile key={k.metric} {...k} />)}
       {pulseTile}
       {targetTile}

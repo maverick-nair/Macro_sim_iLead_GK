@@ -1,0 +1,3 @@
+{
+  "panels.overview.stagesNote": "El resultado es lo que una etapa pasó a la siguiente: contactos calificados, propuestas enviadas, {unitMany} cerradas. El ideal es lo que pasaría con todo el equipo rindiendo bien. El ideal de {unit, select, year {este año} month {este mes} week {esta semana} day {este día} other {este periodo}} cuenta en el total cuando termina."
+}

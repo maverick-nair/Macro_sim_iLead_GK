@@ -30,6 +30,10 @@
     "white": {
       "$value": "oklch(1 0 0)"
     },
+    "black": {
+      "$value": "oklch(0 0 0)",
+      "$description": "Behind video, and its shade (D232)"
+    },
     "ink": {
       "200": {
         "$value": "oklch(0.2 0.03 280)"
@@ -148,12 +152,16 @@
   "font": {
     "family": {
       "sans": {
-        "$value": "'Manrope', system-ui, sans-serif"
+        "$value": "'Geist', system-ui, sans-serif",
+        "$description": "Geist, the interface face of the approved canvas (D232). A client theme may name another (src/theme/schema.ts FONTS)"
       }
     },
     "weight": {
       "400": {
         "$value": "400"
+      },
+      "500": {
+        "$value": "500"
       },
       "600": {
         "$value": "600"
@@ -190,8 +198,14 @@
       "18": {
         "$value": "18px"
       },
+      "19": {
+        "$value": "19px"
+      },
       "20": {
         "$value": "20px"
+      },
+      "21": {
+        "$value": "21px"
       },
       "22": {
         "$value": "22px"
@@ -217,6 +231,9 @@
       "36": {
         "$value": "36px"
       },
+      "38": {
+        "$value": "38px"
+      },
       "40": {
         "$value": "40px"
       },
@@ -229,11 +246,20 @@
       "54": {
         "$value": "54px"
       },
+      "58": {
+        "$value": "58px"
+      },
       "60": {
         "$value": "60px"
       },
       "64": {
         "$value": "64px"
+      },
+      "72": {
+        "$value": "72px"
+      },
+      "96": {
+        "$value": "96px"
       },
       "110": {
         "$value": "110px"

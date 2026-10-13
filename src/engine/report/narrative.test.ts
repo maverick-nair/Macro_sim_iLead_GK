@@ -183,11 +183,21 @@ describe('what drove the results (D145)', () => {
     expect(again.summary.drivers).toEqual(runs.coach.summary.drivers);
   });
 
-  it('links a person and the weeks to what changed', () => {
+  it('links a person and the weeks to what changed', async () => {
     expect(runs.coach.summary.drivers.map(d => d.text).join(' ')).toMatch(/Coach member with (\w+) in weeks? [\d, and]+ lifted \1's (result|skill|morale) by \d+/);
-    expect(runs.bystander.summary.drivers.map(d => d.key)).toEqual(expect.arrayContaining(['unanswered', 'escalated']));
+    // With realism (D173, D174) doing nothing costs more than unanswered messages: people left without one to one time and
+    // revenue lost to the events left unanswered now rank among what drove the run, ahead of the escalations' confidence.
+    const idle = runs.bystander.summary.drivers;
+    expect(idle.map(d => d.key)).toEqual(expect.arrayContaining(['neglect', 'lost', 'unanswered']));
+    expect(idle.find(d => d.key === 'neglect')?.text).toMatch(/^\d+ times someone went 4 weeks or more without one to one time with you: morale [−-]\d+ and trust [−-]\d+ in all/);
+    expect(idle.find(d => d.key === 'lost')?.text).toMatch(/^Events left unanswered( and \w+'s loss of confidence)? cost [\d,]+ USD in revenue\.$/);
     expect(runs.warmMismatch.summary.drivers.find(d => d.key === 'style:miss')?.text).toMatch(/^\d+ of your \d+ weekly style choices missed what people needed/);
-    expect(runs.driver.summary.drivers.find(d => d.key === 'bottleneck')?.text).toMatch(/was the bottleneck in \d of 8 weeks: \w+, who owns it, ended with/);
+    // The driver's repeated goals and empty days now cost more than its bottleneck (D171, D174): the bottleneck sentence
+    // is read on the same run without realism.
+    expect(runs.driver.summary.drivers.map(d => d.key)).toEqual(expect.arrayContaining(['neglect', 'idle']));
+    expect(runs.driver.summary.drivers.find(d => d.key === 'idle')?.text).toMatch(/^\d+ days were left unused at the end of a week, and the team did less on them\.$/);
+    const classic = en((await playStrategy({ ...config, realism: undefined }, 'driver', 1)).view.report!) as unknown as Rep;
+    expect(classic.summary.drivers.find(d => d.key === 'bottleneck')?.text).toMatch(/was the bottleneck in \d of 8 weeks: \w+, who owns it, ended with/);
   });
 });
 

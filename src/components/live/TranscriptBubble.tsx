@@ -20,6 +20,11 @@ export interface TranscriptBubbleProps {
    * Omitted for spoken turns in the 1:1, meeting and sponsor screens.
    */
   voiceNote?: { playing?: boolean; onPlay?: () => void };
+  /**
+   * `line`: the canvas's 1:1 (D232): no bubble. The person's lines in the serif under a small name,
+   * yours right aligned under "You".
+   */
+  look?: 'bubble' | 'line';
 }
 
 const Sparkle = () => (
@@ -37,12 +42,12 @@ const PlayGlyph = ({ playing }: { playing: boolean }) => (
 /** The voice note header inside a bubble: play or pause, and the "Voice note" label. */
 function VoiceNoteBar({ npc, playing = false, onPlay }: { npc: boolean; playing?: boolean; onPlay?: () => void }) {
   const { t } = useI18n();
-  const tone = npc ? 'bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-brand-deep-space text-brand-pale-lavender';
+  const tone = npc ? 'bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-brand-deep-space text-brand-pale-lavender';
   return (
-    <span className="mb-1.5 flex items-center gap-2 text-12 font-700">
+    <span className="mb-1.5 flex items-center gap-2 text-12 font-600">
       {onPlay && (
         <button type="button" onClick={onPlay} aria-pressed={playing} aria-label={t('live.turn.play', { playing: String(playing) })}
-          className={`flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 ${tone} focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
+          className={`flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 ${tone} focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary`}>
           <PlayGlyph playing={playing} />
         </button>
       )}
@@ -55,12 +60,30 @@ function VoiceNoteBar({ npc, playing = false, onPlay }: { npc: boolean; playing?
  * One turn in a live conversation transcript. NPC turns sit on the left with the speaker's name,
  * the visible "AI persona" label and a replay control; your turns sit on the right on the brand fill.
  */
-export function TranscriptBubble({ speaker, text, name = '', streaming = false, interrupted = false, ai = true, onReplay, voiceNote }: TranscriptBubbleProps) {
+export function TranscriptBubble({ speaker, text, name = '', streaming = false, interrupted = false, ai = true, onReplay, voiceNote, look = 'bubble' }: TranscriptBubbleProps) {
   const { t } = useI18n();
   const npc = speaker === 'npc';
+  if (look === 'line') {
+    return (
+      <div aria-busy={streaming || undefined} className={`flex max-w-(--il-canvas-measure-line) flex-col gap-1.5 ${npc ? 'self-start' : 'self-end text-end'}`}>
+        <span className={`flex flex-wrap items-center gap-x-2 gap-y-0.5 text-12 text-fg-body ${npc ? 'justify-start' : 'justify-end'}`}>
+          <span>{npc ? name : t('live.turn.you')}</span>
+          {npc && ai && <span className="flex items-center gap-0.75"><Sparkle />{t('live.turn.ai')}</span>}
+          {npc && interrupted && <span className="italic">{t('live.turn.interrupted')}</span>}
+          {npc && onReplay && (
+            <button type="button" onClick={onReplay} aria-label={t('live.turn.replayAria')}
+              className="min-h-6 cursor-pointer rounded-4 border-0 bg-transparent px-1 py-0 text-12 font-600 text-live-replay underline underline-offset-2 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary">
+              {t('live.turn.replay')}
+            </button>
+          )}
+        </span>
+        <span className={npc ? 'font-serif text-21 leading-(--il-canvas-leading-line) text-pretty text-fg-primary' : 'text-17 leading-normal text-pretty text-fg-primary'}>{text}</span>
+      </div>
+    );
+  }
   return (
     <div aria-busy={streaming || undefined} className={`flex max-w-(--il-live-bubble-max-width) flex-col gap-1 ${npc ? 'self-start' : 'self-end'}`}>
-      <div className={`px-3.5 py-2.5 text-14 text-pretty ${npc ? 'rounded-18 rounded-es-6 bg-surface-raised text-fg-primary' : 'rounded-18 rounded-ee-6 bg-(image:--il-fill-brand) text-brand-deep-space'}`}>{voiceNote && <VoiceNoteBar npc={npc} {...voiceNote} />}{text}</div>
+      <div className={`px-3.5 py-2.5 text-14 text-pretty ${npc ? 'rounded-4 rounded-es-4 bg-surface-raised text-fg-primary' : 'rounded-4 rounded-ee-4 bg-(image:--il-fill-brand) text-button-on-solid'}`}>{voiceNote && <VoiceNoteBar npc={npc} {...voiceNote} />}{text}</div>
       <span className={`flex items-center gap-1.5 text-12 text-fg-secondary ${npc ? 'justify-start' : 'justify-end'}`}>
         <span>{npc ? name : t('live.turn.you')}</span>
         {npc && (
@@ -72,7 +95,7 @@ export function TranscriptBubble({ speaker, text, name = '', streaming = false, 
                 type="button"
                 onClick={onReplay}
                 aria-label={t('live.turn.replayAria')}
-                className="cursor-pointer rounded-4 border-0 bg-transparent p-0 text-12 font-700 text-live-replay focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
+                className="cursor-pointer rounded-4 border-0 bg-transparent p-0 text-12 font-600 text-live-replay focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
               >
                 {t('live.turn.replay')}
               </button>

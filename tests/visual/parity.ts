@@ -37,12 +37,9 @@ const THRESHOLD = 0.0005;
  * and says when one was not needed. Every other frame stays at THRESHOLD.
  * Add an entry only with a logged decision, and keep `maxDiff` just above the measured difference.
  */
-const ACCEPTED: Record<string, { maxDiff: number; reason: string }> = {
-  p1: { maxDiff: 0.004, reason: 'D20 dynamic: the live prototype frame, its clock keeps running' },
-  z5: { maxDiff: 0.004, reason: 'D20 dynamic: random voice waveform' },
-  z14: { maxDiff: 0.004, reason: 'D20 dynamic: random voice waveform' },
-  x2: { maxDiff: 0.004, reason: 'D20 dynamic: the board blurred behind a dialog rasterizes unstably' }
-};
+// D232 moved every frame to the canvas look, so none is compared; the D20 allowances for p1, z5, z14 and
+// x2 come back with any frame that is compared again.
+const ACCEPTED: Record<string, { maxDiff: number; reason: string }> = {};
 
 /**
  * Prototype frames the app no longer renders. The design's phone frames (m1 to m7, 390 wide) were
@@ -57,7 +54,65 @@ const RETIRED = new Set(['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7']);
  */
 const REDESIGNED: Record<string, string> = {
   e1: 'D101: the end screen keeps its report actions in reach, in a bar along the bottom',
-  e2: 'D101: the report keeps its toolbar in reach, pinned to the top'
+  e2: 'D101: the report keeps its toolbar in reach, pinned to the top',
+  p1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the whole prototype: every screen it opens moves to the canvas look',
+  o1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the onboarding steps on the canvas palette and type',
+  o2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the sponsor welcome on the canvas palette and type',
+  o3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): consent on the canvas palette and type',
+  o4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): voice setup on the canvas palette and type',
+  o5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): how to play on the canvas palette and type',
+  o6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): meet your team on the canvas palette and type',
+  b1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the navy HUD, the status band and the team as canvas cards (style in words, mood shapes) replace this layout',
+  b2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the desk card names the style in words; the D, G, P, E letters stay in style setting',
+  b3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the style guide opens from style setting; the desk card has no letters',
+  b4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the action drawer on the canvas palette, square option cards',
+  b5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the action drawer on the canvas palette, square option cards',
+  b6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the action drawer on the canvas palette, square option cards',
+  b7: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the profile covers the desk with a rectangle photo, serif name and mono stats',
+  b8: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the inbox drawer is a square paper list with rules between rows',
+  b9: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b10: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b11: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b12: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b13: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the sponsor call is a square bordered strip under the band',
+  b14: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the light theme is now the canvas paper, and the default mode',
+  b15: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the client theme lands on the canvas tokens (its brand label picked for contrast)',
+  s1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): style setting under the navy bar, photo cards with the style as names, a serif question',
+  s2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the list view on the canvas palette and type',
+  s3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the summary on the canvas palette and type',
+  l1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the 1:1 keeps this frame\'s layout in the gallery under the navy header and reply area; in play the desk 1:1 splits into the portrait and the conversation',
+  l2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the navy header and the canvas reply area',
+  l3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the navy header and the canvas reply area',
+  l4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the email composer under the navy header',
+  l5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the meeting under the navy header and the canvas reply area',
+  l6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the sponsor briefing under the navy header and the canvas reply area',
+  r1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the reacting screen on the canvas palette and type',
+  r2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the outcome band is square, with a serif headline and outlined links',
+  w1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the week end banner is a navy hero, left aligned, beside the lounge photo',
+  w2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the weekly report in square tiles with small capital headings and mono numbers',
+  w3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the badge award with an outlined medal and a serif name',
+  w4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the reward cards are square with serif names',
+  w5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the news card is square with a display serif title',
+  e3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the print pages take the serif headings',
+  x1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the settings dialog title in the display serif, square controls',
+  x2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the pause dialog title in the display serif',
+  x3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the resume recap title in the display serif',
+  x4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the timed out dialog title in the display serif',
+  z1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the loading screen on navy with the canvas logo',
+  z2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the empty inbox in the square paper drawer',
+  z3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the out of days desk under the navy HUD',
+  z4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the offline desk under the navy HUD',
+  z5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the listening state in the canvas reply area',
+  z6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the thinking state under the navy header',
+  z7: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the slow reply under the navy header',
+  z8: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the natural close under the navy header',
+  z9: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the evaluation wait on the canvas palette',
+  z10: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the coaching tip in the canvas brief',
+  z11: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the mic denied banner in the canvas reply area',
+  z12: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the partial transcript in the canvas reply area',
+  z13: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): mic denied in voice setup on the canvas palette',
+  z14: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): dictating into an email under the navy header',
+  z15: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): offline in a conversation under the navy header'
 };
 
 const args = process.argv.slice(2);

@@ -67,12 +67,12 @@ export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, c
   ];
 
   return (
-    <div className="absolute inset-0 z-40 p-6 flex items-center justify-center bg-surface-scrim backdrop-blur-(--il-stylesetting-summary-scrim-blur)">
+    <div className="absolute inset-0 z-40 p-6 flex items-center justify-center bg-surface-scrim ">
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape goes back, Tab stays inside */}
       <div ref={dialog} role="dialog" aria-modal="true" aria-label={t('stylesetting.summary.aria')} tabIndex={-1}
         onKeyDown={onKeyDown}
-        className="flex w-180 max-w-full animate-(--il-stylesetting-summary-enter) flex-col gap-4 rounded-26 border border-line-strong outline-none bg-surface-material p-6.5">
-        <h2 className="m-0 text-24 font-700">{t('stylesetting.summary.title', { unit: periodUnit, n: period })}</h2>
+        className="flex w-180 max-w-full animate-(--il-stylesetting-summary-enter) flex-col gap-4 rounded-4 border border-line-strong outline-none bg-surface-material p-6.5">
+        <h2 className="m-0 text-24 font-600">{t('stylesetting.summary.title', { unit: periodUnit, n: period })}</h2>
         <div role="table" aria-label={t('stylesetting.summary.title', { unit: periodUnit, n: period })} className="grid grid-cols-2 gap-x-6 gap-y-1.5">
           <div role="row" className="sr-only">
             <span role="columnheader">{t('stylesetting.list.member')}</span>
@@ -85,7 +85,7 @@ export function StyleSummary({ members, periodUnit, period, onBack, onConfirm, c
               <b role="rowheader" className="flex-1 text-14">{m.name}</b>
               <span role="cell" className={`text-13 ${m.style === null ? 'text-fg-secondary' : ''}`}>{m.style === null ? t('stylesetting.summary.unset') : styleName(m.style)}</span>
               {styleChanged(m)
-                ? <span role="cell" className="text-12 font-700 text-accent-secondary">{t('stylesetting.summary.changed')}</span>
+                ? <span role="cell" className="text-12 font-600 text-accent-secondary">{t('stylesetting.summary.changed')}</span>
                 : <span role="cell" className="sr-only">{m.style !== null && m.lastStyle !== null ? t('stylesetting.summary.same', { unit: periodUnit }) : null}</span>}
             </div>
           ))}

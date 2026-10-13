@@ -30,7 +30,7 @@ const CHOICE: EngineView['openChoices'][number] = {
     { key: 'value', label: 'Hold the price and help them build the business case', detail: null },
     { key: 'walk', label: 'Let it go and focus on the next deal', detail: null }
   ],
-  dueInSubPeriods: 2
+  dueInSubPeriods: 2, default: 'walk', holdsWeekEnd: false
 };
 const RESULT: EngineView['choices'][number] = {
   id: 'c1', eventKey: 'discount_deal', title: CHOICE.title, option: 'value', label: 'Hold the price and help them build the business case', by: 'you',

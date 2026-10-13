@@ -22,7 +22,7 @@ export interface StakeholderBarProps {
   disabled?: boolean;
 }
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 /** The ring round a stakeholder's initials: how the relationship stands. */
 export const LEVEL_RING: Record<RelationLevel, string> = {
   strained: 'border-status-decline', cool: 'border-status-attention', steady: 'border-line-strong', good: 'border-status-gain', strong: 'border-status-gain'
@@ -33,7 +33,7 @@ const initials = (name: string) => name.split(/\s+/).filter(Boolean).map(w => w[
 export function StakeholderFace({ name, img, level, size = 'sm' }: { name: string; img: string | null; level: RelationLevel; size?: 'sm' | 'lg' }) {
   const box = size === 'sm' ? 'size-6 text-11' : 'size-11 text-14';
   return (
-    <span aria-hidden="true" className={`flex flex-none items-center justify-center overflow-hidden rounded-round border-2 bg-surface-raised font-700 text-fg-primary ${box} ${LEVEL_RING[level]}`}>
+    <span aria-hidden="true" className={`flex flex-none items-center justify-center overflow-hidden rounded-round border-2 bg-surface-raised font-600 text-fg-primary ${box} ${LEVEL_RING[level]}`}>
       {img ? <img src={img} alt="" className="size-full object-cover object-top" /> : initials(name)}
     </span>
   );
@@ -51,12 +51,12 @@ export function StakeholderBar({ items, onOpen, onAnswer, disabled }: Stakeholde
   return (
     <div data-stakeholder-bar="" className="flex flex-wrap items-center gap-1.5">
       <button type="button" onClick={() => onOpen()} aria-label={t('board.stakeholders.openAria', { names })} data-tour="stakeholders"
-        className={`flex min-h-7 cursor-pointer items-center gap-1.5 rounded-pill border border-line-default bg-transparent ps-2.5 pe-1 text-13 text-fg-primary ${FOCUS}`}>
-        <span className="text-12 font-700 text-fg-secondary">{t('board.stakeholders.title')}</span>
+        className={`flex min-h-7 cursor-pointer items-center gap-1.5 rounded-4 border border-line-default bg-transparent ps-2.5 pe-1 text-13 text-fg-primary ${FOCUS}`}>
+        <span className="text-12 font-600 text-fg-secondary">{t('board.stakeholders.title')}</span>
         <span className="flex -space-x-1.5">{items.map(s => <StakeholderFace key={s.key} name={s.name} img={s.img} level={s.level} />)}</span>
       </button>
       {items.filter(s => s.request).map(s => (
-        <span key={s.key} data-stakeholder-request={s.key} className="flex items-center gap-2 rounded-pill bg-status-attention-soft py-0.5 ps-3 pe-1 text-13">
+        <span key={s.key} data-stakeholder-request={s.key} className="flex items-center gap-2 rounded-4 bg-status-attention-soft py-0.5 ps-3 pe-1 text-13">
           <span><b>{t('board.stakeholders.asks', { name: s.name.split(' ')[0] })}</b> {s.request!.title} <span className="text-fg-secondary">{s.request!.due}</span></span>
           <NoWrapButton variant="secondary" size="sm" disabled={disabled} onClick={() => onAnswer(s.key)}>{t('board.stakeholders.answer')}<span className="sr-only"> {s.name}</span></NoWrapButton>
         </span>

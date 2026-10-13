@@ -94,6 +94,9 @@ export function rateSkills(sim: Sim): SkillRating[] {
     let raw = obs.length ? mean(obs.map(o => bandScore(sim, o.band))) : null;
     const capped = obs.some(o => o.band === 'harmful');
     let idx = enough && raw !== null ? (capped ? Math.min(levelOf(sim, raw), 1) : levelOf(sim, raw)) : null;
+    // A harmful conversation caps the skill at Developing, and its score with it, so the overall level averages
+    // what is shown (D170), as reconciliation does below.
+    if (capped && idx !== null && idx + 1 < r.scale.length) raw = Math.min(raw!, r.scale[idx + 1].min - 1);
     // Words alone do not rate a skill about adapting: what the participant chose caps it (D144). The score
     // is held under the next level too, so the score out of 10, the level and the overall level agree.
     const cap = idx === null ? null : reconcileCap(sim, sk.key, signals);

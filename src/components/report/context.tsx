@@ -25,7 +25,7 @@ export function ReportProvider({ value, children }: { value: ReportSettings; chi
 
 export const useReport = () => useContext(ReportContext);
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
  * Chart or table. In the web view the button switches between them, for everyone, keyboard included.
@@ -40,7 +40,7 @@ export function useTableAlternative(printAs: 'chart' | 'table' = 'chart'): { sho
   if (tables === 'hidden') return { showTable: false, srTable: true, button: null };
   const button = (
     <button type="button" aria-pressed={table} onClick={() => setTable(v => !v)}
-      className={`cursor-pointer rounded-pill border border-line-control bg-transparent px-2.5 py-0.5 text-12 font-600 text-fg-primary aria-pressed:bg-accent-soft print:hidden ${FOCUS}`}>
+      className={`cursor-pointer rounded-4 border border-line-control bg-transparent px-2.5 py-0.5 text-12 font-600 text-fg-primary aria-pressed:bg-accent-soft print:hidden ${FOCUS}`}>
       {t('report.chart.showTable')}
     </button>
   );
@@ -66,7 +66,7 @@ export function DataTable({ caption, columns, rows, hidden, captionHidden }: Dat
       <thead>
         <tr>
           {columns.map((c, i) => (
-            <th key={i} scope="col" className={`border-b border-line-default px-2 py-1 font-700 text-fg-secondary ${i ? 'text-end' : 'text-start'}`}>{c}</th>
+            <th key={i} scope="col" className={`border-b border-line-default px-2 py-1 font-600 text-fg-secondary ${i ? 'text-end' : 'text-start'}`}>{c}</th>
           ))}
         </tr>
       </thead>

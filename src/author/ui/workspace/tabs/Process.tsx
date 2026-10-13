@@ -7,7 +7,8 @@ import { useAuthor } from '../../../model/store';
 import { Badge, BUTTON, CARD, CardHead, Field, MarkOf, Segmented, Select, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRegenerate } from './regenerate';
-import { DynamicsCard, VariablesCard } from './Variables';
+import { DynamicsCard, RealismCard, VariablesCard } from './Variables';
+import { RevenueReach, unitOf } from './Reach';
 
 const num = (v: string, min: number, max: number) => Math.max(min, Math.min(max, Math.round(Number(v) || 0)));
 const PACING_TEXT: Record<AuthorDraft['process']['pacing'], string> = {
@@ -30,7 +31,7 @@ function stageUses(d: AuthorDraft, key: string) {
 /**
  * Workspace: Work process (docs/design/genie/Process): the stages the team turns leads into revenue
  * through, people and passing rates per stage, the pressure point, the targets and the pacing, the business
- * variables decisions move (D136) and people dynamics (D135).
+ * variables decisions move (D136), people dynamics (D135) and real world costs (D171 to D178).
  */
 export default function Process() {
   const d = useAuthor(s => s.draft);
@@ -39,7 +40,8 @@ export default function Process() {
   const pr = d.process;
   const tone = toneOf(d.marks['process.stages']);
   const last = pr.stages.length - 1;
-  const unit = (i: number) => (i === 0 ? ' leads' : i === last ? ' deals' : '');
+  const sold = unitOf(d);
+  const unit = (i: number) => (i === 0 ? ' leads' : i === last ? ` ${sold.many}` : '');
   const [moved, setMoved] = useState<string | null>(null);
   const [removing, setRemoving] = useState<{ key: string; to: string } | null>(null);
   const resize = (weeks: number, days: number) => {
@@ -117,7 +119,8 @@ export default function Process() {
               <Field label="Days per week" hint={`${MIN_DAYS} to ${MAX_DAYS}; the week's leads stay the same`}>{id => <Select id={id} value={pr.daysPerWeek} onChange={e => resize(pr.weeks, num(e.target.value, MIN_DAYS, MAX_DAYS))}>{Array.from({ length: MAX_DAYS - MIN_DAYS + 1 }, (_, i) => i + MIN_DAYS).map(n => <option key={n} value={n}>{n}</option>)}</Select>}</Field>
             </div>
             {moved && <p role="status" className="m-0 rounded-12 bg-author-need-field p-3 text-13 text-author-need">{moved}</p>}
-            {!d.story.product.dealValue && <p className="m-0 text-13 text-author-body"><Badge kind="need" /> The target needs the average deal value from Story and world.</p>}
+            {!d.story.product.dealValue && <p className="m-0 text-13 text-author-body"><Badge kind="need" /> The target needs the average {sold.one} value from Story and world.</p>}
+            <RevenueReach />
           </section>
           <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="pacing">
             <CardHead id="pacing" title="Pacing"><MarkOf path="process.pacing" /></CardHead>
@@ -131,6 +134,7 @@ export default function Process() {
         </div>
         <VariablesCard />
         <DynamicsCard />
+        <RealismCard />
       </div>
     </TabBody>
   );

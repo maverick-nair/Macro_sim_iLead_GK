@@ -2,6 +2,7 @@ import type { StorylineConfig } from '../config';
 import type { NeedKey } from '../lens';
 import type { Mismatch, Style, Triple } from './rules';
 import type { Copy } from '../copy';
+import type { RealismState } from './realism';
 
 export type MetricKey = 'skill' | 'morale' | 'result' | 'trust';
 export type Band = 'strong' | 'adequate' | 'weak' | 'harmful';
@@ -128,7 +129,8 @@ export interface ChoiceRecord {
   option: string | null;
   label: Copy | null;
   outcome: Copy | null;
-  by: 'you' | 'default';
+  /** `you`: the participant picked it; `kept`: they let the default stand when the week was ending (D231); `default`: nobody decided in time. */
+  by: 'you' | 'kept' | 'default';
   period: number;
   sub: number;
   changes: Change[];
@@ -177,6 +179,10 @@ export interface Interaction {
   plan?: PlanFields;
   /** A conversation with a stakeholder (D161): who, which of their interactions, how it is evaluated, and the request it answers. */
   stakeholder?: { key: string; interaction: string; format: StakeholderFormat; requestId?: string };
+  /** Realism (D171): the share each person's effects land at (by member id, or `team`), worked out when it was planned. */
+  shares?: Record<string, number>;
+  /** The participant's own update to the sponsor (D173), not a scheduled briefing. */
+  update?: boolean;
 }
 
 /** How a stakeholder conversation is evaluated and voiced (D161): a meeting, a presentation, a negotiation or an email. */
@@ -409,7 +415,7 @@ export interface PeriodSummary {
   /** Business variables at the start and end of the period, the shown ones only (D136). Left out when the storyline has none. */
   variables?: Array<{ key: string; start: number; end: number }>;
   /** Choices made or defaulted this period (D137). Left out when the storyline has none. */
-  choices?: Array<{ id: string; title: Copy; label: Copy | null; by: 'you' | 'default' }>;
+  choices?: Array<{ id: string; title: Copy; label: Copy | null; by: 'you' | 'kept' | 'default' }>;
   /** People off sick or gone because morale stayed low (D135). Left out without dynamics. */
   attrition?: Array<{ memberId: string; name: string; kind: 'sick' | 'resigned' }>;
   /** Each stakeholder's relationship at the start and end of the period (D160). Left out without stakeholders. */
@@ -479,6 +485,11 @@ export interface Sim {
   counters: Record<string, number>;
   /** Choices waiting for the participant (D137). */
   openChoices: PendingChoice[];
+  /**
+   * The participant pressed End week and the week is ending (D231): conversations are closed and the idle days counted,
+   * and only a decision still to come this week stands between them and the week end. Nothing else can be planned.
+   */
+  ending?: boolean;
   /** Choices made or defaulted, in order (D137). */
   choices: ChoiceRecord[];
   /** Business variables at the start of the period (D136). */
@@ -525,6 +536,8 @@ export interface Sim {
   stakeholders: Record<string, StakeholderState>;
   stakeholderRequests: StakeholderRequestState[];
   stakeholderRecords: StakeholderRecord[];
+  /** Realism (D171 to D178): uses, the team's lost time, attention, the sponsor's last word. Only with a realism block. */
+  realism?: RealismState;
 }
 
 export type { Mismatch, NeedKey, Style, Triple };

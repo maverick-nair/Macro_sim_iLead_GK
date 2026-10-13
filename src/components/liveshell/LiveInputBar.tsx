@@ -54,13 +54,6 @@ export function micHintFor(p: Pick<LiveInputBarProps, 'mic' | 'mode' | 'voiceInp
   return 'text';
 }
 
-const SendIcon = () => (
-  <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="m5 12 14 0" />
-    <path d="m13 6 6 6-6 6" />
-  </svg>
-);
-
 /**
  * The reply bar under every spoken format: the state line, your words (typed, or the live transcript
  * with the waveform while listening, editable before sending), record again, the mic and send.
@@ -85,40 +78,49 @@ export function LiveInputBar(p: LiveInputBarProps) {
       if (!cantSend) p.onSend();
     }
   };
+  const tablet = p.layout === 'tablet';
+  // The canvas's reply area (D232): the state line with the mode switch, the field, then the hint,
+  // the mic and Send.
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2.5">
       {denied && (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-16 border border-status-attention bg-status-attention-soft px-3.5 py-3 text-13">
+        <div role="alert" className="flex flex-wrap items-center gap-3 border border-status-attention bg-status-attention-soft px-3.5 py-3 text-13">
           <span className="min-w-50 flex-1"><b>{t('liveshell.micDenied.title')}</b> {t('liveshell.micDenied.body')}</span>
-          <NoWrapButton variant="secondary" size="sm" onClick={() => p.onModeChange('text')}>{t('liveshell.micDenied.action')}</NoWrapButton>
+          <NoWrapButton variant="secondary" size="md" onClick={() => p.onModeChange('text')}>{t('liveshell.micDenied.action')}</NoWrapButton>
         </div>
       )}
       {p.partial && (
-        <div role="alert" className="rounded-16 border border-line-strong bg-surface-raised px-3.5 py-2.5 text-13">
+        <div role="alert" className="border border-line-strong bg-surface-raised px-3.5 py-2.5 text-13">
           <b>{t('liveshell.partial.title')}</b> {t('liveshell.partial.body')}
         </div>
       )}
-      <div className={`flex items-end ${p.layout === 'tablet' ? 'gap-3 rounded-22 p-3' : 'gap-2.5 rounded-24 p-2.5'} border border-solid bg-surface-material ${listening ? 'border-voice-listening shadow-(--il-liveshell-reply-listening-ring)' : 'border-line-control'}`}>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        <span className="flex min-h-6 items-center gap-2.5">
+          {listening && <span aria-hidden="true" className="size-2 rounded-round bg-voice-listening" />}
           <MicStatus status={micStatusFor(p)} speaker={p.speakerName} />
-          {listening ? (
-            <div className="flex min-h-12 items-center gap-2.5 px-2 py-1">
-              <Waveform levels={p.levels} />
-              <span className="text-15">{draft}</span>
-            </div>
-          ) : (
-            <textarea value={draft} onChange={e => p.onDraft(e.target.value)} onKeyDown={onKey} placeholder={placeholder} aria-label={t('liveshell.reply.aria')} rows={2}
-              className="w-full resize-none rounded-12 border-0 bg-transparent p-2 text-15 leading-normal text-fg-primary outline-0 focus-visible:outline-2 focus-visible:outline-accent-secondary" />
-          )}
-        </div>
+          {listening && <Waveform levels={p.levels} size="sm" />}
+        </span>
+        {!denied && (
+          <button type="button" onClick={() => p.onModeChange(mode === 'voice' ? 'text' : 'voice')}
+            className={`min-h-11 cursor-pointer rounded-4 border-0 bg-transparent px-2 py-0 text-14 text-fg-body hover:text-fg-primary ${FOCUS}`}>
+            {t('liveshell.mode.switch', { mode })}
+          </button>
+        )}
+      </div>
+      <div className={`flex ${tablet ? 'min-h-16' : 'min-h-14'} items-center border border-solid bg-(--il-color-canvas-navy-850) ${listening ? 'border-voice-listening' : 'border-(--il-color-canvas-navy-750)'}`}>
+        {listening ? (
+          <span className="px-4 py-3 text-16 leading-normal">{draft}</span>
+        ) : (
+          <textarea value={draft} onChange={e => p.onDraft(e.target.value)} onKeyDown={onKey} placeholder={placeholder} aria-label={t('liveshell.reply.aria')} rows={2}
+            className="w-full resize-none border-0 bg-transparent px-4 py-3 text-16 leading-normal text-fg-primary outline-0 placeholder:text-fg-secondary focus-visible:outline-3 focus-visible:outline-accent-secondary" />
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-2.5">
+        <span className="me-auto min-w-0 flex-1"><MicHint input={micHintFor(p)} /></span>
         {canRedo && <RecordAgainButton onPress={p.onRecordAgain!} />}
         <MicButton state={mic} mode={mode} onPress={pressMic} layout={p.layout} />
-        <button type="button" onClick={p.onSend} disabled={cantSend} aria-label={t('liveshell.reply.send')}
-          className={`flex ${p.layout === 'tablet' ? 'size-14' : 'size-12'} flex-none cursor-pointer items-center justify-center rounded-round border-0 p-0 text-brand-deep-space ${listening || closed ? 'bg-track' : 'bg-transparent bg-(image:--il-fill-brand)'} ${FOCUS}`}>
-          <SendIcon />
-        </button>
+        <NoWrapButton variant="primary" size={tablet ? 'lg' : 'md'} disabled={cantSend} onClick={p.onSend}>{t('liveshell.reply.send')}</NoWrapButton>
       </div>
-      <MicHint input={micHintFor(p)} />
     </div>
   );
 }

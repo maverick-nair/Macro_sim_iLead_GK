@@ -83,7 +83,7 @@ export interface ProfilePanelProps {
 
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 export const STATS: MetricKey[] = ['skill', 'morale', 'result', 'trust'];
 const DOT: Record<ProfileTone, string> = { pos: 'bg-status-gain', neg: 'bg-status-decline', neutral: 'bg-line-strong' };
 const OUTCOME: Record<ProfileTone, string> = { pos: 'text-status-gain', neg: 'text-status-decline', neutral: 'text-fg-secondary' };
@@ -126,8 +126,8 @@ export function TimelineItem({ entry, periodUnit, subPeriodUnit }: { entry: Prof
       <div className="flex flex-col gap-1 pb-3">
         <span className="text-12 text-fg-secondary">{when}</span>
         <b className="text-14">{entry.title}</b>
-        {entry.quote && <span className="rounded-10 bg-surface-raised px-2.5 py-2 text-13">{t('common.quote', { text: entry.quote })}</span>}
-        {outcome && <span className={`text-12 font-700 ${OUTCOME[entry.tone]}`}>{outcome}</span>}
+        {entry.quote && <span className="font-serif text-17 leading-snug">{t('common.quote', { text: entry.quote })}</span>}
+        {outcome && <span className={`text-12 font-600 ${OUTCOME[entry.tone]}`}>{outcome}</span>}
       </div>
     </li>
   );
@@ -137,7 +137,7 @@ export function PromiseLine({ promise }: { promise: ProfilePromise }) {
   const { t } = useI18n();
   const label = t('profile.promise.label', { status: promise.status });
   if (promise.status === 'open') {
-    return <div className="rounded-12 border border-dashed border-line-strong px-3 py-2.5 text-13"><b>{label}</b> {promise.text}</div>;
+    return <div className="rounded-4 border border-dashed border-line-strong px-3 py-2.5 text-13"><b>{label}</b> {promise.text}</div>;
   }
   return <div className="px-3 text-12 text-fg-secondary"><b className={PROMISE[promise.status]}>{label}</b> {promise.text}</div>;
 }
@@ -151,31 +151,31 @@ export function ProfileSummary(props: ProfilePanelProps & { compact?: boolean })
   const { t, number } = useI18n();
   const styleName = useStyleName();
   const factRow = (label: string, value: string) => (
-    <div key={label} className="grid grid-cols-(--il-profile-fact-columns) gap-2.5 text-13"><span className="text-fg-secondary">{label}</span><span>{value}</span></div>
+    <div key={label} className="grid grid-cols-(--il-profile-fact-columns) gap-2.5 text-14 leading-normal"><span className="text-fg-body">{label}</span><span>{value}</span></div>
   );
   return (
     <>
-    <div className={`flex items-center gap-4.5 ${compact ? 'pb-1' : 'px-5 pt-5.5 pb-1.5'}`}>
-      <div className={`${compact ? 'size-20' : 'size-30'} flex-none overflow-hidden rounded-round shadow-(--il-profile-portrait-ring) ${backdrop(mood, away)}`}>
+    <div className={`flex gap-4.5 ${compact ? 'items-center pb-1' : 'flex-col gap-4 px-11 pt-6 pb-1'}`}>
+      <div className={`${compact ? 'size-20 rounded-round' : 'h-79 w-full short:h-60'} flex-none overflow-hidden ${backdrop(mood, away)}`}>
         <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
       </div>
       <div className="flex flex-col gap-0.5">
-        <h2 className="m-0 text-24 font-700 tracking-(--il-profile-name-tracking)">{name}</h2>
-        <span className="text-13 text-fg-secondary">{title}</span>
-        <span className="text-13 font-700">{away ? t('member.mood.away') : t('member.mood', { mood })}</span>
+        <h2 className={`m-0 font-400 ${compact ? 'text-24 font-600' : 'font-display text-36 leading-(--il-canvas-leading-heading)'}`}>{name}</h2>
+        <span className="text-15 text-fg-body">{title}</span>
+        <span className="text-13 font-600">{away ? t('member.mood.away') : t('member.mood', { mood })}</span>
       </div>
     </div>
-    <div className={`flex flex-col gap-3.5 ${compact ? 'py-2' : 'px-5 py-4.5'}`}>
-      <div className="grid grid-cols-4 gap-2">
+    <div className={`flex flex-col gap-3.5 ${compact ? 'py-2' : 'px-11 py-4'}`}>
+      <div className="grid grid-cols-4 gap-2 border-t border-fg-primary pt-3">
         {STATS.map(k => (
-          <div key={k} className="flex flex-col rounded-12 bg-surface-raised p-2.5">
-            <span className="text-12 text-fg-secondary">{t('metric.name', { metric: k })}</span>
-            <b className={`text-20 ${stats[k] < LOW_BELOW ? 'text-status-attention' : 'text-fg-primary'}`}>{number(stats[k])}</b>
+          <div key={k} className="flex flex-col">
+            <span className="text-12 text-fg-body">{t('metric.name', { metric: k })}</span>
+            <b className={`font-mono text-22 font-400 ${stats[k] < LOW_BELOW ? 'text-status-attention' : 'text-fg-primary'}`}>{number(stats[k])}</b>
           </div>
         ))}
       </div>
       {props.trend && props.trend.length > 0 && <TrendChart title={t('profile.trend.title')} points={props.trend} />}
-      {shared && <div className="rounded-12 bg-accent-soft px-3 py-2.5 text-13"><b>{t('profile.shared')}</b> {shared}</div>}
+      {shared && <div className="border-s-2 border-accent-default py-1 ps-3 text-14"><b>{t('profile.shared')}</b> {shared}</div>}
       {factRow(t('profile.fact.label', { key: 'style', unit: periodUnit }), style ? styleName(style) : t('profile.fact.empty', { key: 'style' }))}
       {facts.map(f => factRow(t('profile.fact.label', { key: f.key, unit: periodUnit }), f.value ?? t('profile.fact.empty', { key: f.key })))}
     </div>
@@ -188,7 +188,7 @@ export function ProfileHistory({ name, timeline, promises, periodUnit, subPeriod
   const { t } = useI18n();
   return (
     <>
-      <h3 id={headingId} className="m-0 text-18 font-700">{t('profile.interactions.title')}</h3>
+      <h3 id={headingId} className="m-0 border-b border-fg-primary pb-2.5 font-display text-28 leading-(--il-canvas-leading-heading) font-400">{t('profile.interactions.title')}</h3>
       {timeline.length === 0
         ? <p className="m-0 text-13 text-fg-secondary">{t('profile.interactions.empty', { name })}</p>
         : <ol className="m-0 contents list-none p-0">{timeline.map(e => <TimelineItem key={e.id} entry={e} periodUnit={periodUnit} subPeriodUnit={subPeriodUnit} />)}</ol>}
@@ -229,21 +229,21 @@ export function ProfilePanel(props: ProfilePanelProps) {
   return (
     // eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- Escape closes the dialog
     <div ref={ref} role="dialog" aria-label={t('profile.aria', { name })} tabIndex={-1} onKeyDown={onKeyDown}
-      className="absolute top-0 end-6 bottom-6 start-4 z-35 grid animate-(--il-profile-panel-enter) grid-cols-(--il-profile-panel-columns) overflow-hidden rounded-24 border border-line-strong bg-surface-material shadow-(--il-profile-panel-shadow) outline-none backdrop-blur-24">
-      <div className="flex flex-col overflow-auto border-r border-line-default">
+      className="absolute inset-0 z-35 grid animate-(--il-profile-panel-enter) grid-cols-(--il-profile-panel-columns) overflow-hidden bg-surface-page outline-none">
+      <div className="flex flex-col overflow-auto">
         <ProfileSummary {...props} />
       </div>
 
       {/* A long timeline scrolls: the column takes focus so keyboards can scroll it (WCAG 2.1.1). */}
-      <div role="region" aria-labelledby={interactionsId} tabIndex={0} className="flex flex-col gap-3 overflow-auto border-r border-line-default p-5 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
+      <div role="region" aria-labelledby={interactionsId} tabIndex={0} className="flex flex-col gap-3 overflow-auto px-6 py-6 focus-visible:outline-3 focus-visible:-outline-offset-3 focus-visible:outline-accent-secondary">
         <ProfileHistory {...props} headingId={interactionsId} />
       </div>
 
-      <div className="flex flex-col gap-2.5 overflow-auto p-5">
-        <div className="flex items-center justify-between">
-          <h3 className="m-0 text-18 font-700">{t('profile.actions.title')}</h3>
+      <div className="flex flex-col gap-2 overflow-auto py-6 pe-11 ps-6">
+        <div className="flex items-end justify-between gap-3 border-b border-fg-primary pb-2.5">
+          <h3 className="m-0 font-display text-28 leading-(--il-canvas-leading-heading) font-400">{t('profile.actions.title')}</h3>
           <button type="button" onClick={onClose} aria-label={t('profile.close')}
-            className={`size-8 cursor-pointer rounded-round border-0 bg-surface-raised p-0 text-fg-primary ${focus}`}>{CLOSE_GLYPH}</button>
+            className={`flex min-h-11 flex-none cursor-pointer items-center gap-2 rounded-4 border border-line-strong bg-surface-card px-3 text-14 font-500 text-fg-primary ${focus}`}><span aria-hidden="true">{CLOSE_GLYPH}</span><span aria-hidden="true">{t('menu.closeShort')}</span></button>
         </div>
         <SubPeriodUnitContext.Provider value={subPeriodUnit}>
           {actions.map((a, i) => <ActionTile key={`${a.name}:${i}`} layout="compact" {...a} />)}

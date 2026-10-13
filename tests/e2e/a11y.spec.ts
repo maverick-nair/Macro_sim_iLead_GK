@@ -223,37 +223,29 @@ for (const [theme, q] of Object.entries(THEMES)) {
         test('onboarding, every step', async ({ page }) => {
           test.setTimeout(120_000);
           await page.goto(url('/', q));
-          await expect(page.getByRole('heading', { level: 1, name: 'Lead a sales team of ten, for eight weeks.' })).toBeVisible();
-          await scan(page, 'onboarding: language');
-          await page.getByRole('button', { name: "Let's begin" }).click();
-          await expect(page.getByRole('heading', { level: 1, name: 'Paula Jacob' })).toBeVisible();
-          await scan(page, 'onboarding: sponsor');
-          for (const tab of ['About the product', 'Your targets']) {
-            const t = page.getByRole('tab', { name: tab });
-            if (await t.count()) { await t.click(); await scan(page, `onboarding: sponsor, ${tab}`); }
-          }
-          const next = page.getByRole('button', { name: 'Next' });
-          await expect(next).toBeEnabled({ timeout: 10_000 });
-          await next.click();
-          await expect(page.getByRole('button', { name: 'Accept and use voice' })).toBeVisible();
-          await scan(page, 'onboarding: consent');
-          await page.getByRole('button', { name: 'Accept and use voice' }).click();
-          await expect(page.getByRole('button', { name: 'Start mic test' })).toBeVisible();
-          await scan(page, 'onboarding: voice check');
-          await page.getByRole('button', { name: 'Start mic test' }).click();
-          await expect(page.getByRole('heading', { level: 1, name: 'We heard you clearly' })).toBeVisible({ timeout: 10_000 });
-          await page.getByRole('button', { name: 'Play a sample voice' }).click();
-          await expect(page.getByText(/how this week is going\.$/)).toHaveCount(2, { timeout: 20_000 });
-          await scan(page, 'onboarding: voice heard');
-          await page.getByRole('button', { name: 'Sounds good' }).click();
-          await expect(page.getByRole('button', { name: 'Meet your team' })).toBeVisible();
-          await scan(page, 'onboarding: how to play');
-          await page.getByRole('button', { name: 'Meet your team' }).click();
-          await expect(page.getByRole('button', { name: 'Start week 1' })).toBeVisible();
-          await scan(page, 'onboarding: team');
-          for (const name of ['Kent Goldberg', 'Green Bell', 'Ruth Ether']) await page.getByRole('button', { name: new RegExp(`^${name}, `) }).click();
-          await expect(page.getByText('3 of 3 profiles read')).toBeVisible();
-          await scan(page, 'onboarding: team, profiles read');
+          // The pre-game flow (D219): landing, the sponsor's message and its end, the products (D221), the objectives with the mic test.
+          await expect(page.getByRole('heading', { level: 1, name: 'Lead a team of ten through eight weeks that count.' })).toBeVisible();
+          await page.getByRole('button', { name: 'Watch the video message from Paula Jacob' }).waitFor({ timeout: 5000 });
+          await scan(page, 'onboarding: landing');
+          await page.getByRole('button', { name: 'Watch the video message from Paula Jacob' }).click();
+          await expect(page.getByRole('region', { name: 'Captions' })).toBeVisible();
+          await scan(page, 'onboarding: message');
+          await page.getByRole('slider', { name: 'Position in the message' }).press('End');
+          await expect(page.getByRole('button', { name: 'Watch again' })).toBeVisible();
+          await scan(page, 'onboarding: message end');
+          await page.getByRole('button', { name: 'Explore products' }).click();
+          await expect(page.getByRole('tabpanel')).toBeVisible();
+          await scan(page, 'onboarding: products');
+          await page.getByRole('button', { name: 'Point 3: Who buys it' }).click();
+          await page.getByRole('button', { name: 'Next: Levo H4' }).click();
+          await expect(page.getByText('Quiet enough for home.')).toBeVisible();
+          await scan(page, 'onboarding: products, second model');
+          await page.getByRole('button', { name: 'See your objectives' }).click();
+          await expect(page.getByRole('button', { name: 'Start simulation' })).toBeVisible();
+          await scan(page, 'onboarding: objectives');
+          await page.getByRole('button', { name: 'Test your microphone' }).click();
+          await expect(page.getByText('We heard you. Voice is on.')).toBeVisible({ timeout: 10_000 });
+          await scan(page, 'onboarding: objectives, voice heard');
         });
 
         test('a week: style setting, board, drawer, inbox, profile, dialogs, a 1:1, week end', async ({ page }) => {
@@ -275,6 +267,8 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(drawer(page)).toHaveCount(0);
           } else {
+            // The desk opens a profile from the person's actions (D232): select them first.
+            if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
             await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
             await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeVisible();
             await scan(page, 'profile');
@@ -295,14 +289,15 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(page.getByRole('dialog', { name: 'Badges' })).toHaveCount(0);
           }
-          // Settings and pause.
-          await page.getByRole('button', { name: 'Settings' }).click();
+          // Settings (from the menu: the desk's navy bar keeps only the session controls, D232) and pause.
+          await page.getByRole('button', { name: /^Menu/ }).first().click();
+          await page.getByRole('list', { name: 'Game menu' }).getByRole('button', { name: 'Settings', exact: true }).click();
           await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
           await scan(page, 'settings');
           await page.keyboard.press('Escape');
           await expect(page.getByRole('dialog', { name: 'Settings' })).toHaveCount(0);
           await page.getByRole('button', { name: /^Pause/ }).first().click();
-          const paused = page.getByRole('dialog', { name: 'You are paused' });
+          const paused = page.getByRole('dialog', { name: 'Take your time.' });
           await expect(paused).toBeVisible();
           await scan(page, 'paused');
           await paused.getByRole('button', { name: 'Resume' }).click();
@@ -313,7 +308,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await quiet(page);
           await scan(page, 'live: 1:1');
           await say(page, 'I am sorry it has been rough. What is on your mind?');
-          await page.getByRole('button', { name: 'Hint' }).click();
+          await page.getByRole('button', { name: 'Ask for a hint' }).click();
           await scan(page, 'live: 1:1 with a hint');
           await endLive(page);
           await expect(page.getByText('The team is reacting')).toBeVisible();
