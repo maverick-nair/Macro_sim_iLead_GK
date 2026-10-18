@@ -153,6 +153,10 @@ const render = () => createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 // English is in the first load; another language's catalog comes first (a failed load renders in English).
-if (packaged) void import('./lms/boot').then(m => m.bootPackage(document.getElementById('root')!));
-else if (appLocale() === 'en') render();
-else void loadLocale().catch(e => console.warn('Locale catalog failed to load, showing English', e)).then(render);
+const boot = () => {
+  if (packaged) void import('./lms/boot').then(m => m.bootPackage(document.getElementById('root')!));
+  else if (appLocale() === 'en') render();
+  else void loadLocale().catch(e => console.warn('Locale catalog failed to load, showing English', e)).then(render);
+};
+// A browser under the floor already shows the notice from index.html; nothing else loads.
+if (!(window as { __ileadUnsupported?: boolean }).__ileadUnsupported) boot();
