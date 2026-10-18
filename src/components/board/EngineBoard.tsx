@@ -529,9 +529,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       : m.promise ?? null;
     const last = [...v.history].reverse().find(l => l.period === v.clock.period && (l.kind === 'action' || l.kind === 'interaction') && l.memberIds.includes(m.id) && l.action);
     const act = last?.action ? action(last.action) : undefined;
+    // "No time with you yet" is noise on day 1 and doubles the neglect line later: the card shows it from period 2, never beside that line.
+    const noTime = v.clock.period >= 2 && !m.neglected;
     return {
       style: st ? styleName(st) : null, flag,
-      time: last ? t('desk.card.time', { unit: periodUnit, action: act?.name ?? last.title, sub: t('time.subPeriod', { unit, n: Math.min(last.sub + 1, v.clock.capacity) }) }) : null
+      time: last ? t('desk.card.time', { unit: periodUnit, action: act?.name ?? last.title, sub: t('time.subPeriod', { unit, n: Math.min(last.sub + 1, v.clock.capacity) }) }) : null,
+      noTime
     };
   };
   const columns: StageColumn[] = v.funnel.map(st => ({
@@ -774,7 +777,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       streak={streak} tiers={v.gamification.tiers} tier={v.score.tier}
       badges={{ earned: v.badges.filter(b => b.earned).length, total: v.badges.length }}
       onBadges={() => { setScoreOpen(false); setBadgesOpen(true); }}
-      rank={v.gamification.leaderboard.enabled ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
+      rank={v.gamification.leaderboard.enabled && v.clock.period >= 2 ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
     />
   );
   const hud: HudProps = {
@@ -936,7 +939,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const nameOf = (id: string) => names.get(id) ?? null;
 
   // ---- the desk (D211, D212): the status band, and the feedback and inbox feed under the team ----
-  const band = bandModel(v);
+  // Tier and rank wait for the first move (period 2): week 1 shows the score alone.
+  const bandBase = bandModel(v);
+  const band = { ...bandBase, tier: v.clock.period >= 2 ? bandBase.tier : null };
   // On the desk milestones go to the feed; tips and what neglect costs (D173, D174) stay as notices. The upright
   // tablet keeps them all as notices (D73).
   const boardNotices = tablet ? notices : notices.filter(n => n.kind !== 'milestone');
@@ -1170,7 +1175,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <StatusBand model={band} periodUnit={periodUnit} subPeriodUnit={unit} targetLabel={t('board.target', { n: periods, unit: periodUnit })}
             business={business} sponsorName={first(v.sponsor.name)} sponsorCauses={v.sponsor.causes}
             score={{ total: v.score.total }} breakdown={breakdown} scoreOpen={scoreOpen} onScoreOpenChange={setScoreOpen}
-            rank={v.gamification.leaderboard.enabled && !demo ? <Suspense fallback={null}><BandRank view={v} onOpen={() => openPanel({ kind: 'leaderboard' })} /></Suspense> : undefined}
+            rank={v.gamification.leaderboard.enabled && !demo && v.clock.period >= 2 ? <Suspense fallback={null}><BandRank view={v} onOpen={() => openPanel({ kind: 'leaderboard' })} /></Suspense> : undefined}
             onOverview={demo ? undefined : () => openPanel({ kind: 'overview' })} />
         )}
         {/* On the desk the business variables are in the status band; the bar keeps decisions and stakeholders. */}

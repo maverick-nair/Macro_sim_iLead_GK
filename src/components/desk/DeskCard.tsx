@@ -10,6 +10,8 @@ export interface DeskCardInfo {
   flag: string | null;
   /** "This week: Coach member, Day 2", or null when there has been no time with them this period. */
   time: string | null;
+  /** Say "No time with you yet" when there is no time line; the board turns it on from period 2, and not beside the neglect line. */
+  noTime?: boolean;
 }
 
 /** Mood is a word with a shape, never colour alone, as the canvas draws it: a triangle up, a circle steady, a diamond under pressure. */
@@ -50,7 +52,7 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
       </span>
       <span className="flex min-w-0 items-center gap-1.5 text-13 text-fg-body text-large:flex-wrap"><MoodMark mood={away ? 'neutral' : mood} /><span className="truncate text-large:overflow-visible text-large:whitespace-normal">{moodName}</span></span>
       {desk.flag && <span className="text-12 leading-(--il-canvas-leading-snug) text-status-attention">{desk.flag}</span>}
-      <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body text-large:overflow-visible text-large:whitespace-normal ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>
+      {(desk.time || desk.noTime) && <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body text-large:overflow-visible text-large:whitespace-normal ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>}
     </button>
   );
 }

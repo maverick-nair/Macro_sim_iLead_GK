@@ -13,7 +13,7 @@
   "desk.team.title": "Team health",
   "desk.business.title": "Business",
   "desk.progress.title": "Your progress",
-  "desk.delta": "{dir, select, up {↑{n}} down {↓{n}} other {= 0}}",
+  "desk.delta": "{dir, select, up {↑{n}} down {↓{n}} other {}}",
   "desk.deltaSr": "{dir, select, up {up {n}} down {down {n}} other {no change}} this {unit, select, year {year} month {month} week {week} day {day} other {period}}",
   "desk.money.pace": "{state, select, ahead {Ahead of pace by {amount}} behind {Behind pace by {amount}} other {On pace}}",
   "desk.money.barAria": "{label}: {share} percent of the target. Pace marker at {pace} percent.",

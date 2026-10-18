@@ -129,9 +129,9 @@ function FunnelHeader({ name, count, ideal, bottleneck, periodUnit, about, suits
     <div data-tour="stage" data-bottleneck={bottleneck ? '' : undefined}
       className={`relative flex flex-col gap-1 px-2.5 py-1.75 short:gap-0.5 short:py-1.5 ${bottleneck ? 'border-2 border-(--il-color-canvas-orange-700) bg-status-attention-soft' : 'border border-line-strong bg-surface-card'}`}>
       <span className="sr-only">{t('desk.stage.outputAria', { stage: name, n, ideal: goal, unit: periodUnit, bottleneck: bottleneck ? 'yes' : 'no', people: count, ideal2: ideal })}</span>
-      <div className="flex min-h-6 items-center gap-1.5">
-        <b aria-hidden="true" title={name} className={`min-w-0 flex-1 truncate text-13 font-600 text-large:whitespace-normal text-large:break-words ${bottleneck ? 'text-status-attention' : ''}`}>{name}</b>
-        {bottleneck && <span aria-hidden="true" className="flex flex-none items-center gap-0.5 text-12 font-600 text-status-attention"><b>!</b>{t('desk.stage.bottleneck')}</span>}
+      <div className="flex min-h-6 items-start gap-1.5">
+        <b aria-hidden="true" className={`min-w-0 flex-1 py-0.5 text-13 font-600 break-words whitespace-normal ${bottleneck ? 'text-status-attention' : ''}`}>{name}</b>
+        {bottleneck && <span aria-hidden="true" className="flex flex-none items-center gap-0.5 py-0.5 text-12 font-600 text-status-attention"><b>!</b>{t('desk.stage.bottleneck')}</span>}
         <StageInfo name={name} about={about} suits={suits} alignEnd={alignEnd} />
       </div>
       <span aria-hidden="true" className="flex min-w-0 flex-wrap items-baseline gap-x-2 text-12 text-fg-body">
@@ -158,8 +158,8 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
   if (output) return <FunnelHeader {...{ name, count, ideal, bottleneck, periodUnit, about, suits, output, alignEnd }} />;
   return (
     <div data-tour="stage" className={`relative flex flex-col gap-0.5 rounded-4 border px-3 py-2 short:py-1.5 ${bottleneck ? 'border-status-attention bg-status-attention-soft' : 'border-line-default bg-surface-card'}`}>
-      <div className="flex items-baseline justify-between gap-1.5">
-        <b title={name} className="min-w-0 truncate text-13 text-large:whitespace-normal text-large:break-words">{name}</b>
+      <div className="flex items-start justify-between gap-1.5">
+        <b className="min-w-0 text-13 break-words whitespace-normal">{name}</b>
         <span className="flex flex-none items-center gap-1">
           {hasInfo && (
             <button type="button" aria-expanded={info} aria-controls={info ? infoId : undefined} aria-label={t('team.stage.info', { stage: name })} onClick={() => setInfo(v => !v)}

@@ -470,7 +470,7 @@ test.describe('/author', () => {
 
   author('author chat', async page => {
     await page.goto('/author');
-    await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+    await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
   }, composer);
   author('author recording', async page => {
     await page.goto('/author');
@@ -539,8 +539,8 @@ test.describe('baselines', () => {
         // The pointer stays where Confirm styles was, over a team card once the band has pushed the board down; whether
         // that card shows its hover depends on when the browser rechecks it. Parked on the page's empty gutter instead.
         await page.mouse.move(8, height - 8);
-        // The rank in the status band loads on demand and reads Leaderboard until the cohort answers: wait for it.
-        await expect(page.locator('[data-band-rank]')).toHaveText(/^Rank \d+ of \d+$/);
+        // Week 1 shows the score alone: no tier line and no rank in the status band until week 2.
+        await expect(page.locator('[data-band-rank]')).toHaveCount(0);
         await still(page, `fit-${at}-outcome`);
       });
       test(`action drawer at ${at}`, async ({ page }) => {
@@ -566,7 +566,7 @@ test.describe('baselines', () => {
       });
       test(`author at ${at}`, async ({ page }) => {
         await page.goto('/author');
-        await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+        await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
         await expect(page.getByText('Saved just now')).toBeVisible();
         await still(page, `fit-${at}-author`);
       });
