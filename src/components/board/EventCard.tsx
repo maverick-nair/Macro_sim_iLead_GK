@@ -39,11 +39,13 @@ export const EVENT_ART: Record<EventCardKind, string> = {
 const focusRing = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 /** The card's type tag, as the canvas sets it (D232): small capitals on the selected tint. */
 export const EVENT_TAG = 'relative flex min-h-6.5 items-center bg-accent-soft px-2 text-13 font-600 tracking-(--il-tracking-eyebrow) text-accent-default uppercase';
-/** The card's portrait column when the event is about someone (D232): their photo down the side. */
+/** The card's portrait column when the event is about someone (D232): their photo in a 4:5 card, at most 480px wide (the art is 240px) so it does not blur. */
 export function EventPortrait({ img }: { img: string }) {
   return (
-    <div aria-hidden="true" className="relative min-h-60 overflow-hidden bg-(image:--il-fill-portrait-calm) tablet:hidden">
-      <img src={img} alt="" className="absolute inset-0 size-full object-cover object-top mix-blend-multiply" />
+    <div aria-hidden="true" className="flex min-h-60 items-center justify-center bg-(image:--il-fill-portrait-calm) p-6 tablet:hidden">
+      <div className="relative aspect-4/5 w-full max-w-120 overflow-hidden rounded-4 bg-(image:--il-fill-portrait-calm)">
+        <img src={img} alt="" className="absolute inset-0 size-full object-cover object-top mix-blend-multiply" />
+      </div>
     </div>
   );
 }

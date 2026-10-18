@@ -120,22 +120,27 @@ export interface RolePlayPortraitProps {
 }
 
 /**
- * The left column of the canvas's 1:1 (D232): the person's photo filling it, the brief over the top,
- * their name in the display serif and how they seem at the foot. A mint mark beside the name while
- * they speak.
+ * The left column of the canvas's 1:1 (D232): the brief on top, then the person's photo in a
+ * bounded 4:5 card (the art is 240px wide, so it stops at 480px rather than blur across the half
+ * screen), their name in the display serif and how they seem under it. A mint mark beside the
+ * name while they speak.
  */
 export function RolePlayPortrait({ person, mood, conversation, brief }: RolePlayPortraitProps) {
   const { t } = useI18n();
   return (
-    <div className="absolute inset-0 overflow-hidden bg-(image:--il-fill-portrait-calm)">
-      {person.img && <img src={person.img} alt={person.name} className="absolute inset-0 size-full object-cover object-top mix-blend-multiply" />}
-      {brief && <div data-tour="live-brief" className="absolute start-4 end-4 top-4 max-h-(--il-canvas-live-brief-max-height) overflow-auto">{brief}</div>}
-      <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-(image:--il-canvas-fade-portrait) px-6 pt-20 pb-6 text-(--il-color-white)">
-        <span className="flex items-center gap-2.5 font-display text-26 leading-tight">
-          {person.name}
-          {conversation === 'npcSpeaking' && <span aria-hidden="true" className="size-2.5 animate-(--il-liveshell-roleplay-speaking-ring) bg-(--il-color-canvas-mint)" />}
-        </span>
-        <span className="text-13 text-(--il-color-canvas-mist)">{t('liveshell.roleplay.seems', { mood: t('liveshell.roleplay.moodWord', { mood }) })}</span>
+    <div className="absolute inset-0 overflow-y-auto bg-(image:--il-fill-portrait-calm) text-(--il-color-canvas-ink)">
+      <div className="flex min-h-full flex-col items-center justify-center gap-4 p-4 short:gap-3 short:p-3">
+        {brief && <div data-tour="live-brief" className="w-full max-w-120 short:max-w-100 shorter:max-w-80">{brief}</div>}
+        <div className="relative aspect-4/5 w-full max-w-120 overflow-hidden rounded-4 bg-(image:--il-fill-portrait-calm) shadow-(--il-event-card-shadow) short:max-w-100 shorter:max-w-80">
+          {person.img && <img src={person.img} alt={person.name} className="absolute inset-0 size-full object-cover object-top mix-blend-multiply" />}
+        </div>
+        <div className="flex w-full max-w-120 flex-col items-center gap-1 text-center short:max-w-100 shorter:max-w-80">
+          <span className="flex items-center gap-2.5 font-display text-26 leading-tight">
+            {person.name}
+            {conversation === 'npcSpeaking' && <span aria-hidden="true" className="size-2.5 animate-(--il-liveshell-roleplay-speaking-ring) bg-(--il-color-canvas-mint)" />}
+          </span>
+          <span className="text-13 text-(--il-color-canvas-ink)/70">{t('liveshell.roleplay.seems', { mood: t('liveshell.roleplay.moodWord', { mood }) })}</span>
+        </div>
       </div>
     </div>
   );

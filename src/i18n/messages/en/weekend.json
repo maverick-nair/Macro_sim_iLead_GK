@@ -51,6 +51,7 @@
   "weekend.reward.name": "{key, select, bonus_day {A bonus {sub, select, quarter {quarter} month {month} week {week} day {day} hour {hour} other {step}}} hire_budget {Extra hire budget} team_activity {A team activity} other {A reward}}",
   "weekend.reward.description": "{key, select, bonus_day {One more {sub, select, quarter {quarter} month {month} week {week} day {day} hour {hour} other {step}} of your time in {unit, select, year {year} month {month} week {week} day {day} other {period}} {n}.} hire_budget {Your next hire can join a full team, and hiring takes none of your time.} team_activity {Your next team activity leaves no cooldown, so you can run it again right away.} other {}}",
   "weekend.news.eyebrow": "{unit, select, year {Year} month {Month} week {Week} day {Day} other {Period}} {n} news · {index} of {total}",
+  "weekend.news.kind": "{kind, select, opportunity {Opportunity} signal {Signal} crisis {Crisis} other {News}}",
   "weekend.news.impact": "See impact",
   "weekend.news.previous": "Previous",
   "weekend.news.next": "Next",
