@@ -72,7 +72,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
       </div>
       <div className="flex min-w-0 flex-col">
         <b className="truncate text-14 font-600 text-large:whitespace-normal">{m.name}</b>
-        <span className="truncate text-12 text-fg-secondary text-large:whitespace-normal">{t('stylesetting.member.line', { title: m.title, mood: m.away ? t('member.mood.away') : mood })}</span>
+        <span className="text-12 text-fg-secondary">{t('stylesetting.member.line', { title: m.title, mood: m.away ? t('member.mood.away') : mood })}</span>
       </div>
       {m.lastStyle !== null && <LastPeriodTag periodUnit={periodUnit} style={m.lastStyle} reaction={m.lastReaction} />}
       {!statsHidden(m) && <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>}
