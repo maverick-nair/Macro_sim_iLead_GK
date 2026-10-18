@@ -11,6 +11,7 @@
     "tokens:check": "tsx scripts/tokens/build.ts --check",
     "dev": "npm run tokens && vite",
     "build": "npm run tokens:check && vitest run && tsc -b && vite build && tsx scripts/budget.ts",
+    "build:app": "vite build",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -99,5 +100,8 @@
     "firefox >= 120",
     "safari >= 17.5",
     "ios_saf >= 17.5"
-  ]
+  ],
+  "engines": {
+    "node": "22.x"
+  }
 }
