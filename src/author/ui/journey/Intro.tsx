@@ -6,7 +6,8 @@ export const INTRO = {
   what: 'The participant leads a team of 6 to 12 direct reports through a staged work process, over up to 10 weeks. Each week they choose a leadership style and actions for each person: conversations, coaching, feedback, goals, team meetings. Events land, a sponsor watches, and the team works toward a revenue or output target, with business measures such as a budget or customer trust beside it.',
   goodFor: 'Good for: leading people with different skill and morale, coaching and feedback conversations, leading one team through pressure or change, decisions with trade offs, such as a budget cut or a discount to a customer, whose consequences carry forward, and stakeholders outside the team, such as a client, a CFO or a union, to meet, present to and negotiate with.',
   notYet: 'Not covered yet: a merger across several functions, and negotiations between several parties at once. If your brief needs them, I will say so.',
-  kora: 'I am Kora. A few short questions, typed or recorded, and I will draft it.',
+  welcome: ['Paste a brief, a deck or a few lines about the team and the challenge.', 'I will draft a playable simulation and ask only what I cannot infer.'],
+  example: 'Example: A sales team of 8 in a 100 person SaaS company, missing quota for 2 quarters, new manager.',
   glossary: [
     ['Leadership lens', 'the model of leadership styles the simulation scores against, for example Readiness Based Leadership.'],
     ['Work process stages', 'the steps the team\'s work moves through, such as Leads, Qualify and Proposal.'],
@@ -35,9 +36,9 @@ function Body() {
 }
 
 /**
- * The journey's first card (D133): what an iLead simulation is, what it suits and what it does not cover
- * yet, with a one line glossary, and Kora's hello, before question 1. Once the chat has started it folds to a
- * line that opens.
+ * The journey's first card (D133): Kora's hello in two short lines and one example, before question 1; what an
+ * iLead simulation is, what it suits and what it does not cover yet stay one click away. Once the chat has
+ * started it folds to a line that opens.
  */
 export function Intro({ folded }: { folded: boolean }) {
   if (folded) {
@@ -49,10 +50,13 @@ export function Intro({ folded }: { folded: boolean }) {
     );
   }
   return (
-    <section aria-labelledby="ilead-intro" className="flex max-w-[47rem] flex-col gap-2 self-start rounded-16 border border-solid border-author-ai-line bg-author-ai-field px-4 py-3">
-      <h2 id="ilead-intro" className="m-0 text-16 font-800">{INTRO.title}</h2>
-      <Body />
-      <p className="m-0 border-t border-solid border-author-ai-line pt-2 text-15">{INTRO.kora}</p>
+    <section aria-label="Welcome" className="flex max-w-[47rem] flex-col gap-2 self-start rounded-16 border border-solid border-author-ai-line bg-author-ai-field px-4 py-3">
+      <p className="m-0 flex flex-col text-15 leading-[1.45]">{INTRO.welcome.map(line => <span key={line}>{line}</span>)}</p>
+      <p className="m-0 text-13 leading-[1.4] text-author-muted">{INTRO.example}</p>
+      <details className="border-t border-solid border-author-ai-line pt-2">
+        <summary className={`cursor-pointer text-13 font-800 ${FOCUS}`}>{INTRO.title}</summary>
+        <div className="mt-2 flex flex-col gap-2"><Body /></div>
+      </details>
     </section>
   );
 }

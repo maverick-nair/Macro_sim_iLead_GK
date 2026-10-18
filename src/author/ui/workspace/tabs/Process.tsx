@@ -80,10 +80,15 @@ export default function Process() {
               <li key={s.key} className={`flex min-w-0 flex-col gap-2 rounded-14 border border-solid p-3 ${s.key === pr.pressure ? 'border-author-need-line bg-author-need-field' : 'border-author-line'}`}>
                 <TextInput aria-label={`Stage ${i + 1} name`} className="font-800" value={s.name} onChange={e => edit(x => { x.process.stages[i].name = e.target.value; }, 'process.stages')} />
                 <Field label="People">{id => <TextInput id={id} type="number" min={0} max={6} tone={tone} value={s.people} onChange={e => edit(x => { x.process.stages[i].people = num(e.target.value, 0, 6); }, 'process.stages')} />}</Field>
-                <Field label="Ideal per week">{id => <TextInput id={id} readOnly tone={tone} value={`${ideal[i]}${unit(i)}`} aria-describedby="per-week-hint" />}</Field>
-                <Field label="Passes on">{id => i === pr.stages.length - 1
+                <Field label="Ideal per week">{id => <TextInput id={id} readOnly tone={tone} value={`${Math.round(ideal[i])}${unit(i)}`} aria-describedby="per-week-hint" />}</Field>
+                <Field label="Passes on" hint={i === pr.stages.length - 1 ? undefined : `about ${Math.round(s.passesOn / 10)} in 10 move on`}>{id => i === pr.stages.length - 1
                   ? <TextInput id={id} readOnly tone={tone} value="Revenue" />
-                  : <TextInput id={id} type="number" min={5} max={100} tone={tone} value={s.passesOn} onChange={e => edit(x => { x.process.stages[i].passesOn = num(e.target.value, 5, 100); }, 'process.stages')} />}</Field>
+                  : (
+                    <span className="relative flex">
+                      <TextInput id={id} type="number" min={5} max={100} tone={tone} className="w-full pe-12" value={s.passesOn} onChange={e => edit(x => { x.process.stages[i].passesOn = num(e.target.value, 5, 100); }, 'process.stages')} />
+                      <span aria-hidden="true" className="pointer-events-none absolute inset-y-0 end-7 flex items-center text-14 text-author-muted">%</span>
+                    </span>
+                  )}</Field>
                 <div className="flex flex-wrap gap-1">
                   <button type="button" className={`${BUTTON.secondary} min-h-8 px-2 text-12`} aria-pressed={s.key === pr.pressure} onClick={() => edit(x => { x.process.pressure = x.process.pressure === s.key ? null : s.key; }, 'process.stages')}>Pressure point<span className="sr-only">: {s.name}</span></button>
                   {pr.stages.length > 3 && <button type="button" className={`${BUTTON.secondary} min-h-8 px-2 text-12`} onClick={() => {

@@ -66,6 +66,8 @@ export function parseEffect(text: string): [number, number, number] | null {
 const HQ: Record<string, string> = { global: 'London, United Kingdom', us: 'Chicago, United States', uk: 'Manchester, United Kingdom', india: 'Pune, India', singapore: 'Singapore', uae: 'Dubai, United Arab Emirates', australia: 'Melbourne, Australia' };
 /** The portrait library: Sales Elevator's faces, each with its moods. */
 /** The office backdrops GenieKreator offers (D182): the player's default first. */
+/** The participant app's default brand: the canvas navy and mint in the light look (D232). */
+export const DEFAULT_BRAND_COLORS = { main: '#1C3354', second: '#7FD6C2' } as const;
 export const OFFICES = [{ src: '/assets/bg-1.webp', label: 'Night skyline' }, { src: '/assets/bg-2.webp', label: 'Deep blue' }] as const;
 export const PORTRAITS = ['kent', 'beth', 'justin', 'ruth', 'derick', 'mandy', 'peter', 'lowe', 'green', 'jack'].map(n => `/assets/npc/${n}.webp`);
 const AGES = ['25 to 34', '35 to 44', '45 to 54', '25 to 34'];
@@ -316,7 +318,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
       samples: SAMPLES.map((s, i) => ({ id: `s${i + 1}`, with: team.find(m => m.stage === pressure)?.first ?? team[0].first, answer: s.answer, scored: s.scored, call: null, reason: '', resolution: null })),
       framework: null, levels: (sl.report?.scale ?? DEFAULT_SCALE).map(l => l.name), reportSections: null, rubric: [], anchors: {}
     },
-    brand: { from: 'knolskape', name: ctx.company, logo: '', main: '#249DFF', second: '#43D6E8', font: 'Manrope', look: 'dark', preview: 'board' },
+    brand: { from: 'knolskape', name: ctx.company, logo: '', ...DEFAULT_BRAND_COLORS, font: 'Manrope', look: 'light', preview: 'board' },
     lms: { ...DEFAULT_LMS_DRAFT },
     publish: { cohort: '', notes: '', version: 0, played: false, skipTest: false },
     marks: {},

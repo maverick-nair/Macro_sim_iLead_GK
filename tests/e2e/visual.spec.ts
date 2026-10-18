@@ -300,7 +300,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
         // /author is light only, whatever the participant theme (D105): one baseline per width.
         if (theme === 'dark') test(`author chat at ${w}`, async ({ page }) => {
           await page.goto('/author');
-          await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+          await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
           await expect(page.getByText('Saved just now')).toBeVisible();
           await still(page, `author-${w}`);
         });

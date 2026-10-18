@@ -16,7 +16,7 @@ test.beforeEach(({ page }) => {
 });
 test.afterEach(() => expect(errors).toEqual([]));
 
-const progress = (page: Page) => page.getByText(/^Question \d+ of about \d+$/);
+const progress = (page: Page) => page.getByText(/^Question \d+ · (?:last one|about \d+ to go)$/);
 const chip = (page: Page, name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
 const answerBox = (page: Page) => page.getByRole('textbox', { name: 'Your answer' });
 async function type(page: Page, text: string) {
@@ -39,7 +39,7 @@ async function openTab(page: Page, name: string) {
 
 test('the co-creator chat: typed, chips and voice answers, the lens, First draft ready and the participant preview', async ({ page, context }) => {
   await page.goto('/author');
-  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await expect(progress(page)).toHaveText('Question 1 · about 9 to go');
   await expect(page.getByRole('heading', { name: 'Your simulation so far' })).toBeVisible();
   await chip(page, 'First time managers').click();
   await chip(page, 'Manufacturing').click();
@@ -49,7 +49,7 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await expect(soFar.getByRole('list', { name: 'Stages' })).toContainText('Negotiation');
   await expect(soFar.getByText('Add your average deal value')).toBeVisible();
   await type(page, 'Ascent Lifts');
-  await expect(progress(page)).toHaveText('Question 5 of about 10');
+  await expect(progress(page)).toHaveText('Question 5 · about 5 to go');
 
   // Voice: record, the live transcript, stop, then the words in the answer box to edit before Send.
   // Focus follows: Stop and review while recording, the microphone after Cancel, the answer box after stop.
@@ -70,7 +70,7 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await answerBox(page).fill(`${await answerBox(page).inputValue()} Two of them joined last month.`);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.getByRole('log')).toContainText('Two of them joined last month.');
-  await expect(progress(page)).toHaveText('Question 6 of about 10');
+  await expect(progress(page)).toHaveText('Question 6 · about 4 to go');
 
   await chip(page, /^Sales Elevator funnel/).click();
   await chip(page, 'Standard').click();
@@ -310,14 +310,14 @@ test('blocked storage keeps the draft in memory and says so; a stale stored draf
   await page.goto('/author');
   await chip(page, 'First time managers').click();
   await expect(page.getByText('Not saved: this browser blocks storage')).toBeVisible();
-  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(progress(page)).toHaveText('Question 2 · about 8 to go');
 
   const fresh = await page.context().newPage();
   fresh.on('pageerror', e => errors.push(e.message));
   await fresh.goto('/author');
   await fresh.evaluate(() => localStorage.setItem('ilead.author.workspace', '{"v":0,"stage":"workspace"}'));
   await fresh.reload();
-  await expect(progress(fresh)).toHaveText('Question 1 of about 10');
+  await expect(progress(fresh)).toHaveText('Question 1 · about 9 to go');
 });
 
 test('a bad draft falls back to Sales Elevator with a warning', async ({ page }) => {

@@ -1,5 +1,6 @@
 import { contrastRatio, parseColor, toRgb } from '../../../../theme/color';
 import { FONTS } from '../../../../theme/schema';
+import { DEFAULT_BRAND_COLORS } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
 import { ImageUpload } from '../../ImageUpload';
 import { Badge, CARD, CardHead, Field, Segmented, Select, SubTabs, TextInput } from '../../kit';
@@ -34,7 +35,7 @@ export default function Brand() {
       <div className="grid grid-cols-2 gap-4 max-[1180px]:grid-cols-1">
         <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="theme">
           <CardHead id="theme" title="Theme"><Badge kind={client ? 'you' : 'default'}>{client ? 'Client theme' : 'KNOLSKAPE default'}</Badge></CardHead>
-          <Field label="Start from">{() => <Segmented label="Start from" value={b.from} onChange={v => edit(x => { x.brand.from = v; if (v === 'knolskape') { x.brand.main = '#249DFF'; x.brand.second = '#43D6E8'; x.brand.font = 'Manrope'; } }, 'brand.from')} options={[{ value: 'knolskape', label: 'KNOLSKAPE default' }, { value: 'client', label: 'Client brand' }]} />}</Field>
+          <Field label="Start from">{() => <Segmented label="Start from" value={b.from} onChange={v => edit(x => { x.brand.from = v; if (v === 'knolskape') { Object.assign(x.brand, DEFAULT_BRAND_COLORS); x.brand.font = 'Manrope'; } }, 'brand.from')} options={[{ value: 'knolskape', label: 'KNOLSKAPE default' }, { value: 'client', label: 'Client brand' }]} />}</Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Brand name">{id => <TextInput id={id} disabled={!client} value={b.name} onChange={e => set('name', e.target.value)} />}</Field>
             <Field label="Logo">{() => (
