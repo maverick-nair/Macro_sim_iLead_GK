@@ -6,7 +6,8 @@ import type { TourEnd } from '../../tour/Tour';
 import { dueAlerts, dueTips, newMilestones, type Notice } from '../notices';
 
 type Keys = { has(key: string): boolean };
-type NoticeView = Parameters<typeof newMilestones>[0] & Parameters<typeof dueTips>[0] & Parameters<typeof dueAlerts>[0];
+// What newMilestones, dueTips and dueAlerts read.
+type NoticeView = Pick<EngineView, 'milestones' | 'phase' | 'live' | 'actions' | 'clock' | 'funnel' | 'members' | 'sponsor'>;
 
 /** The notices due on the plain board: milestones not yet shown, tips once each (unless the guide is off), and alerts until dismissed. */
 export function dueNotices(v: NoticeView, shown: Keys, dismissed: Keys): Notice[] {
