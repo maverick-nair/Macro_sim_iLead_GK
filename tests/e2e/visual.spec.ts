@@ -54,7 +54,8 @@ async function finishRun(page: Page) {
   await page.getByRole('button', { name: /End week/ }).click();
   await dismissCards(page);
   await page.getByRole('button', { name: /^See your week$/ }).click();
-  const step = page.getByRole('button', { name: /^(Continue|Nice)$/ });
+  // The last report goes straight to the results when no badge was earned.
+  const step = page.getByRole('button', { name: /^(Continue|Nice|See your results)$/ });
   const h1 = page.getByRole('heading', { level: 1, name: /^You finished at / });
   for (;;) {
     await expect(step.first().or(h1)).toBeVisible();

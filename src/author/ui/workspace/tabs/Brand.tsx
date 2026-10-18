@@ -18,6 +18,14 @@ export function readability(hex: string): { ok: boolean; text: string } {
   return light >= 4.5 && dark >= 4.5 ? { ok: true, text: 'Readable on every surface' } : { ok: false, text: `Adjusted slightly so text stays readable (${(Math.min(light, dark)).toFixed(1)}:1 as is)` };
 }
 
+/** Text on a chip filled with a brand color: white on a dark color, night on a light one. */
+function onColor(hex: string): string {
+  const c = parseColor(hex);
+  if (!c) return 'var(--il-color-brand-deep-space)';
+  const rgb = toRgb(c);
+  return contrastRatio(rgb, WHITE) >= contrastRatio(rgb, NIGHT) ? 'var(--il-color-white)' : 'var(--il-color-brand-deep-space)';
+}
+
 /**
  * Workspace: Brand and theme (docs/design/genie/Brand): how the simulation looks for this client. Left
  * empty, it is the KNOLSKAPE look. Colors are checked for readability the way the theme loader corrects
@@ -73,10 +81,10 @@ export default function Brand() {
             <div className="flex items-center gap-2">
               {client && b.logo
                 ? <img src={b.logo} alt="" className="h-7 w-auto max-w-20 object-contain" />
-                : <span className="flex size-7 items-center justify-center rounded-6 text-11 font-800" style={{ background: b.second, color: 'var(--il-color-brand-deep-space)' }}>{(b.name || 'KS').slice(0, 2).toUpperCase()}</span>}
+                : <span className="flex size-7 items-center justify-center rounded-6 text-11 font-800" style={{ background: b.second, color: onColor(b.second) }}>{(b.name || 'KS').slice(0, 2).toUpperCase()}</span>}
               <b className={`text-14 ${b.look === 'light' ? 'text-author-ink' : 'text-brand-pale-lavender'}`}>{client ? b.name : 'iLead'}</b>
               <span className="flex-1" />
-              {b.preview === 'board' && <span className="rounded-8 px-2.5 py-1 text-12 font-800" style={{ background: b.main, color: 'var(--il-color-brand-deep-space)' }}>End week 1</span>}
+              {b.preview === 'board' && <span className="rounded-8 px-2.5 py-1 text-12 font-800" style={{ background: b.main, color: onColor(b.main) }}>End week 1</span>}
             </div>
             {b.preview === 'board' ? (
               <>
