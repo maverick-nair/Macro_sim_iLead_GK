@@ -30,8 +30,7 @@
     "meeting": {
       "tile-glow": { "value": "0 0 0 2px {color.liveshell.speaking}", "$description": "Active speaker: a solid ring, no halo (D232)" },
       "tile-transition": { "value": "border-color {duration.base} ease, box-shadow {duration.base} ease" },
-      "tile-overlay": { "value": "linear-gradient(180deg, transparent 55%, {color.liveshell.tile-shade})" },
-      "tile-position": { "value": "center 15%", "$description": "Keeps faces in frame in the 4:3 tile" }
+      "tile-overlay": { "value": "linear-gradient(180deg, transparent 55%, {color.liveshell.tile-shade})" }
     },
     "sponsor": {
       "fill": { "value": "linear-gradient({color.canvas.navy-800},{color.canvas.navy-800})", "$description": "Sponsor avatar backdrop: flat navy (D232)" },

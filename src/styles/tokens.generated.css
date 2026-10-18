@@ -583,7 +583,6 @@
   --il-liveshell-meeting-tile-glow: 0 0 0 2px var(--il-color-liveshell-speaking);
   --il-liveshell-meeting-tile-transition: border-color var(--il-duration-base) ease, box-shadow var(--il-duration-base) ease;
   --il-liveshell-meeting-tile-overlay: linear-gradient(180deg, transparent 55%, var(--il-color-liveshell-tile-shade));
-  --il-liveshell-meeting-tile-position: center 15%;
   --il-liveshell-sponsor-fill: linear-gradient(var(--il-color-canvas-navy-800),var(--il-color-canvas-navy-800));
   --il-liveshell-sponsor-funnel-columns: 110px 1fr 54px;
   --il-liveshell-email-leading: 1.65;
@@ -595,8 +594,6 @@
   --il-member-portrait-strained: var(--il-fill-portrait-warm);
   --il-member-portrait-away: var(--il-fill-portrait-away);
   --il-member-portrait-overlay: linear-gradient(180deg, transparent 50%, var(--il-color-member-portrait-shade) 100%);
-  --il-member-portrait-position: center 12%;
-  --il-member-portrait-position-compact: center 26%;
   --il-member-card-shadow: none;
   --il-member-card-shadow-selected: 0 0 0 1px var(--il-color-accent-default);
   --il-member-card-transition: translate var(--il-duration-base) var(--il-easing-settle), box-shadow var(--il-duration-base) var(--il-easing-brand), opacity var(--il-duration-base) var(--il-easing-brand);
@@ -629,7 +626,6 @@
   --il-onboarding-how-transition: transform var(--il-duration-base) ease, border-color var(--il-duration-base) ease;
   --il-onboarding-how-art-calm: linear-gradient(var(--il-color-canvas-sky-100),var(--il-color-canvas-sky-100));
   --il-onboarding-team-columns: minmax(0,1fr) 380px;
-  --il-onboarding-team-portrait-position: center 12%;
   --il-onboarding-team-card-lift: translateY(-3px);
   --il-onboarding-team-card-transition: transform 200ms ease;
   --il-onboarding-profile-enter: ilIn 240ms ease;
@@ -704,8 +700,6 @@
   --il-stylesetting-intro-columns: minmax(0,1.1fr) repeat(4,minmax(0,1fr));
   --il-stylesetting-intro-leading: 1.4;
   --il-stylesetting-portrait-overlay: linear-gradient(180deg, transparent 50%, var(--il-color-stylesetting-portrait-shade));
-  --il-stylesetting-portrait-position: center 12%;
-  --il-stylesetting-portrait-position-compact: center 26%;
   --il-stylesetting-list-columns: minmax(220px,1.4fr) minmax(170px,1fr) minmax(170px,1fr) repeat(4,96px) minmax(180px,1.1fr);
   --il-stylesetting-list-lead-lens: minmax(160px,1.4fr) minmax(110px,1fr) minmax(110px,1fr);
   --il-stylesetting-list-radio-lens: minmax(52px,96px);
