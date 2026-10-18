@@ -43,10 +43,12 @@ describe('seeded replay', () => {
     // Re-recorded at D168 to D170, where the summary's overall level is capped by the outcomes (with the line that
     // says why) and a harmful conversation holds a skill's score: hashed without the summary and the skills' scores
     // and levels, passive, random and good on seeds 1 to 3 matched the D167 code.
+    // Re-recorded when Steady Hand came to need three conversations and the key moments came to keep a best one:
+    // hashed without the badges (the run's and each period's) and the moments, all six runs matched the earlier code.
     expect(out).toEqual({
-      'passive 1': '97a812923c5d349a', 'passive 2': '97046b741bf8874c',
-      'random 1': '0a386e5a05bad675', 'random 2': '50152dcd411ff73a',
-      'good 1': 'f2afd87ba0a4c5c4', 'good 2': 'e99a663a1405dd0e'
+      'passive 1': 'c0cd0cc91045ac03', 'passive 2': 'f616d104a9b8227d',
+      'random 1': 'b0398b7167997f1a', 'random 2': '674941a9d06f5a11',
+      'good 1': 'ce098fccfd8f32ba', 'good 2': 'd86cf9d73bf2c94a'
     });
   });
 });

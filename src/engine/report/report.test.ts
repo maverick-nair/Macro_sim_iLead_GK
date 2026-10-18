@@ -105,6 +105,22 @@ describe('the evaluator rates the linked skills', () => {
   });
 });
 
+describe('key moments', () => {
+  it('keeps at least one best moment when the run has one, in place of the lightest revisit', () => {
+    const sim = createSim(config, 1);
+    // Nine heavy conversations that went badly, each with its own title, and one light one that went well.
+    for (let i = 0; i < 9; i++) rec(sim, [['giving_feedback', 'weak']], { title: `Hard talk ${i}`, band: 'weak', impact: 20 + i });
+    rec(sim, [['giving_feedback', 'strong']], { title: 'Good talk', band: 'strong', impact: 1 });
+    const moments = en(buildReport(sim)).moments;
+    expect(moments).toHaveLength(7);
+    expect(moments.filter(m => m.kind === 'best').map(m => m.title)).toEqual(['Good talk with Kent went well']);
+    // The lightest revisit of the top seven made way; the heavier ones stay.
+    const titles = moments.map(m => m.title);
+    expect(titles).not.toContain('Hard talk 2 with Kent did not land');
+    expect(titles).toContain('Hard talk 3 with Kent did not land');
+  });
+});
+
 describe('the whole report from a run', () => {
   it('builds every section, passes the contract, and keeps to the copy rules', async () => {
     const r = await play(config, 'random', 5);

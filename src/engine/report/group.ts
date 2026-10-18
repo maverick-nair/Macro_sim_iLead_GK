@@ -162,8 +162,9 @@ export function summarizeBenchmark(runs: RunSummary[], opts: { completeAt?: numb
   };
 }
 
-const DEVELOPMENT_SECTIONS: GroupSection[] = ['about', 'skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways'];
-const ASSESSMENT_SECTIONS: GroupSection[] = ['about', 'verdicts', 'skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways'];
+// "About this report" closes the report rather than opening it.
+const DEVELOPMENT_SECTIONS: GroupSection[] = ['skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways', 'about'];
+const ASSESSMENT_SECTIONS: GroupSection[] = ['verdicts', 'skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways', 'about'];
 
 /** The group report from a cohort's run summaries (D75, D77). See the rules above. */
 export function buildGroupReport({ runs, names, benchmark: bench = null, cohort }: GroupReportInput): GroupReportPayload {

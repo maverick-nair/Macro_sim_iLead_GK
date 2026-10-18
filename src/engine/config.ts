@@ -288,7 +288,7 @@ const DEFAULT_BADGES: Array<z.input<typeof Badge>> = [
   { key: 'fair_hand', rule: 'fair_hand', name: 'Fair Hand', description: 'Recognize people three times without anyone feeling passed over.' },
   { key: 'turnaround', rule: 'turnaround', name: 'Turnaround', description: 'Bring someone from morale below 30 to above 60.' },
   { key: 'change_champion', rule: 'change_champion', name: 'Change Champion', description: 'Explain a change really well twice.' },
-  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Finish the run without a conversation going badly.' },
+  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Hold at least three conversations and finish the run without one going badly.' },
   { key: 'target_crusher', rule: 'target_crusher', name: 'Target Crusher', description: 'Reach the revenue target.' }
 ];
 
@@ -367,10 +367,10 @@ export type ReportSection = (typeof REPORT_SECTIONS)[number];
 /** Why the storyline runs (D75): development reports never show verdicts; assessment reports do. */
 export const PURPOSES = ['development', 'assessment'] as const;
 export type Purpose = (typeof PURPOSES)[number];
-/** The report's sections when the author leaves `report.sections` out: they differ by purpose (D76). */
+/** The report's sections when the author leaves `report.sections` out: they differ by purpose (D76). "About this report" closes the report, before the methodology appendix. */
 export const DEFAULT_SECTIONS: Record<Purpose, ReportSection[]> = {
-  development: ['about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'],
-  assessment: ['about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'consistency', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'plan', 'progress', 'methodology']
+  development: ['summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'about', 'methodology'],
+  assessment: ['summary', 'skills', 'objectives', 'adaptability', 'styles', 'consistency', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'plan', 'progress', 'about', 'methodology']
 };
 
 const Bands3 = z.object({ low: Copy, mid: Copy, high: Copy });

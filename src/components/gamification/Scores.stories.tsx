@@ -23,7 +23,7 @@ const BADGES: ShelfBadge[] = [
   { key: 'fair_hand', rule: 'fair_hand', name: 'Fair Hand', description: 'Recognize people three times without anyone feeling passed over.', earned: false, period: null, reason: null },
   { key: 'turnaround', rule: 'turnaround', name: 'Turnaround', description: 'Bring someone from morale below 30 to above 60.', earned: false, period: null, reason: null },
   { key: 'change_champion', rule: 'change_champion', name: 'Change Champion', description: 'Explain a change really well twice.', earned: false, period: null, reason: null },
-  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Finish the run without a conversation going badly.', earned: false, period: null, reason: null },
+  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Hold at least three conversations and finish the run without one going badly.', earned: false, period: null, reason: null },
   { key: 'target_crusher', rule: 'target_crusher', name: 'Target Crusher', description: 'Reach the revenue target.', earned: false, period: null, reason: null }
 ];
 

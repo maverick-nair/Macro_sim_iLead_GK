@@ -230,7 +230,8 @@ function rule(sim: Sim, r: string, moment: BadgeMoment): Msg | null {
       return n >= 2 ? msg('engine.badge.changeChampion') : null;
     }
     case 'steady_hand':
-      return moment === 'runEnd' && !sim.liveRecords.some(rec => rec.band === 'harmful') ? msg('engine.badge.steadyHand') : null;
+      // A run with no conversations held nothing steady: at least three, none of them harmful.
+      return moment === 'runEnd' && sim.liveRecords.length >= 3 && !sim.liveRecords.some(rec => rec.band === 'harmful') ? msg('engine.badge.steadyHand') : null;
     case 'target_crusher':
       return moment === 'periodEnd' && sim.funnel.value >= sim.config.money.target ? msg('engine.badge.targetCrusher') : null;
   }

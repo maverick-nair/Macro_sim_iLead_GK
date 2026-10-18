@@ -146,7 +146,7 @@
   "engine.badge.fairHand": "Reconociste a personas tres veces y nadie se sintió pasado por alto.",
   "engine.badge.turnaround": "{name} pasó de una moral por debajo de 30 a {morale}.",
   "engine.badge.changeChampion": "Explicaste muy bien un cambio, dos veces.",
-  "engine.badge.steadyHand": "Ninguna conversación salió mal en toda la partida.",
+  "engine.badge.steadyHand": "Al menos tres conversaciones mantenidas, y ninguna salió mal en toda la partida.",
   "engine.badge.targetCrusher": "Tu equipo alcanzó el objetivo de ingresos.",
   "engine.goal.sponsor": "Dale a {name} un informe sincero: dónde estás frente al objetivo, el mayor riesgo y lo que necesitas.",
   "engine.goal.reply": "Responde a {name} sobre: {title}",

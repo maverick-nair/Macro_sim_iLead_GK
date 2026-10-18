@@ -82,7 +82,7 @@ export function GroupReportView({ report, print: printProp = false }: GroupRepor
   for (const key of report.sections) {
     const joined = blocks.length === 1;
     blocks.push({ key, card: !joined, pageBreak: !joined, node: sectionNode(key, report, money) });
-    if (key === 'about' && report.withheld) blocks.push({ key: 'withheld', node: <WithheldNotice message={report.withheld.message} /> });
+    if (joined && report.withheld) blocks.push({ key: 'withheld', node: <WithheldNotice message={report.withheld.message} /> });
   }
 
   return (
