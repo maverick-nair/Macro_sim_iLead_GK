@@ -69,8 +69,8 @@ function Delta({ delta, unit, className = '' }: { delta: number; unit: PeriodUni
   const n = number(Math.abs(delta));
   return (
     <span className={`font-mono text-12 whitespace-nowrap ${tone(dir)} ${className}`}>
-      {/* No change shows nothing; the words stay for screen readers. */}
-      {dir !== 'flat' && <span aria-hidden="true">{t('desk.delta', { dir, n })}</span>}
+      {/* No change shows nothing; a zero width space keeps the line, so the row keeps its height and baseline. */}
+      <span aria-hidden="true">{dir === 'flat' ? '\u200B' : t('desk.delta', { dir, n })}</span>
       <span className="sr-only">{t('desk.deltaSr', { dir, n, unit })}</span>
     </span>
   );

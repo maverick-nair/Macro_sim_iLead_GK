@@ -130,7 +130,7 @@ function FunnelHeader({ name, count, ideal, bottleneck, periodUnit, about, suits
       className={`relative flex flex-col gap-1 px-2.5 py-1.75 short:gap-0.5 short:py-1.5 ${bottleneck ? 'border-2 border-(--il-color-canvas-orange-700) bg-status-attention-soft' : 'border border-line-strong bg-surface-card'}`}>
       <span className="sr-only">{t('desk.stage.outputAria', { stage: name, n, ideal: goal, unit: periodUnit, bottleneck: bottleneck ? 'yes' : 'no', people: count, ideal2: ideal })}</span>
       <div className="flex min-h-6 items-start gap-1.5">
-        <b aria-hidden="true" className={`min-w-0 flex-1 py-0.5 text-13 font-600 whitespace-normal ${bottleneck ? 'text-status-attention' : ''}`}>{name}</b>
+        <b aria-hidden="true" className={`min-w-0 flex-1 py-0.5 text-13 font-600 break-words whitespace-normal ${bottleneck ? 'text-status-attention' : ''}`}>{name}</b>
         <StageInfo name={name} about={about} suits={suits} alignEnd={alignEnd} />
       </div>
       {/* The flag has its own line, so a long stage name never splits around it. */}
