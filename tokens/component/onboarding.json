@@ -44,7 +44,6 @@
     },
     "team": {
       "columns": { "value": "minmax(0,1fr) 380px", "$description": "Team grid, then the profile" },
-      "portrait-position": { "value": "center 12%", "$description": "Keeps faces in frame in the 150px card portrait" },
       "card-lift": { "value": "translateY(-3px)", "$description": "Team card on hover" },
       "card-transition": { "value": "transform 200ms ease" }
     },

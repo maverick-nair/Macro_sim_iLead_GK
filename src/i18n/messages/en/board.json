@@ -80,6 +80,7 @@
   "board.stakeholders.openAria": "Stakeholders: {names}. Open",
   "board.stakeholders.asks": "{name} asks:",
   "board.stakeholders.answer": "Answer",
+  "board.notices.title": "Needs you {unit, select, year {this year} month {this month} week {this week} day {today} other {now}}",
   "board.alert.title": "Heads up.",
   "board.alert.neglect": "{names} {count, plural, one {has} other {have}} had no one to one time with you for {weeks, plural, one {# {unit, select, year {year} month {month} week {week} day {day} other {period}}} other {# {unit, select, year {years} month {months} week {weeks} day {days} other {periods}}}}: they are losing heart and getting less done. A conversation or a one to one action puts it right.",
   "board.alert.silence": "{name} has not heard from you lately. Without a word this {unit, select, year {year} month {month} week {week} day {day} other {period}}, confidence slips at its end.",

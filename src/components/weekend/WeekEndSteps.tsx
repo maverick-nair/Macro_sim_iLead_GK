@@ -5,7 +5,7 @@ import { BadgeAward } from '../gamification/Badge';
 import { StarMeter } from '../gamification/StarMeter';
 import { onRovingKey } from '../roving';
 import { badgeIcon } from './badgeIcons';
-import { newsArt, REWARD_ART } from './display';
+import { newsArt, newsKind, REWARD_ART } from './display';
 import type { ReactNode } from 'react';
 import type { PeriodUnit, WeekEndBadge, WeekEndNews, WeekEndReward, WeekEndStep } from './types';
 import './messages';
@@ -155,6 +155,22 @@ export function UnlockStep({ sponsorFirstName, period, periodUnit, rewards, chos
   );
 }
 
+const ART_ICON = 'size-16 opacity-40';
+/** The fallback illustration for a bulletin, by kind, in the stroke style of the other inline icons. */
+function NewsArtIcon({ kind }: { kind: ReturnType<typeof newsKind> }) {
+  const svg = { className: ART_ICON, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: '2', strokeLinecap: 'round', strokeLinejoin: 'round', 'aria-hidden': true } as const;
+  switch (kind) {
+    case 'opportunity':
+      return <svg {...svg}><path d="M3 17 9 11l4 4 8-8" /><path d="M15 7h6v6" /></svg>;
+    case 'signal':
+      return <svg {...svg}><path d="M3 12h4l3-8 4 16 3-8h4" /></svg>;
+    case 'crisis':
+      return <svg {...svg}><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>;
+    default:
+      return <svg {...svg}><path d="M4 4h13a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2z" /><path d="M19 9h2v9a2 2 0 0 1-2 2" /><path d="M8 8h7M8 12h7M8 16h4" /></svg>;
+  }
+}
+
 export interface NewsStepProps {
   /** The period the news is for. */
   period: number;
@@ -180,8 +196,11 @@ export function NewsStep({ period, periodUnit, news, index, total, impact, artLa
     <div className={`flex flex-1 flex-col items-center justify-center gap-5 ${ENTER}`}>
       <h1 tabIndex={-1} className={`${HEADING} ${EYEBROW}`}>{t('weekend.news.eyebrow', { unit: periodUnit, n: period, index: index + 1, total })}</h1>
       <article aria-labelledby={`${id}title`} className="w-180 max-w-full overflow-hidden rounded-4 border border-line-strong bg-surface-card">
-        <div className={`relative h-55 ${newsArt(news.card)}`}>
-          {artLabel && <span className="absolute top-3.5 start-4.5 text-12 font-600 text-button-on-solid">{artLabel}</span>}
+        <div className={`relative flex h-40 items-center justify-center text-button-on-solid ${newsArt(news.card)}`}>
+          <NewsArtIcon kind={newsKind(news.card)} />
+          {artLabel
+            ? <span className="absolute top-3.5 start-4.5 text-12 font-600">{artLabel}</span>
+            : <span className="absolute top-3.5 start-4.5 rounded-full border border-current px-2.5 py-0.5 text-12 font-600">{t('weekend.news.kind', { kind: newsKind(news.card) })}</span>}
         </div>
         <div className="flex flex-col gap-2.5 px-6 py-5.5">
           <h2 id={`${id}title`} className="m-0 font-display text-36 leading-tight font-400">{news.title}</h2>

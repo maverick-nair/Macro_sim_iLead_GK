@@ -14,9 +14,9 @@ export function levelSteps(from: SponsorLevel, to: SponsorLevel): { steps: numbe
   return { steps: Math.abs(d), dir: d > 0 ? 'up' : d < 0 ? 'down' : 'same' };
 }
 
-/** Funnel counts as shown: whole numbers from 10, one decimal below (the engine keeps fractions). */
+/** Funnel counts as shown: always whole, as deals, leads and people are (the engine keeps fractions). */
 export function funnelNumber(n: number): number {
-  return n >= 10 ? Math.round(n) : Math.round(n * 10) / 10;
+  return Math.round(n);
 }
 
 /** Bar length for a funnel value: a share of the track, 0 to 100. */
@@ -61,6 +61,11 @@ export function newsArt(card: WeekEndNews['card']): string {
     default:
       return 'bg-(image:--il-weekend-news-art-blue)';
   }
+}
+
+/** The kind a bulletin's chip and fallback icon show: the three with their own art, the rest as plain news. */
+export function newsKind(card: WeekEndNews['card']): 'opportunity' | 'signal' | 'crisis' | 'other' {
+  return card === 'opportunity' || card === 'signal' || card === 'crisis' ? card : 'other';
 }
 
 /** The art on a reward card, by its place in the offer, as the design shows three. */

@@ -160,9 +160,16 @@ export function buildReport(sim: Sim) {
     };
   });
   // One moment per title (the same thing three times teaches nothing), the weightiest kept.
-  const moments = [...fromLive, ...fromLog].sort((a, b) => b.weight - a.weight || a.period - b.period || a.sub - b.sub)
-    .filter((m, i, arr) => arr.findIndex(x => copyKey(x.title) === copyKey(m.title)) === i).slice(0, 7)
-    .sort((a, b) => a.period - b.period || a.sub - b.sub).map(({ weight: _w, sub: _s, ...m }) => m);
+  const ranked = [...fromLive, ...fromLog].sort((a, b) => b.weight - a.weight || a.period - b.period || a.sub - b.sub)
+    .filter((m, i, arr) => arr.findIndex(x => copyKey(x.title) === copyKey(m.title)) === i);
+  const kept = ranked.slice(0, 7);
+  // A run with a best moment shows one: the lightest revisit in the selection makes way for the weightiest best.
+  const best = ranked.find(m => m.kind === 'best');
+  if (best && !kept.includes(best)) {
+    const at = kept.map(m => m.kind).lastIndexOf('revisit');
+    if (at >= 0) kept[at] = best;
+  }
+  const moments = kept.sort((a, b) => a.period - b.period || a.sub - b.sub).map(({ weight: _w, sub: _s, ...m }) => m);
 
   // ---- 6. People outcomes
   const people = all.map(m => {

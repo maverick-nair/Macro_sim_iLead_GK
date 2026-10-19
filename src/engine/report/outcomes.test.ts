@@ -43,14 +43,14 @@ describe('the overall level tile, capped by outcomes (D168)', () => {
       driver: { level: 'Developing', why: 'Rated Developing: your words rated Proficient, but 2 people left the team and team morale fell 39 points.' },
       // No conversations, so no level to cap.
       bystander: { level: null, why: null },
-      warmMismatch: { level: 'Developing', why: 'Rated Developing: your words rated Role Model, but 6% of your style choices fit what people needed, 4 people left the team and revenue reached 50% of target.' }
+      warmMismatch: { level: 'Developing', why: 'Rated Developing: your words rated Role Model, but 6% of your style choices fit what people needed, 4 people left the team and revenue reached 49% of target.' }
     });
     expect(dev.warmMismatch.summary.levelCap).toMatchObject({ from: { index: 4, name: 'Role Model' }, gates: ['fit', 'people', 'business'] });
     expect(dev.warmMismatch.run.overall).toMatchObject({ level: 1, score: 59, words: { level: 4, score: 91.8 }, caps: ['fit', 'people', 'business'] });
   });
 
   it('words the reason neutrally in assessment', () => {
-    expect(tile(asmt.warmMismatch).why).toBe('Rated Developing: the words in conversation rated Role Model, but 6% of the style choices fit what people needed, 4 people left the team and revenue reached 50% of target.');
+    expect(tile(asmt.warmMismatch).why).toBe('Rated Developing: the words in conversation rated Role Model, but 6% of the style choices fit what people needed, 4 people left the team and revenue reached 49% of target.');
     for (const s of STRATEGIES) expect(tile(asmt[s]).why ?? '').not.toMatch(/\byour?\b/i);
   });
 
@@ -66,7 +66,7 @@ describe('assessment verdicts on the capped level and the outcome gates (D169)',
       coach: { label: 'Exceeds the bar', why: null },
       driver: { label: 'Below the bar', why: 'The words in conversation alone would approach the bar, but 2 people left the team, revenue reached 63% of target and team morale fell 39 points.' },
       bystander: { label: 'Not enough evidence for a verdict', why: null },
-      warmMismatch: { label: 'Below the bar', why: 'The words in conversation alone would meet the bar, but 6% of the style choices fit what people needed, 4 people left the team and revenue reached 50% of target.' }
+      warmMismatch: { label: 'Below the bar', why: 'The words in conversation alone would meet the bar, but 6% of the style choices fit what people needed, 4 people left the team and revenue reached 49% of target.' }
     });
   });
 
@@ -89,7 +89,7 @@ describe('assessment verdicts on the capped level and the outcome gates (D169)',
     // No gate triggers, but the guard still holds a run the data calls weak at the middle of the scale (D170).
     expect(r.run.overall.caps).toEqual(['guard']);
     expect(r.summary.level?.name).toBe('Proficient');
-    expect(r.summary.levelCap!.why).toBe('Rated Proficient: the words in conversation rated Role Model, but 6% of the style choices fit what people needed, 4 people left the team and revenue reached 50% of target.');
+    expect(r.summary.levelCap!.why).toBe('Rated Proficient: the words in conversation rated Role Model, but 6% of the style choices fit what people needed, 4 people left the team and revenue reached 49% of target.');
     // Meets needs no weak core dimension: the guard refuses it.
     expect(r.verdict!.overall.key).toBe('approaching');
   });

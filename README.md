@@ -26,6 +26,8 @@ npm run test:server      # the server's tests;  npm run e2e:server  Playwright a
 
 CI (`.github/workflows/ci.yml`) runs on every push and pull request: token check, lint, build, the server's tests, Storybook smoke, the Playwright flows (the app's and the server's), parity and the Web Vitals budgets.
 
+**Deploying the app alone (Vercel).** `vercel.json` builds with `npm run build:app` (only `vite build`) and serves `dist` as a single page app on the mock engine; Node 22 comes from `engines`. The quality gates (tokens, lint, unit tests, types, the budget, end to end) run in CI on every push and pull request, never in the deploy, so a red test blocks the merge, not the preview.
+
 The reference server is in `server/` (D81): the engine authoritative and persisted, every endpoint the app calls, signed launch links, report PDF and email, the AI from `ai/` (D82). Setup, configuration, deploy and operations: `docs/SERVER.md`. An engineer only configures it (`.env.example`, `Dockerfile`, `docker-compose.yml`).
 
 For the server and GenieKreator teams: `docs/HANDOFF.md` (architecture, the engine contract, every endpoint, the config and report schemas, how to run, test and release, budgets, known limits).

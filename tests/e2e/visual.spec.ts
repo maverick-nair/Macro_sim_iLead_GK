@@ -54,7 +54,8 @@ async function finishRun(page: Page) {
   await page.getByRole('button', { name: /End week/ }).click();
   await dismissCards(page);
   await page.getByRole('button', { name: /^See your week$/ }).click();
-  const step = page.getByRole('button', { name: /^(Continue|Nice)$/ });
+  // The last report goes straight to the results when no badge was earned.
+  const step = page.getByRole('button', { name: /^(Continue|Nice|See your results)$/ });
   const h1 = page.getByRole('heading', { level: 1, name: /^You finished at / });
   for (;;) {
     await expect(step.first().or(h1)).toBeVisible();
@@ -300,7 +301,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
         // /author is light only, whatever the participant theme (D105): one baseline per width.
         if (theme === 'dark') test(`author chat at ${w}`, async ({ page }) => {
           await page.goto('/author');
-          await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+          await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
           await expect(page.getByText('Saved just now')).toBeVisible();
           await still(page, `author-${w}`);
         });

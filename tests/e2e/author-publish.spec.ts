@@ -15,7 +15,7 @@ test.beforeEach(({ page }) => {
 test.afterEach(() => expect(errors).toEqual([]));
 
 const KEY = 'ilead.author.workspace';
-const progress = (page: Page) => page.getByText(/^Question \d+ of about \d+$/);
+const progress = (page: Page) => page.getByText(/^Question \d+ · (?:last one|about \d+ to go)$/);
 const answerBox = (page: Page) => page.getByRole('textbox', { name: 'Your answer' });
 async function type(page: Page, text: string) {
   await answerBox(page).fill(text);
@@ -48,19 +48,22 @@ const FINISHED = "d.brief.challenge = 'Deals stall at negotiation and new reps b
 
 const MERGER = 'Newly appointed VPs at a regional healthcare system that has just merged with a rival hospital group. They must integrate clinical and administrative functions across both organizations, keep the board and physician leaders aligned, negotiate with the nurses\' unions and decide where to cut a 12 million budget.';
 
-test('the chat says what an iLead simulation is before question 1, then folds it', async ({ page }) => {
+test('the chat welcomes in two lines and an example before question 1, keeps what an iLead simulation is one click away, then folds it', async ({ page }) => {
   await page.goto('/author');
-  const intro = page.getByRole('region', { name: 'What you are building: an iLead simulation' });
+  const intro = page.getByRole('region', { name: 'Welcome' });
   await expect(intro).toBeVisible();
+  await expect(intro).toContainText('Paste a brief, a deck or a few lines about the team and the challenge.');
+  await expect(intro).toContainText('I will draft a playable simulation and ask only what I cannot infer.');
+  await expect(intro).toContainText('Example: A sales team of 8 in a 100 person SaaS company');
+  await intro.getByText('What you are building: an iLead simulation').click();
   await expect(intro).toContainText('a team of 6 to 12 direct reports through a staged work process, over up to 10 weeks');
   await expect(intro).toContainText('Not covered yet: a merger across several functions');
-  await expect(intro).toContainText('I am Kora.');
   await expect(intro.getByRole('term').filter({ hasText: 'Pressure point' })).toBeVisible();
   const question = page.getByRole('log').getByText('Who are your participants?');
   await expect(question).toBeVisible();
   expect((await intro.boundingBox())!.y).toBeLessThan((await question.boundingBox())!.y);
   await page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name: 'First time managers' }).click();
-  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(progress(page)).toHaveText('Question 2 · about 8 to go');
   await expect(intro).toHaveCount(0);
   await expect(page.getByText('What you are building: an iLead simulation')).toBeVisible();
   // Why we ask the industry.
@@ -68,7 +71,7 @@ test('the chat says what an iLead simulation is before question 1, then folds it
   await page.getByRole('textbox', { name: 'Your answer' }).fill('idk');
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.getByText('No problem. Pick an industry below, or choose Decide for me and I will pick one you can change later.')).toBeVisible();
-  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(progress(page)).toHaveText('Question 2 · about 8 to go');
 });
 
 test('a brief the template cannot play is named plainly, with the nearest fit and a choice', async ({ page }) => {
@@ -94,7 +97,7 @@ test('a brief the template cannot play is named plainly, with the nearest fit an
   await expect(log).toContainText('Then I will draft the team leadership version:');
   await expect(choice).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Suggested answers' })).toBeVisible();
-  await expect(progress(page)).toHaveText(/^Question 2 of about \d+$/);
+  await expect(progress(page)).toHaveText(/^Question 2 · (?:last one|about \d+ to go)$/);
 });
 
 test('a degenerate draft cannot publish: the reason shows, and Fix opens the tab', async ({ page }) => {

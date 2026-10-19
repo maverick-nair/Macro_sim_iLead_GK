@@ -254,10 +254,16 @@ describe('badges (each condition true and false)', () => {
     checkBadges(sim, 'interaction'); expect(earned(sim, 'change_champion')).toBe(true);
   });
 
-  it('Steady Hand: no Harmful band in the run', () => {
-    const a = fresh(); a.liveRecords.push({ period: 1, actionKey: 'f2f', format: 'roleplay', band: 'harmful', memberIds: [] });
-    checkBadges(a, 'runEnd'); expect(earned(a, 'steady_hand')).toBe(false);
-    const b = fresh(); checkBadges(b, 'runEnd'); expect(earned(b, 'steady_hand')).toBe(true);
+  it('Steady Hand: at least three conversations and no Harmful band in the run', () => {
+    const live = (band: 'adequate' | 'harmful') => ({ period: 1, actionKey: 'f2f', format: 'roleplay' as const, band, memberIds: [] });
+    // No conversations: nothing was held steady.
+    const a = fresh(); checkBadges(a, 'runEnd'); expect(earned(a, 'steady_hand')).toBe(false);
+    // Three adequate ones earn it.
+    const b = fresh(); b.liveRecords.push(live('adequate'), live('adequate'), live('adequate'));
+    checkBadges(b, 'runEnd'); expect(earned(b, 'steady_hand')).toBe(true);
+    // Three with one harmful do not.
+    const c = fresh(); c.liveRecords.push(live('adequate'), live('adequate'), live('harmful'));
+    checkBadges(c, 'runEnd'); expect(earned(c, 'steady_hand')).toBe(false);
   });
 
   it('Target Crusher: revenue reaches the target', () => {

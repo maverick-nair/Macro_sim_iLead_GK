@@ -84,7 +84,9 @@ export default function Events() {
               {EVENT_KINDS.map(k => <li key={k} className={`flex items-center gap-1.5 ${KIND[k].text}`}><span aria-hidden="true" className={`size-2.5 rounded-2 ${KIND[k].bar}`} />{KIND[k].label}</li>)}
             </ul>
           </CardHead>
-          <ol className="m-0 grid list-none gap-2 p-0" style={{ gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 1fr))` }} aria-label="Weeks">
+          {/* Columns stay readable at 8 or more weeks; the row scrolls instead of breaking words. */}
+          <div className="overflow-x-auto pb-1">
+          <ol className="m-0 grid list-none gap-2 p-0" style={{ gridTemplateColumns: `repeat(${weeks.length}, minmax(9.5rem, 1fr))` }} aria-label="Weeks">
             {weeks.map(w => (
               <li key={w} className={`flex min-w-0 flex-col gap-2 rounded-10 p-1 ${dragging ? 'bg-author-track' : ''}`} onDragOver={ev => ev.preventDefault()} onDrop={drop(w)}>
                 <span className="text-11 font-800 tracking-[0.1em] text-author-label uppercase">Week {w}</span>
@@ -103,6 +105,7 @@ export default function Events() {
               </li>
             ))}
           </ol>
+          </div>
           {floating.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 border-t border-solid border-author-rule pt-3">
               <span className="text-13 font-700 text-author-label">Not on a fixed week:</span>

@@ -170,6 +170,11 @@ describe('the workspace\'s helpers', () => {
     expect(k.options).toEqual(['Approve', 'Approve with conditions', 'Refuse']);
   });
 
+  it('seeds the brand with the participant app\'s default look (D232)', () => {
+    const { brand } = seedDraft(emptyChat());
+    expect(brand).toMatchObject({ main: '#1C3354', second: '#7FD6C2', look: 'light' });
+  });
+
   it('checks brand colors the way the theme loader does', () => {
     expect(readability('#1F4FD1').ok).toBe(false);
     expect(readability('nope').ok).toBe(false);

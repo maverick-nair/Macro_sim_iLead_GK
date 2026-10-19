@@ -142,7 +142,7 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['brand.main', d => { d.brand.main = '#112233'; }, 'brand.colors'],
   ['brand.second', d => { d.brand.second = '#445566'; }, 'brand.colors'],
   ['brand.font', d => { d.brand.font = 'Inter'; }, 'brand.font'],
-  ['brand.look', d => { d.brand.look = 'light'; }, 'brand.mode'],
+  ['brand.look', d => { d.brand.look = 'dark'; }, 'brand.mode'],
   // What the LMS records (D184).
   ['lms.completion', d => { d.lms.completion = 'weeks'; }, 'lms.completion'],
   ['lms.completionWeeks', d => { d.lms.completionWeeks = 2; }, 'lms.completion'],
@@ -660,7 +660,7 @@ describe('the brand, the Story tab\'s visuals, uploads and the LMS export as aut
     d.story.company.office = 'Glass office, city view';
     d.story.product.view = 'none';
     const sl = toStoryline(d).storyline;
-    expect(sl.brand).toEqual({ mode: 'dark' });
+    expect(sl.brand).toEqual({ mode: 'light' });
     expect(sl.world?.office).toEqual({ description: 'Glass office, city view' });
     expect(sl.world?.products).toBeUndefined();
   });

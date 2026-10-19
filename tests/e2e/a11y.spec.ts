@@ -445,7 +445,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
         if (theme === 'dark') test('author: the chat, the lens, first draft, every workspace tab and dialog, the library', async ({ page }) => {
           test.setTimeout(240_000);
           await page.goto('/author');
-          await expect(page.getByText(/^Question \d+ of about \d+$/)).toBeVisible();
+          await expect(page.getByText(/^Question \d+ · (?:last one|about \d+ to go)$/)).toBeVisible();
           await scan(page, 'author: first question');
           const chip = (name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
           await chip('First time managers').click();

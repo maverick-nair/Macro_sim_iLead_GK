@@ -105,7 +105,7 @@ describe('answers the chat does not take (D133)', () => {
   });
 
   it('the intro and every error are plain copy', () => {
-    for (const s of [INTRO.title, INTRO.what, INTRO.goodFor, INTRO.notYet, ...INTRO.glossary.flat()]) noDash(s);
+    for (const s of [INTRO.title, ...INTRO.welcome, INTRO.example, INTRO.what, INTRO.goodFor, INTRO.notYet, ...INTRO.glossary.flat()]) noDash(s);
     for (const id of QUESTION_IDS) { const e = applyAnswer(blank(), id, 'idk').error; if (e) noDash(e); }
     noDash(applyAnswer(blank(), 'process', 'warm and brisk and direct').error!);
   });

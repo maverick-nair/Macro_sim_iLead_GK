@@ -146,7 +146,7 @@
   "engine.badge.fairHand": "You recognized people three times and nobody felt passed over.",
   "engine.badge.turnaround": "{name} went from morale below 30 to {morale}.",
   "engine.badge.changeChampion": "You explained a change really well, twice.",
-  "engine.badge.steadyHand": "No conversation went badly in the whole run.",
+  "engine.badge.steadyHand": "At least three conversations held, and none went badly in the whole run.",
   "engine.badge.targetCrusher": "Your team reached the revenue target.",
   "engine.goal.sponsor": "Give {name} an honest update: where you stand against target, the biggest risk, and what you need.",
   "engine.goal.reply": "Reply to {name} about: {title}",

@@ -69,7 +69,8 @@ function Delta({ delta, unit, className = '' }: { delta: number; unit: PeriodUni
   const n = number(Math.abs(delta));
   return (
     <span className={`font-mono text-12 whitespace-nowrap ${tone(dir)} ${className}`}>
-      <span aria-hidden="true">{t('desk.delta', { dir, n })}</span>
+      {/* No change shows nothing; a zero width space keeps the line, so the row keeps its height and baseline. */}
+      <span aria-hidden="true">{dir === 'flat' ? '\u200B' : t('desk.delta', { dir, n })}</span>
       <span className="sr-only">{t('desk.deltaSr', { dir, n, unit })}</span>
     </span>
   );
@@ -193,7 +194,7 @@ export function StatusBand(p: StatusBandProps) {
                 <span>{t('metrics.sponsor.checkIn', { below: lines.below, unit: p.subPeriodUnit })}</span>
               </>}>
               <span>{p.sponsorName}</span><b className="font-mono font-600">{number(sp.value)}</b>
-              {sp.delta !== null && <span aria-hidden="true" className={`font-mono text-12 ${tone(spDir!)}`}>{t('desk.delta', { dir: spDir, n: number(Math.abs(sp.delta)) })}</span>}
+              {sp.delta !== null && spDir !== 'flat' && <span aria-hidden="true" className={`font-mono text-12 ${tone(spDir!)}`}>{t('desk.delta', { dir: spDir, n: number(Math.abs(sp.delta)) })}</span>}
             </Pop>
             <span role="img" aria-label={t('desk.sponsor.meterAria', { name: p.sponsorName, value: number(sp.value), ...lines })} className="relative block h-1.5 bg-track">
               <span className="absolute inset-y-0 start-0 bg-accent-default" style={{ width: pct(sp.value / 100) }} />

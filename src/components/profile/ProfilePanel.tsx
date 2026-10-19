@@ -157,7 +157,7 @@ export function ProfileSummary(props: ProfilePanelProps & { compact?: boolean })
     <>
     <div className={`flex gap-4.5 ${compact ? 'items-center pb-1' : 'flex-col gap-4 px-11 pt-6 pb-1'}`}>
       <div className={`${compact ? 'size-20 rounded-round' : 'h-79 w-full short:h-60'} flex-none overflow-hidden ${backdrop(mood, away)}`}>
-        <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
+        <img src={img} alt="" className={`size-full ${compact ? 'object-cover object-top' : 'object-contain'} mix-blend-multiply ${away ? 'grayscale' : ''}`} />
       </div>
       <div className="flex flex-col gap-0.5">
         <h2 className={`m-0 font-400 ${compact ? 'text-24 font-600' : 'font-display text-36 leading-(--il-canvas-leading-heading)'}`}>{name}</h2>

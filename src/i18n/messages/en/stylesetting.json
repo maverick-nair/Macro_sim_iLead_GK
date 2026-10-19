@@ -25,7 +25,7 @@
   "stylesetting.choice": "{style}.",
   "stylesetting.unset": "No style yet. Pick one for this {unit, select, year {year} month {month} week {week} day {day} other {period}}.",
   "stylesetting.away.note": "Applies when {pronoun, select, he {he is} she {she is} other {they are}} back from {reason, select, leave {leave} other {training}}.",
-  "stylesetting.rationale.add": "Add a reason (optional)",
+  "stylesetting.rationale.add": "Add a reason",
   "stylesetting.rationale.note": "Note: {text}…",
   "stylesetting.rationale.addAria": "Add a reason for {name}",
   "stylesetting.rationale.editAria": "Edit the reason for {name}: {text}",

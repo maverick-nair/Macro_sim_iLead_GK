@@ -1,5 +1,6 @@
 import { contrastRatio, parseColor, toRgb } from '../../../../theme/color';
 import { FONTS } from '../../../../theme/schema';
+import { DEFAULT_BRAND_COLORS } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
 import { ImageUpload } from '../../ImageUpload';
 import { Badge, CARD, CardHead, Field, Segmented, Select, SubTabs, TextInput } from '../../kit';
@@ -15,6 +16,14 @@ export function readability(hex: string): { ok: boolean; text: string } {
   const rgb = toRgb(c);
   const light = contrastRatio(rgb, WHITE), dark = contrastRatio(rgb, NIGHT);
   return light >= 4.5 && dark >= 4.5 ? { ok: true, text: 'Readable on every surface' } : { ok: false, text: `Adjusted slightly so text stays readable (${(Math.min(light, dark)).toFixed(1)}:1 as is)` };
+}
+
+/** Text on a chip filled with a brand color: white on a dark color, night on a light one. */
+function onColor(hex: string): string {
+  const c = parseColor(hex);
+  if (!c) return 'var(--il-color-brand-deep-space)';
+  const rgb = toRgb(c);
+  return contrastRatio(rgb, WHITE) >= contrastRatio(rgb, NIGHT) ? 'var(--il-color-white)' : 'var(--il-color-brand-deep-space)';
 }
 
 /**
@@ -34,7 +43,7 @@ export default function Brand() {
       <div className="grid grid-cols-2 gap-4 max-[1180px]:grid-cols-1">
         <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="theme">
           <CardHead id="theme" title="Theme"><Badge kind={client ? 'you' : 'default'}>{client ? 'Client theme' : 'KNOLSKAPE default'}</Badge></CardHead>
-          <Field label="Start from">{() => <Segmented label="Start from" value={b.from} onChange={v => edit(x => { x.brand.from = v; if (v === 'knolskape') { x.brand.main = '#249DFF'; x.brand.second = '#43D6E8'; x.brand.font = 'Manrope'; } }, 'brand.from')} options={[{ value: 'knolskape', label: 'KNOLSKAPE default' }, { value: 'client', label: 'Client brand' }]} />}</Field>
+          <Field label="Start from">{() => <Segmented label="Start from" value={b.from} onChange={v => edit(x => { x.brand.from = v; if (v === 'knolskape') { Object.assign(x.brand, DEFAULT_BRAND_COLORS); x.brand.font = 'Manrope'; } }, 'brand.from')} options={[{ value: 'knolskape', label: 'KNOLSKAPE default' }, { value: 'client', label: 'Client brand' }]} />}</Field>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Brand name">{id => <TextInput id={id} disabled={!client} value={b.name} onChange={e => set('name', e.target.value)} />}</Field>
             <Field label="Logo">{() => (
@@ -72,10 +81,10 @@ export default function Brand() {
             <div className="flex items-center gap-2">
               {client && b.logo
                 ? <img src={b.logo} alt="" className="h-7 w-auto max-w-20 object-contain" />
-                : <span className="flex size-7 items-center justify-center rounded-6 text-11 font-800" style={{ background: b.second, color: 'var(--il-color-brand-deep-space)' }}>{(b.name || 'KS').slice(0, 2).toUpperCase()}</span>}
+                : <span className="flex size-7 items-center justify-center rounded-6 text-11 font-800" style={{ background: b.second, color: onColor(b.second) }}>{(b.name || 'KS').slice(0, 2).toUpperCase()}</span>}
               <b className={`text-14 ${b.look === 'light' ? 'text-author-ink' : 'text-brand-pale-lavender'}`}>{client ? b.name : 'iLead'}</b>
               <span className="flex-1" />
-              {b.preview === 'board' && <span className="rounded-8 px-2.5 py-1 text-12 font-800" style={{ background: b.main, color: 'var(--il-color-brand-deep-space)' }}>End week 1</span>}
+              {b.preview === 'board' && <span className="rounded-8 px-2.5 py-1 text-12 font-800" style={{ background: b.main, color: onColor(b.main) }}>End week 1</span>}
             </div>
             {b.preview === 'board' ? (
               <>

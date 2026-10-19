@@ -6,6 +6,23 @@
     <title>Simulation</title>
     <!-- The packaged participant player (D200): built with relative paths by scripts/player-build.ts, it
          becomes a SCORM package's index.html, which also gets the package flag and the storyline's title. -->
+    <!-- Browsers older than the floor (Chrome and Edge 123, Firefox 120, Safari 17.5: the first with native
+         light-dark(), D21) would render every colour wrong and may not parse the app's modules at all, so the
+         check runs here, as a classic script, and the app does not boot. Mirrored in player.html. -->
+    <script>
+      (function () {
+        var ok = typeof CSS !== 'undefined' && CSS.supports && CSS.supports('color', 'light-dark(#000, #fff)') && typeof structuredClone === 'function' && typeof Array.prototype.at === 'function';
+        if (ok) return;
+        window.__ileadUnsupported = true;
+        document.addEventListener('DOMContentLoaded', function () {
+          var root = document.getElementById('root');
+          if (!root) return;
+          root.setAttribute('role', 'alert');
+          root.style.cssText = 'min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:Canvas;color:CanvasText;font:16px/1.5 system-ui,sans-serif';
+          root.innerHTML = '<div style="max-width:480px;display:flex;flex-direction:column;gap:12px"><h1 style="margin:0;font-size:24px">This browser is too old for iLead</h1><p style="margin:0">Open it in Chrome or Edge 123, Firefox 120, Safari 17.5 or newer, or update this browser.</p></div>';
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

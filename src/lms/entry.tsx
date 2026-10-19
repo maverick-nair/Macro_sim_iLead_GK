@@ -6,4 +6,5 @@ import { bootPackage } from './boot';
  * `dist/player`, becomes a SCORM package's index.html. It holds the participant app and its engine only:
  * none of GenieKreator, the galleries or the group report.
  */
-void bootPackage(document.getElementById('root')!);
+// An unsupported browser already shows the notice from player.html.
+if (!(window as { __ileadUnsupported?: boolean }).__ileadUnsupported) void bootPackage(document.getElementById('root')!);
