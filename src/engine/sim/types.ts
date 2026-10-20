@@ -7,6 +7,12 @@ import type { RealismState } from './realism';
 export type MetricKey = 'skill' | 'morale' | 'result' | 'trust';
 export type Band = 'strong' | 'adequate' | 'weak' | 'harmful';
 export type Mood = 'happy' | 'neutral' | 'thinking' | 'concerned' | 'frustrated';
+/**
+ * How the person in a conversation is with the participant right now, read after each of their turns (D233):
+ * a ladder from closing down to engaged. Mood is how they came in; stance is where the conversation has them.
+ */
+export const STANCES = ['closing', 'guarded', 'opening', 'engaged'] as const;
+export type Stance = typeof STANCES[number];
 
 /** What the AI evaluator reports about one live interaction (docs/SIMULATION.md 5.1). */
 export interface Evaluation {
@@ -151,6 +157,8 @@ export interface Turn {
   voice?: boolean;
   /** The participant spoke over the NPC; the text is what was shown. */
   interrupted?: boolean;
+  /** An NPC turn: where the speaker stands after it (D233). Older runs have none. */
+  stance?: Stance;
 }
 
 export interface Interaction {

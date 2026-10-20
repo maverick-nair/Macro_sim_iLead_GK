@@ -4,7 +4,10 @@ import { parseStoryline, type StorylineConfig } from '../config';
 import salesElevator from '../storylines/sales-elevator.json';
 import { createEngine, IntentError } from './engine';
 import { overallBand } from './evaluator';
+import { LiveView } from '../contract';
+import { readStance, type NpcContext, type NpcModel } from './live';
 import { neededStyles } from './policies';
+import type { Stance } from './types';
 
 const parsed = parseStoryline(salesElevator);
 if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
@@ -175,5 +178,53 @@ describe('team meeting floor', () => {
     const next = en(e.view()).live!.raisedHands[0];
     await e.dispatch({ type: 'sendTurn', interactionId: id, text: 'Good. Anything else from anyone?' });
     expect(en(e.view()).live!.speaker.id).toBe(next);
+  });
+});
+
+describe('stance (D233)', () => {
+  const ctx = (said: string | null, o: Partial<NpcContext> = {}, trust = 50): NpcContext => ({
+    format: 'roleplay', speaker: { id: 'kent', name: 'Kent Goldberg', persona: null, mood: 'concerned', trust }, said,
+    turnsSoFar: 1, turnsLeft: 5, concernRevealed: false, actionName: 'Meet face to face', ...o
+  });
+
+  it('reads the ladder from the participant\'s words: one step at a time, abuse closes, the concern opens', () => {
+    expect(readStance(ctx(null), { text: 'Hi.' })).toBe('guarded');
+    expect(readStance(ctx(null, { speaker: { id: 'k', name: 'K', persona: null, mood: 'happy', trust: 50 } }), { text: 'Hi!' })).toBe('engaged');
+    expect(readStance(ctx('I hear you. What is going on?', { stance: 'guarded' }), { text: 'Well.' })).toBe('opening');
+    expect(readStance(ctx('Thanks. Let\'s agree a next step by Friday.', { stance: 'opening' }), { text: 'Okay.' })).toBe('engaged');
+    expect(readStance(ctx('You need to fix this. No excuses.', { stance: 'engaged' }), { text: 'Right.' })).toBe('opening');
+    expect(readStance(ctx('As I was saying, the numbers.', { stance: 'opening', interrupted: true }), { text: 'Right.' })).toBe('guarded');
+    expect(readStance(ctx('The numbers are down.', { stance: 'guarded' }, 30), { text: 'Okay.' })).toBe('closing');
+    expect(readStance(ctx('The numbers are down.', { stance: 'guarded' }), { text: 'Okay.' })).toBe('guarded');
+    expect(readStance(ctx('This is your fault.', { stance: 'engaged' }), { text: 'Stop.' })).toBe('closing');
+    expect(readStance(ctx('Go on.', { stance: 'closing' }), { text: 'It is this job.', revealsConcern: true })).toBe('opening');
+  });
+
+  it('every NPC turn carries the speaker\'s stance, and it moves with what the participant says', async () => {
+    const e = await onBoard();
+    const r = await e.dispatch({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });
+    const id = r.interactionId!;
+    const stances = () => en(e.view()).live!.turns.filter(t => t.by !== 'you').map(t => t.stance);
+    expect(stances()).toEqual(['guarded']);
+    await e.dispatch({ type: 'sendTurn', interactionId: id, text: 'I am sorry it has been rough. What is on your mind?' });
+    await e.dispatch({ type: 'sendTurn', interactionId: id, text: 'Thank you for telling me. Let\'s agree a next step by Friday.' });
+    await e.dispatch({ type: 'sendTurn', interactionId: id, text: 'You need to sort this out. No excuses.' });
+    expect(stances()).toEqual(['guarded', 'opening', 'engaged', 'opening']);
+    expect(() => LiveView.parse(e.view().live)).not.toThrow();
+  });
+
+  it('takes the model\'s stance when it gives one, reads its own when not, and older turns without one still parse', async () => {
+    const heard: Array<Stance | undefined> = [];
+    const npc: NpcModel = { reply: c => { heard.push(c.stance); return c.said === null ? { text: 'Hi.', stance: 'engaged' } : { text: 'Fine.' }; } };
+    const e = createEngine(config, { seed: 1, npc });
+    await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
+    const r = await e.dispatch({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });
+    await e.dispatch({ type: 'sendTurn', interactionId: r.interactionId!, text: 'Do the report.' });
+    expect(en(e.view()).live!.turns.filter(t => t.by !== 'you').map(t => t.stance)).toEqual(['engaged', 'engaged']);
+    // The model hears where the person stood after their last line.
+    expect(heard).toEqual([undefined, 'engaged']);
+    const live = e.view().live!;
+    const old = { ...live, turns: live.turns.map(({ stance: _stance, ...t }) => t) };
+    expect(LiveView.parse(old).turns.every(t => t.stance === undefined)).toBe(true);
   });
 });

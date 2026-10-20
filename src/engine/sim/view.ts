@@ -94,7 +94,7 @@ function liveView(sim: Sim) {
       promises: sim.promises.filter(x => x.state === 'open' && it.memberIds.includes(x.memberId)).map(x => x.text),
       declaredStyle: main?.style ?? null
     },
-    turns: it.turns.map(t => ({ id: t.id, by: t.by, text: t.text, voice: !!t.voice, interrupted: !!t.interrupted, aiGenerated: t.by !== 'you' })),
+    turns: it.turns.map(t => ({ id: t.id, by: t.by, text: t.text, voice: !!t.voice, interrupted: !!t.interrupted, aiGenerated: t.by !== 'you', ...(t.stance ? { stance: t.stance } : {}) })),
     turnLimit: turnLimit(sim, it), turnsLeft: Math.max(0, turnLimit(sim, it) - yours), minutes: it.actionKey === PRACTICE ? c.practice.minutes : a?.live.minutes ?? 3,
     /** The Week 0 practice (D84): not scored, ends without the team reacting. */
     practice: it.actionKey === PRACTICE,

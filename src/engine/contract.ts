@@ -50,6 +50,8 @@ export const LensView = z.object({
   examples: z.array(z.object({ need: NeedKey, style: StyleKey, person: Text, why: Text })).default([])
 });
 export const Mood = z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']);
+/** Where the person in a conversation stands after their turn (D233), closing down to engaged. */
+export const Stance = z.enum(['closing', 'guarded', 'opening', 'engaged']);
 export const Score = z.number().min(0).max(100);
 export const PeriodUnit = z.enum(['year', 'month', 'week', 'day']);
 export const SubPeriodUnit = z.enum(['quarter', 'month', 'week', 'day', 'hour']);
@@ -152,8 +154,8 @@ export const LiveView = z.object({
   oneShot: z.boolean(),
   people: z.array(Who), speaker: Who, raisedHands: z.array(Id),
   brief: z.object({ goal: Text.nullable(), known: z.array(Text), mood: Mood.nullable(), promises: z.array(Text), declaredStyle: StyleKey.nullable() }),
-  /** `aiGenerated` marks NPC turns for the AI label (brief, rule 7). */
-  turns: z.array(z.object({ id: Id, by: Id, text: Text, voice: z.boolean(), interrupted: z.boolean(), aiGenerated: z.boolean() })),
+  /** `aiGenerated` marks NPC turns for the AI label (brief, rule 7). `stance`: the speaker's stance after an NPC turn (D233); optional, so older runs parse. */
+  turns: z.array(z.object({ id: Id, by: Id, text: Text, voice: z.boolean(), interrupted: z.boolean(), aiGenerated: z.boolean(), stance: Stance.optional() })),
   turnLimit: z.number().int().min(1), turnsLeft: z.number().int().min(0), minutes: Num,
   closed: z.boolean(),
   hint: z.object({ mode: z.enum(['off', 'onRequest']), text: Text.nullable() }),
@@ -486,6 +488,7 @@ export type MetricKey = z.output<typeof MetricKey>;
 export type StyleKey = z.output<typeof StyleKey>;
 export type LensView = z.output<typeof LensView>;
 export type Mood = z.output<typeof Mood>;
+export type Stance = z.output<typeof Stance>;
 export type VariableView = z.output<typeof VariableView>;
 export type OpenChoice = z.output<typeof OpenChoice>;
 export type ChoiceView = z.output<typeof ChoiceView>;

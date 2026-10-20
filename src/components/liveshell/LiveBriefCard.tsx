@@ -21,6 +21,8 @@ export interface LiveBriefCardProps {
   bare?: boolean;
   /** The storyline's period, for "Style you set this week" on the tablet. */
   periodUnit?: 'year' | 'month' | 'week' | 'day';
+  /** `overlay`: the goal is kept in view over the conversation instead (D233), so the card leaves it out. */
+  goalElsewhere?: boolean;
 }
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
@@ -39,18 +41,30 @@ const value = 'text-13 text-pretty';
  * mood, open promises and your declared style, then the coaching tip once you have asked for it.
  * Collapses to a "Show brief" button.
  */
-export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onToggle, layout = 'desk', bare = false, periodUnit = 'week' }: LiveBriefCardProps) {
+export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onToggle, layout = 'desk', bare = false, periodUnit = 'week', goalElsewhere = false }: LiveBriefCardProps) {
   const { t } = useI18n();
   const lens = useLens();
   const id = useId();
   if (layout === 'overlay') {
     // Over the 1:1 portrait (D232): the goal in one line on navy, the rest of the brief opening under it.
+    // With the goal kept over the conversation (D233), a one line head instead: the eyebrow and Show brief.
     const moodText = brief.mood && ('key' in brief.mood ? t('member.mood', { mood: brief.mood.key }) : brief.mood.text);
+    const toggle = (
+      <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={open ? id : undefined}
+        className={`min-h-11 cursor-pointer self-start rounded-4 border border-solid border-(--il-color-canvas-steel) bg-transparent px-3 py-0 text-13 font-500 text-(--il-color-white) ${FOCUS}`}>
+        {open ? t('liveshell.brief.hide') : t('liveshell.brief.show')}
+      </button>
+    );
     return (
       <aside aria-label={t('liveshell.brief.title')} className="flex flex-col gap-2.5 bg-(--il-canvas-veil-soft) px-3 py-2.5 text-13 text-(--il-color-white)">
-        <span className="text-pretty">{t('liveshell.brief.goalLine', { goal: brief.goal })}</span>
+        {goalElsewhere ? (
+          <div className="flex items-center justify-between gap-3">
+            <span aria-hidden="true" className="text-12 font-600 tracking-(--il-liveshell-eyebrow-tracking) uppercase">{t('liveshell.brief.title')}</span>
+            {toggle}
+          </div>
+        ) : <span className="text-pretty">{t('liveshell.brief.goalLine', { goal: brief.goal })}</span>}
         {open && (
-          <div id={id} className="flex flex-col gap-2 border-t border-(--il-color-canvas-navy-750) pt-2.5">
+          <div id={id} className={`flex flex-col gap-2 ${goalElsewhere ? '' : 'border-t border-(--il-color-canvas-navy-750) pt-2.5'}`}>
             {brief.agenda && brief.agenda.length > 0 && <Row label={t('liveshell.brief.agenda')}><span className={value}>{brief.agenda.map((item, i) => t('liveshell.brief.agendaItem', { n: i + 1, item })).join(' ')}</span></Row>}
             {brief.known && brief.known.length > 0 && <Row label={t('liveshell.brief.known', { format, pronoun })}><span className={value}>{brief.known.join(' ')}</span></Row>}
             {moodText && <Row label={t('liveshell.brief.mood', { format })}><span className={value}>{moodText}</span></Row>}
@@ -65,10 +79,7 @@ export function LiveBriefCard({ format, brief, pronoun = 'they', tip, open, onTo
             <span>{tip}</span>
           </div>
         )}
-        <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={open ? id : undefined}
-          className={`min-h-11 cursor-pointer self-start rounded-4 border border-solid border-(--il-color-canvas-steel) bg-transparent px-3 py-0 text-13 font-500 text-(--il-color-white) ${FOCUS}`}>
-          {open ? t('liveshell.brief.hide') : t('liveshell.brief.show')}
-        </button>
+        {!goalElsewhere && toggle}
       </aside>
     );
   }

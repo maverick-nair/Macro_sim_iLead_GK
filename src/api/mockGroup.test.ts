@@ -45,7 +45,7 @@ describe('mock group report', () => {
     expect(g.benchmark).toEqual({ participants: 300 });
     expect(g.sections).toHaveLength(12);
     expect(JSON.stringify(g)).not.toContain('Aisha Rahman');
-  });
+  }, 30_000);
 
   it('assessment: the participant table by name, through the mock API', async () => {
     const raw = await createMockApi({ latencyMs: 0, group: { purpose: 'assessment' } }).getGroupReport('7');

@@ -65,7 +65,7 @@ describe('NPC prompt assembly', () => {
     const user = buildNpcRequest(ctx, settingsFor('npc')).messages[0].content as string;
     expect(user).toMatch(/Your satisfaction with the participant's team \(0 to 100\): 62/);
     expect(user).toMatch(/This conversation: a negotiation/);
-    expect(npcPromptVersion()).toMatch(/^npc@3#/);
+    expect(npcPromptVersion()).toMatch(/^npc@4#/);
   });
 
   it('writes the author\'s persona into the sheet: age, motivation, topics, how they talk, notes and reactions by style name (D130)', () => {
@@ -106,6 +106,27 @@ describe('the Anthropic NPC model (fake client)', () => {
     expect(tokens).toEqual(['Honestly?', ' This job is not what I was promised.', ' I expected a lot more.']);
     expect(done?.reply).toEqual({ text: 'Honestly? This job is not what I was promised. I expected a lot more.', revealsConcern: true });
     expect(done?.meta).toMatchObject({ provider: 'anthropic', fallback: false, guards: [], promptVersion: npcPromptVersion() });
+  });
+
+  it('returns the stance the character reports beside the reply, never in its words (D233)', async () => {
+    const { npc } = model(['Okay, I can tell you more. [[signals reveal=no end=no stance=opening]]']);
+    const { tokens, done } = await run(npc.stream(kentTurn({ stance: 'guarded' })));
+    expect(tokens.join('')).toBe('Okay, I can tell you more.');
+    expect(done?.reply).toEqual({ text: 'Okay, I can tell you more.', stance: 'opening' });
+    // No stance in the tag: none in the reply, and the engine reads its own.
+    const plain = model(['Okay. [[signals reveal=no end=no]]']);
+    expect(await plain.npc.reply(kentTurn())).toStrictEqual({ text: 'Okay.' });
+    // A replaced reply carries the stand in's stance.
+    const broke = model(['As an AI language model, I cannot say. [[signals reveal=no end=no stance=engaged]]']);
+    expect((await broke.npc.reply(kentTurn())).stance).toMatch(/^(closing|guarded|opening|engaged)$/);
+  });
+
+  it('tells the model where the character stood and whether they were cut off (D233)', () => {
+    const user = buildNpcRequest(kentTurn({ stance: 'guarded', interrupted: true }), settingsFor('npc')).messages[0].content as string;
+    expect(user).toMatch(/Where you stood after your last line \(stance\): guarded/);
+    expect(user).toMatch(/The participant cut your last line off\./);
+    expect(buildNpcRequest(kentTurn(), settingsFor('npc')).messages[0].content).not.toMatch(/stance\)/);
+    expect(buildNpcRequest(kentTurn(), settingsFor('npc')).system[0].text).toMatch(/stance=closing\|guarded\|opening\|engaged/);
   });
 
   it('applies the copy rules to what it streams', async () => {

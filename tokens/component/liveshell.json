@@ -25,7 +25,11 @@
       "speaking-ring": { "value": "ilRing 1.6s ease-out infinite", "$description": "Pulse around the portrait while the NPC speaks" },
       "dot-1": { "value": "ilDot 1.2s infinite", "$description": "Thinking dots, staggered" },
       "dot-2": { "value": "ilDot 1.2s infinite .15s" },
-      "dot-3": { "value": "ilDot 1.2s infinite .3s" }
+      "dot-3": { "value": "ilDot 1.2s infinite .3s" },
+      "stance-enter": { "value": "ilIn {duration.slow} ease", "$description": "The live read under the portrait settling in when it changes (D233); off with reduced motion" }
+    },
+    "pace": {
+      "transition": { "value": "inline-size {duration.slow} ease", "$description": "The conversation's progress track filling after each exchange (D233)" }
     },
     "meeting": {
       "tile-glow": { "value": "0 0 0 2px {color.liveshell.speaking}", "$description": "Active speaker: a solid ring, no halo (D232)" },

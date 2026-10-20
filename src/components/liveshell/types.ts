@@ -63,6 +63,16 @@ export interface LiveCaptionLine {
 /** How the 1:1 counterpart comes across right now: the colour of the mood ring and the pill under it. */
 export type LiveMood = 'frustrated' | 'guarded' | 'open';
 
+/** The engine's live read of the counterpart after their last line (D233), closing down to engaged. */
+export type LiveStance = 'closing' | 'guarded' | 'opening' | 'engaged';
+
+/** Where the conversation is (D233): exchanges left of the limit, and whether it has closed. */
+export interface LivePace {
+  turnsLeft: number;
+  turnLimit: number;
+  closed: boolean;
+}
+
 /**
  * The brief card. Rows render in this order and only when present: agenda, what you know, mood,
  * open promises, your declared style, tone. `undefined` hides a row; `promises: []` reads "None yet"

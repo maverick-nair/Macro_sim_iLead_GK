@@ -40,7 +40,7 @@ async function* personaStream(ctx: NpcTurnContext, signal: AbortSignal | undefin
   for (const text of filter.finish().out) yield { type: 'token', text };
   if (signal?.aborted) return;
   const text = filter.text || r.text;
-  yield { type: 'done', reply: { text, ...(r.revealsConcern ? { revealsConcern: true } : {}), ...(r.signsOff ? { signsOff: true } : {}) }, meta: { ...meta, guards: [...meta.guards, ...filter.guards], latencyMs: Date.now() - started } };
+  yield { type: 'done', reply: { text, ...(r.revealsConcern ? { revealsConcern: true } : {}), ...(r.signsOff ? { signsOff: true } : {}), ...(r.stance ? { stance: r.stance } : {}) }, meta: { ...meta, guards: [...meta.guards, ...filter.guards], latencyMs: Date.now() - started } };
 }
 
 export function createMockNpcModel(): NpcModel {
@@ -106,13 +106,15 @@ export function createAnthropicNpcModel(o: AnthropicNpcOptions): NpcModel {
         // Words were shown as they came: the reply the engine keeps is the stand in's.
         log.warn('npc: a shown reply broke a guardrail; the engine keeps the stand in', { guards, speaker: ctx.speaker.id });
         const r = await personaNpc.reply(ctx);
-        yield { type: 'done', reply: { text: r.text, ...(r.signsOff ? { signsOff: true } : {}) }, meta: { ...meta, fallback: true, latencyMs: Date.now() - started } };
+        yield { type: 'done', reply: { text: r.text, ...(r.signsOff ? { signsOff: true } : {}), ...(r.stance ? { stance: r.stance } : {}) }, meta: { ...meta, fallback: true, latencyMs: Date.now() - started } };
         return;
       }
       if (guards.length) log.warn('npc: the reply stopped early', { guards, speaker: ctx.speaker.id });
       const reply: NpcReply = { text: filter.text };
       if (!violated && !failed && fin.signals.reveal && mayReveal(ctx)) reply.revealsConcern = true;
       if (!violated && !failed && fin.signals.end) reply.signsOff = true;
+      // The character's own read of where they stand (D233); without one the engine reads it.
+      if (!violated && !failed && fin.signals.stance) reply.stance = fin.signals.stance;
       yield { type: 'done', reply, meta: { ...meta, fallback: false, latencyMs: Date.now() - started } };
     } finally {
       opts?.signal?.removeEventListener('abort', onAbort);
