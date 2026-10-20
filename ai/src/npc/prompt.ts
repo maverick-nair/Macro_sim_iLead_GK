@@ -114,6 +114,7 @@ export function characterSheet(ctx: NpcTurnContext): string {
     if (w) {
       s += line('What the company does', w.about);
       s += line('Headquarters', w.headquarters);
+      s += line('The office', w.office?.description);
       s += line('Your team', w.team);
       s += line('The product in one line', w.product?.line);
       s += line('Selling points', w.product?.points?.join('; '));

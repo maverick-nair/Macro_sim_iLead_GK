@@ -7,6 +7,7 @@ import type {
   StyleKey, StylesData, SummaryExtras, TeamSeries, ThoughtData, VerdictData
 } from './types';
 import './messages';
+import { unitWords } from '../../engine/units';
 
 /**
  * The engine's report (`view.report`, parsed with `parseReport`) shaped into the report components' props.
@@ -104,10 +105,10 @@ export function teamSeries(i18n: Fmt, money: MoneyFormat, r: ReportView): TeamSe
 }
 
 /** A verdict's evidence, review status and records, worded for the report. */
-function verdictData(i18n: Fmt, v: { key: string | null; label: string; recordIds: string[]; quotes: Array<{ text: string; when: string }>; review: 'assessor' | 'mixed' | 'ai'; reviewed: number; total: number }, bar: string): VerdictData {
+function verdictData(i18n: Fmt, v: { key: string | null; label: string; why?: string | null; recordIds: string[]; quotes: Array<{ text: string; when: string }>; review: 'assessor' | 'mixed' | 'ai'; reviewed: number; total: number }, bar: string): VerdictData {
   const { t } = i18n;
   return {
-    key: v.key, label: v.label, bar: t('report.verdict.bar', { bar }),
+    key: v.key, label: v.label, bar: t('report.verdict.bar', { bar }), why: v.why ?? null,
     evidence: t('report.verdict.evidence', { n: v.total }),
     review: t('report.verdict.review', { review: v.review, reviewed: v.reviewed, total: v.total }),
     records: t('report.verdict.records', { ids: v.recordIds.join(t('report.listSeparator')) }),
@@ -142,7 +143,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
         return { key, data: r.about };
       case 'summary':
         return { key, narrative: r.summary.narrative, extras: {
-          level: r.summary.level?.name ?? null, strengths: r.summary.strengths.map(skillName), priorities: r.summary.priorities.map(skillName), business: r.summary.business,
+          level: r.summary.level?.name ?? null, levelWhy: r.summary.levelCap?.why ?? null, strengths: r.summary.strengths.map(skillName), priorities: r.summary.priorities.map(skillName), business: r.summary.business,
           verdict: r.verdict ? verdictData(i18n, r.verdict.overall, r.verdict.overall.bar) : null,
           headline: r.summary.headline, lines: r.summary.lines, drivers: r.summary.drivers
         } };
@@ -191,7 +192,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       case 'objectives': {
         const o3 = r.run.objectives;
         return { key, data: {
-          revenue: o3.revenue, target: o3.target, money: money.compact, share: t('report.percent', { pct: pct(o3.share) }), conversions: o3.conversions,
+          revenue: o3.revenue, target: o3.target, money: money.compact, share: t('report.percent', { pct: pct(o3.share) }), conversions: o3.conversions, units: unitWords(t, r.storyline.unit),
           team: (['skill', 'morale', 'result'] as const).map(k => ({ key: k, label: t('report.team.metric', { metric: k }), start: o3.team[k].start, end: o3.team[k].end })),
           narrative: r.objectives.narrative
         } };
@@ -286,6 +287,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
             funnel: b.funnel.map(f => ({ key: f.stage, name: f.name, value: f.cumulative, ideal: f.cumulativeIdeal, bottleneck: f.stage === b.bottleneck?.stage })),
             bottleneck: b.bottleneck ? { name: b.bottleneck.name, periods: b.bottleneck.periods, why: b.bottleneck.why } : null,
             conversions: b.conversions,
+            units: unitWords(t, r.storyline.unit),
             line: r.summary.business
           }
         };

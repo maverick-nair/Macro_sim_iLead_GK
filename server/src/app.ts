@@ -25,6 +25,7 @@ import { registerCalibrate } from './routes/calibrate';
 import { registerEngine } from './routes/engine';
 import { registerLaunch } from './routes/launch';
 import { inlineScriptHashes, registerOps, serveStatic } from './routes/ops';
+import { registerPreview } from './routes/preview';
 import { registerSpeech } from './routes/speech';
 import type { Repository } from './store';
 
@@ -43,7 +44,7 @@ export interface AppDeps {
  *   /engine/...    the engine (VITE_ILEAD_ENGINE_URL=/engine)
  *   /api/...       the app API (VITE_ILEAD_API_URL=/api)
  *   /speech/...    transcription (VITE_ILEAD_SPEECH_URL=/speech)
- *   /genie/...     the author chat (VITE_GENIE_URL=/genie)
+ *   /genie/...     the author chat and previews (VITE_GENIE_URL=/genie)
  *   /launch, /auth/...  sign in;  /healthz, /readyz, /openapi.json  operations
  */
 export function createApp(deps: AppDeps) {
@@ -120,6 +121,7 @@ export function createApp(deps: AppDeps) {
   registerEngine(ctx);
   registerApi(ctx);
   registerAuthor(ctx);
+  registerPreview(ctx);
   const calibrations = registerCalibrate(ctx);
   const stopSpeech = registerSpeech(ctx);
   registerAdmin(ctx);

@@ -33,7 +33,7 @@ describe('the engine report, shaped for display', () => {
     const m = model(report);
     expect(m.header).toMatchObject({ name: 'Jordan Lee', tier: report.score.tier.name, score: i18n.number(report.score.total) });
     expect(m.header.line).toBe(`${report.storyline.name} · October 2026`);
-    expect(model({ ...report, storyline: { name: 'Sales Elevator', organisation: 'Innov8' } }).header.line).toBe('Sales Elevator · Innov8 · October 2026');
+    expect(model({ ...report, storyline: { name: 'Sales Elevator', organisation: 'Innov8', unit: null } }).header.line).toBe('Sales Elevator · Innov8 · October 2026');
     expect(model(report, null).header.name).toBe('Your development report');
   });
 

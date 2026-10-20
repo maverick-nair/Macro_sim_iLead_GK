@@ -1,5 +1,9 @@
 {
   "stylesetting.where": "{period} of {total} · Style setting",
+  "stylesetting.eyebrow": "Set styles",
+  "stylesetting.question": "How will you lead each person this {unit, select, year {year} month {month} week {week} day {day} other {period}}?",
+  "stylesetting.defs.title": "{count, plural, =2 {The two styles} =3 {The three styles} =4 {The four styles} =5 {The five styles} =6 {The six styles} other {The # styles}}",
+  "stylesetting.member.line": "{title} · {mood}",
   "stylesetting.view.aria": "View",
   "stylesetting.view": "{view, select, list {List} other {Cards}}",
   "stylesetting.review": "Review and confirm",

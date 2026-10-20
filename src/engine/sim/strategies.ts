@@ -2,6 +2,7 @@ import type { StorylineConfig } from '../config';
 import { bestStyle, fitOf, needOf, type Lens } from '../lens';
 import { createEngine } from './engine';
 import { neededStyles } from './policies';
+import { endWeek } from './endWeek';
 import type { Style } from './rules';
 import type { EngineView } from './view';
 
@@ -10,7 +11,7 @@ import type { EngineView } from './view';
  * They follow the strategies of the report audit: each plays the whole run deterministically from the
  * seed, reading only what the view shows a participant.
  * - coach: people first. Fits each person's style, coaches and meets the weakest person in the style
- *   they need, with warm words, and answers every message.
+ *   they need (with realism, spreading the time over the team), with warm words, and answers every message.
  * - driver: results first. Directs everyone every week, sets goals and gives directive feedback with
  *   blunt, numbers first words, and briefs the sponsor on the numbers.
  * - bystander: reads people and then does nothing. Opens every profile, sets the fitting style each
@@ -71,12 +72,17 @@ export async function playStrategy(config: StorylineConfig, strategy: Strategy, 
         if (!weakest) break;
         const need = needOf(stats(weakest), high);
         if (strategy === 'coach') {
-          const style = bestStyle(lens, need);
+          // With realism (D171, D174) the coach spreads their time: someone long without one to one time first, and
+          // not the person they have just talked to, whose next conversation would land at less.
+          const recent = (id: string) => ['coach', 'f2f', 'goals'].some(k => v.actions.find(x => x.key === k)?.repeatFor?.[id]);
+          const care = (m: Member) => stats(m).morale + stats(m).result - 40 * (m.unattended ?? 0) + (recent(m.id) ? 60 : 0);
+          const who = [...present].sort((a, b) => care(a) - care(b))[0];
+          const style = bestStyle(lens, needOf(stats(who), high));
           const words = COACH_SAY[style] ?? WARM;
-          if (stats(weakest).skill < 50 && free('coach', weakest.id)) await act('coach', [weakest.id], words, style);
-          else if (free('f2f', weakest.id)) await act('f2f', [weakest.id], words, style);
+          if (stats(who).skill < 50 && free('coach', who.id)) await act('coach', [who.id], words, style);
+          else if (free('f2f', who.id)) await act('f2f', [who.id], words, style);
           else if (free('meet')) await act('meet', [], COACH_SAY.P, 'P');
-          else if (free('goals', weakest.id)) await act('goals', [weakest.id], words, style);
+          else if (free('goals', who.id)) await act('goals', [who.id], words, style);
           else break;
         } else if (strategy === 'driver') {
           // The weakest result first: goals, then feedback, then a team meeting, all directing.
@@ -99,7 +105,8 @@ export async function playStrategy(config: StorylineConfig, strategy: Strategy, 
         v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: words })).view;
       }
     }
-    v = (await engine.dispatch({ type: 'endPeriod' })).view;
+    // End week shows a decision still to come first (D231): these scripted players let its default stand.
+    v = await endWeek(engine);
     if (v.pendingReward) v = (await engine.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] })).view;
     if (v.phase === 'periodEnd') v = (await engine.dispatch({ type: 'startNextPeriod' })).view;
   }

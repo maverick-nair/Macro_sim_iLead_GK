@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
+import { unitWords } from '../../engine/units';
 import { ChartBlock } from './ChartBlock';
 import { FunnelChart, RevenueChart } from './charts';
 import type { BusinessData, PeriodUnit } from './types';
@@ -13,7 +14,7 @@ export function BusinessSection({ data, unit, periods }: { data: BusinessData; u
   const bottleneck = data.funnel.find(f => f.bottleneck);
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.business.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.business.title')}</h2>
       <p className="m-0 text-14 text-pretty">{data.line}</p>
       <div className="grid gap-5 grid-cols-2">
         <ChartBlock
@@ -43,7 +44,7 @@ export function BusinessSection({ data, unit, periods }: { data: BusinessData; u
           {data.bottleneck.why && ` ${data.bottleneck.why}`}
         </p>
       )}
-      <p className="m-0 text-13 text-fg-secondary">{t('report.business.conversions', { n: data.conversions })}</p>
+      <p className="m-0 text-13 text-fg-secondary">{t('report.business.conversions', { n: data.conversions, ...(data.units ?? unitWords(t, null)) })}</p>
     </section>
   );
 }

@@ -99,6 +99,291 @@
                   "type": "null"
                 }
               ]
+            },
+            "brand": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/$defs/Text"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "colors": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "main": {
+                              "type": "string"
+                            },
+                            "second": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "main",
+                            "second"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "logo": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "font": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "mode": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "enum": [
+                            "dark",
+                            "light",
+                            "system"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "colors",
+                    "logo",
+                    "font",
+                    "mode"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "logo": {
+              "default": null,
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "image": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "text": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "image",
+                    "text"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "office": {
+              "default": null,
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "products": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "$ref": "#/$defs/Text"
+                  },
+                  "line": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "specs": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Text"
+                    }
+                  },
+                  "image": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "view": {
+                    "type": "string",
+                    "enum": [
+                      "photo",
+                      "model"
+                    ]
+                  },
+                  "code": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "kind": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "tagline": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "audience": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "dealValue": {
+                    "default": null,
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  },
+                  "imageAlt": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "features": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "$ref": "#/$defs/Text"
+                        },
+                        "text": {
+                          "$ref": "#/$defs/Text"
+                        },
+                        "spot": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "x": {
+                                  "type": "number"
+                                },
+                                "y": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "x",
+                                "y"
+                              ]
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "text",
+                        "spot"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "line",
+                  "specs",
+                  "image",
+                  "view"
+                ]
+              }
+            },
+            "screens": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "title": {
+                    "$ref": "#/$defs/Text"
+                  },
+                  "body": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Text"
+                    }
+                  }
+                },
+                "required": [
+                  "key",
+                  "title",
+                  "body"
+                ]
+              }
             }
           },
           "required": [
@@ -311,6 +596,28 @@
             },
             "valueThisPeriod": {
               "type": "number"
+            },
+            "unit": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "one": {
+                      "$ref": "#/$defs/Text"
+                    },
+                    "other": {
+                      "$ref": "#/$defs/Text"
+                    }
+                  },
+                  "required": [
+                    "one",
+                    "other"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
             }
           },
           "required": [
@@ -582,6 +889,14 @@
                   "remarks",
                   "relations"
                 ]
+              },
+              "unattended": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "neglected": {
+                "type": "boolean"
               }
             },
             "required": [
@@ -1765,6 +2080,93 @@
                     }
                   ]
                 }
+              },
+              "repeat": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "share": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      },
+                      "uses": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "ago": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "window": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      "tires": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "share",
+                      "uses",
+                      "ago",
+                      "window"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "repeatFor": {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "share": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "uses": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "ago": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 9007199254740991
+                    },
+                    "window": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 9007199254740991
+                    },
+                    "tires": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "share",
+                    "uses",
+                    "ago",
+                    "window"
+                  ]
+                }
+              },
+              "teamTime": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
               }
             },
             "required": [
@@ -2869,6 +3271,7 @@
                       "type": "string",
                       "enum": [
                         "you",
+                        "kept",
                         "default"
                       ]
                     }
@@ -3092,6 +3495,52 @@
                   "delta"
                 ]
               }
+            },
+            "silence": {
+              "type": "object",
+              "properties": {
+                "weeks": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "costsFrom": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 9007199254740991
+                }
+              },
+              "required": [
+                "weeks",
+                "costsFrom"
+              ]
+            },
+            "update": {
+              "type": "object",
+              "properties": {
+                "cost": {
+                  "type": "number"
+                },
+                "blocked": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "enum": [
+                        "off",
+                        "done",
+                        "capacity"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              },
+              "required": [
+                "cost",
+                "blocked"
+              ]
             }
           },
           "required": [
@@ -4037,6 +4486,22 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 9007199254740991
+              },
+              "default": {
+                "default": null,
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "holdsWeekEnd": {
+                "default": false,
+                "type": "boolean"
               }
             },
             "required": [
@@ -4103,6 +4568,7 @@
                 "type": "string",
                 "enum": [
                   "you",
+                  "kept",
                   "default"
                 ]
               },
@@ -4272,6 +4738,10 @@
               "triggered"
             ]
           }
+        },
+        "endingWeek": {
+          "default": false,
+          "type": "boolean"
         },
         "stakeholders": {
           "type": "array",
@@ -5472,6 +5942,7 @@
                 "type": "string",
                 "enum": [
                   "you",
+                  "kept",
                   "default"
                 ]
               }

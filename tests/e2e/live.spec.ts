@@ -82,7 +82,7 @@ test('1:1: the NPC opens, streams labelled AI replies, opens up when asked, and 
   expect(a11y.violations.map(v => `${v.id}: ${v.nodes.length}`)).toEqual([]);
   await say(page, 'I am sorry it has been rough. What is on your mind?');
   await expect(page.getByText(/not what I was promised/).first()).toBeVisible({ timeout: 15000 });
-  await page.getByRole('button', { name: 'Hint' }).click();
+  await page.getByRole('button', { name: 'Ask for a hint' }).click();
   await expect(page.getByText(/open question/).first()).toBeVisible();
   await end(page);
   await expect(page.getByRole('region', { name: 'Outcome' }).getByRole('heading', { level: 2 })).toBeFocused();

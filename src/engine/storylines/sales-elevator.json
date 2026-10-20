@@ -9,7 +9,7 @@
     "target": 240000,
     "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      33
+      34
     ]
   },
   "time": {
@@ -65,6 +65,210 @@
     "name": "Paula Jacob",
     "title": "Regional Sales Director",
     "styleLine": "To each their own. Your people need different things from you this week."
+  },
+  "world": {
+    "products": [
+      {
+        "name": "Levo B10",
+        "specs": [
+          "Rated load 1,000 kg",
+          "Speed 1.0 m/s",
+          "Travel up to 30 m"
+        ],
+        "image": "/assets/products/lift-b10.jpg",
+        "view": "photo",
+        "code": "B10",
+        "kind": "Commercial",
+        "tagline": "Engineered to fit. Built to move.",
+        "audience": "Mid rise offices, clinics, hotels and mixed use buildings.",
+        "dealValue": 30000,
+        "imageAlt": "Levo B10: a steel and glass passenger lift car in a grey studio",
+        "features": [
+          {
+            "title": "Built modular",
+            "text": "Ships in modules and installs in nine days, where most competitors need four weeks.",
+            "spot": {
+              "x": 40,
+              "y": 50
+            }
+          },
+          {
+            "title": "Made to last",
+            "text": "A 25 year structural warranty, and remote monitoring that flags faults before tenants notice.",
+            "spot": {
+              "x": 62,
+              "y": 20
+            }
+          },
+          {
+            "title": "Who buys it",
+            "text": "Developers and facility managers replacing an old lift in an existing shaft.",
+            "spot": {
+              "x": 72,
+              "y": 52
+            }
+          },
+          {
+            "title": "Winning the deal",
+            "text": "Clients buy uptime, not steel. Lead with the service contract; discounts on the car rarely close.",
+            "spot": {
+              "x": 46,
+              "y": 80
+            }
+          }
+        ]
+      },
+      {
+        "name": "Levo H4",
+        "specs": [
+          "Rated load 450 kg",
+          "Speed 0.6 m/s",
+          "Travel up to 15 m"
+        ],
+        "image": "/assets/products/lift-h4.jpg",
+        "view": "photo",
+        "code": "H4",
+        "kind": "Residential",
+        "tagline": "Quiet enough for home.",
+        "audience": "Apartment blocks, townhouses and private homes.",
+        "dealValue": 18000,
+        "imageAlt": "Levo H4: a compact home lift with walnut panels and a bronze frame",
+        "features": [
+          {
+            "title": "Quiet ride",
+            "text": "Under 50 dB, quieter than a conversation, with a soft start and stop.",
+            "spot": {
+              "x": 62,
+              "y": 30
+            }
+          },
+          {
+            "title": "Small footprint",
+            "text": "No machine room and only a 15 cm pit, so it fits most homes.",
+            "spot": {
+              "x": 58,
+              "y": 78
+            }
+          },
+          {
+            "title": "Who buys it",
+            "text": "Homeowners planning to stay in their home for life, and boutique apartment developers.",
+            "spot": {
+              "x": 34,
+              "y": 50
+            }
+          },
+          {
+            "title": "Winning the deal",
+            "text": "The buyer is often the family, not the rider. Talk safety and independence before finishes.",
+            "spot": {
+              "x": 70,
+              "y": 44
+            }
+          }
+        ]
+      },
+      {
+        "name": "Levo P20",
+        "specs": [
+          "Rated load 1,275 kg",
+          "Speed 1.6 m/s",
+          "Travel up to 60 m"
+        ],
+        "image": "/assets/products/lift-p20.jpg",
+        "view": "photo",
+        "code": "P20",
+        "kind": "Panoramic",
+        "tagline": "A view on the way up.",
+        "audience": "Atriums, shopping centres and hotel lobbies.",
+        "dealValue": 65000,
+        "imageAlt": "Levo P20: a rounded panoramic glass lift with a chrome frame",
+        "features": [
+          {
+            "title": "Curved glass",
+            "text": "Laminated, heat strengthened glass on three sides for an unbroken view.",
+            "spot": {
+              "x": 42,
+              "y": 48
+            }
+          },
+          {
+            "title": "Fast and smooth",
+            "text": "1.6 m/s, with ride comfort tuned for standing passengers.",
+            "spot": {
+              "x": 56,
+              "y": 27
+            }
+          },
+          {
+            "title": "Who buys it",
+            "text": "Mall owners, hotel groups and architects who want a landmark.",
+            "spot": {
+              "x": 74,
+              "y": 58
+            }
+          },
+          {
+            "title": "Winning the deal",
+            "text": "Architects decide early. Get into the design stage before the tender is written.",
+            "spot": {
+              "x": 50,
+              "y": 82
+            }
+          }
+        ]
+      },
+      {
+        "name": "Levo C30",
+        "specs": [
+          "Rated load 3,000 kg",
+          "Speed 0.5 m/s",
+          "Travel up to 25 m"
+        ],
+        "image": "/assets/products/lift-c30.jpg",
+        "view": "photo",
+        "code": "C30",
+        "kind": "Service and freight",
+        "tagline": "Built for the heavy days.",
+        "audience": "Hospitals, warehouses and back of house.",
+        "dealValue": 42000,
+        "imageAlt": "Levo C30: a large graphite freight lift with steel bumper rails",
+        "features": [
+          {
+            "title": "Heavy duty",
+            "text": "3,000 kg capacity, with an impact resistant steel car and bumper rails.",
+            "spot": {
+              "x": 50,
+              "y": 52
+            }
+          },
+          {
+            "title": "Wide access",
+            "text": "Bi parting doors up to 2.5 m wide for beds, pallets and carts.",
+            "spot": {
+              "x": 28,
+              "y": 58
+            }
+          },
+          {
+            "title": "Who buys it",
+            "text": "Hospitals, logistics sites and hotel back of house teams.",
+            "spot": {
+              "x": 78,
+              "y": 42
+            }
+          },
+          {
+            "title": "Winning the deal",
+            "text": "Downtime stops their operation. Sell response times and a guaranteed repair window.",
+            "spot": {
+              "x": 46,
+              "y": 78
+            }
+          }
+        ]
+      }
+    ]
   },
   "members": [
     {
@@ -1161,7 +1365,8 @@
               -4
             ]
           },
-          "cooldownDays": 10
+          "cooldownDays": 10,
+          "opportunity": 0.1
         },
         {
           "key": "team_building",
@@ -1184,7 +1389,8 @@
             ]
           },
           "cooldownDays": 10,
-          "cost": 2
+          "cost": 2,
+          "opportunity": 0.5
         }
       ]
     },
@@ -1410,7 +1616,11 @@
             ]
           }
         }
-      ]
+      ],
+      "realism": {
+        "opportunity": 0,
+        "fatigue": false
+      }
     },
     {
       "key": "fire",
@@ -2439,6 +2649,7 @@
     }
   ],
   "dynamics": {},
-  "performanceThreshold": 73,
+  "realism": {},
+  "performanceThreshold": 116,
   "calibrated": true
 }

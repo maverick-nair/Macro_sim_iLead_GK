@@ -16,7 +16,7 @@ test.beforeEach(({ page }) => {
 });
 test.afterEach(() => expect(errors).toEqual([]));
 
-const progress = (page: Page) => page.getByText(/^Question \d+ of about \d+$/);
+const progress = (page: Page) => page.getByText(/^Question \d+ · (?:last one|about \d+ to go)$/);
 const chip = (page: Page, name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
 const answerBox = (page: Page) => page.getByRole('textbox', { name: 'Your answer' });
 async function type(page: Page, text: string) {
@@ -39,7 +39,7 @@ async function openTab(page: Page, name: string) {
 
 test('the co-creator chat: typed, chips and voice answers, the lens, First draft ready and the participant preview', async ({ page, context }) => {
   await page.goto('/author');
-  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await expect(progress(page)).toHaveText('Question 1 · about 9 to go');
   await expect(page.getByRole('heading', { name: 'Your simulation so far' })).toBeVisible();
   await chip(page, 'First time managers').click();
   await chip(page, 'Manufacturing').click();
@@ -49,7 +49,7 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await expect(soFar.getByRole('list', { name: 'Stages' })).toContainText('Negotiation');
   await expect(soFar.getByText('Add your average deal value')).toBeVisible();
   await type(page, 'Ascent Lifts');
-  await expect(progress(page)).toHaveText('Question 5 of about 10');
+  await expect(progress(page)).toHaveText('Question 5 · about 5 to go');
 
   // Voice: record, the live transcript, stop, then the words in the answer box to edit before Send.
   // Focus follows: Stop and review while recording, the microphone after Cancel, the answer box after stop.
@@ -70,7 +70,7 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await answerBox(page).fill(`${await answerBox(page).inputValue()} Two of them joined last month.`);
   await page.getByRole('button', { name: 'Send', exact: true }).click();
   await expect(page.getByRole('log')).toContainText('Two of them joined last month.');
-  await expect(progress(page)).toHaveText('Question 6 of about 10');
+  await expect(progress(page)).toHaveText('Question 6 · about 4 to go');
 
   await chip(page, /^Sales Elevator funnel/).click();
   await chip(page, 'Standard').click();
@@ -89,8 +89,8 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   expect(await page.locator('body').innerText()).not.toMatch(FORBIDDEN);
 
   const [play] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: 'Preview week 1 as a participant' }).click()]);
-  await play.getByRole('button', { name: "Let's begin" }).click({ timeout: 20_000 });
-  await expect(play.getByText(/Ascent Lifts/).first()).toBeVisible();
+  // The pre-game flow's landing (D219) names the storyline's organisation.
+  await expect(play.getByText(/Ascent Lifts/).first()).toBeVisible({ timeout: 20_000 });
   await play.close();
 
   await page.getByRole('button', { name: 'Open the workspace' }).click();
@@ -101,6 +101,80 @@ test('the co-creator chat: typed, chips and voice answers, the lens, First draft
   await page.reload();
   await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
   await expect(page.getByText('Ascent Lifts', { exact: false }).first()).toBeVisible();
+});
+
+/** D227: the revenue a run can make, next to the deal value and the target, as the author types; the sales unit named. */
+test('what a run can make: a target out of reach warns as you type, the fix applies, and the sales unit has its own name', async ({ page }) => {
+  await workspace(page, 'Story and world');
+  await page.getByRole('textbox', { name: 'Average deal value' }).fill('300');
+  const story = page.locator('[data-reach]');
+  await expect(story).toHaveAttribute('data-reach', 'unreachable');
+  await expect(story.getByRole('status')).toContainText('Out of reach, even for an Expert');
+  await page.getByRole('textbox', { name: 'What one deal is called' }).fill('outlet order');
+  await expect(page.getByRole('textbox', { name: 'Average outlet order value' })).toHaveValue('300');
+  await expect(story.getByRole('status')).toContainText('outlet orders a week');
+
+  await openTab(page, 'Work process');
+  const reach = page.locator('[data-reach]');
+  await expect(reach.getByText('What a run can make')).toBeVisible();
+  await expect(reach.getByRole('status')).toContainText('Out of reach');
+  await expect(page.getByRole('textbox', { name: 'Ideal per week' }).last()).toHaveValue(/ outlet orders$/);
+  await reach.getByRole('button', { name: /^Set the target to / }).click();
+  await expect(reach).toHaveAttribute('data-reach', 'fits');
+  await expect(reach.getByRole('status')).toContainText('A Proficient player typically makes about');
+});
+
+/** D228: the hire candidates in Team, Hiring, edited and owned; Review and publish checks every text has a home. */
+test('hire candidates are listed and edited in Team, and Review and publish finds every text a home', async ({ page }) => {
+  await workspace(page, 'Team');
+  const hiring = page.getByRole('region', { name: 'Hiring' });
+  const list = hiring.getByRole('list', { name: 'Hire candidates' });
+  await expect(list.getByRole('listitem')).toHaveCount(10);
+  await expect(hiring).not.toContainText('Urban Basket');
+  await list.getByRole('listitem').first().getByRole('button', { name: /^Edit / }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox', { name: 'First name' }).fill('Kavita');
+  await dialog.getByRole('textbox', { name: 'Last name' }).fill('Rane');
+  await dialog.getByRole('textbox', { name: 'Background' }).fill('Sales officer at a regional distributor');
+  await dialog.getByRole('textbox', { name: 'Remarks' }).fill('Knows every kirana on the Nashik beats.');
+  await dialog.getByRole('radio', { name: 'Portrait 2' }).click();
+  await dialog.getByRole('button', { name: 'Done' }).click();
+  await expect(list.getByRole('listitem').first()).toContainText('Kavita Rane');
+  await expect(list.getByRole('listitem').first()).toContainText('Knows every kirana on the Nashik beats.');
+
+  await openTab(page, 'Review and publish');
+  const checks = page.getByRole('region', { name: 'Checks' });
+  await expect(checks.getByRole('listitem').filter({ hasText: 'Every text has a home' })).toContainText('Passed');
+});
+
+/** D229: an honest disagreement with a scoring sample: the rubric behind it, and a reason that resolves it. */
+test('a scoring sample disagreed with shows its rubric; a reasoned disagreement resolves the gate and stays as a note', async ({ page }) => {
+  await workspace(page, 'Scoring and report');
+  const samples = page.getByRole('table', { name: /^Sample answers/ });
+  const calls = samples.getByRole('combobox', { name: /^Your call on:/ });
+  await expect(calls).toHaveCount(6);
+  const n = await calls.count();
+  for (let i = 0; i < n; i++) {
+    const call = calls.nth(i);
+    const agree = await call.locator('option', { hasText: ', agree' }).getAttribute('value');
+    await call.selectOption(i === 2 ? (agree === 'harmful' ? 'weak' : 'harmful') : agree!);
+  }
+  await openTab(page, 'Review and publish');
+  const scoring = page.getByRole('region', { name: 'Checks' }).getByRole('listitem').filter({ hasText: 'Scoring matches your judgment' });
+  await expect(scoring).toContainText('counting a disagreement you give a reason for');
+  await expect(scoring).toContainText('Fix');
+
+  await openTab(page, 'Scoring and report');
+  await samples.getByRole('button', { name: /^You disagree: see the rubric and say why/ }).click();
+  const rubric = page.getByRole('region', { name: 'Rubric for sample 3' });
+  await expect(rubric.getByRole('textbox', { name: 'What Listening looks for' })).toHaveValue(/^Listening: /);
+  await expect(rubric.getByText(/make it Harmful, whatever else is said/)).toBeVisible();
+  await rubric.getByRole('textbox', { name: 'Why you disagree' }).fill('Demanding two deals from someone already slipping, with no help, harms trust.');
+  await expect(page.getByText(/5 of 6 agreed, 1 disagreed with your reason/)).toBeVisible();
+
+  await openTab(page, 'Review and publish');
+  await expect(scoring).not.toContainText('counting a disagreement');
+  await expect(scoring).toContainText('Your reason: Demanding two deals');
 });
 
 test('renamed and added styles flow into actions and the played storyline; edits mark Edited; publish once nothing needs you', async ({ page, context }) => {
@@ -155,7 +229,7 @@ test('renamed and added styles flow into actions and the played storyline; edits
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(page.getByText('Version 1 published')).toBeVisible();
 
-  const [play] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: 'Play a week' }).click()]);
+  const [play] = await Promise.all([context.waitForEvent('page'), page.getByRole('button', { name: 'Preview', exact: true }).click()]);
   await play.goto('/?storyline=draft&start=board&participant=author_draft');
   const groups = play.getByRole('radiogroup', { name: /^Leadership style for/ });
   await expect(groups.first()).toBeVisible({ timeout: 20_000 });
@@ -236,14 +310,14 @@ test('blocked storage keeps the draft in memory and says so; a stale stored draf
   await page.goto('/author');
   await chip(page, 'First time managers').click();
   await expect(page.getByText('Not saved: this browser blocks storage')).toBeVisible();
-  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(progress(page)).toHaveText('Question 2 · about 8 to go');
 
   const fresh = await page.context().newPage();
   fresh.on('pageerror', e => errors.push(e.message));
   await fresh.goto('/author');
   await fresh.evaluate(() => localStorage.setItem('ilead.author.workspace', '{"v":0,"stage":"workspace"}'));
   await fresh.reload();
-  await expect(progress(fresh)).toHaveText('Question 1 of about 10');
+  await expect(progress(fresh)).toHaveText('Question 1 · about 9 to go');
 });
 
 test('a bad draft falls back to Sales Elevator with a warning', async ({ page }) => {

@@ -14,7 +14,7 @@ import { play, type Policy } from './policies';
  */
 // Recorded before people dynamics (D135): Sales Elevator as it was then, without dynamics and with the funnel
 // numbers calibrated for it (buffer 79, 24 leads a day). The guard is the lens's maths, which dynamics leave alone.
-const parsed = parseStoryline({ ...salesElevator, dynamics: undefined, performanceThreshold: 79, money: { ...salesElevator.money, inputPerSubPeriod: [24] } });
+const parsed = parseStoryline({ ...salesElevator, dynamics: undefined, realism: undefined, performanceThreshold: 79, money: { ...salesElevator.money, inputPerSubPeriod: [24] } });
 if (!parsed.ok) throw new Error(parsed.issues.join('\n'));
 const config = parsed.config;
 
@@ -24,7 +24,8 @@ async function digest(policy: Policy, seed: number) {
   // A log entry's `action` (D95) labels where it came from for the History filter; it decides nothing, so it is left out.
   const history = view.history.map(({ action: _action, ...entry }) => entry);
   const r = view.report!;
-  const facts = { members, money, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
+  // The sales unit (D227) is copy the view carries, not a decision: left out, as it was before it existed.
+  const facts = { members, money: { ...money, unit: undefined }, periods, score, history, badges, style: { ...r.style, fit: undefined }, intent: r.intent, moments: r.moments, people: r.people,
     skills: r.skills.map(s => ({ key: s.key, observations: s.observations, score: s.score, level: s.level, quotes: s.quotes })), summary: r.summary };
   // Portraits moved to WebP (D78), an asset change, not a decision: hashed as the PNGs they were recorded with.
   const json = JSON.stringify(wordAll(facts)).replace(/\/assets\/npc\/(\w+)\.webp/g, '/assets/npc/$1.png');
@@ -39,10 +40,15 @@ describe('seeded replay', () => {
     // summary (headline, lines, drivers, the guarded level line), the moments' impact lines (net per person
     // and metric) and the reconciled skill ratings changed by design: the same runs hashed without those
     // fields matched the earlier code for all five players on seeds 1 to 3, so what the runs decide is unchanged.
+    // Re-recorded at D168 to D170, where the summary's overall level is capped by the outcomes (with the line that
+    // says why) and a harmful conversation holds a skill's score: hashed without the summary and the skills' scores
+    // and levels, passive, random and good on seeds 1 to 3 matched the D167 code.
+    // Re-recorded when Steady Hand came to need three conversations and the key moments came to keep a best one:
+    // hashed without the badges (the run's and each period's) and the moments, all six runs matched the earlier code.
     expect(out).toEqual({
-      'passive 1': '74ffc58af0e3ce98', 'passive 2': 'e243b0c1284bfb66',
-      'random 1': '84e35404c7d1a6b3', 'random 2': '69fbe55c1e9e0a26',
-      'good 1': 'a08fe8690122411d', 'good 2': 'a216ef5a90e7e302'
+      'passive 1': 'c0cd0cc91045ac03', 'passive 2': 'f616d104a9b8227d',
+      'random 1': 'b0398b7167997f1a', 'random 2': '674941a9d06f5a11',
+      'good 1': 'ce098fccfd8f32ba', 'good 2': 'd86cf9d73bf2c94a'
     });
   });
 });

@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import { Brief, Clarify, Dilemma, FrameworkDimension, QUESTION_IDS, Stakeholder } from '../../api/author';
-import { CONDITION_METRICS, EVENT_CONDITIONS, MAX_MEMBERS, MAX_PERIODS, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
+import { IMAGE_REF_MAX } from '../../engine/assets';
+import { BRAND_FONTS, CONDITION_METRICS, DEFAULT_LMS, EVENT_CONDITIONS, LMS_COMPLETION, LMS_PACKAGES, LMS_PASS, MAX_MEMBERS, MAX_PERIODS, MAX_PRODUCT_FEATURES, MAX_STAKEHOLDERS, MAX_VARIABLES, MIN_MEMBERS, REPLY_LENGTHS, REPORT_SECTIONS, STAKEHOLDER_INTERACTIONS, STAKEHOLDER_KINDS, VARIABLE_FORMATS } from '../../engine/config';
 import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from '../../engine/lens';
+import { libraryTag } from '../lenses';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
 
 /**
@@ -28,6 +30,11 @@ export const TEXT_MAX = 4000;
 const Text = z.string().max(TEXT_MAX);
 const Short = z.string().max(SHORT_MAX);
 const Pct = z.number().int().min(0).max(100);
+/**
+ * An image the author picked or uploaded (D183): a library path (`/assets/...`) or an upload embedded as a data URL,
+ * which GenieKreator shrinks to the budget on the way in. Empty for none. Export checks the budget and names any image over it.
+ */
+const Image = z.string().max(IMAGE_REF_MAX);
 /**
  * A whole number kept inside the engine's range (D128): a stored draft from before a bound tightened (12
  * weeks, say) reads back at the nearest value the engine plays, instead of failing and losing its section.
@@ -88,7 +95,20 @@ export const DraftStyle = z.object({
 });
 export type DraftStyle = z.infer<typeof DraftStyle>;
 
-export const DraftLens = z.object({
+/**
+ * Drafts saved before D230 kept the library's tag ("D") on a style the tone or the author renamed ("Show the Way"):
+ * it reads back empty, so the tag shows the name's first letter.
+ */
+function migrateLens(v: unknown): unknown {
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return v;
+  const l = v as { id?: unknown; styles?: unknown };
+  if (typeof l.id !== 'string' || !(LENS_IDS as readonly string[]).includes(l.id) || !Array.isArray(l.styles)) return v;
+  const id = l.id as (typeof LENS_IDS)[number];
+  const styles = l.styles.map(s => (s && typeof s === 'object' && typeof s.letter === 'string' && typeof s.name === 'string' && typeof s.key === 'string' && libraryTag(id, s) ? { ...s, letter: '' } : s));
+  return { ...l, styles };
+}
+
+export const DraftLens = z.preprocess(migrateLens, z.object({
   id: z.enum(LENS_IDS),
   title: Short,
   secondary: z.enum(LENS_IDS).nullable(),
@@ -97,7 +117,7 @@ export const DraftLens = z.object({
   library: z.array(DraftStyle),
   needs: z.record(z.enum(NEEDS), z.object({ label: Short, short: Short })),
   fit: z.record(z.enum(NEEDS), z.record(z.string(), Fit))
-});
+}));
 export type DraftLens = z.infer<typeof DraftLens>;
 
 export const GENDERS = ['woman', 'man', 'nonbinary', 'unstated'] as const;
@@ -113,8 +133,8 @@ export const Character = z.object({
   title: Short,
   /** A stage key of the work process. */
   stage: z.string(),
-  /** A library portrait (each has four moods in play), or the name of an uploaded photo. */
-  photo: z.string().max(300),
+  /** A library portrait (each has four moods in play), or an uploaded photo (D183). */
+  photo: Image,
   voice: z.object({ id: Short, language: Short, accent: Short, pace: Pct, warmth: Pct, formality: Pct, replyLength: z.enum(REPLY_LENGTHS) }),
   persona: Text,
   hiddenConcern: Text,
@@ -136,6 +156,31 @@ export const Character = z.object({
   custom: z.array(z.object({ label: Short, value: Text }))
 });
 export type Character = z.infer<typeof Character>;
+
+/**
+ * A hire candidate (D228), edited in Team, Hiring: who the participant interviews from the hiring action, as the CV
+ * card shows them. `background` is where they work now (the CV's previous role), `strengths` the skills they bring.
+ * Their numbers by stage are the drafted ones, by position, as the team's are.
+ */
+export const CandidateDraft = z.object({
+  id: z.string().regex(/^[a-z][a-z0-9_]*$/),
+  first: Short,
+  last: Short,
+  gender: z.enum(GENDERS),
+  pronouns: Short,
+  title: Short,
+  /** A stage key of the work process: where they would start. */
+  stage: z.string(),
+  /** A library portrait, an uploaded photo, or empty for none. */
+  photo: Image,
+  background: Short,
+  experience: Short,
+  strengths: Short,
+  remarks: Text
+});
+export type CandidateDraft = z.infer<typeof CandidateDraft>;
+/** At most this many candidates, the bundled storylines' count. */
+export const MAX_CANDIDATES = 10;
 
 export const PLAYS = ['static', 'live', 'hybrid'] as const;
 export type Plays = (typeof PLAYS)[number];
@@ -297,8 +342,8 @@ export const StakeholderDraft = z.object({
   kind: z.enum(STAKEHOLDER_KINDS),
   gender: z.enum(GENDERS),
   pronouns: Short,
-  /** A library portrait, or empty for their initials. */
-  photo: z.string().max(300),
+  /** A library portrait, an uploaded photo (D183), or empty for their initials. */
+  photo: Image,
   /** What the participant knows about them. */
   about: Text,
   persona: Text,
@@ -429,8 +474,25 @@ export const AuthorDraft = z.object({
     dilemmas: z.array(Dilemma).max(12).default([])
   }),
   story: z.object({
-    company: z.object({ name: Short, hq: Short, about: Text, team: Short, office: Short, logo: Short }),
-    product: z.object({ name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']) }),
+    /**
+     * `office`: the office image behind the player's screens, a library backdrop or an upload, or (from drafts and Kora) a description of it
+     * (D182). `logo`: up to three letters; `logoImage`: an uploaded logo, which wins over the letters.
+     */
+    company: z.object({ name: Short, hq: Short, about: Text, team: Short, office: Image, logo: Short, logoImage: Image.default('') }),
+    /**
+     * `view`: how the onboarding's portfolio scene shows the product (D182); `image`: its photo, for the photos view.
+     * For the portfolio scene (D221): `code` (a short code such as B10), `kind`, `tagline`, `audience` (who it is for),
+     * `imageAlt` (the photo described for screen readers) and up to four `features`, each a title, a sentence or two
+     * and, when placed, its spot on the photo (`x`, `y`: percent from the left and the top). The deal value is the
+     * product's typical deal too. `unit` names what one deal is ("outlet order", D227) and `units` its plural (empty: the
+     * singular with an s); left empty, participants read "deal".
+     */
+    product: z.object({
+      name: Short, dealValue: z.number().positive().nullable(), oneLine: Text, points: z.array(Short), view: z.enum(['model', 'photos', 'none']), image: Image.default(''),
+      code: Short.default(''), kind: Short.default(''), tagline: Short.default(''), audience: Text.default(''), imageAlt: Short.default(''),
+      features: z.array(z.object({ title: Short, text: Text, x: Pct.nullable(), y: Pct.nullable() })).max(MAX_PRODUCT_FEATURES).default([]),
+      unit: z.string().max(40).default(''), units: z.string().max(40).default('')
+    }),
     market: z.object({ customers: Short, rivals: z.array(z.object({ name: Short, angle: Text })) }),
     sponsor: z.object({ name: Short, title: Short, voice: Short }),
     screens: z.array(z.object({ key: z.string(), title: Short, body: Text }))
@@ -443,35 +505,69 @@ export const AuthorDraft = z.object({
     daysPerWeek: IntIn(MIN_DAYS, MAX_DAYS),
     pacing: z.enum(['forgiving', 'balanced', 'demanding']),
     /** People dynamics (D135): morale and trust reach output and attrition. New drafts switch it on; drafts saved before read back off. */
-    dynamics: z.boolean().optional()
+    dynamics: z.boolean().optional(),
+    /**
+     * Real world costs (D171 to D178) at the engine's defaults: diminishing returns on repeats, the team's time, the cost
+     * of neglect and silence, and the score's curves. New drafts switch it on; drafts saved before read back off.
+     */
+    realism: z.boolean().optional()
   }),
   /** Business variables (D136), 0 to 6, edited in Work process. */
   variables: z.array(VariableDraft).max(MAX_VARIABLES).default([]),
   /** Stakeholders outside the team (D160), 0 to 8, edited in Team. */
   stakeholders: z.array(StakeholderDraft).max(MAX_STAKEHOLDERS).default([]),
   team: z.array(Character).min(MIN_TEAM).max(MAX_TEAM),
+  /** Hire candidates (D228), edited in Team. Left out (drafts saved before), they are drafted from the brief until the author edits one. */
+  candidates: z.array(CandidateDraft).max(MAX_CANDIDATES).optional(),
   lens: DraftLens,
   actions: z.array(ActionDraft),
   events: z.array(EventDraft),
   scoring: z.object({
     skills: z.array(z.object({ key: z.string(), name: Short, reportOnly: z.boolean() })),
-    samples: z.array(z.object({ id: z.string(), with: Short, answer: Text, scored: z.enum(BANDS), call: z.enum(BANDS).nullable() })),
+    /**
+     * `reason`: why the author disagrees with the band GenieKreator gave (D229), kept with the draft; a disagreement
+     * with a reason counts as resolved for the publish gate. `resolution`: how they resolved it, by changing the
+     * rubric or by recording the reason alone.
+     */
+    samples: z.array(z.object({ id: z.string(), with: Short, answer: Text, scored: z.enum(BANDS), call: z.enum(BANDS).nullable(), reason: Text.default(''), resolution: z.enum(['reason', 'rubric']).nullable().default(null) })),
+    /**
+     * The conversations' rubric in the author's words (D229): per dimension key (listening, clarity, involvement for a
+     * 1:1), what it looks for and phrases that count as evidence. Exported to every conversation rated on it.
+     */
+    rubric: z.array(z.object({ key: z.string().regex(/^[a-z][a-z0-9_]*$/), label: Short, cues: z.array(z.string().max(80)).max(12) })).default([]),
+    /** What each level looks like for a skill (D229), lowest first, by skill key: the anchors the report and the evaluator read. */
+    anchors: z.record(z.string(), z.array(Text)).default({}),
     framework: z.object({ file: Short, pages: z.number().int().min(0), step: z.union([z.literal(1), z.literal(2), z.literal(3)]), rows: z.array(FrameworkRow), confirmed: z.boolean() }).nullable(),
     /** The rating scale's level names, lowest first: 3 to 7 (the report's scale, D128). */
     levels: z.array(Short).min(3).max(7).default(() => DEFAULT_SCALE.map(l => l.name)),
     /** The report's sections in the engine's order; null is the purpose's default set. */
     reportSections: z.array(z.enum(REPORT_SECTIONS)).min(1).nullable().default(null)
   }),
+  /** The client brand (D181): exported as the storyline's `brand`. `logo` is an uploaded image (D183); `preview` is the tab's own preview switch. */
   brand: z.object({
     from: z.enum(['knolskape', 'client']),
     name: Short,
-    logo: Short,
+    logo: Image,
     main: Short,
     second: Short,
-    font: Short,
+    font: z.string().max(40),
     look: z.enum(['dark', 'light', 'participant']),
     preview: z.enum(['board', 'report'])
   }),
+  /**
+   * What the LMS records of a run (D184), exported as the storyline's `lms`. Edited in Review and publish. `completionWeeks`: the weeks
+   * to complete for the `weeks` rule (null: every week); `passScore`: the Leadership Score, 0 to 100, for the `score` rule; `passLevel`:
+   * the lowest overall level that passes, for the `level` rule.
+   */
+  lms: z.object({
+    completion: z.enum(LMS_COMPLETION),
+    completionWeeks: IntIn(1, MAX_WEEKS).nullable(),
+    pass: z.enum(LMS_PASS),
+    passScore: Pct,
+    passLevel: Short,
+    package: z.enum(LMS_PACKAGES),
+    connected: z.boolean()
+  }).default(() => ({ ...DEFAULT_LMS_DRAFT })),
   /**
    * `skipTest`: the author ticked "Publish without testing" for this version (D132): a synthetic test that has
    * not run, or not run fully, on this version is then advisory. It never covers a failed test, and it resets on publish.
@@ -491,6 +587,13 @@ export const AuthorDraft = z.object({
   }).nullable()
 });
 export type AuthorDraft = z.infer<typeof AuthorDraft>;
+
+/** A new draft's LMS settings (D184): the engine's defaults. */
+export const DEFAULT_LMS_DRAFT = {
+  completion: DEFAULT_LMS.completion.rule, completionWeeks: null, pass: DEFAULT_LMS.pass.rule, passScore: DEFAULT_LMS.pass.score, passLevel: '',
+  package: DEFAULT_LMS.package, connected: DEFAULT_LMS.connected
+} as const satisfies z.input<typeof AuthorDraft>['lms'];
+export { BRAND_FONTS };
 
 /** Where "Play a week" leaves the storyline; the participant mock reads it (`src/engine/mock.ts`, DRAFT_KEY). */
 export const DRAFT_KEY = 'ilead.author.draft';

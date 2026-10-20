@@ -7,8 +7,8 @@
       "cursor": { "value": "ilPulse 0.9s infinite", "$description": "Streaming caret while the NPC speaks" }
     },
     "mic": {
-      "glow-ready": { "value": "0 0 24px {color.voice.ready-glow}" },
-      "glow-listening": { "value": "0 0 40px {color.voice.listening-glow}" },
+      "glow-ready": { "value": "none" },
+      "glow-listening": { "value": "0 0 0 3px {color.voice.listening-glow}" },
       "ring": { "value": "ilRing 1.4s ease-out infinite", "$description": "Pulse ring while listening" }
     },
     "waveform": {

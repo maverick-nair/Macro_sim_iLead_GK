@@ -29,11 +29,11 @@ export function KpiTile({ metric, value, trend }: KpiTileProps) {
   const tone = sign > 0 ? 'text-status-gain' : sign < 0 ? 'text-status-decline' : 'text-fg-secondary';
   const name = t('metric.nameLower', { metric });
   return (
-    <div role="group" aria-label={t('metric.team.aria', { metric: name, value: number(value), trend: trendWords })} className="flex flex-col gap-1.5 rounded-16 border border-line-default bg-surface-card px-3.5 py-2.5 backdrop-blur-12 short:gap-1 short:py-1.5">
+    <div role="group" aria-label={t('metric.team.aria', { metric: name, value: number(value), trend: trendWords })} className="flex flex-col gap-1.5 rounded-4 border border-line-default bg-surface-card px-3.5 py-2.5 short:gap-1 short:py-1.5">
       <span className="text-12 text-fg-secondary">{t('metric.team', { metric: name })}</span>
       <div className="flex items-baseline gap-2">
-        <b className="text-22 font-700 short:text-18">{number(value)}</b>
-        <span className={`text-12 font-700 ${tone}`}>{trendText}</span>
+        <b className="text-22 font-600 short:text-18">{number(value)}</b>
+        <span className={`text-12 font-600 ${tone}`}>{trendText}</span>
       </div>
       <MetricTrack value={value} />
     </div>

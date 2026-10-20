@@ -1,0 +1,19 @@
+{
+  "preview.bar.aria": "Preview controls",
+  "preview.bar.notice": "Preview · test run · nothing is saved to reports",
+  "preview.bar.draft": "Draft for version {version}, saved {at}",
+  "preview.bar.draftLocal": "The draft saved in this browser",
+  "preview.jump.button": "Jump to",
+  "preview.jump.aria": "Points in the run",
+  "preview.jump.week": "{unit, select, year {Year} month {Month} day {Day} other {Week}}",
+  "preview.jump.item": "{key, select, onboarding {Onboarding} styles {Monday styles, {unit, select, year {year} month {month} day {day} other {week}} {n}} board {Your desk, {unit, select, year {year} month {month} day {day} other {week}} {n}} weekend {{unit, select, year {Year} month {Month} day {Day} other {Week}} end, {unit, select, year {year} month {month} day {day} other {week}} {n}} report {End and report} other {}}",
+  "preview.restart": "Restart",
+  "preview.back": "Back to GenieKreator",
+  "preview.trace.show": "Show where this comes from",
+  "preview.trace.count": "{count, plural, =0 {Nothing on this screen is labelled yet.} one {# thing on this screen is labelled with the GenieKreator section it comes from.} other {# things on this screen are labelled with the GenieKreator section they come from.}}",
+  "preview.updated": "Updated from GenieKreator.",
+  "preview.updated.detail": "Reload plays the latest save from the same point.",
+  "preview.reload": "Reload",
+  "preview.working": "Opening the preview",
+  "preview.failed": "The preview could not do that. Try again, or preview again from GenieKreator."
+}

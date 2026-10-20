@@ -9,6 +9,7 @@ import { useI18n } from '../i18n';
 import { WithClientLogo } from '../theme/brand';
 import { ShareGridChart, TrendChart, TrendSample, type TrendLook } from './charts';
 import './messages';
+import { ILeadLogo } from '../components/shell/Logo';
 
 /**
  * The group report's sections (D75, D77), in the individual report's design language: a heading, a
@@ -18,8 +19,8 @@ import './messages';
 
 type R = GroupReport;
 type Money = (n: number) => string;
-const CARD = 'flex flex-col gap-1.5 rounded-16 border border-line-default px-3.5 py-3 text-13';
-const H2 = 'm-0 text-20 font-700';
+const CARD = 'flex flex-col gap-1.5 border border-line-default px-3.5 py-3 text-13';
+const H2 = 'm-0 font-display text-36 leading-tight font-400';
 const INTRO = 'm-0 text-13 text-fg-secondary text-pretty';
 const BODY = 'm-0 text-14 text-pretty';
 
@@ -39,8 +40,8 @@ export function Prompts({ lines }: { lines: string[] }) {
   const { t } = useI18n();
   if (!lines.length) return null;
   return (
-    <div className="flex flex-col gap-1 rounded-16 bg-surface-raised px-3.5 py-3">
-      <h3 className="m-0 text-13 font-700">{t('group.prompts')}</h3>
+    <div className="flex flex-col gap-1 bg-surface-raised px-3.5 py-3">
+      <h3 className="m-0 text-13 font-600">{t('group.prompts')}</h3>
       <ul className="m-0 flex list-disc flex-col gap-1 ps-5 text-13">
         {lines.map(l => <li key={l} className="text-pretty">{l}</li>)}
       </ul>
@@ -70,17 +71,17 @@ export function GroupCover({ report }: { report: R }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <WithClientLogo className="self-start">
-            <span className="self-start bg-(image:--il-fill-brand) bg-clip-text text-20 font-700 tracking-(--il-report-logo-tracking) text-transparent">{t('hud.logo')}</span>
+            <ILeadLogo size="md" className="self-start" />
           </WithClientLogo>
-          <span className="text-12 font-700 tracking-(--il-tracking-eyebrow-wide) text-fg-secondary uppercase">{t('group.eyebrow', { purpose: report.cohort.purpose })}</span>
-          <h1 tabIndex={-1} className="m-0 font-700 outline-0 leading-(--il-report-title-leading) tracking-(--il-report-title-tracking) text-48 text-balance">{report.cohort.name}</h1>
+          <span className="text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-fg-secondary uppercase">{t('group.eyebrow', { purpose: report.cohort.purpose })}</span>
+          <h1 tabIndex={-1} className="m-0 font-display text-58 leading-(--il-report-title-leading) font-400 outline-0 text-balance">{report.cohort.name}</h1>
           <span className="text-14 text-fg-secondary">{t('group.cover.line', { storyline: report.cohort.storyline.name, lens: report.cohort.lens.title })}</span>
         </div>
         <dl className="m-0 flex flex-wrap gap-2.5">
           {boxes.map(b => (
-            <div key={b.key} className="flex flex-col rounded-18 border border-line-default px-4 py-3">
+            <div key={b.key} className="flex flex-col border border-line-default px-4 py-3">
               <dt className="text-12 text-fg-secondary">{t('group.cover.box', { box: b.key })}</dt>
-              <dd className="m-0 text-24 font-700">{b.value}</dd>
+              <dd className="m-0 text-24 font-600">{b.value}</dd>
             </div>
           ))}
         </dl>
@@ -95,15 +96,15 @@ export function WithheldNotice({ message }: { message: string }) {
   const { t } = useI18n();
   const id = useId();
   return (
-    <section aria-labelledby={`${id}h`} className="flex flex-col gap-1.5 rounded-16 border-2 border-status-attention px-4 py-3.5">
-      <h2 id={`${id}h`} className="m-0 text-17 font-700">{t('group.withheld.title')}</h2>
+    <section aria-labelledby={`${id}h`} className="flex flex-col gap-1.5 border-2 border-status-attention px-4 py-3.5">
+      <h2 id={`${id}h`} className="m-0 text-17 font-600">{t('group.withheld.title')}</h2>
       <p className={BODY}>{message}</p>
     </section>
   );
 }
 
 /** Assessment: the verdict distribution against the benchmark, and the participant table by name. */
-export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }) {
+export function VerdictsSection({ data, capped = null }: { data: NonNullable<R['assessment']>; capped?: string | null }) {
   const { t, number } = useI18n();
   const hasBenchmark = data.verdicts.some(v => v.benchmark !== null);
   const series = groupSeries(t, hasBenchmark);
@@ -111,6 +112,7 @@ export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }
   return (
     <Section title={t('group.verdicts.title')} intro={t('group.verdicts.bar', { bar: data.bar })}>
       <p className={BODY}>{data.narrative}</p>
+      {capped && <p className={BODY}>{capped}</p>}
       <ChartBlock
         title={t('group.verdicts.chartTitle')}
         chart={<BarsChart series={series} max={100} label={t('group.verdicts.aria', { list: data.verdicts.map(v => t('group.verdicts.item', { label: v.label, pct: Math.round(v.share) })).join(t('report.listSeparator')) })}
@@ -122,7 +124,7 @@ export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }
       />
       <SeriesLegend series={series} />
       <div className="flex flex-col gap-1.5">
-        <h3 className="m-0 text-15 font-700">{t('group.verdicts.participantsTitle')}</h3>
+        <h3 className="m-0 text-15 font-600">{t('group.verdicts.participantsTitle')}</h3>
         <p className="m-0 text-12 text-fg-secondary">{t('group.verdicts.participantsNote')}</p>
         <DataTable
           caption={t('group.verdicts.participantsTitle')}
@@ -136,7 +138,7 @@ export function VerdictsSection({ data }: { data: NonNullable<R['assessment']> }
 }
 
 /** Skills: the group's average out of 10 beside the benchmark's, with levels, and a narrative per skill. */
-export function SkillsSection({ data, participants }: { data: NonNullable<R['skills']>; participants: number }) {
+export function SkillsSection({ data, participants, capped = null }: { data: NonNullable<R['skills']>; participants: number; capped?: string | null }) {
   const { t, number } = useI18n();
   const hasBenchmark = data.rows.some(s => s.benchmark !== null);
   const series = groupSeries(t, hasBenchmark);
@@ -157,13 +159,14 @@ export function SkillsSection({ data, participants }: { data: NonNullable<R['ski
         }}
       />
       <SeriesLegend series={series} />
+      {capped && <p className={BODY}>{capped}</p>}
       <div className="grid gap-2.5 grid-cols-(--il-report-halves-columns)">
         {data.rows.map(s => (
           <article key={s.key} aria-label={s.name} className={CARD}>
             <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-              <h3 className="m-0 text-15 font-700">{s.name}</h3>
-              <span className="flex items-center gap-2 text-12 font-700">
-                {s.reportOnly && <span className="rounded-pill bg-surface-raised px-2 py-0.5 text-fg-secondary">{t('report.skills.reportOnly')}</span>}
+              <h3 className="m-0 text-15 font-600">{s.name}</h3>
+              <span className="flex items-center gap-2 text-12 font-600">
+                {s.reportOnly && <span className="rounded-4 bg-surface-raised px-2 py-0.5 text-fg-secondary">{t('report.skills.reportOnly')}</span>}
                 {value(s.group)}
               </span>
             </div>
@@ -266,9 +269,9 @@ function Meter({ who, pct }: { who: 'group' | 'benchmark'; pct: number }) {
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-12 text-fg-secondary">{t('group.adaptability.label', { who })}</span>
-      <b className={who === 'group' ? 'text-40 font-700' : 'text-28 font-700'}>{`${Math.round(pct)}%`}</b>
-      <div role="img" aria-label={t('group.adaptability.aria', { who, pct: Math.round(pct) })} className="h-(--il-report-meter-height) w-60 overflow-hidden rounded-pill bg-track">
-        <div className={`h-full rounded-pill ${who === 'group' ? 'bg-accent-default' : 'border-2 border-accent-default'}`} style={{ inlineSize: `${pct}%` }}></div>
+      <b className={who === 'group' ? 'text-40 font-600' : 'text-28 font-600'}>{`${Math.round(pct)}%`}</b>
+      <div role="img" aria-label={t('group.adaptability.aria', { who, pct: Math.round(pct) })} className="h-(--il-report-meter-height) w-60 overflow-hidden rounded-4 bg-track">
+        <div className={`h-full rounded-4 ${who === 'group' ? 'bg-accent-default' : 'border-2 border-accent-default'}`} style={{ inlineSize: `${pct}%` }}></div>
       </div>
     </div>
   );
@@ -290,7 +293,7 @@ export function AdaptabilitySection({ data }: { data: NonNullable<R['styles']> }
       </div>
       <p className={BODY}>{a.narrative}</p>
       {a.compare && <p className="m-0 text-14 font-600">{a.compare}</p>}
-      <h3 className="m-0 text-17 font-700">{t('group.adaptability.preferredTitle')}</h3>
+      <h3 className="m-0 text-17 font-600">{t('group.adaptability.preferredTitle')}</h3>
       <ChartBlock
         title={t('group.adaptability.preferredChart')}
         chart={<BarsChart series={series} max={100}
@@ -337,7 +340,7 @@ export function StylesSection({ data }: { data: NonNullable<R['styles']> }) {
       <div className="grid gap-2.5 grid-cols-(--il-report-tiles-columns)">
         {data.perStyle.map(s => (
           <article key={s.key} aria-label={name(s.key)} className={CARD}>
-            <h3 className="m-0 text-15 font-700">{name(s.key)}</h3>
+            <h3 className="m-0 text-15 font-600">{name(s.key)}</h3>
             <span className="flex flex-wrap gap-x-3 text-12 font-600 text-fg-secondary">
               <span>{t('report.styles.proportion', { pct: Math.round(s.proportion) })}</span>
               <span>{t('report.styles.accuracy', { used: String(s.accuracy !== null), pct: Math.round(s.accuracy ?? 0) })}</span>
@@ -364,7 +367,7 @@ export function ConsistencySection({ data }: { data: NonNullable<R['consistency'
       <div className="grid gap-2.5 grid-cols-(--il-report-tiles-columns)">
         {data.deviations.map(d => (
           <article key={d.key} aria-label={measure(d.key)} className={CARD}>
-            <h3 className="m-0 text-15 font-700">{measure(d.key)}</h3>
+            <h3 className="m-0 text-15 font-600">{measure(d.key)}</h3>
             <b className="text-22">{t('report.consistency.deviation', { has: String(d.group !== null), pct: Math.round(d.group ?? 0) })}</b>
             {d.benchmark !== null && <span className="text-12 text-fg-secondary">{t('group.business.benchmark', { value: `${Math.round(d.benchmark)}%` })}</span>}
             <span className="text-12 text-fg-secondary text-pretty">{t('report.consistency.explain', { key: d.key })}</span>
@@ -431,7 +434,7 @@ export function ActionsSection({ data }: { data: NonNullable<R['actions']> }) {
     <Section title={t('group.actions.title')} intro={t('group.actions.intro')}>
       {data.narrative && <p className={BODY}>{data.narrative}</p>}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-12 text-fg-secondary">
-        <span className="font-700">{t('report.distribution.legend')}</span>
+        <span className="font-600">{t('report.distribution.legend')}</span>
         {(['none', 'veryLow', 'low', 'moderate', 'high'] as const).map(b => (
           <span key={b} className="flex items-center gap-1.25 whitespace-nowrap"><span aria-hidden="true" className={`size-3.5 shrink-0 rounded-4 ${impactClass(b)}`}></span>{impact(b)}</span>
         ))}
@@ -449,7 +452,7 @@ export function ActionsSection({ data }: { data: NonNullable<R['actions']> }) {
       <SeriesLegend series={series} />
       <div className="grid gap-2 grid-cols-(--il-report-tiles-columns)">
         {data.rows.filter(r => r.frequency > 0).map(r => (
-          <div key={r.key} className="flex items-center justify-between gap-2 rounded-12 border border-line-default px-3 py-2 text-13">
+          <div key={r.key} className="flex items-center justify-between gap-2 rounded-4 border border-line-default px-3 py-2 text-13">
             <span className="font-600">{r.name}</span>
             <span className="flex items-center gap-1.25 whitespace-nowrap text-12"><span aria-hidden="true" className={`size-3.5 shrink-0 rounded-4 ${impactClass(r.impact)}`}></span>{impact(r.impact)}</span>
           </div>
@@ -502,7 +505,7 @@ export function TakeawaysSection({ data }: { data: R['takeaways'] }) {
       <div className="grid gap-2.5 grid-cols-(--il-report-halves-columns)">
         {data.map(g => (
           <article key={g.key} aria-label={g.title} className={CARD}>
-            <h3 className="m-0 text-15 font-700">{g.title}</h3>
+            <h3 className="m-0 text-15 font-600">{g.title}</h3>
             <ul className="m-0 flex list-disc flex-col gap-1 ps-5 text-13">
               {g.questions.map(q => <li key={q} className="text-pretty">{q}</li>)}
             </ul>

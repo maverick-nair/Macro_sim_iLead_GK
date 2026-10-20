@@ -53,6 +53,8 @@ describe('skill ratings', () => {
     for (let i = 0; i < 5; i++) rec(sim, [['results_ownership', 'strong']]);
     rec(sim, [['results_ownership', 'harmful']]);
     expect(skill(sim, 'results_ownership')).toMatchObject({ capped: true, level: { name: 'Developing' } });
+    // Its score is held under Proficient too, so the overall level averages what is shown (D170).
+    expect(skill(sim, 'results_ownership').score).toBe(59);
   });
 
   it('shows an overall level only when at least half the skills are rated', () => {
@@ -61,11 +63,15 @@ describe('skill ratings', () => {
     for (const k of keys.slice(0, 3)) { rec(sim, [[k, 'adequate']]); rec(sim, [[k, 'adequate']]); }
     expect(en(buildReport(sim)).summary.level).toBeNull();
     rec(sim, [[keys[3], 'adequate']]); rec(sim, [[keys[3], 'adequate']]);
-    expect(en(buildReport(sim)).summary.level).toEqual({ index: 2, name: 'Proficient' });
-    // The level line praises the whole run (D143): with no revenue at all, the data contradicts it.
-    expect(en(buildReport(sim)).summary.narrative).toBeNull();
+    // The words reach Proficient; with no revenue at all the business outcome holds the level at Developing (D168).
+    const capped = en(buildReport(sim)).summary;
+    expect(capped.level).toEqual({ index: 1, name: 'Developing' });
+    expect(capped.levelCap).toMatchObject({ from: { index: 2, name: 'Proficient' }, gates: ['business'] });
+    expect(capped.levelCap!.why).toBe('Rated Developing: your words rated Proficient, but revenue reached 0% of target.');
+    // The capped level's line is the one shown; the Proficient line praises the whole run (D143), and only fits once the revenue is in.
+    expect(capped.narrative).toBe(config.report.narratives.overall[1]);
     sim.funnel.value = config.money.target;
-    expect(en(buildReport(sim)).summary.narrative).toBe(config.report.narratives.overall[2]);
+    expect(en(buildReport(sim)).summary).toMatchObject({ level: { index: 2, name: 'Proficient' }, levelCap: null, narrative: config.report.narratives.overall[2] });
   });
 
   it('quotes only verbatim words from the participant, best band first, up to 2', () => {
@@ -96,6 +102,22 @@ describe('the evaluator rates the linked skills', () => {
     expect(ok.skills!.map(s => s.key)).toEqual(skills);
     const bad = await heuristicEvaluator.evaluate({ format: 'roleplay', text: 'This is your fault, you are useless.', skills });
     expect(bad.skills!.every(s => s.band === 'harmful')).toBe(true);
+  });
+});
+
+describe('key moments', () => {
+  it('keeps at least one best moment when the run has one, in place of the lightest revisit', () => {
+    const sim = createSim(config, 1);
+    // Nine heavy conversations that went badly, each with its own title, and one light one that went well.
+    for (let i = 0; i < 9; i++) rec(sim, [['giving_feedback', 'weak']], { title: `Hard talk ${i}`, band: 'weak', impact: 20 + i });
+    rec(sim, [['giving_feedback', 'strong']], { title: 'Good talk', band: 'strong', impact: 1 });
+    const moments = en(buildReport(sim)).moments;
+    expect(moments).toHaveLength(7);
+    expect(moments.filter(m => m.kind === 'best').map(m => m.title)).toEqual(['Good talk with Kent went well']);
+    // The lightest revisit of the top seven made way; the heavier ones stay.
+    const titles = moments.map(m => m.title);
+    expect(titles).not.toContain('Hard talk 2 with Kent did not land');
+    expect(titles).toContain('Hard talk 3 with Kent did not land');
   });
 });
 

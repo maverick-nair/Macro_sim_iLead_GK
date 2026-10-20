@@ -50,26 +50,26 @@ export function SponsorStage({ sponsor, speaking, caption, spokenLine, notes, on
   return (
     <div className="grid flex-1 content-start grid-cols-2 gap-5 stage-narrow:grid-cols-1">
       <div className="flex flex-col items-center gap-3.5">
-        <div className="relative flex aspect-square w-full max-w-105 items-center short:max-w-80 shorter:max-w-70 justify-center rounded-28 bg-(image:--il-liveshell-sponsor-fill)">
+        <div className="relative flex aspect-square w-full max-w-105 items-center short:max-w-80 shorter:max-w-70 justify-center rounded-4 bg-(image:--il-liveshell-sponsor-fill)">
           {sponsor.img
-            ? <img src={sponsor.img} alt={sponsor.name} className="size-full rounded-28 object-cover object-top" />
-            : <span aria-hidden="true" className="text-110 font-700 text-liveshell-on-signal opacity-85">{initialsOf(sponsor.name)}</span>}
-          <span className="absolute top-3.5 start-4 text-12 font-700 text-liveshell-on-signal">{t('liveshell.sponsor.avatar')}</span>
-          {speaking && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-liveshell-roleplay-speaking-ring) rounded-32 border-2 border-solid border-liveshell-sponsor-ring" />}
+            ? <img src={sponsor.img} alt={sponsor.name} className="size-full rounded-4 object-cover object-top" />
+            : <span aria-hidden="true" className="text-110 font-600 text-liveshell-on-signal opacity-85">{initialsOf(sponsor.name)}</span>}
+          <span className="absolute top-3.5 start-4 text-12 font-600 text-liveshell-on-signal">{t('liveshell.sponsor.avatar')}</span>
+          {speaking && <span aria-hidden="true" className="absolute -inset-1.5 animate-(--il-liveshell-roleplay-speaking-ring) rounded-4 border-2 border-solid border-liveshell-sponsor-ring" />}
         </div>
         {caption && <LiveCaption variant="panel" centered name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} />}
         {!caption && spokenLine !== undefined && <LineAnnouncer line={spokenLine} />}
       </div>
       <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-2.5 rounded-20 border border-line-default bg-surface-card p-4">
+        <div className="flex flex-col gap-2.5 rounded-4 border border-line-default bg-surface-card p-4">
           <b>{t('liveshell.sponsor.notes.title')}</b>
           <span className="text-12 text-fg-secondary">{t('liveshell.sponsor.notes.lead', { name: shortNameOf(sponsor) })}</span>
           {notes.map((n, i) => (
             <input key={i} value={n.value} onChange={e => onNoteChange(i, e.target.value)} placeholder={n.prompt} aria-label={t('liveshell.sponsor.notes.aria', { n: i + 1 })}
-              className="h-10 rounded-12 border border-solid border-line-control bg-surface-raised px-3 py-0 text-14 text-fg-primary focus-visible:outline-2 focus-visible:outline-accent-secondary" />
+              className="h-10 rounded-4 border border-solid border-line-control bg-surface-raised px-3 py-0 text-14 text-fg-primary focus-visible:outline-3 focus-visible:outline-accent-secondary" />
           ))}
         </div>
-        <div className="flex flex-col gap-2 rounded-20 border border-line-default bg-surface-card p-4">
+        <div className="flex flex-col gap-2 rounded-4 border border-line-default bg-surface-card p-4">
           <div className="flex justify-between">
             <b>{t('liveshell.sponsor.funnel.title', { unit: funnel.periodUnit })}</b>
             <span className="text-12 text-fg-secondary">{t('liveshell.sponsor.funnel.pinned')}</span>

@@ -112,7 +112,13 @@ export const MemberView = z.object({
   unread: z.boolean(),
   promise: Text.nullable(),
   /** `attitude`, `awareness` and `responsibilities` come only when the storyline authors them (D97). */
-  profile: z.object({ previous: Text, tenure: Text, experience: Text, skills: Text, remarks: Text, relations: Text, attitude: Text.optional(), awareness: Text.optional(), responsibilities: Text.optional() })
+  profile: z.object({ previous: Text, tenure: Text, experience: Text, skills: Text, remarks: Text, relations: Text, attitude: Text.optional(), awareness: Text.optional(), responsibilities: Text.optional() }),
+  /**
+   * Realism (D174), only when the storyline has it: whole periods this person has had no one to one time with you,
+   * and whether that is past the neglect window (they are losing heart and delivering less).
+   */
+  unattended: z.number().int().min(0).optional(),
+  neglected: z.boolean().optional()
 });
 
 export const Clock = z.object({
@@ -160,6 +166,11 @@ export const LiveView = z.object({
   stakeholder: z.object({ key: Id, role: Text, kind: z.string(), type: z.enum(['meet', 'present', 'negotiate', 'email', 'reply']) }).nullable().default(null)
 });
 
+/** How a repeated action would land now (D171). */
+export const Repeat = z.object({ share: z.number().min(0).max(1), uses: z.number().int().min(0), ago: z.number().int().min(0), window: z.number().int().min(1),
+  /** A team action: a repeat this soon also tires everyone. */
+  tires: z.boolean().optional() });
+
 export const ActionView = z.object({
   key: Id, rule: Id, name: Text, description: Text, scope: z.enum(['team', 'member']), kind: z.enum(['live', 'static', 'hybrid']),
   /** `cost` is what it costs now (0 on the extra hire budget). `perk` names an unlock reward that applies to it. */
@@ -183,7 +194,16 @@ export const ActionView = z.object({
   /** Why a team action is unavailable, or null. */
   blocked: Block.nullable(),
   /** Why a member action is unavailable for each member, or null. */
-  blockedFor: z.record(Id, Block.nullable())
+  blockedFor: z.record(Id, Block.nullable()),
+  /**
+   * Realism (D171, D172), only when the storyline has it. A use now lands at `share` of its good effects because of
+   * `uses` earlier ones in the last `window` sub-periods, the latest `ago` sub-periods ago: for a team action
+   * (`repeat`), or by member (`repeatFor`, members with a full share left out). `teamTime` is the share of the team's
+   * working time each of its sub-periods takes (team actions).
+   */
+  repeat: Repeat.nullable().optional(),
+  repeatFor: z.record(Id, Repeat).optional(),
+  teamTime: z.number().min(0).max(1).optional()
 });
 
 export const LogEntry = z.object({
@@ -224,7 +244,7 @@ export const PeriodSummary = z.object({
   /** Shown business variables at the period's start and end (D136); left out when the storyline has none. */
   variables: z.array(z.object({ key: Id, start: Num, end: Num })).optional(),
   /** Choices made, or left to their default, this period (D137). */
-  choices: z.array(z.object({ id: Id, title: Text, label: Text.nullable(), by: z.enum(['you', 'default']) })).optional(),
+  choices: z.array(z.object({ id: Id, title: Text, label: Text.nullable(), by: z.enum(['you', 'kept', 'default']) })).optional(),
   /** People off sick or gone because their morale stayed low (D135). */
   attrition: z.array(z.object({ memberId: Id, name: Text, kind: z.enum(['sick', 'resigned']) })).optional(),
   /** Each stakeholder's relationship at the period's start and end (D160). */
@@ -241,11 +261,15 @@ export const VariableView = z.object({
 /** A choice waiting for the participant (D137): what is known and the options, never their consequences. */
 export const OpenChoice = z.object({
   id: Id, eventKey: Id, card: z.enum(['impact', 'signal', 'capacity', 'diagnostic', 'opportunity', 'crisis']), title: Text, body: Text, memberId: Id.nullable(), known: z.array(Text),
-  options: z.array(z.object({ key: Id, label: Text, detail: Text.nullable() })).min(2).max(4), dueInSubPeriods: z.number().int().min(0)
+  options: z.array(z.object({ key: Id, label: Text, detail: Text.nullable() })).min(2).max(4), dueInSubPeriods: z.number().int().min(0),
+  /** The option that applies when nobody decides, or null for none (D231: the participant may let it stand). */
+  default: Id.nullable().default(null),
+  /** End week was pressed and this decision is still open (D231): it is shown before the week ends. */
+  holdsWeekEnd: z.boolean().default(false)
 });
 /** A choice made, or left to its default (D137), and what it changed. */
 export const ChoiceView = z.object({
-  id: Id, eventKey: Id, title: Text, option: Id.nullable(), label: Text.nullable(), outcome: Text.nullable(), by: z.enum(['you', 'default']), period: z.number().int(), sub: z.number().int(),
+  id: Id, eventKey: Id, title: Text, option: Id.nullable(), label: Text.nullable(), outcome: Text.nullable(), by: z.enum(['you', 'kept', 'default']), period: z.number().int(), sub: z.number().int(),
   changes: z.array(MetricChange), variables: z.array(z.object({ key: Id, name: Text, delta: Num })), revenue: Num,
   triggered: z.array(z.object({ key: Id, title: Text, period: z.number().int() }))
 });
@@ -273,16 +297,41 @@ export const StakeholderView = z.object({
   request: z.object({ id: Id, messageId: Id, kind: z.enum(['message', 'meeting']), title: Text, interaction: Id.nullable(), dueInSubPeriods: z.number().int().min(0) }).nullable()
 });
 
+/**
+ * What the player renders from the storyline's look and world (D181 to D183), so no screen needs a fixture: the client brand
+ * (the theme the player applies when the server has none), the company logo, the office image behind the screens, the
+ * product portfolio for onboarding, and every intro screen with its title. Images are site paths, https or data URLs.
+ */
+export const StorylineLook = z.object({
+  brand: z.object({
+    name: Text.nullable(), colors: z.object({ main: z.string(), second: z.string() }).nullable(), logo: z.string().nullable(),
+    font: z.string().nullable(), mode: z.enum(['dark', 'light', 'system']).nullable()
+  }).nullable().default(null),
+  logo: z.object({ image: z.string().nullable(), text: z.string().nullable() }).nullable().default(null),
+  office: z.string().nullable().default(null),
+  products: z.array(z.object({
+    name: Text, line: Text.nullable(), specs: z.array(Text), image: z.string().nullable(), view: z.enum(['photo', 'model']),
+    // D221: each null or empty when the storyline leaves it out.
+    code: Text.nullable().default(null), kind: Text.nullable().default(null), tagline: Text.nullable().default(null),
+    audience: Text.nullable().default(null), dealValue: z.number().nullable().default(null), imageAlt: Text.nullable().default(null),
+    features: z.array(z.object({ title: Text, text: Text, spot: z.object({ x: z.number(), y: z.number() }).nullable() })).default([])
+  })).default([]),
+  screens: z.array(z.object({ key: Id, title: Text, body: z.array(Text) })).default([])
+});
+export type StorylineLook = z.output<typeof StorylineLook>;
+
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
   /** The storyline's name, the organisation the participant joins and the authored welcome letter, for onboarding. */
   storyline: z.object({ name: Text, organisation: Text.nullable(), locale: z.string().default('en'), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish(),
     /** The welcome video, replayable from Tutorial and video (D90): its file, poster, captions track and transcript. */
-    video: z.object({ src: z.string().optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Text) }).nullish() }),
+    video: z.object({ src: z.string().optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Text) }).nullish(),
+    ...StorylineLook.shape }),
   lens: LensView,
   clock: Clock,
-  money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num }),
+  /** `unit`: the sales unit the storyline names (D227), or null for the catalog's word (deal). */
+  money: z.object({ currency: z.string(), locale: z.string(), display: z.enum(['symbol', 'narrowSymbol', 'code']), target: Num, value: Num, valueThisPeriod: Num, unit: z.object({ one: Text, other: Text }).nullable().default(null) }),
   members: z.array(MemberView),
   kpis: z.array(z.object({ metric: MetricKey, value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']) })),
   /** Team Pulse (scoring-and-report.md 6): the mean of team morale and trust, its trend this period, and the mood counts. */
@@ -324,7 +373,14 @@ export const EngineView = z.object({
   periods: z.array(PeriodSummary),
   badges: z.array(z.object({ key: Id, rule: Id, name: Text, description: Text, earned: z.boolean(), period: z.number().int().nullable(), reason: Text.nullable() })),
   /** The sponsor meter may show its value (Configuration Spec, CEO meter 0 to 100). */
-  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, value: Num, unlockAt: Num, checkInBelow: Num, level: SponsorLevel, causes: z.array(z.object({ text: Text, delta: Num })) }),
+  sponsor: z.object({ name: Text, title: Text, img: z.string().nullable(), styleLine: Text, value: Num, unlockAt: Num, checkInBelow: Num, level: SponsorLevel, causes: z.array(z.object({ text: Text, delta: Num })),
+    /**
+     * Realism (D173), only when the storyline has it: whole periods since your last word to the sponsor, and the
+     * silence at which confidence starts to slip each period; your own update, its cost in sub-periods and why it
+     * cannot be given now (`done` this period, not enough `capacity`), or null when it can.
+     */
+    silence: z.object({ weeks: z.number().int().min(0), costsFrom: z.number().int().min(1) }).optional(),
+    update: z.object({ cost: Num, blocked: z.enum(['off', 'done', 'capacity']).nullable() }).optional() }),
   /** Unlock rewards on offer: `bonus_day`, `hire_budget`, `team_activity`. */
   pendingReward: z.array(Id).nullable(),
   /** Unlock rewards in hand, not yet used. */
@@ -351,6 +407,8 @@ export const EngineView = z.object({
   /** Choices waiting for the participant, and choices made (D137). */
   openChoices: z.array(OpenChoice).default([]),
   choices: z.array(ChoiceView).default([]),
+  /** End week was pressed and a decision holds the week end (D231); End week again once it is decided or its default kept. */
+  endingWeek: z.boolean().default(false),
   /** Stakeholders outside the team (D160): none in a storyline without them. */
   stakeholders: z.array(StakeholderView).default([]),
   /**
@@ -390,6 +448,8 @@ export const Intent = z.discriminatedUnion('type', [
   z.object({ type: z.literal('skipPractice') }),
   /** A choice event's option (D137). Costs no time. */
   z.object({ type: z.literal('decide'), choiceId: Id, option: Id }),
+  /** Decide later, when the week is ending (D231): the participant lets the choice's default stand. Recorded as theirs. Costs no time. */
+  z.object({ type: z.literal('keepDefault'), choiceId: Id }),
   /** A stakeholder interaction (D161): a live one opens a conversation; a static one needs its option. Costs its days. */
   z.object({ type: z.literal('engageStakeholder'), stakeholder: Id, interaction: Id, option: Id.optional() })
 ]);

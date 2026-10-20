@@ -22,6 +22,8 @@ export interface EndResults {
   /** Revenue over target, as the engine sends it (1 is the whole target). */
   share: number;
   conversions: number;
+  /** The conversions tile's label, in the storyline's sales unit (D227), worded by the caller; left out, Conversions. */
+  conversionsLabel?: string;
   /** The line under the conversions, worded by the caller. */
   conversionsNote: string;
   conversionsTone: Tone;

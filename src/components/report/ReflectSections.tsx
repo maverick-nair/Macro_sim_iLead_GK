@@ -13,11 +13,11 @@ export function ThoughtSection({ data }: { data: ThoughtData }) {
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.thought.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.thought.title')}</h2>
       <p className="m-0 text-13 text-fg-secondary">{t('report.thought.intro')}</p>
       <ol className="m-0 grid list-none gap-2.5 p-0 grid-cols-(--il-report-halves-columns)">
         {data.items.map(q => (
-          <li key={q.question} className="flex flex-col gap-1.5 rounded-16 border border-line-default px-3.5 py-3">
+          <li key={q.question} className="flex flex-col gap-1.5 border border-line-default px-3.5 py-3">
             <p className="m-0 text-14 font-600 text-pretty">{q.question}</p>
             <p className="m-0 text-13 text-fg-secondary text-pretty">{q.guide}</p>
           </li>
@@ -34,7 +34,7 @@ export function TakeawaysSection({ lines }: { lines: string[] }) {
   const id = useId();
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.takeaways.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.takeaways.title')}</h2>
       <p className="m-0 text-14">{t('report.takeaways.intro', { purpose })}</p>
       <ul className="m-0 flex list-disc flex-col gap-1.5 ps-5 text-14">
         {lines.map(l => <li key={l} className="text-pretty">{l}</li>)}
@@ -59,7 +59,7 @@ export function ProgressSection({ data }: { data: ProgressData }) {
   const score = (v: number | null) => (v === null ? none : number(v));
   return (
     <section aria-labelledby={`${id}h`} className="flex flex-col gap-3">
-      <h2 id={`${id}h`} className="m-0 text-20 font-700">{t('report.progress.title')}</h2>
+      <h2 id={`${id}h`} className="m-0 font-display text-36 leading-tight font-400">{t('report.progress.title')}</h2>
       <p className="m-0 text-13 text-fg-secondary">{t('report.progress.intro')}</p>
       <DataTable
         caption={t('report.progress.chartTitle')}

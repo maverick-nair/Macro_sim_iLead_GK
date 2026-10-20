@@ -2,16 +2,20 @@ import { blockedReason, freeActivity } from './actions';
 import { ONE_SHOT, PRACTICE, practiceAvailable, practicePartner, speakerFor, turnLimit } from './live';
 import { purposeOf } from '../config';
 import { buildReport } from '../report/build';
-import { finalScore } from './period';
+import { finalScore, holdingChoices } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
 import { capacity, capacityLeft, fill, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import { bestStyle, lensView, NEEDS } from '../lens';
 import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
 import type { StorylineConfig } from '../config';
-import { msg, type Copy } from '../copy';
+import { msg, template, type Copy } from '../copy';
+import { unitParams } from '../units';
+import { FIRST_CLOSE_DEFAULT } from '../config';
 import { choiceBody, varName } from './business';
 import { engagedNow, interactionLabel, interactionOf, offered, stakeholderBlock, stakeholderMood } from './stakeholders';
 import { relationLevel, stakeholderConfig } from './stakeholderState';
+import { opportunityOf, realismOf, repeatOf, tires, unattendedWeeks, windowOf } from './realism';
+import { sponsorUpdateBlock } from './actions';
 
 /**
  * What the participant may see. Built from engine state, never computed by the UI. Deliberately
@@ -83,7 +87,7 @@ function liveView(sim: Sim) {
         : a?.live.goal ?? (option && a && a.options.length > 1 ? option.label : a?.description ?? goalFor(sim, it)),
       // An interview's brief is its structured questions, the same for every candidate (D85). A stakeholder's: who they are and where you stand.
       known: it.format === 'interview'
-        ? a?.live.questions ?? [msg('engine.interview.q1'), msg('engine.interview.q2'), msg('engine.interview.q3')]
+        ? a?.live.questions ?? [msg('engine.interview.q1', { aUnit: unitParams(c.money.unit).aUnit }), msg('engine.interview.q2'), msg('engine.interview.q3')]
         : sh ? [msg('engine.stakeholder.known', { role: sh.role, kind: sh.kind, level: relationLevel(sim.stakeholders[sh.key]) }), sh.about, sim.stakeholders[sh.key]?.concernShared ? sh.hiddenConcern : undefined].filter((x): x is NonNullable<typeof x> => !!x && (typeof x !== 'string' || !!x.trim()))
         : [p?.profile.remarks, main?.concernShared ? p?.hiddenConcern : undefined].filter((x): x is string => !!x && !!x.trim()),
       mood: main ? moodOf(main, sim) : sh ? stakeholderMood(sim, sh.key) : null,
@@ -109,6 +113,7 @@ function liveView(sim: Sim) {
 
 export function buildView(sim: Sim) {
   const c = sim.config;
+  const holding = new Set(sim.ending ? holdingChoices(sim).map(h => h.id) : []);
   const ideal = idealThroughput(sim);
   const ratios = sim.funnel.stageOutPeriod.map((v, i) => (ideal[i] ? v / ideal[i] : 1));
   const bottleneck = sim.sub > 0 ? ratios.indexOf(Math.min(...ratios)) : -1;
@@ -128,15 +133,30 @@ export function buildView(sim: Sim) {
       unread: sim.inbox.some(x => x.from === m.id && x.state === 'open'),
       promise: sim.promises.find(x => x.memberId === m.id && x.state === 'open')?.text ?? null,
       // The optional authored rows (D97) are sent only when the storyline has them.
-      profile: p.profile
+      profile: p.profile,
+      // Realism (D174): weeks with no time of their own with you, so the board can say so. Only with realism.
+      ...(realism ? { unattended: unattendedWeeks(sim, m.id), neglected: unattendedWeeks(sim, m.id) >= realism.neglect.weeks } : null)
     };
   };
   const demoAction = c.demo.action ?? c.actions.find(a => a.kind === 'static' && a.scope === 'member')?.key ?? null;
+  const realism = realismOf(sim);
+  /** How a use now would land (D171): the share of its good effects, earlier uses in its window and the days since the last. */
+  const repeatView = (a: StorylineConfig['actions'][number], id: string | null) => {
+    const r = repeatOf(sim, a, id);
+    return r.share < 1 ? { share: r.share, uses: r.uses, ago: r.ago ?? 0, window: windowOf(realism!, a), ...(a.scope === 'team' ? { tires: tires(a) } : null) } : null;
+  };
   const score = finalScore(sim);
   return {
     phase: sim.phase,
-    /** Read only storyline identity, for onboarding. */
-    storyline: { name: c.name, organisation: c.organisation ?? null, locale: c.locale, ...(c.intro ? { intro: c.intro } : null), video: c.video ?? null },
+    /**
+     * Read only storyline identity, for onboarding, and what the player renders from the storyline's look and world
+     * (D181 to D183): the client brand, the company logo, the office image, the product portfolio and the intro screens.
+     */
+    storyline: {
+      name: c.name, organisation: c.organisation ?? null, locale: c.locale,
+      ...(c.intro ? { intro: { welcome: c.intro.welcome, product: c.intro.product, targets: c.intro.targets } } : null), video: c.video ?? null,
+      ...storylineLook(c)
+    },
     /**
      * The lens's styles and needs; never the fit table or the source (D70). The Tutorial's worked examples
      * (D91) are authored archetypes, or two worded from the needs and the first style that fits each.
@@ -149,7 +169,7 @@ export function buildView(sim: Sim) {
       /** How far through the run we are, 0 to 1: where the pace marker sits. */
       runShare: Math.min(1, ((sim.period - 1) * perPeriod(sim) + sim.sub) / (c.time.period.count * perPeriod(sim)))
     },
-    money: { currency: c.money.currency, locale: c.money.locale, display: c.money.display, target: c.money.target, value: Math.round(sim.funnel.value), valueThisPeriod: Math.round(sim.funnel.periodValue) },
+    money: { currency: c.money.currency, locale: c.money.locale, display: c.money.display, target: c.money.target, value: Math.round(sim.funnel.value), valueThisPeriod: Math.round(sim.funnel.periodValue), unit: c.money.unit ?? null },
     members: sim.members.map(member),
     kpis: (['skill', 'morale', 'result', 'trust'] as const).map(k => {
       const value = teamAverage(sim, k), start = sim.periodStart.kpis[k];
@@ -179,7 +199,13 @@ export function buildView(sim: Sim) {
         // Stages a move can go to, with a reason where the stage has no room (role coverage).
         stages: o.pickStage ? c.stages.map(st => ({ key: st.key, blocked: a.rule === 'swap' && sim.members.filter(m => m.stage === st.key).length >= c.maxPerStage ? { reason: 'stageFull' as const, stage: st.key } : null })) : null, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,
-      blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {}
+      blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {},
+      // Realism (D171, D172): a repeat lands at less (for the team, or by person), and the share of the team's day it takes.
+      ...(realism ? {
+        repeat: a.scope === 'team' ? repeatView(a, null) : null,
+        repeatFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, repeatView(a, m.id)]).filter(([, r]) => r)) : {},
+        teamTime: a.scope === 'team' ? opportunityOf(realism, a, a.options[0]) : 0
+      } : null)
     })),
     promises: sim.promises.map(x => ({ id: x.id, memberId: x.memberId, text: x.text, state: x.state, dueInSubPeriods: Math.max(0, x.dueAbsSub - sim.absSub) })),
     inbox: sim.inbox.filter(x => x.state === 'open').map(message),
@@ -199,10 +225,17 @@ export function buildView(sim: Sim) {
     periods: sim.periods,
     badges: c.gamification.badges.map(b => {
       const got = sim.badges.find(x => x.key === b.key);
-      return { key: b.key, rule: b.rule, name: b.name, description: b.description, earned: !!got, period: got?.period ?? null, reason: got?.reason ?? null };
+      // The first close badge's default description names the storyline's sales unit when it has one (D227).
+      const description = b.rule === 'first_close' && c.money.unit && b.description === FIRST_CLOSE_DEFAULT ? template('Your team converts its first {unit}.', { unit: c.money.unit.one }) : b.description;
+      return { key: b.key, rule: b.rule, name: b.name, description, earned: !!got, period: got?.period ?? null, reason: got?.reason ?? null };
     }),
     sponsor: { name: c.sponsor.name, title: c.sponsor.title, img: c.sponsor.portrait ?? null, styleLine: c.sponsor.styleLine, value: sim.sponsor.value,
-      unlockAt: c.gamification.sponsor.unlockAt, checkInBelow: c.gamification.sponsor.checkInBelow, level: sponsorLevel(sim), causes: sim.sponsor.causes },
+      unlockAt: c.gamification.sponsor.unlockAt, checkInBelow: c.gamification.sponsor.checkInBelow, level: sponsorLevel(sim), causes: sim.sponsor.causes,
+      // Realism (D173): weeks since your last word to the sponsor, when silence starts to cost, and your own update.
+      ...(realism && sim.realism ? {
+        silence: { weeks: sim.period - sim.realism.sponsorContact - (sim.realism.sponsorContact === sim.period ? 0 : 1), costsFrom: realism.sponsor.silence },
+        update: { cost: realism.sponsor.update.cost, blocked: sponsorUpdateBlock(sim) }
+      } : null) },
     pendingReward: sim.pendingReward,
     perks: { bonusDay: sim.bonusPeriod !== null && sim.bonusPeriod >= sim.period, hireBudget: sim.hireBudget, teamActivity: sim.freeTeamActivity, checkIn: sim.checkInPeriod === sim.period },
     history: sim.log,
@@ -229,8 +262,11 @@ export function buildView(sim: Sim) {
       const ev = c.events.find(e => e.key === oc.eventKey)!;
       const f = (t: string) => fill(t, sim, oc.memberId);
       return { id: oc.id, eventKey: ev.key, card: ev.card, title: f(ev.title), body: choiceBody(sim, ev, oc.memberId), memberId: oc.memberId, known: ev.choice!.known.map(f),
-        options: ev.choice!.options.map(o => ({ key: o.key, label: f(o.label), detail: o.detail ? f(o.detail) : null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub) };
+        options: ev.choice!.options.map(o => ({ key: o.key, label: f(o.label), detail: o.detail ? f(o.detail) : null })), dueInSubPeriods: Math.max(0, oc.dueAbsSub - sim.absSub),
+        default: ev.choice!.default ?? null, holdsWeekEnd: !!sim.ending && holding.has(oc.id) };
     }),
+    /** End week was pressed and a decision holds the week end (D231): it is shown before the week ends. */
+    endingWeek: !!sim.ending,
     /** Choices made or defaulted (D137), with what they changed: the decision's "what happened" and the History. */
     choices: sim.choices.map(r => ({ id: r.id, eventKey: r.eventKey, title: r.title, option: r.option, label: r.label, outcome: r.outcome, by: r.by, period: r.period, sub: r.sub,
       changes: r.changes, variables: r.variables.filter(x => c.variables.find(v => v.key === x.key)?.shown).map(x => ({ ...x, name: varName(sim, x.key) })), revenue: Math.round(r.revenue),
@@ -252,6 +288,22 @@ export function buildView(sim: Sim) {
       };
     }),
     report: sim.phase === 'ended' ? buildReport(sim) : null
+  };
+}
+
+/** The storyline's look and world for the player (D181 to D183), each null or empty when the storyline leaves it out. */
+export function storylineLook(c: StorylineConfig) {
+  const b = c.brand, w = c.world;
+  return {
+    brand: b ? { name: b.name ?? null, colors: b.colors ?? null, logo: b.logo ?? null, font: b.font ?? null, mode: b.mode ?? null } : null,
+    logo: w?.logo ? { image: w.logo.image ?? null, text: w.logo.text ?? null } : null,
+    office: w?.office?.image ?? null,
+    products: (w?.products ?? []).map(p => ({
+      name: p.name, line: p.line ?? null, specs: p.specs, image: p.image ?? null, view: p.view,
+      code: p.code ?? null, kind: p.kind ?? null, tagline: p.tagline ?? null, audience: p.audience ?? null, dealValue: p.dealValue ?? null,
+      imageAlt: p.imageAlt ?? null, features: p.features.map(f => ({ title: f.title, text: f.text, spot: f.spot ?? null }))
+    })),
+    screens: (c.intro?.screens ?? []).map(x => ({ key: x.key, title: x.title, body: x.body }))
   };
 }
 

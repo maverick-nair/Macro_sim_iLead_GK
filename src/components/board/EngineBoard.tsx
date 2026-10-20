@@ -1,4 +1,4 @@
-import { lazy, startTransition, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { lazy, startTransition, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Block, EngineView, Intent, MemberView, MetricChange, StyleKey } from '../../engine/contract';
 import { EngineError } from '../../engine/client';
 import { useEngineView, useIntent } from '../../engine/react';
@@ -11,22 +11,28 @@ import { MoneyProvider } from '../../i18n/money';
 import { useI18n } from '../../i18n';
 import { Hud, type HudProps } from '../hud/Hud';
 import { MetricsStrip, type MetricsStripProps } from '../metrics/MetricsStrip';
+import { StatusBand } from '../desk/StatusBand';
+import { DeskStatus } from '../desk/DeskStatus';
+import type { DeskCardInfo } from '../desk/DeskCard';
+import { useStyleName } from '../style/lens';
+import { bandModel } from '../desk/band';
+import { DeskFeed, type FeedFeedback, type FeedMessage, type FeedMilestone } from '../desk/DeskFeed';
+import { feedbackChanges, lastFeedback } from '../desk/feed';
+import { useSession } from '../session/session';
+import { SignedOut } from '../session/SignedOut';
 import { TeamBoard, type StageColumn, type TeamBoardHint } from '../team/TeamBoard';
 import { ActionsPanel } from '../actions/ActionsPanel';
 import { ActionDrawer, type ActionDrawerProps } from '../action/ActionDrawer';
 import type { ActionBlock, ActionTileProps } from '../action/ActionTile';
 import { useDays } from '../action/days';
-import { InboxRail, type InboxRailItem } from '../inbox/InboxRail';
 import { InboxDrawer, type InboxDrawerItem } from '../inbox/InboxDrawer';
-import type { InboxSender } from '../inbox/sender';
 import { OutcomePanel, type OutcomePerson } from '../outcome/OutcomePanel';
 import type { PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
-import { StyleSettingView, type StyleSettingLayout } from '../stylesetting/StyleSettingView';
+import { StyleSettingView } from '../stylesetting/StyleSettingView';
 import { ReactingScreen } from '../liveshell/ReactingScreen';
-import type { LivePerson } from '../liveshell/types';
 // The live screen loads when a conversation starts, so the board's first load stays in budget.
 const EngineLive = lazy(() => import('./EngineLive').then(m => ({ default: m.EngineLive })));
 const EngineWeekEnd = lazy(() => import('./EngineWeekEnd').then(m => ({ default: m.EngineWeekEnd })));
@@ -38,6 +44,8 @@ const EngineReport = lazy(() => import('../report/EngineReport'));
 // Only storylines with stakeholders show the bar (D160), so it stays out of the first load (D167).
 const StakeholderBar = lazy(() => import('../stakeholders/StakeholderBar').then(m => ({ default: m.StakeholderBar })));
 const CohortRank = lazy(() => import('../gamification/CohortRank'));
+// The rank in the desk's status band (D211) loads only when the storyline turns the leaderboard on.
+const BandRank = lazy(() => import('../gamification/BandRank'));
 // The badge shelf and the command palette load when first opened (D73: room in the first load for the tablet board).
 const BadgeShelfDialog = lazy(() => import('../gamification/BadgeShelfDialog').then(m => ({ default: m.BadgeShelfDialog })));
 const CommandPalette = lazy(() => import('../palette/CommandPalette').then(m => ({ default: m.CommandPalette })));
@@ -53,10 +61,7 @@ import { initials, streakText } from '../gamification/display';
 import { teamChips, type Chip } from './chips';
 import { GameMenu, type GameMenuItem } from '../hud/GameMenu';
 import { BoardNotices } from './BoardNotices';
-import { dueTips, newMilestones, type Notice } from './notices';
-import { guideOff, guideSeen, markGuideSeen, turnGuideOff } from '../tour/guideStore';
 import type { TourArea } from '../tour/steps';
-import type { TourEnd } from '../tour/Tour';
 import { resultColumns } from '../panels/overview';
 import type { PlayPanel } from '../panels/PlayPanels';
 import type { OutcomeReply } from '../outcome/OutcomePanel';
@@ -71,6 +76,19 @@ const StakeholdersPanel = lazy(() => import('../stakeholders/StakeholdersPanel')
 import { formatVariable, variableTrend } from '../business/format';
 import { moneyFormatter } from '../../engine/money';
 const Tour = lazy(() => import('../tour/Tour'));
+// The board's state lives in focused hooks; this file wires the engine view to the screen.
+import { useFocusRescue, useOutcomeFocus } from './hooks/useFocus';
+import { useFullscreen } from './hooks/useFullscreen';
+import { useNotices, useTour } from './hooks/useGuide';
+import { useInbox } from './hooks/useInbox';
+import { useLiveReacting } from './hooks/useLiveReacting';
+import { usePanels } from './hooks/usePanels';
+import { useRunEnd } from './hooks/useRunEnd';
+import { useSaveAndSignOut } from './hooks/useSaveAndSignOut';
+import { useStyleDraft } from './hooks/useStyleDraft';
+import { useToast } from './hooks/useToast';
+export { REACTING_MS } from './hooks/useLiveReacting';
+export type { FinishLive } from './hooks/useLiveReacting';
 
 /**
  * The main board, rendered only from the engine view (brief, rule 1). Every button sends an intent;
@@ -78,22 +96,7 @@ const Tour = lazy(() => import('../tour/Tour'));
  * in the UI store and local state.
  */
 const PLACEHOLDER = '/assets/npc/placeholder.svg';
-const TOAST_MS = 3400;
-/** "The team is reacting" lasts at least this long, so the evaluation reads as a moment (D53). */
-export const REACTING_MS = 1600;
 const first = (n: string) => n.split(' ')[0];
-/** The outcome panel's headline, made focusable, when the outcome is on screen. */
-const headlineIn = (panel: HTMLElement | null) => {
-  const h = panel?.querySelector<HTMLElement>('h2, h3');
-  if (h && !h.hasAttribute('tabindex')) h.setAttribute('tabindex', '-1');
-  return h ?? null;
-};
-
-/** The action being planned: which drawer card is chosen, who is picked, and whether the nudge was waved off. */
-interface Flow { key: string; choice: string | null; picks: string[]; nudgeOk: boolean }
-
-/** Ends a live interaction: the board shows "The team is reacting" and holds the outcome until it has had its moment. */
-export type FinishLive = (intent: Extract<Intent, { type: 'endInteraction' | 'submitInteraction' | 'chooseCandidate' }>, people: LivePerson[]) => Promise<boolean>;
 
 export interface EngineBoardProps {
   /** Consent to audio capture, from onboarding or Settings. */
@@ -120,7 +123,10 @@ export interface EngineBoardProps {
    * board. Stories and tests can fix it.
    */
   layout?: 'desk' | 'tablet';
-  /** Exit to the learning platform (D89): the menu offers Exit only when the launch gave a return address. */
+  /**
+   * Leave to the learning platform (D89), when the launch gave a return address: Sign out saves first and
+   * then calls it (D213). Without it, Sign out shows the signed out screen.
+   */
   onExit?: () => void;
   /**
    * The demo round (D92): the board runs on the demo's own engine, with styles set for everyone but the
@@ -209,14 +215,14 @@ function TeamScroll({ stages, label, children }: { stages: number; label: string
   }, []);
   // A card column at least 38 spacing units (152px) wide, so five stages fit beside the Actions panel at 1280 (D101), the 3 unit gaps between, and the board's 5 unit padding each side.
   const minWidth = `calc(var(--spacing) * ${38 * stages + 3 * Math.max(0, stages - 1) + 10})`;
-  const base = 'col-start-2 row-start-1 relative flex min-h-0 min-w-0 flex-col';
+  const base = 'col-start-1 row-start-1 relative flex min-h-0 min-w-0 flex-col';
   const inner = <div className="flex flex-1 flex-col" style={{ minWidth }}>{children}</div>;
   // The team scrolls inside its region when it does not fit the window (D101): narrow windows sideways,
   // short windows down. Then it is a focusable, named scroll region, and a fade marks what is below.
   return (
     <div className={base}>
       {scrolls
-        ? <div ref={ref} role="region" aria-label={label} tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">{inner}</div>
+        ? <div ref={ref} role="region" aria-label={label} tabIndex={0} className="flex min-h-0 flex-1 flex-col overflow-auto overscroll-contain focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">{inner}</div>
         : <div ref={ref} className="flex min-h-0 flex-1 flex-col overflow-auto">{inner}</div>}
       {more && <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-(image:--il-board-scroll-fade)" />}
     </div>
@@ -225,97 +231,44 @@ function TeamScroll({ stages, label, children }: { stages: number; label: string
 
 function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const api = useApi();
-  // The participant's name from the launch, for the report header.
-  const [profileName, setProfileName] = useState<string | null>(null);
-  useEffect(() => { let live = true; void api.getProfile().then(p => { if (live) setProfileName(p.name); }, () => undefined); return () => { live = false; }; }, [api]);
+  const { profileName, endView, setEndView, lastWeekSeen, setLastWeekSeen } = useRunEnd(api);
   const { t, number, delta: signed } = useI18n();
-  /** A choice opened from the business bar, and a choice just decided whose outcome the dialog is showing (D137). */
-  const [deciding, setDeciding] = useState<string | null>(null);
-  const [decided, setDecided] = useState<EngineView['openChoices'][number] | null>(null);
-  /** The stakeholders panel (D162), open on one of them or on all. */
-  const [stakeholdersOpen, setStakeholdersOpen] = useState<{ focus: string | null } | null>(null);
   const ui = useUi();
+  const styleName = useStyleName();
   const intent = useIntent();
   const unit = v.clock.subPeriodUnit, periodUnit = v.clock.periodUnit;
   const amount = useDays(unit);
-  const [flow, setFlow] = useState<Flow | null>(null);
-  const [draft, setDraft] = useState<Record<string, StyleKey>>(() => app.demo?.prefill ?? {});
   const demo = app.demo;
-  /** The in play panel that is open (D89), if any. */
-  const [panel, setPanel] = useState<PlayPanel | null>(null);
-  /** The guided tour that is running (D94), if any. */
-  const [tour, setTour] = useState<TourArea | null>(app.startTour ?? null);
-  /** Notices on screen this load, and the ones dismissed. Milestones reached before the board opened are not news (a resumed run). */
-  const [shown, setShown] = useState<Set<string>>(() => new Set());
-  const [dismissed, setDismissed] = useState<Set<string>>(() => new Set(v.milestones.map(m => `milestone:${m.key}`)));
+  /** The palette may open: the plain board, outside the demo. Read by the key handler, which never re-binds. */
+  const paletteOk = useRef(false);
+  const {
+    flow, setFlow, panel, setPanel, legend, toggleLegend, scoreOpen, setScoreOpen, sponsorOpen, setSponsorOpen, toggleSponsor, badgesOpen, setBadgesOpen,
+    pal, query, setQuery, openPalette, closePalette, deciding, setDeciding, decided, setDecided, stakeholdersOpen, setStakeholdersOpen,
+    sheet, setSheet, lowered, setLowered, tabletReady, setTabletReady, foldedFor, setFoldedFor
+  } = usePanels({ paletteOk });
   /** Names of everyone seen on the team this load, so History still names someone who has since left. */
   const [names] = useState(() => new Map<string, string>());
   for (const m of v.members) names.set(m.id, m.name);
-  const [fullscreen, setFullscreen] = useState(() => typeof document !== 'undefined' && !!document.fullscreenElement);
-  useEffect(() => {
-    const on = () => setFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', on);
-    return () => document.removeEventListener('fullscreenchange', on);
-  }, []);
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [styleView, setStyleView] = useState<{ layout: StyleSettingLayout; summary: boolean }>({ layout: 'cards', summary: false });
-  const [toast, setToast] = useState<string | null>(null);
-  /** News items read here. Messages that need an answer stay with the engine. */
-  const [readIds, setReadIds] = useState<string[]>([]);
-  /** Set aside with Later: hidden until the next sub-period (id to the clock it was set aside at). */
-  const [snoozed, setSnoozed] = useState<Record<string, string>>({});
-  const [legend, setLegend] = useState(false);
-  const [scoreOpen, setScoreOpen] = useState(false);
-  const [sponsorOpen, setSponsorOpen] = useState(false);
-  const [badgesOpen, setBadgesOpen] = useState(false);
-  const [pal, setPal] = useState(false);
-  const [query, setQuery] = useState('');
-  /** Whose reaction is showing, for which outcome: a new outcome starts with none. */
-  const [reveal, setReveal] = useState<{ outcome: string; id: string } | null>(null);
-  /** "The team is reacting", for one interaction. The outcome waits behind it until its moment has passed. */
-  const [reacting, setReacting] = useState<{ id: string; people: LivePerson[] } | null>(null);
-  /** After the run: the end screen, the board read only, or the report (web or print view). */
-  const [endView, setEndView] = useState<'end' | 'board' | 'report' | 'print'>('end');
-  /** At the end of the run, the last week end (banner, report, badges) comes before the end screen. */
-  const [lastWeekSeen, setLastWeekSeen] = useState(false);
-  /** The outcome headline, for screen readers, when focus cannot move to it (an action is being planned). */
-  const [announce, setAnnounce] = useState('');
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const { toast, say } = useToast();
+  const { fullscreen, canFullscreen, toggle: toggleFullscreen } = useFullscreen({ say, t });
   const narrow = useMediaQuery(NARROW_BOARD);
   const tabletQuery = useMediaQuery(TABLET);
   const tablet = app.layout ? app.layout === 'tablet' : tabletQuery;
-  /** The tablet's actions drawer: which tab is open, or null when it is closed (D73). */
-  const [sheet, setSheet] = useState<SheetTab | null>(null);
-  /** The drawer is lowered so people can be picked on the board. */
-  const [lowered, setLowered] = useState(false);
-  /** The tablet board's code has loaded and it is on screen. */
-  const [tabletReady, setTabletReady] = useState(false);
-  /** Selecting someone opens a folded Actions panel for them; folding it again while they are selected leaves it folded. */
-  const [foldedFor, setFoldedFor] = useState<string | null>(null);
   const inFlight = useRef(false);
-  const mainRef = useRef<HTMLElement>(null);
-  const h1Ref = useRef<HTMLHeadingElement>(null);
-  const outcomeRef = useRef<HTMLDivElement>(null);
-  const lastFocus = useRef<Element | null>(null);
-  /** The dialog the last focused element was in, if any: focus stays in it when an item inside goes away. */
-  const lastDialog = useRef<HTMLElement | null>(null);
-  /** Where focus should go the next time it is lost, when somewhere better than the default is known. */
-  const focusHint = useRef<(() => HTMLElement | null | undefined) | null>(null);
-  const paletteOk = useRef(false);
+  const { mainRef, h1Ref, outcomeRef, focusHintRef, rescue } = useFocusRescue();
 
-  const say = useCallback((msg: string) => {
-    setToast(msg);
-    clearTimeout(toastTimer.current);
-    toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
-  }, []);
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
+  // ---- save and sign out (D213) ----
+  const { session, saveNote, saveNow, leave } = useSaveAndSignOut({ onExit: app.onExit, say, t });
 
   /** Sends one intent. A second click while one is on its way is ignored, so nothing is sent twice. */
   const send = async (i: Intent) => {
     if (inFlight.current) return null;
     inFlight.current = true;
     try {
-      return await intent.mutateAsync(i);
+      const r = await intent.mutateAsync(i);
+      // The engine saves the run with every answered intent (D213).
+      useSession.getState().markSaved();
+      return r;
     } catch (e) {
       say(t('board.error', { code: e instanceof EngineError ? e.code : 'other' }));
       return null;
@@ -324,30 +277,38 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     }
   };
 
-  // Keys. The palette (Ctrl or Cmd K) is for the plain board only: not during style setting, a
-  // conversation, or with a modal open. The handler reads the store directly so it never re-binds.
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        if (!paletteOk.current) return;
-        e.preventDefault(); setQuery(''); setPal(true);
-      }
-      if (e.key === 'Escape') { setFlow(null); setLegend(false); setSheet(null); setLowered(false); useUi.getState().openPanel('none'); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
-
-  // A new period clears the style draft and any half planned action.
-  const [draftPeriod, setDraftPeriod] = useState(v.clock.period);
-  if (draftPeriod !== v.clock.period) {
-    setDraftPeriod(v.clock.period);
-    setDraft({}); setNotes({}); setStyleView(x => ({ ...x, summary: false })); setFlow(null);
-  }
+  // ---- style setting: the draft, which a new period clears along with any half planned action ----
+  const styles = useStyleDraft({ period: v.clock.period, prefill: demo?.prefill, members: v.members, send, onPeriodChange: () => setFlow(null) });
+  const { draft, notes, styleView, chosen } = styles;
+  // ---- live interactions: the board owns "The team is reacting" ----
+  const { reveal, setReveal, reacting, finishLive } = useLiveReacting({ send, inFlight });
 
   const styling = v.phase === 'style';
   const ended = v.phase === 'ended';
   const busy = intent.isPending;
+
+  // ---- what is in front ----
+  // One modal at a time: an event card first (after the outcome has been read), then the period end.
+  // A sponsor call is not a modal: it rings over the board until it is answered or put off.
+  // A choice event's card is a decision (D137): the decision dialog, or its outcome right after deciding.
+  const oc = v.outcome;
+  const card = !oc ? v.cards.find(c => c.delivery === 'modal') : undefined;
+  // End week was pressed with a decision still open (D231): it shows before the week ends, whether or not it has a card.
+  const holding = v.endingWeek && v.phase === 'board' ? v.openChoices.find(c => c.holdsWeekEnd) : undefined;
+  const decisionOpen = decided ?? v.openChoices.find(c => c.id === (card?.choiceId ?? deciding)) ?? holding ?? null;
+  const callCard = v.phase === 'board' ? v.cards.find(c => c.delivery === 'sponsorCall' && (c.messageId === null || v.inbox.some(m => m.id === c.messageId))) : undefined;
+  // The week end replaces the board at a period end, and once more at the end of the run before the end screen.
+  const weekEnd = !card && !v.live && !reacting && (v.phase === 'periodEnd' || (ended && !lastWeekSeen));
+  // Then the end screen (or the report opened from it) takes the whole page; the board stays reachable, read only.
+  const endScreen = !card && !weekEnd && ended && lastWeekSeen && endView !== 'board';
+  const plainBoard = !session.signedOut && !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
+
+  // ---- the guided tours (D94): each starts on its own the first time its screen shows, unless switched off ----
+  const tourArea: TourArea | null = demo || card || endScreen || weekEnd || reacting ? null : v.live ? (v.live.practice ? null : 'live') : styling ? 'style' : plainBoard ? 'board' : null;
+  const { tour, setTour, endTour } = useTour({ start: app.startTour, area: tourArea, panel, paused: app.paused, enabled: v.guide.tour.enabled, focusHintRef, h1Ref });
+  // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13),
+  // nor while a panel or the tour is open, nor in the demo (D89, D92, D94).
+  useSessionTicker(!app.paused && !ended && plainBoard && !panel && !tour && !demo);
   const member = (id: string) => v.members.find(m => m.id === id);
   const action = (key: string) => v.actions.find(a => a.key === key);
   const img = (m: { img: string | null } | undefined) => m?.img ?? PLACEHOLDER;
@@ -445,7 +406,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
 
   const closeFlow = () => {
-    if (fa) focusHint.current = tileFocus(fa.name);
+    if (fa) focusHintRef.current = tileFocus(fa.name);
     setFlow(null);
   };
 
@@ -486,8 +447,30 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   };
 
   const styleOf = (m: MemberView) => (styling ? draft[m.id] ?? null : m.style);
+  /**
+   * What the desk card says about someone (D232): their style by name, one flag (away, a message waiting, past the
+   * neglect window, a promise), and the last time spent with them this period, from the engine's history.
+   */
+  const deskInfo = (m: MemberView): DeskCardInfo => {
+    const st = styleOf(m);
+    const flag = m.away > 0 ? t('board.block.away', { kind: m.awayReason ?? 'leave', amount: amount(m.away) })
+      : m.unread ? t('desk.card.unread')
+      : m.neglected ? t('desk.card.neglected', { n: m.unattended ?? 0, unit: periodUnit })
+      : m.promise ?? null;
+    const last = [...v.history].reverse().find(l => l.period === v.clock.period && (l.kind === 'action' || l.kind === 'interaction') && l.memberIds.includes(m.id) && l.action);
+    const act = last?.action ? action(last.action) : undefined;
+    // "No time with you yet" is noise on day 1 and doubles the neglect line later: the card shows it from period 2, never beside that line.
+    const noTime = v.clock.period >= 2 && !m.neglected;
+    return {
+      style: st ? styleName(st) : null, flag,
+      time: last ? t('desk.card.time', { unit: periodUnit, action: act?.name ?? last.title, sub: t('time.subPeriod', { unit, n: Math.min(last.sub + 1, v.clock.capacity) }) }) : null,
+      noTime
+    };
+  };
   const columns: StageColumn[] = v.funnel.map(st => ({
     key: st.key, name: st.name, count: st.members, ideal: st.ideal, bottleneck: st.bottleneck, about: st.about, suits: st.suits,
+    // The stage's output this period against its ideal (D216).
+    output: { n: st.throughput, ideal: st.idealThroughput },
     cards: v.members.filter(m => m.stage === st.key).map(m => ({
       id: m.id, name: m.name, title: m.title, img: img(m), mood: m.mood, away: m.away > 0,
       // The engine sends no stats until the profile is opened; the card shows its hidden state then.
@@ -497,11 +480,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       unavailableReason: picking ? ineligible(m) : undefined,
       onSelect: () => clickCard(m),
       onOpenProfile: () => openProfile(m.id),
-      onStyleChange: (k: StyleKey) => { if (styling) setDraft(d => ({ ...d, [m.id]: k })); },
+      onStyleChange: (k: StyleKey) => { if (styling) styles.setStyle(m.id, k); },
       // Outside style setting the letters stay focusable but read as locked, with the reason.
       styleDisabled: !styling,
       styleDisabledReason: styling ? undefined : t('board.style.locked', { unit: periodUnit }),
-      onStyleDisabledPick: () => say(t('board.style.locked', { unit: periodUnit }))
+      onStyleDisabledPick: () => say(t('board.style.locked', { unit: periodUnit })),
+      desk: deskInfo(m)
     }))
   }));
 
@@ -547,18 +531,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     if (pm.profile.responsibilities) profile.facts.push({ key: 'responsibilities', value: fact(pm.profile.responsibilities) });
   }
 
-  const chosen = v.members.filter(m => draft[m.id]).length;
-  const confirmStyles = () => {
-    if (chosen !== v.members.length) return;
-    const given = Object.fromEntries(Object.entries(notes).filter(([, n]) => n.trim()));
-    void send({ type: 'confirmStyles', styles: draft, notes: Object.keys(given).length ? given : undefined });
-  };
-
   // ---- action drawer ----
   let drawer: ActionDrawerProps | null = null;
   if (f && fa) {
-    const names = f.picks.map(id => first(member(id)?.name ?? ''));
-    const list = names.length > 1 ? t('action.list.pair', { rest: names.slice(0, -1).join(', '), last: names[names.length - 1] }) : names[0] ?? '';
+    const listNames = (xs: string[]) => (xs.length > 1 ? t('action.list.pair', { rest: xs.slice(0, -1).join(', '), last: xs[xs.length - 1] }) : xs[0] ?? '');
+    const list = listNames(f.picks.map(id => first(member(id)?.name ?? '')));
     const cost = hireFree(fa) ? 0 : choice?.option.cost ?? fa.cost;
     const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
     const detail = (c: Choice) => [
@@ -579,8 +556,19 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const unassessed = pre && !f.nudgeOk ? f.picks.map(id => ({ m: member(id)!, to: destination(id) })).find(x => x.m && x.to && !x.m.assessedStages.includes(x.to)) : undefined;
 
     const isStatic = fa.kind !== 'live';
+    // Realism (D171, D172): a repeat lands at less (the lowest share among the people picked), and a team action takes the team's time.
+    const pct = (x: number) => Math.round(x * 100);
+    const repeats = f.picks.map(id => ({ id, r: fa.repeatFor?.[id] })).filter((x): x is { id: string; r: NonNullable<typeof x.r> } => !!x.r);
+    const low = fa.repeat ?? repeats.map(x => x.r).sort((a, b) => a.share - b.share)[0];
+    const notes = [
+      low ? t('action.drawer.repeat', {
+        who: fa.repeat ? 'team' : 'people', names: listNames(repeats.filter(x => x.r.share === low.share).map(x => first(member(x.id)?.name ?? ''))),
+        pct: pct(low.share), ago: low.ago, agoText: amount(low.ago), window: amount(low.window), tires: low.tires ? 'yes' : 'no'
+      }) : '',
+      fa.teamTime ? t('action.drawer.teamTime', { pct: pct(fa.teamTime), unit }) : ''
+    ].filter(Boolean);
     drawer = {
-      name: fa.name, kind: fa.kind, days: cost, description: fa.description,
+      name: fa.name, kind: fa.kind, days: cost, description: fa.description, notes,
       perk: hireFree(fa) ? t('actions.perk.drawer', { perk: 'hire', unit }) : freeActivity(fa) ? t('actions.perk.drawer', { perk: 'activity', unit }) : undefined,
       options: choices.length > 1 ? choices.map(c => ({ name: label(c), detail: detail(c), disabled: !!c.stageBlocked })) : undefined,
       option: choice ? choices.indexOf(choice) : null,
@@ -612,22 +600,12 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }
 
   // ---- inbox ----
-  const stamp = `${v.clock.period}:${v.clock.subPeriod}`;
-  /** Later sets a message aside until the next sub-period, never past the point it is due. */
-  const canLater = (x: EngineView['inbox'][number]) => x.dueInSubPeriods === null || x.dueInSubPeriods >= 1;
-  const inbox = v.inbox.filter(x => !readIds.includes(x.id) && !(snoozed[x.id] === stamp && canLater(x)));
-  const stakeholder = (id: string) => v.stakeholders.find(s => s.key === id);
-  const sender = (from: string): InboxSender => {
-    const sh = stakeholder(from);
-    // A stakeholder (D162): their portrait, else their initials as the sponsor's are shown.
-    if (sh) return sh.img ? { kind: 'member', img: sh.img } : { kind: 'sponsor', initials: initials(sh.name) };
-    return from === 'sponsor' ? { kind: 'sponsor', initials: v.sponsor.name.split(' ').map(w => w[0]).join('').slice(0, 2) } : from === 'news' ? { kind: 'news' } : { kind: 'member', img: img(member(from)) };
-  };
+  const { inbox, stakeholder, sender, senderName, dueText, markRead, later, canLater } = useInbox({ view: v, t, amount, say, img });
   const openMessage = async (id: string) => {
     const msg = v.inbox.find(x => x.id === id);
     ui.openPanel('none');
     if (!msg || ended) return;
-    if (msg.kind === 'news') { setReadIds(r => [...r, id]); return; }
+    if (msg.kind === 'news') { markRead(id); return; }
     // A stakeholder's meeting request (D162) opens the meeting they asked for; when that is a decision, or not open now, their card in the panel.
     const sh = v.stakeholders.find(s => s.request?.messageId === id);
     if (sh?.request?.kind === 'meeting') {
@@ -637,16 +615,23 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const r = await send({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: id });
     if (r?.interactionId) setFlow(null);
   };
-  const later = (id: string) => {
-    const msg = v.inbox.find(x => x.id === id);
-    if (!msg || !canLater(msg)) return;
-    setSnoozed(s => ({ ...s, [id]: stamp }));
-    say(t('board.snoozed', { unit }));
+  /** Your own update to the sponsor (D173): a conversation like a briefing, for a sub-period, once a period. */
+  const updateSponsor = async () => {
+    if (ended || styling || busy || !v.sponsor.update || v.sponsor.update.blocked) return;
+    ui.openPanel('none');
+    setSponsorOpen(false);
+    const r = await send({ type: 'openConversation', kind: 'sponsor' });
+    if (r?.interactionId) setFlow(null);
   };
-  const railItems: InboxRailItem[] = inbox.map(x => ({ id: x.id, label: x.title, sender: sender(x.from), urgent: x.urgent }));
+  /** The messages in the desk's feed (D212): each with its sender, due point, Reply or Read, and Later. */
+  const feedMessages: FeedMessage[] = inbox.map(x => ({
+    id: x.id, sender: sender(x.from), from: senderName(x.from), kind: x.kind, title: x.title, due: dueText(x), urgent: x.urgent,
+    cta: x.kind === 'news' ? 'read' : 'reply', onOpen: () => void openMessage(x.id),
+    onLater: x.kind !== 'news' && canLater(x) ? () => later(x.id) : undefined
+  }));
   const drawerItems: InboxDrawerItem[] = inbox.map(x => ({
     id: x.id, sender: sender(x.from), title: x.title, preview: x.body, meta: '', urgent: x.urgent,
-    due: x.dueInSubPeriods === null ? null : x.dueInSubPeriods === 0 ? t('inbox.dueNow', { unit }) : t('board.due', { amount: amount(x.dueInSubPeriods) }),
+    due: dueText(x),
     tag: t('inbox.tag', { type: x.kind, name: x.from === 'sponsor' ? first(v.sponsor.name) : x.from === 'news' ? '' : first(member(x.from)?.name ?? stakeholder(x.from)?.name ?? '') }),
     // News (a CEO check in) needs no answer: it is marked as read, and never set aside.
     cta: x.kind === 'news' ? 'read' : 'reply', later: x.kind !== 'news' && canLater(x)
@@ -664,7 +649,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const lastPeriod = v.periods[v.periods.length - 1];
   const streak = streakText(t, { count: v.streak, next: lastPeriod ? lastPeriod.streak.next : undefined, periodUnit, rule: v.gamification.streak });
   // ---- the game menu (D89) ----
-  const canFullscreen = typeof document !== 'undefined' && !!document.fullscreenEnabled;
   const openPanel = (p: PlayPanel) => { ui.openPanel('none'); setScoreOpen(false); setPanel(p); };
   const menuItems: GameMenuItem[] = [
     { key: 'objectives', onSelect: () => openPanel({ kind: 'objectives' }) },
@@ -675,33 +659,41 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     { key: 'actions', onSelect: () => openPanel({ kind: 'actions' }) },
     { key: 'tour', onSelect: () => { ui.openPanel('none'); setTour('board'); } },
     { key: 'settings', onSelect: app.onSettings },
-    ...(canFullscreen ? [{
-      key: fullscreen ? 'exitFullscreen' as const : 'fullscreen' as const,
-      onSelect: () => { void (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen()).catch(() => say(t('board.fullscreen.failed'))); }
-    }] : []),
-    ...(app.onExit ? [{ key: 'exit' as const, onSelect: app.onExit }] : [])
+    ...(canFullscreen ? [{ key: fullscreen ? 'exitFullscreen' as const : 'fullscreen' as const, onSelect: toggleFullscreen }] : []),
   ];
+  const where = t('menu.where', {
+    period: t('time.period', { unit: periodUnit, n: v.clock.period }), total: v.clock.periods,
+    sub: t('time.subPeriod', { unit, n: v.clock.subPeriod }), left: t('time.left', { amount: amount(v.clock.capacityLeft) })
+  });
+  const menu = demo ? undefined : (
+    <GameMenu items={menuItems} where={where} periodUnit={periodUnit} scope={v.gamification.leaderboard.scope}
+      session={{ savedAt: session.savedAt, saving: session.saving, note: saveNote, onPause: app.onPause, onSave: () => void saveNow(), onSignOut: () => void leave() }} />
+  );
 
+  const breakdown = (
+    <ScoreBreakdown
+      total={v.score.total} max={v.score.max}
+      pillars={(['business', 'people', 'leadership'] as const).map(k => ({ key: k, value: v.score[k], weight: v.gamification.weights[k] }))}
+      capability={v.score.capability} live={v.score.live} bonus={v.score.bonus} bonusCap={v.gamification.streak.cap}
+      streak={streak} tiers={v.gamification.tiers} tier={v.score.tier}
+      badges={{ earned: v.badges.filter(b => b.earned).length, total: v.badges.length }}
+      onBadges={() => { setScoreOpen(false); setBadgesOpen(true); }}
+      rank={v.gamification.leaderboard.enabled && v.clock.period >= 2 ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
+    />
+  );
   const hud: HudProps = {
-    menu: demo ? undefined : <GameMenu items={menuItems} />,
+    organisation: v.storyline.organisation,
+    menu,
     nav: [], onNav: () => undefined,
     clock: { period: v.clock.period, periodUnit, subPeriod: v.clock.subPeriod, periods: v.clock.periods, subPeriodUnit: unit, capacity: v.clock.capacity, capacityLeft: v.clock.capacityLeft },
     sessionClock: app.showClock === false ? null : <SessionClockText />, alwaysPause: true, onPause: app.onPause,
-    // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6).
-    score: { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership },
-    breakdown: (
-      <ScoreBreakdown
-        total={v.score.total} max={v.score.max}
-        pillars={(['business', 'people', 'leadership'] as const).map(k => ({ key: k, value: v.score[k], weight: v.gamification.weights[k] }))}
-        capability={v.score.capability} live={v.score.live} bonus={v.score.bonus} bonusCap={v.gamification.streak.cap}
-        streak={streak} tiers={v.gamification.tiers} tier={v.score.tier}
-        badges={{ earned: v.badges.filter(b => b.earned).length, total: v.badges.length }}
-        onBadges={() => { setScoreOpen(false); setBadgesOpen(true); }}
-        rank={v.gamification.leaderboard.enabled ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
-      />
-    ),
-    scoreOpen, onScoreOpenChange: setScoreOpen,
-    streak: v.streak, streakLabel: streak, onPalette: () => { setQuery(''); setPal(true); }, onSettings: app.onSettings,
+    // Save beside Pause (D213); not in the demo, which runs on its own engine.
+    onSave: demo ? undefined : () => void saveNow(), saving: session.saving,
+    // Pillars are 0 to 100 each, the total 0 to `max` (scoring-and-report.md 6). On the desk the score and its
+    // breakdown are in the status band (D211); the upright tablet board keeps them in the HUD (D73).
+    score: tablet ? { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership } : undefined,
+    breakdown, scoreOpen, onScoreOpenChange: setScoreOpen,
+    streak: tablet ? v.streak : undefined, streakLabel: streak, onPalette: openPalette, onSettings: app.onSettings,
     onEndPeriod: demo ? undefined : () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
@@ -709,8 +701,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     kpis: v.kpis.map(k => ({ metric: k.metric, value: k.value, trend: { kind: 'direction', direction: k.trend } })),
     pulse: { ...v.pulse, periodUnit },
     target: { label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target, pace: v.clock.runShare, pacePeriod: { unit: periodUnit, n: v.clock.period } },
-    sponsor: { level: v.sponsor.level, causes: v.sponsor.causes, open: sponsorOpen, onToggle: () => setSponsorOpen(o => !o),
-      meter: { value: v.sponsor.value, unlockAt: v.sponsor.unlockAt, checkInBelow: v.sponsor.checkInBelow, sponsorName: first(v.sponsor.name), subPeriodUnit: unit } }
+    sponsor: { level: v.sponsor.level, causes: v.sponsor.causes, open: sponsorOpen, onToggle: toggleSponsor,
+      meter: { value: v.sponsor.value, unlockAt: v.sponsor.unlockAt, checkInBelow: v.sponsor.checkInBelow, sponsorName: first(v.sponsor.name), subPeriodUnit: unit },
+      silence: v.sponsor.silence ? { ...v.sponsor.silence, periodUnit } : undefined,
+      update: v.sponsor.update && v.sponsor.update.blocked !== 'off' && !ended ? { cost: amount(v.sponsor.update.cost), blocked: v.sponsor.update.blocked, onUpdate: () => { void updateSponsor(); } } : undefined }
   };
 
   // ---- the business (D136, D137): variables on the board, decisions still waiting ----
@@ -731,7 +725,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   ];
 
   // ---- outcome ----
-  const oc = v.outcome;
   const person = (id: string): OutcomePerson | null => {
     const m = member(id);
     if (m) return { id, name: m.name, shortName: first(m.name), img: img(m) };
@@ -782,9 +775,9 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const needle = query.trim().toLowerCase();
   const palette: PaletteResult[] = [
     ...v.members.map(m => ({ id: 'member:' + m.id, name: m.name, detail: m.title, img: img(m), tone: (m.away ? 'away' : m.mood === 'concerned' || m.mood === 'frustrated' ? 'warm' : 'calm') as PaletteResult['tone'],
-      onRun: () => { setPal(false); setFlow(null); if (selected !== m.id) ui.toggleMember(m.id); } })),
+      onRun: () => { closePalette(); setFlow(null); if (selected !== m.id) ui.toggleMember(m.id); } })),
     ...v.actions.filter(a => a.scope === 'team').map(a => ({ id: 'action:' + a.key, name: a.name, detail: amount(a.cost), tone: 'brand' as const,
-      onRun: () => { setPal(false); tile(a.key, null).onPick(); } }))
+      onRun: () => { closePalette(); tile(a.key, null).onPick(); } }))
   ].filter(i => !needle || i.name.toLowerCase().includes(needle)).slice(0, 9);
 
   const sm = selected ? member(selected) : undefined;
@@ -794,52 +787,47 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   ] : undefined;
   const hint: TeamBoardHint = picking ? { kind: 'picking' } : sm ? { kind: 'selected', name: sm.name } : { kind: 'idle' };
 
-  // One modal at a time: an event card first (after the outcome has been read), then the period end.
-  // A sponsor call is not a modal: it rings over the board until it is answered or put off.
-  // A choice event's card is a decision (D137): the decision dialog, or its outcome right after deciding.
-  const card = !oc ? v.cards.find(c => c.delivery === 'modal') : undefined;
-  const decisionOpen = decided ?? v.openChoices.find(c => c.id === (card?.choiceId ?? deciding)) ?? null;
-  const callCard = v.phase === 'board' ? v.cards.find(c => c.delivery === 'sponsorCall' && (c.messageId === null || v.inbox.some(m => m.id === c.messageId))) : undefined;
-  // The week end replaces the board at a period end, and once more at the end of the run before the end screen.
-  const weekEnd = !card && !v.live && !reacting && (v.phase === 'periodEnd' || (ended && !lastWeekSeen));
-  // Then the end screen (or the report opened from it) takes the whole page; the board stays reachable, read only.
-  const endScreen = !card && !weekEnd && ended && lastWeekSeen && endView !== 'board';
-  const plainBoard = !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
-  // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13),
-  // nor while a panel or the tour is open, nor in the demo (D89, D92, D94).
-  useSessionTicker(!app.paused && !ended && plainBoard && !panel && !tour && !demo);
-
-  // ---- the guided tours (D94): each starts on its own the first time its screen shows, unless switched off ----
-  const tourArea: TourArea | null = demo || card || endScreen || weekEnd || reacting ? null : v.live ? (v.live.practice ? null : 'live') : styling ? 'style' : plainBoard ? 'board' : null;
-  useEffect(() => {
-    if (!tourArea || tour || panel || app.paused || !v.guide.tour.enabled || guideOff() || guideSeen(`tour:${tourArea}`)) return;
-    // A moment after the screen settles, so its targets are on screen.
-    const id = setTimeout(() => setTour(cur => cur ?? tourArea), 600);
-    return () => clearTimeout(id);
-  }, [tourArea, tour, panel, app.paused, v.guide.tour.enabled]);
-  const endTour = (how: TourEnd) => {
-    if (tour) markGuideSeen(`tour:${tour}`);
-    if (how === 'never') turnGuideOff();
-    setTour(null);
-    focusHint.current = () => h1Ref.current;
-  };
-
   // ---- notices (D93, D99): milestones as the engine reaches them, and tips at key moments, once each ----
-  const notices: Notice[] = demo || !plainBoard ? [] : [
-    ...newMilestones(v, dismissed),
-    ...(guideOff() ? [] : dueTips(v).filter(n => !dismissed.has(n.key) && (shown.has(n.key) || !guideSeen(n.key))))
-  ];
-  const freshKeys = notices.filter(n => !shown.has(n.key)).map(n => n.key).join('|');
-  useEffect(() => {
-    if (!freshKeys) return;
-    const fresh = freshKeys.split('|');
-    // A tip is remembered as seen once it is on screen, so a reload does not repeat it (D99).
-    for (const k of fresh) if (k.startsWith('tip:')) markGuideSeen(k);
-    // A notice on screen stays until it is dismissed, even after its tip is marked seen (D78 keeps this pattern).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShown(s => new Set([...s, ...fresh]));
-  }, [freshKeys]);
+  const { notices, dismiss: dismissNotice } = useNotices({ view: v, active: !demo && plainBoard });
   const nameOf = (id: string) => names.get(id) ?? null;
+
+  // ---- the desk (D211, D212): the status band, and the feedback and inbox feed under the team ----
+  // Tier and rank wait for the first move (period 2): week 1 shows the score alone.
+  const bandBase = bandModel(v);
+  const band = { ...bandBase, tier: v.clock.period >= 2 ? bandBase.tier : null };
+  // On the desk milestones go to the feed; tips and what neglect costs (D173, D174) stay as notices. The upright
+  // tablet keeps them all as notices (D73).
+  const boardNotices = tablet ? notices : notices.filter(n => n.kind !== 'milestone');
+  const feedMilestones: FeedMilestone[] = tablet ? [] : notices.flatMap(n => (n.kind !== 'milestone' ? [] : [{
+    key: n.key,
+    text: t('board.milestone.body', { kind: n.milestone.kind, pct: n.milestone.pct, stage: stageName(n.milestone.stage ?? '') }),
+    onResults: demo ? undefined : () => openPanel({ kind: 'overview', tab: n.milestone.kind === 'stage' ? 'stages' : 'results' }),
+    onLeaderboard: v.gamification.leaderboard.enabled && !demo ? () => openPanel({ kind: 'leaderboard' }) : undefined,
+    onDismiss: () => dismissNotice(n.key)
+  }]));
+  const fb = lastFeedback(v);
+  let feedback: FeedFeedback | null = null;
+  if (fb) {
+    const { changes, more } = feedbackChanges(fb, v.members.length, 2);
+    const people = new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject));
+    const single = people.size <= 1 && !people.has('team') && !people.has('group');
+    const sub = Math.min(fb.sub + 1, v.clock.capacity);
+    feedback = {
+      key: fb.id,
+      when: fb.period === v.clock.period ? t('time.subPeriod', { unit, n: sub }) : t('time.period', { unit: periodUnit, n: fb.period }),
+      title: fb.title,
+      changes: changes.map(c => ({
+        label: t('desk.feed.label', {
+          kind: c.subject === 'sponsor' ? 'sponsor' : c.subject === 'team' || c.subject === 'group' ? c.subject : single ? 'one' : 'person',
+          who: c.subject === 'sponsor' ? first(v.sponsor.name) : first(nameOf(c.subject) ?? ''), n: c.count,
+          metric: c.metric === 'confidence' ? '' : t('metric.nameLower', { metric: c.metric }), metricCap: c.metric === 'confidence' ? '' : t('metric.name', { metric: c.metric })
+        }),
+        dir: c.delta > 0 ? 'up' as const : 'down' as const, n: number(Math.abs(c.delta))
+      })),
+      more,
+      onWhy: demo ? undefined : () => openPanel({ kind: 'history', filter: fb.memberIds.length === 1 ? { person: fb.memberIds[0] } : {} })
+    };
+  }
   /** Whether each action can be taken now, in words, for the list of every action (D97). */
   const availability: Record<string, string> = Object.fromEntries(v.actions.map(a => {
     if (a.scope === 'team') { const b = tile(a.key, null).block; return [a.key, b ? actionSub(t, amount, { kind: a.kind, block: b }) : t('board.available.now')]; }
@@ -874,75 +862,16 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         }}
         // Later: the call stops ringing; its message stays in the inbox, urgent, with its due.
         onLater={async () => {
-          focusHint.current = () => h1Ref.current;
+          focusHintRef.current = () => h1Ref.current;
           if (await send({ type: 'dismissCard', cardId: callCard.id })) say(t('events.call.waiting', { name: first(v.sponsor.name) }));
         }}
       />
     );
   }
 
-  // ---- live interactions: the board owns "The team is reacting" ----
-  const finishLive: FinishLive = async (i, people) => {
-    if (inFlight.current) return false;
-    const id = i.interactionId;
-    setReacting({ id, people });
-    const started = Date.now();
-    const r = await send(i);
-    if (!r) { setReacting(null); return false; }
-    await new Promise(res => setTimeout(res, Math.max(0, REACTING_MS - (Date.now() - started))));
-    setReacting(cur => (cur?.id === id ? null : cur));
-    return true;
-  };
-
   // ---- focus ----
-  /**
-   * When the focused control disappears (Confirm styles, Go back, Got it, Start week, the end of a
-   * conversation), focus would fall to the page. Put it somewhere sensible instead: a hint if one
-   * was left, the outcome headline, or the screen's heading. A modal handles its own focus.
-   */
-  const rescue = useCallback((closing = false) => {
-    const main = mainRef.current;
-    if (!main) return;
-    const active = document.activeElement;
-    if (active && active !== document.body) return;
-    const lost = lastFocus.current;
-    if (!lost || (lost.isConnected && (lost as HTMLElement).checkVisibility?.() !== false)) return;
-    if (main.querySelector('[role="dialog"][aria-modal="true"]')) return;
-    const dialog = lastDialog.current;
-    if (dialog?.isConnected) { dialog.focus({ preventScroll: true }); return; }
-    // A modal that just closed puts focus back itself (Radix), unless it hands that to us (`closing`).
-    if (!closing && dialog?.getAttribute('aria-modal') === 'true') return;
-    const hinted = focusHint.current?.();
-    focusHint.current = null;
-    (hinted ?? headlineIn(outcomeRef.current) ?? h1Ref.current)?.focus({ preventScroll: true });
-  }, []);
-  useEffect(() => {
-    const main = mainRef.current;
-    if (!main) return;
-    const onFocusIn = (e: FocusEvent) => {
-      lastFocus.current = e.target as Element;
-      lastDialog.current = (e.target as Element).closest?.<HTMLElement>('[role="dialog"]') ?? null;
-    };
-    document.addEventListener('focusin', onFocusIn);
-    // Removals by child components (a stage switching, a dialog closing) are caught here.
-    const mo = new MutationObserver(() => rescue());
-    mo.observe(main, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
-    return () => { document.removeEventListener('focusin', onFocusIn); mo.disconnect(); };
-  }, [rescue]);
-
   // A new outcome takes focus, so it is read out; while an action is being planned it is announced instead.
-  const shownOutcome = useRef<string | null>(null);
-  useEffect(() => {
-    // The tablet board loads on demand: wait until it is on screen to focus its outcome.
-    if (!oc || reacting || v.live || styling || (tablet && !tabletReady)) return;
-    if (shownOutcome.current === oc.id) return;
-    shownOutcome.current = oc.id;
-    // A new outcome from the engine is announced when focus cannot move to it (D78 keeps this finding).
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (flow || card || endScreen) { setAnnounce(oc.headline); return; }
-    const h = headlineIn(outcomeRef.current);
-    h?.focus({ preventScroll: true });
-  }, [oc, reacting, v.live, styling, flow, card, endScreen, tablet, tabletReady]);
+  const announce = useOutcomeFocus({ outcome: oc, outcomeRef, reacting, live: v.live, styling, flow, card, endScreen, tablet, tabletReady });
 
   useEffect(() => { paletteOk.current = plainBoard && !demo; }, [plainBoard, demo]);
 
@@ -952,7 +881,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     : t('board.h1', { view: styling ? 'style' : 'board', unit: periodUnit, n: v.clock.period });
 
   let body: ReactNode;
-  if (v.live || reacting) {
+  if (session.signedOut) {
+    // Signed out on a launch with no return address (D213): the run is saved; Sign back in returns to the board.
+    body = (
+      <SignedOut at={session.signedOutAt ?? session.savedAt ?? 0}
+        where={{ period: t('time.period', { unit: periodUnit, n: v.clock.period }), sub: t('time.subPeriod', { unit, n: v.clock.subPeriod }), left: t('time.left', { amount: amount(v.clock.capacityLeft) }) }}
+        score={{ total: v.score.total, tier: band.tier?.name ?? null }}
+        money={{ label: t('board.target', { n: periods, unit: periodUnit }), value: v.money.value, target: v.money.target }}
+        live={{ used: v.liveCap.used, cap: v.liveCap.cap }}
+        onBack={() => { focusHintRef.current = () => h1Ref.current; useSession.getState().setSignedOut(false); }} />
+    );
+  } else if (v.live || reacting) {
     // A live interaction takes the whole screen (spec, Live interaction screens). It stays mounted
     // behind "The team is reacting", so nothing written is lost if the engine refuses the end.
     body = (
@@ -995,24 +934,26 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       {partner && (
         <PracticeOffer name={first(partner.name)} busy={busy}
           onStart={() => { void send({ type: 'startPractice' }); }}
-          onSkip={async () => { focusHint.current = () => h1Ref.current; if (await send({ type: 'skipPractice' })) say(t('board.practice.skipped')); }} />
+          onSkip={async () => { focusHintRef.current = () => h1Ref.current; if (await send({ type: 'skipPractice' })) say(t('board.practice.skipped')); }} />
       )}
       <StyleSettingView
         embedded
         periodUnit={periodUnit} period={v.clock.period} periodCount={v.clock.periods}
         sponsorName={v.sponsor.name} sponsorLine={v.sponsor.styleLine}
+        organisation={v.storyline.organisation}
+        status={<DeskStatus value={v.money.value} target={v.money.target} score={v.score.total} />}
         view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
-        onViewChange={m => setStyleView(x => (m === 'summary' ? { ...x, summary: true } : { layout: m, summary: false }))}
+        onViewChange={styles.changeView}
         members={v.members.map(m => ({
           id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
           away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
           stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, trust: m.trust } : null,
           lastStyle: m.lastStyle, lastReaction: m.lastReaction, style: draft[m.id] ?? null, rationale: notes[m.id] ?? ''
         }))}
-        onStyle={(id, k) => setDraft(d => ({ ...d, [id]: k }))}
-        onRationale={(id, text) => setNotes(n => ({ ...n, [id]: text }))}
-        onConfirm={confirmStyles}
-        onBack={() => setStyleView(x => ({ ...x, summary: false }))}
+        onStyle={styles.setStyle}
+        onRationale={styles.setRationale}
+        onConfirm={styles.confirm}
+        onBack={styles.closeSummary}
         confirmDisabled={busy || chosen < v.members.length}
       />
       </>
@@ -1023,17 +964,24 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {demo?.banner}
         <Hud {...hud} />
         {call}
-        <MetricsStrip {...strip} />
-        <BusinessBar items={business} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)}
+        {tablet ? <MetricsStrip {...strip} /> : (
+          <StatusBand model={band} periodUnit={periodUnit} subPeriodUnit={unit} targetLabel={t('board.target', { n: periods, unit: periodUnit })}
+            business={business} sponsorName={first(v.sponsor.name)} sponsorCauses={v.sponsor.causes}
+            score={{ total: v.score.total }} breakdown={breakdown} scoreOpen={scoreOpen} onScoreOpenChange={setScoreOpen}
+            rank={v.gamification.leaderboard.enabled && !demo && v.clock.period >= 2 ? <Suspense fallback={null}><BandRank view={v} onOpen={() => openPanel({ kind: 'leaderboard' })} /></Suspense> : undefined}
+            onOverview={demo ? undefined : () => openPanel({ kind: 'overview' })} />
+        )}
+        {/* On the desk the business variables are in the status band; the bar keeps decisions and stakeholders. */}
+        <BusinessBar items={tablet ? business : []} decisions={ended ? [] : decisionsDue} onDecide={id => setDeciding(id)}
           aside={v.stakeholders.length ? (
             <Suspense fallback={null}><StakeholderBar disabled={busy || ended || v.phase !== 'board'} onOpen={key => setStakeholdersOpen({ focus: key ?? null })} onAnswer={answerStakeholder}
               items={v.stakeholders.map(s => ({ key: s.key, name: s.name, img: s.img, level: s.level,
                 request: s.request && !ended ? { title: s.request.title, due: t('board.business.due', { n: s.request.dueInSubPeriods, unit }) } : null }))} /></Suspense>
           ) : undefined} />
-        <BoardNotices notices={notices} view={v} onDismiss={key => setDismissed(d => new Set([...d, key]))}
-          onLeaderboard={() => openPanel({ kind: 'leaderboard' })} />
+        <BoardNotices notices={boardNotices} view={v} onDismiss={dismissNotice}
+          onLeaderboard={() => openPanel({ kind: 'leaderboard' })} onUpdateSponsor={() => { void updateSponsor(); }} />
         {ended && lastWeekSeen && endView === 'board' && (
-          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-16 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
+          <div className="mx-6 mb-3.5 flex items-center gap-3 rounded-4 border border-line-strong bg-surface-material px-4 py-2.5 text-13 tablet-portrait:mt-3.5 tablet-portrait:mb-0">
             <span className="flex-1">{t('board.ended.readOnly')}</span>
             <Button variant="secondary" size="sm" onClick={() => setEndView('end')}>{t('board.ended.reopen')}</Button>
           </div>
@@ -1071,22 +1019,22 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           <>
             {top}
             {outcome}
-            <div className={`relative grid min-h-0 flex-1 grid-rows-1 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
-              {/* Tab order follows the spec: HUD, team board, actions, then inbox. The grid places the rail first. */}
+            <div className={`relative grid min-h-0 flex-1 grid-rows-(--il-desk-rows) gap-x-4.5 gap-y-2.5 px-8 pt-3 pb-3.5 short:gap-y-2 short:pt-2.5 short:pb-2.5 tablet:gap-x-3 tablet:px-5 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
+              {/* Tab order follows the spec: HUD, team board, actions, then the feedback and inbox feed. The grid places the feed under the team (D212). */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
-                <TeamBoard hint={hint} legendOpen={legend} onToggleLegend={() => setLegend(l => !l)} periodUnit={periodUnit} columns={columns}
-                  onOverview={demo ? undefined : () => openPanel({ kind: 'overview' })} />
+                <TeamBoard desk hint={hint} legendOpen={legend} onToggleLegend={toggleLegend} periodUnit={periodUnit} columns={columns} />
               </TeamScroll>
               {/*
                 * The board's first render is split (D87): the HUD, the KPIs and the team (where the largest
                 * paint is) come first; the actions panel and the inbox follow once that has painted, built
                 * in their own render inside a transition, so the board is not one long task.
                 */}
-              <div className="col-start-3 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <ActionsPanel
+              <div data-trace="actions" className="col-start-2 row-span-2 row-start-1 flex min-h-0 flex-col [contain:size]"><Deferred>{() => <ActionsPanel
                 capacityLeft={v.clock.capacityLeft} capacity={v.clock.capacity} subPeriodUnit={unit} periodUnit={periodUnit} outOfCapacity={!styling && v.clock.capacityLeft <= 0}
                 notes={actionNotes}
                 team={v.actions.filter(a => a.scope === 'team').map(a => tile(a.key, null))}
-                member={sm ? { firstName: first(sm.name), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
+                member={sm ? { firstName: first(sm.name), name: sm.name, img: img(sm), onProfile: () => openProfile(sm.id), tiles: v.actions.filter(a => a.scope === 'member').map(a => tile(a.key, sm.id)) } : null}
+                live={v.liveCap.cap > 0 ? { used: v.liveCap.used, cap: v.liveCap.cap } : undefined}
                 drawer={drawer ? <ActionDrawer {...drawer} /> : undefined}
                 onAbout={demo ? undefined : () => openPanel({ kind: 'actions' })}
                 collapse={foldable ? {
@@ -1095,7 +1043,10 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                   onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
                 } : undefined}
               />}</Deferred></div>
-              <div className="col-start-1 row-start-1 flex min-h-0 flex-col"><Deferred>{() => <InboxRail unread={inbox.length} items={railItems} onToggle={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} onOpen={id => void openMessage(id)} />}</Deferred></div>
+              <div data-trace="events" className="col-start-1 row-start-2 flex min-w-0 flex-col"><Deferred>{() => (
+                <DeskFeed feedback={feedback} milestones={feedMilestones} messages={feedMessages} subPeriodUnit={unit}
+                  onAll={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} />
+              )}</Deferred></div>
               {profile && <ProfilePanel {...profile} />}
               {inboxDrawer}
             </div>
@@ -1109,13 +1060,24 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
               due={t('board.business.due', { n: decisionOpen.dueInSubPeriods, unit })}
               changes={choiceLines}
               onDecide={async option => { if (await send({ type: 'decide', choiceId: decisionOpen.id, option })) { setDecided(decisionOpen); setDeciding(null); } }}
+              ending={v.endingWeek && decisionOpen.holdsWeekEnd ? { periodUnit } : null}
               onLater={async () => {
+                // While the week is ending (D231), Decide later is Let the default stand: kept as the participant's own call.
+                if (v.endingWeek && decisionOpen.holdsWeekEnd) {
+                  if (await send({ type: 'keepDefault', choiceId: decisionOpen.id })) { setDecided(decisionOpen); setDeciding(null); }
+                  return;
+                }
                 const c = v.cards.find(x => x.choiceId === decisionOpen.id);
-                focusHint.current = () => h1Ref.current;
+                focusHintRef.current = () => h1Ref.current;
                 if (c && !(await send({ type: 'dismissCard', cardId: c.id }))) return;
                 setDeciding(null);
               }}
-              onDone={() => { focusHint.current = () => h1Ref.current; setDecided(null); }}
+              onDone={() => {
+                focusHintRef.current = () => h1Ref.current;
+                setDecided(null);
+                // The week was ending: once the decision is settled, End week goes on (the next one, if any, shows first).
+                if (v.endingWeek && !busy) void send({ type: 'endPeriod' });
+              }}
               onCloseFocus={() => rescue(true)} />
           </Suspense>
         )}
@@ -1137,8 +1099,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {card && !card.choiceId && !decided && <EventCard key={card.id} card={card} busy={busy} nameOf={chipName} everyone={v.members.length} img={card.memberId ? member(card.memberId)?.img ?? null : null} onDismiss={() => { if (!busy) void send({ type: 'dismissCard', cardId: card.id }); }} onCloseFocus={() => rescue(true)} />}
         <Suspense fallback={null}>
           {badgesOpen && <BadgeShelfDialog badges={v.badges} periodUnit={periodUnit} onClose={() => setBadgesOpen(false)}
-            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header [data-hud-score]')} />}
-          {pal && plainBoard && <CommandPalette open onClose={() => setPal(false)} query={query} onQueryChange={setQuery} results={palette} />}
+            returnFocus={() => mainRef.current?.querySelector<HTMLElement>('[data-hud-score]')} />}
+          {pal && plainBoard && <CommandPalette open onClose={closePalette} query={query} onQueryChange={setQuery} results={palette} />}
           {panel && <PlayPanels panel={panel} view={v} nameOf={nameOf} availability={availability} onClose={() => setPanel(null)}
             onTour={() => { setPanel(null); setTour('board'); }}
             returnFocus={() => mainRef.current?.querySelector<HTMLElement>('header [data-tour="menu"] button') ?? h1Ref.current} />}
@@ -1152,8 +1114,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     <main ref={mainRef} aria-label={plainBoard || card ? t('board.aria') : undefined} data-celebration={v.gamification.celebration} data-tablet={tablet ? '' : undefined}
       data-fit={app.fit && !weekEnd && !endScreen ? '' : undefined}
       className={`relative flex min-h-0 flex-1 flex-col ${app.fit && !weekEnd && !endScreen ? FIT : ''}`}>
-      {/* The week end, the end screen and the report bring their own headings. */}
-      {!weekEnd && !endScreen && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
+      {/* The week end, the end screen, the report and the signed out screen bring their own headings. */}
+      {!weekEnd && !endScreen && !session.signedOut && <h1 ref={h1Ref} tabIndex={-1} className="sr-only">{h1}</h1>}
       {body}
       {tour && <Suspense fallback={null}><Tour key={tour} area={tour} view={v} onEnd={endTour} /></Suspense>}
       <div role="status" className="sr-only">{announce}</div>

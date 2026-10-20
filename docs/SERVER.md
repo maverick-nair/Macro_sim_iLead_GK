@@ -59,6 +59,7 @@ Every path, its schema and its roles are in `/openapi.json` (OpenAPI 3.1, genera
 | `createHttpApi` (src/api/http.ts) | `VITE_ILEAD_API_URL=/api` | `/api/profile`, `/api/theme`, `/api/history`, `/api/cohort/leaderboard`, `/api/cohort/{id}/report`, `/api/cohort/report`, `/api/report.pdf`, `/api/report/email`, `/api/scenario`, `/api/session`, `/api/session/settings` |
 | `createHttpTranscriptionClient` (src/speech/transcription.ts) | `VITE_ILEAD_SPEECH_URL=/speech` | `POST /speech/transcriptions`, `POST .../{id}/chunks?seq=n`, `POST .../{id}/end`, `DELETE .../{id}` |
 | `ServerDrafter` (src/author/drafter.ts) | `VITE_GENIE_URL=/genie` | `POST /genie/author/turn`, `POST /genie/author/draft` |
+| GenieKreator's Preview (src/author/ui/play.ts) and the preview tab (src/components/preview, `createHttpClient` at `{VITE_GENIE_URL}/preview`) | `VITE_GENIE_URL=/genie` | `POST /genie/author/preview`, `PUT /genie/author/preview/{id}`; `GET /genie/preview/sessions/{id}/view`, `POST .../intents`, `GET .../interactions/{i}/turns/{t}/stream`, `POST .../restart` (D195) |
 
 Added by the server (not called by the app today):
 
@@ -88,7 +89,8 @@ Notes on behaviour:
 - **Group report.** `GET /api/cohort/{id}/report` builds `buildGroupReport` over each participant's latest attempt (unfinished runs count in the completion rate) with the stored benchmark of the storyline's lens. Development withholds aggregates under `report.group.minimumCohort`; assessment adds verdicts and names (D77).
 - **History.** Ended earlier attempts of the same storyline, oldest first, with their stored summary and the report's headline; 404 when there are none.
 - **Benchmarks.** `summarizeBenchmark` over every stored run summary of a lens, refreshed every `BENCHMARK_REFRESH_HOURS` (and soon after start) or on demand. A lens with fewer than `BENCHMARK_MIN_RUNS` runs keeps the cached sample (`src/api/samples`).
-- **Prototype only.** `PUT /api/weeks/...`, `POST /api/interactions` and friends (the design prototype's fixed board, `?engine=off`) answer 501. `GET /api/scenario` is served because the app shell reads it on load.
+- **Prototype only.** `PUT /api/weeks/...`, `POST /api/interactions` and friends (the design prototype's fixed board, `?engine=off`) answer 501. `GET /api/scenario` is served for the prototype's screens (`?engine=off`); the engine's shell no longer reads it (D199).
+- **Previews** (D195). `POST /genie/author/preview` (author) checks a StorylineConfig as `POST /api/admin/storylines` does (schema, copy rules, id) and keeps it in `previews`, never as a storyline version, for `PREVIEW_DAYS` (7) after its last save (`PUT /genie/author/preview/{id}` replaces the draft and extends it). It answers `{ id, token, url, expiresAt }`: the token is the id, the url the participant app's preview address. The preview plays through the engine contract at `/genie/preview/sessions/{id}` as the signed in author, as the stand in participant `preview.{id}` on the storyline `preview:{id}`; `restart` starts a fresh run played forward to a point (`board:3`, `report`; `src/engine/jump.ts`). Its runs are flagged `preview`, keep no run summary, and are left out of cohort runs, group reports, the leaderboard, benchmarks and the history. An expired preview answers 404 `unknownPreview`; retention removes it with its runs and stand in participant.
 
 ## 4. Launch, sessions and roles
 
@@ -130,6 +132,7 @@ Minting in another language is three lines with any JWT library (HS256, the clai
 | `runs` | One attempt: participant, cohort, storyline id and version, lens, purpose, the storyline input snapshot, seed, attempt, engine version, status, event count, score, conversions, capability, headline. |
 | `run_events` | The event log: `(run_id, seq)` unique, intent or review, payload, the model answers it used. |
 | `intent_keys` | Idempotency keys (migration 2, D100): `(run_id, key)` unique, the event's seq and the stored result. Deleted with the run. |
+| `previews` | Preview storylines from GenieKreator (migration 3, D195): the draft config, its version and save time, who, and when it expires. Migration 3 also adds `runs.preview`. |
 | `run_summaries` | The latest `RunSummary` per run, by lens (group report, history, benchmark). |
 | `reviews` | Assessor reviews (also in the event log). |
 | `storylines` | Every version: draft or published, by whom. |
@@ -139,7 +142,7 @@ Minting in another language is three lines with any JWT library (HS256, the clai
 | `sessions` | Cookie sessions. |
 | `pdf_cache` | The report PDF per run, keyed by the run's event count. |
 
-**Privacy and retention.** A participant can export and delete their data (`/api/privacy/*`); cohort admins can for their cohorts. Deletion removes the participant, runs, events, summaries, reviews, PDFs, email log and sessions, and drops any engine in memory. `RETENTION_DAYS` deletes runs untouched that long (daily, and on demand); expired sessions are always removed. Benchmarks keep only averages and distributions, never names. Audio is never stored (section 6). Logs carry ids, codes and timings, never what a participant typed or said, and never query strings (launch tokens travel in them).
+**Privacy and retention.** A participant can export and delete their data (`/api/privacy/*`); cohort admins can for their cohorts. Deletion removes the participant, runs, events, summaries, reviews, PDFs, email log and sessions, and drops any engine in memory. `RETENTION_DAYS` deletes runs untouched that long (daily, and on demand); expired sessions and expired previews (with their runs) are always removed. Benchmarks keep only averages and distributions, never names. Audio is never stored (section 6). Logs carry ids, codes and timings, never what a participant typed or said, and never query strings (launch tokens travel in them).
 
 ## 6. AI and speech
 

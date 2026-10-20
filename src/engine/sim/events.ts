@@ -7,6 +7,7 @@ import type { Change, EventCard, MemberSim, NewsItem, Reason, Sim } from './type
 import { msg } from '../copy';
 import { applyBusiness, conditionsHold, noteTriggered, openChoice } from './business';
 import { stakeholderEvent } from './stakeholders';
+import { escalationRevenue, realismOf } from './realism';
 
 /**
  * Events (Configuration Spec, Events and NPC initiated moments): fixed, random or conditional timing;
@@ -51,7 +52,10 @@ function followUpTargets(config: Sim['config']): Set<string> {
       add(ev.business);
       for (const o of ev.choice?.options ?? []) add(o.business);
       add(ev.choice?.ignored?.business);
+      add(ev.escalation?.business);
     }
+    add(config.realism?.sponsor.reaction.business);
+    if (config.realism?.sponsor.reaction.event) out.add(config.realism.sponsor.reaction.event);
     for (const a of config.actions) for (const o of a.options) for (const b of Object.values(o.business ?? {})) add(b);
     // What stakeholders do can lead to an event too (D161, D162).
     for (const s of config.stakeholders ?? []) for (const x of s.interactions) {
@@ -214,6 +218,14 @@ function checkResponses(sim: Sim, rng: Rng) {
     if (sim.absSub <= p.dueAbsSub) continue;
     sim.events.pending = sim.events.pending.filter(x => x !== p);
     const ev = sim.config.events.find(e => e.key === p.eventKey);
+    // Realism (D173): an ignored event costs the business, not only people: a share of a week's target and its authored effect.
+    if (ev && realismOf(sim)) {
+      const cause = msg('engine.real.escalation', { title: ev.title });
+      const lost = applyBusiness(sim, { variables: {}, revenue: escalationRevenue(sim), sponsor: 0, set: [], clear: [], count: {}, followUps: [] }, cause);
+      const authored = applyBusiness(sim, ev.escalation?.business, cause);
+      if (sim.realism) sim.realism.evidence.escalationRevenue += -(lost.revenue + Math.min(0, authored.revenue));
+      log(sim, { kind: 'trigger', title: cause, memberIds: p.memberId ? [p.memberId] : [], changes: [...lost.changes, ...authored.changes] });
+    } else if (ev?.escalation?.business) applyBusiness(sim, ev.escalation.business, msg('engine.real.escalation', { title: ev.title }));
     if (!ev?.escalation) continue;
     if (ev.escalation.sponsor) {
       const first = sim.config.sponsor.name.split(' ')[0];

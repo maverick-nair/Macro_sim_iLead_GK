@@ -1,0 +1,28 @@
+{
+  "intro": {
+    "message-columns": {
+      "value": "minmax(0, 1fr) 360px",
+      "$description": "The sponsor's message (D220): the video, then the chapters beside it"
+    },
+    "products-columns": {
+      "value": "276px minmax(0, 1fr)",
+      "$description": "The portfolio: the list of models, then the model"
+    },
+    "model-columns": {
+      "value": "minmax(0, 1fr) minmax(0, 1.1fr)",
+      "$description": "A model: its words and features, then its photo with the numbered spots"
+    },
+    "objectives-columns": {
+      "value": "minmax(0, 1fr) 420px",
+      "$description": "The objectives, then the sponsor's word, Start simulation and the mic test"
+    },
+    "objectives-rows": {
+      "value": "minmax(0, 1fr) auto",
+      "$description": "The objectives on an upright tablet: the objectives scroll, Start simulation and the mic test stay under them"
+    },
+    "code-size": {
+      "value": "calc(120px * var(--il-text-scale, 1))",
+      "$description": "The model's big short code, as on the canvas (D232)"
+    }
+  }
+}

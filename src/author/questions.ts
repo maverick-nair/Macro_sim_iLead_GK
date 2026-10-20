@@ -82,7 +82,7 @@ export interface Plan {
 }
 
 /**
- * The next question, and "Question n of about m". `taken` are questions a long answer or an upload answered and the
+ * The next question, and the estimate behind "Question n, about m to go". `taken` are questions a long answer or an upload answered and the
  * chat said back with a way to change each (D146): they count toward the minimum, so they are not asked again.
  */
 export function planQuestions(brief: Brief, asked: readonly QuestionId[], taken: readonly QuestionId[] = []): Plan {
@@ -100,6 +100,9 @@ export function planQuestions(brief: Brief, asked: readonly QuestionId[], taken:
   }
   return { next: null, n: asked.length, about: asked.length };
 }
+
+/** How many questions are left after this one, from the estimate; never negative, and 0 reads "last one". */
+export const questionsToGo = (plan: Pick<Plan, 'n' | 'about'>): number => Math.max(0, plan.about - plan.n);
 
 /** The chip that hands a choice to Kora, said back in the chat (D133). */
 export const DECIDE = 'Decide for me';

@@ -116,7 +116,11 @@ async function playToEnd(request: APIRequestContext, token: string, id: string) 
   let v = await (await request.get(`/engine/sessions/${id}/view`, { headers })).json();
   for (let i = 0; v.phase !== 'ended' && i < 100; i++) {
     if (v.phase === 'style') v = await send({ type: 'confirmStyles', styles: Object.fromEntries(v.members.map((m: { id: string }) => [m.id, 'G'])) });
-    else if (v.phase === 'board') v = await send({ type: 'endPeriod' });
+    else if (v.phase === 'board') {
+      // A decision holds the week end (D231): its default stands, then End week again.
+      for (const c of (v.openChoices ?? []).filter((x: { holdsWeekEnd?: boolean }) => x.holdsWeekEnd)) v = await send({ type: 'keepDefault', choiceId: c.id });
+      v = await send({ type: 'endPeriod' });
+    }
     else {
       if (v.pendingReward?.length) v = await send({ type: 'chooseReward', reward: v.pendingReward[0] });
       if (v.phase === 'periodEnd') v = await send({ type: 'startNextPeriod' });

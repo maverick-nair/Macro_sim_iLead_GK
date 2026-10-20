@@ -20,7 +20,7 @@ export default meta;
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <ReportProvider value={{ print: false, tables: 'toggle' }}>
-      <div className="mx-auto flex max-w-(--il-report-width) flex-col gap-7 rounded-28 border border-line-default bg-surface-card p-8">{children}</div>
+      <div className="mx-auto flex max-w-(--il-report-width) flex-col gap-7 border border-line-default bg-surface-card p-8">{children}</div>
     </ReportProvider>
   );
 }

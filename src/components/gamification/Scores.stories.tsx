@@ -23,7 +23,7 @@ const BADGES: ShelfBadge[] = [
   { key: 'fair_hand', rule: 'fair_hand', name: 'Fair Hand', description: 'Recognize people three times without anyone feeling passed over.', earned: false, period: null, reason: null },
   { key: 'turnaround', rule: 'turnaround', name: 'Turnaround', description: 'Bring someone from morale below 30 to above 60.', earned: false, period: null, reason: null },
   { key: 'change_champion', rule: 'change_champion', name: 'Change Champion', description: 'Explain a change really well twice.', earned: false, period: null, reason: null },
-  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Finish the run without a conversation going badly.', earned: false, period: null, reason: null },
+  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Hold at least three conversations and finish the run without one going badly.', earned: false, period: null, reason: null },
   { key: 'target_crusher', rule: 'target_crusher', name: 'Target Crusher', description: 'Reach the revenue target.', earned: false, period: null, reason: null }
 ];
 
@@ -33,7 +33,7 @@ function Breakdown(p: Partial<ScoreBreakdownProps> & { count?: number; next?: nu
   const { t } = useI18n();
   const streak = streakText(t, { count: p.count ?? 2, next: p.firstWeek ? undefined : p.next === undefined ? 1 : p.next, periodUnit: 'week', rule: RULE });
   return (
-    <div className="flex w-80 flex-col gap-2 rounded-16 border border-line-strong bg-surface-material p-3.5">
+    <div className="flex w-80 flex-col gap-2 rounded-4 border border-line-strong bg-surface-material p-3.5">
       <ScoreBreakdown total={433} max={1000}
         pillars={[{ key: 'business', value: 18, weight: 0.3 }, { key: 'people', value: 49, weight: 0.3 }, { key: 'leadership', value: 70, weight: 0.4 }]}
         capability={70} live={null} bonus={0} bonusCap={100} tiers={TIERS} tier={null}
@@ -89,7 +89,7 @@ export const BadgeIcons: StoryObj = {
     <div className="flex flex-wrap gap-3">
       {[...BADGE_RULES, 'custom'].map(r => (
         <div key={r} className="flex flex-col items-center gap-2 text-12 text-fg-secondary">
-          <span className="flex size-16 items-center justify-center rounded-round bg-(image:--il-fill-spectrum) text-brand-deep-space"><span className="size-8">{badgeIcon(r)}</span></span>
+          <span className="flex size-16 items-center justify-center rounded-round bg-(image:--il-fill-spectrum) text-fg-on-accent"><span className="size-8">{badgeIcon(r)}</span></span>
           <span className="flex size-10 items-center justify-center rounded-round bg-track text-fg-secondary"><span className="size-5">{badgeIcon(r)}</span></span>
           <span>{r}</span>
         </div>

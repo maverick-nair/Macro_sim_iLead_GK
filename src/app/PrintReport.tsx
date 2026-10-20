@@ -48,7 +48,7 @@ export default function PrintReport() {
           <div className="il-theme relative flex flex-col overflow-hidden font-sans text-14 leading-(--il-app-leading) text-fg-primary tabular-nums [min-height:inherit]">
             {state && state !== 'error'
               ? <EngineReport view={state.view} print onBack={() => history.back()} participantName={state.name} getHistory={() => Promise.resolve(state.history)} />
-              : state === 'error' ? <main className="p-8"><h1 className="m-0 text-24 font-700">The report is not ready</h1></main> : <LoadingScreen />}
+              : state === 'error' ? <main className="p-8"><h1 className="m-0 text-24 font-600">The report is not ready</h1></main> : <LoadingScreen />}
           </div>
         </div>
       </BrandContext.Provider>

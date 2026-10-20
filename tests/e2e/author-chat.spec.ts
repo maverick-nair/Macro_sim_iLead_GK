@@ -31,7 +31,7 @@ test.beforeEach(async ({ page }) => {
 });
 test.afterEach(() => expect(errors).toEqual([]));
 
-const progress = (page: Page) => page.getByText(/^Question \d+ of about \d+$/);
+const progress = (page: Page) => page.getByText(/^Question \d+ · (?:last one|about \d+ to go)$/);
 const chip = (page: Page, name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
 const answerBox = (page: Page) => page.getByRole('textbox', { name: 'Your answer' });
 async function send(page: Page, text: string) {
@@ -46,7 +46,7 @@ async function openTab(page: Page, name: string) {
 
 test('a detailed brief in one answer: "I took these", the questions it answered skipped, and the named client kept', async ({ page }) => {
   await page.goto('/author');
-  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await expect(progress(page)).toHaveText('Question 1 · about 9 to go');
   await send(page, BRIEF);
   const took = page.getByRole('region', { name: 'I took these from your brief' });
   await expect(took).toContainText('Participants: VPs of Customer Operations');
@@ -71,7 +71,7 @@ test('a detailed brief in one answer: "I took these", the questions it answered 
   await expect(page.getByRole('log')).toContainText('A note on fit: iLead puts a senior leader in front of their own team');
   await expect(page.getByRole('group', { name: 'Does iLead fit this brief?' })).toHaveCount(0);
   // Only the work process is left; nothing the brief answered is asked again.
-  await expect(progress(page)).toHaveText('Question 2 of about 2');
+  await expect(progress(page)).toHaveText('Question 2 · last one');
   await expect(page.getByRole('log')).toContainText('What work process does the team run?');
   await chip(page, /^Service delivery/).click();
   const rec = page.getByRole('article', { name: 'Client Leadership Model' });
@@ -90,7 +90,7 @@ test('a detailed brief in one answer: "I took these", the questions it answered 
 
 test('an uploaded .txt brief keeps the client it names, and says what it took', async ({ page }) => {
   await page.goto('/author');
-  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await expect(progress(page)).toHaveText('Question 1 · about 9 to go');
   await page.locator('input[type="file"]').setInputFiles({ name: 'brief.txt', mimeType: 'text/plain', buffer: Buffer.from(BRIEF) });
   await expect(page.getByRole('log')).toContainText('I read brief.txt.');
   const took = page.getByRole('region', { name: 'I took these from your brief' });
@@ -107,11 +107,11 @@ test('a short request for senior managers gets a clarifying question, not an ind
   await send(page, 'create a leadership simulation for senior managers');
   await expect(page.getByRole('log')).toContainText('Senior managers leading which kind of team?');
   await chip(page, 'Sales teams').click();
-  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(progress(page)).toHaveText('Question 2 · about 8 to go');
   await send(page, 'banking but actually a hospital');
   await expect(page.getByRole('log')).toContainText('You mention Banking and financial services and Healthcare. Which industry should the story be set in?');
   await chip(page, 'Healthcare').click();
-  await expect(progress(page)).toHaveText('Question 3 of about 10');
+  await expect(progress(page)).toHaveText('Question 3 · about 7 to go');
   const soFar = page.getByRole('region', { name: 'Your simulation so far' });
   await expect(soFar.getByText('Senior managers leading sales teams')).toBeVisible();
   await expect(soFar.getByText('Healthcare', { exact: true })).toBeVisible();
@@ -122,7 +122,7 @@ test('an answer changed later shows what it changes, with Apply or Keep as note 
   await chip(page, 'First time managers').click();
   await chip(page, 'Manufacturing').click();
   await send(page, 'Deals stall at negotiation and new reps burn out in the first quarter.');
-  await expect(progress(page)).toHaveText('Question 4 of about 10');
+  await expect(progress(page)).toHaveText('Question 4 · about 6 to go');
   const soFar = page.getByRole('region', { name: 'Your simulation so far' });
   await soFar.getByRole('button', { name: 'Change Industry' }).click();
   await expect(page.getByRole('log')).toContainText('Tell me the new answer to: Which industry is the simulation set in?');
@@ -136,7 +136,7 @@ test('an answer changed later shows what it changes, with Apply or Keep as note 
   await send(page, 'Banking and financial services');
   await page.getByRole('region', { name: 'What this change does' }).getByRole('button', { name: 'Apply' }).click();
   await expect(soFar.getByText('Banking and financial services', { exact: true })).toBeVisible();
-  await expect(progress(page)).toHaveText('Question 4 of about 10');
+  await expect(progress(page)).toHaveText('Question 4 · about 6 to go');
 
   // In the workspace: the client, then what it changes, then Apply as one named step of undo.
   await page.getByRole('button', { name: 'Skip to the workspace' }).click();
@@ -209,10 +209,10 @@ test('a server that does not answer in time: Retry and Continue offline, and the
   await expect(failed.getByRole('button', { name: 'Retry' })).toBeVisible();
   await expect(answerBox(page)).toBeEnabled();
   await failed.getByRole('button', { name: 'Continue offline' }).click();
-  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await expect(progress(page)).toHaveText('Question 1 · about 9 to go');
   await expect(failed).toHaveCount(0);
   await chip(page, 'First time managers').click();
-  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(progress(page)).toHaveText('Question 2 · about 8 to go');
   // Offline from here on: the server is not asked again.
   expect(calls).toBe(1);
 });
@@ -227,7 +227,7 @@ test('an answer whose next turn fails stays in the chat, and its question is not
     await route.fulfill({ status: 501, json: { message: 'Not offered', code: 'notImplemented' } });
   });
   await page.goto('/author');
-  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await expect(progress(page)).toHaveText('Question 1 · about 9 to go');
   await chip(page, 'First time managers').click();
   const failed = page.getByRole('alert').filter({ has: page.getByRole('button', { name: 'Retry' }) });
   await expect(failed).toBeVisible();
@@ -241,7 +241,7 @@ test('an answer whose next turn fails stays in the chat, and its question is not
   await expect(page.getByText('I have your answer. Choose Retry, or Continue offline, and I will go on from there.')).toBeVisible();
   await expect(answerBox(page)).toHaveValue('Mid level managers');
   await failed.getByRole('button', { name: 'Continue offline' }).click();
-  await expect(progress(page)).toHaveText('Question 2 of about 10');
+  await expect(progress(page)).toHaveText('Question 2 · about 8 to go');
   await expect(log).toContainText('Which industry is the simulation set in?');
 });
 
@@ -259,6 +259,6 @@ test('Cancel stops Kora, and Retry asks again', async ({ page }) => {
   const failed = page.getByRole('alert').filter({ hasText: 'You stopped Kora.' });
   await expect(failed).toBeVisible();
   await failed.getByRole('button', { name: 'Retry' }).click();
-  await expect(progress(page)).toHaveText('Question 1 of about 10');
+  await expect(progress(page)).toHaveText('Question 1 · about 9 to go');
   expect(calls).toBe(2);
 });

@@ -33,6 +33,9 @@ Where each item lands is in the last column of the summary table; DECISIONS.md D
 - Resolved in the engine (D62): 1 Leadership Score, 2 stars, 3 streak, 4 tiers, 5 badges, 6 sponsor confidence and unlocks (briefings since M4), 10 Team Pulse, 15 events (types, timing, targets, delivery, responses, escalation).
 - Still open: 14 funnel inputs (authored ideal throughput per stage, Skill/Morale/Result weights, carry over); 17 play modes (Full, Standard, Lite), save and resume, practice week; 21 the Engagement, Quality and Safety dials and renameable KPI labels; the leaderboard and celebration level settings.
 
+## Status after D171 to D178 (real world costs)
+- A storyline with a `realism` block departs from items 1 and 3 by design: revenue past the target counts with diminishing value (the target is worth 85 of Business, D175), sponsor confidence takes 20% of Business, the People pillar rises with diminishing value and counts leavers (D177), and the streak bonus grows a little every week at 2 stars or more instead of +25 from the third week (D176). Left out, the formulas above stand unchanged. Both bundled storylines use it.
+
 ## What the participant UI must show
 - Stats hidden until the profile is first opened (D39 matches).
 - Trust as the ring and in Team Pulse.

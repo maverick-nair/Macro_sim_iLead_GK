@@ -15,7 +15,8 @@ const base = salesElevator as unknown as StorylineInput;
 type EventIn = NonNullable<StorylineInput['events']>[number];
 type ChoiceIn = NonNullable<EventIn['choice']>;
 function storyline(extra: Partial<StorylineInput>): StorylineConfig {
-  const p = parseStoryline({ ...structuredClone(base), events: [], triggers: [], ...extra });
+  // Without realism (D171 to D178): these rules are read on their own; realism.test.ts covers what realism adds.
+  const p = parseStoryline({ ...structuredClone(base), events: [], triggers: [], realism: undefined, ...extra });
   if (!p.ok) throw new Error(p.issues.join('\n'));
   return p.config;
 }
@@ -79,7 +80,8 @@ describe('business variables (D136)', () => {
     for (const e of [a, b]) { await toBoard(e); await nextWeek(e); }
     const ra = a.view().score.business, rb = b.view().score.business;
     // Revenue alone is rb; half of it plus half of a full variable (100) is the weighted pillar.
-    expect(ra).toBeCloseTo(0.5 * rb + 50, 0);
+    // Both are rounded for the view, so they can sit half a point apart.
+    expect(Math.abs(ra - (0.5 * rb + 50))).toBeLessThanOrEqual(0.5);
   });
 
   it('refuse a reference to a variable that does not exist, and weights over 80%', () => {
@@ -140,7 +142,8 @@ describe('choice events (D137)', () => {
     const e = createEngine(c, { seed: 6 });
     await toBoard(e);
     await nextWeek(e);
-    await nextWeek(e);
+    // The decision opens on day 1 and is left on the board while the days pass (D231: ending the week would show it).
+    for (let i = 0; i < 4; i++) await day(e);
     const v = en(e.view());
     expect(v.openChoices).toEqual([]);
     expect(v.choices[0]).toMatchObject({ option: 'travel', by: 'default' });
@@ -157,6 +160,84 @@ describe('choice events (D137)', () => {
     // Every weekly style fitted (100); with no conversation yet, the choice's Adequate read (70) is the band mean.
     expect(e.view().score.leadership).toBe(85);
     expect(e.summary().skills.find(s => s.key === 'results_ownership')!.observations).toBe(1);
+  });
+});
+
+describe('a decision never resolves unseen (D231)', () => {
+  /** The training budget on day 3 of week 2, as a choice event opens in GenieKreator's drafts. */
+  const c = storyline({ variables: [BUDGET, { ...CSAT, drift: 0 }], events: [{ ...TRAINING_CUT, subPeriod: 3 }] });
+  const toWeek2 = async (e: Engine) => { await toBoard(e); await nextWeek(e); };
+
+  it('shows a decision still to come when End week is pressed, on its own day and never earlier', async () => {
+    const e = createEngine(c, { seed: 11 });
+    await toWeek2(e);
+    await day(e);
+    expect(e.view().openChoices).toEqual([]);
+    const r = await e.dispatch({ type: 'endPeriod' });
+    expect(r.summary).toBeUndefined();
+    const v = r.view;
+    expect(v.phase).toBe('board');
+    expect(v.endingWeek).toBe(true);
+    // The same day it opens on when the participant plays on through the week.
+    const played = createEngine(c, { seed: 11 });
+    await toWeek2(played);
+    while (!played.view().openChoices.length) await day(played);
+    expect(v.clock.subPeriod).toBe(played.view().clock.subPeriod);
+    expect(v.openChoices).toHaveLength(1);
+    expect(v.openChoices[0]).toMatchObject({ eventKey: 'training_budget', holdsWeekEnd: true });
+    expect(v.cards.some(x => x.key === 'training_budget')).toBe(true);
+    // The week is ending: nothing else can be planned.
+    const m = v.members[0];
+    await expect(e.dispatch({ type: 'planAction', action: 'f2f', option: 'D', memberIds: [m.id] })).rejects.toMatchObject({ code: 'wrongPhase' });
+    // Decided, the week ends, and the week end says it was the participant's decision.
+    await e.dispatch({ type: 'decide', choiceId: v.openChoices[0].id, option: 'cut' });
+    const end = await e.dispatch({ type: 'endPeriod' });
+    expect(end.summary?.choices).toEqual([expect.objectContaining({ by: 'you', label: 'Cut the training budget' })]);
+    expect(end.view.phase).toBe('periodEnd');
+    expect(end.view.endingWeek).toBe(false);
+  });
+
+  it('lets the participant keep the default, recorded as theirs and reported as kept, not as decided', async () => {
+    const e = createEngine(c, { seed: 12 });
+    await toWeek2(e);
+    const held = await e.dispatch({ type: 'endPeriod' });
+    const id = held.view.openChoices[0].id;
+    const r = await e.dispatch({ type: 'keepDefault', choiceId: id });
+    expect(en(r.view).choices[0]).toMatchObject({ option: 'travel', by: 'kept', label: 'Cut travel instead' });
+    expect(r.view.variables.find(x => x.key === 'budget')!.value).toBe(42000);
+    const end = await e.dispatch({ type: 'endPeriod' });
+    expect(end.summary?.choices).toEqual([expect.objectContaining({ by: 'kept' })]);
+    // Like a default, a kept choice carries no leadership read.
+    expect(e.summary().skills.find(s => s.key === 'coaching_for_growth')!.observations).toBe(0);
+    await expect(e.dispatch({ type: 'keepDefault', choiceId: id })).rejects.toBeInstanceOf(IntentError);
+  });
+
+  it('shows again a decision put off during the week whose deadline falls before the week ends', async () => {
+    const e = createEngine(storyline({ variables: [BUDGET, CSAT], events: [{ ...TRAINING_CUT, subPeriod: 1 }] }), { seed: 13 });
+    await toWeek2(e);
+    await day(e);
+    const card = e.view().cards.find(x => x.key === 'training_budget')!;
+    await e.dispatch({ type: 'dismissCard', cardId: card.id });
+    const r = await e.dispatch({ type: 'endPeriod' });
+    expect(r.summary).toBeUndefined();
+    expect(r.view.openChoices[0].holdsWeekEnd).toBe(true);
+  });
+
+  it('holds the week for a decision on its last day too, though its deadline is next week', async () => {
+    const e = createEngine(storyline({ variables: [BUDGET, CSAT], events: [{ ...TRAINING_CUT, subPeriod: 5, choice: { ...TRAINING_CUT.choice, within: 3 } }] }), { seed: 14 });
+    await toWeek2(e);
+    const held = await e.dispatch({ type: 'endPeriod' });
+    expect(held.summary).toBeUndefined();
+    expect(held.view.openChoices[0]).toMatchObject({ holdsWeekEnd: true, dueInSubPeriods: 3 });
+  });
+
+  it('plays a week with no decision to come exactly as before', async () => {
+    const plain = storyline({ variables: [BUDGET] });
+    const e = createEngine(plain, { seed: 15 });
+    await toBoard(e);
+    const r = await e.dispatch({ type: 'endPeriod' });
+    expect(r.summary).toBeDefined();
+    expect(r.view.endingWeek).toBe(false);
   });
 });
 

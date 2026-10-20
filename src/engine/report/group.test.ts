@@ -155,7 +155,7 @@ describe('buildGroupReport, development', () => {
 
   it('parses with its schema, in the development order, with no verdicts and no names', () => {
     expect(() => GroupReport.parse(g)).not.toThrow();
-    expect(g.sections).toEqual(['about', 'skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways']);
+    expect(g.sections).toEqual(['skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways', 'about']);
     expect(g.assessment).toBeNull();
     expect(g.withheld).toBeNull();
     const json = JSON.stringify(g);
@@ -234,7 +234,7 @@ describe('the minimum cohort (development privacy)', () => {
     const runs = [...five().slice(0, 4), run({ completion: 30 })];
     const g = buildGroupReport({ runs, cohort: cohort('development') });
     expect(g.withheld).toEqual({ minimum: 5, message: 'Group results are withheld for now. 4 of 5 participants completed the simulation, and this report needs at least 5 to keep individual results private. The results appear once at least 5 participants have completed the simulation.' });
-    expect(g.sections).toEqual(['about', 'completion']);
+    expect(g.sections).toEqual(['completion', 'about']);
     expect(g.completion!.share).toBe(80);
     for (const k of ['skills', 'business', 'styles', 'consistency', 'funnel', 'actions', 'attention'] as const) expect(g[k]).toBeNull();
     expect(g.takeaways).toEqual([]);
@@ -264,7 +264,8 @@ describe('buildGroupReport, assessment', () => {
 
   it('adds the verdicts first and keeps every aggregate however small the cohort', () => {
     expect(() => GroupReport.parse(g)).not.toThrow();
-    expect(g.sections.slice(0, 3)).toEqual(['about', 'verdicts', 'skills']);
+    expect(g.sections.slice(0, 3)).toEqual(['verdicts', 'skills', 'distribution']);
+    expect(g.sections.at(-1)).toBe('about');
     expect(g.withheld).toBeNull();
     expect(g.about.confidentiality).toBe(DEFAULT_GROUP_COPY.confidentiality.assessment);
   });

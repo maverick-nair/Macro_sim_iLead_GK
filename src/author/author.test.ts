@@ -7,7 +7,7 @@ import { firstAnswer, MockDrafter, ServerDrafter } from './drafter';
 import { extractFramework } from './extract';
 import { LENS_LIBRARY } from './lenses';
 import { buildModule } from './module';
-import { addDocument, applyAnswer, MAX_QUESTIONS, MIN_QUESTIONS, planQuestions, questionFor } from './questions';
+import { addDocument, applyAnswer, MAX_QUESTIONS, MIN_QUESTIONS, planQuestions, questionFor, questionsToGo } from './questions';
 import { recommendLens } from './recommend';
 import { SAMPLE_FRAMEWORK } from './fixtures';
 
@@ -35,6 +35,12 @@ describe('question policy', () => {
   it('asks the ten core questions in order with nothing covered', () => {
     expect(chat(empty())).toEqual([...QUESTION_IDS]);
     expect(planQuestions(empty(), [])).toEqual({ next: 'role_level', n: 1, about: 10 });
+  });
+
+  it('counts the questions to go from the estimate, never below zero', () => {
+    expect(questionsToGo(planQuestions(empty(), []))).toBe(9);
+    expect(questionsToGo({ n: 2, about: 2 })).toBe(0);
+    expect(questionsToGo({ n: 3, about: 2 })).toBe(0);
   });
 
   it('skips what an upload covers', () => {

@@ -77,6 +77,26 @@ export const READINESS_NEEDS: Record<NeedKey, LensNeed> = {
   highSkill_highMorale: { label: 'Ready to run with it', short: 'High skill, high morale' }
 };
 
+/**
+ * Each style's tag, the short label on the board, in style setting and on the style cards (D230): the author's own
+ * when they wrote one, otherwise the first letter of the style's name, so a lens that renames its styles (Show the
+ * Way, Coach Along) shows S and C rather than the keys it kept (D and G). A tag is unique within the lens: when the
+ * first letter is taken, the style's key (when it is one or two characters), then the first two letters of its name,
+ * then its position.
+ */
+export function styleLetters(styles: ReadonlyArray<{ key: string; name: string; letter?: string | null }>): string[] {
+  const own = styles.map(s => (s.letter ?? '').trim().slice(0, 2));
+  const taken = new Set(own.filter(Boolean).map(l => l.toUpperCase()));
+  return styles.map((s, i) => {
+    if (own[i]) return own[i];
+    const name = s.name.trim().replace(/[^\p{L}\p{N}]/gu, '');
+    const candidates = [name.charAt(0).toUpperCase(), s.key.length <= 2 ? s.key.toUpperCase() : '', name.slice(0, 2).toUpperCase(), s.key.slice(0, 2).toUpperCase(), String(i + 1)];
+    const pick = candidates.find(c => c && !taken.has(c.toUpperCase())) ?? String(i + 1);
+    taken.add(pick.toUpperCase());
+    return pick;
+  });
+}
+
 /** A member's need: High at or above `high` (Model doc, sections 4 and 5). */
 export function needOf(s: { skill: number; morale: number }, high = 70): NeedKey {
   const hs = s.skill >= high, hm = s.morale >= high;

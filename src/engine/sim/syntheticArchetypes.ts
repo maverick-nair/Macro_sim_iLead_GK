@@ -60,7 +60,7 @@ function swapTo(p: PlayerApi, v: EngineView, margin: number): Step | null {
 const pickBy = (value: (o: ChoiceOption) => number) => (options: ChoiceOption[]) => bestBy(options, o => value(o) + choiceLead(o) / 1000);
 
 const riskTaker: Policy = {
-  traits: { ...PERSONA_TRAITS.proficient, promise: 1, keepPromises: 0.5, events: 0.5, extras: 1, waste: 0.3 },
+  traits: { ...PERSONA_TRAITS.proficient, promise: 1, keepPromises: 0.5, events: 0.5, extras: 1, waste: 0.3, manageUp: 0.5 },
   level: 2,
   option: 'boldest',
   choose: (p, _e, options) => pickBy(o => choiceSize(p.config, o))(options),
@@ -117,7 +117,7 @@ const conservative: Policy = {
 };
 
 const peopleFirst: Policy = {
-  traits: { ...PERSONA_TRAITS.expert, diagnose: 0.9, adapt: 0.9, promise: 0.3, extras: 1, waste: 0 },
+  traits: { ...PERSONA_TRAITS.expert, diagnose: 0.9, adapt: 0.9, promise: 0.3, extras: 1, waste: 0, manageUp: 0 },
   level: 3,
   email: 'congratulate',
   choose: (_p, _e, options) => pickBy(choicePeople)(options),
@@ -138,7 +138,7 @@ const peopleFirst: Policy = {
 };
 
 const businessFirst: Policy = {
-  traits: { ...PERSONA_TRAITS.proficient, promise: 0, extras: 1, waste: 0.2, events: 0.8 },
+  traits: { ...PERSONA_TRAITS.proficient, promise: 0, extras: 1, waste: 0.2, events: 0.8, manageUp: 1 },
   level: 2,
   weights: () => [1, 0, 3],
   choose: (p, _e, options) => pickBy(o => choiceBusiness(p.config, o))(options),

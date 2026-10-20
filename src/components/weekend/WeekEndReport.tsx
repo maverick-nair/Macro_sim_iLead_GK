@@ -6,11 +6,14 @@ import { barPercent, funnelNumber, funnelRow, levelSteps } from './display';
 import type { FunnelView, PeriodUnit, WeekEndReport as Report } from './types';
 import './messages';
 
-const CARD = 'flex flex-col rounded-24 border border-line-default bg-surface-card p-5 backdrop-blur-14';
-const SMALL_BOX = 'flex flex-col rounded-24 border p-4.5';
+// The canvas's report language (D232): square white tiles on paper, small capital headings,
+// numbers in the mono, bars in the accent on a sand track.
+const CARD = 'flex flex-col border border-line-default bg-surface-card p-5';
+const SMALL_BOX = 'flex flex-col border p-4.5';
 const SMALL_CARD = `${SMALL_BOX} border-line-default bg-surface-card`;
-const H2 = 'm-0 text-20 font-700';
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const H2 = 'm-0 text-13 font-600 tracking-(--il-tracking-eyebrow-wide) text-fg-body uppercase';
+const LABEL = 'text-13 text-fg-body';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 /** Arrow glyphs beside a change. Decorative: the words say up or down. */
 const UP = '▲';
 const DOWN = '▼';
@@ -46,7 +49,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
   const change = t('weekend.sponsor.change', { steps: sponsorMove.steps, dir: sponsorMove.dir });
   const pulse = r.pulse;
   const moods = [['upbeat', pulse.upbeat], ['steady', pulse.steady], ['struggling', pulse.struggling]] as const;
-  const legend = <span className="text-12 text-fg-secondary">{t('weekend.funnel.legend', { view: shown, unit })}</span>;
+  const legend = <span className="text-13 text-fg-body">{t('weekend.funnel.legend', { view: shown, unit })}</span>;
   const pulseTitle = pulse.value
     ? t('weekend.pulse.titleValue', { value: pulse.value.to, n: Math.abs(pulse.value.to - pulse.value.from), dir: pulse.value.to > pulse.value.from ? 'up' : pulse.value.to < pulse.value.from ? 'down' : 'same' })
     : t('weekend.pulse.title');
@@ -55,15 +58,15 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
     <div className="grid flex-1 animate-(--il-weekend-enter) grid-cols-(--il-weekend-report-columns) gap-5 tablet-portrait:grid-cols-1">
       <div className="flex flex-col gap-5">
         <section aria-labelledby={`${id}funnel`} className={`${CARD} gap-3`}>
-          <div className="flex justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id={`${id}funnel`} className={H2}>{t('weekend.funnel.title', { view: shown, unit })}</h2>
             {hasTotal ? (
               <div className="flex items-center gap-3">
                 {legend}
-                <div role="group" aria-label={t('weekend.funnel.viewAria')} className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.5">
+                <div role="group" aria-label={t('weekend.funnel.viewAria')} className="flex gap-0.5 rounded-4 border border-line-strong p-0.5">
                   {(['period', 'total'] as const).map(k => (
                     <button key={k} type="button" aria-pressed={shown === k} onClick={() => setView(k)}
-                      className={`cursor-pointer rounded-pill border-0 px-2.5 py-0.5 text-12 font-600 ${FOCUS} ${shown === k ? 'bg-accent-soft text-fg-primary' : 'bg-transparent text-fg-secondary'}`}>
+                      className={`min-h-10 cursor-pointer rounded-4 border-0 px-3 py-0 text-13 font-500 ${FOCUS} ${shown === k ? 'bg-surface-raised text-fg-primary' : 'bg-transparent text-fg-secondary'}`}>
                       {t('weekend.funnel.view', { view: k, unit })}
                     </button>
                   ))}
@@ -76,18 +79,18 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
             const isBottleneck = s.key === r.funnel.bottleneck;
             const v = number(funnelNumber(value)), i = number(funnelNumber(ideal));
             return (
-              <div key={s.key} className="grid grid-cols-(--il-weekend-funnel-columns) items-center gap-3 text-13">
+              <div key={s.key} className="grid grid-cols-(--il-weekend-funnel-columns) items-center gap-3 text-14">
                 <span>{s.name}</span>
-                <div role="img" aria-label={t('weekend.funnel.bar', { stage: s.name, value: v, ideal: i, bottleneck: String(isBottleneck) })} className="relative h-3 rounded-6 bg-track">
-                  <div className={`h-full rounded-6 ${isBottleneck ? 'bg-status-attention' : 'bg-(image:--il-fill-meter)'}`} style={{ width: `${barPercent(value, scale)}%` }}></div>
+                <div role="img" aria-label={t('weekend.funnel.bar', { stage: s.name, value: v, ideal: i, bottleneck: String(isBottleneck) })} className="relative h-3 bg-track">
+                  <div className={`h-full ${isBottleneck ? 'bg-status-attention' : 'bg-accent-default'}`} style={{ width: `${barPercent(value, scale)}%` }}></div>
                   <div className="absolute -top-1 -bottom-1 w-(--il-weekend-funnel-tick) bg-fg-primary" style={{ left: `${barPercent(ideal, scale)}%` }}></div>
                 </div>
-                <b aria-hidden="true" className="text-end">{t('weekend.funnel.value', { value: v, ideal: i })}</b>
+                <b aria-hidden="true" className="text-end font-mono font-500">{t('weekend.funnel.value', { value: v, ideal: i })}</b>
               </div>
             );
           })}
           {bottleneck && (
-            <span className="text-13 font-600 text-status-attention">
+            <span className="border-s-2 border-status-attention bg-status-attention-soft px-3 py-2 text-14 text-status-attention">
               {t('weekend.funnel.bottleneck', { stage: bottleneck.name, last: String(last), unit, next: period + 1 })}
             </span>
           )}
@@ -100,7 +103,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
               <ul className="m-0 flex list-none flex-wrap gap-x-5 gap-y-1.5 p-0 text-14">
                 {r.business.rows.map(b => (
                   <li key={b.key}>
-                    <span className="text-fg-secondary">{b.name}</span>{' '}
+                    <span className="text-fg-body">{b.name}</span>{' '}
                     {t('weekend.business.move', { start: b.start, end: b.end, dir: b.dir })}
                     {b.dir !== 'flat' && <span aria-hidden="true" className={`ms-1 text-12 ${b.better ? 'text-status-gain' : 'text-status-decline'}`}>{b.dir === 'up' ? UP : DOWN}</span>}
                   </li>
@@ -114,7 +117,7 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
         <section aria-labelledby={`${id}team`} className={`${CARD} gap-2.5`}>
           <h2 id={`${id}team`} className={H2}>{t('weekend.team.title', { unit })}</h2>
           <div role="table" aria-labelledby={`${id}team`} className="flex flex-col gap-2.5">
-            <div role="row" className="grid grid-cols-(--il-weekend-kpi-columns) gap-2 text-12 font-700 text-fg-secondary">
+            <div role="row" className="grid grid-cols-(--il-weekend-kpi-columns) gap-2 text-13 text-fg-body">
               <span role="columnheader"><span className="sr-only">{t('weekend.team.column', { column: 'metric' })}</span></span>
               <span role="columnheader" className="text-end">{t('weekend.team.column', { column: 'start' })}</span>
               <span role="columnheader" className="text-end">{t('weekend.team.column', { column: 'change' })}</span>
@@ -125,9 +128,9 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
               return (
                 <div key={k.metric} role="row" className="grid grid-cols-(--il-weekend-kpi-columns) gap-2 border-t border-line-default py-2 text-14">
                   <span role="rowheader">{t('weekend.team.metric', { metric: k.metric })}</span>
-                  <span role="cell" className="text-end">{number(k.start)}</span>
-                  <b role="cell" className={`text-end ${d > 0 ? 'text-status-gain' : 'text-fg-secondary'}`}>{delta(d)}</b>
-                  <b role="cell" className="text-end">{number(k.end)}</b>
+                  <span role="cell" className="text-end font-mono">{number(k.start)}</span>
+                  <b role="cell" className={`text-end font-mono font-500 ${d > 0 ? 'text-status-gain' : d < 0 ? 'text-status-decline' : 'text-fg-secondary'}`}>{delta(d)}</b>
+                  <b role="cell" className="text-end font-mono font-500">{number(k.end)}</b>
                 </div>
               );
             })}
@@ -140,41 +143,41 @@ export function WeekEndReport({ report: r, period, periodUnit: unit, last, subPe
           <h2 id={`${id}stars`} className={H2}>{t('weekend.stars.title')}</h2>
           {r.stars.map((s, i) => <StarRow key={s.kind ?? i} kind={s.kind} title={s.title} earned={s.earned} detail={s.detail} />)}
           {r.scoreParts && r.scoreParts.length > 0 && (
-            <ul aria-label={t('weekend.stars.partsAria')} className="m-0 flex list-none flex-col gap-1 border-t border-line-default p-0 pt-3 text-12 text-fg-secondary">
+            <ul aria-label={t('weekend.stars.partsAria')} className="m-0 flex list-none flex-col gap-1 border-t border-line-default p-0 pt-3 text-13 text-fg-body">
               {r.scoreParts.map(p => <li key={p}>{p}</li>)}
             </ul>
           )}
         </section>
-        <div className="grid grid-cols-2 gap-3.5 text-large:grid-cols-1">
+        <div className="grid grid-cols-2 gap-0 border-s border-t border-line-default text-large:grid-cols-1 [&>*]:border-s-0 [&>*]:border-t-0">
           <div className={`${SMALL_CARD} gap-1.5`}>
-            <span className="text-12 text-fg-secondary">{t('weekend.streak.title')}</span>
-            <b className="flex items-center gap-1.5 text-26">
+            <span className={LABEL}>{t('weekend.streak.title')}</span>
+            <b className="flex items-center gap-1.5 font-mono text-26 font-500">
               <svg className="size-5.5 fill-hud-streak" viewBox="0 0 24 24" aria-hidden="true"><path d={FLAME}></path></svg>
               {t('weekend.streak.count', { unit: r.streak.unit, n: r.streak.count })}
             </b>
-            <span className="text-12 text-fg-secondary">{r.streak.note}</span>
+            <span className={LABEL}>{r.streak.note}</span>
           </div>
           <div className={`${SMALL_CARD} gap-1.5`}>
-            <span className="text-12 text-fg-secondary">{t('weekend.sponsor.title')}</span>
-            <b className="text-22">{sponsorMove.dir === 'same' ? level(r.sponsor.to) : t('weekend.sponsor.levels', { from: level(r.sponsor.from), to: level(r.sponsor.to) })}</b>
-            <span className={`text-12 font-700 ${sponsorMove.dir === 'up' ? 'text-status-gain' : sponsorMove.dir === 'down' ? 'text-status-decline' : 'text-fg-secondary'}`}>
+            <span className={LABEL}>{t('weekend.sponsor.title')}</span>
+            <b className="font-serif text-24 font-400">{sponsorMove.dir === 'same' ? level(r.sponsor.to) : t('weekend.sponsor.levels', { from: level(r.sponsor.from), to: level(r.sponsor.to) })}</b>
+            <span className={`text-13 font-500 ${sponsorMove.dir === 'up' ? 'text-status-gain' : sponsorMove.dir === 'down' ? 'text-status-decline' : 'text-fg-secondary'}`}>
               {sponsorMove.dir !== 'same' && <span aria-hidden="true">{sponsorMove.dir === 'up' ? UP : DOWN}</span>}
               {sponsorMove.dir !== 'same' && ' '}
               {r.sponsor.values ? t('weekend.sponsor.values', { change, from: number(r.sponsor.values.from), to: number(r.sponsor.values.to) }) : change}
             </span>
           </div>
           <div className={`col-span-full ${SMALL_CARD} gap-2`}>
-            <span className="text-12 text-fg-secondary">{pulseTitle}</span>
-            <div role="img" aria-label={t('weekend.pulse.aria', { upbeat: pulse.upbeat, steady: pulse.steady, struggling: pulse.struggling })} className="flex h-3 gap-0.5 overflow-hidden rounded-6">
+            <span className={LABEL}>{pulseTitle}</span>
+            <div role="img" aria-label={t('weekend.pulse.aria', { upbeat: pulse.upbeat, steady: pulse.steady, struggling: pulse.struggling })} className="flex h-3 gap-0.5 overflow-hidden">
               <div className="bg-metrics-pulse-upbeat" style={{ flex: pulse.upbeat }}></div>
               <div className="bg-metrics-pulse-steady" style={{ flex: pulse.steady }}></div>
               <div className="bg-metrics-pulse-struggling" style={{ flex: pulse.struggling }}></div>
             </div>
-            <span className="text-13">
+            <span className="text-14">
               {moods.map(([mood, n], i) => (
                 <span key={mood} className="contents">
                   {i > 0 && t('weekend.pulse.separator')}
-                  <b>{number(n)}</b>
+                  <b className="font-mono font-500">{number(n)}</b>
                   {` ${t('weekend.pulse.mood', { mood })}`}
                 </span>
               ))}

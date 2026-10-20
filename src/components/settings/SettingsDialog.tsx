@@ -29,7 +29,7 @@ export interface SettingsDialogProps {
 
 /** Icon glyph, not copy: the button is named from the catalog. */
 const CLOSE_GLYPH = '✕';
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 export const TEXT_SIZES = [100, 125, 150, 200];
 const INPUTS: InputMode[] = ['text', 'ptt', 'open'];
 
@@ -47,16 +47,16 @@ function ChoiceRow<V extends string | number>({ label, hint, options, value, onP
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-between gap-3">
-        <span id={id} className="font-700">{label}</span>
+        <span id={id} className="font-600">{label}</span>
         <span className="text-12 text-fg-secondary">{hint}</span>
       </div>
-      <div role="radiogroup" aria-labelledby={id} className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.75">
+      <div role="radiogroup" aria-labelledby={id} className="flex gap-0.5 rounded-4 border border-line-default bg-surface-raised p-0.75">
         {options.map((o, j) => {
           const on = o.value === value;
           return (
             <button key={String(o.value)} type="button" role="radio" aria-checked={on} tabIndex={on || (j === 0 && !options.some(x => x.value === value)) ? 0 : -1}
               onClick={() => onPick(o.value)} onKeyDown={e => onRovingKey(e, j, options.length, i => onPick(options[i].value))}
-              className={`min-h-8.5 flex-1 cursor-pointer rounded-pill border-0 text-13 font-700 ${FOCUS} ${on ? 'bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}>
+              className={`min-h-8.5 flex-1 cursor-pointer rounded-4 border-0 text-13 font-600 ${FOCUS} ${on ? 'bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary'}`}>
               {o.name}
             </button>
           );
@@ -76,7 +76,7 @@ export function SettingsDialog({ values, onChange, onClose, voiceConsent = false
     <AppDialog onDismiss={onClose} frozen={frozen} returnFocus={returnFocus} described
       className="flex max-h-full w-140 flex-col gap-5.5 overflow-x-hidden overflow-y-auto p-7">
       <div className="flex items-center justify-between">
-        <DialogTitle className="m-0 text-22 font-700">{t('settings.title')}</DialogTitle>
+        <DialogTitle className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400">{t('settings.title')}</DialogTitle>
         <button type="button" onClick={onClose} aria-label={t('settings.close')}
           className={`size-9 cursor-pointer rounded-round border-0 bg-surface-raised leading-none text-fg-primary ${FOCUS}`}>{CLOSE_GLYPH}</button>
       </div>

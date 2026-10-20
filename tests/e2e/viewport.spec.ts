@@ -151,7 +151,8 @@ async function finishRun(page: Page) {
   await endWeek(page).click();
   await dismissCards(page);
   await page.getByRole('button', { name: /^See your week$/ }).click();
-  const step = page.getByRole('button', { name: /^(Continue|Nice)$/ });
+  // The last report goes straight to the results when no badge was earned.
+  const step = page.getByRole('button', { name: /^(Continue|Nice|See your results)$/ });
   const h1 = page.getByRole('heading', { level: 1, name: /^You finished at / });
   for (;;) {
     await expect(step.first().or(h1)).toBeVisible();
@@ -177,13 +178,14 @@ function both(name: string, kind: Kind, reach: (page: Page) => Promise<void>, pr
 }
 
 test.describe('onboarding and the demo', () => {
+  // The pre-game flow (D219): each screen's way on must be on screen at every size.
   const steps: [string, (page: Page) => Locator][] = [
-    ['language', page => page.getByRole('button', { name: "Let's begin" })],
-    ['sponsor', page => page.getByRole('button', { name: 'Next' })],
-    ['consent', page => page.getByRole('button', { name: 'Accept and use voice' })],
-    ['voice', page => page.getByRole('button', { name: 'Start mic test' })],
-    ['how to play', page => page.getByRole('button', { name: 'Meet your team' })],
-    ['team', page => page.getByRole('button', { name: 'Start week 1' })]
+    ['landing', page => page.getByRole('button', { name: 'Watch the video message from Paula Jacob' })],
+    ['message', page => page.getByRole('slider', { name: 'Position in the message' })],
+    ['message end', page => page.getByRole('button', { name: 'Explore products' })],
+    // The product portfolio (D221): its way on to the objectives.
+    ['products', page => page.getByRole('button', { name: 'See your objectives' })],
+    ['objectives', page => page.getByRole('button', { name: 'Start simulation' })]
   ];
   for (const [label, sizes] of [['landscape', LANDSCAPE], ['portrait', PORTRAIT]] as const) {
     test(`every onboarding step, ${label}`, async ({ page }) => {
@@ -198,16 +200,12 @@ test.describe('onboarding and the demo', () => {
           found.push(...await measure(page, 'play', [primary(page)], `onboarding ${step} at ${width}x${height}`));
         }
         await page.setViewportSize({ width: sizes[0][0], height: sizes[0][1] });
-        if (step === 'sponsor') await expect(primary(page)).toBeEnabled({ timeout: 10_000 });
-        if (step === 'voice') {
-          await primary(page).click();
-          await page.getByRole('button', { name: 'Sounds good' }).click({ timeout: 10_000 });
-        } else if (step === 'team') {
-          for (const name of ['Kent Goldberg', 'Green Bell', 'Ruth Ether']) await page.getByRole('button', { name: new RegExp(`^${name}, `) }).click();
-          await primary(page).click();
-        } else await primary(page).click();
+        if (step === 'message') await primary(page).press('End');
+        else await primary(page).click();
       }
-      // The demo offer, then the demo's first step.
+      await expect(styles(page)).toHaveCount(10, { timeout: 20_000 });
+      // The demo offer (off the default path, D219), then the demo's first step.
+      await page.goto('/?start=demo');
       await expect(page.getByRole('heading', { level: 1, name: 'Try the demo first?' })).toBeVisible();
       for (const [width, height] of sizes) {
         await page.setViewportSize({ width, height });
@@ -256,7 +254,11 @@ test.describe('style setting and the board', () => {
     if (tablet(page)) {
       await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
       await drawer(page).getByRole('tab', { name: 'Profile' }).click();
-    } else await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
+    } else {
+      // The desk opens a profile from the person's actions (D232): select them first.
+      await page.getByText('Kent Goldberg', { exact: true }).click();
+      await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
+    }
     await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeAttached();
   }, page => [page.getByRole('heading', { name: 'Kent Goldberg' }).first()]);
 
@@ -452,7 +454,7 @@ test.describe('/author', () => {
   }
   const chip = (page: Page, name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
   const composer = (page: Page) => [page.getByRole('textbox', { name: 'Your answer' }), page.getByRole('button', { name: 'Send', exact: true })];
-  const top = (page: Page) => [page.getByRole('button', { name: 'Review and publish' }), page.getByRole('button', { name: 'Play a week' })];
+  const top = (page: Page) => [page.getByRole('button', { name: 'Review and publish' }), page.getByRole('button', { name: 'Preview', exact: true })];
   async function toLens(page: Page) {
     await page.goto('/author');
     await chip(page, 'First time managers').click();
@@ -469,7 +471,7 @@ test.describe('/author', () => {
 
   author('author chat', async page => {
     await page.goto('/author');
-    await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+    await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
   }, composer);
   author('author recording', async page => {
     await page.goto('/author');
@@ -508,12 +510,15 @@ test.describe('/author', () => {
 test.describe('baselines', () => {
   async function still(page: Page, name: string) {
     await page.waitForLoadState('networkidle');
+    // A status band's rank loads on demand and reads Leaderboard until the cohort answers.
+    const rank = page.locator('[data-band-rank]');
+    if (await rank.count()) await expect(rank).toHaveText(/^Rank \d+ of \d+$/);
     await page.evaluate(async () => {
       await document.fonts.ready;
       await Promise.all(Array.from(document.images).map(i => (i.complete ? null : new Promise(r => { i.onload = i.onerror = r; }))));
       await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined)));
     });
-    await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ })] });
+    await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ }), page.locator('[data-session-clock]')] });
   }
   for (const [width, height] of [[1513, 745], [1366, 768]] as const) {
     test.describe(`${width}x${height}`, () => {
@@ -532,6 +537,11 @@ test.describe('baselines', () => {
       test(`board with the outcome at ${at}`, async ({ page }) => {
         await page.goto('/?start=board');
         await confirmStyles(page);
+        // The pointer stays where Confirm styles was, over a team card once the band has pushed the board down; whether
+        // that card shows its hover depends on when the browser rechecks it. Parked on the page's empty gutter instead.
+        await page.mouse.move(8, height - 8);
+        // Week 1 shows the score alone: no tier line and no rank in the status band until week 2.
+        await expect(page.locator('[data-band-rank]')).toHaveCount(0);
         await still(page, `fit-${at}-outcome`);
       });
       test(`action drawer at ${at}`, async ({ page }) => {
@@ -557,7 +567,7 @@ test.describe('baselines', () => {
       });
       test(`author at ${at}`, async ({ page }) => {
         await page.goto('/author');
-        await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+        await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
         await expect(page.getByText('Saved just now')).toBeVisible();
         await still(page, `fit-${at}-author`);
       });

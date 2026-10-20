@@ -26,6 +26,8 @@ npm run test:server      # the server's tests;  npm run e2e:server  Playwright a
 
 CI (`.github/workflows/ci.yml`) runs on every push and pull request: token check, lint, build, the server's tests, Storybook smoke, the Playwright flows (the app's and the server's), parity and the Web Vitals budgets.
 
+**Deploying the app alone (Vercel).** `vercel.json` builds with `npm run build:app` (only `vite build`) and serves `dist` as a single page app on the mock engine; Node 22 comes from `engines`. The quality gates (tokens, lint, unit tests, types, the budget, end to end) run in CI on every push and pull request, never in the deploy, so a red test blocks the merge, not the preview.
+
 The reference server is in `server/` (D81): the engine authoritative and persisted, every endpoint the app calls, signed launch links, report PDF and email, the AI from `ai/` (D82). Setup, configuration, deploy and operations: `docs/SERVER.md`. An engineer only configures it (`.env.example`, `Dockerfile`, `docker-compose.yml`).
 
 For the server and GenieKreator teams: `docs/HANDOFF.md` (architecture, the engine contract, every endpoint, the config and report schemas, how to run, test and release, budgets, known limits).
@@ -114,7 +116,7 @@ A client theme is GenieKreator configuration (Configuration Spec, "Brand and the
 | `colors.brand` | `{ from, to, angle? }` | `fill.brand`: the primary button, wordmark, on switch and progress. |
 | `colors.surface` | `{ solid?, card?, raised?, material? }` | The surface tokens. |
 | `logo` | `{ src?, alt?, text? }` | The brand mark beside the iLead wordmark: an image (https, a site path or a data:image URI), or a text mark. With neither, the design's placeholder names the client. |
-| `font` | allowlist | Manrope (default), Inter, IBM Plex Sans, Source Sans 3, Nunito Sans, Work Sans, Lato, Open Sans, System. Web fonts load from Google Fonts. |
+| `font` | allowlist | Left out: Geist, the canvas's face (D232). Manrope, Inter, IBM Plex Sans, Source Sans 3, Nunito Sans, Work Sans, Lato, Open Sans, System. Web fonts load from Google Fonts. |
 | `radiusScale` | 0 to 2 | Multiplies every numbered radius token; pills stay pills. |
 
 A colour is `oklch()`, `#hex` or `rgb()`, either one value or `{ "light": …, "dark": … }`. Theme text follows the copy rules (no dashes as punctuation, no emoji).

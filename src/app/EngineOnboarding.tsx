@@ -1,11 +1,17 @@
-import { OnboardingFlow } from '../components/onboarding/OnboardingFlow';
+import { useEffect, useState } from 'react';
+import { useApi } from '../api';
+import { tierProgress } from '../components/desk/band';
+import { IntroFlow } from '../components/intro/IntroFlow';
 import type { OnboardingMember, OnboardingSponsor } from '../components/onboarding/types';
+import { useSession, useSignOut } from '../components/session/session';
+import { SignedOut } from '../components/session/SignedOut';
 import type { EngineView } from '../engine/contract';
 import { moneyFormatter } from '../engine/money';
-import { useEngineView, useIntent } from '../engine/react';
+import { useEngineView } from '../engine/react';
 import { useI18n, type I18n } from '../i18n';
+import { MoneyProvider } from '../i18n/money';
 import type { AppActions } from './types';
-import { useUi } from './uiStore';
+import { unitWords } from '../engine/units';
 
 /** Initials for the sponsor's placeholder when the storyline has no portrait: first and last name. */
 export function initials(name: string): string {
@@ -24,11 +30,11 @@ export function engineLetter({ t, locale }: I18n, view: EngineView): OnboardingS
   return {
     welcome: [
       t('onboarding.sponsor.welcome.1', { organisation: view.storyline.organisation ?? 'none' }),
-      t('onboarding.sponsor.welcome.2', { size: words(view.members.length) }),
+      t('onboarding.sponsor.welcome.2', { size: words(view.members.length), ...unitWords(t, money.unit) }),
       t('onboarding.sponsor.welcome.3')
     ],
     product: [
-      t('onboarding.sponsor.product.1', { count: words(funnel.length), stages: new Intl.ListFormat(locale, { type: 'conjunction' }).format(funnel.map(f => f.name)) }),
+      t('onboarding.sponsor.product.1', { ...unitWords(t, money.unit), count: words(funnel.length), stages: new Intl.ListFormat(locale, { type: 'conjunction' }).format(funnel.map(f => f.name)) }),
       t('onboarding.sponsor.product.2', { max: view.maxPerStage, maxWords: words(view.maxPerStage) })
     ],
     targets: [
@@ -52,39 +58,47 @@ export function engineMembers({ t }: I18n, view: EngineView): OnboardingMember[]
 }
 
 /**
- * Onboarding in the playable app: the running storyline's sponsor, organisation, stages and team,
- * from the engine view. Opening a profile sends `openProfile`, so its stats show on the board too.
- * The storyline has no welcome video, so the sponsor step shows the letter only.
+ * The pre-game flow in the playable app (D219): the approved canvas's four screens, landing, the sponsor's video
+ * message, the product portfolio when the storyline has one, and the objectives, all from the engine view. The
+ * older scenes (the sales floor, how a week works, the voice or text setup, the demo offer and the Week 0 practice offer) are not
+ * on this path. Log out saves and leaves to the launch's return address when it gave one, else signs out here.
  */
-export function EngineOnboarding({ act, minHeight }: { act: AppActions; minHeight: string }) {
+export function EngineOnboarding({ act }: { act: AppActions; minHeight: string }) {
   const i18n = useI18n();
   const { t } = i18n;
   const { data: view } = useEngineView();
-  const { mutate } = useIntent();
-  const offerPractice = useUi(s => s.setPracticeOffer);
+  const api = useApi();
+  const [exitUrl, setExitUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    api.getProfile().then(p => { if (live && p.exit && /^https?:\/\//.test(p.exit)) setExitUrl(p.exit); }, () => undefined);
+    return () => { live = false; };
+  }, [api]);
+  const signOut = useSignOut(exitUrl ? () => location.assign(exitUrl) : undefined);
+  const signedOut = useSession(s => s.signedOut);
+  const signedOutAt = useSession(s => s.signedOutAt);
   if (!view) return null;
-  const { sponsor, storyline, clock } = view;
+  const { clock, money } = view;
+  if (signedOut) {
+    const tier = tierProgress(view.score.total, view.gamification.tiers, view.score.tier);
+    return (
+      <MoneyProvider money={money}>
+        <div className="flex min-h-dvh flex-col">
+          <SignedOut at={signedOutAt ?? 0} score={{ total: view.score.total, tier: tier?.name ?? null }}
+            where={{ period: t('time.period', { unit: clock.periodUnit, n: clock.period }), sub: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }), left: t('time.left', { amount: t('time.amount', { unit: clock.subPeriodUnit, n: clock.capacityLeft }) }) }}
+            money={{ label: t('board.target', { n: clock.periods, unit: clock.periodUnit }), value: money.value, target: money.target }}
+            live={{ used: view.liveCap.used, cap: view.liveCap.cap }} onBack={() => useSession.getState().setSignedOut(false)} />
+        </div>
+      </MoneyProvider>
+    );
+  }
   return (
-    <OnboardingFlow
-      minHeight={minHeight}
-      teamSize={view.members.length} periods={{ unit: clock.periodUnit, count: clock.periods }} subPeriodUnit={clock.subPeriodUnit} capacity={clock.capacity}
-      // One language is configured, so the language picker stays hidden (spec, onboarding step 1).
-      languages={[]}
-      sponsor={{
-        name: sponsor.name, initials: initials(sponsor.name), img: sponsor.img,
-        role: t('onboarding.sponsor.role', { title: sponsor.title, organisation: storyline.organisation ?? 'none' }),
-        // The welcome video's first transcript line is its caption (D90); the video replays from Tutorial and video during play.
-        letter: storyline.intro ?? engineLetter(i18n, view), video: storyline.video?.transcript[0] ? { caption: storyline.video.transcript[0] } : null
-      }}
-      organisation={storyline.organisation}
-      sampleName={view.members[0]?.name.split(' ')[0] ?? ''}
-      members={engineMembers(i18n, view)}
-      onConsent={voice => act.settings(voice ? { voiceConsent: true } : { voiceConsent: false, input: 'text' })}
-      onOpenProfile={id => { if (!view.members.find(m => m.id === id)?.statsRevealed) mutate({ type: 'openProfile', memberId: id }); }}
-      onSay={act.say}
-      // The demo round is offered next when the storyline has it (D92); then the Week 0 practice, above week 1's style setting (D16, D84).
-      onFinish={() => { if (view.guide.demo.enabled) act.go('demo'); else { offerPractice(true); act.go('style'); } }}
-      liveVoice
-    />
+    <IntroFlow view={view} letter={view.storyline.intro ?? engineLetter(i18n, view)}
+      onLogOut={() => void signOut()}
+      onVoice={() => act.settings({ voiceConsent: true })}
+      onText={() => act.settings({ voiceConsent: false, input: 'text' })}
+      // Straight to week 1's style setting: the pre-game flow is exactly these four screens (D219), so the demo
+      // offer (D92) is off this path even when the storyline has it (`?start=demo` still opens it).
+      onStart={() => act.go('style')} />
   );
 }

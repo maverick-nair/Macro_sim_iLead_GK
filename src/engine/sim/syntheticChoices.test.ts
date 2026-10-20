@@ -33,7 +33,8 @@ describe('synthetic players decide choice events by level', () => {
     const short = (cs: typeof beginner) => cs.filter(c => c.by === 'you' && ['discount', 'weekend', 'cut', 'silent'].includes(c.option ?? '')).length / Math.max(1, cs.filter(c => c.by === 'you').length);
     expect(short(beginner)).toBeGreaterThan(0.6);
     expect(short(expert)).toBeLessThan(0.2);
-  });
+    // Twelve playthroughs: about 3 s alone, longer under the full suite's load (realism adds a little to each run).
+  }, 30_000);
 
   it('the same seed makes the same decisions, whatever the conversations were rated', async () => {
     expect(await choices('proficient', [9])).toEqual(await choices('proficient', [9]));
@@ -71,6 +72,7 @@ describe('player types decide by their nature, and probes leave every choice to 
   it('a probe decides nothing', async () => {
     const made = await choices('expert', [1], { probe: { kind: 'idle' } });
     expect(made.length).toBeGreaterThan(0);
-    expect(made.every(c => c.by === 'default')).toBe(true);
+    // Shown at the week's end (D231), a probe lets every default stand.
+    expect(made.every(c => c.by !== 'you')).toBe(true);
   });
 });

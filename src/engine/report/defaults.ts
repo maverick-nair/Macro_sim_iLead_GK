@@ -374,8 +374,8 @@ export const DEFAULT_RECONCILE: { skills: Record<string, Array<'styleFit' | 'dia
  * the numbers. Each dimension is strong, weak or in between; a claim that praises a weak dimension, or
  * faults a strong one, is never shown.
  * - business: share of target, %: strong from `strong`, weak under `weak`.
- * - people: team average changes over the run: weak when morale fell by `moraleDrop` or more, trust by
- *   `trustDrop` or more, or anyone resigned; otherwise strong when two of skill, morale, result and trust
+ * - people: average changes over everyone who was on the team (D170): weak when morale fell by `moraleDrop` or more, trust by
+ *   `trustDrop` or more, or anyone left (resigned or let go, D170); otherwise strong when two of skill, morale, result and trust
  *   rose by `rise` or more.
  * - styleFit: share of style choices that fit, %. words: the mean band score of the conversations (at
  *   least two). activity: actions per period, weak under `weak`, strong from `strong`. sponsor: the
@@ -390,4 +390,40 @@ export const DEFAULT_EVIDENCE = {
   activity: { strong: 2, weak: 1 },
   sponsor: { strong: 10, weak: -10 },
   events: { weak: 2 }
+};
+
+/**
+ * The overall level capped by what happened (D168). The level the words reach (the mean of the reconciled
+ * skill ratings, D144) is held at or under `level` (a position on the rating scale, 0 is the lowest) by each
+ * gate the run triggers; the lowest cap wins. The defaults sit on D143's weak thresholds, so a run the
+ * report calls weak on a dimension is never rated above Proficient for it.
+ * - fit: the lowest of the listed signals (D144's `styleFit` and `diagnosis`), with `caps` (left out, the
+ *   `reconcile` caps: under 40% at most Developing, under 70% at most Proficient).
+ * - business: revenue as % of target, or the Business pillar (0 to 100) when the storyline weights business
+ *   variables (D136). Under 50% at most Developing, under 80% at most Proficient.
+ * - people: the averages over everyone who was on the team (people away and people who left at their last
+ *   values), and the people who left, resigned or let go. Weak (at most Proficient): morale fell 10 points or
+ *   more, trust 5 or more, skill 5 or more, or someone left. Collapsed (at most Developing): morale fell 25 or
+ *   more, trust 15 or more, skill 15 or more, or two or more people left. A fall threshold of 0 is off.
+ * - stakeholders: relationships outside the team (D160) that ended strained and lower than they started; one
+ *   or more holds the level at Proficient.
+ * - decisions: choice events (D137) left to their default, as % of all of them when there were at least
+ *   `min`; half or more holds the level at Proficient.
+ * Business, people, stakeholders and decisions are the outcome gates an assessment verdict reads (D169).
+ */
+export const DEFAULT_OUTCOMES: {
+  fit: { signals: Array<'styleFit' | 'diagnosis'>; caps?: Array<{ below: number; level: number }> };
+  business: { caps: Array<{ below: number; level: number }> };
+  people: Record<'weak' | 'collapsed', { moraleDrop: number; trustDrop: number; skillDrop: number; left: number; level: number }>;
+  stakeholders: { strained: number; level: number };
+  decisions: { defaulted: number; min: number; level: number };
+} = {
+  fit: { signals: ['styleFit', 'diagnosis'] },
+  business: { caps: [{ below: 50, level: 1 }, { below: 80, level: 2 }] },
+  people: {
+    weak: { moraleDrop: 10, trustDrop: 5, skillDrop: 5, left: 1, level: 2 },
+    collapsed: { moraleDrop: 25, trustDrop: 15, skillDrop: 15, left: 2, level: 1 }
+  },
+  stakeholders: { strained: 1, level: 2 },
+  decisions: { defaulted: 50, min: 2, level: 2 }
 };

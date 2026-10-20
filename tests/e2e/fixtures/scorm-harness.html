@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Mock LMS</title>
+  <style>html, body { margin: 0; height: 100%; } iframe { border: 0; width: 100%; height: 100%; display: block; }</style>
+  <script>
+    /*
+     * A minimal mock LMS for tests/e2e/scorm.spec.ts (D209): SCORM 1.2's `API` and SCORM 2004's `API_1484_11`
+     * on this window, the package in an iframe below it (so the package finds them by walking up its parents).
+     * `?api=12` or `?api=2004`, `?pkg=<path to the package's index.html>`. Every call is recorded in
+     * `window.lms.calls`; the data model is kept in localStorage per API version and saved on commit and finish,
+     * so reloading the page relaunches the package with the suspend data, as an LMS does.
+     */
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var version = q.get('api') === '12' ? '12' : '2004';
+      var key = 'scorm-harness-' + version;
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) { saved = null; }
+      var data = saved || {};
+      var lms = window.lms = { version: version, calls: [], data: data, initialized: false, finished: false, lastError: '0', launches: (saved && saved.__launches) || 0 };
+      lms.launches += 1;
+      data.__launches = lms.launches;
+      function save() { localStorage.setItem(key, JSON.stringify(data)); }
+      function record(fn, args, result) { lms.calls.push({ fn: fn, args: args, result: result }); return result; }
+      function err(code) { lms.lastError = code; return 'false'; }
+      var VOCAB12 = { 'cmi.core.lesson_status': ['passed', 'completed', 'failed', 'incomplete', 'browsed', 'not attempted'], 'cmi.core.exit': ['time-out', 'suspend', 'logout', ''] };
+      var VOCAB2004 = { 'cmi.completion_status': ['completed', 'incomplete', 'not attempted', 'unknown'], 'cmi.success_status': ['passed', 'failed', 'unknown'], 'cmi.exit': ['time-out', 'suspend', 'logout', 'normal', ''] };
+      function set12(k, v) {
+        if (!lms.initialized || lms.finished) return err('301');
+        if (typeof v !== 'string') return err('405');
+        if (VOCAB12[k] && VOCAB12[k].indexOf(v) < 0) return err('405');
+        if (k === 'cmi.suspend_data' && v.length > 4096) return err('405');
+        if (k === 'cmi.core.lesson_location' && v.length > 255) return err('405');
+        if (/^cmi\.core\.score\.(raw|min|max)$/.test(k) && (isNaN(Number(v)) || Number(v) < 0 || Number(v) > 100)) return err('405');
+        if (k === 'cmi.core.session_time' && !/^\d{2,4}:\d{2}:\d{2}(\.\d{1,2})?$/.test(v)) return err('405');
+        if (/^cmi\.core\.(student_id|student_name|entry|total_time)$/.test(k)) return err('403');
+        data[k] = v; lms.lastError = '0'; return 'true';
+      }
+      function set2004(k, v) {
+        if (!lms.initialized || lms.finished) return err('132');
+        if (typeof v !== 'string') return err('406');
+        if (VOCAB2004[k] && VOCAB2004[k].indexOf(v) < 0) return err('406');
+        if (k === 'cmi.suspend_data' && v.length > 64000) return err('405');
+        if (/score\.scaled$/.test(k) && (isNaN(Number(v)) || Number(v) < -1 || Number(v) > 1)) return err('407');
+        if (k === 'cmi.progress_measure' && (isNaN(Number(v)) || Number(v) < 0 || Number(v) > 1)) return err('407');
+        if (k === 'cmi.session_time' && !/^P(\d+Y)?(\d+M)?(\d+D)?(T(\d+H)?(\d+M)?(\d+(\.\d{1,2})?S)?)?$/.test(v)) return err('406');
+        var m = /^cmi\.objectives\.(\d+)\.(.+)$/.exec(k);
+        if (m) {
+          var n = Number(m[1]), count = Number(data['cmi.objectives._count'] || 0);
+          if (n > count) return err('351');
+          if (m[2] !== 'id' && data['cmi.objectives.' + n + '.id'] === undefined) return err('408');
+          if (m[2] === 'completion_status' && VOCAB2004['cmi.completion_status'].indexOf(v) < 0) return err('406');
+          if (m[2] === 'success_status' && VOCAB2004['cmi.success_status'].indexOf(v) < 0) return err('406');
+          if (n === count) data['cmi.objectives._count'] = String(count + 1);
+        }
+        if (/^cmi\.(learner_id|learner_name|entry|total_time|objectives\._count)$/.test(k)) return err('404');
+        data[k] = v; lms.lastError = '0'; return 'true';
+      }
+      function get(k) {
+        if (k === 'cmi.core.entry' || k === 'cmi.entry') return data['cmi.suspend_data'] ? 'resume' : 'ab-initio';
+        if (k === 'cmi.core.student_id' || k === 'cmi.learner_id') return 'learner-7';
+        if (k === 'cmi.core.student_name' || k === 'cmi.learner_name') return 'Okafor, Ben';
+        if (k === 'cmi.objectives._count') return data[k] || '0';
+        return data[k] === undefined ? '' : data[k];
+      }
+      window.API = {
+        LMSInitialize: function (a) { lms.initialized = true; lms.finished = false; return record('LMSInitialize', [a], 'true'); },
+        LMSFinish: function (a) { lms.finished = true; save(); return record('LMSFinish', [a], 'true'); },
+        LMSGetValue: function (k) { return record('LMSGetValue', [k], get(k)); },
+        LMSSetValue: function (k, v) { return record('LMSSetValue', [k, v], set12(k, v)); },
+        LMSCommit: function (a) { save(); return record('LMSCommit', [a], 'true'); },
+        LMSGetLastError: function () { return lms.lastError; },
+        LMSGetErrorString: function () { return ''; },
+        LMSGetDiagnostic: function () { return ''; }
+      };
+      window.API_1484_11 = {
+        Initialize: function (a) { lms.initialized = true; lms.finished = false; return record('Initialize', [a], 'true'); },
+        Terminate: function (a) { lms.finished = true; save(); return record('Terminate', [a], 'true'); },
+        GetValue: function (k) { return record('GetValue', [k], get(k)); },
+        SetValue: function (k, v) { return record('SetValue', [k, v], set2004(k, v)); },
+        Commit: function (a) { save(); return record('Commit', [a], 'true'); },
+        GetLastError: function () { return lms.lastError; },
+        GetErrorString: function () { return ''; },
+        GetDiagnostic: function () { return ''; }
+      };
+      // Only the version under test is offered, as an LMS does.
+      if (version === '12') delete window.API_1484_11; else delete window.API;
+      lms.reset = function () { localStorage.removeItem(key); };
+    })();
+  </script>
+</head>
+<body>
+  <iframe id="sco" title="Course" allow="autoplay; microphone"></iframe>
+  <script>document.getElementById('sco').src = new URLSearchParams(location.search).get('pkg') || 'pkg/index.html';</script>
+</body>
+</html>

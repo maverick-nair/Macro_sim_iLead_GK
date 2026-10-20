@@ -199,6 +199,20 @@ class Player implements PlayerApi {
     return this.engine.dispatch(intent);
   }
 
+  /**
+   * End week (D231): a decision still to come this week is shown first. The player decides it by their nature (as on
+   * the board); one they would leave, they now leave explicitly, letting its default stand. Then End week again.
+   */
+  private async endWeek(): Promise<EngineView> {
+    let v = (await this.send({ type: 'endPeriod' })).view;
+    for (let guard = 0; guard < 50 && v.phase === 'board' && v.endingWeek; guard++) {
+      v = await this.choose(v);
+      for (const c of v.openChoices.filter(x => x.holdsWeekEnd)) v = (await this.send({ type: 'keepDefault', choiceId: c.id })).view;
+      v = (await this.send({ type: 'endPeriod' })).view;
+    }
+    return v;
+  }
+
   async play(): Promise<SyntheticRun> {
     let v = this.engine.view();
     for (let guard = 0; v.phase !== 'ended' && guard < 400; guard++) {
@@ -207,7 +221,7 @@ class Player implements PlayerApi {
         this.own = 0;
         v = await this.board(v);
         const period = v.clock.period;
-        v = (await this.send({ type: 'endPeriod' })).view;
+        v = await this.endWeek();
         const week = this.weeks.find(w => w.period === period);
         const sum = v.periods.find(p => p.period === period);
         if (week && sum) Object.assign(week, { styleFit: { correct: sum.week.styleFit.correct, total: sum.week.styleFit.total }, revenue: Math.round(sum.valueThisPeriod), score: sum.week.score });
@@ -266,6 +280,7 @@ class Player implements PlayerApi {
     for (let steps = 0; steps < 40 && v.phase === 'board'; steps++) {
       v = await this.answer(v);
       v = await this.stakeholderStep(v);
+      v = await this.updateSponsor(v);
       if (v.phase !== 'board') break;
       const step = this.next(v);
       if (!step) break;
@@ -359,6 +374,26 @@ class Player implements PlayerApi {
     return v;
   }
 
+  /**
+   * Realism (D173): before a silence costs the sponsor's confidence, a player who manages up gives the sponsor an update
+   * (a day, once a week). Decided once a week, by the `manageUp` trait. The probes, which replace every decision, never do.
+   */
+  private async updateSponsor(v: EngineView): Promise<EngineView> {
+    const up = v.sponsor.update;
+    if (!up || up.blocked || this.policy.next || !v.sponsor.silence || v.sponsor.silence.weeks + 1 < v.sponsor.silence.costsFrom) return v;
+    const key = `update:${v.clock.period}`;
+    if (this.decided.has(key)) return v;
+    this.decided.set(key, this.rng.chance(this.t.manageUp));
+    if (!this.decided.get(key) || v.clock.capacityLeft < up.cost) return v;
+    try {
+      const o = await this.send({ type: 'openConversation', kind: 'sponsor' });
+      return await this.converse(o.interactionId!, { actionKey: 'sponsor', actionName: 'Sponsor update', memberIds: [] }, o.view);
+    } catch (e) {
+      if (!(e instanceof IntentError)) throw e;
+      return this.engine.view();
+    }
+  }
+
   private markHandled(eventKey: string, period: number) {
     this.pending = this.pending.filter(p => p.eventKey !== eventKey);
     const e = this.week(period).events.find(x => x.key === eventKey) ?? this.weeks.flatMap(w => w.events).find(x => x.key === eventKey);
@@ -405,8 +440,14 @@ class Player implements PlayerApi {
   /** Who needs time most: the policy's order, else lowest morale and result first. */
   neediest(v: EngineView): Member[] {
     if (this.policy.neediest) return this.policy.neediest(this, v);
-    return present(v).sort((a, b) => (this.stats(a).morale + this.stats(a).result) - (this.stats(b).morale + this.stats(b).result) || a.id.localeCompare(b.id));
+    // Realism (D174): someone about to go a whole neglect window without time of their own comes first, as much as the player focuses.
+    // Someone already given time this week waits for the others, as much as the player spreads their time.
+    const due = (m: Member) => (m.unattended === undefined ? 0 : (m.unattended + 1 >= this.neglectWeeks() ? 80 * this.t.focus : 0) - (this.memo.has(`with:${v.clock.period}:${m.id}`) ? 30 * this.t.focus : 0));
+    const key = (m: Member) => this.stats(m).morale + this.stats(m).result - due(m);
+    return present(v).sort((a, b) => key(a) - key(b) || a.id.localeCompare(b.id));
   }
+
+  private neglectWeeks() { return this.config.realism?.neglect.weeks ?? Infinity; }
 
   /** The member action that does most for this need in the player's style, from the storyline's effect tables. */
   bestActionFor(v: EngineView, m: Member): string | null {
@@ -417,7 +458,9 @@ class Player implements PlayerApi {
     for (const a of this.config.actions) {
       if (a.scope !== 'member' || a.kind === 'static' || a.rule !== 'styleOption') continue;
       const o = a.options.find(x => x.style === style) ?? a.options[0];
-      const score = o.effects.m0[0] * w[0] + o.effects.m0[1] * w[1] + o.effects.m0[2] * w[2];
+      // Realism (D171): the board says when a repeat lands at less; a player who fits the action to the need reads it.
+      const rep = v.actions.find(x => x.key === a.key)?.repeatFor?.[m.id]?.share ?? 1;
+      const score = (o.effects.m0[0] * w[0] + o.effects.m0[1] * w[1] + o.effects.m0[2] * w[2]) * rep;
       if (this.free(v, a.key, m.id) && (!best || score > best.score)) best = { key: a.key, score };
     }
     return best?.key ?? null;
@@ -443,8 +486,12 @@ class Player implements PlayerApi {
       }
     }
 
+    // With realism, an Expert keeps the week's last conversation for what comes up until midweek (D174: an event left
+    // unanswered costs revenue), unless a promise falls due tomorrow; something else useful can fill the day.
+    const reserve = !!this.config.realism && this.level >= 3 && v.clock.subPeriod <= 3 && v.liveCap.used >= v.liveCap.cap - 1;
+
     // 2. A promise coming due: follow up with that person, in the action that suits them.
-    for (const pr of v.promises.filter(x => x.state === 'open' && x.dueInSubPeriods <= 3)) {
+    for (const pr of v.promises.filter(x => x.state === 'open' && x.dueInSubPeriods <= 3 && !(reserve && x.dueInSubPeriods > 1))) {
       const id = `promise:${pr.id}`;
       if (!this.decided.has(id)) this.decided.set(id, this.rng.chance(this.t.keepPromises));
       if (!this.decided.get(id)) continue;
@@ -459,15 +506,19 @@ class Player implements PlayerApi {
     const first = this.policy.first?.(this, v);
     if (first) return first;
 
-    // 3. Development: a conversation with the person who needs it, in the action that suits the need.
-    if (this.liveLeft(v)) {
+    // 3. Development: a conversation with the person who needs it, in the action that suits the need (kept back as above).
+    const filler = reserve && this.rng.chance(this.t.extras) ? (this.policy.extra ? this.policy.extra(this, v) : this.extra(v)) : null;
+    if (filler) return filler;
+    if (this.liveLeft(v) && !reserve) {
       const here = this.neediest(v);
       const m = this.rng.chance(this.t.focus) ? here[0] : this.rng.pick(here);
       if (m) {
         // A team meeting when one style fits most of the team, for the players who read the room.
         const team = this.teamStyle(v);
         const fits = present(v).filter(x => this.need(x) && fitOf(this.config.lens, team, this.need(x)!) === 0).length;
-        if (this.level >= 2 && this.policy.meetings !== false && fits >= Math.ceil(0.7 * present(v).length)) {
+        const meet0 = meetingAction(this.config);
+        const tired = !!(meet0 && v.actions.find(x => x.key === meet0.key)?.repeat);
+        if (this.level >= 2 && this.policy.meetings !== false && !tired && fits >= Math.ceil(0.7 * present(v).length)) {
           const meet = meetingAction(this.config);
           const step = meet && this.stepFor(v, meet.key, null, 'develop', team);
           if (step) return step;
@@ -512,7 +563,7 @@ class Player implements PlayerApi {
     const here = present(v);
     // Team energy: the effect follows each person's style fit, so only when most styles fit.
     const energize = energizeAction(this.config);
-    if (energize && period - (this.memo.get('energized') ?? -10) >= 2 && here.filter(fitting).length >= Math.ceil(0.7 * here.length)) {
+    if (energize && !v.actions.find(x => x.key === energize.key)?.repeat && period - (this.memo.get('energized') ?? -10) >= 2 && here.filter(fitting).length >= Math.ceil(0.7 * here.length)) {
       const step = this.stepFor(v, energize.key, null, 'extra');
       if (step) { this.memo.set('energized', period); return step; }
     }
@@ -559,6 +610,7 @@ class Player implements PlayerApi {
       return this.engine.view();
     }
     if (step.why !== 'event' && step.why !== 'promise') this.own++;
+    for (const id of step.memberIds) this.memo.set(`with:${period}:${id}`, 1);
     const a = this.config.actions.find(x => x.key === step.action)!;
     // The option in a few words: its style's name when it has one, else its label when short.
     const o = a.options.length > 1 ? a.options.find(x => x.key === step.option) : undefined;

@@ -162,14 +162,14 @@ test('a later week end in the light theme: so far view of the funnel, every step
   await expect(page.getByRole('heading', { level: 1, name: 'Set your leadership styles for week 4' })).toBeFocused();
 });
 
-test('the end of the run: banner, report and the new badges, then the end screen', async ({ page }) => {
+test('the end of the run: banner and report with no badge for a run without conversations, then the end screen', async ({ page }) => {
   await page.goto('/?start=board&period=8');
   await setStyles(page);
   await endWeek(page);
   await expect(page.getByText('End of week 8')).toBeVisible();
   const seen = await walk(page, 8);
-  // No conversation went badly in the whole run: Steady Hand. No unlock or news after the last week.
-  expect(seen).toContain('badge');
+  // A fast forwarded run holds no conversations, so Steady Hand is not earned and no badge step shows. No unlock or news after the last week.
+  expect(seen).not.toContain('badge');
   expect(seen).not.toContain('unlock');
   expect(seen).not.toContain('news');
   // The end screen replaces the week end (end.spec.ts walks it); focus starts on its headline.

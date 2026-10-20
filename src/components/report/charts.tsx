@@ -38,7 +38,7 @@ export function StyleSharesChart({ styles, shares, total, dominant, label }: { s
         const strong = dominant.includes(k);
         return (
           <Group key={k} top={top}>
-            <text x={0} y={h / 2} dominantBaseline="central" className={`${LABEL} ${strong ? 'font-700' : ''}`}>{name}</text>
+            <text x={0} y={h / 2} dominantBaseline="central" className={`${LABEL} ${strong ? 'font-600' : ''}`}>{name}</text>
             <Bar x={LEFT} y={0} width={W - LEFT - RIGHT} height={h} rx={4} className="fill-report-chart-cell" />
             <Bar x={LEFT} y={0} width={w} height={h} rx={4} className="fill-report-chart-series" />
             <text x={LEFT + w + 8} y={h / 2} dominantBaseline="central" className={MUTED}>
@@ -78,7 +78,7 @@ export function FitGridChart({ grid, fit, styles, needs, label }: { grid: number
               <Group key={used}>
                 <Bar x={cx} y={cy} width={w} height={h} rx={6} className={`fill-report-chart-cell ${cell.matched ? 'stroke-report-chart-series' : ''}`} strokeWidth={cell.matched ? 2 : 0} />
                 <Bar x={cx + 6} y={cy + h - 8} width={(w - 12) * cell.share} height={4} rx={2} className="fill-report-chart-series" />
-                <text x={cx + w / 2} y={cy + h / 2 - 2} textAnchor="middle" dominantBaseline="central" className={`${LABEL} ${cell.matched ? 'font-700' : ''}`}>{number(cell.count)}</text>
+                <text x={cx + w / 2} y={cy + h / 2 - 2} textAnchor="middle" dominantBaseline="central" className={`${LABEL} ${cell.matched ? 'font-600' : ''}`}>{number(cell.count)}</text>
               </Group>
             );
           })}
@@ -104,7 +104,7 @@ export function RevenueChart({ points, money, label }: { points: Array<{ label: 
       <LinePath data={points} x={cx} y={p => round1(y(p.value))} fill="none" className="stroke-report-chart-series" strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
       {last && (
         <>
-          <text x={cx(last) + 8} y={y(last.value)} dominantBaseline="central" className={`${LABEL} font-700`}>{t('report.business.you', { value: money(last.value) })}</text>
+          <text x={cx(last) + 8} y={y(last.value)} dominantBaseline="central" className={`${LABEL} font-600`}>{t('report.business.you', { value: money(last.value) })}</text>
           <text x={cx(last) + 8} y={y(last.pace) + (last.pace > last.value ? -14 : 14)} dominantBaseline="central" className={MUTED}>{t('report.business.pace', { value: money(last.pace) })}</text>
         </>
       )}
@@ -127,7 +127,7 @@ export function FunnelChart({ stages, label }: { stages: Array<{ key: string; na
         const top = y(s.key) ?? 0, h = y.bandwidth();
         return (
           <Group key={s.key} top={top}>
-            <text x={0} y={h / 2} dominantBaseline="central" className={`${LABEL} ${s.bottleneck ? 'font-700' : ''}`}>{s.name}</text>
+            <text x={0} y={h / 2} dominantBaseline="central" className={`${LABEL} ${s.bottleneck ? 'font-600' : ''}`}>{s.name}</text>
             <Bar x={LEFT} y={0} width={W - LEFT - RIGHT} height={h} rx={4} className="fill-report-chart-cell" />
             <Bar x={LEFT} y={0} width={x(s.value)} height={h} rx={4}
               className={s.bottleneck ? 'stroke-report-chart-attention' : 'fill-report-chart-series'} fill={s.bottleneck ? `url(#${id}hatch)` : undefined} strokeWidth={s.bottleneck ? 1.5 : 0} />

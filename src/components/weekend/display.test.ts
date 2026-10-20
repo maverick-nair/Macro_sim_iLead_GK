@@ -17,8 +17,10 @@ describe('week end display mappings', () => {
 
   it('rounds funnel counts and scales bars', () => {
     expect(funnelNumber(52.04)).toBe(52);
-    expect(funnelNumber(4.899)).toBe(4.9);
-    expect(funnelNumber(0.79)).toBe(0.8);
+    expect(funnelNumber(4.899)).toBe(5);
+    expect(funnelNumber(0.9)).toBe(1);
+    expect(funnelNumber(1.9)).toBe(2);
+    expect(funnelNumber(0.4)).toBe(0);
     expect(barPercent(42, 45)).toBe(93);
     expect(barPercent(60, 45)).toBe(100);
     expect(barPercent(3, 0)).toBe(0);

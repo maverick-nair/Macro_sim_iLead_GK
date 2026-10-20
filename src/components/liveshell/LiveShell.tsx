@@ -65,12 +65,17 @@ export interface LiveShellProps {
   layout?: 'desk' | 'tablet';
   /** The stage shows the brief itself (the 1:1 on a tablet, beside the portrait). */
   briefInStage?: boolean;
+  /**
+   * The 1:1 on a desk (D232): the person's portrait fills the left column, with the brief over it,
+   * and the conversation and reply bar take the right. Leave it out for the brief beside the stage.
+   */
+  portrait?: ReactNode;
 }
 
-const HeaderMic = () => (
-  <svg className="size-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+const ClockIcon = () => (
+  <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <circle cx="12" cy="13" r="8" />
+    <path d="M12 9v4l2.5 2M10 2h4" />
   </svg>
 );
 
@@ -89,7 +94,7 @@ const PlayIcon = () => (
 
 const MODES: LiveMode[] = ['voice', 'text'];
 
-/** Voice or text, any time. A radio group: arrow keys move and pick. */
+/** Voice or text, any time. A radio group: arrow keys move and pick. In the header only when there is no reply bar (which carries its own switch). */
 function ModeSwitch({ mode, onChange }: { mode: LiveMode; onChange: (m: LiveMode) => void }) {
   const { t } = useI18n();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -103,12 +108,12 @@ function ModeSwitch({ mode, onChange }: { mode: LiveMode; onChange: (m: LiveMode
   };
   return (
     <div role="radiogroup" tabIndex={-1} aria-label={t('liveshell.mode.aria')} onKeyDown={onKey}
-      className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.75">
+      className="flex gap-0.5 rounded-4 border border-line-strong p-0.75">
       {MODES.map((m, i) => {
         const on = mode === m;
         return (
           <button key={m} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1} onClick={() => onChange(m)}
-            className={`h-7 cursor-pointer rounded-pill border-0 px-3 py-0 text-12 font-700 ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'} ${FOCUS}`}>
+            className={`min-h-9 cursor-pointer rounded-4 border-0 px-3 py-0 text-13 font-500 ${on ? 'bg-surface-raised text-fg-primary' : 'bg-transparent text-fg-secondary'} ${FOCUS}`}>
             {t('liveshell.mode.option', { mode: m })}
           </button>
         );
@@ -135,55 +140,69 @@ export function LiveShell(p: LiveShellProps) {
       p.onInterrupt();
     }
   };
+  const direction = p.timer.counts === 'up' ? 'elapsed' : 'left';
+  const split = !tablet && !!p.portrait;
+  const replyBar = p.input && <LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} layout={p.layout} />;
   return (
     // Escape anywhere in the shell interrupts the NPC; the controls inside stay the interactive elements.
+    // The live screens are the canvas's navy room in both modes (D232).
     // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <div onKeyDown={onKeyDown} className="flex flex-1 flex-col">
-      <header className="flex items-center border-b border-line-default bg-surface-material backdrop-blur-(--il-liveshell-header-blur) gap-4 px-6 py-3 tablet-portrait:min-h-18 tablet-portrait:gap-3">
-        <span aria-hidden="true" className="flex size-9 flex-none tablet-portrait:hidden items-center justify-center rounded-12 bg-(image:--il-fill-brand) text-liveshell-on-signal">
-          <HeaderMic />
-        </span>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <b className="truncate text-17 tablet-portrait:text-18">{t('liveshell.title', { format: p.format, name: p.personName })}</b>
-          <span className="text-12 text-fg-secondary">
+    <div onKeyDown={onKeyDown} className="il-scheme-dark flex flex-1 flex-col bg-(--il-color-canvas-navy) text-fg-primary">
+      <header className="il-chrome flex min-h-16 flex-wrap items-center gap-x-4 gap-y-2 px-8 py-2.5 tablet:px-5 tablet-portrait:min-h-18 tablet-portrait:gap-3 tablet-portrait:px-6">
+        <div className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-5 gap-y-0.5">
+          <span className="text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-(--il-color-canvas-mint) uppercase">
             {p.meta.action && p.format === 'roleplay'
               ? t('liveshell.subtitle.action', { action: p.meta.action, cost: days(p.meta.cost) })
               : t('liveshell.subtitle', { format: p.format, cost: days(p.meta.cost), topic: p.meta.topic ?? '', minutes: p.meta.minutes ?? 0 })}
           </span>
+          <b className="truncate text-15 font-400 tablet-portrait:text-17">{t('liveshell.title', { format: p.format, name: p.personName })}</b>
         </div>
-        <button type="button" onClick={p.onPause} aria-label={t('liveshell.timer.aria', { paused: p.timer.paused, time, direction: p.timer.counts === 'up' ? 'elapsed' : 'left' })}
-          className={`flex h-8.5 cursor-pointer items-center gap-1.5 rounded-pill border border-solid border-line-default bg-surface-raised px-3 py-0 text-13 font-700 text-fg-primary tablet-portrait:h-11 tablet-portrait:rounded-12 ${FOCUS}`}>
-          {p.timer.paused ? <PlayIcon /> : <PauseIcon />}
-          <span>{time}</span>
-        </button>
+        <span className="flex items-center gap-1.5 font-mono text-14 whitespace-nowrap" aria-hidden="true">
+          <ClockIcon />{t('liveshell.timer.left', { time, direction })}
+        </span>
         <span className="text-12 text-fg-secondary tablet-portrait:hidden">{t('liveshell.clock.paused')}</span>
+        <button type="button" onClick={p.onPause} aria-label={t('liveshell.timer.aria', { paused: p.timer.paused, time, direction })}
+          className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-4 border border-solid border-line-strong bg-transparent px-3.5 py-0 text-14 font-500 text-fg-primary hover:border-line-control ${FOCUS}`}>
+          {p.timer.paused ? <PlayIcon /> : <PauseIcon />}
+          <span>{t('liveshell.timer.button', { paused: p.timer.paused })}</span>
+        </button>
         {p.hint && (
           <button type="button" onClick={p.hint.onRequest} disabled={!p.hint.available} data-tour="live-hint"
-            className={`h-8.5 cursor-pointer rounded-pill border border-solid border-line-default bg-transparent px-3.5 py-0 text-13 font-700 tablet-portrait:h-11 tablet-portrait:rounded-12 tablet-portrait:px-4 ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
+            className={`min-h-11 cursor-pointer rounded-4 border border-solid border-line-strong bg-transparent px-3.5 py-0 text-14 font-500 hover:border-line-control disabled:cursor-default ${p.hint.text !== null ? 'text-fg-secondary' : 'text-fg-primary'} ${FOCUS}`}>
             {t('liveshell.hint.button', { used: p.hint.text !== null })}
           </button>
         )}
-        <ModeSwitch mode={p.mode} onChange={p.onModeChange} />
+        {!p.input && <ModeSwitch mode={p.mode} onChange={p.onModeChange} />}
         <span data-tour="live-end" className="inline-flex flex-none">
-          <NoWrapButton variant={p.endKind === 'finish' ? 'primary' : 'secondary'} size="md" onClick={p.onEnd}>
+          <NoWrapButton variant={p.endKind === 'discard' ? 'secondary' : 'primary'} size="md" onClick={p.onEnd}>
             {t('liveshell.end', { kind: p.endKind })}
           </NoWrapButton>
         </span>
       </header>
 
       {p.offline && (
-        <div role="alert" className="border-b border-status-attention bg-status-attention-soft px-6 py-2.5 text-13">
+        <div role="alert" className="border-b border-status-attention bg-status-attention-soft px-8 py-2.5 text-13">
           <b>{t('liveshell.offline.title')}</b> {t('liveshell.offline.body')}
         </div>
       )}
 
-      <div className={tablet ? 'flex min-h-0 flex-1 flex-col gap-4 px-6 pt-5 pb-7' : `grid min-h-0 flex-1 ${p.briefOpen ? 'grid-cols-(--il-liveshell-body-columns-brief)' : 'grid-cols-(--il-liveshell-body-columns-collapsed)'} gap-5 px-6 pt-5 pb-6`}>
-        {!(tablet && p.briefInStage) && <div data-tour="live-brief" className="flex min-h-0 flex-col"><LiveBriefCard format={p.format} brief={p.brief} pronoun={p.pronoun} tip={p.hint?.text ?? null} open={p.briefOpen} onToggle={p.onBriefToggle} layout={p.layout} /></div>}
-        <section aria-label={t('liveshell.stage.aria')} className={`@container flex min-h-0 min-w-0 flex-col gap-3.5 ${tablet ? 'flex-1' : ''}`}>
-          {p.children}
-          {p.input && <div data-tour="live-input" className="flex flex-none flex-col"><LiveInputBar {...p.input} mode={p.mode} onModeChange={p.onModeChange} onInterrupt={p.onInterrupt} layout={p.layout} /></div>}
-        </section>
-      </div>
+      {split ? (
+        <div className="grid min-h-0 flex-1 grid-cols-(--il-canvas-live-columns)">
+          <div className="relative min-h-0 border-e border-line-default">{p.portrait}</div>
+          <section aria-label={t('liveshell.stage.aria')} className="@container flex min-h-0 min-w-0 flex-col">
+            <div className="flex min-h-0 flex-1 flex-col gap-3.5 px-10 pt-6 pb-4 tablet:px-6">{p.children}</div>
+            {replyBar && <div data-tour="live-input" className="flex flex-none flex-col border-t border-line-default px-10 pt-4 pb-5 tablet:px-6">{replyBar}</div>}
+          </section>
+        </div>
+      ) : (
+        <div className={tablet ? 'flex min-h-0 flex-1 flex-col gap-4 px-6 pt-5 pb-7' : `grid min-h-0 flex-1 ${p.briefOpen ? 'grid-cols-(--il-liveshell-body-columns-brief)' : 'grid-cols-(--il-liveshell-body-columns-collapsed)'} gap-6 px-8 pt-6 pb-6 tablet:px-5`}>
+          {!(tablet && p.briefInStage) && <div data-tour="live-brief" className="flex min-h-0 flex-col"><LiveBriefCard format={p.format} brief={p.brief} pronoun={p.pronoun} tip={p.hint?.text ?? null} open={p.briefOpen} onToggle={p.onBriefToggle} layout={p.layout} /></div>}
+          <section aria-label={t('liveshell.stage.aria')} className={`@container flex min-h-0 min-w-0 flex-col gap-3.5 ${tablet ? 'flex-1' : ''}`}>
+            {p.children}
+            {replyBar && <div data-tour="live-input" className="flex flex-none flex-col">{replyBar}</div>}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

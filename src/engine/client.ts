@@ -116,7 +116,8 @@ export function lazyClient(load: () => Promise<EngineClient>): EngineClient {
  */
 export function createDemoClient(sessionId = 'local', fetchImpl: typeof fetch = fetch): EngineClient & { end(): Promise<void> } {
   const url = import.meta.env.VITE_ILEAD_ENGINE_URL as string | undefined;
-  if (url) {
+  // A preview's demo round plays the draft on the mock (D193): the server's demo resource is a participant's.
+  if (url && new URLSearchParams(globalThis.location?.search ?? '').get('preview') !== '1') {
     const c = createHttpClient(url, sessionId, fetchImpl, '/demo');
     const end = () => fetchImpl(`${url.replace(/\/$/, '')}/sessions/${encodeURIComponent(sessionId)}/demo`, { method: 'DELETE', credentials: 'include' }).then(() => undefined, () => undefined);
     return { view: c.view, send: c.send, streamTurn: c.streamTurn, end };
@@ -133,5 +134,7 @@ export function createDefaultClient(sessionId = 'local'): EngineClient {
   // `?lens=six_styles` plays the mock with the Six Leadership Styles test lens (D70).
   const q = new URLSearchParams(globalThis.location?.search ?? '');
   const period = Number(q.get('period')) || undefined;
-  return url ? createHttpClient(url, sessionId) : lazyClient(() => import('./mock').then(m => m.createMockClient({ startPeriod: period, lens: q.get('lens') })));
+  // A preview from GenieKreator (`?preview=1`, D192) opens where its Jump to says (`?jump=board:3`), on the mock engine.
+  const preview = q.get('preview') === '1';
+  return url && !preview ? createHttpClient(url, sessionId) : lazyClient(() => import('./mock').then(m => m.createMockClient({ startPeriod: period, lens: q.get('lens'), jump: preview ? m.parseJump(q.get('jump')) : null })));
 }

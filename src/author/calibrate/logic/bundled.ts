@@ -10,7 +10,7 @@ import salesElevator from '../../../engine/storylines/sales-elevator.json';
  *
  * The bundled Client Trust (D141) plays the same actions with budget costs and quality gains on some options
  * (business effects, D136). Those do not change what the actions do to people and the funnel, where the finding
- * lies (the routine still wins with them, D152), so for the bundled storylines the actions' business effects are
+ * lies (the routine still won with them, D152, until real world costs, D171), so for the bundled storylines the actions' business effects are
  * left out of the comparison; an author's storyline that adds one has changed the action.
  * Runs with the calibration (worker, server, CLI), never in the screen.
  */

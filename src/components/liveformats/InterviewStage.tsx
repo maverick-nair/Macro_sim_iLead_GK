@@ -38,7 +38,7 @@ export function CvValue({ cv, field }: { cv: CandidateCv; field: CvField }) {
     if (cv.skills.length === 0) return <span className="text-fg-secondary">{t('liveformats.cv.empty')}</span>;
     return (
       <ul className="m-0 flex list-none flex-wrap gap-1.5 p-0">
-        {cv.skills.map(s => <li key={s} className="rounded-pill border border-line-default bg-surface-raised px-2.5 py-0.5 text-12 font-600">{s}</li>)}
+        {cv.skills.map(s => <li key={s} className="rounded-4 border border-line-default bg-surface-raised px-2.5 py-0.5 text-12 font-600">{s}</li>)}
       </ul>
     );
   }
@@ -52,7 +52,7 @@ export function CvCard({ cv, className = '' }: { cv: CandidateCv; className?: st
   const id = useId();
   return (
     <section aria-labelledby={id} className={`flex flex-col gap-3 p-4.5 ${CARD} ${className}`}>
-      <h3 id={id} className="m-0 text-12 font-700 tracking-(--il-liveformats-eyebrow-tracking) text-fg-secondary uppercase">{t('liveformats.cv.title')}</h3>
+      <h3 id={id} className="m-0 text-12 font-600 tracking-(--il-liveformats-eyebrow-tracking) text-fg-secondary uppercase">{t('liveformats.cv.title')}</h3>
       <dl className="m-0 flex flex-col gap-2.5">
         {CV_FIELDS.map(f => (
           <div key={f} className="grid grid-cols-(--il-liveformats-fact-columns) gap-2.5 text-13">
@@ -96,8 +96,8 @@ export function InterviewStage({ candidate, position, turns, notes, onNotes, onR
     <div className="flex flex-col items-center gap-3 text-center">
       <Portrait img={candidate.img} size="lg" />
       <div className="flex min-w-0 flex-col gap-0.5 items-center">
-        {position && <span className="text-12 font-700 text-fg-secondary">{t('liveformats.interview.position', position)}</span>}
-        <h2 id={nameId} className="m-0 font-700 text-20">{candidate.name}</h2>
+        {position && <span className="text-12 font-600 text-fg-secondary">{t('liveformats.interview.position', position)}</span>}
+        <h2 id={nameId} className="m-0 font-600 text-20">{candidate.name}</h2>
         <span className="text-13 text-fg-secondary">{candidate.title}</span>
       </div>
     </div>
@@ -108,7 +108,7 @@ export function InterviewStage({ candidate, position, turns, notes, onNotes, onR
 
   const notesCard = (
     <div className={`flex flex-col gap-2 p-4 ${CARD}`}>
-      <label htmlFor={notesId} className="text-14 font-700">{t('liveformats.interview.notes.label')}</label>
+      <label htmlFor={notesId} className="text-14 font-600">{t('liveformats.interview.notes.label')}</label>
       <span id={hintId} className="text-12 text-fg-secondary">{t('liveformats.interview.notes.hint')}</span>
       <textarea id={notesId} value={notes} onChange={e => onNotes(e.target.value)} rows={5} aria-describedby={hintId}
         placeholder={t('liveformats.interview.notes.placeholder')}
@@ -125,7 +125,7 @@ export function InterviewStage({ candidate, position, turns, notes, onNotes, onR
   return (
     <section aria-label={t('liveformats.interview.aria', { name: candidate.name })}
       className="grid size-full min-h-0 grid-cols-(--il-liveformats-interview-columns) gap-5 stage-narrow:grid-cols-1 stage-narrow:overflow-y-auto">
-      <div role="region" aria-labelledby={nameId} tabIndex={0} className={`flex min-h-0 flex-col gap-4 overflow-auto rounded-22 p-1 ${FOCUS}`}>
+      <div role="region" aria-labelledby={nameId} tabIndex={0} className={`flex min-h-0 flex-col gap-4 overflow-auto rounded-4 p-1 ${FOCUS}`}>
         {who}
         {caption}
         <CvCard cv={candidate.cv} />

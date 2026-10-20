@@ -26,6 +26,22 @@ describe('overall verdict against the default bar (Proficient, no skill below De
   });
 });
 
+describe('overall verdict with the outcome gates (D169)', () => {
+  const clear = { gated: false, belowBar: false, strong: true, contradicted: false };
+  it('exceeds only with strong business and people outcomes', () => {
+    expect(overallVerdict(3, [2, 3], bar, clear)).toBe('exceeds');
+    expect(overallVerdict(3, [2, 3], bar, { ...clear, strong: false })).toBe('meets');
+  });
+  it('meets only with no outcome gate triggered and no weak core dimension', () => {
+    expect(overallVerdict(2, [2, 2], bar, { ...clear, gated: true })).toBe('approaching');
+    expect(overallVerdict(3, [3, 3], bar, { ...clear, contradicted: true })).toBe('approaching');
+  });
+  it('approaching only when no outcome gate holds the level below the bar', () => {
+    expect(overallVerdict(1, [1, 2], bar, { ...clear, gated: true })).toBe('approaching');
+    expect(overallVerdict(1, [1, 2], bar, { ...clear, gated: true, belowBar: true })).toBe('below');
+  });
+});
+
 describe('skill verdict', () => {
   it('Strength above the bar level, Meets at it, Development need below, none unrated', () => {
     expect([4, 3, 2, 1, 0, null].map(l => skillVerdict(l, bar))).toEqual(['strength', 'strength', 'meets', 'development', 'development', null]);

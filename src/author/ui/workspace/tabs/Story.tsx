@@ -1,11 +1,19 @@
 import { useState } from 'react';
+import { isImageRef } from '../../../../engine/assets';
+import { OFFICES } from '../../../model/seed';
 import { useAuthor } from '../../../model/store';
+import { AboutThis } from '../../AboutThis';
+import { ImageUpload } from '../../ImageUpload';
 import { Avatar, BUTTON, CARD, CardHead, EYEBROW, Field, MarkOf, Segmented, SubTabs, TEXT_MAX, TextArea, TextInput, toneOf } from '../../kit';
 import { TabBody, TabHead } from '../Workspace';
 import { useRenameOffer } from '../UpdatePrompt';
 import { useRegenerate } from './regenerate';
+import { RevenueReach, unitOf } from './Reach';
 
 type Sub = 'company' | 'market' | 'sponsor';
+
+/** A spot coordinate as typed: a whole percent from 0 to 100, or none when empty. */
+const percent = (v: string): number | null => (v.trim() === '' || !Number.isFinite(Number(v)) ? null : Math.min(100, Math.max(0, Math.round(Number(v)))));
 
 /**
  * Workspace: Story and world (docs/design/genie/Story and StoryIntro): the company and product, the
@@ -41,15 +49,28 @@ export default function Story() {
                 <Field label="Headquarters" optional>{id => <TextInput id={id} tone={tone('story.company.hq')} value={c.hq} onChange={e => edit(x => { x.story.company.hq = e.target.value; }, 'story.company.hq')} />}</Field>
               </div>
               <Field label="What it does">{id => <TextArea id={id} rows={3} tone={tone('story.company.about')} value={c.about} onChange={e => edit(x => { x.story.company.about = e.target.value; }, 'story.company.about')} />}</Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Your team">{id => <TextInput id={id} tone={tone('story.company.team')} value={c.team} onChange={e => edit(x => { x.story.company.team = e.target.value; }, 'story.company.team')} />}</Field>
-                <Field label="Office image" optional>{id => <TextInput id={id} tone={tone('story.company.office')} value={c.office} onChange={e => edit(x => { x.story.company.office = e.target.value; }, 'story.company.office')} />}</Field>
-              </div>
-              <Field label="Logo" optional>{id => (
-                <div className="flex flex-wrap items-center gap-2">
-                  <span aria-hidden="true" className="flex size-11 items-center justify-center rounded-10 bg-author-primary-soft text-16 font-800 text-author-primary">{c.logo || c.name.slice(0, 2).toUpperCase()}</span>
+              <Field label="Your team">{id => <TextInput id={id} tone={tone('story.company.team')} value={c.team} onChange={e => edit(x => { x.story.company.team = e.target.value; }, 'story.company.team')} />}</Field>
+              <fieldset className="m-0 flex flex-col gap-2 border-0 p-0">
+                <legend className="mb-1 text-13 font-700 text-author-label">Office image <span className="font-600 text-author-muted">(behind every screen participants see)</span></legend>
+                <div className="grid grid-cols-3 gap-2">
+                  {[...OFFICES.map(o => ({ src: o.src as string, label: o.label })), ...(c.office.startsWith('data:') ? [{ src: c.office, label: 'Your upload' }] : [])].map(o => (
+                    <label key={o.label} className={`flex cursor-pointer flex-col gap-1 rounded-10 border-2 border-solid p-1 text-12 font-700 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary ${c.office === o.src ? 'border-author-primary' : 'border-transparent'}`}>
+                      <input type="radio" name="office" className="sr-only" checked={c.office === o.src} onChange={() => edit(x => { x.story.company.office = o.src; }, 'story.company.office')} />
+                      <img src={o.src} alt="" className="aspect-video w-full rounded-8 object-cover" />{o.label}
+                    </label>
+                  ))}
+                </div>
+                <ImageUpload label="Upload an office photo" maxSide={1600} onImage={src => edit(x => { x.story.company.office = src; }, 'story.company.office')} />
+                {c.office.trim() && !isImageRef(c.office) && <p className="m-0 text-12 text-author-muted">Described as "{c.office}": the characters can mention it, and participants see the default office until you pick or upload an image.</p>}
+              </fieldset>
+              <Field label="Logo" optional hint="Uploaded, it shows next to the iLead wordmark and in onboarding; otherwise the letters do.">{id => (
+                <div className="flex flex-wrap items-start gap-2">
+                  {c.logoImage
+                    ? <img src={c.logoImage} alt={`${c.name} logo`} className="size-11 rounded-10 bg-author-primary-soft object-contain" />
+                    : <span aria-hidden="true" className="flex size-11 items-center justify-center rounded-10 bg-author-primary-soft text-16 font-800 text-author-primary">{c.logo || c.name.slice(0, 2).toUpperCase()}</span>}
                   <TextInput id={id} className="max-w-24" aria-label="Logo initials" value={c.logo} onChange={e => edit(x => { x.story.company.logo = e.target.value.slice(0, 3); }, 'story.company.logo')} />
-                  <label className={`${BUTTON.secondary} has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary`}>Upload<input type="file" accept="image/*" className="sr-only" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) edit(x => { x.story.company.logo = f.name.slice(0, 3).toUpperCase(); }, 'story.company.logo'); }} /></label>
+                  <ImageUpload label={c.logoImage ? 'Replace the logo' : 'Upload a logo'} maxSide={512} onImage={src => edit(x => { x.story.company.logoImage = src; }, 'story.company.logoImage')} />
+                  {c.logoImage && <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { x.story.company.logoImage = ''; }, 'story.company.logoImage')}>Remove the logo</button>}
                   <button type="button" className={BUTTON.koraOutline} onClick={() => edit(x => { x.story.company.logo = x.story.company.name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(); }, 'story.company.logo', 'ai')}>Create with Kora</button>
                 </div>
               )}</Field>
@@ -58,11 +79,18 @@ export default function Story() {
               <CardHead id="product" title="Product"><MarkOf path="story.product.name" /></CardHead>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Product name" required need={!p.name.trim()}>{id => <TextInput id={id} {...renameProduct} tone={tone('story.product.name')} value={p.name} onChange={e => edit(x => { x.story.product.name = e.target.value; }, 'story.product.name')} />}</Field>
-                <Field label="Average deal value" need={!p.dealValue} mark="story.product.dealValue">{id => (
+                <Field label={`Average ${unitOf(d).one} value`} need={!p.dealValue} mark="story.product.dealValue">{id => (
                   <TextInput id={id} inputMode="decimal" tone={tone('story.product.dealValue', !p.dealValue)} placeholder="For example 30,000" value={p.dealValue ?? ''}
                     onChange={e => { const v = Number(e.target.value.replace(/[^\d.]/g, '')); edit(x => { x.story.product.dealValue = v > 0 ? v : null; }, 'story.product.dealValue'); }} />
                 )}</Field>
+                <Field label="What one deal is called" optional mark="story.product.unit" hint={'For example "outlet order" or "distributor bill". Participants read it wherever deals are counted: the first deal badge, the end screen, the week end, the product screen and the report. Left empty, "deal".'}>{id => (
+                  <TextInput id={id} maxLength={40} tone={tone('story.product.unit')} placeholder="deal" value={p.unit} onChange={e => edit(x => { x.story.product.unit = e.target.value.slice(0, 40); }, 'story.product.unit')} />
+                )}</Field>
+                <Field label="Plural" optional mark="story.product.unit" hint="Left empty, the name with an s.">{id => (
+                  <TextInput id={id} maxLength={40} tone={tone('story.product.unit')} placeholder={unitOf(d).many} value={p.units} onChange={e => edit(x => { x.story.product.units = e.target.value.slice(0, 40); }, 'story.product.unit')} />
+                )}</Field>
               </div>
+              <RevenueReach compact />
               <Field label="In one line">{id => <TextInput id={id} maxLength={TEXT_MAX} tone={tone('story.product.oneLine')} value={p.oneLine} onChange={e => edit(x => { x.story.product.oneLine = e.target.value; }, 'story.product.oneLine')} />}</Field>
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between gap-2"><span className="text-13 font-700 text-author-label">Selling points</span><span className="text-12 font-600 text-author-muted">Shown as hotspots on the product</span></div>
@@ -77,7 +105,47 @@ export default function Story() {
               <Field label="Product view" optional>{() => (
                 <Segmented label="Product view" value={p.view} onChange={v => edit(x => { x.story.product.view = v; }, 'story.product.view')} options={[{ value: 'model', label: '3D model from the library' }, { value: 'photos', label: 'Photos' }, { value: 'none', label: 'None' }]} />
               )}</Field>
+              <p className="m-0 text-12 text-author-muted">{p.view === 'none' ? 'Participants see no product scene in onboarding.' : 'Participants see the product, its line and its selling points in a portfolio scene during onboarding.'}</p>
+              {p.view === 'photos' && (
+                <div className="flex flex-wrap items-start gap-3">
+                  {p.image && <img src={p.image} alt={p.name} className="h-20 w-28 rounded-10 bg-author-track object-cover" />}
+                  <ImageUpload label={p.image ? 'Replace the photo' : 'Upload a product photo'} maxSide={1024} onImage={src => edit(x => { x.story.product.image = src; }, 'story.product.image')} />
+                </div>
+              )}
             </section>
+            {p.view !== 'none' && (
+              <section className={`${CARD} col-span-2 flex flex-col gap-3 p-5 max-[1180px]:col-span-1`} aria-labelledby="portfolio">
+                <CardHead id="portfolio" title="Portfolio scene"><MarkOf path="story.product.features" /></CardHead>
+                <AboutThis
+                  what="How the product appears in the product portfolio screen before week 1: its code, kind, tagline, who it is for and up to four features placed on its photo."
+                  why="Participants coach deals on this product all run long. Knowing what it is, who buys it and how it is won makes their conversations with the team concrete."
+                  paths={['world.products[].code', 'world.products[].features[]', 'world.products[].dealValue']}
+                  experience="A product screen in onboarding: the code large, the kind and tagline, who it is for, the features as tabs and as numbered spots on the photo, and the specs with the typical deal. Nothing on it is scored."
+                  preview="onboarding" />
+                <div className="grid grid-cols-4 gap-3 max-[1180px]:grid-cols-2">
+                  <Field label="Short code" optional hint="Shown large, for example B10.">{id => <TextInput id={id} maxLength={8} tone={tone('story.product.code')} value={p.code} onChange={e => edit(x => { x.story.product.code = e.target.value.slice(0, 8); }, 'story.product.code')} />}</Field>
+                  <Field label="Kind" optional hint="For example Commercial.">{id => <TextInput id={id} maxLength={40} tone={tone('story.product.kind')} value={p.kind} onChange={e => edit(x => { x.story.product.kind = e.target.value; }, 'story.product.kind')} />}</Field>
+                  <Field label="Tagline" optional className="col-span-2">{id => <TextInput id={id} maxLength={120} tone={tone('story.product.tagline')} value={p.tagline} onChange={e => edit(x => { x.story.product.tagline = e.target.value; }, 'story.product.tagline')} />}</Field>
+                </div>
+                <Field label="Who it is for" optional>{id => <TextInput id={id} maxLength={240} tone={tone('story.product.audience')} value={p.audience} onChange={e => edit(x => { x.story.product.audience = e.target.value; }, 'story.product.audience')} />}</Field>
+                {p.view === 'photos' && p.image && (
+                  <Field label="Describe the photo" optional hint="Read out by screen readers in place of the photo.">{id => <TextInput id={id} maxLength={200} tone={tone('story.product.imageAlt')} value={p.imageAlt} onChange={e => edit(x => { x.story.product.imageAlt = e.target.value; }, 'story.product.imageAlt')} />}</Field>
+                )}
+                <fieldset className="m-0 flex flex-col gap-3 border-0 p-0">
+                  <legend className="mb-1 text-13 font-700 text-author-label">Features <span className="font-600 text-author-muted">(up to four; with none, the first four selling points show)</span></legend>
+                  {p.features.map((f, i) => (
+                    <div key={i} className="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)_6rem_6rem_auto] items-end gap-3 max-[1180px]:grid-cols-2">
+                      <Field label={`Feature ${i + 1} title`}>{id => <TextInput id={id} maxLength={40} tone={tone('story.product.features')} value={f.title} onChange={e => edit(x => { x.story.product.features[i].title = e.target.value; }, 'story.product.features')} />}</Field>
+                      <Field label={`Feature ${i + 1} text`}>{id => <TextInput id={id} maxLength={300} tone={tone('story.product.features')} value={f.text} onChange={e => edit(x => { x.story.product.features[i].text = e.target.value; }, 'story.product.features')} />}</Field>
+                      <Field label="Spot across" optional hint="% from the left">{id => <TextInput id={id} inputMode="numeric" value={f.x ?? ''} onChange={e => edit(x => { x.story.product.features[i].x = percent(e.target.value); }, 'story.product.features')} />}</Field>
+                      <Field label="Spot down" optional hint="% from the top">{id => <TextInput id={id} inputMode="numeric" value={f.y ?? ''} onChange={e => edit(x => { x.story.product.features[i].y = percent(e.target.value); }, 'story.product.features')} />}</Field>
+                      <button type="button" className={BUTTON.secondary} onClick={() => edit(x => { x.story.product.features.splice(i, 1); }, 'story.product.features')}>Remove<span className="sr-only"> feature {i + 1}</span></button>
+                    </div>
+                  ))}
+                  {p.features.length < 4 && <button type="button" className={`${BUTTON.secondary} self-start`} onClick={() => edit(x => { x.story.product.features.push({ title: '', text: '', x: null, y: null }); }, 'story.product.features')}>Add a feature</button>}
+                </fieldset>
+              </section>
+            )}
           </div>
         )}
         {sub === 'market' && (

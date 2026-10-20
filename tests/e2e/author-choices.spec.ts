@@ -4,7 +4,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 /**
  * Authoring decisions that carry forward (D136 to D138): business variables in Work process, a choice event in
  * Events with its options, flags and leadership read, and a later event that plays only if a decision set a flag
- * and team morale is low. The exported storyline is read where Play a week leaves it.
+ * and team morale is low. The exported storyline is read where Preview leaves it.
  */
 
 const errors: string[] = [];
@@ -25,7 +25,7 @@ async function workspace(page: Page, tab: string) {
 }
 async function exported(page: Page, context: BrowserContext): Promise<Json> {
   const opened = context.waitForEvent('page');
-  await page.getByRole('banner').getByRole('button', { name: 'Play a week' }).click();
+  await page.getByRole('banner').getByRole('button', { name: 'Preview', exact: true }).click();
   await (await opened).close();
   return page.evaluate(() => JSON.parse(localStorage.getItem('ilead.author.draft') ?? 'null'));
 }

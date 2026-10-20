@@ -93,7 +93,8 @@ export class Reports {
 
   /** Earlier attempts (D75): ended runs of the storyline other than the current one, oldest first. */
   async history(participantId: string, current: RunRow): Promise<HistoryEntry[]> {
-    const runs = (await this.repo.listRuns(participantId, current.storylineId)).filter(r => r.id !== current.id && r.status === 'ended');
+    // A preview's runs are never history (D195).
+    const runs = (await this.repo.listRuns(participantId, current.storylineId)).filter(r => r.id !== current.id && r.status === 'ended' && !r.preview);
     const out: HistoryEntry[] = [];
     for (const r of runs) {
       const summary = await this.repo.getSummary(r.id);

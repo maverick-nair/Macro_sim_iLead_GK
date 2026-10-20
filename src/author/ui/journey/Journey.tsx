@@ -11,7 +11,7 @@ import { Composer } from './Composer';
 import { Intro } from './Intro';
 import { SoFar } from './SoFar';
 import { useJourney, type Journey as J } from './useJourney';
-import { DECIDE, questionFor as askFor } from '../../questions';
+import { DECIDE, questionFor as askFor, questionsToGo } from '../../questions';
 import type { QuestionId } from '../../../api/author';
 import { QUESTION_IDS } from '../../../api/author';
 
@@ -132,6 +132,7 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
   const wide = useMediaQuery('(min-width: 1180px)');
   const log = useRef<HTMLDivElement>(null);
   const { chat, question } = j;
+  const toGo = chat.current ? questionsToGo(chat.current) : 0;
   const progress = chat.current ? Math.round(((chat.current.n - 1) / chat.current.about) * 100) : 100;
 
   useEffect(() => {
@@ -158,7 +159,7 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
           <h1 className="sr-only">Create your simulation with Kora</h1>
           {chat.current && (
             <div className="flex flex-none items-center gap-3">
-              <span className="text-14 font-800 whitespace-nowrap text-author-ai">Question {chat.current.n} of about {chat.current.about}</span>
+              <span className="text-14 font-800 whitespace-nowrap text-author-ai">Question {chat.current.n} &middot; {toGo === 0 ? 'last one' : `about ${toGo} to go`}</span>
               <div role="progressbar" aria-label="Questions answered" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} className="h-1.5 flex-1 overflow-hidden rounded-pill bg-author-track">
                 <div className="h-full rounded-pill bg-author-kora" style={{ width: `${progress}%` }} />
               </div>

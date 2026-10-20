@@ -267,6 +267,16 @@ export const LENS_LIBRARY: LibraryLens[] = [
 
 export const LENS_BY_ID = Object.fromEntries(LENS_LIBRARY.map(l => [l.id, l])) as Record<LensId, LibraryLens>;
 
+/**
+ * A style's tag that only stands for the library's own name (D230): the library's tag for that key ("D", "SG") on a
+ * style the tone or the author renamed ("Show the Way"). It is no tag of the author's, so it is left empty and the
+ * name's first letter shows instead.
+ */
+export function libraryTag(lens: LensId, s: { key: string; letter: string; name: string }): boolean {
+  const l = LENS_BY_ID[lens]?.styles?.find(x => x.key === s.key) ?? (lens === 'client_model' ? LENS_BY_ID.readiness_based.styles?.find(x => x.key === s.key) : undefined);
+  return !!l && s.letter.trim() === l.letter && s.name.trim() !== l.names.professional;
+}
+
 /** The KNOLSKAPE titles, the only titles a lens may carry (guardrail 1). */
 export const LENS_TITLES: readonly string[] = LENS_LIBRARY.map(l => l.title);
 

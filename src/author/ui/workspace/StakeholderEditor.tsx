@@ -1,3 +1,4 @@
+import { ImageUpload } from '../ImageUpload';
 import { useState } from 'react';
 import { skillNames } from '../../model/choices';
 import { GENDERS, STAKEHOLDER_KINDS, type AuthorDraft, type Character, type StakeholderDraft, type StakeholderEffectDraft, type StakeholderInteractionDraft, type StakeholderOptionDraft } from '../../model/draft';
@@ -154,7 +155,14 @@ export function StakeholderEditor({ draft, stakeholder, open, onOpenChange, onSa
                     <img src={src} alt="" className="aspect-square w-full rounded-8 object-cover object-top" />
                   </label>
                 ))}
+                {s.photo.startsWith('data:') && (
+                  <label className="cursor-pointer rounded-10 border-2 border-solid border-author-primary p-0.5 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-author-primary">
+                    <input type="radio" name="sh-photo" className="sr-only" checked onChange={() => undefined} aria-label="Your uploaded photo" />
+                    <img src={s.photo} alt="" className="aspect-square w-full rounded-8 object-cover object-top" />
+                  </label>
+                )}
               </div>
+              <ImageUpload label="Upload a photo" maxSide={640} onImage={src => set('photo', src)} />
             </fieldset>
             <div className="flex flex-col gap-4">
               <div className="grid grid-cols-2 gap-3 max-[1000px]:grid-cols-1">
