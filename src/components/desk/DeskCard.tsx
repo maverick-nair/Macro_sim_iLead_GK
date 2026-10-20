@@ -103,7 +103,7 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo; grow?: b
       {desk.performance && !statsHidden && <PerformanceLine performance={desk.performance} hidden />}
       {desk.goal && (
         <span aria-hidden="true" data-goal="" className="flex flex-col gap-1">
-          <span className="flex items-baseline justify-between gap-2 text-12 text-fg-body">
+          <span className="flex items-baseline justify-between gap-2 text-12 text-large:flex-wrap text-fg-body">
             <span>{t('desk.card.goal')}</span>
             <span><b className="font-mono font-500 text-fg-primary">{desk.goal.closed}</b> {t('desk.card.goalOf', { target: desk.goal.target })}</span>
           </span>

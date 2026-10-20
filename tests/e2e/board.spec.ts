@@ -151,7 +151,7 @@ test('a person\'s actions are grouped by intent, the team\'s last; no hint with 
   expect(await mine.locator('[data-intent]').evaluateAll(els => els.map(e => e.getAttribute('data-intent')))).toEqual(['talk', 'develop', 'decide']);
   await expect(mine.getByRole('list', { name: 'Talk' }).getByRole('button')).toHaveText([/^Send email/, /^Meet face to face/, /^Set goals/, /^Coach member/, /^Give feedback/]);
   await expect(mine.getByRole('list', { name: 'Develop' }).getByRole('button')).toHaveText([/^Send for training/, /^Assess member/, /^Reward member/]);
-  await expect(mine.getByRole('list', { name: 'Decide' }).getByRole('button')).toHaveText([/^Swap roles/, /^Let go/]);
+  await expect(mine.getByRole('list', { name: 'Decide' }).getByRole('button')).toHaveText([/^Change focus/, /^Let go/]);
   await expect(page.getByRole('list', { name: 'Actions for the whole team' }).getByRole('button')).toHaveText([/^Meet the team/, /^Energize the team/, /^Hire member/]);
   // Keyboard order follows the groups: Tab from the last Talk action lands on the first Develop one.
   await mine.getByRole('button', { name: /^Give feedback/ }).focus();

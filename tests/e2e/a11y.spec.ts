@@ -135,12 +135,17 @@ async function teamAction(page: Page, w: Width, action: RegExp, option?: RegExp)
   }
 }
 
-/** The scheduled sponsor briefing: from the inbox rail where it shows (1440), otherwise from the inbox. */
+/** The scheduled sponsor briefing: on the desk from the mail overlay off the envelope (D242), on a tablet from its inbox list. */
 async function openBriefing(page: Page) {
-  const direct = page.getByRole('button', { name: /Briefing with Paul/ });
-  if (await direct.count()) return direct.first().click();
-  await page.getByRole('button', { name: /^Inbox/ }).click();
+  await page.getByRole('button', { name: /^Inbox/ }).first().click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
+  await expect(inbox.getByText('Briefing with Paul').first()).toBeVisible();
+  const mail = inbox.getByRole('button', { name: /Briefing with Paul/ });
+  if (await mail.count()) {
+    await mail.first().click();
+    await inbox.getByRole('article').getByRole('button', { name: 'Reply now' }).click();
+    return;
+  }
   const item = inbox.locator('div').filter({ has: page.getByText('Briefing with Paul', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last();
   await item.getByRole('button').last().click();
 }

@@ -72,6 +72,8 @@ async function spendThreeDays(page: Page) {
   await page.getByRole('radiogroup', { name: 'Choose an option' }).getByRole('radio').first().click();
   await page.getByRole('button', { name: /^Confirm/ }).click();
   await expect(page.getByText(/2 days left/).first()).toBeVisible();
+  // How it landed is a pop-up (D242): the call rings on the board once it is dismissed.
+  if (await page.getByText('How it landed').count()) await dismissOutcome(page);
 }
 
 test('score breakdown and badge shelf, by keyboard', async ({ page }) => {
@@ -86,8 +88,8 @@ test('score breakdown and badge shelf, by keyboard', async ({ page }) => {
   await expect(pop.getByText('Revenue against target')).toBeVisible();
   await expect(pop.getByText('Change in team morale and trust since the start')).toBeVisible();
   await expect(pop.getByText(/^Style fit \d+%/)).toBeVisible();
-  // Two weeks with stars so far: the streak says how far the bonus is.
-  await expect(pop.getByText('2 weeks in a row. 1 more week for a +25 bonus.')).toBeVisible();
+  // Each seller owns a target (D243): the fast forward's untouched weeks earn no stars, so no streak yet, and it says how one is earned.
+  await expect(pop.getByText('No streak yet. 3 weeks in a row at 2 stars or more earn a +25 bonus.')).toBeVisible();
   await expect(pop.getByRole('listitem').filter({ hasText: 'You are here' })).toHaveCount(1);
   // On the desk the score and its breakdown are in the status band (D211); the streak's flame stays on the upright tablet's HUD.
   expect(await axe(page)).toEqual([]);
@@ -156,9 +158,10 @@ test('a sponsor call: Later leaves it in the inbox, pinned with its due', async 
   await call.getByRole('button', { name: 'Call back within 2 days' }).click();
   await expect(call).toHaveCount(0);
   await expect(page.getByRole('status').filter({ hasText: "Paul's call is waiting in your inbox" })).toBeVisible();
-  await page.getByRole('button', { name: /^Inbox/ }).click();
+  await page.getByRole('button', { name: /^Inbox, \d+ unread$/ }).click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
-  const item = inbox.locator('[data-inbox-item]').filter({ hasText: 'Recession strikes' });
+  await inbox.getByRole('button', { name: /Recession strikes/ }).click();
+  const item = inbox.getByRole('article');
   await expect(item.getByText('Pinned · Due in 2 days')).toBeVisible();
   await expect(item.getByRole('button', { name: 'Reply now' })).toBeVisible();
   expect(await axe(page)).toEqual([]);

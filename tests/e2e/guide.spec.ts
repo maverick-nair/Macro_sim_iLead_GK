@@ -69,8 +69,9 @@ test.describe('a first run', () => {
     await expect(tip).toHaveCount(0);
 
     await setStyles(page);
-    // The board's tour starts once the board shows (the outcome band is not a dialog, so it does not wait
-    // for it): Next walks it, Back returns, the counter follows.
+    // The board's tour starts once the board shows: How it landed is a pop-up (D242), so the tour waits until
+    // it is closed. Next walks it, Back returns, the counter follows.
+    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
     const first = page.getByRole('dialog', { name: 'Objectives and Tutorial' });
     await expect(first).toBeVisible({ timeout: 10_000 });
     await expect(page.getByText(/^Board tour · 1 of \d+$/)).toBeVisible();
@@ -82,7 +83,6 @@ test.describe('a first run', () => {
     await expect(first).toBeVisible();
     await page.getByRole('button', { name: 'Do not show tips again' }).click();
     await expect(first).toHaveCount(0);
-    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
     await dismissCards(page);
 
     // A reload does not offer it again; the menu replays it.
@@ -114,11 +114,11 @@ test.describe('hints on the actions (D234)', () => {
     await expect(styleTip).toBeVisible({ timeout: 10_000 });
     await page.keyboard.press('Escape');
     await setStyles(page);
+    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
     const tour = page.getByRole('dialog', { name: 'Objectives and Tutorial' });
     await expect(tour).toBeVisible({ timeout: 10_000 });
     await tour.getByRole('button', { name: 'Skip tour' }).click();
     await expect(tour).toHaveCount(0);
-    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
     await dismissCards(page);
 
     await page.getByText('Kent Goldberg', { exact: true }).click();
@@ -166,6 +166,8 @@ test.describe('the demo round', () => {
     await open.getByRole('radio').nth(1).click();
     await page.getByRole('button', { name: 'Review and confirm' }).click();
     await page.getByRole('button', { name: 'Confirm styles' }).click();
+    // How it landed for the styles comes first (D242), then the demo points at the person.
+    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
     await expect(page.getByRole('dialog', { name: 'Select a person' })).toBeVisible({ timeout: 10_000 });
     // A live action is not in the demo.
     await page.getByText('Kent Goldberg', { exact: true }).click();
@@ -248,9 +250,11 @@ test.describe('the menu and its panels', () => {
     await axe(page, 'actions list');
     await page.keyboard.press('Escape');
 
-    // Stage info: what the stage does and which skills suit it.
-    await page.getByRole('button', { name: 'About Leads' }).click();
-    await expect(page.getByText('Suits:').first()).toBeVisible();
+    // Stage info, in the funnel pop-up (D242): what the stage does and which skills suit it.
+    await page.locator('[data-tour="funnel"]').click();
+    const funnel = page.getByRole('dialog', { name: 'Your funnel' });
+    await funnel.getByRole('radio', { name: /^Leads/ }).click();
+    await expect(funnel.getByText('Suits:').first()).toBeVisible();
     await axe(page, 'stage info');
     await page.keyboard.press('Escape');
   });

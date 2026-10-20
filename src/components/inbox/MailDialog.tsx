@@ -103,7 +103,7 @@ export function MailButton({ unread, open, onOpen }: { unread: number; open: boo
       {unread > 0 && (
         // Keyed by the count, so the badge pulses again each time a message arrives.
         <span key={unread} aria-hidden="true" data-mail-badge=""
-          className="absolute -top-1.5 -end-1.5 flex h-5 min-w-5 animate-(--il-mail-badge-enter) items-center justify-center rounded-round bg-status-attention px-1 font-mono text-11 font-600 text-fg-on-accent">
+          className="absolute -top-1.5 -end-1.5 flex h-5 min-w-5 animate-(--il-mail-badge-enter) text-large:h-auto items-center justify-center rounded-round bg-status-attention px-1 font-mono text-11 font-600 text-fg-on-accent">
           {number(unread)}
         </span>
       )}

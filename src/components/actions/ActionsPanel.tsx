@@ -87,7 +87,7 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
     // The rail: one button that brings the card back, with how many actions are open and the time left.
     return (
       <aside aria-label={t('actions.title')} className="flex min-h-0 flex-1 flex-col">
-        <div className="flex flex-1 flex-col overflow-hidden border border-line-strong bg-surface-card">
+        <div className="flex flex-1 flex-col overflow-hidden border border-line-strong bg-surface-card text-large:overflow-visible">
           <button type="button" aria-expanded={false} onClick={collapse.onToggle}
             aria-label={t('actions.rail.aria', { n: collapse.open, left: t('time.left', { amount: fmt(capacityLeft) }) })}
             className="flex flex-1 cursor-pointer flex-col items-center gap-3 rounded-4 border-0 bg-transparent px-1 py-4 text-fg-primary hover:bg-surface-raised focus-visible:outline-3 focus-visible:-outline-offset-2 focus-visible:outline-accent-secondary">
@@ -102,7 +102,7 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
   const subRow = (a: ActionTileProps, i: number) => <li key={i}><ActionTile {...a} layout="row" /></li>;
   return (
     <aside aria-label={t('actions.title')} data-tour="actions" className="flex min-h-0 flex-1 flex-col">
-      <div className="flex flex-1 flex-col overflow-hidden border border-line-strong bg-surface-card">
+      <div className="flex flex-1 flex-col overflow-hidden border border-line-strong bg-surface-card text-large:overflow-visible">
         <SubPeriodUnitContext.Provider value={subPeriodUnit}>
           {drawer ? drawer : (
             <>

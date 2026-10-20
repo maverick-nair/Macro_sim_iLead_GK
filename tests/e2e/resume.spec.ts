@@ -13,7 +13,8 @@ test('offline mid run: the action waits with a clear banner, then goes out on re
   await expect(banner).toHaveText(/1 action is saved here and goes out when you reconnect/);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Set your leadership styles for week 1');
   await context.setOffline(false);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your team board, week 1', { timeout: 10000 });
+  // How it landed opens over the board as a pop-up (D242), so the board's heading is read from the page behind it.
+  await expect(page.locator('h1')).toHaveText('Your team board, week 1', { timeout: 10000 });
   await expect(banner).toHaveCount(0);
 });
 

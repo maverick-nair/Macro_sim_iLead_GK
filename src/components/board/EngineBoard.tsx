@@ -317,7 +317,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const plainBoard = !session.signedOut && !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
 
   // ---- the guided tours (D94): each starts on its own the first time its screen shows, unless switched off ----
-  const tourArea: TourArea | null = demo || card || endScreen || weekEnd || reacting ? null : v.live ? (v.live.practice ? null : 'live') : styling ? 'style' : plainBoard ? 'board' : null;
+  // On the desk How it landed is a pop-up (D242): a tour waits until it is read and closed, so its tips are not under it.
+  const tourArea: TourArea | null = demo || card || endScreen || weekEnd || reacting || (oc && !tablet) ? null : v.live ? (v.live.practice ? null : 'live') : styling ? 'style' : plainBoard ? 'board' : null;
   const { tour, setTour, endTour } = useTour({ start: app.startTour, area: tourArea, panel, paused: app.paused, enabled: v.guide.tour.enabled, focusHintRef, h1Ref });
   // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13),
   // nor while a panel or the tour is open, nor in the demo (D89, D92, D94).
@@ -1094,7 +1095,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
             {top}
             {/* How it landed is a pop-up over the board (D242), once nothing else is in front: an action being planned
                 or a decision keeps it waiting, and it shows when they close. */}
-            {outcome && !flow && !decisionOpen && <OutcomeDialog onDismiss={() => { void send({ type: 'clearOutcome' }); }}>{outcome}</OutcomeDialog>}
+            {outcome && !flow && !decisionOpen && <OutcomeDialog modal={!demo} onDismiss={() => { void send({ type: 'clearOutcome' }); }}>{outcome}</OutcomeDialog>}
             <div className={`relative grid min-h-0 flex-1 grid-rows-(--il-desk-rows) gap-x-4.5 gap-y-2.5 px-8 pt-3 pb-3.5 short:gap-y-2 short:pt-2.5 short:pb-2.5 tablet:gap-x-3 tablet:px-5 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
               {/* Tab order follows the spec: HUD, team board, actions, then the feedback and inbox feed. The grid places the feed under the team (D212). */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>

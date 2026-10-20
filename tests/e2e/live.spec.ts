@@ -42,6 +42,11 @@ async function dismissEvents(page: Page) {
 
 /** Opens a member's live action from the board. */
 async function start(page: Page, who: string, action: RegExp, option?: RegExp) {
+  // How it landed is a pop-up over the board (D242): read and closed first, with any event cards behind it.
+  if (await page.getByRole('button', { name: 'Dismiss outcome' }).count()) {
+    await dismissOutcome(page);
+    await dismissEvents(page);
+  }
   await page.getByText(who, { exact: true }).click();
   await page.getByRole('button', { name: action }).click();
   if (option) await page.getByRole('radio', { name: option }).click();
@@ -182,7 +187,13 @@ test('a failed send is retried and keeps your words until it lands; the sponsor 
     await route.fulfill({ response: res, body });
   });
   await toBoard(page, '/?start=board&period=4');
-  await page.getByRole('button', { name: /Briefing with Paul/ }).first().click();
+  await dismissOutcome(page);
+  await dismissEvents(page);
+  // The briefing waits in the inbox, off the envelope in the top bar (D242).
+  await page.getByRole('button', { name: /^Inbox, \d+ unread$/ }).click();
+  const inbox = page.getByRole('dialog', { name: 'Inbox' });
+  await inbox.getByRole('button', { name: /Briefing with Paul/ }).first().click();
+  await inbox.getByRole('article').getByRole('button', { name: 'Reply now' }).click();
   // The fast forward to week 4 runs three weeks of the mock engine first: give it time under parallel load.
   await expect(page.getByText(/Sponsor briefing with Paul/).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/^Leads$/).locator('xpath=..')).toContainText(/\d+(\.\d)? \/ \d+(\.\d)?/);
@@ -244,9 +255,10 @@ test('letting someone go: the outcome shows them; hiring: End in the comparison 
   await quiet(page);
   await say(page, 'Derick, I am sorry, this is a hard conversation. Thank you for your work here.');
   await end(page);
-  // Derick has left the team; the engine still resolves him as the speaker.
-  await expect(page.getByRole('region', { name: 'Outcome' }).getByRole('img', { name: 'Derick Kaynes' })).toBeVisible();
-  await expect(page.getByText('Derick Kaynes', { exact: true })).toHaveCount(0);
+  // Derick has left the team: the outcome shows how the rest took it, each reply with its speaker's portrait (D242).
+  const landed = page.getByRole('region', { name: 'Outcome' });
+  await expect(landed.getByRole('img').first()).toBeVisible();
+  await expect(page.locator('[data-member-card]').filter({ hasText: 'Derick Kaynes' })).toHaveCount(0);
   await dismissOutcome(page);
   await dismissEvents(page);
 

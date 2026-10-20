@@ -93,7 +93,7 @@ for (const [theme, q] of [['dark', ''], ['light', '&theme=light'], ['client', '&
     const choose = drawer(page).getByRole('radiogroup', { name: 'Choose an action' });
     await expect(choose.getByRole('group')).toHaveText([/^Talk/, /^Develop/, /^Decide/]);
     await expect(choose.getByRole('group', { name: 'Talk' }).getByRole('radio', { name: /Meet face to face/ })).toHaveCount(1);
-    await expect(choose.getByRole('group', { name: 'Decide' }).getByRole('radio', { name: /Swap roles/ })).toHaveCount(1);
+    await expect(choose.getByRole('group', { name: 'Decide' }).getByRole('radio', { name: /Change focus/ })).toHaveCount(1);
     // Tours and tips are off in these flows: no hint.
     await expect(drawer(page).getByText('Fits now')).toHaveCount(0);
     await check(page);
@@ -112,10 +112,11 @@ for (const [theme, q] of [['dark', ''], ['light', '&theme=light'], ['client', '&
     if (theme === 'dark') {
       // People are picked on the board: the drawer lowers, the pick bar stands in for it.
       await drawer(page).getByRole('tab', { name: 'For Kent' }).tap();
-      await drawer(page).getByRole('radio', { name: /Swap roles/ }).tap();
+      await drawer(page).getByRole('radio', { name: /Change focus/ }).tap();
+      await drawer(page).getByRole('radio', { name: /^Swap focus/ }).tap();
       await drawer(page).getByRole('button', { name: 'Pick people on the board' }).tap();
       await expect(drawer(page)).toHaveCount(0);
-      const bar = page.getByRole('region', { name: 'Picking people for Swap roles' });
+      const bar = page.getByRole('region', { name: 'Picking people for Change focus' });
       await expect(bar).toBeFocused();
       await card(page, 'Justin Keel').tap();
       await expect(card(page, 'Justin Keel')).toHaveAttribute('aria-pressed', 'true');
@@ -123,7 +124,7 @@ for (const [theme, q] of [['dark', ''], ['light', '&theme=light'], ['client', '&
       await check(page);
       await bar.getByRole('button', { name: 'Done' }).tap();
       await expect(drawer(page)).toBeVisible();
-      await expect(drawer(page).getByText('Swap roles: Swap role, with Kent and Justin. Costs 1 day.')).toBeVisible();
+      await expect(drawer(page).getByText('Change focus: Swap focus, with Kent and Justin. Costs 1 day.')).toBeVisible();
       await drawer(page).getByRole('button', { name: 'Close actions' }).tap();
       await expect(drawer(page)).toHaveCount(0);
       await card(page, 'Kent Goldberg').tap();

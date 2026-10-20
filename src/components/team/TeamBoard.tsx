@@ -232,9 +232,9 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
       </div>
       {people ? (
         // Five to a row (six with a larger team): rows share the height, up to a comfortable card.
-        <ul aria-label={t('team.people')} className={`m-0 grid flex-1 list-none auto-rows-(--il-desk-people-rows) gap-2 p-0 ${PEOPLE_COLS(columns.reduce((n, c) => n + c.cards.length, 0))}`}>
+        <ul aria-label={t('team.people')} className={`m-0 grid flex-1 list-none auto-rows-(--il-desk-people-rows) gap-2 p-0 text-large:auto-rows-auto text-large:grid-cols-3 ${PEOPLE_COLS(columns.reduce((n, c) => n + c.cards.length, 0))}`}>
           {columns.flatMap(c => c.cards).map(({ id, desk: info, ...card }) => (
-            <li key={id} className="flex min-h-0 [&>[data-member-card]]:flex-1"><DeskCard memberId={id} {...card} grow desk={info ?? { style: null, flag: null, time: null }} /></li>
+            <li key={id} className="flex min-h-0 text-large:min-h-auto [&>[data-member-card]]:flex-1"><DeskCard memberId={id} {...card} grow desk={info ?? { style: null, flag: null, time: null }} /></li>
           ))}
         </ul>
       ) : (
