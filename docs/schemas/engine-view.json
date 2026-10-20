@@ -4068,6 +4068,15 @@
                   },
                   "aiGenerated": {
                     "type": "boolean"
+                  },
+                  "stance": {
+                    "type": "string",
+                    "enum": [
+                      "closing",
+                      "guarded",
+                      "opening",
+                      "engaged"
+                    ]
                   }
                 },
                 "required": [

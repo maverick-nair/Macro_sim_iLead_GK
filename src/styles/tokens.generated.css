@@ -338,6 +338,10 @@
   --il-color-liveshell-mood-frustrated: light-dark(var(--il-color-coral-780), var(--il-color-coral-780));
   --il-color-liveshell-mood-guarded: light-dark(var(--il-color-amber-840), var(--il-color-amber-840));
   --il-color-liveshell-mood-open: light-dark(var(--il-color-canvas-mint), var(--il-color-canvas-mint));
+  --il-color-liveshell-stance-closing: light-dark(var(--il-color-coral-780), var(--il-color-coral-780));
+  --il-color-liveshell-stance-guarded: light-dark(var(--il-color-amber-840), var(--il-color-amber-840));
+  --il-color-liveshell-stance-opening: light-dark(var(--il-color-canvas-mint), var(--il-color-canvas-mint));
+  --il-color-liveshell-stance-engaged: light-dark(var(--il-color-canvas-green-300), var(--il-color-canvas-green-300));
   --il-color-liveshell-speaking: light-dark(var(--il-color-canvas-mint), var(--il-color-canvas-mint));
   --il-color-liveshell-speaking-glow: light-dark(oklch(0.8154 0.0896 177.51 / 0.45), oklch(0.8154 0.0896 177.51 / 0.45));
   --il-color-liveshell-on-signal: light-dark(var(--il-color-canvas-navy), var(--il-color-canvas-navy));
@@ -580,6 +584,8 @@
   --il-liveshell-roleplay-dot-1: ilDot 1.2s infinite;
   --il-liveshell-roleplay-dot-2: ilDot 1.2s infinite .15s;
   --il-liveshell-roleplay-dot-3: ilDot 1.2s infinite .3s;
+  --il-liveshell-roleplay-stance-enter: ilIn var(--il-duration-slow) ease;
+  --il-liveshell-pace-transition: inline-size var(--il-duration-slow) ease;
   --il-liveshell-meeting-tile-glow: 0 0 0 2px var(--il-color-liveshell-speaking);
   --il-liveshell-meeting-tile-transition: border-color var(--il-duration-base) ease, box-shadow var(--il-duration-base) ease;
   --il-liveshell-meeting-tile-overlay: linear-gradient(180deg, transparent 55%, var(--il-color-liveshell-tile-shade));

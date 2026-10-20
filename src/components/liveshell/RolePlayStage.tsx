@@ -4,7 +4,8 @@ import { mark, rich } from '../stylesetting/rich';
 import { LineAnnouncer } from '../live/LiveAnnouncer';
 import { LiveCaption } from '../live/LiveCaption';
 import { TranscriptBubble } from '../live/TranscriptBubble';
-import { FOCUS, shortNameOf, type LiveCaptionLine, type LiveConversation, type LiveMood, type LivePerson, type LiveTurn } from './types';
+import { LivePacing, StanceCue } from './LiveRead';
+import { FOCUS, shortNameOf, type LiveCaptionLine, type LiveConversation, type LiveMood, type LivePace, type LivePerson, type LiveStance, type LiveTurn } from './types';
 
 export interface LiveTranscriptProps {
   turns: LiveTurn[];
@@ -109,6 +110,12 @@ export interface RolePlayStageProps {
    */
   layout?: 'desk' | 'tablet' | 'split';
   aside?: ReactNode;
+  /** The engine's live read of the person after their last line (D233). Leave it out for the mood pill alone. */
+  stance?: LiveStance | null;
+  /** Where the conversation is (D233): the track and "About 3 more exchanges". Leave it out to hide them. */
+  pace?: LivePace;
+  /** `split`: your goal, kept in view over the conversation while you type (D233). */
+  goal?: string;
 }
 
 export interface RolePlayPortraitProps {
@@ -117,6 +124,8 @@ export interface RolePlayPortraitProps {
   conversation: LiveConversation;
   /** The brief over the photo (LiveBriefCard `overlay`). */
   brief?: ReactNode;
+  /** The engine's live read of the person (D233): replaces "Seems frustrated" once there is one. */
+  stance?: LiveStance | null;
 }
 
 /**
@@ -125,7 +134,7 @@ export interface RolePlayPortraitProps {
  * screen), their name in the display serif and how they seem under it. A mint mark beside the
  * name while they speak.
  */
-export function RolePlayPortrait({ person, mood, conversation, brief }: RolePlayPortraitProps) {
+export function RolePlayPortrait({ person, mood, conversation, brief, stance }: RolePlayPortraitProps) {
   const { t } = useI18n();
   return (
     <div className="absolute inset-0 overflow-y-auto bg-(image:--il-fill-portrait-calm) text-(--il-color-canvas-ink)">
@@ -139,7 +148,9 @@ export function RolePlayPortrait({ person, mood, conversation, brief }: RolePlay
             {person.name}
             {conversation === 'npcSpeaking' && <span aria-hidden="true" className="size-2.5 animate-(--il-liveshell-roleplay-speaking-ring) bg-(--il-color-canvas-mint)" />}
           </span>
-          <span className="text-13 text-(--il-color-canvas-ink)/70">{t('liveshell.roleplay.seems', { mood: t('liveshell.roleplay.moodWord', { mood }) })}</span>
+          {stance
+            ? <StanceCue name={shortNameOf(person)} stance={stance} />
+            : <span className="text-13 text-(--il-color-canvas-ink)/70">{t('liveshell.roleplay.seems', { mood: t('liveshell.roleplay.moodWord', { mood }) })}</span>}
         </div>
       </div>
     </div>
@@ -158,7 +169,7 @@ const DOTS = ['animate-(--il-liveshell-roleplay-dot-1)', 'animate-(--il-liveshel
  * 1:1 RolePlay workspace: the portrait in its mood ring (pulsing while the NPC speaks), the mood
  * pill, captions or the thinking state, and the transcript beside it.
  */
-export function RolePlayStage({ person, mood, conversation, caption, slow = false, onRetry, turns, onReplay, layout = 'desk', aside }: RolePlayStageProps) {
+export function RolePlayStage({ person, mood, conversation, caption, slow = false, onRetry, turns, onReplay, layout = 'desk', aside, stance, pace, goal }: RolePlayStageProps) {
   const { t } = useI18n();
   const m = MOOD[mood];
   const name = shortNameOf(person);
@@ -177,7 +188,12 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
         <span aria-hidden="true" className="flex gap-1">{DOTS.map(d => <span key={d} className={`size-1.5 bg-fg-secondary ${d}`} />)}</span>
       </div>
     ) : null;
-    return <LiveTranscript turns={turns} onReplay={onReplay} look="line" tail={tail} />;
+    return (
+      <>
+        {pace && <LivePacing pace={pace} goal={goal} />}
+        <LiveTranscript turns={turns} onReplay={onReplay} look="line" tail={tail} />
+      </>
+    );
   }
   if (layout === 'tablet') {
     return (
@@ -191,13 +207,16 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
             </div>
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-            <span className="flex min-h-7 items-center gap-1.5 self-start rounded-4 border border-line-default bg-surface-card px-3 text-13 font-600">
-              <span className={`size-2 rounded-round ${m.dot}`} />
-              {rich(t('liveshell.roleplay.mood', { name: mark(0), mood: mark(1) }), [nameNode, <span>{t('liveshell.roleplay.moodWord', { mood })}</span>])}
-            </span>
+            {stance ? <span className="flex self-start"><StanceCue name={name} stance={stance} tone="card" /></span> : (
+              <span className="flex min-h-7 items-center gap-1.5 self-start rounded-4 border border-line-default bg-surface-card px-3 text-13 font-600">
+                <span className={`size-2 rounded-round ${m.dot}`} />
+                {rich(t('liveshell.roleplay.mood', { name: mark(0), mood: mark(1) }), [nameNode, <span>{t('liveshell.roleplay.moodWord', { mood })}</span>])}
+              </span>
+            )}
             {aside}
           </div>
         </div>
+        {pace && <LivePacing pace={pace} />}
         {caption && <LiveCaption name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} />}
         {conversation === 'npcThinking' && !slow && (
           <div role="status" className="flex items-center gap-2 self-center rounded-4 border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
@@ -224,10 +243,12 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
             {person.img && <img src={person.img} alt={person.name} className="size-full object-cover object-top mix-blend-multiply" />}
           </div>
         </div>
-        <span className="flex h-6.5 items-center gap-1.5 rounded-4 border border-line-default bg-surface-card px-3 text-12 font-600">
-          <span className={`size-2 rounded-round ${m.dot}`} />
-          {rich(t('liveshell.roleplay.mood', { name: mark(0), mood: mark(1) }), [nameNode, <span>{t('liveshell.roleplay.moodWord', { mood })}</span>])}
-        </span>
+        {stance ? <StanceCue name={name} stance={stance} tone="card" /> : (
+          <span className="flex h-6.5 items-center gap-1.5 rounded-4 border border-line-default bg-surface-card px-3 text-12 font-600">
+            <span className={`size-2 rounded-round ${m.dot}`} />
+            {rich(t('liveshell.roleplay.mood', { name: mark(0), mood: mark(1) }), [nameNode, <span>{t('liveshell.roleplay.moodWord', { mood })}</span>])}
+          </span>
+        )}
         {caption && <LiveCaption name={caption.name} text={caption.text} streaming={caption.streaming} ai={caption.aiGenerated} size="lg" />}
         {conversation === 'npcThinking' && !slow && (
           <div role="status" className="flex items-center gap-2 rounded-4 border border-line-default bg-surface-card px-4 py-2.5 text-13 text-fg-secondary">
@@ -248,7 +269,12 @@ export function RolePlayStage({ person, mood, conversation, caption, slow = fals
           </div>
         )}
       </div>
-      <LiveTranscript turns={turns} onReplay={onReplay} captionsAnnounce={!!caption} />
+      {pace ? (
+        <div className="flex min-h-0 flex-col gap-3.5">
+          <LivePacing pace={pace} />
+          <LiveTranscript turns={turns} onReplay={onReplay} captionsAnnounce={!!caption} />
+        </div>
+      ) : <LiveTranscript turns={turns} onReplay={onReplay} captionsAnnounce={!!caption} />}
     </div>
   );
 }

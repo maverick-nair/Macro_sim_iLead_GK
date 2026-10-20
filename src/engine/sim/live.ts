@@ -4,7 +4,7 @@ type Person = StorylineConfig['members'][number];
 type StakeholderConfig = StorylineConfig['stakeholders'][number];
 import { IntentError } from './actions';
 import { firstName, member, nextId, person } from './sim';
-import type { Interaction, Mood, PlanFields, Sim, Turn } from './types';
+import { STANCES, type Interaction, type Mood, type PlanFields, type Sim, type Stance, type Turn } from './types';
 import { msg, type Copy } from '../copy';
 import { moodOf } from './view';
 import { interactionOf, stakeholderMood } from './stakeholders';
@@ -51,9 +51,14 @@ export interface NpcContext {
   actionName: string;
   /** Body of the message being replied to (chat replies open with it). */
   replyTo?: Copy;
+  /** Where the speaker stood after their last line in this conversation (D233). None before they have spoken. */
+  stance?: Stance;
+  /** The participant cut the speaker's last line off. */
+  interrupted?: boolean;
 }
 
-export interface NpcReply { text: Copy; revealsConcern?: boolean; signsOff?: boolean }
+/** `stance`: where the speaker stands after this reply (D233). A model may leave it out; the engine then reads it (`readStance`). */
+export interface NpcReply { text: Copy; revealsConcern?: boolean; signsOff?: boolean; stance?: Stance }
 
 export interface NpcModel {
   reply(ctx: NpcContext): NpcReply | Promise<NpcReply>;
@@ -72,63 +77,94 @@ const BYE = /\b(?:bye|thanks for your time|that'?s all|we can stop here|let'?s w
 const HARSH = /\b(?:idiot|stupid|useless|pathetic|shut up|incompetent|worthless|your fault)\b/i;
 
 const pick = <T,>(list: T[], n: number) => list[n % list.length];
+/** Telling, blaming or pressing rather than asking (D233): it closes people down. */
+const PUSH = /\b(?:you need to|you have to|you must|you should have|i expect you|just do|why didn'?t you|why haven'?t you|not good enough|no excuses)\b/i;
 
-/** The persona stand in: short, plain replies that follow mood, trust and what was said. */
+/** Where someone starts, before the participant has said anything: their mood and trust (D233). */
+const startStance = (sp: NpcContext['speaker']): Stance =>
+  sp.mood === 'happy' ? 'engaged' : sp.mood === 'thinking' || (sp.trust >= 60 && sp.mood !== 'frustrated') ? 'opening' : 'guarded';
+
+/**
+ * The engine's read of where the speaker stands after a reply (D233), on the ladder closing, guarded,
+ * opening, engaged. Abuse closes them down; sharing the concern opens them up. Otherwise they move at
+ * most one step from where they were: up for open questions, acknowledging them and agreeing a next
+ * step; down for pressing, cutting them off, or (when trust is low) words that do none of those.
+ * The stand in's own signal, and the fallback when a model reply carries none.
+ */
+export function readStance(ctx: NpcContext, r: NpcReply): Stance {
+  const { said, speaker: sp } = ctx;
+  if (said === null) return ctx.stance ?? startStance(sp);
+  if (HARSH.test(said)) return 'closing';
+  const from = STANCES.indexOf(ctx.stance ?? startStance(sp));
+  let step = Number(OPEN_Q.test(said) || CONCERN_Q.test(said)) + Number(ACK.test(said)) + Number(STEP.test(said));
+  if (PUSH.test(said)) step -= 2;
+  if (ctx.interrupted) step -= 1;
+  if (step === 0 && sp.trust < 40) step = -1;
+  const to = Math.max(0, Math.min(STANCES.length - 1, from + Math.sign(step)));
+  return STANCES[r.revealsConcern ? Math.max(to, STANCES.indexOf('opening')) : to];
+}
+
+/** The persona stand in: short, plain replies that follow mood, trust and what was said, with its stance (D233). */
 export const personaNpc: NpcModel = {
   reply(ctx) {
-    const { speaker: sp, said, format } = ctx;
-    if (sp.stakeholder) return stakeholderReply(ctx, sp.stakeholder);
-    if (said === null) {
-      if (ctx.replyTo) return { text: ctx.replyTo };
-      if (format === 'sponsor') return { text: `Thanks for making time. Give me your update: where are we against target, and what is your plan?` };
-      if (format === 'interview') return { text: `Hello, thank you for having me. I am ${sp.name}, and I am interested in the ${sp.persona?.title ?? 'role'} role.` };
-      if (format === 'meeting') return { text: `Morning, everyone is here. So, what did you want to go through?` };
-      const byMood: Record<Mood, string[]> = {
-        frustrated: ['You wanted to see me? Honestly, it has been a rough week.', 'Okay. I did not expect this meeting. What is it about?'],
-        concerned: ['Sure. I have a few things on my mind, to be honest.', 'Hi. Is everything alright? You wanted to talk.'],
-        thinking: ['Hi. I was hoping we would get a chance to talk.', 'Good timing. I had something I wanted to raise.'],
-        neutral: ['Hi. What did you want to talk about?', 'Sure, I have a few minutes. What is up?'],
-        happy: ['Hi! Good to see you. What did you want to talk about?', 'Hey, sure. Things are going well this week.']
-      };
-      return { text: pick(byMood[sp.mood], sp.name.length) };
-    }
-    if (HARSH.test(said)) return { text: 'That is not okay. I would rather stop here.', signsOff: true };
-    if (BYE.test(said) || ctx.turnsLeft <= 0) {
-      return { text: format === 'sponsor' ? 'Good. Keep me posted, and come back to me if you need support.' : format === 'interview' ? 'Thank you for your time. I look forward to hearing from you.' : `Okay. Thanks, I will get back to it.`, signsOff: true };
-    }
-    if (format === 'sponsor') {
-      const probes = ['What is the biggest risk to the target, in your view?', 'And what do you need from me to get there?', 'Who on the team are you most worried about, and what are you doing about it?'];
-      return { text: pick(probes, ctx.turnsSoFar) };
-    }
-    if (format === 'plan') {
-      // The 2 minute check in on the plan (spec, Written plan).
-      if (ctx.turnsSoFar <= 1) return { text: /\d/.test(said) ? 'Thanks for the plan. The numbers make it clear what good looks like, and I can commit to that.' : 'Thanks for the plan. Could we make the goals more specific? I am not sure how we will know it worked.' };
-      return { text: 'Okay, that works for me. I will get started.', signsOff: true };
-    }
-    if (format === 'interview') {
-      const p = sp.persona;
-      if (/\b(?:experience|background|previous|before)\b/i.test(said)) return { text: p?.profile.remarks || `I have ${p?.profile.experience || 'some'} of experience in this area.` };
-      if (/\b(?:skill|strength|good at)\b/i.test(said)) return { text: `My strengths are ${p?.profile.skills || 'working with clients'}.` };
-      if (/\b(?:why|motivat|interest)\b/i.test(said)) return { text: 'I want a team where I can grow and where results are recognized.' };
-      return { text: pick(['Good question. I would start by understanding the customer, then work out the next step with them.', 'I learned to keep promises small and keep them. That has worked for me.', 'I would ask the team first. They usually know where the problem is.'], ctx.turnsSoFar) };
-    }
-    const canOpenUp = sp.persona?.concernLine && !ctx.concernRevealed && (sp.trust >= 45 || ACK.test(said)) && (CONCERN_Q.test(said) || (OPEN_Q.test(said) && ctx.turnsSoFar >= 2));
-    if (canOpenUp) return { text: sp.persona!.concernLine!, revealsConcern: true };
-    if (STEP.test(said)) return { text: pick(['Okay. I can do that by then.', 'Fair. I will have it ready.', 'Alright, that is clear. I will make it happen.'], ctx.turnsSoFar) };
-    if (ACK.test(said)) return { text: pick(['Thanks, I appreciate you saying that.', 'That helps, honestly.', 'Thanks. It means something that you noticed.'], ctx.turnsSoFar) };
-    if (OPEN_Q.test(said)) {
-      const byMood: Record<Mood, string> = {
-        frustrated: 'Mostly that things change and nobody asks us first.',
-        concerned: 'The pipeline is slow, and I am not sure what is expected of me anymore.',
-        thinking: 'I have some ideas, but I am not sure they would be welcome.',
-        neutral: 'Things are okay. The work is moving, slowly.',
-        happy: 'Going well. I think we can push a bit harder this week.'
-      };
-      return { text: byMood[sp.mood] };
-    }
-    return { text: pick([`Okay${sp.trust < 40 ? ', if you say so' : ''}.`, 'Right. Anything else?', `I hear you${sp.mood === 'frustrated' ? ', but I am not sure that fixes it' : ''}.`], ctx.turnsSoFar) };
+    const r = personaLine(ctx);
+    return { ...r, stance: readStance(ctx, r) };
   }
 };
+
+function personaLine(ctx: NpcContext): NpcReply {
+  const { speaker: sp, said, format } = ctx;
+  if (sp.stakeholder) return stakeholderReply(ctx, sp.stakeholder);
+  if (said === null) {
+    if (ctx.replyTo) return { text: ctx.replyTo };
+    if (format === 'sponsor') return { text: `Thanks for making time. Give me your update: where are we against target, and what is your plan?` };
+    if (format === 'interview') return { text: `Hello, thank you for having me. I am ${sp.name}, and I am interested in the ${sp.persona?.title ?? 'role'} role.` };
+    if (format === 'meeting') return { text: `Morning, everyone is here. So, what did you want to go through?` };
+    const byMood: Record<Mood, string[]> = {
+      frustrated: ['You wanted to see me? Honestly, it has been a rough week.', 'Okay. I did not expect this meeting. What is it about?'],
+      concerned: ['Sure. I have a few things on my mind, to be honest.', 'Hi. Is everything alright? You wanted to talk.'],
+      thinking: ['Hi. I was hoping we would get a chance to talk.', 'Good timing. I had something I wanted to raise.'],
+      neutral: ['Hi. What did you want to talk about?', 'Sure, I have a few minutes. What is up?'],
+      happy: ['Hi! Good to see you. What did you want to talk about?', 'Hey, sure. Things are going well this week.']
+    };
+    return { text: pick(byMood[sp.mood], sp.name.length) };
+  }
+  if (HARSH.test(said)) return { text: 'That is not okay. I would rather stop here.', signsOff: true };
+  if (BYE.test(said) || ctx.turnsLeft <= 0) {
+    return { text: format === 'sponsor' ? 'Good. Keep me posted, and come back to me if you need support.' : format === 'interview' ? 'Thank you for your time. I look forward to hearing from you.' : `Okay. Thanks, I will get back to it.`, signsOff: true };
+  }
+  if (format === 'sponsor') {
+    const probes = ['What is the biggest risk to the target, in your view?', 'And what do you need from me to get there?', 'Who on the team are you most worried about, and what are you doing about it?'];
+    return { text: pick(probes, ctx.turnsSoFar) };
+  }
+  if (format === 'plan') {
+    // The 2 minute check in on the plan (spec, Written plan).
+    if (ctx.turnsSoFar <= 1) return { text: /\d/.test(said) ? 'Thanks for the plan. The numbers make it clear what good looks like, and I can commit to that.' : 'Thanks for the plan. Could we make the goals more specific? I am not sure how we will know it worked.' };
+    return { text: 'Okay, that works for me. I will get started.', signsOff: true };
+  }
+  if (format === 'interview') {
+    const p = sp.persona;
+    if (/\b(?:experience|background|previous|before)\b/i.test(said)) return { text: p?.profile.remarks || `I have ${p?.profile.experience || 'some'} of experience in this area.` };
+    if (/\b(?:skill|strength|good at)\b/i.test(said)) return { text: `My strengths are ${p?.profile.skills || 'working with clients'}.` };
+    if (/\b(?:why|motivat|interest)\b/i.test(said)) return { text: 'I want a team where I can grow and where results are recognized.' };
+    return { text: pick(['Good question. I would start by understanding the customer, then work out the next step with them.', 'I learned to keep promises small and keep them. That has worked for me.', 'I would ask the team first. They usually know where the problem is.'], ctx.turnsSoFar) };
+  }
+  const canOpenUp = sp.persona?.concernLine && !ctx.concernRevealed && (sp.trust >= 45 || ACK.test(said)) && (CONCERN_Q.test(said) || (OPEN_Q.test(said) && ctx.turnsSoFar >= 2));
+  if (canOpenUp) return { text: sp.persona!.concernLine!, revealsConcern: true };
+  if (STEP.test(said)) return { text: pick(['Okay. I can do that by then.', 'Fair. I will have it ready.', 'Alright, that is clear. I will make it happen.'], ctx.turnsSoFar) };
+  if (ACK.test(said)) return { text: pick(['Thanks, I appreciate you saying that.', 'That helps, honestly.', 'Thanks. It means something that you noticed.'], ctx.turnsSoFar) };
+  if (OPEN_Q.test(said)) {
+    const byMood: Record<Mood, string> = {
+      frustrated: 'Mostly that things change and nobody asks us first.',
+      concerned: 'The pipeline is slow, and I am not sure what is expected of me anymore.',
+      thinking: 'I have some ideas, but I am not sure they would be welcome.',
+      neutral: 'Things are okay. The work is moving, slowly.',
+      happy: 'Going well. I think we can push a bit harder this week.'
+    };
+    return { text: byMood[sp.mood] };
+  }
+  return { text: pick([`Okay${sp.trust < 40 ? ', if you say so' : ''}.`, 'Right. Anything else?', `I hear you${sp.mood === 'frustrated' ? ', but I am not sure that fixes it' : ''}.`], ctx.turnsSoFar) };
+}
 
 /**
  * The stand in for a stakeholder (D161): plain replies that follow the conversation's type, their trust and their
@@ -205,13 +241,20 @@ const yourTurns = (it: Interaction) => it.turns.filter(t => t.by === 'you').leng
 async function npcSays(sim: Sim, npc: NpcModel, it: Interaction, said: string | null): Promise<Turn> {
   const by = speakerFor(sim, it);
   const msg = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
-  const r = await npc.reply({
+  // Where this speaker stood after their last line, and whether the participant cut the last line off (D233).
+  const prior = [...it.turns].reverse().find(t => t.by === by && t.stance)?.stance;
+  const lastNpc = [...it.turns].reverse().find(t => t.by !== 'you');
+  const ctx: NpcContext = {
     format: it.stakeholder?.format ?? it.format, speaker: speakerCtx(sim, by, it), said, turnsSoFar: yourTurns(it), turnsLeft: turnLimit(sim, it) - yourTurns(it),
-    concernRevealed: it.concernRevealed, actionName: actionName(sim, it), replyTo: said === null ? msg?.body : undefined
-  });
+    concernRevealed: it.concernRevealed, actionName: actionName(sim, it), replyTo: said === null ? msg?.body : undefined,
+    ...(prior ? { stance: prior } : {}), ...(said !== null && lastNpc?.interrupted ? { interrupted: true } : {})
+  };
+  const r = await npc.reply(ctx);
   if (r.revealsConcern) it.concernRevealed = true;
   if (r.signsOff) it.closed = true;
-  const turn: Turn = { id: nextId(sim, 't'), by, text: r.text };
+  // The model's stance when it gave one (D233); else the engine reads it, so a recorded reply without one replays the same.
+  const stance = r.stance && STANCES.includes(r.stance) ? r.stance : readStance(ctx, r);
+  const turn: Turn = { id: nextId(sim, 't'), by, text: r.text, stance };
   it.turns.push(turn);
   return turn;
 }

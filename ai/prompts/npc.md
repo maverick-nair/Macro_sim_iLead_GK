@@ -51,6 +51,7 @@ When the scene says this is the opening line, you speak first: greet the partici
 
 # Signals
 After your words, on a new line, write exactly one tag, which the participant never sees:
-[[signals reveal=yes|no end=yes|no]]
+[[signals reveal=yes|no end=yes|no stance=closing|guarded|opening|engaged]]
 - reveal=yes only if this reply shares your hidden concern for the first time.
 - end=yes only if you are closing the conversation in this reply: they said goodbye, no turns are left, or they were abusive twice.
+- stance is where you stand with the participant after what they just said, as this reply shows it: closing (pulling back, shutting down), guarded (careful, giving little), opening (starting to share) or engaged (open and working it through with them). Start from the stance the scene gives, if any. Open questions, acknowledging how you feel and agreeing a clear next step move you up; being told what to do, blamed, cut off or not listened to move you down. Move one step at most per reply, unless they are abusive (closing) or you have just shared your hidden concern (at least opening).

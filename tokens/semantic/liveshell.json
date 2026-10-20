@@ -7,6 +7,12 @@
         "guarded": { "light": "{color.amber.840}", "dark": "{color.amber.840}", "$description": "1:1 mood ring and pill dot: guarded" },
         "open": { "light": "{color.canvas.mint}", "dark": "{color.canvas.mint}", "$description": "1:1 mood ring and pill dot: more open" }
       },
+      "stance": {
+        "closing": { "light": "{color.coral.780}", "dark": "{color.coral.780}", "$description": "1:1 live read dot, on navy: closing down (D233)" },
+        "guarded": { "light": "{color.amber.840}", "dark": "{color.amber.840}", "$description": "1:1 live read dot, on navy: guarded (D233)" },
+        "opening": { "light": "{color.canvas.mint}", "dark": "{color.canvas.mint}", "$description": "1:1 live read dot, on navy: opening up (D233)" },
+        "engaged": { "light": "{color.canvas.green-300}", "dark": "{color.canvas.green-300}", "$description": "1:1 live read dot, on navy: engaged (D233)" }
+      },
       "speaking": { "light": "{color.canvas.mint}", "dark": "{color.canvas.mint}", "$description": "Active speaker ring and tag in the meeting grid" },
       "speaking-glow": { "light": { "ref": "color.canvas.mint", "alpha": 0.45 }, "dark": { "ref": "color.canvas.mint", "alpha": 0.45 }, "$description": "Halo around the active speaker tile" },
       "on-signal": { "light": "{color.canvas.navy}", "dark": "{color.canvas.navy}", "$description": "Text on the speaking tag, the raised hand, the header badge and the sponsor avatar" },

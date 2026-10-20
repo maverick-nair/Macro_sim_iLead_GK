@@ -141,6 +141,8 @@ export function sceneOf(ctx: NpcTurnContext): string {
     s += line('What the participant came to do', sp.stakeholder.goal);
   }
   s += line('The participant has spoken', `${ctx.turnsSoFar} time(s); turns left: ${Math.max(0, ctx.turnsLeft)}`);
+  s += line('Where you stood after your last line (stance)', ctx.stance);
+  if (ctx.interrupted) s += 'The participant cut your last line off.\n';
   if (sp.persona?.hiddenConcern || sp.stakeholder?.hiddenConcern) s += line('Hidden concern already shared in this conversation', ctx.concernRevealed ? 'yes (do not share it again)' : 'no');
   if (ctx.guarded) s += 'The team feels unsafe right now: you are guarded and will not share your hidden concern.\n';
   if (ctx.meeting) {
