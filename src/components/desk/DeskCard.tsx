@@ -82,7 +82,7 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo; grow?: b
       className={`flex min-h-35 min-w-0 flex-col gap-1.25 bg-surface-card px-2.25 py-2 text-start text-fg-primary short:min-h-32 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${selected ? 'border-3 border-accent-default px-1.75 py-1.5' : 'border border-line-strong hover:border-line-control'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
       {/* With room on the board (D242) the photo spans the card and takes what height there is, at least a face's worth. */}
       {grow && (
-        <span className={`relative -mx-2.25 -mt-2 mb-0.5 block min-h-14 flex-1 overflow-hidden ${selected ? '-mx-1.75 -mt-1.5' : ''} ${backdrop(mood, away)}`}>
+        <span className={`relative -mx-2.25 -mt-2 mb-0.5 block min-h-8 flex-1 overflow-hidden ${selected ? '-mx-1.75 -mt-1.5' : ''} ${backdrop(mood, away)}`}>
           <img src={img} alt="" className={`absolute inset-0 size-full object-contain object-bottom mix-blend-multiply ${away ? 'grayscale' : ''}`} />
         </span>
       )}

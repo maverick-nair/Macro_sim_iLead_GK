@@ -34,7 +34,7 @@ import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfileDialog } from '../profile/ProfileDialog';
 import { performance } from '../desk/performance';
-import { FunnelButton, FunnelDialog, type FunnelStage } from '../desk/FunnelDialog';
+import { FunnelButton, FunnelDialog, type FunnelSeller, type FunnelStage } from '../desk/FunnelDialog';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView } from '../stylesetting/StyleSettingView';
 import { ReactingScreen } from '../liveshell/ReactingScreen';
@@ -530,6 +530,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     })
   }));
   const bottleneckStage = v.funnel.find(st => st.bottleneck)?.name ?? null;
+  // Everyone sells end to end (D243): the sellers against their own targets, beside the team's funnel.
+  const sellers: FunnelSeller[] | undefined = v.salesModel === 'fullCycle' ? v.members.map(m => {
+    const style = styleOf(m);
+    const money = moneyFormatter(v.money);
+    return {
+      id: m.id, name: m.name, img: img(m), mood: m.mood, away: m.away > 0, style: style ? styleName(style) : null,
+      stats: m.skill !== null && m.morale !== null && m.result !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, result: m.result, trust: m.trust } : null,
+      performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
+      closed: money.compact(m.closed ?? 0), target: money.compact(m.target ?? 0), share: m.target ? (m.closed ?? 0) / m.target : 0
+    };
+  }) : undefined;
   /** Opens the profile, and the engine reveals the stats on the first open. Style setting opens it alone (D240). */
   const showProfile = (id: string) => {
     ui.openPanel('profile', id);
@@ -1003,7 +1014,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
         onViewChange={styles.changeView}
         members={v.members.map(m => ({
-          id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
+          id: m.id, name: m.name, title: v.salesModel === 'fullCycle' ? m.title : v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
           away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
           stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, result: m.result ?? undefined, trust: m.trust } : null,
           performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
@@ -1110,7 +1121,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
               />}</Deferred></div>
               {profile && <ProfilePanel {...profile} />}
               {funnelOpen && (
-                <FunnelDialog stages={funnelStages} periodUnit={periodUnit} onClose={() => setFunnelOpen(false)}
+                <FunnelDialog stages={funnelStages} sellers={sellers} periodUnit={periodUnit} onClose={() => setFunnelOpen(false)}
                   money={t('funnel.money', { label: t('board.target', { n: periods, unit: periodUnit }), value: fmts.money.compact(v.money.value), target: fmts.money.compact(v.money.target) })}
                   onPerson={id => { setFunnelOpen(false); setFlow(null); if (selected !== id) ui.toggleMember(id); }} />
               )}

@@ -34,8 +34,18 @@ export interface FunnelStage {
   people: FunnelPerson[];
 }
 
+/** A seller in the full cycle model (D243): what they have closed against their own target. */
+export interface FunnelSeller extends FunnelPerson {
+  closed: string;
+  target: string;
+  /** Closed as a share of their target, 0 to 1. */
+  share: number;
+}
+
 export interface FunnelDialogProps {
   stages: FunnelStage[];
+  /** Everyone sells end to end (D243): beside the funnel, each seller against their target instead of the stages' people. */
+  sellers?: FunnelSeller[];
   periodUnit: PeriodUnit;
   /** "8 week target $60K of $240K", as the status band says it. */
   money: string;
@@ -67,7 +77,7 @@ function bandStyle(i: number, count: number): CSSProperties {
  * delivering, and the stage's headcount against its ideal. Choosing a band shows what the stage does and which skills
  * suit it; choosing a person selects them on the board. Everything is the engine's number; nothing scrolls on a laptop.
  */
-export function FunnelDialog({ stages, periodUnit, money, onClose, onPerson }: FunnelDialogProps) {
+export function FunnelDialog({ stages, sellers, periodUnit, money, onClose, onPerson }: FunnelDialogProps) {
   const { t, number } = useI18n();
   const [chosen, setChosen] = useState<string>(stages.find(s => s.bottleneck)?.key ?? stages[0]?.key ?? '');
   const open = stages.find(s => s.key === chosen);
@@ -128,12 +138,47 @@ export function FunnelDialog({ stages, periodUnit, money, onClose, onPerson }: F
                   </span>
                   {open.about && <span>{open.about}</span>}
                   {open.suits && <span className="text-fg-body"><b className="text-fg-primary">{t('team.stage.suits')}</b> {open.suits}</span>}
-                  <span className="text-fg-body">{t('funnel.headcount', { n: open.headcount.n, ideal: open.headcount.ideal })}</span>
+                  {/* Selling end to end (D243), nobody sits in a stage: no headcount to show. */}
+                  {!sellers && <span className="text-fg-body">{t('funnel.headcount', { n: open.headcount.n, ideal: open.headcount.ideal })}</span>}
                 </div>
               )}
             </div>
 
-            {/* Every stage and its people at once. */}
+            {sellers ? (
+              // Every seller at once (D243): what they have closed against their own target, their stats and delivery.
+              <table className="w-full border-collapse self-start text-13">
+                <caption className="sr-only">{t('funnel.sellers')}</caption>
+                <thead>
+                  <tr className="border-b border-fg-primary text-12 text-fg-body">
+                    <th scope="col" className="py-2 pe-3 text-start font-600">{t('funnel.col.seller')}</th>
+                    <th scope="col" className="py-2 pe-3 text-start font-600">{t('funnel.col.closed')}</th>
+                    <th scope="col" className="py-2 text-start font-600">{t('funnel.col.stats')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sellers.map(m => (
+                    <tr key={m.id} data-seller={m.id} className="border-b border-line-default">
+                      <th scope="row" className="py-1.5 pe-3 text-start font-400">
+                        <button type="button" onClick={() => onPerson(m.id)} aria-label={t('funnel.person', { name: m.name })}
+                          className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-4 border-0 bg-transparent p-0 text-start text-fg-primary hover:underline ${focus}`}>
+                          <span className={`size-9 flex-none overflow-hidden rounded-round ${backdrop(m.mood, m.away)}`}><img src={m.img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${m.away ? 'grayscale' : ''}`} /></span>
+                          <b className="text-14 font-600">{m.name}</b>
+                        </button>
+                      </th>
+                      <td className="w-48 py-1.5 pe-3">
+                        <span className="font-mono text-14">{m.closed}</span> <span className="text-12 text-fg-body">{t('desk.card.goalOf', { target: m.target })}</span>
+                        <span aria-hidden="true" className="mt-1 block h-1.25 bg-track"><span className="block h-full bg-accent-default" style={{ width: pct(m.share) }} /></span>
+                      </td>
+                      <td className="py-1.5">
+                        {m.stats && <span className="flex gap-3 font-mono text-12 text-fg-body">{STATS.map(k => <span key={k}>{t('metric.name', { metric: k })} <b className={`font-500 ${m.stats![k] < LOW_BELOW ? 'text-status-attention' : 'text-fg-primary'}`}>{number(m.stats![k])}</b></span>)}</span>}
+                        {m.performance && <span className={`text-12 ${m.performance.dir === 'up' ? 'text-status-gain' : m.performance.dir === 'down' ? 'text-status-decline' : 'text-fg-body'}`}>{m.performance.text}</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+            /* Every stage and its people at once. */
             <table className="w-full border-collapse self-start text-13">
               <caption className="sr-only">{t('funnel.table')}</caption>
               <thead>
@@ -182,6 +227,7 @@ export function FunnelDialog({ stages, periodUnit, money, onClose, onPerson }: F
                 ))}
               </tbody>
             </table>
+            )}
           </div>
         </Dialog.Content>
       </Dialog.Overlay>
