@@ -1432,6 +1432,8 @@ The synthetic user trial of a general trade FMCG simulation (branch `hul-synthet
 
 **D237. The sponsor video's captions follow its captions file.** Decided 2026-10-20, while writing the CEO welcome video script. The app spaced the transcript lines evenly across the video, so a long line was cut short and a short one lingered, and the native track drew a second set of captions under the app's own. With a captions file that has one cue per transcript line, the caption on screen and the chapter buttons follow the cue start times (`captionAt`, `captionStart` in `src/components/intro/intro.ts`); without one, the lines keep their even shares. The track is loaded hidden, so only the app's captions show. The welcome video's script and its captions file: the CEO Welcome Video Script doc.
 
+**D238. One link per product: the simulation and GenieKreator deploy apart.** Decided 2026-10-20 at the product owner's request. The same build served both, so a participant could reach /author and an author landed on the simulation. `VITE_SITE` (build time, `src/app/site.ts`) picks the product: `simulation` serves the participant's play and sends any /author address to `/`; `geniekreator` opens /author at its bare root and keeps the participant routes, because Preview plays the draft on them; unset serves both, as on a developer's machine. The redirect happens once, before routing reads the address (`history.replaceState`, so Back does not loop). Two hosting projects build the same branch with the two values (README, Deploying).
+
 ## Blocked on missing docs
 
 **D19.** Mostly resolved by the iLead 1.0 documents (D28 to D35). Still open:
