@@ -119,6 +119,9 @@ async function spendThreeDays(page: Page, w: Width) {
     await page.getByRole('button', { name: /Assess member/ }).click();
     await page.getByRole('radiogroup', { name: 'Choose an option' }).getByRole('radio').first().click();
     await page.getByRole('button', { name: /^Confirm/ }).click();
+    // How it landed is a pop-up on the desk (D242): the call rings on the board once it is closed.
+    await expect(page.getByText('How it landed')).toBeVisible();
+    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
   }
 }
 

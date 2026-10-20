@@ -234,7 +234,7 @@ test.describe('style setting and the board', () => {
   both('board with the outcome', 'play', async page => {
     await page.goto('/?start=board');
     await confirmStyles(page);
-  }, page => [page.getByRole('button', { name: 'Dismiss outcome' }), endWeek(page)]);
+  }, page => tablet(page) ? [page.getByRole('button', { name: 'Dismiss outcome' }), endWeek(page)] : [page.getByRole('button', { name: 'Dismiss outcome' })]);
 
   both('event card', 'play', async page => {
     await page.goto('/?start=board&period=3');
@@ -306,6 +306,8 @@ test.describe('style setting and the board', () => {
     await dismissOutcome(page);
     await dismissCards(page);
     await memberAction(page, 'Kent Goldberg', /Assess member/, 'first');
+    // How it landed is a pop-up on the desk (D242): the call rings on the board once it is closed.
+    if (!tablet(page)) await dismissOutcome(page);
     await expect(page.getByRole('alert').filter({ hasText: 'Paul Jacob is calling' })).toBeVisible({ timeout: 15_000 });
   }, page => [page.getByRole('button', { name: 'Take the call' })]);
 
@@ -376,11 +378,15 @@ test.describe('live formats', () => {
 
   both('sponsor briefing', 'play', async page => {
     await toBoard(page, 4);
-    const direct = page.getByRole('button', { name: /Briefing with Paul/ });
-    if (await direct.count()) await direct.first().click();
-    else {
-      await page.getByRole('button', { name: /^Inbox/ }).click();
-      const inbox = page.getByRole('dialog', { name: 'Inbox' });
+    await page.getByRole('button', { name: /^Inbox/ }).first().click();
+    const inbox = page.getByRole('dialog', { name: 'Inbox' });
+    await expect(inbox.getByText('Briefing with Paul').first()).toBeVisible();
+    // The desk's mail overlay (D242): pick the message, then Reply now in the reading pane.
+    const mail = inbox.getByRole('button', { name: /Briefing with Paul/ });
+    if (await mail.count()) {
+      await mail.first().click();
+      await inbox.getByRole('article').getByRole('button', { name: 'Reply now' }).click();
+    } else {
       const item = inbox.locator('div').filter({ has: page.getByText('Briefing with Paul', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last();
       await item.getByRole('button').last().click();
     }
