@@ -24,10 +24,10 @@ export interface DeskCardInfo {
 export function StatGrid({ stats, hidden = false }: { stats: Record<MetricKey, number>; hidden?: boolean }) {
   const { t, number } = useI18n();
   return (
-    <span aria-hidden={hidden || undefined} className="grid grid-cols-4 gap-1 border-t border-line-default pt-1.25">
+    <span aria-hidden={hidden || undefined} className="grid grid-cols-4 gap-0.5 border-t border-line-default pt-1.25 text-large:grid-cols-2">
       {STATS.map(k => (
         <span key={k} className="flex min-w-0 flex-col">
-          <span className="truncate text-11 text-fg-secondary">{t('metric.name', { metric: k })}</span>
+          <span className="truncate text-11 text-fg-secondary text-large:overflow-visible text-large:whitespace-normal">{t('metric.name', { metric: k })}</span>
           <b className={`font-mono text-14 leading-tight font-500 ${stats[k] < LOW_BELOW ? 'text-status-attention' : 'text-fg-primary'}`}>{number(stats[k])}</b>
         </span>
       ))}
@@ -38,9 +38,9 @@ export function StatGrid({ stats, hidden = false }: { stats: Record<MetricKey, n
 /** "Below par ▼4": the band, then this period's move in its colour, as an arrow and a number (D241). */
 export function PerformanceLine({ performance: p, hidden = false }: { performance: Performance; hidden?: boolean }) {
   return (
-    <span aria-hidden={hidden || undefined} className="flex min-w-0 items-baseline gap-1.5 text-12 text-fg-body">
+    <span aria-hidden={hidden || undefined} className="flex min-w-0 flex-wrap items-baseline gap-x-1.5 text-12 text-fg-body">
       {/* The arrow says the move to the eye; screen readers hear it in words. */}
-      <span aria-hidden="true" className="truncate">{p.band}</span>
+      <span aria-hidden="true" className="truncate text-large:overflow-visible text-large:whitespace-normal">{p.band}</span>
       {p.dir !== 'flat' && <b aria-hidden="true" className={`font-mono font-600 ${p.dir === 'up' ? 'text-status-gain' : 'text-status-decline'}`}>{p.move}</b>}
       {!hidden && <span className="sr-only">{p.text}</span>}
     </span>

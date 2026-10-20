@@ -168,9 +168,10 @@ export function MoraleMeter({ value, delta, unit }: { value: number; delta: numb
     <span role="img" aria-label={label} title={label} data-tour="morale" data-morale={dir}
       className="relative flex flex-none items-center gap-2 rounded-4 border border-line-strong px-2.5 py-1 text-13">
       <span className={tone}><Heart /></span>
-      <span className="text-fg-secondary tablet:hidden">{t('hud.morale.label')}</span>
+      {/* Under 1280 wide the words give way, so End week stays on screen; the heart, number and arrow remain. */}
+      <span className="hidden text-fg-secondary wide:inline">{t('hud.morale.label')}</span>
       <b className="font-mono text-15 font-500 text-fg-primary">{number(value)}</b>
-      <span className={`font-600 whitespace-nowrap ${tone}`}>{t('hud.morale.trend', { dir, n: number(Math.abs(delta)) })}</span>
+      <span className={`font-600 whitespace-nowrap ${tone}`}>{t('hud.morale.trend', { dir, n: number(Math.abs(delta)) })}<span className="hidden wide:inline">{t('hud.morale.word', { dir })}</span></span>
       {pop && (
         <span key={pop.key} aria-hidden="true" data-morale-pop=""
           className={`il-morale-pop pointer-events-none absolute -top-1 end-1 font-mono text-13 font-600 ${pop.n > 0 ? 'text-status-gain' : 'text-status-decline'}`}>
@@ -205,7 +206,8 @@ export function Hud(p: HudProps) {
   const amount = t('time.amountHalves', { unit: clock.subPeriodUnit, whole, half: left % 1 ? 'yes' : 'no' });
   const capAria = t('time.capacityAria', { left, total: clock.capacity, unit: clock.subPeriodUnit, period: clock.periodUnit });
   const pulse = left > 0 && left <= 1;
-  // One bar a sub period, as the canvas draws the days (D232): spent ones first, then what is left.
+  // One bar a sub period, as the canvas draws the days (D232): spent ones first, then what is left. Under 1280 wide
+  // the words alone say it, so the team morale meter fits beside them (D241).
   const slots = Array.from({ length: Math.ceil(clock.capacity) }, (_, i) => Math.max(0, Math.min(1, left - (Math.ceil(clock.capacity) - 1 - i))));
 
   const periodText = t('time.period', { unit: clock.periodUnit, n: clock.period });
@@ -239,7 +241,7 @@ export function Hud(p: HudProps) {
         {clock.periods ? <span className="sr-only">{t('hud.clock.aria', { period: t('time.periodOf', { unit: clock.periodUnit, n: clock.period, total: clock.periods }), subPeriod: t('time.subPeriod', { unit: clock.subPeriodUnit, n: clock.subPeriod }) })}</span> : null}
       </span>
       <div role="group" aria-label={capAria} data-tour="days" className="flex items-center gap-2 tablet-portrait:-order-2">
-        <div aria-hidden="true" className={`flex gap-1 tablet-portrait:hidden ${pulse ? 'animate-(--il-hud-capacity-pulse)' : ''}`}>
+        <div aria-hidden="true" className={`hidden gap-1 wide:flex tablet-portrait:hidden ${pulse ? 'animate-(--il-hud-capacity-pulse)' : ''}`}>
           {slots.map((v, i) => (
             <span key={i} className="relative block h-1.5 w-4 bg-(--il-color-canvas-steel)">
               {v > 0 && <span className="absolute inset-y-0 end-0 block bg-hud-capacity-full" style={{ width: `${v * 100}%` }} />}
