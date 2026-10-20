@@ -9,7 +9,7 @@ import { checkBadges } from './score';
 import { markRelationsStart, startStakeholders } from './stakeholderState';
 import { stakeholderDueChecks } from './stakeholders';
 import { personOutput, saturation, startRealism, teamOutput } from './realism';
-import type { ActionRecord, Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
+import type { ActionRecord, Change, InboxMessage, LiveRecord, LogEntry, MemberSim, MetricKey, Reason, Sim, Turn } from './types';
 import { msg, type Copy } from '../copy';
 
 /**
@@ -72,6 +72,13 @@ export function netChanges(chs: Array<{ subject: string; metric: string; delta: 
     else out.push({ subject: ch.subject, metric: ch.metric, delta: ch.delta });
   }
   return out.filter(x => x.delta !== 0).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}
+/** The participant's first turn and the reply to it, verbatim: the report's replay of a moment (D235). */
+export function exchangeOf(turns: Turn[]): NonNullable<LiveRecord['exchange']> {
+  const at = turns.findIndex(t => t.by === 'you');
+  if (at < 0) return [];
+  const reply = turns.slice(at + 1).find(t => t.by !== 'you');
+  return [{ by: 'you', text: String(turns[at].text) }, ...(reply ? [{ by: reply.by, text: reply.text }] : [])];
 }
 export const present = (sim: Sim) => sim.members;
 export const available = (sim: Sim) => sim.members.filter(m => m.away === 0);

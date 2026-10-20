@@ -307,6 +307,8 @@ export interface LiveRecord {
   skills?: Array<{ key: string; band: Band; evidence: string[] }>;
   /** The participant's own turns, verbatim. */
   quotes?: string[];
+  /** The participant's first turn and the reply to it (`by`: 'you', or who replied), for the report's replay (D235). */
+  exchange?: Array<{ by: string; text: Copy }>;
   /** Words said by the participant and by the NPCs, open questions asked, recognition statements, and whether it was spoken. */
   talk?: { you: number; npc: number; openQuestions: number; recognition: number; spoken: boolean };
   concern?: boolean;

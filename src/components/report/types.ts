@@ -180,6 +180,17 @@ export interface MomentData {
   intent: string | null;
 }
 
+/** One line of a moment's replay (D235): who spoke, and what they said, verbatim. */
+export interface ReplayLine { key: string; you: boolean; who: string; text: string }
+
+/** The report's first page (D235): three findings, three things to do on Monday, the two moments that mattered most. */
+export interface BriefData {
+  findings: Array<{ key: string; tone: 'positive' | 'negative' | 'neutral'; text: string }>;
+  /** Development: what to do on Monday, with the skill it builds. Assessment: the development needs, `skill` their name. */
+  actions: Array<{ key: string; text: string; skill: string | null }>;
+  moments: Array<MomentData & { replay: ReplayLine[] }>;
+}
+
 export interface PersonData {
   id: string;
   name: string;

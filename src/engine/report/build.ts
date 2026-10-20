@@ -10,6 +10,7 @@ import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param
 import { narrativeOf, type BottleneckFact } from './narrative';
 import { stakeholdersOf, withStakeholders } from './stakeholders';
 import { unitParams } from '../units';
+import { pickActions, pickFindings, pickMoments } from './brief';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -131,6 +132,9 @@ export function buildReport(sim: Sim) {
     return chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange');
   };
   const unit0 = { unit: unitName(sim) };
+  // Who replied in a moment's replay (D235): a team member or candidate, the sponsor or a stakeholder.
+  const speaker = (by: string): string => (by === 'sponsor' ? shortName(sim, 'sponsor')
+    : c.stakeholders.find(s => s.key === by)?.name.split(' ')[0] ?? [...c.members, ...c.candidates].find(p => p.id === by)?.name.split(' ')[0] ?? by);
   const fromLive = sim.liveRecords.filter(rec => rec.band !== 'adequate').map(rec => {
     const one = rec.memberIds.length === 1;
     const title: Copy = rec.title ?? rec.actionKey;
@@ -143,7 +147,9 @@ export function buildReport(sim: Sim) {
       behaviour: rec.styleShown ? msg('engine.moment.chose.style', { title, style: styleName(sim, rec.styleShown) }) : msg('engine.moment.chose', { title }),
       quote: rec.quotes?.[0] ?? null,
       impact: impactOf(rec.changes ?? []),
-      intent: intentFor(rec.memberIds[0], rec.period), weight: rec.impact ?? 0, sub: rec.sub ?? 0
+      intent: intentFor(rec.memberIds[0], rec.period),
+      replay: (rec.exchange ?? []).map(x => ({ you: x.by === 'you', name: x.by === 'you' ? null : speaker(x.by), text: x.text })),
+      weight: rec.impact ?? 0, sub: rec.sub ?? 0, said: !!(rec.exchange?.length || rec.quotes?.length)
     };
   });
   const LOGGED = ['engine.escalated', 'engine.promise.kept', 'engine.promise.broken', 'engine.log.unanswered'];
@@ -156,7 +162,7 @@ export function buildReport(sim: Sim) {
       situation: msg('engine.moment.at', { ...unit0, n: l.period, text: l.changes[0]?.reason.cause ?? l.title }),
       behaviour: msg(good ? 'engine.moment.kept' : 'engine.moment.waited'),
       quote: null, impact: impactOf(l.changes),
-      intent: intentFor(who, l.period), weight: l.changes.reduce((a, ch) => a + Math.abs(ch.delta), 0), sub: l.sub
+      intent: intentFor(who, l.period), replay: [], weight: l.changes.reduce((a, ch) => a + Math.abs(ch.delta), 0), sub: l.sub, said: false
     };
   });
   // One moment per title (the same thing three times teaches nothing), the weightiest kept.
@@ -169,7 +175,9 @@ export function buildReport(sim: Sim) {
     const at = kept.map(m => m.kind).lastIndexOf('revisit');
     if (at >= 0) kept[at] = best;
   }
-  const moments = kept.sort((a, b) => a.period - b.period || a.sub - b.sub).map(({ weight: _w, sub: _s, ...m }) => m);
+  kept.sort((a, b) => a.period - b.period || a.sub - b.sub);
+  const momentPicks = pickMoments(kept);
+  const moments = kept.map(({ weight: _w, sub: _s, said: _d, ...m }) => m);
 
   // ---- 6. People outcomes
   const people = all.map(m => {
@@ -211,6 +219,20 @@ export function buildReport(sim: Sim) {
   // The headline, summary, drivers and reflections from the evidence, not the level alone (D143, D145).
   const levelLine = overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null;
   const story = narrativeOf(sim, purpose, run, overall, levelLine, bottleneckFact);
+  const levelCap = levelCapOf(sim, purpose, outcome);
+  // The first page (D235): three findings, three things to do on Monday, the two moments that mattered most.
+  const levelOf = (key: string) => skills.find(s => s.key === key)?.level?.index ?? Number.MAX_SAFE_INTEGER;
+  const brief = {
+    findings: pickFindings({
+      purpose, held: (purpose === 'assessment' ? v3.sections.verdict?.overall.why : null) ?? levelCap?.why ?? null, drivers: story.drivers,
+      rated: byScore.map(s => ({ name: s.name, level: s.level!.name })), business: { text: businessLine, share: share * 100 }
+    }),
+    actions: pickActions({
+      purpose, person: story.toDo.person, plan: plan.map(p => ({ skill: p.skill, name: p.name, onTheJob: p.onTheJob })), fallback: [story.toDo.practical],
+      needs: [...v3.sections.needs].sort((a, b) => levelOf(a.key) - levelOf(b.key))
+    }),
+    moments: momentPicks
+  };
   return {
     available: sim.phase === 'ended',
     purpose,
@@ -222,7 +244,7 @@ export function buildReport(sim: Sim) {
     results: { revenue: Math.round(sim.funnel.value), target: c.money.target, share, conversions: Math.floor(sim.funnel.conversions), kpis },
     summary: {
       level: overall === null ? null : { index: overall, name: r.scale[overall].name },
-      levelCap: levelCapOf(sim, purpose, outcome),
+      levelCap,
       strengths, priorities, business: businessLine,
       narrative: story.levelLine,
       profile: story.profile, headline: story.headline, lines: story.lines, drivers: story.drivers
@@ -244,7 +266,8 @@ export function buildReport(sim: Sim) {
     ...stakeholdersOf(sim),
     ...v3.sections,
     // Food for thought and takeaways name what happened in this run, then the authored ones (D145).
-    thought: story.thought, takeaways: story.takeaways
+    thought: story.thought, takeaways: story.takeaways,
+    brief
   };
 }
 
