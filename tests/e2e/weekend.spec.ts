@@ -181,7 +181,8 @@ test('the reward picker is a radio group: arrows choose, the reward must be take
   await page.goto('/screens#w4');
   const frame = page.locator('#w4');
   const group = frame.getByRole('radiogroup', { name: 'Rewards' });
-  await expect(group).toBeVisible();
+  // /screens mounts every screen at once: about 4.5 s cold on a quiet machine, so the first render gets the suite's 20 s.
+  await expect(group).toBeVisible({ timeout: 20_000 });
   const take = frame.getByRole('button', { name: 'Take this reward' });
   await expect(take).toBeDisabled();
   await group.getByRole('radio').first().focus();
