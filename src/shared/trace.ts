@@ -135,11 +135,13 @@ export const TRACE: Record<string, TraceEntry> = {
   'variables[].shown': e('process', 'Shown on the board', 'board.variables'),
   'variables[].about': e('process', 'What it means', 'board.variables', 'report.business'),
   'maxPerStage': e('team', 'Team (people per stage)', 'board.actions'),
+  'salesModel': e('team', 'How the team sells: one stage each, or everyone end to end (D243)', 'board.team', 'board.funnel'),
   // Team.
   'members[].name': e('team', 'First and last name', 'board.team', 'onboarding.team', 'live.npc', 'report.decisions'),
   'members[].title': e('team', 'Job title', 'board.team', 'board.profile', 'onboarding.team'),
   'members[].pronoun': e('team', 'Gender and pronouns', 'board.events', 'live.npc', 'report.decisions'),
   'members[].homeStage': e('team', 'Stage', 'board.team', 'board.funnel', 'onboarding.team'),
+  'members[].target': e('team', 'Their own revenue target (full cycle, D243)', 'board.team', 'board.funnel'),
   'members[].start': e('team', 'Starting stats', 'board.profile', 'board.team'),
   'members[].byStage': e('team', 'Best stage', 'board.profile', 'board.actions'),
   'members[].profile.previous': e('team', 'Previous company', 'board.profile', 'onboarding.team'),

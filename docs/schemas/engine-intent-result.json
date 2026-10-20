@@ -922,6 +922,14 @@
               },
               "neglected": {
                 "type": "boolean"
+              },
+              "target": {
+                "type": "number",
+                "minimum": 0
+              },
+              "closed": {
+                "type": "number",
+                "minimum": 0
               }
             },
             "required": [
@@ -1035,6 +1043,13 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 9007199254740991
+        },
+        "salesModel": {
+          "type": "string",
+          "enum": [
+            "stages",
+            "fullCycle"
+          ]
         },
         "funnel": {
           "type": "array",
@@ -2319,6 +2334,96 @@
               "state",
               "briefing",
               "dueInSubPeriods"
+            ]
+          }
+        },
+        "mail": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "chat",
+                  "email",
+                  "sponsor",
+                  "news"
+                ]
+              },
+              "title": {
+                "$ref": "#/$defs/Text"
+              },
+              "body": {
+                "$ref": "#/$defs/Text"
+              },
+              "urgent": {
+                "type": "boolean"
+              },
+              "state": {
+                "type": "string"
+              },
+              "briefing": {
+                "type": "boolean"
+              },
+              "dueInSubPeriods": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "at": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "period": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      },
+                      "sub": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 9007199254740991
+                      }
+                    },
+                    "required": [
+                      "period",
+                      "sub"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "from",
+              "kind",
+              "title",
+              "body",
+              "urgent",
+              "state",
+              "briefing",
+              "dueInSubPeriods",
+              "at"
             ]
           }
         },

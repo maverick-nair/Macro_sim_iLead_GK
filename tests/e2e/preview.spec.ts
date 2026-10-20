@@ -42,6 +42,19 @@ async function jump(preview: Page, item: string, week?: number) {
   await menu.getByRole('button', { name: item }).click();
 }
 
+/** How it landed is a pop-up over the desk (D242), with event cards behind it: closed, the preview bar is in reach again. */
+async function closeOutcome(preview: Page) {
+  const dismiss = preview.getByRole('button', { name: 'Dismiss outcome' });
+  if (await dismiss.count()) await dismiss.click();
+  await expect(dismiss).toHaveCount(0);
+  const gotIt = preview.getByRole('button', { name: 'Got it' });
+  while (await gotIt.count()) {
+    const title = await preview.getByRole('dialog').getByRole('heading').first().textContent();
+    await gotIt.click();
+    await expect(preview.getByRole('heading', { name: title ?? '' })).toHaveCount(0);
+  }
+}
+
 test('Preview opens the saved draft as a marked test, jumps, labels sources, reloads a new save, and writes no history', async ({ page, context }) => {
   // The preview keeps its own tour state (D193): tours stay out of this flow's way, as GUIDE_OFF does for participants.
   await context.addInitScript(() => { try { localStorage.setItem('ilead.preview.guide', JSON.stringify({ never: true })); } catch { /* blocked */ } });
@@ -61,9 +74,10 @@ test('Preview opens the saved draft as a marked test, jumps, labels sources, rel
   // Jump to the desk of week 2.
   await jump(preview, 'Your desk, week 2', 2);
   await expect(preview).toHaveURL(/jump=board%3A2/);
-  await expect(preview.getByRole('region', { name: 'Preview controls' })).toBeVisible();
   const card = preview.locator(`[data-member-id="${person.id}"]`);
   await expect(card).toBeVisible({ timeout: 20_000 });
+  await closeOutcome(preview);
+  await expect(preview.getByRole('region', { name: 'Preview controls' })).toBeVisible();
   await expect(card).toContainText(person.first);
 
   // Show where this comes from: traced surfaces carry their GenieKreator section.
@@ -85,6 +99,7 @@ test('Preview opens the saved draft as a marked test, jumps, labels sources, rel
   // Back to the desk, then rename the person in GenieKreator: the preview offers Reload, which plays the new save.
   await jump(preview, 'Your desk, week 1', 1);
   await expect(card).toBeVisible({ timeout: 20_000 });
+  await closeOutcome(preview);
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Team/i }).click();
   await page.getByRole('button', { name: `Edit ${person.first} ${person.last}` }).click();
   const dialog = page.getByRole('dialog');
@@ -94,6 +109,7 @@ test('Preview opens the saved draft as a marked test, jumps, labels sources, rel
   await bar.getByRole('button', { name: 'Reload' }).click();
   await expect(preview).toHaveURL(/jump=board%3A1/);
   await expect(card).toContainText('Zara', { timeout: 20_000 });
+  await closeOutcome(preview);
 
   // Back to GenieKreator returns to this tab; no other tab opens.
   await preview.getByRole('region', { name: 'Preview controls' }).getByRole('button', { name: 'Back to GenieKreator' }).click();

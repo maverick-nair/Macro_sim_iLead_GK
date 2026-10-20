@@ -95,6 +95,8 @@ export const Outcome = z.object({
   changed: z.array(Text).max(2)
 });
 
+export const InboxItem = z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() });
+
 export const MemberView = z.object({
   id: Id, name: Text, title: Text, pronoun: z.enum(['he', 'she', 'they']), stage: Id,
   /** Null until the profile has been opened (D39). */
@@ -120,7 +122,10 @@ export const MemberView = z.object({
    * and whether that is past the neglect window (they are losing heart and delivering less).
    */
   unattended: z.number().int().min(0).optional(),
-  neglected: z.boolean().optional()
+  neglected: z.boolean().optional(),
+  /** The full cycle model (D243): their own target, and what they have closed so far, in the money's major unit. */
+  target: z.number().min(0).optional(),
+  closed: z.number().min(0).optional()
 });
 
 export const Clock = z.object({
@@ -342,6 +347,8 @@ export const EngineView = z.object({
   pulse: z.object({ value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']), upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
   /** Role coverage: at most this many people per stage. */
   maxPerStage: z.number().int().min(1),
+  /** How the team sells (D243): one stage each, or everyone end to end against their own target. Optional so older views parse. */
+  salesModel: z.enum(['stages', 'fullCycle']).optional(),
   funnel: z.array(z.object({ key: Id, name: Text, members: z.number().int(), ideal: z.number().int(), throughput: Num, idealThroughput: Num, bottleneck: z.boolean(),
     /** What the stage does and which skills suit it, when authored (D97). */
     about: Text.nullable().default(null), suits: Text.nullable().default(null) })),
@@ -349,7 +356,12 @@ export const EngineView = z.object({
   /** `keptBy`: the actions that keep the promise when taken with that person (D234's hint). */
   promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0), keptBy: z.array(Id).default([]) })),
   /** `briefing`: a scheduled sponsor briefing, opened with `openConversation` kind `sponsor`; other messages are replies. News needs no answer. */
-  inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() })),
+  inbox: z.array(InboxItem),
+  /**
+   * Every message, newest first, whatever its state (D242), with when it arrived (null in runs saved before): the
+   * inbox overlay lists them, unread first in weight. Optional so older views still parse.
+   */
+  mail: z.array(InboxItem.extend({ at: z.object({ period: z.number().int().min(1), sub: z.number().int().min(1) }).nullable() })).optional(),
   /** Event cards. `sponsorCall` rings before it shows; `messageId` is the message to answer, if any. */
   cards: z.array(z.object({ id: Id, key: Id, card: CardKind, delivery: z.enum(['modal', 'sponsorCall']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange), label: Text.nullable(), messageId: Id.nullable(),
     /** The choice the card opens, when the event is a choice (D137). */

@@ -402,6 +402,15 @@ The Model doc divides by 100. With a positive buffer that lets a stage output mo
 
 **Bottleneck stage** [S]: the stage with the lowest ratio of actual to ideal throughput this period.
 
+**Full cycle model (D243).** With `salesModel: fullCycle` nobody sits in a stage. Each sub-period the input is shared by target (`target`, authored or the team target split by starting skill plus 50), and each available person's share runs through every stage:
+
+```
+strength(person, stage) = clamp(effectiveResult + byStage[stage].result − byStage[home].result + (focus ? 8 : 0))
+flow = flow × conversionRatio × (strength + performanceThreshold) / (100 + performanceThreshold)
+```
+
+What leaves the last stage is that person's conversions; the team's stage output is the sum over people. Move member changes the person's focus instead of their seat.
+
 ### 6.3 General events [W][G]
 An event's impact (skill / morale / result) lands on its target, adjusted by the style you set with each person:
 

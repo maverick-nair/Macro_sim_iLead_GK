@@ -50,5 +50,8 @@ export function useInbox({ view: v, t, amount, say, img }: Input) {
     setSnoozed(s => ({ ...s, [id]: stamp }));
     say(t('board.snoozed', { unit }));
   };
-  return { inbox, stakeholder, sender, senderName, dueText, markRead, later, canLater };
+  /** Read here or set aside at this clock point, for the inbox overlay's unread marks (D242). */
+  const isRead = (id: string) => readIds.includes(id);
+  const isSnoozed = (x: Pick<Message, 'id' | 'dueInSubPeriods'>) => snoozed[x.id] === stamp && canLater(x);
+  return { inbox, stakeholder, sender, senderName, dueText, markRead, later, canLater, isRead, isSnoozed };
 }

@@ -263,6 +263,8 @@ export interface InboxMessage {
   dueAbsSub: number | null;
   urgent: boolean;
   state: 'open' | 'answered' | 'expired' | 'read';
+  /** When it arrived (D242), for the inbox's date column; absent in runs saved before. */
+  at?: { period: number; sub: number };
   /** A scheduled sponsor briefing (Design doc: weeks 4 and 8). */
   briefing?: boolean;
 }
@@ -449,7 +451,8 @@ export interface Sim {
   candidates: string[];
   /** Absolute sub-period when an action (or action:option, action:member) is available again. */
   availableAt: Record<string, number>;
-  funnel: { conversions: number; value: number; periodValue: number; stageOut: number[]; stageOutPeriod: number[] };
+  /** `byMember`: what each person has closed, in the full cycle model only (D243). */
+  funnel: { conversions: number; value: number; periodValue: number; stageOut: number[]; stageOutPeriod: number[]; byMember?: Record<string, number> };
   decisions: { period: Decision[]; run: Decision[] };
   styleUses: Record<Style, number>;
   periods: PeriodSummary[];

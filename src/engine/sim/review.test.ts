@@ -2,7 +2,8 @@ import { wordAll as en } from '../../i18n/engineCopy';
 import { describe, expect, it } from 'vitest';
 import { parseStoryline, type StorylineConfig } from '../config';
 import { lazyClient } from '../client';
-import salesElevator from '../storylines/sales-elevator.json';
+// The stage model's rules and recorded outcomes (D243).
+import { salesElevatorStages as salesElevator } from '../storylines/salesElevatorStages';
 import { createEngine } from './engine';
 import { neededStyles } from './policies';
 

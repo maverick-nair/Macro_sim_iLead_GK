@@ -2,7 +2,8 @@ import type { AuthorDraftResponse, Brief, FrameworkDimension, LeadershipLensModu
 import { DEFAULT_SECTIONS, REPORT_SECTIONS, type StorylineInput } from '../engine/config';
 import { bestStyle, NEEDS, styleLetters, type Lens, type LensStyle, type NeedKey } from '../engine/lens';
 import { DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE } from '../engine/report/defaults';
-import salesElevator from '../engine/storylines/sales-elevator.json';
+// Drafts play the stage model (one stage each, its titles and calibration): the full cycle is Sales Elevator's own (D243).
+import { salesElevatorStages as salesElevator } from '../engine/storylines/salesElevatorStages';
 import { sanitizeCopy } from '../i18n/copy';
 import { challengeKind, DEFAULT_PROCESS, DURATION_MODES, industryOf, REGIONS, type Industry } from './context';
 import { SKIP } from './copyGuard';

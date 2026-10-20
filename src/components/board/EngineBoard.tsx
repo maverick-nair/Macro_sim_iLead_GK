@@ -10,13 +10,12 @@ import { Button } from '../../ds/Button';
 import { MoneyProvider } from '../../i18n/money';
 import { useI18n } from '../../i18n';
 import { Hud, type HudProps } from '../hud/Hud';
-import { MetricsStrip, type MetricsStripProps } from '../metrics/MetricsStrip';
+import type { MetricsStripProps } from '../metrics/MetricsStrip';
 import { StatusBand } from '../desk/StatusBand';
 import { DeskStatus } from '../desk/DeskStatus';
 import type { DeskCardInfo } from '../desk/DeskCard';
 import { useStyleName } from '../style/lens';
 import { bandModel } from '../desk/band';
-import { DeskFeed, type FeedFeedback, type FeedMessage, type FeedMilestone } from '../desk/DeskFeed';
 import { feedbackChanges, lastFeedback } from '../desk/feed';
 import { useSession } from '../session/session';
 import { SignedOut } from '../session/SignedOut';
@@ -27,12 +26,16 @@ import { ActionDrawer, type ActionDrawerProps } from '../action/ActionDrawer';
 import type { ActionBlock, ActionTileProps } from '../action/ActionTile';
 import { useDays } from '../action/days';
 import { InboxDrawer, type InboxDrawerItem } from '../inbox/InboxDrawer';
+import { OutcomeDialog } from '../outcome/OutcomeDialog';
+import type { MailFeedback, MailMessage, MailMilestone } from '../inbox/MailDialog';
+import { MailButton } from '../inbox/MailButton';
 import { OutcomePanel, type OutcomePerson } from '../outcome/OutcomePanel';
 import type { PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
-import { ProfileDialog } from '../profile/ProfileDialog';
 import { performance } from '../desk/performance';
+import type { FunnelSeller, FunnelStage } from '../desk/FunnelDialog';
+import { FunnelButton } from '../desk/FunnelButton';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView } from '../stylesetting/StyleSettingView';
 import { ReactingScreen } from '../liveshell/ReactingScreen';
@@ -51,6 +54,12 @@ const CohortRank = lazy(() => import('../gamification/CohortRank'));
 const BandRank = lazy(() => import('../gamification/BandRank'));
 // The badge shelf and the command palette load when first opened (D73: room in the first load for the tablet board).
 const BadgeShelfDialog = lazy(() => import('../gamification/BadgeShelfDialog').then(m => ({ default: m.BadgeShelfDialog })));
+// The funnel, the mail overlay and the style setting's profile open on demand (D240, D242): out of the first load.
+const FunnelDialog = lazy(() => import('../desk/FunnelDialog').then(m => ({ default: m.FunnelDialog })));
+// The metrics strip shows on a tablet only; the desk has the status band.
+const MetricsStrip = lazy(() => import('../metrics/MetricsStrip').then(m => ({ default: m.MetricsStrip })));
+const ProfileDialog = lazy(() => import('../profile/ProfileDialog').then(m => ({ default: m.ProfileDialog })));
+const MailDialog = lazy(() => import('../inbox/MailDialog').then(m => ({ default: m.MailDialog })));
 const CommandPalette = lazy(() => import('../palette/CommandPalette').then(m => ({ default: m.CommandPalette })));
 // The portrait tablet board (D73) loads only on a tablet.
 const TabletBoardView = lazy(() => import('./TabletBoard'));
@@ -315,7 +324,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const plainBoard = !session.signedOut && !v.live && !reacting && !styling && !card && !endScreen && !weekEnd;
 
   // ---- the guided tours (D94): each starts on its own the first time its screen shows, unless switched off ----
-  const tourArea: TourArea | null = demo || card || endScreen || weekEnd || reacting ? null : v.live ? (v.live.practice ? null : 'live') : styling ? 'style' : plainBoard ? 'board' : null;
+  // On the desk How it landed is a pop-up (D242): a tour waits until it is read and closed, so its tips are not under it.
+  const tourArea: TourArea | null = demo || card || endScreen || weekEnd || reacting || (oc && !tablet) ? null : v.live ? (v.live.practice ? null : 'live') : styling ? 'style' : plainBoard ? 'board' : null;
   const { tour, setTour, endTour } = useTour({ start: app.startTour, area: tourArea, panel, paused: app.paused, enabled: v.guide.tour.enabled, focusHintRef, h1Ref });
   // The session clock runs while the plain board is in front (where the HUD shows it), never while paused (D13),
   // nor while a panel or the tour is open, nor in the demo (D89, D92, D94).
@@ -484,6 +494,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     return {
       style: st ? styleName(st) : null, flag,
       performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
+      // Everyone sells end to end (D243): what they have closed against their own target.
+      goal: m.target !== undefined ? { closed: moneyFormatter(v.money).compact(m.closed ?? 0), target: moneyFormatter(v.money).compact(m.target), share: m.target > 0 ? (m.closed ?? 0) / m.target : 0 } : null,
       time: last ? t('desk.card.time', { unit: periodUnit, action: act?.name ?? last.title, sub: t('time.subPeriod', { unit, n: Math.min(last.sub + 1, v.clock.capacity) }) }) : null,
       noTime
     };
@@ -511,6 +523,32 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }));
 
   const [styleProfile, setStyleProfile] = useState(false);
+  // ---- the funnel pop-up (D242): every stage, its output and its people, opened from beside "Your team" ----
+  const [funnelOpen, setFunnelOpen] = useState(false);
+  const funnelStages: FunnelStage[] = v.funnel.map(st => ({
+    key: st.key, name: st.name, about: st.about, suits: st.suits, bottleneck: st.bottleneck,
+    output: { n: st.throughput, ideal: st.idealThroughput }, headcount: { n: st.members, ideal: st.ideal },
+    people: v.members.filter(m => m.stage === st.key).map(m => {
+      const style = styleOf(m);
+      return {
+        id: m.id, name: m.name, img: img(m), mood: m.mood, away: m.away > 0, style: style ? styleName(style) : null,
+        stats: m.skill !== null && m.morale !== null && m.result !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, result: m.result, trust: m.trust } : null,
+        performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null
+      };
+    })
+  }));
+  const bottleneckStage = v.funnel.find(st => st.bottleneck)?.name ?? null;
+  // Everyone sells end to end (D243): the sellers against their own targets, beside the team's funnel.
+  const sellers: FunnelSeller[] | undefined = v.salesModel === 'fullCycle' ? v.members.map(m => {
+    const style = styleOf(m);
+    const money = moneyFormatter(v.money);
+    return {
+      id: m.id, name: m.name, img: img(m), mood: m.mood, away: m.away > 0, style: style ? styleName(style) : null,
+      stats: m.skill !== null && m.morale !== null && m.result !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, result: m.result, trust: m.trust } : null,
+      performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
+      closed: money.compact(m.closed ?? 0), target: money.compact(m.target ?? 0), share: m.target ? (m.closed ?? 0) / m.target : 0
+    };
+  }) : undefined;
   /** Opens the profile, and the engine reveals the stats on the first open. Style setting opens it alone (D240). */
   const showProfile = (id: string) => {
     ui.openPanel('profile', id);
@@ -563,7 +601,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const listNames = (xs: string[]) => (xs.length > 1 ? t('action.list.pair', { rest: xs.slice(0, -1).join(', '), last: xs[xs.length - 1] }) : xs[0] ?? '');
     const list = listNames(f.picks.map(id => first(member(id)?.name ?? '')));
     const cost = hireFree(fa) ? 0 : choice?.option.cost ?? fa.cost;
-    const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
+    // Selling end to end (D243), a move is a change of focus.
+    const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : v.salesModel === 'fullCycle' ? 'board.option.focusOn' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
     const detail = (c: Choice) => [
       c.stageBlocked ? blockLine(c.stageBlocked) : '',
       c.option.blocked ? blockLine(c.option.blocked) : '',
@@ -626,7 +665,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   }
 
   // ---- inbox ----
-  const { inbox, stakeholder, sender, senderName, dueText, markRead, later, canLater } = useInbox({ view: v, t, amount, say, img });
+  const { inbox, stakeholder, sender, senderName, dueText, markRead, later, canLater, isRead, isSnoozed } = useInbox({ view: v, t, amount, say, img });
   const openMessage = async (id: string) => {
     const msg = v.inbox.find(x => x.id === id);
     ui.openPanel('none');
@@ -649,12 +688,6 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const r = await send({ type: 'openConversation', kind: 'sponsor' });
     if (r?.interactionId) setFlow(null);
   };
-  /** The messages in the desk's feed (D212): each with its sender, due point, Reply or Read, and Later. */
-  const feedMessages: FeedMessage[] = inbox.map(x => ({
-    id: x.id, sender: sender(x.from), from: senderName(x.from), kind: x.kind, title: x.title, due: dueText(x), urgent: x.urgent,
-    cta: x.kind === 'news' ? 'read' : 'reply', onOpen: () => void openMessage(x.id),
-    onLater: x.kind !== 'news' && canLater(x) ? () => later(x.id) : undefined
-  }));
   const drawerItems: InboxDrawerItem[] = inbox.map(x => ({
     id: x.id, sender: sender(x.from), title: x.title, preview: x.body, meta: '', urgent: x.urgent,
     due: dueText(x),
@@ -662,6 +695,19 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     // News (a CEO check in) needs no answer: it is marked as read, and never set aside.
     cta: x.kind === 'news' ? 'read' : 'reply', later: x.kind !== 'news' && canLater(x)
   }));
+
+  /** Every message for the inbox overlay (D242), newest first: unread until answered, missed, or read here. */
+  const mailMessages: MailMessage[] = (v.mail ?? v.inbox.map(x => ({ ...x, at: null }))).map(x => {
+    const waiting = x.state === 'open' && !isRead(x.id);
+    const status = x.state === 'answered' || x.state === 'expired' || x.state === 'read' ? x.state : x.state === 'open' && isRead(x.id) ? 'read' as const : null;
+    return {
+      id: x.id, sender: sender(x.from), from: senderName(x.from), title: x.title, body: x.body, urgent: x.urgent, unread: waiting,
+      tag: t('inbox.tag', { type: x.kind, name: x.from === 'sponsor' ? first(v.sponsor.name) : x.from === 'news' ? '' : first(member(x.from)?.name ?? stakeholder(x.from)?.name ?? '') }),
+      when: x.at ? t('mail.when', { period: t('time.period', { unit: periodUnit, n: x.at.period }), sub: t('time.subPeriod', { unit, n: Math.min(x.at.sub, v.clock.capacity) }) }) : null,
+      due: waiting ? dueText(x) : null, status, snoozed: waiting && isSnoozed(x),
+      cta: !waiting || ended ? null : x.kind === 'news' ? 'read' : 'reply', later: x.kind !== 'news' && canLater(x)
+    };
+  });
 
   /** Answers a stakeholder's open request (D162): the reply or meeting it asks for, else their card in the panel. */
   const answerStakeholder = (key: string) => {
@@ -723,6 +769,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     breakdown, scoreOpen, onScoreOpenChange: setScoreOpen,
     streak: tablet ? v.streak : undefined, streakLabel: streak, onPalette: openPalette, onSettings: app.onSettings,
     morale: moraleKpi ? { value: moraleKpi.value, delta: Math.round(moraleKpi.value - moraleKpi.start) } : undefined,
+    // The inbox from the top bar (D242); the upright tablet keeps its dock.
+    mail: tablet ? undefined : <MailButton unread={inbox.length} open={ui.panel === 'inbox'} onOpen={() => { setScoreOpen(false); ui.openPanel('inbox'); }} />,
     onEndPeriod: demo ? undefined : () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
@@ -795,6 +843,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           // View history (D95): the team's history, on this person's story when the reply is someone's.
           onOpenHistory={demo ? undefined : () => openPanel({ kind: 'history', filter: member(oc.from.id) ? { person: oc.from.id } : {} })}
           replies={replies} step={step} onStep={i => { const r = replies[i]; if (r) setReveal({ outcome: oc.id, id: r.person.id }); }}
+          inDialog={!tablet}
         />
       </div>
     );
@@ -827,7 +876,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   // On the desk milestones go to the feed; tips and what neglect costs (D173, D174) stay as notices. The upright
   // tablet keeps them all as notices (D73).
   const boardNotices = tablet ? notices : notices.filter(n => n.kind !== 'milestone');
-  const feedMilestones: FeedMilestone[] = tablet ? [] : notices.flatMap(n => (n.kind !== 'milestone' ? [] : [{
+  const feedMilestones: MailMilestone[] = tablet ? [] : notices.flatMap(n => (n.kind !== 'milestone' ? [] : [{
     key: n.key,
     text: t('board.milestone.body', { kind: n.milestone.kind, pct: n.milestone.pct, stage: stageName(n.milestone.stage ?? '') }),
     onResults: demo ? undefined : () => openPanel({ kind: 'overview', tab: n.milestone.kind === 'stage' ? 'stages' : 'results' }),
@@ -835,7 +884,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     onDismiss: () => dismissNotice(n.key)
   }]));
   const fb = lastFeedback(v);
-  let feedback: FeedFeedback | null = null;
+  let feedback: MailFeedback | null = null;
   if (fb) {
     const { changes, more } = feedbackChanges(fb, v.members.length, 2);
     const people = new Set(changes.filter(c => c.subject !== 'sponsor').map(c => c.subject));
@@ -974,7 +1023,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         view={styleView.summary ? 'summary' : styleView.layout} summaryOver={styleView.layout}
         onViewChange={styles.changeView}
         members={v.members.map(m => ({
-          id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
+          id: m.id, name: m.name, title: v.salesModel === 'fullCycle' ? m.title : v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
           away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
           stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, result: m.result ?? undefined, trust: m.trust } : null,
           performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
@@ -988,7 +1037,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         confirmDisabled={busy || chosen < v.members.length}
       />
       {/* Only a profile opened here: one left open on the board last period stays shut (D240). */}
-      {profile && styleProfile && <ProfileDialog {...profile} onClose={() => { setStyleProfile(false); profile.onClose(); }} />}
+      {profile && styleProfile && <Suspense fallback={null}><ProfileDialog {...profile} onClose={() => { setStyleProfile(false); profile.onClose(); }} /></Suspense>}
       </>
     );
   } else {
@@ -997,7 +1046,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {demo?.banner}
         <Hud {...hud} />
         {call}
-        {tablet ? <MetricsStrip {...strip} /> : (
+        {tablet ? <Suspense fallback={null}><MetricsStrip {...strip} /></Suspense> : (
           <StatusBand model={band} periodUnit={periodUnit} subPeriodUnit={unit} targetLabel={t('board.target', { n: periods, unit: periodUnit })}
             business={business} sponsorName={first(v.sponsor.name)} sponsorCauses={v.sponsor.causes}
             score={{ total: v.score.total }} breakdown={breakdown} scoreOpen={scoreOpen} onScoreOpenChange={setScoreOpen}
@@ -1051,11 +1100,14 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         ) : (
           <>
             {top}
-            {outcome}
+            {/* How it landed is a pop-up over the board (D242), once nothing else is in front: an action being planned
+                or a decision keeps it waiting, and it shows when they close. */}
+            {outcome && !flow && !decisionOpen && <OutcomeDialog modal={!demo} onDismiss={() => { void send({ type: 'clearOutcome' }); }}>{outcome}</OutcomeDialog>}
             <div className={`relative grid min-h-0 flex-1 grid-rows-(--il-desk-rows) gap-x-4.5 gap-y-2.5 px-8 pt-3 pb-3.5 short:gap-y-2 short:pt-2.5 short:pb-2.5 tablet:gap-x-3 tablet:px-5 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
               {/* Tab order follows the spec: HUD, team board, actions, then the feedback and inbox feed. The grid places the feed under the team (D212). */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
-                <TeamBoard desk hint={hint} legendOpen={legend} onToggleLegend={toggleLegend} periodUnit={periodUnit} columns={columns} />
+                <TeamBoard desk people={v.salesModel === 'fullCycle'} hint={hint} legendOpen={legend} onToggleLegend={toggleLegend} periodUnit={periodUnit} columns={columns}
+                  funnel={<FunnelButton bottleneck={bottleneckStage} onOpen={() => { ui.openPanel('none'); setFunnelOpen(true); }} />} />
               </TeamScroll>
               {/*
                 * The board's first render is split (D87): the HUD, the KPIs and the team (where the largest
@@ -1076,12 +1128,17 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                   onToggle: () => { setFoldedFor(folded ? null : selected); app.onActionsCollapsed?.(!folded); }
                 } : undefined}
               />}</Deferred></div>
-              <div data-trace="events" className="col-start-1 row-start-2 flex min-w-0 flex-col"><Deferred>{() => (
-                <DeskFeed feedback={feedback} milestones={feedMilestones} messages={feedMessages} subPeriodUnit={unit}
-                  onAll={() => ui.openPanel(ui.panel === 'inbox' ? 'none' : 'inbox')} />
-              )}</Deferred></div>
               {profile && <ProfilePanel {...profile} />}
-              {inboxDrawer}
+              {funnelOpen && (
+                <Suspense fallback={null}><FunnelDialog stages={funnelStages} sellers={sellers} periodUnit={periodUnit} onClose={() => setFunnelOpen(false)}
+                  money={t('funnel.money', { label: t('board.target', { n: periods, unit: periodUnit }), value: fmts.money.compact(v.money.value), target: fmts.money.compact(v.money.target) })}
+                  onPerson={id => { setFunnelOpen(false); setFlow(null); if (selected !== id) ui.toggleMember(id); }} /></Suspense>
+              )}
+              {/* The inbox, feedback and milestones open from the envelope in the top bar (D242), not under the team. */}
+              {ui.panel === 'inbox' && (
+                <Suspense fallback={null}><MailDialog messages={mailMessages} feedback={feedback} milestones={feedMilestones} initial={ui.messageId} subPeriodUnit={unit} sponsorName={first(v.sponsor.name)}
+                  onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} /></Suspense>
+              )}
             </div>
           </>
         )}

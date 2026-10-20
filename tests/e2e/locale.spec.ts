@@ -26,6 +26,9 @@ test('Spanish: the HUD and the engine copy are worded in Spanish, the rest falls
   await expect(page.getByText(/respondió bien a cómo piensas liderarlo/).first()).toBeVisible();
   // The HUD's catalog is Spanish: "Semana 1 · Día 1", "Terminar la semana 1".
   await expect(page.getByText('Semana 1').first()).toBeVisible();
+  // The outcome is a pop-up (D242): the board behind it is reachable once it is closed.
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Resultado' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Terminar la semana/ })).toBeVisible();
 });
 

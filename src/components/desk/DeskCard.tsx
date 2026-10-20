@@ -18,6 +18,8 @@ export interface DeskCardInfo {
   noTime?: boolean;
   /** How they are delivering (D241): "Below par ▼4". Null while their stats are hidden. */
   performance?: Performance | null;
+  /** The full cycle model (D243): what they have closed against their own target. */
+  goal?: { closed: string; target: string; share: number } | null;
 }
 
 /** The four stats in a row, label over number, a low one in the attention colour as on the profile (D241). */
@@ -65,22 +67,31 @@ function MoodMark({ mood }: { mood: MoodKey }) {
  * whole card is one button that selects them (pressed while selected or picked); their profile opens from the actions
  * panel. While an action is being planned, someone who cannot take part is dimmed and says why.
  */
-export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
-  const { name, title, img, mood, away = false, skill, morale, result, trust, statsHidden = false, selected = false, unavailableReason, onSelect, memberId, desk } = props;
+export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo; grow?: boolean }) {
+  const { name, title, img, mood, away = false, skill, morale, result, trust, statsHidden = false, selected = false, unavailableReason, onSelect, memberId, desk, grow = false } = props;
   const { t } = useI18n();
   const stats = { skill, morale, result, trust };
   const unavailable = unavailableReason !== undefined && unavailableReason !== '';
   const moodName = away ? t('member.mood.away') : t('member.mood', { mood });
   const card = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
-  const aria = desk.performance && !statsHidden ? t('desk.card.aria', { card, performance: desk.performance.text }) : card;
+  const withPerf = desk.performance && !statsHidden ? t('desk.card.aria', { card, performance: desk.performance.text }) : card;
+  const aria = desk.goal ? `${withPerf} ${t('desk.card.goalAria', { closed: desk.goal.closed, target: desk.goal.target })}` : withPerf;
   return (
     <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
       data-tour="member" data-member-card="" data-member-id={memberId} data-trace={memberId ? `members.${memberId}` : undefined}
       className={`flex min-h-35 min-w-0 flex-col gap-1.25 bg-surface-card px-2.25 py-2 text-start text-fg-primary short:min-h-32 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${selected ? 'border-3 border-accent-default px-1.75 py-1.5' : 'border border-line-strong hover:border-line-control'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
-      <span className="flex min-w-0 items-center gap-2">
-        <span className={`size-9 flex-none overflow-hidden rounded-round short:size-8 ${backdrop(mood, away)}`}>
-          <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
+      {/* With room on the board (D242) the photo spans the card and takes what height there is, at least a face's worth. */}
+      {grow && (
+        <span className={`relative -mx-2.25 -mt-2 mb-0.5 block min-h-8 flex-1 overflow-hidden ${selected ? '-mx-1.75 -mt-1.5' : ''} ${backdrop(mood, away)}`}>
+          <img src={img} alt="" className={`absolute inset-0 size-full object-contain object-bottom mix-blend-multiply ${away ? 'grayscale' : ''}`} />
         </span>
+      )}
+      <span className="flex min-w-0 items-center gap-2">
+        {!grow && (
+          <span className={`size-9 flex-none overflow-hidden rounded-round short:size-8 ${backdrop(mood, away)}`}>
+            <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
+          </span>
+        )}
         <span className="flex min-w-0 flex-col">
           <b className="truncate text-14 font-600 text-large:overflow-visible text-large:whitespace-normal text-large:wrap-anywhere">{name}</b>
           <span className="truncate text-12 text-fg-body text-large:whitespace-normal">{desk.style ? t('desk.card.style', { style: desk.style }) : t('desk.card.noStyle')}</span>
@@ -90,6 +101,15 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
       {/* The button's name says the stats; the grid is for the eye. */}
       {!statsHidden && <StatGrid stats={stats} hidden />}
       {desk.performance && !statsHidden && <PerformanceLine performance={desk.performance} hidden />}
+      {desk.goal && (
+        <span aria-hidden="true" data-goal="" className="flex flex-col gap-1">
+          <span className="flex items-baseline justify-between gap-2 text-12 text-large:flex-wrap text-fg-body">
+            <span>{t('desk.card.goal')}</span>
+            <span><b className="font-mono font-500 text-fg-primary">{desk.goal.closed}</b> {t('desk.card.goalOf', { target: desk.goal.target })}</span>
+          </span>
+          <span className="block h-1.25 bg-track"><span className="block h-full bg-accent-default" style={{ width: `${Math.round(Math.max(0, Math.min(1, desk.goal.share)) * 100)}%` }} /></span>
+        </span>
+      )}
       {desk.flag && <span className="text-12 leading-(--il-canvas-leading-snug) text-status-attention">{desk.flag}</span>}
       {(desk.time || desk.noTime) && <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body text-large:overflow-visible text-large:whitespace-normal ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>}
     </button>

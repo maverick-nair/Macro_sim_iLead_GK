@@ -85,6 +85,8 @@ export interface HudProps {
    * top: up or down this period, and a short "+3" or "−2" when it changes. Left out on the design frames.
    */
   morale?: { value: number; delta: number };
+  /** The envelope that opens the inbox overlay, with its unread badge (D242). Left out where the inbox lives elsewhere. */
+  mail?: ReactNode;
   onPalette: () => void;
   onSettings: () => void;
   /** Left out where the period cannot be ended from the HUD (the demo, D92). */
@@ -252,6 +254,7 @@ export function Hud(p: HudProps) {
       </div>
       {p.morale && <span className="flex-none tablet-portrait:-order-2"><MoraleMeter value={p.morale.value} delta={p.morale.delta} unit={clock.periodUnit} /></span>}
       <div className="min-w-0 flex-1 tablet-portrait:-order-1" />
+      {p.mail && <span className="flex flex-none tablet-portrait:-order-1">{p.mail}</span>}
       {/* The session group (D213): the session clock, Pause and Save. One tour stop. */}
       {(pause || p.onSave) && (
         <div role="group" aria-label={t('hud.session.aria')} data-tour="session" className="flex flex-none items-center gap-2 text-13 text-fg-secondary">

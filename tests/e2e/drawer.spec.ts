@@ -10,21 +10,22 @@ test.beforeEach(({ page }) => {
 });
 test.afterEach(() => expect(errors).toEqual([]));
 
-async function toBoard(page: Page) {
-  await page.goto('/?start=board');
+async function toBoard(page: Page, model = '') {
+  await page.goto(`/?start=board${model}`);
   await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
-  await expect(page.getByText(/Styles are set for week 1/)).toBeVisible();
+  await expect(page.getByText(/^Styles are set for week \d/)).toBeVisible();
+  // How it landed is a pop-up (D242): back to the board.
+  await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+  const gotIt = page.getByRole('button', { name: 'Got it' });
+  while (await gotIt.count()) await gotIt.first().click();
 }
 
+// One stage each (D243's stage model, `?model=stages`): a stage can be full.
 test('move options come from the engine: full stages are shown unavailable, with the reason', async ({ page }) => {
-  await page.goto('/?start=board&period=4');
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
-  for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
-  await page.getByRole('button', { name: 'Review and confirm' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
+  await toBoard(page, '&period=4&model=stages');
   await page.locator('section[aria-label="Your team"]').getByText('Kent Goldberg', { exact: true }).click();
   await page.getByRole('button', { name: /Swap roles/ }).click();
   // Focus lands on the drawer's heading.
@@ -47,7 +48,7 @@ test('move options come from the engine: full stages are shown unavailable, with
 });
 
 test('swap roles: different stages only, assess nudge, then the conversation', async ({ page }) => {
-  await toBoard(page);
+  await toBoard(page, '&model=stages');
   await page.getByText('Justin Keel', { exact: true }).click();
   await page.getByRole('button', { name: /Swap roles/ }).click();
   await page.getByText('Swap role', { exact: true }).click();
@@ -83,37 +84,35 @@ test('profile: stats revealed, timeline from the engine, actions for that person
   await expect(page.getByRole('button', { name: /^Kent Goldberg.*Skill \d+/ })).toBeVisible();
 });
 
-test('keyboard: the feed and its messages come after the actions in tab order', async ({ page }) => {
-  // Week 3, so the feed under the team (D212) carries messages as well as the feedback.
-  await page.goto('/?start=board&period=3');
-  const groups = page.getByRole('radiogroup', { name: /^Leadership style for/ });
-  await expect(groups).toHaveCount(10, { timeout: 20000 });
-  for (const g of await groups.all()) await g.getByRole('radio').nth(1).click();
-  await page.getByRole('button', { name: 'Review and confirm' }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
-  await page.getByRole('button', { name: 'Dismiss outcome' }).click();
-  const gotIt = page.getByRole('button', { name: 'Got it' });
-  while (await gotIt.count()) await gotIt.first().click();
-  // The actions panel and the feed render once the board has painted (D87).
-  const feed = page.getByRole('region', { name: 'Feedback and inbox' });
-  await expect(feed.getByRole('button', { name: /^Inbox/ })).toBeVisible();
-  await expect(feed.getByRole('button', { name: /^Reply now/ }).first()).toBeVisible();
+test('change focus, selling end to end (D243): every stage is open, the move reads as a focus', async ({ page }) => {
+  await toBoard(page, '&period=4');
+  await page.getByText('Kent Goldberg', { exact: true }).click();
+  await page.getByRole('button', { name: /^Change focus/ }).click();
+  await expect(page.getByRole('heading', { name: 'Change focus' })).toBeFocused();
+  const options = page.getByRole('radiogroup', { name: 'Choose an option' });
+  // Nobody sits in a stage, so none is full.
+  await expect(options.getByRole('radio', { name: /^Focus on Qualify/ })).not.toHaveAttribute('aria-disabled', 'true');
+  await expect(options.getByText(/is full/)).toHaveCount(0);
+});
+
+test('keyboard: the inbox is in the top bar, and nothing jumps the tab order', async ({ page }) => {
+  await toBoard(page, '&period=3');
+  // The inbox, feedback and milestones open from the envelope (D242), before the team in the tab order.
+  const envelope = page.getByRole('button', { name: /^Inbox, \d+ unread$/ });
+  await expect(envelope).toBeVisible();
   const order = await page.evaluate(() => {
     const all = Array.from(document.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]'))
       .filter(el => !el.hasAttribute('disabled') && el.tabIndex >= 0 && el.getClientRects().length > 0);
     const at = (pick: (el: HTMLElement) => boolean) => all.map((el, i) => (pick(el) ? i : -1)).filter(i => i >= 0);
     return {
+      envelope: at(el => el.hasAttribute('data-mail-button')),
+      team: at(el => el.hasAttribute('data-member-card')),
       actions: at(el => !!el.closest('aside[aria-label="Actions"]')),
-      feed: at(el => !!el.closest('[data-desk-feed]')),
-      messages: at(el => !!el.closest('[data-desk-feed]') && /^Reply now/.test(el.textContent ?? '')),
       positive: all.filter(el => el.tabIndex > 0).length
     };
   });
-  // Tab order is the document's: nothing jumps the queue with a positive tabindex.
   expect(order.positive).toBe(0);
-  expect(order.actions.length).toBeGreaterThan(0);
-  expect(order.messages.length).toBeGreaterThan(0);
-  // Every control of the feed, its messages too, comes after every action.
-  expect(Math.min(...order.feed)).toBeGreaterThan(Math.max(...order.actions));
-  expect(Math.min(...order.messages)).toBeGreaterThan(Math.max(...order.actions));
+  expect(order.envelope).toHaveLength(1);
+  expect(order.envelope[0]).toBeLessThan(Math.min(...order.team));
+  expect(Math.max(...order.team)).toBeLessThan(Math.min(...order.actions));
 });

@@ -2,7 +2,8 @@ import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import { parseStoryline } from '../config';
 import { wordAll } from '../../i18n/engineCopy';
-import salesElevator from '../storylines/sales-elevator.json';
+// The stage model with its titles and copy (D243): the guard is the lens's maths on the funnel as it was recorded.
+import { salesElevatorStages as salesElevator } from '../storylines/salesElevatorStages';
 import { play, type Policy } from './policies';
 
 /**

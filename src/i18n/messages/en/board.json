@@ -18,6 +18,7 @@
   "board.block.noCover": "Nobody else in {stage} can cover the role",
   "board.block.teamFull": "The team is full",
   "board.option.moveTo": "Move to {stage}",
+  "board.option.focusOn": "Focus on {stage}",
   "board.option.cost": "Takes {cost}.",
   "board.option.away": "Away for {amount} afterwards.",
   "board.option.people": "{n, plural, =1 {One person} other {# people}}{distinct, select, yes { in different stages} other {}}.",

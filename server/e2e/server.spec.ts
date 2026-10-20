@@ -59,12 +59,15 @@ test('launches from a signed link and plays a week on the server, then resumes a
   await page.goto(await link({ sub: 'e2e-1', name: 'Jordan Lee', cohort: 'e2e', redirect: '/?participant=e2e-1&start=board' }));
   expect(new URL(page.url()).search).toBe('?participant=e2e-1&start=board');
   await setStyles(page, 1);
+  // How it landed is a pop-up over the board (D242): closed, with any event cards behind it, the board is in reach.
+  await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+  for (let i = 0; i < 3; i++) { await page.waitForTimeout(400); await dismissEvents(page); }
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your team board, week 1');
 
   // A 1:1 with Kent: the NPC's words stream from the server (SSE), the outcome comes from the server's engine.
-  await page.getByRole('button', { name: /^Kent Goldberg, Lead/ }).focus();
+  await page.getByRole('button', { name: /^Kent Goldberg, / }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: /^Kent Goldberg, Lead/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /^Kent Goldberg, / })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: /Meet face to face/ }).click();
   await page.getByText('Energize the person').click();
   await page.getByRole('button', { name: /Confirm and start/ }).click();

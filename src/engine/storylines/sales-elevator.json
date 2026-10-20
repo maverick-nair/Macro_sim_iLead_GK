@@ -9,7 +9,7 @@
     "target": 240000,
     "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      34
+      40
     ]
   },
   "time": {
@@ -61,6 +61,7 @@
       "suits": "Follow through, relationship building and closing skills."
     }
   ],
+  "salesModel": "fullCycle",
   "sponsor": {
     "name": "Paul Jacob",
     "title": "CEO",
@@ -70,7 +71,11 @@
     "src": "/assets/video/ceo-welcome.webm",
     "poster": "/assets/video/ceo-welcome.jpg",
     "captions": "/assets/video/ceo-welcome.vtt",
-    "chapters": [0, 3, 5],
+    "chapters": [
+      0,
+      3,
+      5
+    ],
     "transcript": [
       "Welcome to Innov8 Elevators. I'm Paul Jacob, and I'm glad you're here.",
       "Starting today, you lead our regional sales team. Ten people, across five stages, from the first call to the signed contract.",
@@ -292,7 +297,7 @@
     {
       "id": "kent",
       "name": "Kent Goldberg",
-      "title": "Lead Generation Executive",
+      "title": "Account Executive",
       "pronoun": "he",
       "homeStage": "leads",
       "start": {
@@ -342,7 +347,7 @@
     {
       "id": "beth",
       "name": "Beth Killiney",
-      "title": "Lead Generation Executive",
+      "title": "Account Executive",
       "pronoun": "she",
       "homeStage": "leads",
       "start": {
@@ -392,7 +397,7 @@
     {
       "id": "justin",
       "name": "Justin Keel",
-      "title": "Lead Qualifier",
+      "title": "Senior Account Executive",
       "pronoun": "he",
       "homeStage": "qualify",
       "start": {
@@ -442,7 +447,7 @@
     {
       "id": "derick",
       "name": "Derick Kaynes",
-      "title": "Lead Qualifier",
+      "title": "Senior Account Executive",
       "pronoun": "he",
       "homeStage": "qualify",
       "start": {
@@ -490,7 +495,7 @@
     {
       "id": "green",
       "name": "Green Bell",
-      "title": "Proposal Specialist",
+      "title": "Principal Account Executive",
       "pronoun": "he",
       "homeStage": "proposal",
       "start": {
@@ -538,7 +543,7 @@
     {
       "id": "lowe",
       "name": "Lowe Rex",
-      "title": "Proposal Specialist",
+      "title": "Account Executive",
       "pronoun": "he",
       "homeStage": "proposal",
       "start": {
@@ -588,7 +593,7 @@
     {
       "id": "jack",
       "name": "Jack Holt",
-      "title": "Negotiation Specialist",
+      "title": "Principal Account Executive",
       "pronoun": "he",
       "homeStage": "negotiation",
       "start": {
@@ -636,7 +641,7 @@
     {
       "id": "peter",
       "name": "Peter Higgins",
-      "title": "Negotiation Specialist",
+      "title": "Senior Account Executive",
       "pronoun": "he",
       "homeStage": "negotiation",
       "start": {
@@ -686,7 +691,7 @@
     {
       "id": "ruth",
       "name": "Ruth Ether",
-      "title": "Conversion Specialist",
+      "title": "Account Executive",
       "pronoun": "she",
       "homeStage": "conversion",
       "start": {
@@ -734,7 +739,7 @@
     {
       "id": "mandy",
       "name": "Mandy Lobert",
-      "title": "Conversion Specialist",
+      "title": "Senior Account Executive",
       "pronoun": "she",
       "homeStage": "conversion",
       "start": {
@@ -784,7 +789,7 @@
     {
       "id": "ron",
       "name": "Ron Hackman",
-      "title": "Lead Generation Executive",
+      "title": "Account Executive",
       "pronoun": "he",
       "homeStage": "leads",
       "start": {
@@ -831,7 +836,7 @@
     {
       "id": "sheila",
       "name": "Sheila Frederick",
-      "title": "Lead Generation Executive",
+      "title": "Senior Account Executive",
       "pronoun": "she",
       "homeStage": "leads",
       "start": {
@@ -878,7 +883,7 @@
     {
       "id": "ajit",
       "name": "Ajit Ram",
-      "title": "Lead Qualifier",
+      "title": "Senior Account Executive",
       "pronoun": "he",
       "homeStage": "qualify",
       "start": {
@@ -925,7 +930,7 @@
     {
       "id": "nate",
       "name": "Nate Benjamin",
-      "title": "Lead Qualifier",
+      "title": "Senior Account Executive",
       "pronoun": "he",
       "homeStage": "qualify",
       "start": {
@@ -972,7 +977,7 @@
     {
       "id": "desmond",
       "name": "Desmond Mart",
-      "title": "Proposal Specialist",
+      "title": "Senior Account Executive",
       "pronoun": "he",
       "homeStage": "proposal",
       "start": {
@@ -1019,7 +1024,7 @@
     {
       "id": "rita",
       "name": "Rita Sandersky",
-      "title": "Proposal Specialist",
+      "title": "Account Executive",
       "pronoun": "she",
       "homeStage": "proposal",
       "start": {
@@ -1066,7 +1071,7 @@
     {
       "id": "ben",
       "name": "Ben Lowinsky",
-      "title": "Negotiation Specialist",
+      "title": "Senior Account Executive",
       "pronoun": "he",
       "homeStage": "negotiation",
       "start": {
@@ -1113,7 +1118,7 @@
     {
       "id": "nico",
       "name": "Nico Arnas",
-      "title": "Negotiation Specialist",
+      "title": "Account Executive",
       "pronoun": "he",
       "homeStage": "negotiation",
       "start": {
@@ -1160,7 +1165,7 @@
     {
       "id": "patrick",
       "name": "Patrick Kent",
-      "title": "Conversion Specialist",
+      "title": "Account Executive",
       "pronoun": "he",
       "homeStage": "conversion",
       "start": {
@@ -1207,7 +1212,7 @@
     {
       "id": "terrence",
       "name": "Terrence Paddington",
-      "title": "Conversion Specialist",
+      "title": "Account Executive",
       "pronoun": "he",
       "homeStage": "conversion",
       "start": {
@@ -1534,8 +1539,8 @@
     },
     {
       "key": "swap",
-      "name": "Swap roles",
-      "description": "Move people between stages, then explain the decision to them.",
+      "name": "Change focus",
+      "description": "Point someone's selling at the stage where it counts most, or trade focus between two people, then talk it through.",
       "scope": "member",
       "kind": "hybrid",
       "format": "roleplay",
@@ -1549,7 +1554,7 @@
       "options": [
         {
           "key": "reassign",
-          "label": "Reassign role",
+          "label": "Change focus",
           "effects": {
             "m0": [
               0,
@@ -1575,7 +1580,7 @@
         },
         {
           "key": "swap",
-          "label": "Swap role",
+          "label": "Swap focus",
           "effects": {
             "m0": [
               0,
@@ -2668,6 +2673,6 @@
   ],
   "dynamics": {},
   "realism": {},
-  "performanceThreshold": 116,
+  "performanceThreshold": 142,
   "calibrated": true
 }
