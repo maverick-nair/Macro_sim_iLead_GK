@@ -10,7 +10,7 @@ import { Button } from '../../ds/Button';
 import { MoneyProvider } from '../../i18n/money';
 import { useI18n } from '../../i18n';
 import { Hud, type HudProps } from '../hud/Hud';
-import { MetricsStrip, type MetricsStripProps } from '../metrics/MetricsStrip';
+import type { MetricsStripProps } from '../metrics/MetricsStrip';
 import { StatusBand } from '../desk/StatusBand';
 import { DeskStatus } from '../desk/DeskStatus';
 import type { DeskCardInfo } from '../desk/DeskCard';
@@ -27,14 +27,15 @@ import type { ActionBlock, ActionTileProps } from '../action/ActionTile';
 import { useDays } from '../action/days';
 import { InboxDrawer, type InboxDrawerItem } from '../inbox/InboxDrawer';
 import { OutcomeDialog } from '../outcome/OutcomeDialog';
-import { MailButton, MailDialog, type MailFeedback, type MailMessage, type MailMilestone } from '../inbox/MailDialog';
+import type { MailFeedback, MailMessage, MailMilestone } from '../inbox/MailDialog';
+import { MailButton } from '../inbox/MailButton';
 import { OutcomePanel, type OutcomePerson } from '../outcome/OutcomePanel';
 import type { PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
-import { ProfileDialog } from '../profile/ProfileDialog';
 import { performance } from '../desk/performance';
-import { FunnelButton, FunnelDialog, type FunnelSeller, type FunnelStage } from '../desk/FunnelDialog';
+import type { FunnelSeller, FunnelStage } from '../desk/FunnelDialog';
+import { FunnelButton } from '../desk/FunnelButton';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView } from '../stylesetting/StyleSettingView';
 import { ReactingScreen } from '../liveshell/ReactingScreen';
@@ -53,6 +54,12 @@ const CohortRank = lazy(() => import('../gamification/CohortRank'));
 const BandRank = lazy(() => import('../gamification/BandRank'));
 // The badge shelf and the command palette load when first opened (D73: room in the first load for the tablet board).
 const BadgeShelfDialog = lazy(() => import('../gamification/BadgeShelfDialog').then(m => ({ default: m.BadgeShelfDialog })));
+// The funnel, the mail overlay and the style setting's profile open on demand (D240, D242): out of the first load.
+const FunnelDialog = lazy(() => import('../desk/FunnelDialog').then(m => ({ default: m.FunnelDialog })));
+// The metrics strip shows on a tablet only; the desk has the status band.
+const MetricsStrip = lazy(() => import('../metrics/MetricsStrip').then(m => ({ default: m.MetricsStrip })));
+const ProfileDialog = lazy(() => import('../profile/ProfileDialog').then(m => ({ default: m.ProfileDialog })));
+const MailDialog = lazy(() => import('../inbox/MailDialog').then(m => ({ default: m.MailDialog })));
 const CommandPalette = lazy(() => import('../palette/CommandPalette').then(m => ({ default: m.CommandPalette })));
 // The portrait tablet board (D73) loads only on a tablet.
 const TabletBoardView = lazy(() => import('./TabletBoard'));
@@ -1030,7 +1037,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         confirmDisabled={busy || chosen < v.members.length}
       />
       {/* Only a profile opened here: one left open on the board last period stays shut (D240). */}
-      {profile && styleProfile && <ProfileDialog {...profile} onClose={() => { setStyleProfile(false); profile.onClose(); }} />}
+      {profile && styleProfile && <Suspense fallback={null}><ProfileDialog {...profile} onClose={() => { setStyleProfile(false); profile.onClose(); }} /></Suspense>}
       </>
     );
   } else {
@@ -1039,7 +1046,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         {demo?.banner}
         <Hud {...hud} />
         {call}
-        {tablet ? <MetricsStrip {...strip} /> : (
+        {tablet ? <Suspense fallback={null}><MetricsStrip {...strip} /></Suspense> : (
           <StatusBand model={band} periodUnit={periodUnit} subPeriodUnit={unit} targetLabel={t('board.target', { n: periods, unit: periodUnit })}
             business={business} sponsorName={first(v.sponsor.name)} sponsorCauses={v.sponsor.causes}
             score={{ total: v.score.total }} breakdown={breakdown} scoreOpen={scoreOpen} onScoreOpenChange={setScoreOpen}
@@ -1123,14 +1130,14 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
               />}</Deferred></div>
               {profile && <ProfilePanel {...profile} />}
               {funnelOpen && (
-                <FunnelDialog stages={funnelStages} sellers={sellers} periodUnit={periodUnit} onClose={() => setFunnelOpen(false)}
+                <Suspense fallback={null}><FunnelDialog stages={funnelStages} sellers={sellers} periodUnit={periodUnit} onClose={() => setFunnelOpen(false)}
                   money={t('funnel.money', { label: t('board.target', { n: periods, unit: periodUnit }), value: fmts.money.compact(v.money.value), target: fmts.money.compact(v.money.target) })}
-                  onPerson={id => { setFunnelOpen(false); setFlow(null); if (selected !== id) ui.toggleMember(id); }} />
+                  onPerson={id => { setFunnelOpen(false); setFlow(null); if (selected !== id) ui.toggleMember(id); }} /></Suspense>
               )}
               {/* The inbox, feedback and milestones open from the envelope in the top bar (D242), not under the team. */}
               {ui.panel === 'inbox' && (
-                <MailDialog messages={mailMessages} feedback={feedback} milestones={feedMilestones} initial={ui.messageId} subPeriodUnit={unit} sponsorName={first(v.sponsor.name)}
-                  onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} />
+                <Suspense fallback={null}><MailDialog messages={mailMessages} feedback={feedback} milestones={feedMilestones} initial={ui.messageId} subPeriodUnit={unit} sponsorName={first(v.sponsor.name)}
+                  onClose={() => ui.openPanel('none')} onOpen={id => void openMessage(id)} onLater={later} /></Suspense>
               )}
             </div>
           </>
