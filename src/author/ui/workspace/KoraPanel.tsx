@@ -98,7 +98,7 @@ export function KoraPanel({ tab, onClose }: { tab: Tab; onClose?: () => void }) 
     <aside aria-labelledby="kora-title" className="flex min-h-0 flex-col gap-3 border-s border-solid border-author-line bg-author-surface px-5 pt-5 pb-4">
       <div className="flex flex-none items-start justify-between gap-2">
         <div className="flex flex-col gap-1">
-          <h2 id="kora-title" className="m-0 text-18 font-800">Ask Kora</h2>
+          <h2 id="kora-title" className="m-0 font-serif text-26 leading-(--il-canvas-leading-title) font-400">Ask Kora</h2>
           {tab === 'overview' && <p className="m-0 text-13 text-author-body">Change anything in plain words. I show what will change before I apply it.</p>}
         </div>
         {onClose && <button type="button" className={`${BUTTON.secondary} size-9 px-0`} aria-label="Close Ask Kora" onClick={onClose}>{Icon.close()}</button>}

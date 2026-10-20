@@ -29,8 +29,8 @@ export function LibraryAdmin() {
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <header className="flex min-h-16 flex-none flex-wrap items-center gap-x-4 gap-y-2 border-b border-solid border-author-line bg-author-surface px-6 py-2">
-        <span className="text-20 font-800">Genie<span className="text-author-kora">Kreator</span></span>
-        <h1 className="m-0 text-17 font-800">Action library</h1>
+        <span className="font-display text-24 font-400">Genie<span className="text-author-kora">Kreator</span></span>
+        <h1 className="m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400">Action library</h1>
         <Badge kind="muted">Library admin</Badge>
         <span className="flex-1" />
         <span className="text-13 text-author-muted">Changes reach authors in new drafts; published simulations keep their version</span>
@@ -64,7 +64,7 @@ export function LibraryAdmin() {
           setTypes(ts => [...ts.filter(t => t.key !== key), { key, name, how: config.slice(0, 2).join(', ') || 'Custom', scoredBy: scored.replace(' on words', ''), status: 'beta' }]);
           setSaved(name);
         }}>
-          <h2 id="register-title" className="m-0 text-20 font-800">Register a new interaction type</h2>
+          <h2 id="register-title" className="m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400">Register a new interaction type</h2>
           <Scroll label="New interaction type" className="-mx-1 flex-1 px-1">
             <div className="flex flex-col gap-3">
               <Field label="Name">{id => <TextInput id={id} value={name} onChange={e => setName(e.target.value)} />}</Field>

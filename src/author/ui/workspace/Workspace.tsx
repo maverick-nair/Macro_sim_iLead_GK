@@ -45,7 +45,7 @@ export function TabHead({ title, children, actions }: { title: string; children?
   return (
     <div className="flex flex-none flex-wrap items-start justify-between gap-3">
       <div className="flex min-w-0 flex-col gap-1">
-        <h1 ref={h} tabIndex={-1} className="m-0 text-30 leading-[1.15] font-800 outline-none short:text-26">{title}</h1>
+        <h1 ref={h} tabIndex={-1} className="m-0 font-display text-36 leading-(--il-canvas-leading-heading) font-400 outline-none short:text-30">{title}</h1>
         {children && <p className="m-0 text-15 text-author-body">{children}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -136,7 +136,7 @@ export function Workspace({ tab }: { tab: Tab }) {
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
       <header className="flex min-h-16 flex-none items-center gap-3 border-b border-solid border-author-line bg-author-surface px-6 py-2 max-[1100px]:gap-2 max-[1100px]:px-4">
-        <span className="shrink-0 text-20 font-800 max-[1100px]:text-18">Genie<span className="text-author-kora">Kreator</span></span>
+        <span className="shrink-0 font-display text-24 font-400 max-[1100px]:text-20">Genie<span className="text-author-kora">Kreator</span></span>
         <span aria-hidden="true" className="h-6 w-px shrink-0 bg-author-line max-[1100px]:hidden" />
         <span className="min-w-0 shrink truncate text-16 font-800" title={draft.title}>{draft.title}</span>
         {ready.kind === 'ready' ? <Badge kind="done">Ready to publish</Badge> : <Badge kind="need"><span className="max-[1100px]:sr-only">Draft &middot; </span>{ready.text}</Badge>}
