@@ -25,7 +25,7 @@ const PLAIN = [
   { name: 'Levo H4', line: 'Residential', specs: ['Quiet enough for home', 'A small footprint'], image: null }
 ];
 const view = (products: unknown[] = PRODUCTS) => ({
-  sponsor: { name: 'Paula Jacob', title: 'Regional Sales Director', img: null, styleLine: 'To each their own. Your people need different things from you this week.' },
+  sponsor: { name: 'Paul Jacob', title: 'CEO', img: null, styleLine: 'To each their own. Your people need different things from you this week.' },
   storyline: { name: 'Sales Elevator', organisation: 'Innov8 Elevators', locale: 'en', video: null, products },
   clock: { period: 1, periods: 8, periodUnit: 'week', subPeriod: 1, subPeriodUnit: 'day', capacity: 5, capacityLeft: 5, costStep: 0.5, runShare: 0 },
   money: { currency: 'USD', locale: 'en-US', display: 'symbol', target: 240000, value: 0, valueThisPeriod: 0 },

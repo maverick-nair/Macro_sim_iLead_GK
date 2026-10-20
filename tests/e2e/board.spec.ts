@@ -236,8 +236,8 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
   await expect(inbox).toBeFocused({ timeout: 10_000 });
   // Other messages (news such as the CEO check in) can sit in the inbox too: set the briefing aside.
-  await inbox.locator('div').filter({ has: page.getByText('Briefing with Paula', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last().getByRole('button', { name: 'Later' }).click();
-  await expect(page.getByText('Briefing with Paula')).toHaveCount(0);
+  await inbox.locator('div').filter({ has: page.getByText('Briefing with Paul', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last().getByRole('button', { name: 'Later' }).click();
+  await expect(page.getByText('Briefing with Paul')).toHaveCount(0);
   await expect(inbox).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(inbox).toHaveCount(0);
@@ -253,7 +253,7 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   await expect(left).not.toHaveText(before);
   await expect(page.getByText('The CEO check in took a day this week')).toBeVisible();
   // Back in the feedback and inbox feed (D212).
-  await expect(page.getByRole('button', { name: /^Reply now\W+Briefing with Paula/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Reply now\W+Briefing with Paul/ })).toBeVisible();
 });
 
 test('palette: Ctrl K on the plain board only', async ({ page }) => {

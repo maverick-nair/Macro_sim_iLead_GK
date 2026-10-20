@@ -46,10 +46,11 @@ describe('seeded replay', () => {
     // and levels, passive, random and good on seeds 1 to 3 matched the D167 code.
     // Re-recorded when Steady Hand came to need three conversations and the key moments came to keep a best one:
     // hashed without the badges (the run's and each period's) and the moments, all six runs matched the earlier code.
+    // Re-recorded when the sponsor became Paul Jacob (D239): with the old name's text put back, all six matched.
     expect(out).toEqual({
-      'passive 1': 'c0cd0cc91045ac03', 'passive 2': 'f616d104a9b8227d',
-      'random 1': 'b0398b7167997f1a', 'random 2': '674941a9d06f5a11',
-      'good 1': 'ce098fccfd8f32ba', 'good 2': 'd86cf9d73bf2c94a'
+      'passive 1': 'f116dd219e6aec68', 'passive 2': 'd36ee8cc37076166',
+      'random 1': '56a0a038f2e1ef02', 'random 2': '0123c1e02538fed4',
+      'good 1': 'e240413f205c9be4', 'good 2': '818dc50ff923c277'
     });
   });
 });

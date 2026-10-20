@@ -137,11 +137,11 @@ async function teamAction(page: Page, w: Width, action: RegExp, option?: RegExp)
 
 /** The scheduled sponsor briefing: from the inbox rail where it shows (1440), otherwise from the inbox. */
 async function openBriefing(page: Page) {
-  const direct = page.getByRole('button', { name: /Briefing with Paula/ });
+  const direct = page.getByRole('button', { name: /Briefing with Paul/ });
   if (await direct.count()) return direct.first().click();
   await page.getByRole('button', { name: /^Inbox/ }).click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
-  const item = inbox.locator('div').filter({ has: page.getByText('Briefing with Paula', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last();
+  const item = inbox.locator('div').filter({ has: page.getByText('Briefing with Paul', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last();
   await item.getByRole('button').last().click();
 }
 
@@ -225,9 +225,9 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await page.goto(url('/', q));
           // The pre-game flow (D219): landing, the sponsor's message and its end, the products (D221), the objectives with the mic test.
           await expect(page.getByRole('heading', { level: 1, name: 'Lead a team of ten through eight weeks that count.' })).toBeVisible();
-          await page.getByRole('button', { name: 'Watch the video message from Paula Jacob' }).waitFor({ timeout: 5000 });
+          await page.getByRole('button', { name: 'Watch the video message from Paul Jacob' }).waitFor({ timeout: 5000 });
           await scan(page, 'onboarding: landing');
-          await page.getByRole('button', { name: 'Watch the video message from Paula Jacob' }).click();
+          await page.getByRole('button', { name: 'Watch the video message from Paul Jacob' }).click();
           await expect(page.getByRole('region', { name: 'Captions' })).toBeVisible();
           await scan(page, 'onboarding: message');
           await page.getByRole('slider', { name: 'Position in the message' }).press('End');
@@ -375,7 +375,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await memberAction(page, w, 'Kent Goldberg', /Assess member/, 'first');
           await events(page, 'after assess');
           if (await page.getByText('How it landed').count()) await outcome(page, 'assess');
-          const call = page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' });
+          const call = page.getByRole('alert').filter({ hasText: 'Paul Jacob is calling' });
           await expect(call).toHaveCSS('opacity', '1', { timeout: 15_000 });
           await scan(page, 'sponsor call');
           await call.getByRole('button', { name: 'Take the call' }).click();
@@ -384,7 +384,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
 
           await toBoard(page, q, 'period=4');
           await openBriefing(page);
-          await expect(page.getByText(/Sponsor briefing with Paula/).first()).toBeVisible({ timeout: 20_000 });
+          await expect(page.getByText(/Sponsor briefing with Paul/).first()).toBeVisible({ timeout: 20_000 });
           await quiet(page);
           await scan(page, 'live: sponsor briefing');
           // The interviews need a place on the team: let someone go first (a live 1:1).

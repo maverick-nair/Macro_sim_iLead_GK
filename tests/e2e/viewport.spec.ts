@@ -180,7 +180,7 @@ function both(name: string, kind: Kind, reach: (page: Page) => Promise<void>, pr
 test.describe('onboarding and the demo', () => {
   // The pre-game flow (D219): each screen's way on must be on screen at every size.
   const steps: [string, (page: Page) => Locator][] = [
-    ['landing', page => page.getByRole('button', { name: 'Watch the video message from Paula Jacob' })],
+    ['landing', page => page.getByRole('button', { name: 'Watch the video message from Paul Jacob' })],
     ['message', page => page.getByRole('slider', { name: 'Position in the message' })],
     ['message end', page => page.getByRole('button', { name: 'Explore products' })],
     // The product portfolio (D221): its way on to the objectives.
@@ -306,7 +306,7 @@ test.describe('style setting and the board', () => {
     await dismissOutcome(page);
     await dismissCards(page);
     await memberAction(page, 'Kent Goldberg', /Assess member/, 'first');
-    await expect(page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('alert').filter({ hasText: 'Paul Jacob is calling' })).toBeVisible({ timeout: 15_000 });
   }, page => [page.getByRole('button', { name: 'Take the call' })]);
 
   /** Ends the week and waits for See your week: event cards can still arrive after the week ends, so each is dismissed as it shows. */
@@ -376,12 +376,12 @@ test.describe('live formats', () => {
 
   both('sponsor briefing', 'play', async page => {
     await toBoard(page, 4);
-    const direct = page.getByRole('button', { name: /Briefing with Paula/ });
+    const direct = page.getByRole('button', { name: /Briefing with Paul/ });
     if (await direct.count()) await direct.first().click();
     else {
       await page.getByRole('button', { name: /^Inbox/ }).click();
       const inbox = page.getByRole('dialog', { name: 'Inbox' });
-      const item = inbox.locator('div').filter({ has: page.getByText('Briefing with Paula', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last();
+      const item = inbox.locator('div').filter({ has: page.getByText('Briefing with Paul', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last();
       await item.getByRole('button').last().click();
     }
     await quiet(page);

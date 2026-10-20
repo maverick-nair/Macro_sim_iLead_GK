@@ -182,9 +182,9 @@ test('a failed send is retried and keeps your words until it lands; the sponsor 
     await route.fulfill({ response: res, body });
   });
   await toBoard(page, '/?start=board&period=4');
-  await page.getByRole('button', { name: /Briefing with Paula/ }).first().click();
+  await page.getByRole('button', { name: /Briefing with Paul/ }).first().click();
   // The fast forward to week 4 runs three weeks of the mock engine first: give it time under parallel load.
-  await expect(page.getByText(/Sponsor briefing with Paula/).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/Sponsor briefing with Paul/).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(/^Leads$/).locator('xpath=..')).toContainText(/\d+(\.\d)? \/ \d+(\.\d)?/);
   await page.getByRole('textbox', { name: 'Point 1' }).fill('We are at a quarter of target');
   await quiet(page);

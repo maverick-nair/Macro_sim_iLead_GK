@@ -1156,7 +1156,11 @@ export const StorylineConfig = z.object({
    * The sponsor's welcome video (onboarding, and Tutorial and video during play, D90): where it is, an
    * optional poster and captions track, and its transcript (also the Tutorial's Transcript tab).
    */
-  video: z.object({ src: z.string().min(1).optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Copy).min(1).max(20) }).optional(),
+  video: z.object({
+    src: z.string().min(1).optional(), poster: z.string().optional(), captions: z.string().optional(), transcript: z.array(Copy).min(1).max(20),
+    /** The transcript lines the three chapters start at (the challenge, what I expect, your goal); left out, even thirds (D239). */
+    chapters: z.tuple([z.literal(0), z.number().int().min(1), z.number().int().min(2)]).optional()
+  }).optional(),
   /**
    * The guided tour (D94): on by default; `steps` rewords any step by its key (title, body), so authors can
    * fit the tips to the storyline. Unknown keys are ignored.

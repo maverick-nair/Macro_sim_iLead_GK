@@ -443,7 +443,7 @@ Sales Elevator: the 12 workbook events, mapped from 12 weeks to 8 as `round(peri
 | Insider trading scandal | 7 | 0 / −5 / 0 | Card, one member |
 | Supplier strike | 8 | 0 / −2 / −3 | Bulletin |
 | A big client referral | random, periods 3 to 6, 60% | 0 / +3 / +4 to the proposal stage | Card, opportunity |
-| Paula has heard the team is struggling | when team morale is below 40 at two period ends | none | Sponsor call, crisis; a reply within 2 days, else the sponsor hears |
+| Paul has heard the team is struggling | when team morale is below 40 at two period ends | none | Sponsor call, crisis; a reply within 2 days, else the sponsor hears |
 
 ### 6.4 Trigger events [W][M]
 Conditions are checked each sub-period. Weeks are expressed as fractions of the run, so they scale with `period.count`.

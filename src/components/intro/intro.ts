@@ -99,8 +99,9 @@ export function introMessage(view: Pick<EngineView, 'storyline'>, letter: { welc
   let starts: number[];
   if (transcript.length) {
     captions = transcript;
-    const n = captions.length;
-    starts = [0, Math.min(n - 1, Math.round(n / 3)), Math.min(n - 1, Math.round((2 * n) / 3))];
+    const n = captions.length, at = v?.chapters;
+    // The storyline's own chapter starts when they fit its transcript in order (D239), else even thirds.
+    starts = at && at[1] < at[2] && at[2] < n ? [...at] : [0, Math.min(n - 1, Math.round(n / 3)), Math.min(n - 1, Math.round((2 * n) / 3))];
   } else {
     captions = [...letter.welcome, ...letter.product, ...letter.targets];
     starts = [0, letter.welcome.length, letter.welcome.length + letter.product.length];

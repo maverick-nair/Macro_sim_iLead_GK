@@ -46,8 +46,8 @@ export const DrawerUnitWeeks: StoryObj = { render: () => drawer({ subPeriodUnit:
  */
 export const DrawerEngineKinds: StoryObj = {
   render: () => drawer({ items: [
-    { id: 'n1', sender: { kind: 'sponsor', initials: 'PJ' }, tag: 'News', meta: '', title: 'CEO check in', preview: "Paula's confidence has dropped. The CEO wants a check in, which takes a day of your time next week.", urgent: true, due: null, cta: 'read', later: false },
-    { id: 'c1', sender: { kind: 'sponsor', initials: 'PJ' }, tag: 'Paula, sponsor note', meta: '', title: 'Recession strikes', preview: 'Salaries across the company are lowered.', urgent: true, due: 'Due in 2 days', cta: 'reply' },
+    { id: 'n1', sender: { kind: 'sponsor', initials: 'PJ' }, tag: 'News', meta: '', title: 'CEO check in', preview: "Paul's confidence has dropped. The CEO wants a check in, which takes a day of your time next week.", urgent: true, due: null, cta: 'read', later: false },
+    { id: 'c1', sender: { kind: 'sponsor', initials: 'PJ' }, tag: 'Paul, sponsor note', meta: '', title: 'Recession strikes', preview: 'Salaries across the company are lowered.', urgent: true, due: 'Due in 2 days', cta: 'reply' },
     { id: 'm1', sender: { kind: 'member', img: '/assets/npc/kent.png' }, tag: 'Chat from Kent', meta: '', title: 'Job offer', preview: 'I have been offered a role elsewhere. Can we talk?', urgent: false, due: 'Due in 2 days', cta: 'reply' }
   ] })
 };

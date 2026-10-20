@@ -34,7 +34,7 @@ async function played(config = defaultStoryline(), weeks = 2) {
 const fresh = async () => EngineView.parse(createEngine(defaultStoryline(), { seed: 1 }).view());
 /** Sales Elevator with a welcome video and its transcript (no storyline ships one yet, D54). */
 const withVideo = async () => {
-  const r = parseStoryline({ ...(salesElevator as unknown as StorylineInput), video: { src: '/assets/video/sample-welcome.webm', captions: '/assets/video/sample-welcome.vtt', transcript: ['Welcome to Innov8 Elevators. I am Paula, and I lead sales for the region.', 'Over the next eight weeks you lead a team of ten through our sales funnel.'] } });
+  const r = parseStoryline({ ...(salesElevator as unknown as StorylineInput), video: { src: '/assets/video/sample-welcome.webm', captions: '/assets/video/sample-welcome.vtt', transcript: ['Welcome to Innov8 Elevators. I am Paul, and I lead sales for the region.', 'Over the next eight weeks you lead a team of ten through our sales funnel.'] } });
   if (!r.ok) throw new Error(r.issues.join('\n'));
   return played(r.config, 1);
 };

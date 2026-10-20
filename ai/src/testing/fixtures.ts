@@ -17,7 +17,7 @@ export function kentTurn(over: Partial<NpcTurnContext> = {}): NpcTurnContext {
     format: 'roleplay', actionName: 'Meet face to face', said: 'How are you doing? What is on your mind?', turnsSoFar: 1, turnsLeft: 10, concernRevealed: false,
     speaker: { id: 'kent', name: kent.name, persona: kent, mood: 'concerned', trust: 50 },
     locale: 'en-US', history: [{ by: 'kent', name: kent.name, text: 'You wanted to see me?' }],
-    story: { organisation: 'Innov8', sponsor: { name: 'Paula Jacob', title: 'Regional Sales Director' } },
+    story: { organisation: 'Innov8', sponsor: { name: 'Paul Jacob', title: 'Regional Sales Director' } },
     ...over
   };
 }

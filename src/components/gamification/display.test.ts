@@ -56,7 +56,7 @@ describe('badge shelf', () => {
   });
 
   it('makes initials for a caller without a portrait', () => {
-    expect(initials('Paula Jacob')).toBe('PJ');
+    expect(initials('Paul Jacob')).toBe('PJ');
     expect(initials('priya  nair')).toBe('PN');
   });
 });
@@ -74,7 +74,7 @@ describe('perk, pulse and sponsor copy', () => {
 
   it('reads the sponsor level with its value, and the lines', () => {
     expect(t('metrics.sponsor.levelValue', { level: 'confident', value: 72 })).toBe('Confident, 72');
-    expect(t('metrics.sponsor.unlock', { at: 70, name: 'Paula' })).toBe('Rise to 70 and Paula offers you a reward.');
+    expect(t('metrics.sponsor.unlock', { at: 70, name: 'Paul' })).toBe('Rise to 70 and Paul offers you a reward.');
     expect(t('metrics.sponsor.checkIn', { below: 30, unit: 'day' })).toBe('Drop below 30 and the CEO asks for a check in. It takes a day of your time.');
   });
 
