@@ -75,7 +75,8 @@ export function parseTeamSize(text: string): number | null {
  */
 export function inferBrief(text: string, known: Brief, opts: { upload: boolean }): Partial<Brief> {
   const out: Partial<Brief> = {};
-  if (!known.industry) { const i = INDUSTRIES.find(x => x.keywords.test(text)); if (i) out.industry = i.label; }
+  // Two industries in one answer is a question for the author (D147), never a pick: only one that is alone counts here.
+  if (!known.industry) { const hits = INDUSTRIES.filter(x => x.keywords.test(text)); if (hits.length === 1) out.industry = hits[0].label; }
   if (!known.region) { const r = REGIONS.find(x => x.id !== 'global' && x.keywords.test(text)); if (r) { out.region = r.id; out.language = r.label; } }
   if (!opts.upload) return out;
   if (!known.roleLevel) { const r = ROLE_LEVELS.find(x => x.keywords.test(text)); if (r) out.roleLevel = r.label; }

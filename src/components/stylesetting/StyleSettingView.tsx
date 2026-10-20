@@ -1,6 +1,5 @@
 import { useId, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import type { StyleKey } from '../../data/types';
-import { NoWrapButton } from '../../ds/Button';
 import { Heading } from '../Heading';
 import { useI18n } from '../../i18n';
 import { useLens } from '../style/lens';
@@ -9,7 +8,8 @@ import { StyleSettingCard } from './StyleSettingCard';
 import { ScrollArea } from '../shell/ScrollArea';
 import { StyleSettingList } from './StyleSettingList';
 import { StyleSummary } from './StyleSummary';
-import { initials, type PeriodUnit, type StyleSettingMember } from './types';
+import { statsHidden, type PeriodUnit, type StyleSettingMember } from './types';
+import { ILeadLogo } from '../shell/Logo';
 
 export type StyleSettingLayout = 'cards' | 'list';
 export type StyleSettingViewMode = StyleSettingLayout | 'summary';
@@ -30,6 +30,10 @@ export interface StyleSettingViewProps {
   sponsorName: string;
   /** The sponsor's one line prompt, from the storyline, without quote marks. */
   sponsorLine: string;
+  /** The storyline's organisation, in the header as on the desk; the iLead logo without one. */
+  organisation?: string | null;
+  /** Where the run stands, at the header's end (the money and the score, as on the desk). */
+  status?: ReactNode;
   /** Cards, list, or the summary dialog over the `summaryOver` layout. */
   view: StyleSettingViewMode;
   /** The layout behind the summary dialog, so Go back returns to it. Defaults to cards. */
@@ -59,7 +63,7 @@ export interface StyleSettingViewProps {
 }
 
 const LAYOUTS: readonly StyleSettingLayout[] = ['cards', 'list'];
-export const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+export const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /** Cards or List: a radio group with one tab stop; arrow keys move and pick. */
 function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange: (v: StyleSettingLayout) => void }) {
@@ -74,13 +78,13 @@ function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange
     refs.current[next]?.focus();
   };
   return (
-    <div role="radiogroup" aria-label={t('stylesetting.view.aria')} className="flex gap-0.5 rounded-pill border border-line-default bg-surface-raised p-0.75">
+    <div role="radiogroup" aria-label={t('stylesetting.view.aria')} className="flex gap-0.5 rounded-4 border border-line-strong bg-surface-card p-0.5">
       {LAYOUTS.map((k, i) => {
         const on = value === k;
         return (
           <button key={k} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={on ? 0 : -1}
             onClick={() => onChange(k)} onKeyDown={e => onKey(e, i)}
-            className={`h-8 cursor-pointer rounded-pill border-0 px-3.5 py-0 text-13 font-700 ${focus} ${on ? 'bg-transparent bg-(image:--il-fill-brand) text-brand-deep-space' : 'bg-transparent text-fg-secondary'}`}>
+            className={`h-8 cursor-pointer rounded-3 border-0 px-3 py-0 text-13 font-500 ${focus} ${on ? 'bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-transparent text-fg-secondary'}`}>
             {t('stylesetting.view', { view: k })}
           </button>
         );
@@ -89,51 +93,36 @@ function LayoutToggle({ value, onChange }: { value: StyleSettingLayout; onChange
   );
 }
 
-/**
- * Grid for the intro. Four styles sit beside the sponsor's prompt as designed; any other count puts the
- * prompt on its own row and the styles under it, all in one row from 1280 wide, in rows of three below.
- */
-const WIDE: Record<number, string> = { 2: 'grid-cols-2', 3: 'grid-cols-3', 5: 'grid-cols-3 wide:grid-cols-5', 6: 'grid-cols-3 wide:grid-cols-6' };
-const introGrid = (n: number) => (n === 4
-  ? { className: 'grid-cols-(--il-stylesetting-intro-columns) tablet-portrait:grid-cols-4', prompt: 'tablet-portrait:col-span-full' }
-  : { className: WIDE[n] ?? 'grid-cols-3', prompt: 'col-span-full' });
-
-/** The sponsor's prompt, then the lens's style definitions. */
-function Intro({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine: string }) {
+/** The lens's styles, named in Newsreader with what each means, then the sponsor's word for the week (D232). */
+function Definitions({ sponsorName, sponsorLine }: { sponsorName: string; sponsorLine: string }) {
   const { t } = useI18n();
   const lens = useLens();
-  const defsId = useId();
-  const grid = introGrid(lens.styles.length);
+  const id = useId();
   return (
-    <div id={defsId} data-tour="style-definitions" className={`grid ${grid.className} gap-3`}>
-      <div className={`flex items-center gap-3 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 short:py-2 ${grid.prompt}`}>
-        <span aria-hidden="true" className="flex size-11 short:size-9 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space">{initials(sponsorName)}</span>
-        <span className="text-14 text-pretty">
-          <span className="sr-only">{t('stylesetting.sponsor.says', { name: sponsorName })}</span>
-          {t('common.quote', { text: sponsorLine })}
-        </span>
-        <a href={`#${defsId}`} className={`sr-only text-13 font-700 focus:not-sr-only ${focus}`}>{t('stylesetting.sponsor.definitions', { count: lens.styles.length })}</a>
-      </div>
-      <div role="list" aria-label={t('stylesetting.definitions.aria')} className="contents">
+    <section aria-labelledby={id} data-tour="style-definitions" className="flex flex-col gap-4 tablet-portrait:gap-2">
+      <h2 id={id} className="m-0 text-13 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-fg-secondary">{t('stylesetting.defs.title', { count: lens.styles.length })}</h2>
+      <dl aria-label={t('stylesetting.definitions.aria')} className="m-0 flex flex-col gap-3 tablet-portrait:grid tablet-portrait:grid-cols-4 tablet-portrait:gap-3 short:gap-2">
         {lens.styles.map(s => (
-          <div key={s.key} role="listitem" className="flex items-start gap-2.5 rounded-18 border border-line-default bg-surface-card px-3.5 py-3 short:py-2">
-            <span aria-hidden="true" className={`flex size-7.5 flex-none items-center justify-center rounded-round bg-(image:--il-fill-brand) font-700 text-brand-deep-space ${s.letter.length > 1 ? 'text-12' : ''}`}>{s.letter}</span>
-            <span className="flex flex-col">
-              <b className="text-14">{s.name}</b>
-              <span className="text-12 leading-(--il-stylesetting-intro-leading) text-fg-secondary">{s.description}</span>
-            </span>
+          <div key={s.key}>
+            <dt className="font-serif text-21 leading-snug short:text-18">{s.name}</dt>
+            <dd className="m-0 mt-0.5 text-14 leading-normal text-fg-secondary short:text-13">{s.description}</dd>
           </div>
         ))}
-      </div>
-    </div>
+      </dl>
+      <figure className="m-0 border-s-2 border-accent-default py-1 ps-3 text-13 leading-normal tablet-portrait:hidden">
+        <blockquote className="m-0 text-fg-primary">{t('common.quote', { text: sponsorLine })}</blockquote>
+        <figcaption className="mt-1 text-fg-secondary">{sponsorName}</figcaption>
+      </figure>
+    </section>
   );
 }
 
 /**
- * The weekly (or monthly, or yearly) style setting screen, before any action in the period: the
- * sponsor's prompt and the style definitions, then every member as cards or as a list, and a summary
- * to confirm. Data in, intents out: the engine owns the styles, the reasons and the period.
- * The screen is the page's main landmark, headed by its visible "Week 2 of 8 · Style setting" line.
+ * The weekly (or monthly, or yearly) style setting screen, before any action in the period, as the approved canvas
+ * draws it (D232): the navy header, the question in Newsreader with how many are chosen, every member as a column with
+ * their photo and the styles by name (or the list), and beside them the styles' meanings, the sponsor's word, and
+ * Review and confirm, which opens the summary to confirm. Data in, intents out: the engine owns the styles, the reasons
+ * and the period. Standalone the screen is the page's main landmark, headed by its "Week 2 of 8 · Style setting" line.
  */
 export function StyleSettingView(p: StyleSettingViewProps) {
   const { t, number } = useI18n();
@@ -150,46 +139,67 @@ export function StyleSettingView(p: StyleSettingViewProps) {
 
   const where = t('stylesetting.where', { period: mark(0), total: number(p.periodCount) });
   const tipFor = (id: string) => (p.tooltip === undefined ? undefined : p.tooltip?.id === id ? p.tooltip.style : null);
+  const review = (
+    <button type="button" onClick={() => p.onViewChange('summary')}
+      className={`inline-flex min-h-14 w-full cursor-pointer items-center justify-center rounded-4 border-0 px-5 text-16 font-600 whitespace-nowrap ${complete ? 'bg-(image:--il-fill-brand) text-button-on-solid' : 'bg-(--il-color-canvas-sand-400) text-(--il-color-canvas-ink) [color-scheme:light]'} ${focus}`}>
+      {t('stylesetting.review')}
+    </button>
+  );
 
   const Root = p.embedded ? 'div' : 'main';
   return (
-    <Root className="flex min-h-0 flex-1 flex-col gap-4.5 px-8 pt-5 pb-8 short:gap-3 short:pt-3 short:pb-4 tablet-portrait:px-6 tablet-portrait:pb-30" style={{ minHeight: p.minHeight }}>
-      <header className="flex items-center gap-4">
-        <span className="bg-(image:--il-fill-brand) bg-clip-text text-22 font-700 tracking-(--il-stylesetting-logo-tracking) text-transparent">{t('hud.logo')}</span>
-        {/* The screen's heading is the visible "Week 2 of 8 · Style setting", styled as designed. */}
-        <Heading level={p.embedded ? 2 : 1} className="m-0 text-13 font-400 whitespace-nowrap text-fg-secondary">
-          {rich(where, [<b key="p" className="text-fg-primary">{t('time.period', { unit: periodUnit, n: p.period })}</b>])}
+    <Root data-trace="lens.styles" className="flex min-h-0 flex-1 flex-col" style={{ minHeight: p.minHeight }}>
+      <header className="il-chrome flex h-16 flex-none items-center gap-5.5 px-11 text-14 whitespace-nowrap tablet:gap-3 tablet:px-6">
+        {p.organisation ? <span className="font-serif text-22 leading-none">{p.organisation}</span> : <ILeadLogo size="sm" />}
+        {/* The screen's heading is the visible "Week 2 of 8 · Style setting". */}
+        <Heading level={p.embedded ? 2 : 1} className="m-0 text-14 font-400 text-fg-secondary">
+          {rich(where, [<b key="p" className="font-500 text-fg-primary">{t('time.period', { unit: periodUnit, n: p.period })}</b>])}
         </Heading>
+        <span className="text-12 font-600 uppercase tracking-(--il-tracking-eyebrow-wide) text-accent-secondary tablet:hidden">{t('stylesetting.eyebrow')}</span>
         <span className="flex-1" />
-        <span role="status" className={complete ? 'sr-only' : 'text-13 whitespace-nowrap text-fg-secondary'}>
-          {t('stylesetting.progress', { set: number(set), total: number(members.length) })}
-        </span>
-        <LayoutToggle value={layout} onChange={p.onViewChange} />
-        <span data-tour="style-confirm" className="inline-flex flex-none tablet-portrait:hidden"><NoWrapButton variant="primary" size="md" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton></span>
+        {p.status}
       </header>
       {/* A portrait tablet confirms from a bar at the bottom, in reach of a thumb (D73). */}
-      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-20 border border-line-default bg-surface-material py-2.5 pe-2.5 ps-5 backdrop-blur-20">
+      <div className="hidden tablet-portrait:fixed tablet-portrait:inset-x-6 tablet-portrait:bottom-6 tablet-portrait:z-30 tablet-portrait:flex items-center gap-3 rounded-4 border border-line-strong bg-surface-material py-2.5 pe-2.5 ps-5">
         <span className="flex-1 text-14 text-fg-secondary">{t('stylesetting.bar')}</span>
-        <NoWrapButton variant="primary" size="lg" onClick={() => p.onViewChange('summary')}>{t('stylesetting.review')}</NoWrapButton>
+        <span className="w-60">{review}</span>
       </div>
 
-      <Intro sponsorName={p.sponsorName} sponsorLine={p.sponsorLine} />
-
-      {/* The team scrolls inside the screen when it does not fit the window (D101); the header and its Review stay put. */}
-      <ScrollArea label={t('stylesetting.team.aria')} className="-mx-2 px-2 pb-1">
-        {layout === 'cards' && (
-          <div className="grid grid-cols-5 gap-3.5 short:gap-2.5 tablet-portrait:grid-cols-3">
-            {members.map(m => (
-              <StyleSettingCard key={m.id} member={m} periodUnit={periodUnit}
-                onStyle={k => p.onStyle(m.id, k)} onRationale={text => p.onRationale(m.id, text)}
-                tooltip={tipFor(m.id)} onTooltipChange={p.onTooltipChange && (k => p.onTooltipChange!(k ? { id: m.id, style: k } : null))}
-                rationaleAddon={p.rationaleAddon?.(m.id)} />
-            ))}
+      <div className="grid min-h-0 flex-1 grid-cols-(--il-canvas-stylesetting-columns) gap-7 px-11 py-5.5 short:py-3.5 tablet:grid-cols-(--il-canvas-stylesetting-columns-tablet) tablet:gap-5 tablet:px-7 tablet-portrait:grid-cols-1 tablet-portrait:pb-30">
+        <div className="flex min-h-0 min-w-0 flex-col gap-3.5 short:gap-2.5">
+          <div className="flex items-end justify-between gap-4 border-b border-fg-primary pb-3 short:pb-2">
+            <p className="m-0 font-display text-38 leading-(--il-canvas-leading-display) text-pretty short:text-30 tablet:text-30">{t('stylesetting.question', { unit: periodUnit })}</p>
+            <span className="flex flex-none items-center gap-3">
+              <span role="status" className="text-14 whitespace-nowrap text-fg-secondary">{t('stylesetting.progress', { set: number(set), total: number(members.length) })}</span>
+              <LayoutToggle value={layout} onChange={p.onViewChange} />
+            </span>
           </div>
-        )}
-
-        {layout === 'list' && <StyleSettingList members={members} periodUnit={periodUnit} onStyle={p.onStyle} />}
-      </ScrollArea>
+          {/* Said once for the team rather than on every card (D232). */}
+          {layout === 'cards' && members.some(statsHidden) && <p className="m-0 text-13 text-fg-body">{t('stylesetting.stats.hidden')}</p>}
+          {/* The team scrolls inside the screen when it does not fit the window (D101); the header and Review stay put. */}
+          <ScrollArea label={t('stylesetting.team.aria')} className="-mx-2 px-2 pb-1">
+            {layout === 'cards' && (
+              <div className="grid grid-cols-5 gap-x-3 gap-y-6 short:gap-y-4 tablet-portrait:grid-cols-3">
+                {members.map(m => (
+                  <StyleSettingCard key={m.id} member={m} periodUnit={periodUnit}
+                    onStyle={k => p.onStyle(m.id, k)} onRationale={text => p.onRationale(m.id, text)}
+                    tooltip={tipFor(m.id)} onTooltipChange={p.onTooltipChange && (k => p.onTooltipChange!(k ? { id: m.id, style: k } : null))}
+                    rationaleAddon={p.rationaleAddon?.(m.id)} />
+                ))}
+              </div>
+            )}
+            {layout === 'list' && <StyleSettingList members={members} periodUnit={periodUnit} onStyle={p.onStyle} />}
+          </ScrollArea>
+        </div>
+        <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-s border-line-default ps-7 tablet:ps-5 tablet-portrait:-order-1 tablet-portrait:border-s-0 tablet-portrait:ps-0">
+          <Definitions sponsorName={p.sponsorName} sponsorLine={p.sponsorLine} />
+          <span className="flex-1" />
+          <span data-tour="style-confirm" className="flex flex-col gap-2 tablet-portrait:hidden">
+            {review}
+            <span className="text-center text-13 text-fg-secondary">{complete ? t('stylesetting.summary.note') : t('stylesetting.summary.missing', { count: members.length - set })}</span>
+          </span>
+        </aside>
+      </div>
 
       {view === 'summary' && (
         <StyleSummary members={members} periodUnit={periodUnit} period={p.period} onBack={p.onBack} onConfirm={p.onConfirm} confirmDisabled={confirmDisabled} focusOnOpen={focusSummary} />
@@ -197,4 +207,3 @@ export function StyleSettingView(p: StyleSettingViewProps) {
     </Root>
   );
 }
-

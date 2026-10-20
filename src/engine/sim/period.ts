@@ -3,21 +3,90 @@ import { IntentError } from './actions';
 import { upcomingNews } from './events';
 import { sponsorLevel } from './view';
 import { advanceStreak, checkBadges, leadershipScore, nextStreakBonus, pulse, roundHalfUp, tierFor, weekScore } from './score';
-import { addMessage, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, sponsorChange, teamAverage, trustChange, firstName } from './sim';
-import type { Change, PeriodSummary, Sim } from './types';
+import { addMessage, capacityLeft, idealThroughput, log, markPeriodStart, perPeriod, runRemaining, runSubPeriod, sponsorChange, teamAverage, trustChange, firstName } from './sim';
+import type { Change, PendingChoice, PeriodSummary, Sim } from './types';
 import { msg, type Copy } from '../copy';
+import { attrition } from './dynamics';
+import { conditionsHold, moveVar } from './business';
+import { stakeholdersPeriodEnd, stakeholderSummary } from './stakeholders';
+import { idleDays } from './realism';
+import { realismWeekEnd, sponsorReaction, sponsorSilence } from './realismPeriod';
 
 /** Period end, gamification and the move to the next period (docs/SIMULATION.md section 7). */
 
-export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
-  if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
-  // Conversations left open when the period ends are closed unfinished: they never score later.
+/**
+ * End week, pressed (D231): conversations left open are closed unfinished (they never score later) and, with realism
+ * (D174), the days left unused are counted, once, from the moment the participant ended the week.
+ */
+function beginWeekEnd(sim: Sim) {
+  if (sim.ending) return;
+  sim.ending = true;
   for (const [id, it] of Object.entries(sim.interactions)) {
     delete sim.interactions[id];
     log(sim, { kind: 'interaction', title: msg('engine.unfinished', { action: sim.config.actions.find(a => a.key === it.actionKey)?.name ?? msg('engine.conversation') }), memberIds: it.memberIds, changes: [], action: it.actionKey });
   }
+  if (sim.realism) idleDays(sim, capacityLeft(sim), perPeriod(sim) - sim.sub);
+}
+
+/** The absolute sub-period the period ends on. */
+const periodEndAbs = (sim: Sim) => sim.absSub + perPeriod(sim) - sim.sub;
+
+/**
+ * The decisions that hold the week end (D231): every choice still open. One whose deadline falls this week would take
+ * its default unseen as the remaining days run; one whose deadline is next week is shown now too, so the participant
+ * decides it, or keeps its default, knowingly.
+ */
+export function holdingChoices(sim: Sim): PendingChoice[] {
+  return [...sim.openChoices];
+}
+
+/** A choice event still to come this period, on its own day or as a follow up (D231). */
+function choiceAhead(sim: Sim): boolean {
+  const end = periodEndAbs(sim);
+  const isChoice = (key: string) => !!sim.config.events.find(e => e.key === key)?.choice;
+  const fired = (key: string) => sim.events.fired.includes(key) || sim.events.skipped.includes(key);
+  return sim.config.events.some(ev => {
+    if (!ev.choice || fired(ev.key)) return false;
+    const at = sim.events.schedule[ev.key];
+    return !!at && at.period === sim.period && at.sub > sim.sub && conditionsHold(sim, ev.if);
+  }) || sim.events.delayed.some(d => d.at > sim.absSub && d.at <= end && isChoice(d.key) && !fired(d.key));
+}
+
+/**
+ * A decision is never resolved unseen (D231). When End week is pressed, the week's remaining days run up to the next
+ * decision still to come this week, on the day it was authored for (never earlier), and stop there; a decision already
+ * open whose deadline falls this week stops it too. True while one waits: the participant decides it, or lets its
+ * default stand (`keepDefault`), and presses End week again. False when the week can end.
+ */
+export function holdForDecisions(sim: Sim, rng: Rng): boolean {
+  if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
+  beginWeekEnd(sim);
+  for (;;) {
+    if (holdingChoices(sim).length) return true;
+    if (sim.sub >= perPeriod(sim) || !choiceAhead(sim)) return false;
+    runSubPeriod(sim, rng);
+  }
+}
+
+export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
+  if (sim.phase !== 'board') throw new IntentError('The period can only end from the board', 'wrongPhase');
+  beginWeekEnd(sim);
+  sim.ending = false;
   runRemaining(sim, rng);
   drift(sim);
+  // Realism (D173, D174): neglect, stakeholders left alone, and the sponsor's silence.
+  realismWeekEnd(sim);
+  sponsorSilence(sim);
+  // Business variables drift (D136); sustained low morale keeps people off sick or makes them leave (D135).
+  for (const v of sim.config.variables) if (v.drift) moveVar(sim, v.key, v.drift, msg('engine.var.drift', { unit: sim.config.time.period.unit }));
+  // A stakeholder nobody engaged this period drifts (D160).
+  stakeholdersPeriodEnd(sim);
+  sim.attrition = attrition(sim,
+    m => { sim.members = sim.members.filter(x => x !== m); sim.departed.push(m); },
+    (m, kind, reason) => {
+      addMessage(sim, { from: m.id, kind: 'chat', title: reason.label, body: reason.cause, dueIn: 2, urgent: kind === 'resigned' });
+      log(sim, { kind: 'trigger', title: reason.label, memberIds: [m.id], changes: [] });
+    });
   const g = sim.config.gamification;
   const count = sim.config.time.period.count;
   const target = sim.config.money.target;
@@ -35,6 +104,8 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
   const paceText = msg('engine.pace', { onPace: onPace ? 'yes' : 'no', unit });
   const paceChanges = sponsorChange(sim, onPace ? g.sponsor.periodPace.met : g.sponsor.periodPace.missed, paceText);
   if (paceChanges.length) log(sim, { kind: 'periodEnd', title: paceText, memberIds: [], changes: paceChanges });
+  // Realism (D173): confidence falling under the reaction line makes the sponsor react.
+  sponsorReaction(sim, rng, sFrom);
   // Crossing the unlock line upward offers one reward; dropping below the check in line costs a day next period.
   // No unlock at the last period end: there is no next period to use it in.
   const unlockOffer = sim.period < count && sFrom < g.sponsor.unlockAt && sim.sponsor.value >= g.sponsor.unlockAt ? [...g.unlocks] : null;
@@ -73,7 +144,12 @@ export function endPeriod(sim: Sim, rng: Rng): PeriodSummary {
     streak: { count: sim.streak, bonus: streakBonus, total: sim.streakBonus, next: nextStreakBonus(sim) },
     newBadges, sponsor: { from: sFrom, to: sim.sponsor.value, fromLevel: sponsorLevel(sim, sFrom), toLevel: sponsorLevel(sim) },
     pulse: { from: roundHalfUp(sim.pulseAtStart), to: roundHalfUp(pulse(sim)) },
-    funnel, bottleneck, unlockOffer, checkIn, news: sim.period < count ? upcomingNews(sim) : []
+    funnel, bottleneck, unlockOffer, checkIn, news: sim.period < count ? upcomingNews(sim) : [],
+    // Business variables, choices and attrition (D135 to D137), only when the storyline uses them, so older runs read as before.
+    ...(sim.config.variables.some(v => v.shown) ? { variables: sim.config.variables.filter(v => v.shown).map(v => ({ key: v.key, start: sim.varsAtStart[v.key] ?? v.start, end: sim.vars[v.key] ?? v.start })) } : null),
+    ...(sim.config.events.some(e => e.choice) ? { choices: sim.choices.filter(c => c.period === sim.period).map(c => ({ id: c.id, title: c.title, label: c.label, by: c.by })) } : null),
+    ...(sim.config.dynamics ? { attrition: [...sim.attrition] } : null),
+    ...(sim.config.stakeholders.length ? { stakeholders: stakeholderSummary(sim) } : null)
   };
   sim.periods.push(summary);
   log(sim, { kind: 'periodEnd', title: msg('engine.periodEnd', { unit, n: sim.period }), memberIds: [], changes: [] });

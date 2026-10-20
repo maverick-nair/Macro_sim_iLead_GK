@@ -18,7 +18,7 @@ export function ChartBlock({ title, chart, table, printAs = 'chart', className =
   return (
     <div role="group" aria-labelledby={`${id}t`} className={`flex min-w-0 flex-col gap-2 ${className}`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 id={`${id}t`} className="m-0 text-15 font-700">{title}</h3>
+        <h3 id={`${id}t`} className="m-0 font-serif text-21 leading-snug font-400">{title}</h3>
         {alt.button}
       </div>
       {alt.showTable ? <DataTable caption={title} {...table} /> : (

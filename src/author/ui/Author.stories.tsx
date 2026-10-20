@@ -1,95 +1,117 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { useState } from 'react';
-import { Brief, type FrameworkDimension } from '../../api/author';
-import type { LensId } from '../../engine/lens';
-import { extractFramework } from '../extract';
-import { LENS_BY_ID, LENS_LIBRARY } from '../lenses';
-import { buildModule } from '../module';
-import { questionFor } from '../questions';
-import { recommendLens } from '../recommend';
-import { draftStoryline, previewOf } from '../storyline';
-import { AuthorApp } from './AuthorApp';
-import { ChatBubble } from './ChatBubble';
-import { ChipReplies } from './ChipReplies';
-import { ClientFrameworkTable } from './ClientFrameworkTable';
-import { LensCard } from './LensCard';
-import { LensPicker } from './LensPicker';
-import { PreviewPanel } from './PreviewPanel';
-import { SummaryPanel } from './SummaryPanel';
+import { useMemo, useState, type ReactNode } from 'react';
+import type { AuthorDraft, Tab } from '../model/draft';
+import { AuthorStoreContext, createAuthorStore } from '../model/store';
+import { AuthorApp, AuthorRoot } from './AuthorPage';
+import { chatAfter, journeyDraft, readyDraft, workspaceDraft } from './fixtures';
+import { Composer } from './journey/Composer';
+import { LibraryAdmin } from './library/LibraryAdmin';
+import { ActionAdd } from './workspace/ActionAdd';
+import { CharacterEditor } from './workspace/CharacterEditor';
+import { StakeholderEditor } from './workspace/StakeholderEditor';
+import { blankStakeholderOption, newStakeholder } from '../model/stakeholders';
 
-const meta: Meta = { title: 'Author chat' };
+/**
+ * /author, GenieKreator's authoring tool (docs/design/genie, D105 to D111): the journey (co-creator chat,
+ * voice, lens, first draft ready), every workspace tab, the character editor, Add an action and the
+ * library admin page. Light only, as the canvas draws it; every story has its own in memory draft.
+ */
+const meta: Meta = { title: 'Author', parameters: { layout: 'fullscreen' } };
 export default meta;
 
-const BRIEF = Brief.parse({
-  roleLevel: 'First time managers', industry: 'Banking and financial services', challenge: 'Leading through change or transformation', client: 'Acme Bank',
-  teamSize: 8, process: ['Leads', 'Qualify', 'Proposal', 'Negotiation', 'Conversion'], duration: 'standard', region: 'india', language: 'English, India', framework: null, tone: 'warm'
-});
-const FRAMEWORK = `## Customer Obsession\n- Starts every plan with the customer's problem\n- Brings customer stories into team meetings\n\n## Bold Ownership\n- Owns outcomes end to end\n- Raises risks early and offers a fix\n\nLevels: Emerging, Practising, Role model`;
-const preview = (primary: LensId, secondary: LensId | null) => previewOf(draftStoryline(BRIEF, buildModule(BRIEF, { primary, secondary, clientDimensions: [] }, false)));
-const Frame = ({ children, width = 720 }: { children: React.ReactNode; width?: number }) => <div style={{ maxWidth: width }}>{children}</div>;
+const Frame = ({ children, height = 900 }: { children: ReactNode; height?: number }) => <div style={{ height, overflow: 'hidden', margin: -24 }}>{children}</div>;
+const app = (draft: () => AuthorDraft, route: Parameters<typeof AuthorApp>[0]['route']) => function Story() {
+  const store = useMemo(() => createAuthorStore(draft(), null), []);
+  return <Frame><AuthorApp store={store} route={route} /></Frame>;
+};
+const tab = (t: Tab): StoryObj => ({ render: app(workspaceDraft, { page: 'workspace', tab: t }) });
 
-/** A question, the author's answer with its Edit link, and a note about an upload. */
-export const Bubbles: StoryObj = {
+/** 1. Co-creator chat: four answers in, the draft filling in beside them. */
+export const ChatStart: StoryObj = { render: app(() => journeyDraft(4), { page: 'journey' }) };
+/** 1b. Answer by voice: the answer box after a recording, the transcript to edit before Send. */
+export const ChatVoiceTranscript: StoryObj = {
   render: () => (
-    <Frame>
-      <div className="flex flex-col gap-3">
-        <ChatBubble from="assistant">Who are your participants?</ChatBubble>
-        <ChatBubble from="author" question="Who are your participants?" onEdit={() => undefined}>First time managers</ChatBubble>
-        <ChatBubble from="assistant">I read brief.txt. It covers the client and team size, so I will skip those questions.</ChatBubble>
-        <ChatBubble from="author" question="Which client is this for?" editing onEdit={() => undefined}>Acme</ChatBubble>
+    <AuthorRoot>
+      <div style={{ maxWidth: 820, padding: 24 }}>
+        <Composer question="team_size" placeholder="6 to 12" busy={false} error={null} onSend={async () => true} onUpload={() => undefined}
+          hint="Type or record your answer. A recording turns into text you can edit before you send." />
       </div>
-    </Frame>
+    </AuthorRoot>
   )
 };
+/** 2. Kora recommends a lens; the panel previews its styles. */
+export const ChatLens: StoryObj = { render: app(() => ({ ...journeyDraft(10), chat: chatAfter(10) }), { page: 'journey' }) };
+/** 3. First draft ready: what is done, what needs you. */
+export const DraftReady: StoryObj = { render: app(readyDraft, { page: 'journey' }) };
 
-/** Quick replies for the work process, with each process's stages under its name. */
-export const Chips: StoryObj = { render: () => <Frame><ChipReplies chips={questionFor('process').chips} onPick={() => undefined} /></Frame> };
-
-/** Duration chips, disabled while the chat thinks. */
-export const ChipsDisabled: StoryObj = { render: () => <Frame><ChipReplies chips={questionFor('duration').chips} onPick={() => undefined} disabled /></Frame> };
-
-/** A lens card, picked and recommended. "More detail" shows Based on and the design notes. */
-export const LensCardRecommended: StoryObj = { render: () => <Frame><LensCard lens={LENS_BY_ID.readiness_based} n={1} name="s" checked recommended onSelect={() => undefined} /></Frame> };
-
-export const LensCardPlain: StoryObj = { render: () => <Frame><LensCard lens={LENS_LIBRARY[5]} n={6} name="s" checked={false} onSelect={() => undefined} /></Frame> };
-
-function Picker({ disabled }: { disabled?: boolean }) {
-  const rec = recommendLens(BRIEF);
-  const [primary, setPrimary] = useState<LensId | null>(rec.id);
-  const [secondary, setSecondary] = useState<LensId | null>(null);
-  return <LensPicker primary={primary} secondary={secondary} recommendation={rec} disabled={disabled} onPrimary={setPrimary} onSecondary={setSecondary} />;
-}
-
-/** All eight lenses with the recommendation for a change challenge, the secondary picker and the "Works well with" hint. */
-export const Picker8: StoryObj = { name: 'Lens picker', render: () => <Frame><Picker /></Frame> };
-
-/** Locked after the draft: changing the lens goes through the warning. */
-export const PickerLocked: StoryObj = { name: 'Lens picker, locked', render: () => <Frame><Picker disabled /></Frame> };
-
-function Table() {
-  const [dims, setDims] = useState<FrameworkDimension[]>(() => extractFramework(FRAMEWORK));
-  const [ok, setOk] = useState(false);
-  return <ClientFrameworkTable dimensions={dims} onChange={d => { setDims(d); setOk(false); }} confirmed={ok} onConfirm={() => setOk(true)} />;
-}
-
-/** Dimensions, behaviours and levels read from a pasted framework, ready to edit and confirm. */
-export const ClientFramework: StoryObj = { render: () => <Frame width={900}><Table /></Frame> };
-
-/** The build preview for Readiness Based Leadership in a warm tone. */
-export const Preview: StoryObj = { render: () => <Frame><PreviewPanel preview={preview('readiness_based', null)} lensTitle="Readiness Based Leadership" /></Frame> };
-
-/** Six Leadership Styles with Inspire and Deliver: the secondary's dimensions are marked Report only. */
-export const PreviewWithSecondary: StoryObj = { render: () => <Frame><PreviewPanel preview={preview('six_styles', 'inspire_deliver')} lensTitle="Six Leadership Styles" secondaryTitle="Inspire and Deliver" /></Frame> };
-
-/** "Your simulation so far" part way through the chat. */
-export const Summary: StoryObj = {
-  render: () => (
-    <Frame width={420}>
-      <SummaryPanel brief={Brief.parse({ roleLevel: 'Senior leaders', industry: 'Retail and consumer goods', client: null, teamSize: 10 })} inferred={['industry']}
-        lens={{ primary: null, secondary: null }} team={null} company={null} dimensions={[]} />
-    </Frame>
-  )
+export const Overview = tab('overview');
+export const Brief = tab('brief');
+export const StoryAndWorld = tab('story');
+export const WorkProcess = tab('process');
+export const Team = tab('team');
+export const LeadershipLens = tab('lens');
+export const Actions = tab('actions');
+export const Events = tab('events');
+export const ScoringAndReport = tab('scoring');
+export const BrandAndTheme = tab('brand');
+export const TestWithSyntheticPlayers = tab('calibrate');
+export const ReviewAndPublish = tab('publish');
+/** The workspace at a tablet's width: the sections as a row above the tab, Ask Kora behind its button. */
+export const TeamAt834: StoryObj = {
+  render: function Story() {
+    const store = useMemo(() => createAuthorStore(workspaceDraft(), null), []);
+    return <div style={{ width: 834, margin: -24 }}><Frame height={1112}><AuthorApp store={store} route={{ page: 'workspace', tab: 'team' }} /></Frame></div>;
+  }
 };
 
-/** The whole chat on the templates, as at /author. */
-export const App: StoryObj = { parameters: { layout: 'fullscreen' }, render: () => <AuthorApp /> };
+/** 4b to 4e. The character editor, every field in four tabs. */
+export const CharacterEditorIdentity: StoryObj = {
+  render: function Story() {
+    const draft = useMemo(workspaceDraft, []);
+    const store = useMemo(() => createAuthorStore(draft, null), [draft]);
+    const [open, setOpen] = useState(true);
+    return (
+      <AuthorStoreContext.Provider value={store}>
+        <AuthorRoot><CharacterEditor draft={draft} character={draft.team[0]} open={open} onOpenChange={setOpen} onSave={() => setOpen(false)} /></AuthorRoot>
+      </AuthorStoreContext.Provider>
+    );
+  }
+};
+
+/** A draft with two stakeholders outside the team (D163): the CFO and a client, the client with a decision. */
+function stakeholderDraft(): AuthorDraft {
+  const d = workspaceDraft();
+  d.stakeholders.push(newStakeholder(d, { role: 'cfo' }));
+  const client = newStakeholder(d, { role: 'client' });
+  const negotiate = client.interactions.find(x => x.type === 'negotiate')!;
+  Object.assign(negotiate, { enabled: true, plays: 'static', options: [blankStakeholderOption('hold', 'Hold the scope'), { ...blankStakeholderOption('trade', 'Trade a date for a feature'), needsTrust: 55, refusal: 'Not until you have shown me the plan.' }] });
+  d.stakeholders.push(client);
+  return d;
+}
+/** Team with stakeholders outside the team, under the characters. */
+export const TeamWithStakeholders: StoryObj = { render: app(stakeholderDraft, { page: 'workspace', tab: 'team' }) };
+/** The stakeholder editor on Interactions: a conversation's consequences and a decision's options. */
+export const StakeholderEditorInteractions: StoryObj = {
+  render: function Story() {
+    const draft = useMemo(stakeholderDraft, []);
+    const store = useMemo(() => createAuthorStore(draft, null), [draft]);
+    const [open, setOpen] = useState(true);
+    return (
+      <AuthorStoreContext.Provider value={store}>
+        <AuthorRoot><StakeholderEditor draft={draft} stakeholder={draft.stakeholders[1]} open={open} onOpenChange={setOpen} onSave={() => setOpen(false)} initialTab="interactions" /></AuthorRoot>
+      </AuthorStoreContext.Provider>
+    );
+  }
+};
+
+/** 6c. Add an action: the library, or describe your own to Kora. */
+export const AddAnAction: StoryObj = {
+  render: function Story() {
+    const store = useMemo(() => createAuthorStore(workspaceDraft(), null), []);
+    const [open, setOpen] = useState(true);
+    return <AuthorStoreContext.Provider value={store}><AuthorRoot><ActionAdd open={open} onOpenChange={setOpen} onAdded={() => setOpen(false)} /></AuthorRoot></AuthorStoreContext.Provider>;
+  }
+};
+
+/** Library admin: interaction types and action templates. */
+export const LibraryAdminPage: StoryObj = { render: () => <Frame><AuthorRoot><LibraryAdmin /></AuthorRoot></Frame> };

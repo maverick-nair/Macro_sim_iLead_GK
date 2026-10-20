@@ -1,7 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
 import { mintLaunchToken } from '../src/auth/launch';
 import type { LaunchInput } from '../src/auth/principal';
-import { E2E_SECRET } from '../playwright.config';
+import { E2E_SECRET, GUIDE_OFF } from '../playwright.config';
 
 /**
  * The app against the real server: launched by a minted link, a week played through the UI (styles, a 1:1
@@ -96,7 +96,7 @@ test('launches from a signed link and plays a week on the server, then resumes a
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(/week 2/, { timeout: 30_000 });
 
   // A new browser (the old one closed): without a session the server refuses; a new launch resumes the same run.
-  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, storageState: GUIDE_OFF });
   const fresh = await context.newPage();
   const res = await fresh.request.get('/engine/sessions/e2e-1/view');
   expect(res.status()).toBe(401);
@@ -116,7 +116,11 @@ async function playToEnd(request: APIRequestContext, token: string, id: string) 
   let v = await (await request.get(`/engine/sessions/${id}/view`, { headers })).json();
   for (let i = 0; v.phase !== 'ended' && i < 100; i++) {
     if (v.phase === 'style') v = await send({ type: 'confirmStyles', styles: Object.fromEntries(v.members.map((m: { id: string }) => [m.id, 'G'])) });
-    else if (v.phase === 'board') v = await send({ type: 'endPeriod' });
+    else if (v.phase === 'board') {
+      // A decision holds the week end (D231): its default stands, then End week again.
+      for (const c of (v.openChoices ?? []).filter((x: { holdsWeekEnd?: boolean }) => x.holdsWeekEnd)) v = await send({ type: 'keepDefault', choiceId: c.id });
+      v = await send({ type: 'endPeriod' });
+    }
     else {
       if (v.pendingReward?.length) v = await send({ type: 'chooseReward', reward: v.pendingReward[0] });
       if (v.phase === 'periodEnd') v = await send({ type: 'startNextPeriod' });

@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Scoring and report tab</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.nav a{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;border-radius:10px;color:#3E4763;text-decoration:none;font-size:14px;font-weight:600}
+.nav a.on{background:#EEF2FD;color:#1F4FD1}
+.nav i{font-style:normal;width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.i-you{background:#EAEDF5;color:#3E4763}.i-ai{background:#DDF1F3;color:#0B6670}.i-need{background:#FCEBC8;color:#7A5300}.i-ok{background:#E2F3E8;color:#1E6B3E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:4px 8px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}.m-need{background:#FCEBC8;color:#7A5300}
+.btn{height:36px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.card{background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.chip{height:34px;padding:0 12px;border-radius:999px;background:#EEF8F9;border:1px solid #CDE9EC;font-size:13px;font-weight:600;display:inline-flex;align-items:center}
+.seg{display:inline-flex;padding:4px;border-radius:12px;background:#F0F2F8;gap:4px}
+.seg button{height:36px;padding:0 14px;border-radius:9px;border:0;background:transparent;font:600 14px Manrope,sans-serif;color:#3E4763}
+.seg button[aria-pressed="true"]{background:#FFFFFF;color:#141A2E;box-shadow:0 1px 3px rgba(20,26,46,.15)}
+.adv{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #EEF0F6;font-size:14px}
+.adv:last-child{border-bottom:0}
+.adv small{display:block;color:#6B7390;font-size:12.5px;margin-top:2px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#6B7390;text-align:left;padding:8px 10px;border-bottom:1px solid #E3E7F0}
+td{padding:9px 10px;border-bottom:1px solid #EEF0F6;vertical-align:top}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <span style="font-size: 15px; font-weight: 700">Leading the Negotiation Team</span>
+    <span class="mark m-need">Draft · 1 needs you</span>
+    <span style="flex: 1"></span>
+    <button type="button" class="btn" style="height: 40px">Play a week</button>
+    <button type="button" style="height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Review and publish</button>
+  </header>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 248px minmax(0, 1fr) 340px">
+    <nav class="nav" aria-label="Sections" style="background: #FFFFFF; border-right: 1px solid #E3E7F0; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px">
+      <a href="Overview.dc.html"><i class="i-ok">✓</i>Overview</a>
+      <a href="Brief.dc.html"><i class="i-you">1</i>Brief</a>
+      <a href="Story.dc.html"><i class="i-ok">✓</i>Story and world</a>
+      <a href="Process.dc.html"><i class="i-ai">3</i>Work process</a>
+      <a href="Team.dc.html"><i class="i-ai">4</i>Team</a>
+      <a href="Lens.dc.html"><i class="i-ai">5</i>Leadership lens</a>
+      <a href="Actions.dc.html"><i class="i-ai">6</i>Actions and conversations</a>
+      <a href="Events.dc.html"><i class="i-ai">7</i>Events</a>
+      <a href="Scoring.dc.html" class="on" aria-current="page"><i class="i-need">!</i>Scoring and report</a>
+      <a href="Brand.dc.html"><i class="i-ok">✓</i>Brand and theme</a>
+      <a href="Calibrate.dc.html"><i class="i-need">!</i>Test with synthetic players</a>
+    </nav>
+    <main style="padding: 24px 28px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow: hidden">
+      <div style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 26px">Scoring and report</h1><span style="font-size: 14px; color: #4B5470">How conversations are scored and what participants receive at the end.</span></div>
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 15px">Purpose <span style="font-size: 12px; font-weight: 600; color: #6B7390">Required</span></b><span class="mark m-you">You</span></div>
+          <div class="seg" role="group" aria-label="Purpose"><button type="button" aria-pressed="true">Development</button><button type="button" aria-pressed="false">Assessment</button></div>
+          <span style="font-size: 13px; line-height: 1.5; color: #4B5470">Development reports frame findings as next steps. Assessment adds verdicts against a bar.</span>
+        </div>
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 15px">Skills scored</b><span class="mark m-ai">From your lens</span></div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px"><span class="chip">Diagnosing readiness</span><span class="chip">Style fit</span><span class="chip">Style flexibility</span><span class="chip">Team development</span></div>
+          <a href="#" style="font-size: 13px; font-weight: 700">Use your own skills framework instead</a>
+        </div>
+      </div>
+      <div class="card" style="border-color: #E7B65A; background: #FFFDF8">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px"><b style="font-size: 15px; color: #7A5300">Needs you: check 6 sample answers</b><span style="font-size: 13px; color: #4B5470">So scoring matches your judgment. 4 of 6 agreed.</span></div>
+        <table>
+          <thead><tr><th scope="col">Sample answer in the 1:1 with Peter</th><th scope="col">GenieKreator scored</th><th scope="col">Your call</th></tr></thead>
+          <tbody>
+            <tr><td>"Talk me through what the new discount policy means for your deals."</td><td><span class="mark m-ai">Strong</span></td><td><span class="mark m-you">Strong · agreed</span></td></tr>
+            <tr><td>"The policy is final, so let's focus on what we can control."</td><td><span class="mark m-ai">Adequate</span></td><td><label for="s2" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Your call for sample 2</label><select id="s2" style="height: 34px; border-radius: 8px; border: 1px solid #E7B65A; padding: 0 8px; font: 600 13px Manrope, sans-serif"><option>Choose</option><option>Strong</option><option>Adequate</option><option>Weak</option><option>Harmful</option></select></td></tr>
+            <tr><td>"Your numbers are slipping. I need you to close two deals this week."</td><td><span class="mark m-ai">Weak</span></td><td><label for="s3" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Your call for sample 3</label><select id="s3" style="height: 34px; border-radius: 8px; border: 1px solid #E7B65A; padding: 0 8px; font: 600 13px Manrope, sans-serif"><option>Choose</option><option>Strong</option><option>Adequate</option><option>Weak</option><option>Harmful</option></select></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 15px">Advanced settings</b><span style="font-size: 13px; color: #6B7390">Sensible defaults are set. Open only what you want to change.</span></div>
+        <div>
+          <div class="adv"><span><b>Rating scale</b><small>5 levels, Novice to Role Model</small></span><span class="mark m-ai">Default</span><button type="button" class="btn">Edit</button></div>
+          <div class="adv"><span><b>Which conversations observe which skill</b><small>Every skill observed at least twice</small></span><span class="mark m-ai">Generated</span><button type="button" class="btn">Edit</button></div>
+          <div class="adv"><span><b>Report sections and order</b><small>12 sections for development</small></span><span class="mark m-ai">Default</span><button type="button" class="btn">Edit</button></div>
+          <div class="adv"><span><b>Narratives and development plan copy</b><small>Written for a sales team</small></span><span class="mark m-ai">Generated</span><button type="button" class="btn">Edit</button></div>
+        </div>
+      </div>
+    </main>
+    <aside aria-label="Ask Kora" style="border-left: 1px solid #E3E7F0; background: #FFFFFF; padding: 20px; display: flex; flex-direction: column; gap: 12px; min-height: 0">
+      <b style="font-size: 16px">Ask Kora</b>
+      <div style="padding: 12px; border-radius: 14px; border: 1.5px dashed #0D7F8B; display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 13px; font-weight: 700; color: #0B6670">Suggestion</span>
+        <span style="font-size: 13px; line-height: 1.5">Your participants are first time managers. Add a secondary lens, <b>Six Leadership Styles</b>, for a richer report? It adds report only dimensions.</span>
+        <div style="display: flex; gap: 8px"><button type="button" style="height: 36px; padding: 0 12px; border-radius: 9px; border: 0; background: #0D7F8B; color: #FFFFFF; font: 700 13px Manrope, sans-serif">Add it</button><button type="button" class="btn">Not now</button></div>
+      </div>
+      <span style="flex: 1"></span>
+      <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; border: 1px solid #D9DEEA">
+        <label for="ask3" style="font-size: 12px; font-weight: 700; color: #3E4763">Your instruction for this tab</label>
+        <textarea id="ask3" rows="2" placeholder="For example: make the report shorter for senior leaders" style="border: 0; resize: none; outline: none; font: 500 14px/1.5 Manrope, sans-serif; color: #141A2E"></textarea>
+        <button type="button" style="align-self: flex-end; height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Ask</button>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

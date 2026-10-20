@@ -94,10 +94,10 @@ export const DEFAULT_NARRATIVES = {
     high: 'You matched what people needed most of the time, and corrected course when you did not.'
   },
   dominant: {
-    D: 'You lean on Directing. It helps people who are new or stuck, and holds back people who are ready for more.',
-    G: 'You lean on Guiding. Explaining the why builds commitment; watch for people who need you to step back.',
-    P: 'You lean on Partnering. People feel heard; make sure decisions still get made and owned.',
-    E: 'You lean on Entrusting. Capable people thrive; people who are still learning can feel left alone.'
+    D: 'You lean on {style}. It helps people who are new or stuck, and holds back people who are ready for more.',
+    G: 'You lean on {style}. Explaining the why builds commitment; watch for people who need you to step back.',
+    P: 'You lean on {style}. People feel heard; make sure decisions still get made and owned.',
+    E: 'You lean on {style}. Capable people thrive; people who are still learning can feel left alone.'
   }
 };
 
@@ -349,3 +349,81 @@ export const DEFAULT_IMPACT = { low: -2, moderate: 3, high: 10 };
 
 /** The 1.0 report's consistency actions (Meet the Team, Meet Face to Face, Set Goals, Coach Member, Give Feedback) as action keys. */
 export const DEFAULT_CONSISTENCY_ACTIONS = ['meet', 'f2f', 'goals', 'coach', 'feedback'];
+
+/**
+ * Ratings reconciled with behaviour (D144). A skill about adapting style or reading needs is rated from
+ * the participant's words, then capped by what they did: `styleFit` is the share of every style choice
+ * that fit the person's need (overall leadership adaptability), `diagnosis` the share of weekly style
+ * settings that fit. With several signals the lowest counts. Under `below`% the skill is rated at most
+ * `level` (a position on the rating scale, 0 is the lowest). Keyed by skill key: the iLead framework's
+ * Situational flexibility, and the Readiness Based lens's dimensions as GenieKreator names them.
+ */
+export const DEFAULT_RECONCILE: { skills: Record<string, Array<'styleFit' | 'diagnosis'>>; caps: Array<{ below: number; level: number }> } = {
+  skills: {
+    situational_flexibility: ['styleFit', 'diagnosis'],
+    diagnosing_readiness: ['diagnosis'],
+    style_fit: ['styleFit'],
+    style_flexibility: ['styleFit'],
+    contextual_fit: ['styleFit']
+  },
+  caps: [{ below: 40, level: 1 }, { below: 70, level: 2 }]
+};
+
+/**
+ * The thresholds the report reads the run with (D143), to pick its headline and keep every claim true to
+ * the numbers. Each dimension is strong, weak or in between; a claim that praises a weak dimension, or
+ * faults a strong one, is never shown.
+ * - business: share of target, %: strong from `strong`, weak under `weak`.
+ * - people: average changes over everyone who was on the team (D170): weak when morale fell by `moraleDrop` or more, trust by
+ *   `trustDrop` or more, or anyone left (resigned or let go, D170); otherwise strong when two of skill, morale, result and trust
+ *   rose by `rise` or more.
+ * - styleFit: share of style choices that fit, %. words: the mean band score of the conversations (at
+ *   least two). activity: actions per period, weak under `weak`, strong from `strong`. sponsor: the
+ *   confidence change, strong from `strong`, weak at `weak` or below. events: messages, briefings and
+ *   events left unanswered, weak from `weak`, strong at none with at least one answered.
+ */
+export const DEFAULT_EVIDENCE = {
+  business: { strong: 100, weak: 80 },
+  people: { moraleDrop: 10, trustDrop: 5, rise: 5 },
+  styleFit: { strong: 70, weak: 40 },
+  words: { strong: 75, weak: 60 },
+  activity: { strong: 2, weak: 1 },
+  sponsor: { strong: 10, weak: -10 },
+  events: { weak: 2 }
+};
+
+/**
+ * The overall level capped by what happened (D168). The level the words reach (the mean of the reconciled
+ * skill ratings, D144) is held at or under `level` (a position on the rating scale, 0 is the lowest) by each
+ * gate the run triggers; the lowest cap wins. The defaults sit on D143's weak thresholds, so a run the
+ * report calls weak on a dimension is never rated above Proficient for it.
+ * - fit: the lowest of the listed signals (D144's `styleFit` and `diagnosis`), with `caps` (left out, the
+ *   `reconcile` caps: under 40% at most Developing, under 70% at most Proficient).
+ * - business: revenue as % of target, or the Business pillar (0 to 100) when the storyline weights business
+ *   variables (D136). Under 50% at most Developing, under 80% at most Proficient.
+ * - people: the averages over everyone who was on the team (people away and people who left at their last
+ *   values), and the people who left, resigned or let go. Weak (at most Proficient): morale fell 10 points or
+ *   more, trust 5 or more, skill 5 or more, or someone left. Collapsed (at most Developing): morale fell 25 or
+ *   more, trust 15 or more, skill 15 or more, or two or more people left. A fall threshold of 0 is off.
+ * - stakeholders: relationships outside the team (D160) that ended strained and lower than they started; one
+ *   or more holds the level at Proficient.
+ * - decisions: choice events (D137) left to their default, as % of all of them when there were at least
+ *   `min`; half or more holds the level at Proficient.
+ * Business, people, stakeholders and decisions are the outcome gates an assessment verdict reads (D169).
+ */
+export const DEFAULT_OUTCOMES: {
+  fit: { signals: Array<'styleFit' | 'diagnosis'>; caps?: Array<{ below: number; level: number }> };
+  business: { caps: Array<{ below: number; level: number }> };
+  people: Record<'weak' | 'collapsed', { moraleDrop: number; trustDrop: number; skillDrop: number; left: number; level: number }>;
+  stakeholders: { strained: number; level: number };
+  decisions: { defaulted: number; min: number; level: number };
+} = {
+  fit: { signals: ['styleFit', 'diagnosis'] },
+  business: { caps: [{ below: 50, level: 1 }, { below: 80, level: 2 }] },
+  people: {
+    weak: { moraleDrop: 10, trustDrop: 5, skillDrop: 5, left: 1, level: 2 },
+    collapsed: { moraleDrop: 25, trustDrop: 15, skillDrop: 15, left: 2, level: 1 }
+  },
+  stakeholders: { strained: 1, level: 2 },
+  decisions: { defaulted: 50, min: 2, level: 2 }
+};

@@ -83,9 +83,9 @@ const PlayIcon = () => <svg className="size-3.5" viewBox="0 0 24 24" fill="curre
 /** Icon glyphs, not copy: the buttons are named from the catalog. */
 const CLOSE_GLYPH = '✕';
 
-const eyebrow = 'text-12 font-700 tracking-(--il-outcome-eyebrow-tracking) text-fg-secondary uppercase';
-const focus = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const link = `cursor-pointer border-0 bg-transparent px-1.5 py-0.25 text-13 ${focus}`;
+const eyebrow = 'text-12 font-600 tracking-(--il-tracking-eyebrow-wide) text-fg-body uppercase';
+const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const link = `min-h-11 cursor-pointer rounded-4 border border-line-strong bg-surface-card px-3 text-14 font-500 text-fg-primary hover:border-line-control ${focus}`;
 
 /** The outcome panel: headline, the reply with replay, who it affected, reason chips, ripple and what changed. */
 export function OutcomePanel(p: OutcomePanelProps) {
@@ -103,14 +103,14 @@ export function OutcomePanel(p: OutcomePanelProps) {
 
   const stepper = current && replies ? (
           <div role="group" aria-label={t('outcome.replies.aria', { n: step + 1, total: replies.length, name: current.person.name })} data-tour="replies"
-            className="flex flex-col gap-2 rounded-14 bg-surface-raised px-3 py-2.5">
+            className="flex flex-col gap-2 border-s-2 border-fg-primary bg-surface-page px-3 py-2.5">
             <div className="flex items-center justify-between gap-2">
-              <span aria-hidden="true" className="text-12 font-700 text-fg-secondary">{t('outcome.replies.count', { n: step + 1, total: replies.length })}</span>
+              <span aria-hidden="true" className="text-12 font-600 text-fg-secondary">{t('outcome.replies.count', { n: step + 1, total: replies.length })}</span>
               <span className="flex gap-1">
                 <button type="button" onClick={() => p.onStep?.(step - 1)} disabled={step === 0} aria-label={t('outcome.replies.prev')}
-                  className={`flex size-7 cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-card p-0 text-fg-primary disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}><Arrow to="prev" /></button>
+                  className={`flex size-8 cursor-pointer items-center justify-center rounded-4 border border-line-strong bg-surface-card p-0 text-fg-primary disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}><Arrow to="prev" /></button>
                 <button type="button" onClick={() => p.onStep?.(step + 1)} disabled={step === replies.length - 1} aria-label={t('outcome.replies.next')}
-                  className={`flex size-7 cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-card p-0 text-fg-primary disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}><Arrow to="next" /></button>
+                  className={`flex size-8 cursor-pointer items-center justify-center rounded-4 border border-line-strong bg-surface-card p-0 text-fg-primary disabled:cursor-not-allowed disabled:opacity-40 ${focus}`}><Arrow to="next" /></button>
               </span>
             </div>
             {/* The reply is announced as it changes, so stepping reads each person in turn. */}
@@ -122,20 +122,20 @@ export function OutcomePanel(p: OutcomePanelProps) {
   ) : null;
 
   return (
-    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-6 mt-0 mb-3.5 grid flex-none animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 rounded-22 border border-line-strong bg-surface-material px-5 py-4 shadow-(--il-outcome-band-shadow) short:mb-2 short:max-h-(--il-outcome-band-max-height-short) short:gap-4 short:overflow-y-auto short:overscroll-contain short:py-2.5">
-      <div className="size-21 overflow-hidden rounded-round bg-portrait-calm shadow-(--il-outcome-portrait-ring) short:size-14">
+    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-8 mt-3 mb-0 grid flex-none animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 border border-fg-primary bg-surface-card px-5 py-4 short:mt-2 short:max-h-(--il-outcome-band-max-height-short) short:gap-4 short:overflow-y-auto short:overscroll-contain short:py-2.5 tablet:mx-5">
+      <div className="size-18 overflow-hidden bg-portrait-calm short:size-14">
         <img src={p.person.img} alt={p.person.name} className="size-full object-cover object-top mix-blend-multiply" />
       </div>
       <div className="flex min-w-0 flex-col gap-2">
         <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
-        <Heading level={p.headingLevel ?? 3} className="m-0 text-20 font-700 tracking-(--il-outcome-headline-tracking) short:text-17">{p.headline}</Heading>
+        <Heading level={p.headingLevel ?? 3} className="m-0 font-display text-30 leading-(--il-canvas-leading-heading) font-400 short:text-24">{p.headline}</Heading>
         {/* A decision with no words (energize, training, assess) has no reply to quote. */}
         {(p.reply || p.onReplay) && <div className="flex items-start gap-2.5">
           {p.onReplay && (
             <button type="button" onClick={p.onReplay} aria-label={t('outcome.replay', { name: p.person.shortName })}
-              className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-round border-0 bg-transparent bg-brand p-0 text-brand-deep-space ${focus}`}><PlayIcon /></button>
+              className={`flex size-8 flex-none cursor-pointer items-center justify-center rounded-4 border-0 bg-transparent bg-brand p-0 text-button-on-solid ${focus}`}><PlayIcon /></button>
           )}
-          <span className="text-14 text-pretty">{quote}</span>
+          <span className="font-serif text-19 leading-snug text-pretty">{quote}</span>
         </div>}
         {/* Each person's own reply (D98) reads with the headline, so the band stays short. */}
         {stepper}
@@ -151,17 +151,17 @@ export function OutcomePanel(p: OutcomePanelProps) {
             </button>
           ))}
         </div>
-        {!replies && p.reaction && <span aria-live="polite" className="rounded-12 bg-surface-raised px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
+        {!replies && p.reaction && <span aria-live="polite" className="border-s-2 border-fg-primary bg-surface-page px-2.5 py-2 text-13"><b>{t('outcome.reaction', { name: p.reaction.name })}</b> {p.reaction.text}</span>}
         <div className="flex flex-wrap gap-1.5">{chips}</div>
-        <span className="text-13 text-fg-secondary">{p.ripple}</span>
+        <span className="text-13 text-fg-body">{p.ripple}</span>
         {changed.map((c, i) => <span key={i} className="text-13">{c}</span>)}
       </div>
       <div className="flex flex-col items-end gap-2">
-        <button type="button" onClick={p.onDismiss} aria-label={t('outcome.dismiss')} className={`size-8 cursor-pointer rounded-round border-0 bg-surface-raised p-0 text-fg-primary ${focus}`}>
+        <button type="button" onClick={p.onDismiss} aria-label={t('outcome.dismiss')} className={`size-11 cursor-pointer rounded-4 border border-line-strong bg-surface-card p-0 text-fg-primary ${focus}`}>
           <span aria-hidden="true">{CLOSE_GLYPH}</span>
         </button>
-        <button type="button" onClick={p.onToggleWhy} aria-expanded={p.whyOpen} aria-controls={p.whyOpen ? whyId : undefined} className={`${link} font-700 text-accent-secondary`}>{whyLabel}</button>
-        {p.onOpenHistory && <button type="button" onClick={p.onOpenHistory} className={`${link} font-600 text-fg-secondary`}>{t('outcome.history')}</button>}
+        <button type="button" onClick={p.onToggleWhy} aria-expanded={p.whyOpen} aria-controls={p.whyOpen ? whyId : undefined} className={link}>{whyLabel}</button>
+        {p.onOpenHistory && <button type="button" onClick={p.onOpenHistory} className={link}>{t('outcome.history')}</button>}
       </div>
     </section>
   );

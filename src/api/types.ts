@@ -12,6 +12,11 @@ import type { HistoryEntry } from '../engine/reportContract';
  * enabled by setting `VITE_ILEAD_API_URL`). Swap adapters in `src/api/index.ts`.
  */
 export interface IleadApi {
+  /**
+   * What this adapter can serve beyond the run itself. Left out, everything. A SCORM package plays without
+   * the iLead server, so it has no email service (D208) and the screens leave Email me out.
+   */
+  readonly features?: { email?: boolean };
   /** Scenario config authored in GenieKreator: team, styles, actions, inbox, events. */
   getScenario(): Promise<Scenario>;
   /** Where the participant left off, or null for a fresh run. */

@@ -364,6 +364,47 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "words": {
+                    "type": "object",
+                    "properties": {
+                      "score": {
+                        "type": [
+                          "number",
+                          "null"
+                        ]
+                      },
+                      "level": {
+                        "anyOf": [
+                          {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "score",
+                      "level"
+                    ]
+                  },
+                  "caps": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "fit",
+                        "business",
+                        "people",
+                        "stakeholders",
+                        "decisions",
+                        "guard"
+                      ]
+                    }
                   }
                 },
                 "required": [

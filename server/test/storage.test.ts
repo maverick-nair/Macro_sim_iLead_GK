@@ -38,7 +38,7 @@ const run = (id: string, participantId: string, attempt = 1) => ({
 describe.each(stores)('repository on %s', (_name, open, { rollback }) => {
   async function repo() {
     const db = await open();
-    expect(await migrate(db)).toEqual([1, 2]);
+    expect(await migrate(db)).toEqual([1, 2, 3]);
     expect(await migrate(db)).toEqual([]);
     return new SqlRepository(db);
   }
@@ -120,7 +120,7 @@ describe.each(stores)('repository on %s', (_name, open, { rollback }) => {
     expect(await r.getSession('s-1')).toBeNull();
     expect(await r.countEmails('p-1', '2000-01-01')).toBe(0);
     expect(await r.getRun('r-2')).not.toBeNull();
-    expect(await r.purge(new Date(Date.now() + 1000).toISOString())).toEqual({ sessions: 1, runs: 1 });
+    expect(await r.purge(new Date(Date.now() + 1000).toISOString())).toEqual({ sessions: 1, runs: 1, previews: 0 });
     expect(await r.getRun('r-2')).toBeNull();
   });
 

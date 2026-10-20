@@ -6,8 +6,12 @@ import { loadEngineCopy } from '../i18n/locales';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
 import salesElevator from './storylines/sales-elevator.json';
+import clientTrust from './storylines/client-trust.json';
 import { withSixStyles } from './storylines/sixStyles';
-import { neededStyles, play, type Policy } from './sim/policies';
+import { play, type Policy } from './sim/policies';
+import { fastForward, jumpTo, type JumpTarget } from './jump';
+
+export { parseJump } from './jump';
 import { DEMO_SEED, demoRefusal } from './demo';
 
 /**
@@ -20,8 +24,14 @@ export const DRAFT_KEY = 'ilead.author.draft';
 /**
  * `?storyline=draft`: the author chat's draft, from session storage (or local storage, which a new tab
  * shares), checked with the storyline schema. Missing or invalid: Sales Elevator, with a console warning.
+ * A preview (`?preview=1`, D193) reads local storage only: its tab is reused for every preview, and the copy
+ * of session storage it was opened with goes stale once GenieKreator saves again.
  */
-export function draftStoryline(storage: Array<Pick<Storage, 'getItem'> | undefined> = [globalThis.sessionStorage, globalThis.localStorage]): StorylineConfig | null {
+function draftStores(): Array<Pick<Storage, 'getItem'> | undefined> {
+  const preview = new URLSearchParams(globalThis.location?.search ?? '').get('preview') === '1';
+  try { return preview ? [globalThis.localStorage] : [globalThis.sessionStorage, globalThis.localStorage]; } catch { return []; }
+}
+export function draftStoryline(storage: Array<Pick<Storage, 'getItem'> | undefined> = draftStores()): StorylineConfig | null {
   let raw: string | null = null;
   for (const s of storage) { try { raw ??= s?.getItem(DRAFT_KEY) ?? null; } catch { /* storage blocked */ } }
   let r: ReturnType<typeof parseStoryline> = { ok: false, issues: ['no draft stored'] };
@@ -41,15 +51,22 @@ export const SAMPLE_VIDEO = {
   ]
 };
 
+/** A SCORM package's storyline (D208): pinned, every mock engine in the page plays it, the demo round's too. */
+let pinned: StorylineConfig | null = null;
+export function pinStoryline(config: StorylineConfig | null) { pinned = config; }
+
 export function defaultStoryline(lens?: string | null): StorylineConfig {
+  if (pinned) return pinned;
   if (new URLSearchParams(globalThis.location?.search ?? '').get('storyline') === 'draft') {
     const draft = draftStoryline();
     if (draft) return draft;
   }
-  // `?lens=six_styles` plays Sales Elevator with the Six Leadership Styles test lens (D70), for demos and tests.
-  const base = lens === 'six_styles' ? withSixStyles(salesElevator as unknown as StorylineInput) : salesElevator as unknown as StorylineInput;
-  // `?purpose=assessment` plays it as an assessment, so the report carries verdicts (D75).
   const q = new URLSearchParams(globalThis.location?.search ?? '');
+  // `?storyline=client-trust` plays the Client Trust demo (D141): dynamics, business variables and choice events.
+  const sample = (q.get('storyline') === 'client-trust' ? clientTrust : salesElevator) as unknown as StorylineInput;
+  // `?lens=six_styles` plays it with the Six Leadership Styles test lens (D70), for demos and tests.
+  const base = lens === 'six_styles' ? withSixStyles(sample) : sample;
+  // `?purpose=assessment` plays it as an assessment, so the report carries verdicts (D75).
   const purpose = q.get('purpose');
   // `?video=1` adds the sample welcome video and its transcript (D90), for demos and tests: no storyline ships one yet.
   const video = q.get('video') === '1' ? { video: SAMPLE_VIDEO } : {};
@@ -59,23 +76,29 @@ export function defaultStoryline(lens?: string | null): StorylineConfig {
 }
 
 /**
- * Demo and test aid, mock only: opens every profile, then plays the periods before `period` with the
- * needed styles and no actions, so a later period (interviews from week 3, the week 4 sponsor briefing) can be opened.
+ * `startPeriod` (`?period=N`, demo and test aid, mock only): opens every profile, then plays the periods before
+ * `period` with the needed styles and no actions, so a later period (interviews from week 3, the week 4 sponsor
+ * briefing) can be opened. `jump` (a preview's Jump to, D192) plays forward to a point in the run the same way.
+ *
+ * `replay`: intents applied before the first view, in order (a SCORM package resuming its run from the LMS,
+ * D203). The engine is deterministic for a storyline and seed, so they rebuild the run. Replay stops at the
+ * first intent the engine refuses, and `onReplayed` gets the intents it applied. A replay wins over `jump`
+ * and `startPeriod` (a package never jumps).
  */
-async function fastForward(engine: ReturnType<typeof createEngine>, config: StorylineConfig, period: number) {
-  while (engine.view().clock.period < period && engine.view().phase !== 'ended') {
-    if (engine.view().phase === 'style') await engine.dispatch({ type: 'confirmStyles', styles: await neededStyles(engine, config.thresholds.high, config.lens) });
-    await engine.dispatch({ type: 'endPeriod' });
-    const v = engine.view();
-    if (v.pendingReward) await engine.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] });
-    if (engine.view().phase === 'periodEnd') await engine.dispatch({ type: 'startNextPeriod' });
-  }
-}
-
-export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number; lens?: string | null } = {}): EngineClient {
+export function createMockClient(opts: { config?: StorylineConfig; seed?: number; evaluator?: Evaluator; latencyMs?: number; tokensPerSecond?: number; startPeriod?: number; lens?: string | null; jump?: JumpTarget | null; replay?: Intent[]; onReplayed?: (applied: Intent[]) => void } = {}): EngineClient {
   const config = opts.config ?? defaultStoryline(opts.lens);
   const engine = createEngine(config, { seed: opts.seed ?? 1, evaluator: opts.evaluator });
-  const ready = opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
+  const replay = async (log: Intent[]) => {
+    const applied: Intent[] = [];
+    for (const intent of log) {
+      try { await engine.dispatch(intent); } catch { break; }
+      applied.push(intent);
+    }
+    opts.onReplayed?.(applied);
+  };
+  const ready = opts.replay ? replay(opts.replay)
+    : opts.jump ? jumpTo(engine, config, opts.jump)
+    : opts.startPeriod && opts.startPeriod > 1 ? fastForward(engine, config, opts.startPeriod) : Promise.resolve();
   const wait = async () => { await Promise.all([ready, loadEngineCopy()]); if (opts.latencyMs) await new Promise(r => setTimeout(r, opts.latencyMs)); };
   return {
     async view() {

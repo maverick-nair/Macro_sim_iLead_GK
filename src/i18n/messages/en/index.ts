@@ -10,10 +10,12 @@ import action from './action.json';
 import actions from './actions.json';
 import board from './board.json';
 import common from './common.json';
+import desk from './desk.json';
 import events from './events.json';
 import gamification from './gamification.json';
 import hud from './hud.json';
 import inbox from './inbox.json';
+import intro from './intro.json';
 import live from './live.json';
 import liveformats from './liveformats.json';
 import liveshell from './liveshell.json';
@@ -33,12 +35,15 @@ import stylesetting from './stylesetting.json';
 import team from './team.json';
 import time from './time.json';
 
-export const en = { ...action, ...actions, ...board, ...common, ...events, ...gamification, ...hud, ...inbox, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...smallscreen, ...style, ...stylesetting, ...team, ...time };
+export const en = { ...action, ...actions, ...board, ...common, ...desk, ...events, ...gamification, ...hud, ...inbox, ...intro, ...live, ...liveformats, ...liveshell, ...member, ...metric, ...metrics, ...onboarding, ...outcome, ...palette, ...profile, ...reason, ...score, ...settings, ...smallscreen, ...style, ...stylesetting, ...team, ...time };
 
 /**
  * Loaded with their screens: './end.json', './group.json' (the group report, D77), './report.json', './tablet.json' (the tablet board, D73), './weekend.json',
- * './panels.json' (the in play panels, D89), './guide.json' (the guided tour and the demo, D92, D94).
+ * './panels.json' (the in play panels, D89), './guide.json' (the guided tour and the demo, D92, D94), './decision.json' (the decision dialog, D137),
+ * './stakeholders.json' (the stakeholders panel, D162), './preview.json' (the preview bar from GenieKreator, D191),
+ * './lms.json' (SCORM packages, D208: GenieKreator's package section and the packaged player).
  * './engine.json' (engine copy, D83) loads beside the first view, before any payload is parsed (`loadEngineCopy`).
  */
 export type LazyMessages = typeof import('./end.json') & typeof import('./engine.json') & typeof import('./group.json') & typeof import('./report.json') & typeof import('./tablet.json') & typeof import('./weekend.json')
-  & typeof import('./panels.json') & typeof import('./guide.json');
+  & typeof import('./panels.json') & typeof import('./guide.json') & typeof import('./decision.json') & typeof import('./stakeholders.json') & typeof import('./preview.json')
+  & typeof import('./lms.json');

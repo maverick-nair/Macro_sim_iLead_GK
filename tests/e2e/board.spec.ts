@@ -1,6 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /** Flow: set styles, run a 1:1 on the engine, read the outcome, end the week and start the next. */
 
 const errors: string[] = [];
@@ -14,8 +18,11 @@ test.afterEach(() => expect(errors).toEqual([]));
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 /** Axe on what is on screen now. @axe-core/playwright is typed against a slightly different Playwright version. */
 async function axe(page: Page) {
+  // Panels enter with an animation (the outcome band, D78): colours are measured once they have finished, not mid fade.
+  await page.evaluate(() => Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined))));
   const r = await new AxeBuilder({ page: page as never }).withTags(TAGS).analyze();
-  return r.violations.map(v => `${v.id}: ${v.nodes.length}`);
+  // Each violation names its nodes and why, so a failure says what to fix.
+  return r.violations.map(v => `${v.id}: ${v.nodes.length}: ${v.nodes.map(n => `${n.target.join(' ')} ${n.html.slice(0, 120)} (${n.failureSummary?.replace(/\s+/g, ' ').trim()})`).join(' | ')}`);
 }
 
 /** Dismisses the outcome panel and waits for it to go (event cards wait behind it). */
@@ -57,7 +64,7 @@ async function throughWeekEnd(page: Page, last: string) {
 
 /** Weekly style setting: pick on every card, a reason for one, review the summary, confirm. */
 async function setStyles(page: Page, index = 1) {
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page), { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(index).click();
   await page.getByRole('button', { name: 'Add a reason' }).first().click();
   await page.keyboard.type('Kent is new and unsure');
@@ -106,6 +113,8 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   await dismissEvents(page);
 
   // Opening a profile reveals stats on the card.
+  // The desk opens a profile from the person's actions (D232): select them first.
+  if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
   await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
   await expect(page.getByRole('button', { name: /^Kent Goldberg.*Skill \d+/ })).toBeVisible();
 
@@ -143,12 +152,17 @@ test('style summary: focus is trapped, the page behind is inert, Go back returns
 });
 
 test('toasts hide on time, even when the board changes underneath', async ({ page }) => {
-  await page.goto('/?start=board');
+  await page.goto('/?start=board&period=3');
   await setStyles(page);
-  // Styles are locked on the board: a toast says so. Selecting people changes the UI store meanwhile.
-  await page.getByRole('radiogroup', { name: /^Leadership style for Kent/ }).getByRole('radio').nth(2).click({ force: true }); // Locked letters are aria-disabled; picking one still explains why.
-  const toast = page.getByRole('status').filter({ hasText: /Styles are set until the next week/ });
+  await dismissOutcome(page);
+  await dismissEvents(page);
+  // Later on a message: a toast says when it comes back (the desk names styles in words, D232, so the
+  // locked style letters that used to raise this toast are not on the board). Selecting people changes the UI store meanwhile.
+  await page.getByRole('button', { name: /^Inbox/ }).first().click();
+  await page.getByRole('dialog', { name: 'Inbox' }).getByRole('button', { name: 'Later' }).first().click();
+  const toast = page.getByRole('status').filter({ hasText: /Back in your inbox next/ });
   await expect(toast).toBeVisible();
+  await page.keyboard.press('Escape');
   await page.getByText('Beth Killiney', { exact: true }).click();
   await page.getByText('Justin Keel', { exact: true }).click();
   await expect(toast).toHaveCount(0, { timeout: 6000 });
@@ -216,7 +230,8 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   // Sponsor confidence fell below the check in line in week 3 of this run: the CEO check in took a day of week 4.
   await expect(left).not.toHaveText(before);
   await expect(page.getByText('The CEO check in took a day this week')).toBeVisible();
-  await expect(page.getByRole('button', { name: /Briefing with Paula/ })).toBeVisible();
+  // Back in the feedback and inbox feed (D212).
+  await expect(page.getByRole('button', { name: /^Reply now\W+Briefing with Paula/ })).toBeVisible();
 });
 
 test('palette: Ctrl K on the plain board only', async ({ page }) => {
@@ -228,7 +243,7 @@ test('palette: Ctrl K on the plain board only', async ({ page }) => {
   await page.keyboard.press('Control+k');
   await expect(page.getByRole('dialog')).toHaveCount(1);
   // The board behind is inert while the palette is open (D23, D84), and comes back after.
-  const behind = page.getByRole('button', { name: 'Settings' });
+  const behind = page.getByText('Menu', { exact: true }).first();
   expect(await behind.evaluate(b => !!b.closest('[inert]'))).toBe(true);
   expect(await axe(page)).toEqual([]);
   await page.keyboard.press('Escape');
@@ -292,7 +307,8 @@ test('a whole week by keyboard only', async ({ page }) => {
     await expect(group.getByRole('radio', { checked: true })).toHaveCount(1);
   }
   await expect(page.getByText('10 of 10 styles set')).toBeAttached();
-  await tabTo(/Review and confirm/, true);
+  // Review and confirm sits after the cards, in the aside (D232).
+  await tabTo(/Review and confirm/);
   await page.keyboard.press('Enter');
   await tabTo(/^BUTTON\|\|Confirm styles/);
   await page.keyboard.press('Enter');

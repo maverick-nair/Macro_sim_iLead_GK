@@ -1,11 +1,33 @@
 import type { StorylineConfig } from '../config';
 
 type Person = StorylineConfig['members'][number];
+type StakeholderConfig = StorylineConfig['stakeholders'][number];
 import { IntentError } from './actions';
 import { firstName, member, nextId, person } from './sim';
 import type { Interaction, Mood, PlanFields, Sim, Turn } from './types';
 import { msg, type Copy } from '../copy';
 import { moodOf } from './view';
+import { interactionOf, stakeholderMood } from './stakeholders';
+import { stakeholderConfig } from './stakeholderState';
+
+/**
+ * A stakeholder as the AI character plays them (D161): who they are to the participant, their persona, where the
+ * relationship stands, and what this conversation is (a meeting, a presentation, a negotiation, an email, a reply).
+ */
+export interface StakeholderSpeaker {
+  key: string;
+  role: string;
+  kind: StakeholderConfig['kind'];
+  pronoun: 'he' | 'she' | 'they';
+  about?: string;
+  hiddenConcern?: string;
+  concernLine?: string;
+  npc?: StakeholderConfig['npc'];
+  trust: number;
+  satisfaction: number;
+  interaction: StakeholderConfig['interactions'][number]['type'] | 'reply';
+  goal?: string;
+}
 
 /**
  * Live interactions as conversations (Design doc, Evaluation pipeline; spec, Live interaction
@@ -20,7 +42,7 @@ import { moodOf } from './view';
 export interface NpcContext {
   format: string;
   /** Who is speaking: a member, a candidate, or 'sponsor'. */
-  speaker: { id: string; name: string; persona: Person | null; mood: Mood; trust: number };
+  speaker: { id: string; name: string; persona: Person | null; mood: Mood; trust: number; stakeholder?: StakeholderSpeaker };
   /** The participant's last turn, or null for the opening line. */
   said: string | null;
   turnsSoFar: number;
@@ -55,6 +77,7 @@ const pick = <T,>(list: T[], n: number) => list[n % list.length];
 export const personaNpc: NpcModel = {
   reply(ctx) {
     const { speaker: sp, said, format } = ctx;
+    if (sp.stakeholder) return stakeholderReply(ctx, sp.stakeholder);
     if (said === null) {
       if (ctx.replyTo) return { text: ctx.replyTo };
       if (format === 'sponsor') return { text: `Thanks for making time. Give me your update: where are we against target, and what is your plan?` };
@@ -107,32 +130,83 @@ export const personaNpc: NpcModel = {
   }
 };
 
+/**
+ * The stand in for a stakeholder (D161): plain replies that follow the conversation's type, their trust and their
+ * satisfaction. A negotiation asks what is on offer; a presentation probes the numbers; a meeting asks what is needed.
+ */
+function stakeholderReply(ctx: NpcContext, st: StakeholderSpeaker): NpcReply {
+  const said = ctx.said;
+  const cool = st.trust < 40 || st.satisfaction < 35;
+  if (said === null) {
+    if (ctx.replyTo) return { text: ctx.replyTo };
+    const open: Record<StakeholderSpeaker['interaction'], string> = {
+      meet: cool ? 'You wanted to meet. I hope this is about the problems I raised.' : 'Good to see you. What did you want to talk about?',
+      present: 'Go ahead. Where does your team stand, and what do you need from me?',
+      negotiate: cool ? 'I am listening, but I am not sure we have much room here.' : 'Let us see if we can find something that works for both of us.',
+      email: 'Thanks for writing.',
+      reply: 'Thanks for getting back to me.'
+    };
+    return { text: open[st.interaction] };
+  }
+  if (HARSH.test(said)) return { text: 'I do not think this is a productive way to talk. Let us pick it up another time.', signsOff: true };
+  if (BYE.test(said) || ctx.turnsLeft <= 0) return { text: cool ? 'Fine. I will expect to see the follow through.' : 'Good. Let us keep in touch on this.', signsOff: true };
+  const canOpenUp = st.concernLine && !ctx.concernRevealed && (st.trust >= 45 || ACK.test(said)) && (CONCERN_Q.test(said) || (OPEN_Q.test(said) && ctx.turnsSoFar >= 2));
+  if (canOpenUp) return { text: st.concernLine!, revealsConcern: true };
+  if (st.interaction === 'negotiate') {
+    if (STEP.test(said) || /\b(?:if you|in return|trade|both|meet (?:you )?halfway|compromise)\b/i.test(said)) return { text: cool ? 'Maybe. Put it in writing and I will look at it.' : 'That could work. If you can commit to that, I can move on my side.' };
+    if (OPEN_Q.test(said)) return { text: 'What I need is certainty on the dates and the cost. The rest I can be flexible on.' };
+    return { text: pick(['What are you offering in return?', 'I hear the ask. What does it cost me?', 'That is a big ask. Why now?'], ctx.turnsSoFar) };
+  }
+  if (st.interaction === 'present') {
+    if (/\d/.test(said)) return { text: pick(['And what is the biggest risk to that number?', 'What do you need from me to get there?', 'Who owns the plan if it slips?'], ctx.turnsSoFar) };
+    return { text: 'I need the numbers. Where are you against plan, specifically?' };
+  }
+  if (ACK.test(said)) return { text: pick(['Thank you. That is what I needed to hear.', 'I appreciate you taking it seriously.'], ctx.turnsSoFar) };
+  if (OPEN_Q.test(said)) return { text: cool ? 'Honestly, things slipped and nobody told me. That is the problem.' : 'Mostly I want to know what to expect from your team, and when.' };
+  if (STEP.test(said)) return { text: 'Good. I will hold you to that.' };
+  return { text: pick([`Okay${cool ? ', but I have heard that before' : ''}.`, 'Right. What happens next?', 'I see.'], ctx.turnsSoFar) };
+}
+
 /** Coaching tips per format, one per interaction (Configuration Spec, Hints: on request): `engine.hint` in the catalog. */
 const HINT_FORMATS = new Set(['roleplay', 'chat', 'email', 'meeting', 'sponsor', 'interview', 'plan']);
 
 export function speakerFor(sim: Sim, it: Interaction): string {
+  if (it.stakeholder) return it.stakeholder.key;
   if (it.format === 'sponsor') return 'sponsor';
   if (it.format === 'interview') return it.candidates?.[it.candidate ?? 0] ?? 'sponsor';
   if (it.format === 'meeting') return it.floor ?? attendees(sim)[0] ?? 'sponsor';
   return it.memberIds[0] ?? 'sponsor';
 }
 
-function speakerCtx(sim: Sim, id: string): NpcContext['speaker'] {
+function speakerCtx(sim: Sim, id: string, it?: Interaction): NpcContext['speaker'] {
   if (id === 'sponsor') return { id, name: sim.config.sponsor.name, persona: null, mood: 'neutral', trust: 50 };
+  const sh = stakeholderConfig(sim, id);
+  if (sh) {
+    const st = sim.stakeholders[sh.key];
+    const x = it ? interactionOf(sim, it) : null;
+    const t = (v: unknown) => (typeof v === 'string' && v.trim() ? v : undefined);
+    return { id, name: sh.name, persona: null, mood: stakeholderMood(sim, sh.key), trust: st?.trust ?? sh.start.trust,
+      stakeholder: { key: sh.key, role: sh.role, kind: sh.kind, pronoun: sh.pronoun, about: t(sh.about), hiddenConcern: t(sh.hiddenConcern), concernLine: t(sh.concernLine), npc: sh.npc,
+        trust: st?.trust ?? sh.start.trust, satisfaction: st?.satisfaction ?? sh.start.satisfaction, interaction: x?.type ?? 'reply', goal: t(x?.goal) } };
+  }
   const m = member(sim, id);
   const p = person(sim, id);
   return { id, name: p.name, persona: p, mood: m ? moodOf(m, sim) : 'neutral', trust: m?.trust ?? sim.config.trustRules.start };
 }
 
-const actionName = (sim: Sim, it: Interaction) => sim.config.actions.find(a => a.key === it.actionKey)?.name ?? (it.actionKey === 'sponsor' ? 'Sponsor briefing' : 'Reply');
-export const turnLimit = (sim: Sim, it: Interaction) => (it.actionKey === PRACTICE ? sim.config.practice.turnLimit : sim.config.actions.find(a => a.key === it.actionKey)?.live.turnLimit ?? 12);
+const actionName = (sim: Sim, it: Interaction) => {
+  const x = interactionOf(sim, it);
+  if (x) return String(x.label ?? `${x.type.charAt(0).toUpperCase()}${x.type.slice(1)}`);
+  return sim.config.actions.find(a => a.key === it.actionKey)?.name ?? (it.actionKey === 'sponsor' ? 'Sponsor briefing' : 'Reply');
+};
+export const turnLimit = (sim: Sim, it: Interaction) => (it.actionKey === PRACTICE ? sim.config.practice.turnLimit : it.stakeholder ? interactionOf(sim, it)?.turnLimit ?? 8 : sim.config.actions.find(a => a.key === it.actionKey)?.live.turnLimit ?? 12);
 const yourTurns = (it: Interaction) => it.turns.filter(t => t.by === 'you').length;
 
 async function npcSays(sim: Sim, npc: NpcModel, it: Interaction, said: string | null): Promise<Turn> {
   const by = speakerFor(sim, it);
   const msg = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
   const r = await npc.reply({
-    format: it.format, speaker: speakerCtx(sim, by), said, turnsSoFar: yourTurns(it), turnsLeft: turnLimit(sim, it) - yourTurns(it),
+    format: it.stakeholder?.format ?? it.format, speaker: speakerCtx(sim, by, it), said, turnsSoFar: yourTurns(it), turnsLeft: turnLimit(sim, it) - yourTurns(it),
     concernRevealed: it.concernRevealed, actionName: actionName(sim, it), replyTo: said === null ? msg?.body : undefined
   });
   if (r.revealsConcern) it.concernRevealed = true;
@@ -176,7 +250,7 @@ export const blank = (base: Omit<Interaction, 'turns' | 'hint' | 'concernReveale
 export async function opening(sim: Sim, npc: NpcModel, id: string) {
   const it = sim.interactions[id];
   if (!it || it.turns.length) return;
-  const who = sim.config.actions.find(a => a.key === it.actionKey)?.live.opening ?? 'npc';
+  const who = (it.stakeholder ? interactionOf(sim, it)?.opening : sim.config.actions.find(a => a.key === it.actionKey)?.live.opening) ?? 'npc';
   if (!ONE_SHOT.has(it.format) && (who === 'npc' || it.replyTo)) await npcSays(sim, npc, it, null);
 }
 

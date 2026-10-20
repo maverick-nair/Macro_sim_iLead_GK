@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Leadership lens tab</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.nav a{display:flex;align-items:center;gap:10px;height:44px;padding:0 12px;border-radius:10px;color:#3E4763;text-decoration:none;font-size:14px;font-weight:600}
+.nav a.on{background:#EEF2FD;color:#1F4FD1}
+.nav i{font-style:normal;width:20px;height:20px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800}
+.i-you{background:#EAEDF5;color:#3E4763}.i-ai{background:#DDF1F3;color:#0B6670}.i-need{background:#FCEBC8;color:#7A5300}.i-ok{background:#E2F3E8;color:#1E6B3E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:3px 7px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}
+.btn{height:36px;padding:0 12px;border-radius:9px;border:1px solid #D9DEEA;background:#FFFFFF;color:#141A2E;font:600 13px Manrope,sans-serif;display:inline-flex;align-items:center;gap:6px}
+.card{background:#FFFFFF;border:1px solid #E3E7F0;border-radius:16px;padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.st{display:grid;grid-template-columns:56px 180px minmax(0,1fr) 92px;gap:10px;align-items:center}
+.st input{height:40px;box-sizing:border-box;border-radius:10px;border:1px solid #D9DEEA;padding:0 10px;font:600 14px Manrope,sans-serif;color:#141A2E;background:#FFFFFF;width:100%}
+.st input.ai{background:#EEF8F9;border-color:#CDE9EC;font-weight:500}
+.st input.letter{text-align:center;font-weight:800}
+.hd{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#6B7390}
+.need{display:grid;grid-template-columns:180px repeat(4,minmax(0,1fr));font-size:12.5px;border:1px solid #E3E7F0;border-radius:12px;overflow:hidden}
+.need span{padding:7px 9px;border-bottom:1px solid #EEF0F6;text-align:center}
+.need span:nth-child(5n+1){text-align:left;font-weight:600}
+.need .h{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#6B7390;background:#F6F7FB}
+.f0{background:#E2F3E8;color:#1E6B3E;font-weight:800}.f1{color:#7A5300}.f2{color:#B42318}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 24px; display: flex; align-items: center; gap: 14px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="width: 1px; height: 24px; background: #E3E7F0"></span>
+    <span style="font-size: 15px; font-weight: 700">Leading the Negotiation Team</span>
+    <span style="flex: 1"></span>
+    <button type="button" class="btn" style="height: 40px">Play a week</button>
+    <button type="button" style="height: 40px; padding: 0 16px; border-radius: 10px; border: 0; background: #1F4FD1; color: #FFFFFF; font: 700 14px Manrope, sans-serif">Review and publish</button>
+  </header>
+  <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: 248px minmax(0, 1fr)">
+    <nav class="nav" aria-label="Sections" style="background: #FFFFFF; border-right: 1px solid #E3E7F0; padding: 16px 12px; display: flex; flex-direction: column; gap: 2px">
+      <a href="Overview.dc.html"><i class="i-ok">✓</i>Overview</a>
+      <a href="Brief.dc.html"><i class="i-you">1</i>Brief</a>
+      <a href="Story.dc.html"><i class="i-ok">✓</i>Story and world</a>
+      <a href="Process.dc.html"><i class="i-ai">3</i>Work process</a>
+      <a href="Team.dc.html"><i class="i-ai">4</i>Team</a>
+      <a href="Lens.dc.html" class="on" aria-current="page"><i class="i-you">5</i>Leadership lens</a>
+      <a href="Actions.dc.html"><i class="i-ai">6</i>Actions and conversations</a>
+      <a href="Events.dc.html"><i class="i-ai">7</i>Events</a>
+      <a href="Scoring.dc.html"><i class="i-need">!</i>Scoring and report</a>
+      <a href="Brand.dc.html"><i class="i-ok">✓</i>Brand and theme</a>
+      <a href="Calibrate.dc.html"><i class="i-need">!</i>Test with synthetic players</a>
+    </nav>
+    <main style="padding: 22px 28px; display: flex; flex-direction: column; gap: 14px; min-width: 0; overflow: hidden">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 4px"><h1 style="margin: 0; font-size: 26px">Leadership lens</h1><span style="font-size: 14px; color: #4B5470">Readiness Based Leadership · secondary: none</span></div>
+        <button type="button" class="btn">Change lens</button>
+      </div>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+          <b style="font-size: 16px">Your styles</b>
+          <span style="font-size: 13px; color: #4B5470"><b style="color: #141A2E">4 styles</b> · a simulation always has 4 or 5</span>
+        </div>
+        <span style="font-size: 13px; color: #4B5470; line-height: 1.5">Rename them in your organization's words. The letter is the tag participants see on the board and in style setting. New names flow into every action, the report and Kora's drafts.</span>
+        <div class="st"><span class="hd">Tag</span><span class="hd">Name</span><span class="hd">What the participant reads</span><span></span></div>
+        <div class="st"><label for="l1" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tag for style 1</label><input id="l1" class="letter" value="I"><label for="n1" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Name for style 1</label><input id="n1" value="Instruct"><label for="d1" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Description for style 1</label><input id="d1" class="ai" value="Set the task, show how, check in often"><span class="mark m-you">Renamed</span></div>
+        <div class="st"><label for="l2" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tag for style 2</label><input id="l2" class="letter" value="G"><label for="n2" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Name for style 2</label><input id="n2" value="Guide"><label for="d2" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Description for style 2</label><input id="d2" class="ai" value="Explain why, coach while they practice"><span class="mark m-you">Renamed</span></div>
+        <div class="st"><label for="l3" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tag for style 3</label><input id="l3" class="letter" value="P"><label for="n3" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Name for style 3</label><input id="n3" value="Partner"><label for="d3" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Description for style 3</label><input id="d3" class="ai" value="Decide together, share ownership"><span class="mark m-you">Renamed</span></div>
+        <div class="st"><label for="l4" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Tag for style 4</label><input id="l4" class="letter" value="E"><label for="n4" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Name for style 4</label><input id="n4" value="Empower"><label for="d4" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Description for style 4</label><input id="d4" class="ai" value="Hand over the account, stay available"><span class="mark m-you">Renamed</span></div>
+        <div style="display: flex; gap: 10px; align-items: center">
+          <button type="button" class="btn">Add a fifth style</button>
+          <span style="font-size: 12.5px; color: #6B7390">Kora adds it to every action's impact table and asks you to confirm when it fits each person's need.</span>
+          <span style="flex: 1"></span>
+          <button type="button" class="btn">Restore lens names</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center"><b style="font-size: 16px">Which style fits each need</b><span class="mark m-ai">From your lens</span></div>
+        <div class="need" role="table" aria-label="Style fit by need">
+          <span class="h">Person's need</span><span class="h">I · Instruct</span><span class="h">G · Guide</span><span class="h">P · Partner</span><span class="h">E · Empower</span>
+          <span>Learning and unsure</span><span class="f0">Best</span><span class="f1">Close</span><span class="f1">Close</span><span class="f2">Wrong</span>
+          <span>Keen to learn</span><span class="f1">Close</span><span class="f0">Best</span><span class="f2">Wrong</span><span class="f1">Close</span>
+          <span>Capable but cautious</span><span class="f1">Close</span><span class="f2">Wrong</span><span class="f0">Best</span><span class="f1">Close</span>
+          <span style="border-bottom: 0">Ready to run with it</span><span class="f2" style="border-bottom: 0">Wrong</span><span class="f1" style="border-bottom: 0">Close</span><span class="f1" style="border-bottom: 0">Close</span><span class="f0" style="border-bottom: 0">Best</span>
+        </div>
+        <span style="font-size: 12.5px; color: #4B5470">Every action's impact is worked out from this table, so changing the lens or a fit here changes what each action does in play.</span>
+      </div>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

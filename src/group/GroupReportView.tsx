@@ -23,8 +23,9 @@ export interface GroupReportViewProps {
 function sectionNode(key: GroupSection, r: GroupReport, money: (n: number) => string) {
   switch (key) {
     case 'about': return <AboutSection data={r.about} />;
-    case 'verdicts': return r.assessment && <VerdictsSection data={r.assessment} />;
-    case 'skills': return r.skills && <SkillsSection data={r.skills} participants={r.completed} />;
+    // How often the outcomes held the overall level down (D168): beside the verdicts in assessment, the skills in development.
+    case 'verdicts': return r.assessment && <VerdictsSection data={r.assessment} capped={r.capped} />;
+    case 'skills': return r.skills && <SkillsSection data={r.skills} participants={r.completed} capped={r.assessment ? null : r.capped} />;
     case 'distribution': return r.skills && <DistributionSection data={r.skills} />;
     case 'completion': return r.completion && <CompletionSection data={r.completion} />;
     case 'business': return r.business && <BusinessSection data={r.business} money={money} />;
@@ -81,7 +82,7 @@ export function GroupReportView({ report, print: printProp = false }: GroupRepor
   for (const key of report.sections) {
     const joined = blocks.length === 1;
     blocks.push({ key, card: !joined, pageBreak: !joined, node: sectionNode(key, report, money) });
-    if (key === 'about' && report.withheld) blocks.push({ key: 'withheld', node: <WithheldNotice message={report.withheld.message} /> });
+    if (joined && report.withheld) blocks.push({ key: 'withheld', node: <WithheldNotice message={report.withheld.message} /> });
   }
 
   return (

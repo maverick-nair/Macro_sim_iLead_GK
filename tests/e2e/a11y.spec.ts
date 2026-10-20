@@ -3,9 +3,13 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * Accessibility, consolidated (M8, D78): axe (WCAG 2.2 AA) on every route and major state of the
- * participant app, the reports, the group report and the author chat, in the dark, light and client
+ * participant app, the reports, the group report and /author (light only, walked once per width), in the dark, light and client
  * (Halden) themes, at 1440, 1024 and 834 (a portrait tablet, D73), plus the small screen notice at 390
  * and a custom theme through the theme loader (Brightwater, corrected). Then a keyboard only path
  * through a full week and a live conversation.
@@ -55,7 +59,7 @@ const viewport = (w: Width) => ({ width: w, height: tablet(w) ? 1194 : 1000 });
 
 async function styles(page: Page, where = 'style setting') {
   const groups = page.getByRole('radiogroup', { name: /^Leadership style for/ });
-  await expect(groups).toHaveCount(10, { timeout: 30_000 });
+  await expect(groups).toHaveCount(team(page), { timeout: 30_000 });
   await scan(page, where);
   for (const g of await groups.all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
@@ -180,7 +184,7 @@ async function weekEnd(page: Page, last: RegExp, after?: Locator) {
 async function finishRun(page: Page, q: string, extra = '') {
   await page.goto(url('/?start=board&period=8', extra, q));
   const groups = page.getByRole('radiogroup', { name: /^Leadership style for/ });
-  await expect(groups).toHaveCount(10, { timeout: 30_000 });
+  await expect(groups).toHaveCount(team(page), { timeout: 30_000 });
   for (const g of await groups.all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
@@ -219,37 +223,29 @@ for (const [theme, q] of Object.entries(THEMES)) {
         test('onboarding, every step', async ({ page }) => {
           test.setTimeout(120_000);
           await page.goto(url('/', q));
-          await expect(page.getByRole('heading', { level: 1, name: 'Lead a sales team of ten, for eight weeks.' })).toBeVisible();
-          await scan(page, 'onboarding: language');
-          await page.getByRole('button', { name: "Let's begin" }).click();
-          await expect(page.getByRole('heading', { level: 1, name: 'Paula Jacob' })).toBeVisible();
-          await scan(page, 'onboarding: sponsor');
-          for (const tab of ['About the product', 'Your targets']) {
-            const t = page.getByRole('tab', { name: tab });
-            if (await t.count()) { await t.click(); await scan(page, `onboarding: sponsor, ${tab}`); }
-          }
-          const next = page.getByRole('button', { name: 'Next' });
-          await expect(next).toBeEnabled({ timeout: 10_000 });
-          await next.click();
-          await expect(page.getByRole('button', { name: 'Accept and use voice' })).toBeVisible();
-          await scan(page, 'onboarding: consent');
-          await page.getByRole('button', { name: 'Accept and use voice' }).click();
-          await expect(page.getByRole('button', { name: 'Start mic test' })).toBeVisible();
-          await scan(page, 'onboarding: voice check');
-          await page.getByRole('button', { name: 'Start mic test' }).click();
-          await expect(page.getByRole('heading', { level: 1, name: 'We heard you clearly' })).toBeVisible({ timeout: 10_000 });
-          await page.getByRole('button', { name: 'Play a sample voice' }).click();
-          await expect(page.getByText(/how this week is going\.$/)).toHaveCount(2, { timeout: 20_000 });
-          await scan(page, 'onboarding: voice heard');
-          await page.getByRole('button', { name: 'Sounds good' }).click();
-          await expect(page.getByRole('button', { name: 'Meet your team' })).toBeVisible();
-          await scan(page, 'onboarding: how to play');
-          await page.getByRole('button', { name: 'Meet your team' }).click();
-          await expect(page.getByRole('button', { name: 'Start week 1' })).toBeVisible();
-          await scan(page, 'onboarding: team');
-          for (const name of ['Kent Goldberg', 'Green Bell', 'Ruth Ether']) await page.getByRole('button', { name: new RegExp(`^${name}, `) }).click();
-          await expect(page.getByText('3 of 3 profiles read')).toBeVisible();
-          await scan(page, 'onboarding: team, profiles read');
+          // The pre-game flow (D219): landing, the sponsor's message and its end, the products (D221), the objectives with the mic test.
+          await expect(page.getByRole('heading', { level: 1, name: 'Lead a team of ten through eight weeks that count.' })).toBeVisible();
+          await page.getByRole('button', { name: 'Watch the video message from Paula Jacob' }).waitFor({ timeout: 5000 });
+          await scan(page, 'onboarding: landing');
+          await page.getByRole('button', { name: 'Watch the video message from Paula Jacob' }).click();
+          await expect(page.getByRole('region', { name: 'Captions' })).toBeVisible();
+          await scan(page, 'onboarding: message');
+          await page.getByRole('slider', { name: 'Position in the message' }).press('End');
+          await expect(page.getByRole('button', { name: 'Watch again' })).toBeVisible();
+          await scan(page, 'onboarding: message end');
+          await page.getByRole('button', { name: 'Explore products' }).click();
+          await expect(page.getByRole('tabpanel')).toBeVisible();
+          await scan(page, 'onboarding: products');
+          await page.getByRole('button', { name: 'Point 3: Who buys it' }).click();
+          await page.getByRole('button', { name: 'Next: Levo H4' }).click();
+          await expect(page.getByText('Quiet enough for home.')).toBeVisible();
+          await scan(page, 'onboarding: products, second model');
+          await page.getByRole('button', { name: 'See your objectives' }).click();
+          await expect(page.getByRole('button', { name: 'Start simulation' })).toBeVisible();
+          await scan(page, 'onboarding: objectives');
+          await page.getByRole('button', { name: 'Test your microphone' }).click();
+          await expect(page.getByText('We heard you. Voice is on.')).toBeVisible({ timeout: 10_000 });
+          await scan(page, 'onboarding: objectives, voice heard');
         });
 
         test('a week: style setting, board, drawer, inbox, profile, dialogs, a 1:1, week end', async ({ page }) => {
@@ -271,6 +267,8 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(drawer(page)).toHaveCount(0);
           } else {
+            // The desk opens a profile from the person's actions (D232): select them first.
+            if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
             await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
             await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeVisible();
             await scan(page, 'profile');
@@ -291,14 +289,15 @@ for (const [theme, q] of Object.entries(THEMES)) {
             await page.keyboard.press('Escape');
             await expect(page.getByRole('dialog', { name: 'Badges' })).toHaveCount(0);
           }
-          // Settings and pause.
-          await page.getByRole('button', { name: 'Settings' }).click();
+          // Settings (from the menu: the desk's navy bar keeps only the session controls, D232) and pause.
+          await page.getByRole('button', { name: /^Menu/ }).first().click();
+          await page.getByRole('list', { name: 'Game menu' }).getByRole('button', { name: 'Settings', exact: true }).click();
           await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
           await scan(page, 'settings');
           await page.keyboard.press('Escape');
           await expect(page.getByRole('dialog', { name: 'Settings' })).toHaveCount(0);
           await page.getByRole('button', { name: /^Pause/ }).first().click();
-          const paused = page.getByRole('dialog', { name: 'You are paused' });
+          const paused = page.getByRole('dialog', { name: 'Take your time.' });
           await expect(paused).toBeVisible();
           await scan(page, 'paused');
           await paused.getByRole('button', { name: 'Resume' }).click();
@@ -309,7 +308,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await quiet(page);
           await scan(page, 'live: 1:1');
           await say(page, 'I am sorry it has been rough. What is on your mind?');
-          await page.getByRole('button', { name: 'Hint' }).click();
+          await page.getByRole('button', { name: 'Ask for a hint' }).click();
           await scan(page, 'live: 1:1 with a hint');
           await endLive(page);
           await expect(page.getByText('The team is reacting')).toBeVisible();
@@ -442,41 +441,78 @@ for (const [theme, q] of Object.entries(THEMES)) {
           }
         });
 
-        test('author chat, each step', async ({ page }) => {
-          test.setTimeout(120_000);
-          await page.goto(url('/author', q));
-          const progress = page.getByText(/^Question \d+ of about \d+$/);
-          await expect(progress).toBeVisible();
+        // /author is light only (D105), whatever the participant theme: walked once, at each width.
+        if (theme === 'dark') test('author: the chat, the lens, first draft, every workspace tab and dialog, the library', async ({ page }) => {
+          test.setTimeout(240_000);
+          await page.goto('/author');
+          await expect(page.getByText(/^Question \d+ · (?:last one|about \d+ to go)$/)).toBeVisible();
           await scan(page, 'author: first question');
           const chip = (name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
-          await chip('Senior leaders').click();
+          await chip('First time managers').click();
+          await chip('Manufacturing').click();
+          await chip('Hitting targets without burning out the team').click();
+          await chip('Fictional company').click();
           await page.getByRole('textbox', { name: 'Your answer' }).fill('30');
           await page.getByRole('button', { name: 'Send', exact: true }).click();
+          await expect(page.getByRole('alert')).toBeVisible();
           await scan(page, 'author: an answer refused');
-          for (const c of ['Leading through change or transformation', 'Fictional company', '10 (default)', /^Service delivery/, /^Standard/, 'English, United Kingdom', 'No framework', 'Direct and brisk']) {
-            const ch = chip(c);
-            if (await ch.count()) await ch.click();
-            else break;
-          }
-          // Whatever is still asked, the first suggestion answers it.
-          for (let i = 0; i < 6 && !(await page.getByRole('heading', { name: 'Choose your leadership lens' }).count()); i++) await page.getByRole('group', { name: 'Suggested answers' }).getByRole('button').first().click();
-          await expect(page.getByRole('heading', { name: 'Choose your leadership lens' })).toBeVisible();
+          await page.getByRole('textbox', { name: 'Your answer' }).fill('');
+          await page.getByRole('button', { name: 'Record your answer' }).click();
+          await expect(page.getByText(/^Recording/)).toBeVisible();
+          await scan(page, 'author: recording');
+          await page.getByRole('button', { name: 'Stop and review' }).click();
+          await expect(page.getByText(/Transcribed from your recording/)).toBeVisible();
+          await scan(page, 'author: transcript to review');
+          await page.getByRole('button', { name: 'Send', exact: true }).click();
+          for (const c of [/^Sales Elevator funnel/, 'Standard', 'English, India', 'No framework', 'Professional']) await chip(c).click();
+          await expect(page.getByRole('button', { name: 'Use this lens' }).first()).toBeVisible();
+          if (w < 1180) await page.getByText('Your simulation so far').click();
           await scan(page, 'author: lens');
-          if (w < 1280) {
-            await page.getByText('Your simulation so far').click();
-            await scan(page, 'author: summary open');
-            await page.getByText('Your simulation so far').click();
+          await page.getByRole('button', { name: 'See all 8 lenses, or upload your own framework' }).click();
+          await page.getByRole('button', { name: 'More detail' }).first().click();
+          await scan(page, 'author: all lenses');
+          await page.getByRole('button', { name: 'Use this lens' }).first().click();
+          await expect(page.getByRole('heading', { level: 1, name: /Your simulation is playable/ })).toBeVisible();
+          await scan(page, 'author: first draft ready');
+          await page.getByRole('button', { name: 'Open the workspace' }).click();
+          for (const tab of ['Overview', 'Brief', 'Story and world', 'Work process', 'Team', 'Leadership lens', 'Actions and conversations', 'Events', 'Scoring and report', 'Brand and theme', 'Test with synthetic players', 'Review and publish']) {
+            await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: new RegExp(tab) }).click();
+            await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+            await page.waitForTimeout(100);
+            await scan(page, `author: ${tab}`);
           }
-          await page.getByRole('button', { name: 'Confirm lens and preview the build' }).click();
-          await expect(page.getByRole('heading', { name: 'Build preview' })).toBeVisible();
-          await scan(page, 'author: build preview');
-          await page.getByRole('button', { name: 'Confirm and lock' }).click();
-          await expect(page.getByRole('heading', { name: 'Your draft is ready' })).toBeVisible();
-          await page.getByText('Lens module output').click();
-          await scan(page, 'author: locked');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Story and world/ }).click();
+          for (const sub of ['Market and competitors', 'Sponsor and intro screens']) { await page.getByRole('tab', { name: sub }).click(); await scan(page, `author: story, ${sub}`); }
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Team/ }).click();
+          if (w < 1280) await page.getByRole('button', { name: 'Ask Kora' }).click();
+          await page.getByRole('complementary', { name: 'Ask Kora' }).getByRole('button', { name: /more defensive/ }).click();
+          await expect(page.getByRole('region', { name: 'Proposed change' })).toBeVisible();
+          await scan(page, 'author: Kora proposes a change');
+          if (w < 1280) await page.getByRole('button', { name: 'Close Ask Kora' }).click();
+          await page.getByRole('button', { name: 'Edit profile' }).click();
+          for (const t of ['Identity', 'Voice', 'Personality', 'Starting stats']) { await page.getByRole('dialog').getByRole('tab', { name: t }).click(); await scan(page, `author: character editor, ${t}`); }
+          await page.keyboard.press('Escape');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Actions and conversations/ }).click();
+          await page.getByRole('button', { name: /Send for training/ }).click();
+          await scan(page, 'author: a static decision');
+          await page.getByRole('button', { name: 'Add an action' }).click();
+          await page.getByRole('textbox', { name: 'What should the participant be able to do?' }).fill('Approve or refuse a discount, then explain it.');
+          await page.getByRole('button', { name: 'Set it up with Kora' }).click();
+          await scan(page, 'author: add an action');
+          await page.keyboard.press('Escape');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Leadership lens/ }).click();
           await page.getByRole('button', { name: 'Change lens' }).click();
-          await expect(page.getByRole('alertdialog')).toBeVisible();
-          await scan(page, 'author: change lens warning');
+          await scan(page, 'author: change lens');
+          await page.keyboard.press('Escape');
+          await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: /Scoring and report/ }).click();
+          await page.getByRole('button', { name: 'Use your own skills framework instead' }).click();
+          await page.getByRole('dialog').locator('input[type=file]').setInputFiles({ name: 'framework.md', mimeType: 'text/markdown', buffer: Buffer.from('## Builds trust\n- Keeps promises\n- Admits mistakes\n## Coaches for growth\n- Asks before telling\n- Agrees next steps\n## Leads change\n') });
+          await expect(page.getByRole('table', { name: 'Skills from your framework' })).toBeVisible();
+          await scan(page, 'author: skills framework');
+          await page.keyboard.press('Escape');
+          await page.goto('/author/library');
+          await expect(page.getByRole('heading', { level: 1, name: 'Action library' })).toBeVisible();
+          await scan(page, 'author: library admin');
         });
 
         if (theme !== 'client') {
@@ -512,9 +548,16 @@ async function cardsByKeyboard(page: Page) {
 
 /** Presses Tab until the target has focus (so it is reachable), then a key. */
 async function tabTo(page: Page, target: Locator, max = 120) {
+  const gotIt = page.getByRole('button', { name: 'Got it' });
   for (let i = 0; i < max; i++) {
     // A short timeout: a locator waits for its element, and a card can close while we look for it.
     if (await target.evaluate(el => el === document.activeElement, undefined, { timeout: 1000 }).catch(() => false)) return;
+    // An event card can open a moment after the board settles and keeps focus inside it: close it by
+    // keyboard (as a participant would), unless the target is itself in a dialog.
+    if ((await gotIt.count()) && !(await target.evaluate(el => !!el.closest('[role="dialog"]'), undefined, { timeout: 1000 }).catch(() => false))) {
+      await cardsByKeyboard(page);
+      continue;
+    }
     await page.keyboard.press('Tab');
   }
   throw new Error(`Not reachable by Tab: ${target.toString()}`);

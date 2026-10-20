@@ -1,0 +1,83 @@
+{
+  "title": "author-edit-request",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "instruction": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "tab": {
+      "type": "string",
+      "enum": [
+        "overview",
+        "brief",
+        "story",
+        "process",
+        "team",
+        "lens",
+        "actions",
+        "events",
+        "scoring",
+        "brand",
+        "calibrate",
+        "publish"
+      ]
+    },
+    "view": {
+      "type": "object",
+      "properties": {
+        "context": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 60
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 400
+          }
+        },
+        "fields": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "maxLength": 200
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4000
+              },
+              {
+                "type": "number"
+              },
+              {
+                "maxItems": 12,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 400
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "required": [
+        "context",
+        "fields"
+      ]
+    }
+  },
+  "required": [
+    "instruction",
+    "tab",
+    "view"
+  ]
+}

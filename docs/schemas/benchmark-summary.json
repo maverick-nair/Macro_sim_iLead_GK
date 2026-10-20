@@ -179,6 +179,31 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 9007199254740991
+        },
+        "capped": {
+          "type": "object",
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "gates": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "count",
+            "gates"
+          ]
         }
       },
       "required": [

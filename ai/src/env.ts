@@ -1,4 +1,5 @@
 import type { AnthropicSettings, AuthorDrafterConfig, Effort, EvaluatorConfig, ModelSettings, NpcModelConfig, TranscriberConfig } from './config';
+import type { SyntheticPlayerConfig } from './synthetic/player';
 import type { Provider } from './types';
 
 /**
@@ -14,7 +15,7 @@ const num = (v: string | undefined) => (v !== undefined && v.trim() !== '' && Nu
 const bool = (v: string | undefined) => (v === undefined || v.trim() === '' ? undefined : /^(1|true|yes|on)$/i.test(v.trim()));
 const provider = (v: string | undefined, fallback: Provider): Provider => (v === 'mock' || v === 'anthropic' ? v : fallback);
 
-function model(env: Env, role: 'NPC' | 'EVALUATOR' | 'AUTHOR'): Partial<ModelSettings> {
+function model(env: Env, role: 'NPC' | 'EVALUATOR' | 'AUTHOR' | 'SYNTHETIC'): Partial<ModelSettings> {
   const effort = env[`AI_EFFORT_${role}`] as Effort | undefined;
   return {
     model: env[`AI_MODEL_${role}`] || undefined,
@@ -31,6 +32,7 @@ export interface AiEnvConfig {
   evaluator: EvaluatorConfig;
   author: AuthorDrafterConfig;
   transcriber: TranscriberConfig;
+  synthetic: SyntheticPlayerConfig;
 }
 
 export function configFromEnv(env: Env): AiEnvConfig {
@@ -49,6 +51,7 @@ export function configFromEnv(env: Env): AiEnvConfig {
     npc: { provider: provider(env.AI_PROVIDER_NPC, base), anthropic, model: model(env, 'NPC'), holdBack: env.AI_NPC_HOLD_BACK === 'none' ? 'none' : env.AI_NPC_HOLD_BACK === 'sentence' ? 'sentence' : undefined },
     evaluator: { provider: provider(env.AI_PROVIDER_EVALUATOR, base), anthropic, model: model(env, 'EVALUATOR'), repairRetries },
     author: { provider: provider(env.AI_PROVIDER_AUTHOR, base), anthropic, model: model(env, 'AUTHOR'), repairRetries },
+    synthetic: { provider: provider(env.AI_PROVIDER_SYNTHETIC, base), anthropic, model: model(env, 'SYNTHETIC') },
     transcriber: speech === 'http' && speechUrl
       ? { provider: 'http', http: { url: speechUrl, key: env.SPEECH_KEY || undefined, authHeader: env.SPEECH_AUTH_HEADER || undefined, authScheme: env.SPEECH_AUTH_SCHEME, timeoutMs: num(env.SPEECH_TIMEOUT_MS) } }
       : { provider: 'mock' }

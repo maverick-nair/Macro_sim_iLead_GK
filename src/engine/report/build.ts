@@ -1,11 +1,15 @@
-import { DEFAULT_SECTIONS, purposeOf, type Purpose } from '../config';
+import { DEFAULT_SECTIONS, purposeOf, type Purpose, type ReportSection } from '../config';
 import { roundHalfUp, capability, leadershipScore, tierFor } from '../sim/score';
 import { fitOf, lensView, NEEDS } from '../lens';
-import { firstName, person, styleName } from '../sim/sim';
+import { firstName, netChanges, person, styleName } from '../sim/sim';
 import type { Sim, Style } from '../sim/types';
-import { overallOf, rateSkills, shortName, when, type SkillRating } from './ratings';
+import { rateSkills, shortName, when, type SkillRating } from './ratings';
+import { contradicted, outcomeOf, reasonFor, reasonsOf, type Cap, type Reason, type RunOutcome } from './outcomes';
 import { summarizeRun, type RunSummary } from './summary';
 import { copyKey, hasCode, listOf, moneyOf, msg, template, type Copy, type Param } from '../copy';
+import { narrativeOf, type BottleneckFact } from './narrative';
+import { stakeholdersOf, withStakeholders } from './stakeholders';
+import { unitParams } from '../units';
 
 /**
  * Report 2.0 and 3.0 (docs/genie/scoring-and-report.md 5 and 7; D75, D76), built by the engine from the
@@ -54,22 +58,27 @@ export function buildReport(sim: Sim) {
   const byScore = [...rated].sort((a, b) => b.rawScore! - a.rawScore! || b.observations - a.observations || a.order - b.order);
   const strengths = byScore.slice(0, 3).map(s => s.key);
   const priorities = [...rated].sort((a, b) => a.rawScore! - b.rawScore! || b.observations - a.observations || a.order - b.order).filter(s => !strengths.includes(s.key)).slice(0, 3).map(s => s.key);
-  const overall = overallOf(sim, skills).level;
+  const run: RunSummary = summarizeRun(sim);
+  // The overall level capped by what happened, and the verdict on it (D168, D169).
+  const outcome = outcomeOf(sim, skills, run.objectives, purpose === 'assessment');
+  const overall = outcome.overall.level;
 
   // ---- 7. Business outcomes
   const funnel = c.stages.map((st, i) => ({ stage: st.key, name: st.name, cumulative: sim.funnel.stageOut[i], cumulativeIdeal: sim.periods.reduce((a, p) => a + (p.funnel[i]?.ideal ?? 0), 0) }));
   const counts = new Map<string, number>();
   for (const p of sim.periods) if (p.bottleneck) counts.set(p.bottleneck, (counts.get(p.bottleneck) ?? 0) + 1);
   const worst = [...counts].sort((a, b) => b[1] - a[1])[0];
-  const bottleneck = worst ? (() => {
-    const owners = sim.members.filter(m => m.stage === worst[0]);
-    const low = [...owners].sort((a, b) => a.result - b.result)[0];
-    const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
-    return { stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
-      why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: pr(sim, low.id) }) : null };
-  })() : null;
+  const owners = worst ? sim.members.filter(m => m.stage === worst[0]) : [];
+  const low = [...owners].sort((a, b) => a.result - b.result)[0];
+  const stat = low ? (['skill', 'morale', 'result'] as const).reduce((k, x) => (low[x] < low[k] ? x : k), 'skill' as 'skill' | 'morale' | 'result') : null;
+  const bottleneck = worst ? {
+    stage: worst[0], name: c.stages.find(s => s.key === worst[0])?.name ?? worst[0], periods: worst[1],
+    // The catalog selects on the person's pronoun itself (he, she, they), never a possessive.
+    why: low && stat ? msg('engine.report.bottleneckWhy', { name: firstName(sim, low.id), stat, value: low[stat], pronoun: person(sim, low.id).pronoun }) : null
+  } : null;
+  const bottleneckFact: BottleneckFact | null = bottleneck ? { name: bottleneck.name, periods: bottleneck.periods, owner: low && stat ? { id: low.id, stat, value: low[stat] } : null } : null;
   const share = sim.funnel.value / c.money.target;
-  const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions) };
+  const businessBase = { purpose, pct: Math.round(share * 100), target: moneyOf(c.money.target, c.money), deals: Math.floor(sim.funnel.conversions), ...unitParams(c.money.unit) };
   const businessLine = bottleneck
     ? msg('engine.report.businessStage', { ...businessBase, stage: bottleneck.name, periods: bottleneck.periods, total: sim.periods.length, unit })
     : msg('engine.report.business', businessBase);
@@ -116,7 +125,11 @@ export function buildReport(sim: Sim) {
   // ---- 5. Key moments (SBI), 5 to 7, ranked by impact
   const intentFor = (memberId: string | undefined, period: number) => (memberId ? weekly.find(d => d.memberId === memberId && d.period === period)?.chosen ?? null : null);
   const change = (ch: { subject: string; metric: string; delta: number }) => msg('engine.report.change', { who: ch.subject === 'team' ? msg('engine.report.theTeam') : shortName(sim, ch.subject), metric: ch.metric, delta: ch.delta });
-  const impactOf = (chs: Array<{ subject: string; metric: string; delta: number }>): Copy => (chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange'));
+  // Same person and metric merged into one net change, the 3 largest kept (D145).
+  const impactOf = (all: Array<{ subject: string; metric: string; delta: number }>): Copy => {
+    const chs = netChanges(all).slice(0, 3);
+    return chs.length ? msg('engine.report.impact', { changes: listOf(chs.map(change), 'comma') }) : msg('engine.report.noChange');
+  };
   const unit0 = { unit: unitName(sim) };
   const fromLive = sim.liveRecords.filter(rec => rec.band !== 'adequate').map(rec => {
     const one = rec.memberIds.length === 1;
@@ -124,10 +137,12 @@ export function buildReport(sim: Sim) {
     return {
       id: rec.id ?? `${rec.period}`, kind: rec.band === 'strong' ? 'best' as const : 'revisit' as const, period: rec.period, memberId: one ? rec.memberIds[0] : null,
       title: one ? msg('engine.live.with', { action: title, who: shortName(sim, rec.memberIds[0]), band: rec.band }) : msg('engine.live.done', { action: title, band: rec.band }),
-      situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team', name: one ? shortName(sim, rec.memberIds[0]) : shortName(sim, 'sponsor') }),
+      // A stakeholder conversation (D164) is a moment with one person outside the team.
+      situation: msg('engine.moment.situation', { ...unit0, n: rec.period, kind: one || rec.stakeholder ? 'person' : rec.actionKey === 'sponsor' ? 'sponsor' : 'team',
+        name: one ? shortName(sim, rec.memberIds[0]) : rec.stakeholder ? (sim.config.stakeholders.find(s => s.key === rec.stakeholder)?.name.split(' ')[0] ?? rec.stakeholder) : shortName(sim, 'sponsor') }),
       behaviour: rec.styleShown ? msg('engine.moment.chose.style', { title, style: styleName(sim, rec.styleShown) }) : msg('engine.moment.chose', { title }),
       quote: rec.quotes?.[0] ?? null,
-      impact: impactOf(rec.changes?.slice(0, 3) ?? []),
+      impact: impactOf(rec.changes ?? []),
       intent: intentFor(rec.memberIds[0], rec.period), weight: rec.impact ?? 0, sub: rec.sub ?? 0
     };
   });
@@ -140,14 +155,21 @@ export function buildReport(sim: Sim) {
       title: who ? msg('engine.moment.titleWho', { title: l.title, name: shortName(sim, who) }) : l.title,
       situation: msg('engine.moment.at', { ...unit0, n: l.period, text: l.changes[0]?.reason.cause ?? l.title }),
       behaviour: msg(good ? 'engine.moment.kept' : 'engine.moment.waited'),
-      quote: null, impact: impactOf(l.changes.slice(0, 3).map(ch => ({ subject: ch.subject, metric: ch.metric, delta: ch.delta }))),
+      quote: null, impact: impactOf(l.changes),
       intent: intentFor(who, l.period), weight: l.changes.reduce((a, ch) => a + Math.abs(ch.delta), 0), sub: l.sub
     };
   });
   // One moment per title (the same thing three times teaches nothing), the weightiest kept.
-  const moments = [...fromLive, ...fromLog].sort((a, b) => b.weight - a.weight || a.period - b.period || a.sub - b.sub)
-    .filter((m, i, arr) => arr.findIndex(x => copyKey(x.title) === copyKey(m.title)) === i).slice(0, 7)
-    .sort((a, b) => a.period - b.period || a.sub - b.sub).map(({ weight: _w, sub: _s, ...m }) => m);
+  const ranked = [...fromLive, ...fromLog].sort((a, b) => b.weight - a.weight || a.period - b.period || a.sub - b.sub)
+    .filter((m, i, arr) => arr.findIndex(x => copyKey(x.title) === copyKey(m.title)) === i);
+  const kept = ranked.slice(0, 7);
+  // A run with a best moment shows one: the lightest revisit in the selection makes way for the weightiest best.
+  const best = ranked.find(m => m.kind === 'best');
+  if (best && !kept.includes(best)) {
+    const at = kept.map(m => m.kind).lastIndexOf('revisit');
+    if (at >= 0) kept[at] = best;
+  }
+  const moments = kept.sort((a, b) => a.period - b.period || a.sub - b.sub).map(({ weight: _w, sub: _s, ...m }) => m);
 
   // ---- 6. People outcomes
   const people = all.map(m => {
@@ -179,24 +201,31 @@ export function buildReport(sim: Sim) {
   const revenue = sim.periods.map(p => ({ period: p.period, value: p.cumulativeValue, pace: (c.money.target * p.period) / c.time.period.count }));
 
   const dom1 = dom.length === 1 ? dom[0] : null;
-  const domLine = purpose === 'development' && dom1 ? r.narratives.dominant[dom1] : undefined;
+  // `{style}` in a dominant line is the style's current name, so an author's rename reaches the report (D104).
+  const domName = c.lens.styles.find(st => st.key === dom1)?.name ?? '';
+  const domLine = purpose === 'development' && dom1 ? r.narratives.dominant[dom1]?.replaceAll('{style}', domName) : undefined;
   // Methodology names the lens in participant language; the source ("based on") is author only (D70).
   const lensLines: Copy[] = [msg('engine.report.lens', { title: c.lens.title }),
     ...(c.lens.secondary ? [msg('engine.report.lensSecondary', { title: c.lens.secondary.title })] : [])];
-  const v3 = report3(sim, purpose, skills, plan.map(p => p.name));
+  const v3 = report3(sim, purpose, skills, plan.map(p => p.name), run, outcome);
+  // The headline, summary, drivers and reflections from the evidence, not the level alone (D143, D145).
+  const levelLine = overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null;
+  const story = narrativeOf(sim, purpose, run, overall, levelLine, bottleneckFact);
   return {
     available: sim.phase === 'ended',
     purpose,
-    storyline: { name: c.name, organisation: c.organisation ?? null },
+    storyline: { name: c.name, organisation: c.organisation ?? null, unit: c.money.unit ?? null },
     lens: { ...lensView(c.lens), secondary: c.lens.secondary ? { id: c.lens.secondary.id, title: c.lens.secondary.title } : null },
     periods: sim.periods.length, periodUnit: unit,
-    sections: r.sections ?? DEFAULT_SECTIONS[purpose],
+    sections: r.sections ?? withStakeholders(withDecisions(DEFAULT_SECTIONS[purpose], sim), sim),
     score: { total: score.total, max: score.max, tier: { key: tier.key, name: tier.name } },
     results: { revenue: Math.round(sim.funnel.value), target: c.money.target, share, conversions: Math.floor(sim.funnel.conversions), kpis },
     summary: {
       level: overall === null ? null : { index: overall, name: r.scale[overall].name },
+      levelCap: levelCapOf(sim, purpose, outcome),
       strengths, priorities, business: businessLine,
-      narrative: overall === null ? null : P.overall ? byLevel(P.overall, overall, r.scale.length) : r.narratives.overall[Math.min(overall, r.narratives.overall.length - 1)] ?? null
+      narrative: story.levelLine,
+      profile: story.profile, headline: story.headline, lines: story.lines, drivers: story.drivers
     },
     style: { shares, total: choices.length, dominant: dom, capability: roundHalfUp(cap), grid, fit: fitGrid, matched, weeklyTotal: weekly.length, weeks,
       narrative: [capNarrative, ...(domLine ? [domLine] : [])] },
@@ -211,7 +240,11 @@ export function buildReport(sim: Sim) {
     reflection: sim.reflection, questions: r.reflection,
     methodology: { lines: [...lensLines, ...r.methodology], reviewed: sim.liveRecords.some(rec => rec.reviewed), reviewedCount: sim.liveRecords.filter(rec => rec.reviewed).length, conversations: sim.liveRecords.length, observations: sim.liveRecords.reduce((a, rec) => a + (rec.skills?.length ?? 0), 0) },
     badges: sim.badges.length, gamificationTiers: g.tiers.map(t => ({ key: t.key, name: t.name, min: t.min })),
-    ...v3.sections
+    ...decisionsOf(sim, impactOf),
+    ...stakeholdersOf(sim),
+    ...v3.sections,
+    // Food for thought and takeaways name what happened in this run, then the authored ones (D145).
+    thought: story.thought, takeaways: story.takeaways
   };
 }
 
@@ -219,9 +252,8 @@ export function buildReport(sim: Sim) {
  * Report 3.0's sections (D75): the run summary's numbers with the narratives the purpose's bank gives
  * them, the assessment verdicts with their evidence, food for thought, takeaways and the plan's path.
  */
-function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[]) {
+function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: string[], run: RunSummary, outcome: RunOutcome) {
   const c = sim.config, r = c.report, P = r.purposeCopy[purpose];
-  const run: RunSummary = summarizeRun(sim);
   const levels = r.scale.length;
   const bar = r.assessment.bar;
   const barWords = msg('engine.report.bar', { overall: r.scale[bar.overall].name, floor: r.scale[bar.floor].name });
@@ -235,7 +267,9 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
   const skillNotes = Object.fromEntries(skills.map(s => [s.key, {
     outOf10: s.score === null ? null : s.score / 10,
     description: r.skills.find(x => x.key === s.key)?.description ?? null,
-    narrative: fillCopy(s.level === null ? P.skillNone : byLevel(P.skill, s.level.index, levels), { skill: s.name })
+    narrative: fillCopy(s.level === null ? P.skillNone : byLevel(P.skill, s.level.index, levels), { skill: s.name }),
+    // Why a skill the words rated higher is rated where it is (D144).
+    reconciliation: s.reconciled && s.level ? msg('engine.report.reconciled', { purpose, signal: s.reconciled.signal, pct: roundHalfUp(s.reconciled.pct), from: r.scale[s.reconciled.from].name, level: s.level.name }) : null
   }]));
 
   // Verdicts (assessment only), each with the conversations it rests on and their review status.
@@ -253,7 +287,7 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
       .filter((q, i, arr) => arr.findIndex(x => x.text === q.text) === i).slice(0, 3);
     const key = run.verdict.overall;
     return {
-      overall: { key, label: key ? r.assessment.labels[key] : r.assessment.labels.insufficient, bar: barWords, recordIds: ids, quotes, ...review(ids) },
+      overall: { key, label: key ? r.assessment.labels[key] : r.assessment.labels.insufficient, bar: barWords, why: verdictWhyOf(sim, outcome), recordIds: ids, quotes, ...review(ids) },
       skills: skills.filter(s => !s.reportOnly).map(s => {
         const k = run.verdict!.skills[s.key] ?? null;
         return { key: s.key, verdict: k, label: k ? r.assessment.skillLabels[k] : null, recordIds: s.recordIds, quotes: s.quotes, ...review(s.recordIds) };
@@ -310,11 +344,84 @@ function report3(sim: Sim, purpose: Purpose, skills: SkillRating[], planSkills: 
       about: { lines: P.about.map(l => fillWith(l, { unit, bar: barWords })), howToRead: P.howToRead.map(l => fillWith(l, { unit, bar: barWords })), confidentiality: P.confidentiality },
       verdict,
       objectives, adaptability, styleSummary, consistency, actionSummary,
-      thought: r.thought, takeaways: r.takeaways,
       path, checkIns, needs
     }
   };
 }
 
-const pr = (sim: Sim, id: string) => { const p = person(sim, id).pronoun; return p === 'she' ? 'her' : p === 'they' ? 'their' : 'his'; };
+/** A reason a level or verdict was held down, worded (D168). */
+const reasonCopy = (purpose: Purpose, x: Reason): Copy => msg('engine.report.capReason', { purpose, pct: 0, n: 0, total: 0, ...x });
+
+/**
+ * The overall level tile's line when outcomes held the level under what the words reached (D168): "Rated
+ * Developing: your words rated Role Model, but 3% of your style choices fit what people needed, 4 people left
+ * and revenue reached 37% of target." Null when nothing held it down.
+ */
+function levelCapOf(sim: Sim, purpose: Purpose, outcome: RunOutcome) {
+  const o = outcome.overall, scale = sim.config.report.scale;
+  if (o.level === null || o.words.level === null || !o.binding.length) return null;
+  const level = { index: o.level, name: scale[o.level].name }, from = { index: o.words.level, name: scale[o.words.level].name };
+  return {
+    from, gates: [...new Set(o.binding.map(c => c.gate))],
+    why: msg('engine.report.levelCap', { purpose, level: level.name, from: from.name, reasons: listOf(reasonsOf(o.binding).map(x => reasonCopy(purpose, x)), 'and') })
+  };
+}
+
+/**
+ * Why the verdict is not what the words alone would reach (D169): the caps and outcome gates behind it, or, when
+ * only exceeding was out of reach, that exceeding takes strong business and people outcomes. Null when the words
+ * and the outcomes agree.
+ */
+function verdictWhyOf(sim: Sim, outcome: RunOutcome): Copy | null {
+  const v = outcome.verdict;
+  if (!v || !v.key || !v.words || v.key === v.words) return null;
+  const t = sim.config.report.evidence, e = outcome.evidence;
+  // What held it: the binding caps, then the outcome gates and the guard that did not lower the level.
+  const held: Cap[] = [...outcome.overall.binding, ...outcome.overall.caps.filter(c => !outcome.overall.binding.includes(c) && c.gate !== 'fit')];
+  // Then the core dimensions the data calls weak (the guard, D170).
+  const reasons = [...reasonsOf(held), ...contradicted(e, t).map(d => reasonFor(d, e, t))].filter((x, i, all) => all.findIndex(y => y.kind === x.kind) === i).slice(0, 3);
+  if (reasons.length) return msg('engine.report.verdictWhy', { words: v.words, reasons: listOf(reasons.map(x => reasonCopy('assessment', x)), 'and') });
+  // Only strong outcomes were missing.
+  const c = e.change, rises = [c.skill, c.morale, c.result, c.trust].filter(d => d >= t.people.rise).length;
+  const weak: Reason[] = [
+    ...(e.share < t.business.strong ? [{ kind: 'revenue' as const, pct: roundHalfUp(e.share) }] : []),
+    ...(rises < 2 ? [{ kind: 'rises' as const, n: rises, total: t.people.rise }] : [])
+  ];
+  return msg('engine.report.verdictStrong', { reasons: listOf(weak.map(x => reasonCopy('assessment', x)), 'and'), count: weak.length });
+}
+
+/** The default sections, with "Decisions and consequences" after the key moments when the storyline has choices or business variables (D137). */
+function withDecisions(sections: ReportSection[], sim: Sim): ReportSection[] {
+  const c = sim.config;
+  if (!c.events.some(e => e.choice) && !c.variables.some(v => v.shown)) return sections;
+  const at = sections.indexOf('moments');
+  return at < 0 ? [...sections, 'decisions'] : [...sections.slice(0, at + 1), 'decisions', ...sections.slice(at + 1)];
+}
+
+/**
+ * "Decisions and consequences" (D137): each choice, the option taken (or left to its default), what it changed for
+ * people, the business variables and revenue, the later events it led to, and the leadership it showed; and the
+ * shown business variables at the start and the end of the run. Data only: the narratives are not chosen here.
+ */
+function decisionsOf(sim: Sim, impactOf: (chs: Array<{ subject: string; metric: string; delta: number }>) => Copy) {
+  const c = sim.config;
+  const shown = new Map(c.variables.filter(v => v.shown).map(v => [v.key, v]));
+  const skillName = (k: string) => c.report.skills.find(s => s.key === k)?.name ?? k;
+  return {
+    decisions: sim.choices.map(ch => {
+      // People changes only, netted per person and metric with the 3 largest kept, as every impact line (D145).
+      const people = ch.changes.filter(x => x.subject !== 'sponsor' && x.metric !== 'confidence');
+      return {
+        id: ch.id, period: ch.period, title: ch.title, option: ch.label, by: ch.by, outcome: ch.outcome,
+        impact: impactOf(people),
+        variables: ch.variables.filter(x => shown.has(x.key)).map(x => ({ key: x.key, name: shown.get(x.key)!.name, format: shown.get(x.key)!.format, delta: x.delta })),
+        revenue: Math.round(ch.revenue),
+        sponsor: ch.changes.filter(x => x.subject === 'sponsor').reduce((a, x) => a + x.delta, 0),
+        triggered: ch.triggered.map(t => ({ key: t.key, title: t.title, period: t.period })),
+        read: ch.read.map(x => ({ skill: skillName(x.skill), band: x.band }))
+      };
+    }),
+    businessVariables: [...shown.values()].map(v => ({ key: v.key, name: v.name, format: v.format, start: v.start, end: sim.vars[v.key] ?? v.start, higherIsBetter: v.higherIsBetter, weight: v.weight }))
+  };
+}
 export type ReportView = ReturnType<typeof buildReport>;

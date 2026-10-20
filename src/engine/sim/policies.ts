@@ -6,6 +6,7 @@ import type { Rng } from './rng';
 import { createRng } from './rng';
 import type { Style } from './rules';
 import type { EngineView } from './view';
+import { policyStakeholders } from './stakeholderPlayers';
 
 /**
  * Automated players for calibration and tests (docs/SIMULATION.md section 9).
@@ -73,6 +74,9 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
   const one = keys[seed % keys.length];
   let v = engine.view();
   const high = config.thresholds.high;
+  // Stakeholders (D165): what each player does with them, in its own module; nothing for a storyline without them.
+  const stakeholderDone = new Map<string, boolean>();
+  const withStakeholders = async (view: EngineView) => policyStakeholders(engine, config, view, policy, rng, stakeholderDone);
   while (v.phase !== 'ended') {
     if (opts.stopAfter !== undefined && v.clock.period > opts.stopAfter) break;
     if (v.phase === 'style') {
@@ -87,14 +91,24 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
     }
     if (policy !== 'passive') {
       let guard = 20;
+      v = await decide(engine, config, v, policy, rng);
+      v = await withStakeholders(v);
+      // Realism (D173): the good player updates the sponsor before a silence costs confidence (only where the view offers it).
+      const up = v.sponsor.update, silence = v.sponsor.silence;
+      if (policy === 'good' && up && !up.blocked && silence && silence.weeks + 1 >= silence.costsFrom) {
+        const o = await engine.dispatch({ type: 'openConversation', kind: 'sponsor' });
+        v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: BRIEF })).view;
+      }
       while (v.clock.capacityLeft >= 1 && guard-- > 0) {
         const step = policy === 'good' ? goodStep(v, high, lens) : policy === 'oneStyle' ? goodStep(v, high, lens, one) : randomStep(v, rng, lens);
         if (!step) break;
         const r = await engine.dispatch({ type: 'planAction', ...step.intent });
         v = r.view;
         if (r.interactionId) v = (await engine.dispatch({ type: 'submitInteraction', interactionId: r.interactionId, text: policy === 'careless' ? PLAIN : step.say })).view;
+        v = await decide(engine, config, v, policy, rng);
+        v = await withStakeholders(v);
       }
-      for (const msg of v.inbox.filter(x => x.from !== 'news' && x.kind !== 'news')) {
+      for (const msg of v.inbox.filter(x => x.from !== 'news' && x.kind !== 'news' && !config.stakeholders.some(s => s.key === x.from))) {
         if (policy === 'careless') break;
         if (policy === 'random' && rng.chance(0.5)) continue;
         const o = await engine.dispatch({ type: 'openConversation', kind: msg.briefing ? 'sponsor' : 'reply', messageId: msg.id });
@@ -102,8 +116,13 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
         v = (await engine.dispatch({ type: 'submitInteraction', interactionId: o.interactionId!, text: words })).view;
       }
     }
-    const end = await engine.dispatch({ type: 'endPeriod' });
-    v = end.view;
+    // End week shows a decision still to come first (D231): decided as the player decides, or its default kept.
+    v = (await engine.dispatch({ type: 'endPeriod' })).view;
+    for (let g = 0; g < 50 && v.phase === 'board' && v.endingWeek; g++) {
+      v = await decide(engine, config, v, policy, rng);
+      for (const c of v.openChoices.filter(x => x.holdsWeekEnd)) v = (await engine.dispatch({ type: 'keepDefault', choiceId: c.id })).view;
+      v = (await engine.dispatch({ type: 'endPeriod' })).view;
+    }
     if (v.pendingReward) v = (await engine.dispatch({ type: 'chooseReward', reward: v.pendingReward[0] })).view;
     if (v.phase === 'periodEnd') v = (await engine.dispatch({ type: 'startNextPeriod' })).view;
   }
@@ -111,6 +130,26 @@ export async function play(config: StorylineConfig, policy: Player, seed: number
 }
 
 type Step = { intent: { action: string; option?: string; memberIds: string[] }; say: string };
+
+const BAND_SCORE = { strong: 100, adequate: 70, weak: 35, harmful: 0 } as const;
+
+/**
+ * Choice events (D137), as each player meets them: passive leaves them to their default (it never acts), careless
+ * too; random picks any option; good and one style pick the option whose leadership read is best (the author's
+ * read of the skills it shows), then the one kindest to people. Reads the authored options, as calibration may.
+ */
+async function decide(engine: Engine, config: StorylineConfig, v: EngineView, policy: Player, rng: Rng): Promise<EngineView> {
+  if (policy === 'careless') return v;
+  for (const open of v.openChoices) {
+    const options = config.events.find(e => e.key === open.eventKey)?.choice?.options ?? [];
+    if (!options.length) continue;
+    const read = (o: (typeof options)[number]) => (o.read.length ? o.read.reduce((a, r) => a + BAND_SCORE[r.band], 0) / o.read.length : 50);
+    const people = (o: (typeof options)[number]) => o.people[1] + o.people[2] + o.trust;
+    const pick = policy === 'random' ? rng.pick(options) : [...options].sort((a, b) => read(b) - read(a) || people(b) - people(a))[0];
+    v = (await engine.dispatch({ type: 'decide', choiceId: open.id, option: pick.key })).view;
+  }
+  return v;
+}
 
 /** The team meeting line: Partnering in Readiness Based Leadership, otherwise the style that fits capable but cautious people. */
 const teamSay = (lens: LensLike) => (lens.styles.some(s => s.key === 'P') ? SAY.P : say(lens, bestStyle(lens, 'highSkill_lowMorale')));

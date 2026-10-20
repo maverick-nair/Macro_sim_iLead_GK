@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { PeriodUnit } from '../action/days';
+import type { UnitWords } from '../../engine/units';
 
 export type { PeriodUnit };
 /** A lens style key (D70); names come with the report's lens. */
@@ -67,6 +68,8 @@ export interface SkillRowData {
   more?: {
     anchor: string | null; observations: number; capped: boolean; quotes: ReportQuote[];
     outOf10?: string | null; description?: string | null; narrative?: string | null; verdict?: { label: string; tone: Tone; review: string } | null;
+    /** Why the rating is capped by what the participant did, not only what they said (D144). */
+    reconciliation?: string | null;
   };
 }
 
@@ -128,6 +131,41 @@ export interface PlanItemData {
   enoughEvidence?: boolean;
 }
 
+/** One choice in "Decisions and consequences" (D137), worded for display. */
+export interface DecisionData {
+  key: string;
+  /** "Week 2". */
+  when: string;
+  title: string;
+  /** The option taken, or null when nothing applied. */
+  option: string | null;
+  by: 'you' | 'kept' | 'default';
+  outcome: string | null;
+  /** What it changed: people, then business variables and revenue, as display lines. */
+  changes: string[];
+  /** Later events it led to, with their week. */
+  led: string[];
+  /** The leadership it showed, in words. */
+  read: string[];
+}
+
+/** One stakeholder in "Stakeholders" (D164), worded for display. */
+export interface StakeholderData {
+  key: string;
+  name: string;
+  /** "Chief Financial Officer, an executive". */
+  role: string;
+  /** "Steady to Good". */
+  relationship: string;
+  measures: Array<{ key: 'trust' | 'satisfaction'; name: string; start: number; end: number; direction: 'up' | 'down' | 'flat' }>;
+  interactions: Array<{ key: string; when: string; title: string; how: string; outcome: string | null; changes: string[] }>;
+  /** What moved the relationship most, a line each. */
+  moves: string[];
+}
+
+/** A business variable over the run (D136): start and end, formatted. */
+export interface BusinessVariableData { key: string; name: string; start: string; end: string; direction: 'up' | 'down' | 'flat'; better: boolean | null }
+
 export interface MomentData {
   key: string;
   kind: 'best' | 'revisit';
@@ -160,6 +198,8 @@ export interface BusinessData {
   funnel: Array<{ key: string; name: string; value: number; ideal: number; bottleneck: boolean }>;
   bottleneck: { name: string; periods: number; why: string | null } | null;
   conversions: number;
+  /** The sales unit's words (D227), for the conversions line; left out, the catalog's (deals). */
+  units?: UnitWords;
   /** Revenue against target, formatted: the engine's business line. */
   line: string;
 }
@@ -183,11 +223,18 @@ export interface MethodologyData {
 
 export interface SummaryExtras {
   level: string | null;
+  /** When the outcomes held the overall level under what the words reached (D168): why, in one line. */
+  levelWhy?: string | null;
   strengths: string[];
   priorities: string[];
   business: string;
   /** Assessment only: the overall verdict, shown first (D75). */
   verdict?: VerdictData | null;
+  /** The headline the run's evidence gives, and its factual lines (D143). */
+  headline?: string | null;
+  lines?: string[];
+  /** "What drove your results" (D145): the decisions and patterns that moved the outcomes most. */
+  drivers?: Array<{ key: string; tone: 'positive' | 'negative'; text: string }>;
 }
 
 // ---------------------------------------------------------------- Report 3.0 (D75, D76)
@@ -208,6 +255,8 @@ export interface VerdictData {
   review: string;
   /** "Records: r8, r16". */
   records: string;
+  /** What held the verdict under the one the words alone would reach (D169). */
+  why?: string | null;
   quotes: ReportQuote[];
   tone: Tone;
 }
@@ -225,6 +274,8 @@ export interface ObjectivesData {
   /** "112%". */
   share: string;
   conversions: number;
+  /** The sales unit's words (D227), for the conversions line; left out, the catalog's (conversions). */
+  units?: UnitWords;
   team: Array<{ key: 'skill' | 'morale' | 'result'; label: string; start: number; end: number }>;
   narrative: string;
 }

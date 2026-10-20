@@ -1,4 +1,6 @@
 import { AuthorDraftRequest, AuthorDraftResponse, AuthorTurnRequest, AuthorTurnResponse } from '../../../src/api/author';
+import { AuthorEditRequest, AuthorEditResponse } from '../../../src/api/authorEdit';
+import { checkViewOps } from '../../../src/author/model/patch';
 import { parseStoryline } from '../../../src/engine/config';
 import type { ServerContext } from '../context';
 import { HttpError } from '../http/errors';
@@ -39,6 +41,25 @@ export function registerAuthor(ctx: ServerContext) {
       const saved = await ctx.repo.saveStoryline({ id: parsed.config.id, status: 'draft', name: parsed.config.name, config: r.data.storyline, createdBy: principal!.id });
       c.header('X-Storyline-Version', `${saved.id}@${saved.version}`);
     }
+    return c.json(r.data);
+  });
+
+  routes.add({ method: 'post', path: '/genie/author/edit', tag: 'author', auth: ['author'], limit: 'ai', body: named(AuthorEditRequest, 'AuthorEditRequest'),
+    summary: 'Ask Kora: an instruction becomes set operations on the whitelisted fields it was given, or a reply (D127)',
+    responses: { 200: { description: 'AuthorEditResponse', schema: named(AuthorEditResponse, 'AuthorEditResponse') }, 501: { description: 'Not offered: the app reads the instruction with its rules' }, 502: Err }
+  }, async (c, { body }) => {
+    const editor = ctx.ai.editor;
+    if (!editor) return c.json({ message: 'Not offered', code: 'notImplemented' }, 501);
+    let out: unknown;
+    try {
+      out = await editor.edit(body);
+    } catch {
+      throw new HttpError(502, 'modelFailed', 'Kora\'s model did not answer. The app uses its rules.');
+    }
+    if (out === null) return c.json({ message: 'Not offered', code: 'notImplemented' }, 501);
+    const r = AuthorEditResponse.safeParse(out);
+    // Checked here too, whatever the module did: only paths it was given, on the whitelist, with values the draft schema takes.
+    if (!r.success || (r.data.kind === 'patch' && checkViewOps(body.view, r.data.ops).length)) throw new HttpError(502, 'badModelOutput', 'Kora\'s model gave an answer the app cannot use.');
     return c.json(r.data);
   });
 }

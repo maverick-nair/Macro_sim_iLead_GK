@@ -6,7 +6,8 @@ import { paginate, splitAt } from './paginate';
 import type { ReportBlock } from './types';
 import './messages';
 
-const WEB_PAGE = 'flex flex-col gap-7 border border-line-default bg-surface-card backdrop-blur-14';
+/** Web: square white pages on the canvas's sand desk (D232). */
+const WEB_PAGE = 'flex flex-col gap-7 border border-line-default bg-surface-card';
 /** A letter page: light colours whatever the theme, shown at 0.8 so it is 8.5 by 11 inches on screen and on paper. */
 const PRINT_PAGE = 'flex flex-col gap-7 overflow-hidden bg-surface-solid px-16 pt-16 pb-12 text-fg-primary shadow-(--il-report-print-shadow) scheme-light w-(--il-report-print-page-width) [zoom:var(--il-report-print-zoom)] print:shadow-none print:[zoom:1] print:origin-top-left print:scale-(--il-report-print-scale)';
 /** Printing: one letter sheet per page, clipping the unscaled layout box so it never spills onto a blank sheet. */
@@ -43,17 +44,23 @@ export function ReportDocument({ blocks, toolbar, footer, landmark = false, page
   const Outer = landmark ? 'main' : 'div';
   const outer = print
     ? 'relative mx-auto flex w-full max-w-none flex-1 flex-col items-center gap-6 bg-(--il-report-print-desk) p-8 print:block print:bg-transparent print:p-0'
-    : `mx-auto flex w-full max-w-(--il-report-width) flex-1 flex-col items-stretch gap-5 bg-transparent px-8 pt-6 pb-10`;
+    : 'flex w-full flex-1 flex-col bg-surface-raised';
   return (
     <Outer className={outer}>
       {/* The toolbar (Back, Email, Download) stays at the top of the window as the report scrolls (D101). */}
-      {toolbar && <div className={`sticky top-0 z-30 -mx-3 w-auto rounded-b-16 px-3 py-2.5 backdrop-blur-20 print:hidden ${print ? 'scheme-dark bg-(--il-report-print-desk)' : 'bg-surface-material'}`}>{toolbar}</div>}
+      {toolbar && (print
+        ? <div className="sticky top-0 z-30 -mx-3 w-auto rounded-b-4 px-3 py-2.5 scheme-dark bg-(--il-report-print-desk) print:hidden">{toolbar}</div>
+        : <div className="il-chrome sticky top-0 z-30 px-8 py-2.5 print:hidden"><div className="mx-auto w-full max-w-(--il-report-width)">{toolbar}</div></div>)}
       {print && <style>{REPORT_PAGE_RULE}</style>}
-      {print ? <PrintPages blocks={blocks} footer={footer} label={label} /> : splitAt(blocks, b => !!b.card).map((group, i) => (
-        <article key={group[0].key} aria-label={label(i + 1)} className={`${WEB_PAGE} rounded-28 p-8`}>
-          {group.map(b => <Fragment key={b.key}>{b.node}</Fragment>)}
-        </article>
-      ))}
+      {print ? <PrintPages blocks={blocks} footer={footer} label={label} /> : (
+        <div className="mx-auto flex w-full max-w-(--il-report-width) flex-col gap-5 px-8 pt-7 pb-10 tablet:px-5">
+          {splitAt(blocks, b => !!b.card).map((group, i) => (
+            <article key={group[0].key} aria-label={label(i + 1)} className={`${WEB_PAGE} px-12 py-11 tablet:px-8 tablet:py-8`}>
+              {group.map(b => <Fragment key={b.key}>{b.node}</Fragment>)}
+            </article>
+          ))}
+        </div>
+      )}
     </Outer>
   );
 }

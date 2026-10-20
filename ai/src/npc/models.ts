@@ -13,13 +13,13 @@ import { buildNpcRequest, npcPromptVersion, TRUST_FLOOR } from './prompt';
  */
 
 const guardContext = (ctx: NpcTurnContext): GuardContext => ({
-  hiddenConcern: ctx.speaker.persona?.hiddenConcern,
-  concernLine: ctx.speaker.persona?.concernLine,
+  hiddenConcern: ctx.speaker.persona?.hiddenConcern ?? ctx.speaker.stakeholder?.hiddenConcern,
+  concernLine: ctx.speaker.persona?.concernLine ?? ctx.speaker.stakeholder?.concernLine,
   shareBlocked: ctx.concernRevealed ? false : ctx.speaker.trust < TRUST_FLOOR || !!ctx.guarded
 });
 
 /** Whether a reply may count as the concern surfacing. The model proposes; these rules have the last word. */
-const mayReveal = (ctx: NpcTurnContext) => !!ctx.speaker.persona?.concernLine && !ctx.concernRevealed && ctx.speaker.trust >= TRUST_FLOOR && !ctx.guarded;
+const mayReveal = (ctx: NpcTurnContext) => !!(ctx.speaker.persona?.concernLine ?? ctx.speaker.stakeholder?.concernLine) && !ctx.concernRevealed && ctx.speaker.trust >= TRUST_FLOOR && !ctx.guarded;
 
 async function collect(stream: AsyncIterable<NpcStreamEvent>): Promise<NpcReply> {
   let reply: NpcReply | null = null;

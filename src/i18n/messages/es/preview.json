@@ -1,0 +1,19 @@
+{
+  "preview.bar.aria": "Controles de la vista previa",
+  "preview.bar.notice": "Vista previa · prueba · nada se guarda en los informes",
+  "preview.bar.draft": "Borrador de la versión {version}, guardado {at}",
+  "preview.bar.draftLocal": "El borrador guardado en este navegador",
+  "preview.jump.button": "Ir a",
+  "preview.jump.aria": "Momentos de la simulación",
+  "preview.jump.week": "{unit, select, year {Año} month {Mes} day {Día} other {Semana}}",
+  "preview.jump.item": "{key, select, onboarding {Bienvenida} styles {Estilos del lunes, {unit, select, year {año} month {mes} day {día} other {semana}} {n}} board {Tu escritorio, {unit, select, year {año} month {mes} day {día} other {semana}} {n}} weekend {Cierre de {unit, select, year {año} month {mes} day {día} other {semana}} {n}} report {Final e informe} other {}}",
+  "preview.restart": "Reiniciar",
+  "preview.back": "Volver a GenieKreator",
+  "preview.trace.show": "Mostrar de dónde viene",
+  "preview.trace.count": "{count, plural, =0 {Nada en esta pantalla tiene etiqueta todavía.} one {# elemento de esta pantalla lleva la sección de GenieKreator de la que viene.} other {# elementos de esta pantalla llevan la sección de GenieKreator de la que vienen.}}",
+  "preview.updated": "Actualizado desde GenieKreator.",
+  "preview.updated.detail": "Recargar juega lo último guardado desde el mismo punto.",
+  "preview.reload": "Recargar",
+  "preview.working": "Abriendo la vista previa",
+  "preview.failed": "La vista previa no pudo hacerlo. Inténtalo de nuevo o vuelve a abrirla desde GenieKreator."
+}

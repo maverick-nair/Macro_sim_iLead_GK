@@ -244,6 +244,8 @@ test.describe('the menu and its panels', () => {
 
   test('the result trend in the profile, with a table version', async ({ page }) => {
     await toBoard(page, '/?start=board&period=3');
+    // The desk opens a profile from the person's actions (D232): select them first.
+    if (!(await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).count())) await page.getByText('Kent Goldberg', { exact: true }).click();
     await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
     await expect(page.getByRole('heading', { name: 'Result trend' })).toBeVisible();
     await expect(page.getByRole('img', { name: /^Result from \d+ to \d+, \d+ points$/ })).toBeVisible();
@@ -252,18 +254,42 @@ test.describe('the menu and its panels', () => {
     await axe(page, 'trend');
   });
 
-  test('Exit asks first and returns to the launch\'s address', async ({ page }) => {
+  test('Sign out saves first and returns to the launch\'s address (D213)', async ({ page }) => {
     await page.route('https://lms.example.com/**', route => route.fulfill({ contentType: 'text/html', body: '<title>LMS</title><h1>Back in the LMS</h1>' }));
     await toBoard(page, '/?start=board&exit=https%3A%2F%2Flms.example.com%2Freturn');
-    await openFromMenu(page, 'Exit');
-    const dialog = page.getByRole('dialog', { name: 'Exit the simulation?' }).or(page.getByRole('alertdialog', { name: 'Exit the simulation?' }));
-    await expect(dialog).toBeVisible();
-    await axe(page, 'exit');
-    await dialog.getByRole('button', { name: 'Stay' }).click();
-    await expect(dialog).toHaveCount(0);
-    await openFromMenu(page, 'Exit');
-    await dialog.getByRole('button', { name: 'Exit' }).click();
+    await menu(page).click();
+    const sheet = page.getByRole('dialog', { name: 'Menu' });
+    await expect(sheet.getByRole('group', { name: 'Session' })).toBeVisible();
+    await sheet.getByRole('button', { name: 'Sign out' }).click();
     await expect(page).toHaveURL('https://lms.example.com/return');
+  });
+
+  test('Save, pause and sign out from the HUD, the menu and the pause screen; signed out without a return address (D213)', async ({ page }) => {
+    await toBoard(page);
+    // Save in the HUD: the confirmation says when.
+    await page.getByRole('button', { name: 'Save progress' }).click();
+    await expect(page.getByRole('status').filter({ hasText: /^Progress saved at / })).toBeVisible();
+    // The menu's session group: the last saved time; Pause opens the pause screen.
+    await menu(page).click();
+    const sheet = page.getByRole('dialog', { name: 'Menu' });
+    await expect(sheet.getByRole('button', { name: 'Save progress' })).toHaveAccessibleDescription(/^Last saved /);
+    await axe(page, 'menu sheet');
+    await sheet.getByRole('button', { name: 'Pause simulation' }).click();
+    const paused = page.getByRole('dialog', { name: 'Take your time.' });
+    await expect(paused).toBeVisible();
+    await expect(paused.getByText(/last saved at /)).toBeVisible();
+    await paused.getByRole('button', { name: 'Save progress' }).click();
+    await expect(paused.getByRole('status')).toHaveText(/^Progress saved at /);
+    await axe(page, 'pause screen');
+    // No return address: signing out shows the signed out screen with its heading focused; Sign back in returns.
+    await paused.getByRole('button', { name: 'Sign out' }).click();
+    const out = page.getByRole('heading', { level: 1, name: 'You are signed out.' });
+    await expect(out).toBeFocused();
+    await expect(page.getByText(/^Your progress is saved: Week 1, Day 1, /)).toBeVisible();
+    await axe(page, 'signed out');
+    await page.getByRole('button', { name: 'Sign back in' }).click();
+    await expect(out).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'How your team and business are doing' })).toBeVisible();
   });
 
   test('Full screen toggles, or says why it cannot', async ({ page }) => {

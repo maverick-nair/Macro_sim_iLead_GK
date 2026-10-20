@@ -3,6 +3,7 @@ import { Button } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { copyText } from '../../lib/clipboard';
 import { ClientLogo } from '../../theme/brand';
+import { ILeadLogo } from './Logo';
 
 export interface SmallScreenNoticeProps {
   /** The address to open on a bigger screen: the page's own link, participant and all. */
@@ -43,10 +44,10 @@ export function SmallScreenNotice({ link, copy = copyText, focusOnOpen = true }:
       <main aria-labelledby={titleId} className="m-auto flex w-full max-w-110 flex-col items-center gap-5 px-6 py-10 text-center">
         <div className="flex items-center gap-3">
           <ClientLogo />
-          <span className="bg-(image:--il-fill-brand) bg-clip-text text-28 font-700 tracking-(--il-app-logo-tracking) text-transparent">{t('hud.logo')}</span>
+          <ILeadLogo size="lg" />
         </div>
         <DevicesIcon />
-        <h1 ref={heading} id={titleId} tabIndex={-1} className="m-0 text-24 leading-(--il-smallscreen-title-leading) font-700 text-balance outline-none">{t('smallscreen.title')}</h1>
+        <h1 ref={heading} id={titleId} tabIndex={-1} className="m-0 text-24 leading-(--il-smallscreen-title-leading) font-600 text-balance outline-none">{t('smallscreen.title')}</h1>
         <p className="m-0 text-15 text-pretty text-fg-secondary">{t('smallscreen.body')}</p>
         <Button variant="primary" size="lg" onClick={() => void onCopy()}>{t('smallscreen.copy')}</Button>
         <span role="status" className={`min-h-5 text-13 font-600 ${copied === 'failed' ? 'text-fg-secondary' : 'text-status-gain'}`}>

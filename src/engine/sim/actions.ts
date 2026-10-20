@@ -1,12 +1,16 @@
 import { blank, UNTAGGED } from './live';
+import { IntentError } from './errors';
 import type { StorylineConfig } from '../config';
 import type { Rng } from './rng';
 import { needOf } from '../lens';
 import { mismatchType, trainingMismatch, type Mismatch, type Style, type Triple } from './rules';
 import { respond } from './events';
+import { applyActionBusiness } from './business';
 import { checkBadges } from './score';
+import { finishStakeholder } from './stakeholders';
+import { attend, noteRepeat, noteUse, onAction, realismOf, repeatOf, sponsorContact, type Repeat } from './realism';
 import {
-  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, nextId, person, record, spend, sponsorChange,
+  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, netChanges, nextId, person, record, spend, sponsorChange,
   styleName, stageName, trustChange, YOU
 } from './sim';
 import { msg, type Copy, type Msg } from '../copy';
@@ -17,9 +21,7 @@ import type { ActionRecord, Band, Change, Evaluation, Interaction, LiveRecord, M
 type Action = StorylineConfig['actions'][number];
 type Option = Action['options'][number];
 
-export class IntentError extends Error {
-  constructor(message: string, readonly code: string) { super(message); this.name = 'IntentError'; }
-}
+export { IntentError };
 
 const action = (sim: Sim, key: string) => {
   const a = sim.config.actions.find(x => x.key === key);
@@ -93,6 +95,13 @@ export function confirmStyles(sim: Sim, rng: Rng, styles: Record<string, Style>,
 }
 
 const pr = (sim: Sim, id: string) => { const p = person(sim, id).pronoun; return p === 'she' ? 'she' : p === 'they' ? 'they' : 'he'; };
+
+/** The most common fit among people, ties to the worse fit: how an approach landed overall. */
+function typical(fits: Mismatch[]): Mismatch {
+  const n = [0, 1, 2].map(k => fits.filter(f => f === k).length);
+  const top = Math.max(...n);
+  return ([2, 1, 0] as const).find(k => n[k] === top)!;
+}
 
 // ---------------------------------------------------------------- availability
 
@@ -209,18 +218,26 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   const o = validate(sim, a, input.memberIds, input.option, input.stage);
   const targets = input.memberIds.map(id => member(sim, id)!);
   const changes: Change[] = [];
+  /** How well the approach fitted each person, for the option's business effects by fit (D136). */
+  const fits: Mismatch[] = [];
+  // Realism (D171): how much of its good effects a repeat lands, per person (or for the team), worked out before this use.
+  const reps: Record<string, Repeat> = realismOf(sim) ? (a.scope === 'team' ? { team: repeatOf(sim, a, null) } : Object.fromEntries(input.memberIds.map(id => [id, repeatOf(sim, a, id)]))) : {};
+  const shareOf = (id: string) => (reps.team ?? reps[id])?.share ?? 1;
+  const meanShare = () => { const xs = Object.values(reps).map(r => r.share); return xs.length ? xs.reduce((x, y) => x + y, 0) / xs.length : 1; };
 
   switch (a.rule) {
     case 'weeklyStyle':
       for (const m of sim.members.filter(x => x.away === 0)) {
         const mt = mismatchType(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng, misread(sim, m));
-        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: msg('engine.team.cause', { option: o.label, name: firstName(sim, m.id), style: m.style ? styleName(sim, m.style) : msg('engine.noStyle'), fit: mt === 0 ? 'yes' : 'no' }), rule: ruleText(sim, a, o), evidence: [] }));
+        fits.push(mt);
+        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: o.label, cause: msg('engine.team.cause', { option: o.label, name: firstName(sim, m.id), style: m.style ? styleName(sim, m.style) : msg('engine.noStyle'), fit: mt === 0 ? 'yes' : 'no' }), rule: ruleText(sim, a, o), evidence: [] }, { share: shareOf(m.id), saturate: true }));
       }
       break;
     case 'training':
       for (const m of targets) {
         const mt = trainingMismatch(m.style ? fit(sim, m.style, m.neededAtStart) : 0, rng);
-        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: msg('engine.training.label'), cause: msg('engine.training.cause', { name: firstName(sim, m.id), option: o.label.toLowerCase() }), rule: ruleText(sim, a, o), evidence: [] }));
+        fits.push(mt);
+        changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), { label: msg('engine.training.label'), cause: msg('engine.training.cause', { name: firstName(sim, m.id), option: o.label.toLowerCase() }), rule: ruleText(sim, a, o), evidence: [] }, { share: shareOf(m.id), saturate: true }));
         m.away = o.away; m.awayReason = o.away ? 'training' : null; m.awaySetAt = sim.absSub; m.trainedInPeriod = sim.period;
         if (m.trainingRequestedPeriod === sim.period) changes.push(...trustChange(m, 4, { label: msg('engine.training.heard'), cause: msg('engine.training.heard.cause', { name: firstName(sim, m.id) }), rule: msg('engine.training.heard.rule', { n: 4 }), evidence: [] }));
       }
@@ -240,6 +257,9 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
     default:
       break;
   }
+
+  // Business variables, flags and follow ups (D136): a static or hybrid decision's now; a conversation's when it ends.
+  if (a.kind !== 'live') changes.push(...(applyActionBusiness(sim, o, a.kind === 'static' && fits.length ? typical(fits) : null, a.options.length > 1 ? msg('engine.choice', { action: a.name, option: o.label }) : a.name, meanShare())?.changes ?? []));
 
   // Evidence for decisions with no words: the choice itself, as the participant made it (rule 5).
   const choice = { quote: a.options.length > 1 ? msg('engine.choice', { action: a.name, option: o.label }) : a.name, by: YOU, judgedByAI: false };
@@ -280,7 +300,8 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
       budget: a.rule === 'hire' && sim.hireBudget ? true : undefined });
     // Hybrid decisions are locked before the conversation (spec).
     sim.interactions[interactionId].recordId = rec.id;
-    if (a.rule === 'swap' || a.rule === 'reward' || a.rule === 'fire') changes.push(...hybridDecision(sim, rng, a, targets, input.stage));
+    if (Object.keys(reps).length) sim.interactions[interactionId].shares = Object.fromEntries(Object.entries(reps).map(([k, r]) => [k, r.share]));
+    if (a.rule === 'swap' || a.rule === 'reward' || a.rule === 'fire') changes.push(...hybridDecision(sim, rng, a, targets, input.stage, shareOf));
   }
   addEffects(rec, changes);
   if (a.scope === 'team') sim.touchedTeam = true;
@@ -295,11 +316,21 @@ export function planAction(sim: Sim, rng: Rng, input: { action: string; option?:
   const budget = a.rule === 'hire' && sim.hireBudget;
   if (budget) sim.hireBudget = false;
   setCooldown(sim, a, o, input.memberIds);
+  // Realism (D171, D172): the team's time this takes, fatigue for a team action repeated in its window, time of their own.
+  if (realismOf(sim)) {
+    const fatigue = onAction(sim, a, o, input.memberIds, budget ? 0 : o.cost ?? a.cost, reps.team ?? { uses: 0, share: 1, ago: null });
+    if (fatigue.length) {
+      log(sim, { kind: 'trigger', title: msg('engine.real.fatigue.label'), memberIds: [...new Set(fatigue.map(c => c.subject))], changes: fatigue, action: a.key });
+      changes.push(...fatigue);
+    }
+    for (const r of Object.values(reps)) noteRepeat(sim, a, r);
+    if (a.scope === 'team') noteUse(sim, a, null); else for (const id of input.memberIds) noteUse(sim, a, id);
+  }
   spend(sim, rng, budget ? 0 : o.cost ?? a.cost);
   return { changes, interactionId, summary: a.name };
 }
 
-function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], stage?: string): Change[] {
+function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], stage?: string, shareOf: (id: string) => number = () => 1): Change[] {
   const changes: Change[] = [];
   if (a.rule === 'swap') {
     const moves: Array<[MemberSim, string]> = targets.length === 2 ? [[targets[0], targets[1].stage], [targets[1], targets[0].stage]] : [[targets[0], stage ?? targets[0].stage]];
@@ -320,7 +351,7 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
     const m = targets[0];
     const top = [...sim.members].filter(x => x.away === 0).sort((x, y) => y.result - x.result)[0];
     const o = a.options[0];
-    changes.push(...effectChanges(sim, rng, m, o.effects.m0, { label: msg('engine.reward.label'), cause: msg('engine.reward.cause', { name: firstName(sim, m.id) }), rule: ruleText(sim, a, o), evidence: [] }));
+    changes.push(...effectChanges(sim, rng, m, o.effects.m0, { label: msg('engine.reward.label'), cause: msg('engine.reward.cause', { name: firstName(sim, m.id) }), rule: ruleText(sim, a, o), evidence: [] }, { share: shareOf(m.id), saturate: true }));
     m.recognizedAt = sim.absSub;
     if (!top || top === m) sim.fairRecognitions += 1;
     if (top && top !== m) {
@@ -364,6 +395,8 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
   if (sim.phase !== 'board') throw new IntentError('Conversations happen on the board', 'wrongPhase');
   const replyMsg = it.replyTo ? sim.inbox.find(x => x.id === it.replyTo) : undefined;
   if (it.replyTo && (!replyMsg || replyMsg.state !== 'open')) { delete sim.interactions[interactionId]; throw new IntentError('That message is closed', 'closedMessage'); }
+  // A conversation with a stakeholder (D161) resolves on their relationship, not a team member's.
+  if (it.stakeholder) return finishStakeholder(sim, rng, interactionId, ev, npcReply);
   delete sim.interactions[interactionId];
   for (const id of it.memberIds) sim.touched.push(id);
   if (it.format === 'meeting') sim.touchedTeam = true;
@@ -378,12 +411,21 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
 
   const useRecord = it.recordId ? sim.actionRecords.find(r => r.id === it.recordId) : undefined;
   const table = a?.live.consequences?.[ev.band];
+  /** How well the approach fitted each person, and the option it played as, for the option's business effects (D136). */
+  const liveFits: Mismatch[] = [];
+  let liveOption: Option | undefined = a?.options.find(o => o.key === it.optionKey);
   let sponsorLine: Copy | null = null;
   let hireLine: Copy | null = null;
   if (it.actionKey === 'sponsor') {
     const briefingMsg = sim.inbox.find(x => x.id === it.replyTo);
     if (briefingMsg) briefingMsg.state = 'answered';
-    changes.push(...sponsorChange(sim, sim.config.gamification.sponsor.briefing[ev.band], msg('engine.sponsor.briefing', { band: ev.band })));
+    sponsorContact(sim);
+    // The participant's own update (D173) lands at a share of a briefing's effect.
+    const r = realismOf(sim);
+    const delta = sim.config.gamification.sponsor.briefing[ev.band];
+    changes.push(...(it.update && r
+      ? sponsorChange(sim, Math.round(delta * r.sponsor.update.share), msg('engine.real.update.done', { band: ev.band }))
+      : sponsorChange(sim, delta, msg('engine.sponsor.briefing', { band: ev.band }))));
     const sponsorFirst = sim.config.sponsor.name.split(' ')[0];
     sponsorLine = changes.some(c => c.subject === 'sponsor' && c.delta > 0) ? msg('engine.sponsor.moreConfident', { name: sponsorFirst }) : changes.some(c => c.subject === 'sponsor' && c.delta < 0) ? msg('engine.sponsor.lessConfident', { name: sponsorFirst }) : null;
   } else if (a && table && a.rule !== 'hire') {
@@ -402,6 +444,9 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     if (table.sponsor) changes.push(...sponsorChange(sim, table.sponsor, msg('engine.live.done', { action: a.name, band: ev.band })));
   } else if (it.actionKey === 'reply') {
     if (replyMsg && !targets.length) replyMsg.state = 'answered';
+    // Realism (D173, D174): answering someone is time of their own; answering the sponsor is a word to them.
+    if (replyMsg?.from === 'sponsor') sponsorContact(sim);
+    attend(sim, targets.map(m => m.id));
     for (const m of targets) {
       const inMsg = sim.inbox.find(x => x.id === it.replyTo);
       const onTime = inMsg && inMsg.state === 'open';
@@ -413,6 +458,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     }
   } else if (a && a.rule === 'styleOption') {
     const option = a.options.find(o => o.style === ev.styleUsed) ?? a.options[0];
+    liveOption = option;
     // Meetings, briefings, interviews and multi person conversations carry no style (scoring-and-report.md 3).
     const tagged = targets.length === 1 && !UNTAGGED.has(it.format);
     for (const m of targets) {
@@ -421,13 +467,14 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       const diff = tagged ? record(sim, m, ev.styleUsed, a.key) : fit(sim, ev.styleUsed, n);
       if (tagged) changes.push(...intentGap(sim, m, ev));
       const mt = adjust(mismatchType(diff, rng, misread(sim, m)), ev.band);
+      liveFits.push(mt);
       const reason: Reason = {
         label: label(firstName(sim, m.id)),
         cause: msg('engine.approach.cause', { mostly: ev.confidence < 0.5 ? 'yes' : 'no', style: styleName(sim, ev.styleUsed), fit: mt === 0 ? 'yes' : 'no', name: firstName(sim, m.id) }),
         rule: msg('engine.approach.rule', { rule: ruleText(sim, a, option) }),
         evidence: quotes(ev)
       };
-      changes.push(...effectChanges(sim, rng, m, effectFor(option, mt), reason, { boost: ev.band === 'strong' ? 1.2 : 1 }));
+      changes.push(...effectChanges(sim, rng, m, effectFor(option, mt), reason, { boost: ev.band === 'strong' ? 1.2 : 1, share: it.shares?.[m.id] ?? it.shares?.team, saturate: true }));
       const t = a.format === 'meeting' ? Math.round(BAND_TRUST[ev.band] / 2) : BAND_TRUST[ev.band];
       changes.push(...trustChange(m, t, { ...reason, rule: msg('engine.approach.trustRule') }));
     }
@@ -439,13 +486,15 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       const o = a.options.find(x => x.intent === (intent === 'warn' ? 'warn' : 'congratulate')) ?? a.options[0];
       const base: Mismatch = intent === 'warn' ? (trend < 0 ? 0 : 1) : trend >= 0 ? 0 : 1;
       const mt = adjust(base, ev.band);
+      liveFits.push(mt);
+      liveOption = o;
       const reason: Reason = {
         label: msg('engine.email.label', { name: firstName(sim, m.id), band: ev.band }),
         cause: msg('engine.email.cause', { intent, name: firstName(sim, m.id), trend: trend >= 0 ? 'up' : 'down' }),
         rule: msg('engine.email.rule', { rule: ruleText(sim, a, o) }),
         evidence: quotes(ev)
       };
-      changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), reason, { scale: intent === 'neutral' ? 0.5 : 1 }));
+      changes.push(...effectChanges(sim, rng, m, effectFor(o, mt), reason, { scale: intent === 'neutral' ? 0.5 : 1, share: it.shares?.[m.id], saturate: true }));
       if (intent === 'congratulate') m.recognizedAt = sim.absSub;
       addMessage(sim, { from: m.id, kind: 'email', title: msg('engine.email.re'), body: npcReply || msg('engine.email.thanks'), dueIn: null });
     }
@@ -487,6 +536,10 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
       changes.push(...trustChange(m, BAND_TRUST[ev.band], reason));
     }
   }
+
+  // A conversation's business effects (D136), by how the approach landed; hybrid decisions applied theirs when locked.
+  const liveShare = it.shares ? Object.values(it.shares).reduce((x, y) => x + y, 0) / Math.max(1, Object.keys(it.shares).length) : 1;
+  if (a && a.kind === 'live' && liveOption) changes.push(...(applyActionBusiness(sim, liveOption, liveFits.length ? typical(liveFits) : null, a.name, liveShare)?.changes ?? []));
 
   // Promises, hidden concerns, badges (3.4, 5.4, 7.3). Earlier promises are checked before this
   // conversation's own promise is recorded, so a promise is never kept by the talk that made it.
@@ -546,7 +599,8 @@ function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[]
     talk: { you: words(said), npc: theirs.reduce((n, t) => n + (typeof t.text === 'string' ? words(t.text) : 0), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition, spoken: mine.some(t => t.voice) },
     concern: !!ev.flags.concernSurfaced,
     impact: [...people.values()].reduce((a, b) => a + b, 0),
-    changes: [...changes].filter(c => c.subject !== 'sponsor').sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta)).slice(0, 4).map(c => ({ subject: c.subject, metric: c.metric, delta: c.delta }))
+    // Net per person and metric, so the report never lists "trust +3, trust −3" (D145).
+    changes: netChanges(changes.filter(c => c.subject !== 'sponsor')).slice(0, 4)
   };
 }
 
@@ -580,13 +634,39 @@ function createMemberFrom(sim: Sim, id: string): MemberSim {
     id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? sim.config.trustRules.start, trustCap: sim.config.trustRules.capPerSubPeriod, trustMovedThisSub: 0, style: null, lastStyle: null, lastReaction: null,
     neededAtStart: needOf(p.start, sim.config.thresholds.high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: sim.period, revealed: false, concernShared: false, lastChange: 0,
-    recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale
+    recognizedAt: null, reassignedInPeriod: null, trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale, moraleHistory: [], strikes: 0
   };
 }
 
 /** Opens a reply to an inbox message, or a sponsor briefing. Costs no days (spec). */
-export function openConversation(sim: Sim, kind: 'reply' | 'sponsor', messageId?: string): string {
+/**
+ * Why the participant's own update to the sponsor (D173) cannot be given now, or null when it can: realism on,
+ * on the board, once a period, with the days it costs.
+ */
+export function sponsorUpdateBlock(sim: Sim): 'off' | 'done' | 'capacity' | null {
+  const r = realismOf(sim);
+  if (!r || !sim.realism) return 'off';
+  if (sim.realism.updatedPeriod === sim.period) return 'done';
+  if (r.sponsor.update.cost > capacityLeft(sim) + 1e-9) return 'capacity';
+  return null;
+}
+
+export function openConversation(sim: Sim, kind: 'reply' | 'sponsor', messageId?: string, rng?: Rng): string {
   if (sim.phase !== 'board') throw new IntentError('Conversations happen on the board', 'wrongPhase');
+  // The participant's own update to the sponsor (D173): no briefing due, costs days, once a period.
+  if (kind === 'sponsor' && !messageId) {
+    const why = sponsorUpdateBlock(sim);
+    if (why === 'off') throw new IntentError('The sponsor briefing is not due yet', 'noBriefing');
+    if (why === 'done') throw new IntentError('You have updated the sponsor this period', 'blocked');
+    if (why === 'capacity') throw new IntentError('Not enough time left', 'noCapacity');
+    const open = Object.entries(sim.interactions).find(([, it]) => it.update);
+    if (open) return open[0];
+    const id = nextId(sim, 'i');
+    sim.interactions[id] = { ...blank({ actionKey: 'sponsor', optionKey: null, memberIds: [], format: 'sponsor', startedAt: sim.absSub }), update: true };
+    sim.realism!.updatedPeriod = sim.period;
+    if (rng) spend(sim, rng, realismOf(sim)!.sponsor.update.cost);
+    return id;
+  }
   const msg = messageId ? sim.inbox.find(m => m.id === messageId) : undefined;
   if (kind === 'reply' && !msg) throw new IntentError('Unknown message', 'closedMessage');
   // One conversation per message: an open one is resumed, never doubled.

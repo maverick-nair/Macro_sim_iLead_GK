@@ -1,11 +1,12 @@
 import type { AuthorDraftResponse, Brief, FrameworkDimension, LeadershipLensModule } from '../api/author';
 import { DEFAULT_SECTIONS, REPORT_SECTIONS, type StorylineInput } from '../engine/config';
-import { bestStyle, NEEDS, type Lens, type LensStyle, type NeedKey } from '../engine/lens';
+import { bestStyle, NEEDS, styleLetters, type Lens, type LensStyle, type NeedKey } from '../engine/lens';
 import { DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_RECOGNITION, DEFAULT_SCALE } from '../engine/report/defaults';
 import salesElevator from '../engine/storylines/sales-elevator.json';
 import { sanitizeCopy } from '../i18n/copy';
 import { challengeKind, DEFAULT_PROCESS, DURATION_MODES, industryOf, REGIONS, type Industry } from './context';
 import { SKIP } from './copyGuard';
+import { choicesFromDilemmas, variableFromObjective, variablesFromBrief, type SeedChoice } from './dilemmas';
 import { fitTable, LENS_BY_ID, type Dimension, type LibraryLens, type LibraryStyle, type Tone } from './lenses';
 import { selectionOf } from './module';
 
@@ -27,6 +28,18 @@ const NAMES = {
   he: ['Arjun Mehta', 'Daniel Okafor', 'Marcus Lee', 'Tomas Silva', 'Ravi Kumar', 'Owen Clarke', 'Samuel Tan', 'Hiro Sato', 'Leon Fischer', 'Kwame Mensah', 'Ethan Brooks', 'Omar Haddad', 'Victor Hale', 'Felix Moreau', 'Adrian Cole', 'Nikhil Rao'],
   she: ['Priya Nair', 'Sofia Martins', 'Grace Chen', 'Amara Obi', 'Hannah Wright', 'Leila Rahman', 'Mei Lin', 'Nadia Petrova', 'Clara Jensen', 'Ana Ruiz', 'Zoe Adams', 'Isha Kapoor']
 } as const;
+/**
+ * Names for hire candidates by region (D228): the region's own where GenieKreator has them, else the team's pool.
+ * Candidates never share a name with the team.
+ */
+const CANDIDATE_NAMES: Partial<Record<string, { he: readonly string[]; she: readonly string[] }>> = {
+  india: {
+    he: ['Rahul Deshmukh', 'Sandeep Kulkarni', 'Imran Shaikh', 'Vikram Patil', 'Anil Joshi', 'Manoj Pawar', 'Suresh Iyer', 'Karan Malhotra'],
+    she: ['Sneha Jadhav', 'Pooja Bhosale', 'Kavya Iyer', 'Ritu Sharma', 'Ayesha Khan', 'Neha Gokhale', 'Divya Menon', 'Anjali Verma']
+  }
+};
+/** Where a candidate worked before, by position: no rival or real firm is named. */
+const BACKGROUNDS = ['a regional firm', 'a national firm', 'a fast growing start up', 'a family run business', 'a large competitor', 'a partner firm'];
 const SPONSORS = ['Elena Ward', 'Catherine Bose', 'Julia Brandt', 'Maya Fernandes'];
 const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve'];
 
@@ -85,7 +98,9 @@ export function draftContext(brief: Brief): DraftContext {
 export function fitStyles(lib: LibraryLens, ctx: DraftContext): Array<LensStyle & { home: NeedKey }> {
   const source: LibraryStyle[] = lib.styles ?? LENS_BY_ID.readiness_based.styles!;
   const v = { work: ctx.industry.work, company: ctx.company, product: ctx.product };
-  return source.map(s => ({ key: s.key, letter: s.letter, name: s.names[ctx.tone], short: fill(s.short, v), description: fill(s.description, v), home: s.home }));
+  // The library's tag stands for its own (professional) name; renamed for the tone, a style shows its name's first letter (D230).
+  const letters = styleLetters(source.map(s => ({ key: s.key, name: s.names[ctx.tone], letter: s.names[ctx.tone] === s.names.professional ? s.letter : '' })));
+  return source.map((s, i) => ({ key: s.key, letter: letters[i], name: s.names[ctx.tone], short: fill(s.short, v), description: fill(s.description, v), home: s.home }));
 }
 
 export function draftLens(module: LeadershipLensModule, ctx: DraftContext): Lens {
@@ -111,6 +126,12 @@ export function dimensionsOf(id: LeadershipLensModule['primary']['id'], client: 
   });
 }
 
+/** The low capability narrative, which names every style: rebuilt when the author renames them (D104). */
+export function capabilityLow(names: string[]): string {
+  const or = names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}` : names[0];
+  return `Most of your style choices did not match what people needed. Start each week by asking what each person needs most: ${or}.`;
+}
+
 function draftReport(module: LeadershipLensModule, lens: Lens) {
   const sel = selectionOf(module);
   const primary = dimensionsOf(sel.primary, sel.clientDimensions);
@@ -125,8 +146,6 @@ function draftReport(module: LeadershipLensModule, lens: Lens) {
     if (secondary.length && conversations.has(k)) list.push(secondary[i % secondary.length].key);
     linkage[k] = [...new Set(list)];
   });
-  const names = lens.styles.map(s => s.name);
-  const or = names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names[names.length - 1]}` : names[0];
   return {
     skills: [...primary.map(d => skill(d, false)), ...secondary.map(d => skill(d, true))],
     linkage,
@@ -134,14 +153,14 @@ function draftReport(module: LeadershipLensModule, lens: Lens) {
     narratives: {
       overall: DEFAULT_NARRATIVES.overall,
       capability: {
-        low: `Most of your style choices did not match what people needed. Start each week by asking what each person needs most: ${or}.`,
+        low: capabilityLow(lens.styles.map(s => s.name)),
         mid: DEFAULT_NARRATIVES.capability.mid,
         high: DEFAULT_NARRATIVES.capability.high
       },
       dominant: Object.fromEntries(lens.styles.map(s => {
         const need = NEEDS.find(n => lens.fit[n][s.key] === 0);
         const who = need ? lower(lens.needs[need].label) : 'ready for it';
-        return [s.key, `You lean on ${s.name}. It helps people who are ${who}, and holds back people who need something else.`];
+        return [s.key, `You lean on {style}. It helps people who are ${who}, and holds back people who need something else.`];
       }))
     },
     development: Object.fromEntries([...primary, ...secondary].map(d => [d.key, { practice: d.practice, onTheJob: d.onTheJob }])),
@@ -199,7 +218,7 @@ function titleFor(stage: { key: string; name: string }, ctx: DraftContext) {
   return se ? SE_TITLES[SE_STAGES[ctx.stages.indexOf(stage)]] : `${stage.name} Specialist`;
 }
 
-function draftPeople(ctx: DraftContext, lib: LibraryLens, seed: number) {
+function draftPeople(ctx: DraftContext, lib: LibraryLens, seed: number, region = 'global') {
   const used = { he: 0, she: 0 };
   const offset = { he: seed % NAMES.he.length, she: seed % NAMES.she.length };
   const nameFor = (p: 'he' | 'she') => NAMES[p][(offset[p] + used[p]++) % NAMES[p].length];
@@ -226,14 +245,29 @@ function draftPeople(ctx: DraftContext, lib: LibraryLens, seed: number) {
       portrait: src.portrait
     };
   });
+  // Hire candidates (D228): drafted from the brief and the region like the team, never naming a rival, and editable in Team.
+  const pool = CANDIDATE_NAMES[region];
+  const taken = new Set<string>(members.map(m => m.name));
+  const candidateName = (p: 'he' | 'she', i: number) => {
+    const list: readonly string[] = pool?.[p] ?? NAMES[p];
+    for (let k = 0; k < list.length; k++) { const n = list[(seed + i + k) % list.length]; if (!taken.has(n)) { taken.add(n); return n; } }
+    return nameFor(p);
+  };
   const candidates = salesElevator.candidates.map((c, i) => {
     const pronoun = c.pronoun as 'he' | 'she';
     const stage = ctx.stages[homeIndex(c, ctx)];
-    const name = nameFor(pronoun);
+    const name = candidateName(pronoun, i);
+    const first = name.split(' ')[0];
+    const experience = /^\d/.test(c.profile.experience) ? c.profile.experience : '3 years';
+    const background = BACKGROUNDS[(seed + i) % BACKGROUNDS.length];
+    const title = titleFor(stage, ctx);
     return {
-      id: `cand_${slug(name.split(' ')[0], 'c')}_${i}`, name, title: titleFor(stage, ctx), pronoun, homeStage: stage.key,
+      id: `cand_${slug(first, 'c')}_${i}`, name, title, pronoun, homeStage: stage.key,
       start: { ...c.start }, byStage: remapStages(c, ctx, stage.key),
-      profile: { previous: '', tenure: 'New joiner', experience: /^\d/.test(c.profile.experience) ? c.profile.experience : '3 years', skills: stage.name, remarks: `${name.split(' ')[0]} has worked on ${ctx.industry.work}s like these at ${ctx.rival}.`, relations: '' }
+      profile: {
+        previous: `${title}, ${background}`, tenure: 'New joiner', experience, skills: stage.name,
+        remarks: `${first} has ${experience} on ${ctx.industry.work}s like these at ${background} and wants a bigger role at ${ctx.company}.`, relations: ''
+      }
     };
   });
   return { members, candidates };
@@ -274,12 +308,27 @@ function draftEvents(brief: Brief, ctx: DraftContext, lib: LibraryLens, members:
   return named.map(e => (e.period !== undefined ? { ...e, period: Math.ceil(e.period / 2) } : e.window ? { ...e, window: { ...e.window, from: 2, to: 3 } } : e));
 }
 
-const WELCOME: Record<Tone, string> = {
+/** A decision seeded from a dilemma as the engine plays it (D137): a card on the board, reads by skill key. */
+function choiceEvent(c: SeedChoice): Event {
+  return {
+    key: c.key, title: c.title, body: { he: c.body, she: c.body }, card: 'impact', period: c.week, subPeriod: 2, impact: [0, 0, 0], target: 'team', delivery: 'modal',
+    choice: {
+      known: c.known, within: 2, default: c.default,
+      options: c.options.map(o => ({
+        key: o.key, label: o.label, outcome: o.outcome, who: 'team', people: [o.skill, o.morale, o.result], trust: o.trust,
+        business: { variables: o.variables, revenue: o.revenue, sponsor: o.sponsor }, read: o.read.map(r => ({ skill: r.skill.key, band: r.band }))
+      }))
+    }
+  } as Event;
+}
+
+/** The welcome letter's first line and the targets' closing line per tone (Kora's tone change swaps them, D125). */
+export const WELCOME: Record<Tone, string> = {
   professional: 'Welcome to {company}. I am glad you are here.',
   warm: 'Welcome to {company}. We are so glad to have you with us.',
   direct: 'Welcome to {company}. Let us get straight to it.'
 };
-const CLOSE: Record<Tone, string> = {
+export const CLOSE: Record<Tone, string> = {
   professional: 'Your time is limited each week. Spend it where it matters most.',
   warm: 'You will not do this alone. Lean on your team, and on me.',
   direct: 'Your time is short each week. Spend it well.'
@@ -299,7 +348,7 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
   const seed = hash(`${ctx.company}|${ctx.industry.id}`);
   const lens = draftLens(module, ctx);
   const sponsorName = SPONSORS[seed % SPONSORS.length];
-  const { members, candidates } = draftPeople(ctx, lib, seed);
+  const { members, candidates } = draftPeople(ctx, lib, seed, brief.region ?? 'global');
   const perStage = new Map<string, number>();
   for (const m of members) perStage.set(m.homeStage, (perStage.get(m.homeStage) ?? 0) + 1);
   const mode = DURATION_MODES[brief.duration ?? 'full'];
@@ -313,6 +362,12 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
   const stageList = ctx.stages.map(s => s.name);
   const stagesText = stageList.length > 1 ? `${stageList.slice(0, -1).join(', ')} and ${stageList[stageList.length - 1]}` : stageList[0];
   const challenge = brief.challenge ? `This quarter our challenge is ${sentence(lower(brief.challenge))}` : 'This quarter I need the number, and a team that is stronger when you leave than when you arrived.';
+  const report = draftReport(module, lens);
+  const events = draftEvents(brief, ctx, lib, members, sponsorName);
+  // A brief's objectives and dilemmas (D146) seed business variables and decisions (D153); the model words them.
+  const objectives = brief.objectives ?? [];
+  const seededVariables = objectives.some(o => variableFromObjective(o, m.target)) || brief.dilemmas?.length ? variablesFromBrief(objectives, m.target) : [];
+  const seeded = choicesFromDilemmas(brief.dilemmas ?? [], { weeks: mode.weeks, target: m.target, skills: report.skills.filter(sk => !sk.reportOnly).map(sk => ({ key: sk.key, name: sk.name })), variables: seededVariables, taken: events.map(e => e.key) });
   const storyline: StorylineInput = {
     id: `draft_${slug(ctx.company, 'c')}`,
     name: `${ctx.product}, ${ctx.company}`,
@@ -334,9 +389,10 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
     candidates,
     actions: se.actions.map(a => ({ ...a, options: a.options.map(o => (o.style ? { ...o, style: tag[o.style] ?? o.style } : o)) })),
     weeklyStyle: salesElevator.weeklyStyle as StorylineInput['weeklyStyle'],
-    events: draftEvents(brief, ctx, lib, members, sponsorName),
+    ...(seededVariables.length ? { variables: seededVariables.map(v => ({ ...v, weight: v.weight / 100 })) } : null),
+    events: [...events, ...seeded.map(choiceEvent)],
     triggers: se.triggers,
-    report: draftReport(module, lens),
+    report,
     maxPerStage: Math.max(2, ...perStage.values()),
     performanceThreshold: salesElevator.performanceThreshold,
     calibrated: false
@@ -344,12 +400,12 @@ export function draftStoryline(brief: Brief, module: LeadershipLensModule): Stor
   return sanitizeDeep(storyline);
 }
 
-const SECTION_NAMES: Record<(typeof REPORT_SECTIONS)[number], string> = {
+export const SECTION_NAMES: Record<(typeof REPORT_SECTIONS)[number], string> = {
   about: 'About the simulation', summary: 'Summary', skills: 'Skills', objectives: 'Objectives', adaptability: 'Leadership adaptability',
   styles: 'Leadership styles summary', style: 'Leadership style', consistency: 'Consistency in styles', intent: 'Intent and action',
-  actions: 'Summary of actions', distribution: 'Actions across the team', moments: 'Key moments', people: 'People',
+  actions: 'Summary of actions', distribution: 'Actions across the team', moments: 'Key moments', decisions: 'Decisions and consequences', people: 'People',
   business: 'Business results', analytics: 'Conversation analytics', thought: 'Food for thought', takeaways: 'Key takeaways',
-  plan: 'Development plan', progress: 'Progress over time', methodology: 'Methodology'
+  plan: 'Development plan', progress: 'Progress over time', methodology: 'Methodology', stakeholders: 'Stakeholders'
 };
 
 /** The build preview (module step 6), from a drafted storyline. */

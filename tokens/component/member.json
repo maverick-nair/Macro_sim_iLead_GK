@@ -15,22 +15,16 @@
       },
       "overlay": {
         "value": "linear-gradient(180deg, transparent 50%, {color.member.portrait-shade} 100%)"
-      },
-      "position": {
-        "value": "center 12%",
-        "$description": "Keeps faces in frame in the 118px portrait"
-      },
-      "position-compact": {
-        "value": "center 26%",
-        "$description": "Keeps faces in frame in the shorter portrait of a short window (D101)"
       }
     },
     "card": {
       "shadow": {
-        "value": "0 6px 20px {color.member.shadow-rest}"
+        "value": "none",
+        "$description": "Flat cards with a hairline, as on the canvas (D232)"
       },
       "shadow-selected": {
-        "value": "0 0 0 1px {color.accent.secondary}, 0 12px 36px {color.member.glow}"
+        "value": "0 0 0 1px {color.accent.default}",
+        "$description": "The selected card: a 2px edge in the accent (its 1px border plus this ring), no glow (D232)"
       },
       "transition": {
         "value": "translate {duration.base} {easing.settle}, box-shadow {duration.base} {easing.brand}, opacity {duration.base} {easing.brand}",

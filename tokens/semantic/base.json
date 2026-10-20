@@ -3,17 +3,26 @@
   "color": {
     "fg": {
       "primary": {
-        "light": "{color.ink.200}",
-        "dark": "{color.lavender.940}",
+        "light": "{color.canvas.ink}",
+        "dark": "{color.white}",
         "contrast": {
           "against": "color.surface.solid",
           "min": 4.5
         },
         "$description": "Names, values, headings"
       },
+      "body": {
+        "light": "{color.canvas.slate-700}",
+        "dark": "{color.canvas.mist}",
+        "contrast": {
+          "against": "color.surface.solid",
+          "min": 4.5
+        },
+        "$description": "Running text and labels on the canvas: a step softer than names and numbers, a step stronger than metadata (D232)"
+      },
       "secondary": {
-        "light": "{color.ink.450}",
-        "dark": "{color.lavender.780}",
+        "light": "{color.canvas.slate-600}",
+        "dark": "{color.canvas.mist}",
         "contrast": {
           "against": "color.surface.solid",
           "min": 4.5
@@ -22,119 +31,100 @@
       },
       "on-accent": {
         "light": "{color.white}",
-        "dark": "{color.brand.deep-space}",
+        "dark": "{color.canvas.navy}",
         "$description": "Text on accent fills"
       }
     },
     "surface": {
+      "page": {
+        "light": "{color.canvas.paper}",
+        "dark": "{color.canvas.navy}",
+        "$description": "The page itself: paper, or navy on dark (D232). Sheets and panels that stand in for a page (the menu, the report) use it"
+      },
       "card": {
         "light": "{color.white}",
-        "dark": {
-          "ref": "color.night.170",
-          "alpha": 0.82
-        },
+        "dark": "{color.canvas.charcoal-900}",
         "themable": true,
-        "$description": "Cards over the background image"
+        "$description": "Cards: white on paper, charcoal on navy (D232)"
       },
       "solid": {
         "light": "{color.white}",
-        "dark": "{color.night.170}",
+        "dark": "{color.canvas.charcoal-950}",
         "themable": true,
         "$description": "Opaque card, fallback for translucent layers"
       },
       "raised": {
-        "light": "{color.mist.955}",
-        "dark": {
-          "ref": "color.white",
-          "alpha": 0.06
-        },
+        "light": "{color.canvas.sand-200}",
+        "dark": "{color.canvas.charcoal-850}",
         "themable": true,
         "$description": "Insets, segmented control tracks"
       },
       "material": {
-        "light": {
-          "ref": "color.white",
-          "alpha": 0.93
-        },
-        "dark": {
-          "ref": "color.night.160",
-          "alpha": 0.93
-        },
+        "light": "{color.canvas.paper-light}",
+        "dark": "{color.canvas.charcoal-950}",
         "themable": true,
-        "$description": "Translucent overlays and drawers"
+        "$description": "Overlays and drawers. Opaque in the canvas look: no glass (D232)"
       },
       "scrim": {
         "light": {
-          "ref": "color.ink.200",
-          "alpha": 0.35
+          "ref": "color.canvas.navy",
+          "alpha": 0.45
         },
         "dark": {
-          "ref": "color.night.050",
-          "alpha": 0.66
+          "ref": "color.canvas.navy",
+          "alpha": 0.72
         },
         "$description": "Behind dialogs"
       }
     },
     "line": {
       "default": {
-        "light": "{color.mist.900}",
-        "dark": {
-          "ref": "color.white",
-          "alpha": 0.1
-        },
+        "light": "{color.canvas.sand-300}",
+        "dark": "{color.canvas.charcoal-800}",
         "$description": "Hairlines, decorative"
       },
       "strong": {
-        "light": "{color.mist.820}",
-        "dark": {
-          "ref": "color.white",
-          "alpha": 0.2
-        },
+        "light": "{color.canvas.sand-400}",
+        "dark": "{color.canvas.steel}",
         "$description": "Container borders: panels, dialogs, popovers. Decorative, the fill and shadow carry the edge"
       },
       "control": {
-        "light": "{color.mist.600}",
-        "dark": {
-          "ref": "color.white",
-          "alpha": 0.36
-        },
+        "light": "{color.canvas.sand-600}",
+        "dark": "{color.canvas.charcoal-600}",
         "$description": "Borders that identify a control: text fields, composers, choice chips, unearned star outlines. 3:1 against their surface (WCAG 1.4.11)"
       }
     },
     "track": {
-      "light": "{color.mist.920}",
-      "dark": {
-        "ref": "color.white",
-        "alpha": 0.1
-      },
+      "light": "{color.canvas.sand-300}",
+      "dark": "{color.canvas.charcoal-800}",
       "$description": "Empty part of bars and meters"
     },
     "accent": {
       "default": {
-        "light": "{color.blue.530}",
-        "dark": "{color.brand.electric-blue}",
+        "light": "{color.canvas.button}",
+        "dark": "{color.canvas.mint}",
         "themable": true,
         "contrast": {
           "against": "color.surface.solid",
           "min": 3
         },
-        "$description": "Bars, selected state, links"
+        "$description": "Bars, selected state, links. Navy on paper, mint on dark (D232)"
       },
       "secondary": {
-        "light": "{color.cyan.520}",
-        "dark": "{color.brand.cyber-cyan}",
+        "light": "{color.canvas.button}",
+        "dark": "{color.canvas.mint}",
         "themable": true,
         "contrast": {
           "against": "color.surface.solid",
           "min": 4.5
         },
-        "$description": "Eyebrows, text links, icons, focus. Used as 12px text, so it needs 4.5:1 (D8)"
+        "$description": "Eyebrows, text links, icons, focus rings: navy on paper, mint on dark (D232). Used as 12px text, so it needs 4.5:1 (D8)"
       },
       "soft": {
-        "light": "{color.blue.950}",
+        "light": "{color.canvas.sky-100}",
         "dark": {
-          "ref": "color.blue.620",
-          "alpha": 0.18
+          "ref": "color.canvas.mint",
+          "alpha": 0.14
         },
         "themable": true,
         "$description": "Selected backgrounds"
@@ -142,8 +132,8 @@
     },
     "status": {
       "attention": {
-        "light": "{color.amber.530}",
-        "dark": "{color.amber.840}",
+        "light": "{color.canvas.orange-800}",
+        "dark": "{color.canvas.orange-300}",
         "contrast": {
           "against": "color.surface.solid",
           "min": 4.5
@@ -151,15 +141,15 @@
         "$description": "Needs attention, under 30"
       },
       "attention-soft": {
-        "light": "{color.amber.960}",
+        "light": "{color.canvas.orange-50}",
         "dark": {
-          "ref": "color.amber.840",
+          "ref": "color.canvas.orange-300",
           "alpha": 0.14
         }
       },
       "gain": {
-        "light": "{color.mint.500}",
-        "dark": "{color.brand.mint-green}",
+        "light": "{color.canvas.green-800}",
+        "dark": "{color.canvas.green-300}",
         "contrast": {
           "against": "color.surface.solid",
           "min": 4.5
@@ -167,15 +157,15 @@
         "$description": "Positive delta"
       },
       "gain-soft": {
-        "light": "{color.mint.950}",
+        "light": "{color.canvas.green-100}",
         "dark": {
-          "ref": "color.mint.860",
+          "ref": "color.canvas.green-300",
           "alpha": 0.14
         }
       },
       "decline": {
-        "light": "{color.coral.530}",
-        "dark": "{color.coral.780}",
+        "light": "{color.canvas.orange-800}",
+        "dark": "{color.canvas.red-300}",
         "contrast": {
           "against": "color.surface.solid",
           "min": 4.5
@@ -183,24 +173,48 @@
         "$description": "Negative delta"
       },
       "decline-soft": {
-        "light": "{color.coral.960}",
+        "light": "{color.canvas.orange-50}",
         "dark": {
-          "ref": "color.coral.780",
+          "ref": "color.canvas.red-300",
           "alpha": 0.14
         }
+      }
+    },
+    "button": {
+      "solid": {
+        "light": "{color.canvas.button}",
+        "dark": "{color.canvas.paper-light}",
+        "$description": "The primary button's fill: navy on paper, paper on dark (D232)"
+      },
+      "on-solid": {
+        "light": "{color.white}",
+        "dark": "{color.canvas.ink}",
+        "$description": "The primary button's label: white on navy, ink on paper (D232). A client theme's brand fill brings its own (the loader picks deep space or white, whichever reads better on it)",
+        "themable": true
+      },
+      "quiet": {
+        "light": "{color.white}",
+        "dark": {
+          "ref": "color.white",
+          "alpha": 0.04
+        },
+        "$description": "The outlined button: white on paper, nearly clear on dark (D232)"
       }
     }
   },
   "fill": {
     "brand": {
-      "value": "{gradient.brand}",
-      "themable": true
+      "value": "linear-gradient({color.button.solid}, {color.button.solid})",
+      "themable": true,
+      "$description": "The primary button: flat navy on paper, flat paper on dark (D232, no gradients). A client theme sets its own brand gradient"
     },
     "product": {
-      "value": "{gradient.product}"
+      "value": "linear-gradient({color.accent.default}, {color.accent.default})",
+      "$description": "Progress fills: flat (D232)"
     },
     "spectrum": {
-      "value": "{gradient.spectrum}"
+      "value": "linear-gradient({color.accent.default}, {color.accent.default})",
+      "$description": "Celebration: flat (D232)"
     }
   }
 }

@@ -71,7 +71,7 @@ function ListRow() {
 }
 export const ListRadios: StoryObj = { render: () => <ListRow /> };
 
-/** A lens with six styles (Six Leadership Styles, D70): the letters shrink to fit the card; on a touch screen they wrap to rows of three, each 44px. */
+/** A lens with five styles (Six Leadership Styles, D70 and D104): the letters shrink to fit the card; on a touch screen they wrap to rows of three, each 44px. */
 export const SixStyles: StoryObj = {
   render: () => (
     <LensProvider lens={SIX_STYLES_VIEW}>
@@ -83,12 +83,12 @@ export const SixStyles: StoryObj = {
   )
 };
 
-/** Six styles, the tooltip on the first and the last letter. */
+/** Five styles, the tooltip on the first and the last letter. */
 export const SixStylesTooltips: StoryObj = {
   render: () => (
     <LensProvider lens={SIX_STYLES_VIEW}>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 260px)', gap: '8px 24px' }}>
-        {['vision', 'command'].map(k => <Frame key={k} width={206}><StyleControl value="harmony" onChange={() => {}} memberName="Kent Goldberg" tooltip={k} onTooltipChange={() => {}} /></Frame>)}
+        {['vision', 'drive'].map(k => <Frame key={k} width={206}><StyleControl value="harmony" onChange={() => {}} memberName="Kent Goldberg" tooltip={k} onTooltipChange={() => {}} /></Frame>)}
       </div>
     </LensProvider>
   )

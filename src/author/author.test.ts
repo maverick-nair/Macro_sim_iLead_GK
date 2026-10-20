@@ -7,7 +7,7 @@ import { firstAnswer, MockDrafter, ServerDrafter } from './drafter';
 import { extractFramework } from './extract';
 import { LENS_LIBRARY } from './lenses';
 import { buildModule } from './module';
-import { addDocument, applyAnswer, MAX_QUESTIONS, MIN_QUESTIONS, planQuestions, questionFor } from './questions';
+import { addDocument, applyAnswer, MAX_QUESTIONS, MIN_QUESTIONS, planQuestions, questionFor, questionsToGo } from './questions';
 import { recommendLens } from './recommend';
 import { SAMPLE_FRAMEWORK } from './fixtures';
 
@@ -37,6 +37,12 @@ describe('question policy', () => {
     expect(planQuestions(empty(), [])).toEqual({ next: 'role_level', n: 1, about: 10 });
   });
 
+  it('counts the questions to go from the estimate, never below zero', () => {
+    expect(questionsToGo(planQuestions(empty(), []))).toBe(9);
+    expect(questionsToGo({ n: 2, about: 2 })).toBe(0);
+    expect(questionsToGo({ n: 3, about: 2 })).toBe(0);
+  });
+
   it('skips what an upload covers', () => {
     const brief = addDocument(empty(), { name: 'brief.txt', text: 'Client: Brightline\nTeam size: 8\nStages: Discover, Design, Build, Test\nWe sell software in Singapore.\nChallenge: managers rely on one style' });
     expect(brief).toMatchObject({ client: 'Brightline', teamSize: 8, process: ['Discover', 'Design', 'Build', 'Test'], industry: 'Technology', region: 'singapore', challenge: 'managers rely on one style' });
@@ -60,7 +66,8 @@ describe('question policy', () => {
   });
 
   it('checks answers it cannot use', () => {
-    expect(applyAnswer(empty(), 'team_size', '30').error).toBe('Pick a team size from 6 to 12.');
+    expect(applyAnswer(empty(), 'team_size', '30').error).toBe('iLead teams have 6 to 12 people, so 30 is too many to play. Pick 12 for a large team.');
+    expect(applyAnswer(empty(), 'team_size', 'ten or so people, we think').brief.teamSize).toBe(10);
     expect(applyAnswer(empty(), 'team_size', 'twelve').brief.teamSize).toBe(12);
     expect(applyAnswer(empty(), 'team_size', '10 (default)').brief.teamSize).toBe(10);
     expect(applyAnswer(empty(), 'process', 'Just one stage').error).toBe('List 3 to 6 stage names, separated by commas.');

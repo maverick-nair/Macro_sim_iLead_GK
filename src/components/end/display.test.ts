@@ -1,18 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { createI18n } from '../../i18n';
 import { copyViolations } from '../../i18n/copy';
-import { answersFor, around, pickMoments, portraitOf, reflectionKey, saveState, sharePercent, tierBarHeight, tierBars, tiersAscending, toneOf } from './display';
+import { answersFor, around, pickMoments, portraitOf, reflectionKey, saveState, sharePercent, tiersAscending, toneOf } from './display';
 
-const TIERS = [{ key: 'bronze', name: 'Bronze' }, { key: 'silver', name: 'Silver' }, { key: 'gold', name: 'Gold' }, { key: 'platinum', name: 'Platinum' }];
 
 describe('end screen display mappings', () => {
-  it('fills the tier bars up to the tier reached, each a step taller (the design: 20, 30, 40 and 50)', () => {
-    expect(tierBars(TIERS, 'gold').map(b => b.filled)).toEqual([true, true, true, false]);
-    expect(tierBars(TIERS, 'bronze').map(b => b.filled)).toEqual([true, false, false, false]);
-    expect(tierBars(TIERS, 'unknown').every(b => !b.filled)).toBe(true);
-    expect(tierBars(TIERS, 'gold').map(b => tierBarHeight(b.step) * 4)).toEqual([20, 30, 40, 50]);
-  });
-
   it('orders the engine tiers lowest first', () => {
     expect(tiersAscending([{ key: 'p', min: 850 }, { key: 'g', min: 700 }, { key: 's', min: 500 }, { key: 'b', min: 0 }]).map(x => x.key)).toEqual(['b', 's', 'g', 'p']);
   });

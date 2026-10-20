@@ -14,7 +14,7 @@ export interface TourProps {
   onEnd: (how: TourEnd) => void;
 }
 
-const BUTTON = 'min-h-9 cursor-pointer rounded-pill px-3.5 text-13 font-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const BUTTON = 'min-h-11 cursor-pointer rounded-4 px-4 text-14 font-600 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
 
 /**
  * A guided tour (D94): one tip at a time over what it explains, Back and Next, Skip, and "Do not show tips
@@ -57,9 +57,9 @@ export default function Tour({ area, view, onEnd }: TourProps) {
       <Coachmark target={findTarget(step)} title={title} body={body} stepKey={step.key} onEscape={() => onEnd('skip')}
         counter={t('tour.counter', { n: Math.min(index, available.length - 1) + 1, total: available.length, area })}
         footer={<button type="button" onClick={() => onEnd('never')} className={`${BUTTON} min-h-8 border-0 bg-transparent px-1 font-600 text-fg-secondary hover:text-fg-primary`}>{t('tour.never')}</button>}>
-        <button type="button" onClick={() => onEnd('skip')} className={`${BUTTON} me-auto border-0 bg-transparent px-1 text-fg-secondary hover:text-fg-primary`}>{t('tour.skip')}</button>
-        {index > 0 && <button type="button" onClick={() => setIndex(i => Math.max(0, i - 1))} className={`${BUTTON} border border-line-strong bg-surface-raised text-fg-primary`}>{t('tour.back')}</button>}
-        <button type="button" onClick={() => (last ? onEnd('done') : setIndex(i => i + 1))} className={`${BUTTON} border-0 bg-(image:--il-fill-brand) text-brand-deep-space`}>
+        <button type="button" onClick={() => onEnd('skip')} className={`${BUTTON} me-auto border-0 bg-transparent px-1 font-400 text-fg-primary underline underline-offset-3`}>{t('tour.skip')}</button>
+        {index > 0 && <button type="button" onClick={() => setIndex(i => Math.max(0, i - 1))} className={`${BUTTON} border border-line-strong bg-surface-card font-500 text-fg-primary`}>{t('tour.back')}</button>}
+        <button type="button" onClick={() => (last ? onEnd('done') : setIndex(i => i + 1))} className={`${BUTTON} border-0 bg-button-solid text-button-on-solid`}>
           {last ? t('tour.done') : t('tour.next')}
         </button>
       </Coachmark>

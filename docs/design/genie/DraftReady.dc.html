@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>First draft ready</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0}
+a{color:#1F4FD1}a:hover{color:#163C9E}
+.mark{font-size:11px;font-weight:700;border-radius:999px;padding:4px 8px;white-space:nowrap}
+.m-ai{background:#DDF1F3;color:#0B6670}.m-you{background:#EAEDF5;color:#3E4763}.m-need{background:#FCEBC8;color:#7A5300}.m-ok{background:#E2F3E8;color:#1E6B3E}
+.srow{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #EEF0F6;font-size:14px}
+.srow:last-child{border-bottom:0}
+.srow small{display:block;color:#6B7390;font-size:12.5px;margin-top:2px}
+.dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.stat{display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:14px;background:#F6F7FB}
+.stat b{font-size:26px;font-variant-numeric:tabular-nums}
+.stat span{font-size:13px;color:#4B5470}
+</style>
+</helmet>
+<div style="width: 1440px; height: 900px; box-sizing: border-box; background: #F6F7FB; color: #141A2E; font-family: Manrope, 'Segoe UI', system-ui, sans-serif; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; padding: 0 28px; display: flex; align-items: center; gap: 16px; background: #FFFFFF; border-bottom: 1px solid #E3E7F0">
+    <span style="font-size: 18px; font-weight: 800">Genie<span style="color: #0D7F8B">Kreator</span></span>
+    <span style="font-size: 14px; color: #6B7390">Ascent Lifts · Leading the Negotiation Team</span>
+  </header>
+  <div style="flex: 1; display: flex; align-items: center; justify-content: center; padding: 32px">
+    <div style="width: 1040px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px">
+      <section style="background: #FFFFFF; border: 1px solid #E3E7F0; border-radius: 20px; padding: 32px; display: flex; flex-direction: column; gap: 20px">
+        <span style="font-size: 13px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #0D7F8B">First draft ready</span>
+        <h1 style="margin: 0; font-size: 34px; line-height: 1.12; letter-spacing: -0.02em">Your simulation is playable. Two things need you before you publish.</h1>
+        <p style="margin: 0; font-size: 15px; line-height: 1.55; color: #4B5470">I built it from your 8 answers and the brief you uploaded. Everything is editable, and you can regenerate any section without starting over.</p>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+          <div class="stat"><b>6</b><span>Answers from you</span></div>
+          <div class="stat" style="background: #EEF8F9"><b>142</b><span>Fields generated</span></div>
+          <div class="stat" style="background: #FFF8EB"><b>2</b><span>Need you</span></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 14px; background: #FFF8EB; border: 1px solid #F1D9A8">
+          <b style="font-size: 14px; color: #7A5300">Needs you</b>
+          <a href="#" style="font-size: 14px">Average deal value · Story and world · Required</a>
+          <a href="#" style="font-size: 14px">Approve the scoring rubric samples · Scoring and report · Required</a>
+        </div>
+        <div style="display: flex; gap: 10px; margin-top: auto; flex-wrap: wrap">
+          <a href="Overview.dc.html" style="height: 52px; padding: 0 24px; border-radius: 12px; background: #1F4FD1; color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; text-decoration: none">Open the workspace</a>
+          <a href="#" style="height: 52px; padding: 0 20px; border-radius: 12px; border: 1px solid #D9DEEA; background: #FFFFFF; color: #141A2E; font-size: 16px; font-weight: 600; display: flex; align-items: center; text-decoration: none">Preview week 1 as a participant</a>
+        </div>
+        <span style="font-size: 12.5px; line-height: 1.5; color: #6B7390">The draft is already playable. A preview lets you feel the story and the team before you refine them; it uses placeholders for the 2 items that need you and saves no scores.</span>
+      </section>
+      <section aria-label="Sections" style="background: #FFFFFF; border: 1px solid #E3E7F0; border-radius: 20px; padding: 24px 28px; display: flex; flex-direction: column">
+        <b style="font-size: 16px; padding-bottom: 6px">What I built</b>
+        <div class="srow"><span class="dot" style="background: #EAEDF5; color: #3E4763">1</span><span><b>Brief</b><small>Participants, industry, challenge, run length</small></span><span class="mark m-you">From you</span></div>
+        <div class="srow"><span class="dot" style="background: #FFF8EB; color: #7A5300">2</span><span><b>Story and world</b><small>Company, product, market, sponsor, intro screens</small></span><span class="mark m-need">1 needs you</span></div>
+        <div class="srow"><span class="dot" style="background: #EEF8F9; color: #0B6670">3</span><span><b>Work process</b><small>5 stages, weekly targets, pacing</small></span><span class="mark m-ai">Generated</span></div>
+        <div class="srow"><span class="dot" style="background: #EEF8F9; color: #0B6670">4</span><span><b>Team</b><small>10 characters with personas, voices and hidden concerns</small></span><span class="mark m-ai">Generated</span></div>
+        <div class="srow"><span class="dot" style="background: #EEF8F9; color: #0B6670">5</span><span><b>Leadership lens</b><small>Readiness Based, 4 styles, fit rules</small></span><span class="mark m-ai">Generated</span></div>
+        <div class="srow"><span class="dot" style="background: #EEF8F9; color: #0B6670">6</span><span><b>Actions and conversations</b><small>12 actions, 7 live conversations with goals</small></span><span class="mark m-ai">Generated</span></div>
+        <div class="srow"><span class="dot" style="background: #EEF8F9; color: #0B6670">7</span><span><b>Events</b><small>9 events across 8 weeks</small></span><span class="mark m-ai">Generated</span></div>
+        <div class="srow"><span class="dot" style="background: #FFF8EB; color: #7A5300">8</span><span><b>Scoring and report</b><small>4 skills, development purpose</small></span><span class="mark m-need">1 needs you</span></div>
+        <div class="srow"><span class="dot" style="background: #E2F3E8; color: #1E6B3E">9</span><span><b>Brand and theme</b><small>KNOLSKAPE default; add a client theme any time</small></span><span class="mark m-ok">Ready</span></div>
+      </section>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

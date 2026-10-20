@@ -1,6 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /** M5: the week end on the engine, walked by keyboard, with axe at every step. */
 
 const errors: string[] = [];
@@ -34,7 +38,7 @@ async function tabTo(page: Page, rx: RegExp) {
 
 /** Sets the same style for everyone and confirms, then dismisses the team's reaction. */
 async function setStyles(page: Page) {
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page), { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
@@ -158,14 +162,14 @@ test('a later week end in the light theme: so far view of the funnel, every step
   await expect(page.getByRole('heading', { level: 1, name: 'Set your leadership styles for week 4' })).toBeFocused();
 });
 
-test('the end of the run: banner, report and the new badges, then the end screen', async ({ page }) => {
+test('the end of the run: banner and report with no badge for a run without conversations, then the end screen', async ({ page }) => {
   await page.goto('/?start=board&period=8');
   await setStyles(page);
   await endWeek(page);
   await expect(page.getByText('End of week 8')).toBeVisible();
   const seen = await walk(page, 8);
-  // No conversation went badly in the whole run: Steady Hand. No unlock or news after the last week.
-  expect(seen).toContain('badge');
+  // A fast forwarded run holds no conversations, so Steady Hand is not earned and no badge step shows. No unlock or news after the last week.
+  expect(seen).not.toContain('badge');
   expect(seen).not.toContain('unlock');
   expect(seen).not.toContain('news');
   // The end screen replaces the week end (end.spec.ts walks it); focus starts on its headline.

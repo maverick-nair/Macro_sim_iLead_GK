@@ -74,6 +74,23 @@ describe('storyline config', () => {
     expect(out).toMatch(/Unknown action nope/);
   });
 
+  it('refuses duplicate event keys and duplicate option keys within an action (D128)', () => {
+    const events = [...base().events!, { ...base().events![0] }];
+    expect(issues(storyline({ events })).join()).toMatch(new RegExp(`events.${events.length - 1}.key: Duplicate event ${events[0].key}`));
+    const a = base().actions.map(x => ({ ...x }));
+    a[0] = { ...a[0], options: [...a[0].options, { ...a[0].options[0] }] };
+    expect(issues(storyline({ actions: a })).join()).toMatch(/actions.0.options.\d+.key: Duplicate option/);
+  });
+
+  it('takes an optional AI character block per person, with reactions keyed by lens style (D130)', () => {
+    const m = base().members.map(p => ({ ...p }));
+    const style = base().lens?.styles[0].key ?? 'D';
+    m[0] = { ...m[0], npc: { age: '35 to 44', motivatedBy: 'Recognition', avoid: 'Salary', reactions: { [style]: 'Opens up.' }, speech: { pace: 30, warmth: 80, formality: 20, replyLength: 'short' }, notes: [{ label: 'Hobby', value: 'Cycling' }] } };
+    expect(issues(storyline({ members: m }))).toEqual([]);
+    m[0] = { ...m[0], npc: { reactions: { nope: 'Shrugs.' } } };
+    expect(issues(storyline({ members: m })).join()).toMatch(/members.0.npc.reactions.nope: No style called nope/);
+  });
+
   it('wants one lead input, or one per period', () => {
     expect(issues(storyline({ money: { ...base().money, inputPerSubPeriod: [8, 9, 10] } })).join()).toMatch(/one per period \(8\)/);
     expect(issues(storyline({ money: { ...base().money, inputPerSubPeriod: [6, 7, 8, 8, 9, 9, 10, 10] } }))).toEqual([]);
@@ -114,5 +131,31 @@ describe('money formatting', () => {
     for (const [c, l] of [['USD', 'en-US'], ['INR', 'en-IN'], ['JPY', 'ja-JP'], ['AED', 'ar-AE']]) {
       expect(copyViolations(fmt(c, l).format(-1200))).toEqual([]);
     }
+  });
+});
+
+describe('brand, world visuals and the LMS block (D181 to D184)', () => {
+  it('reads a storyline written before them with no brand and the LMS defaults', () => {
+    const r = parseStoryline(base());
+    if (!r.ok) throw new Error(r.issues.join('\n'));
+    expect(r.config.brand).toBeUndefined();
+    expect(r.config.lms).toEqual({ completion: { rule: 'finish' }, pass: { rule: 'none', score: 70 }, score: 'leadership', package: 'scorm12', connected: false });
+  });
+
+  it('checks the completion weeks, the pass level and the brand\'s colours, font and logo', () => {
+    const periods = base().time.period.count;
+    expect(issues(storyline({ lms: { completion: { rule: 'weeks', periods: periods + 1 } } }))).toEqual([expect.stringMatching(/^lms\.completion\.periods: The run has \d+ periods/)]);
+    expect(issues(storyline({ lms: { pass: { rule: 'level', level: 'Wizard' } } }))).toEqual([expect.stringMatching(/^lms\.pass\.level: Pick a level on the rating scale/)]);
+    expect(issues(storyline({ lms: { completion: { rule: 'weeks', periods: 2 }, pass: { rule: 'score', score: 75 }, package: 'scorm2004', connected: true } }))).toEqual([]);
+    expect(issues(storyline({ brand: { colors: { main: 'blue', second: '#00AA00' }, font: 'Comic Sans' as never, logo: 'logo.png' } })).map(i => i.split(':')[0]).sort())
+      .toEqual(['brand.colors.main', 'brand.font', 'brand.logo']);
+  });
+
+  it('keeps embedded images inside their budget together', () => {
+    const img = `data:image/png;base64,${'A'.repeat(400_000)}`;
+    const s = base();
+    s.members = s.members.map(m => ({ ...m, portrait: img }));
+    s.world = { products: Array.from({ length: 6 }, (_, i) => ({ name: `Product ${i + 1}`, image: img })) };
+    expect(issues(s)).toContainEqual(expect.stringMatching(/^storyline: Uploaded images add up to \d+ KB, over the 3072 KB/));
   });
 });

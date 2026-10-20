@@ -1,6 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * Desktop leftovers from M0 to M6: Pause on the engine board (nothing in the run moves while paused),
  * the welcome back recap from the engine, and the Actions panel that folds on a 1024 wide board.
@@ -23,7 +27,7 @@ async function axe(page: Page) {
 
 async function toBoard(page: Page, q = '') {
   await page.goto(`/?start=board${q}`);
-  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
+  await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(team(page), { timeout: 20000 });
   for (const g of await page.getByRole('radiogroup', { name: /^Leadership style for/ }).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
@@ -40,32 +44,34 @@ async function toBoard(page: Page, q = '') {
 test('Pause in the HUD stops the session clock until Resume', async ({ page }) => {
   await toBoard(page);
   const pause = page.getByRole('button', { name: 'Pause the simulation' });
-  await expect(pause).toHaveText(/^\d+:\d\d$/);
-  const start = await pause.textContent();
+  // The session clock reads beside Pause in the navy bar (D232).
+  const clock = page.locator('[data-session-clock]');
+  await expect(clock).toHaveText(/^\d+:\d\d$/);
+  const start = await clock.textContent();
   // The clock ticks once a second; a loaded machine can be slow to paint a tick, so allow a few.
-  await expect.poll(() => pause.textContent(), { timeout: 10_000 }).not.toBe(start);
+  await expect.poll(() => clock.textContent(), { timeout: 10_000 }).not.toBe(start);
 
   await pause.click();
-  const dialog = page.getByRole('dialog', { name: 'You are paused' });
+  const dialog = page.getByRole('dialog', { name: 'Take your time.' });
   await expect(dialog).toBeVisible();
   expect(await axe(page)).toEqual([]);
   // A tick already on its way when Pause was pressed may still land: read the held time after it.
   await page.waitForTimeout(1200);
-  const held = await pause.textContent();
+  const held = await clock.textContent();
   await page.waitForTimeout(2500);
-  expect(await pause.textContent()).toBe(held);
+  expect(await clock.textContent()).toBe(held);
 
   await dialog.getByRole('button', { name: 'Resume' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(pause).toBeFocused();
-  await expect.poll(() => pause.textContent(), { timeout: 10_000 }).not.toBe(held);
+  await expect.poll(() => clock.textContent(), { timeout: 10_000 }).not.toBe(held);
 });
 
 test('with the clock hidden the HUD keeps a Pause button', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('ilead.settings.local', JSON.stringify({ text: 100, captions: true, reduced: false, input: 'ptt', clock: false, voiceConsent: false })));
   await toBoard(page);
   await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'You are paused' })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Take your time.' })).toBeVisible();
 });
 
 test('pausing a conversation holds the streamed line and its clock', async ({ page }) => {
@@ -76,7 +82,7 @@ test('pausing a conversation holds the streamed line and its clock', async ({ pa
   await page.getByRole('button', { name: /Confirm and start/ }).click();
   const timer = page.getByRole('button', { name: /^Pause\. \d+:\d\d left$/ });
   await timer.click();
-  const dialog = page.getByRole('dialog', { name: 'You are paused' });
+  const dialog = page.getByRole('dialog', { name: 'Take your time.' });
   await expect(dialog).toBeVisible();
   const main = page.getByRole('main');
   // A word already on its way when Pause was pressed may still land: take the snapshot after it.
@@ -95,7 +101,7 @@ test('pausing a conversation holds the streamed line and its clock', async ({ pa
 test('a run in progress opens on the board with the welcome back recap from the engine, once per load', async ({ page }) => {
   // A new run starts at onboarding.
   await page.goto('/');
-  await expect(page.getByRole('button', { name: "Let's begin" })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: /^Lead a team of ten/ })).toBeVisible();
 
   // The mock opens at week 3 with two weeks played: the app skips onboarding and says where things stand.
   await page.goto('/?period=3');
@@ -120,7 +126,7 @@ test('a run in progress opens on the board with the welcome back recap from the 
 test('at 1024 the Actions panel folds to a rail, opens for a selected person, and stays folded after a reload', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 900 });
   await toBoard(page);
-  const team = page.getByRole('heading', { name: /^Your team/ }).locator('xpath=ancestor::*[contains(@class, "col-start-2")][1]');
+  const team = page.getByRole('heading', { name: /^Your team/ }).locator('xpath=ancestor::*[contains(@class, "col-start-1")][1]');
   const wide = (await team.boundingBox())!.width;
 
   await page.getByRole('button', { name: 'Hide actions, to give the team board more room' }).click();
@@ -131,9 +137,9 @@ test('at 1024 the Actions panel folds to a rail, opens for a selected person, an
   expect(await axe(page)).toEqual([]);
 
   // Selecting someone opens the panel for them; deselecting folds it again.
-  await page.getByText('Kent Goldberg', { exact: true }).click();
-  await expect(page.getByText('For Kent', { exact: true })).toBeVisible();
-  await page.getByText('Kent Goldberg', { exact: true }).click();
+  await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
+  await expect(page.getByRole('list', { name: 'For Kent' })).toBeVisible();
+  await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
   await expect(rail).toBeVisible();
 
   // The choice is a setting, kept per participant.
@@ -163,7 +169,7 @@ for (const [theme, q] of [['light', '&theme=light'], ['client', '&client=halden'
     await expect(page.getByRole('button', { name: /^Show actions\./ })).toBeVisible();
     expect(await axe(page)).toEqual([]);
     await page.getByRole('button', { name: 'Pause the simulation' }).click();
-    await expect(page.getByRole('dialog', { name: 'You are paused' })).toBeVisible();
+    await expect(page.getByRole('dialog', { name: 'Take your time.' })).toBeVisible();
     expect(await axe(page)).toEqual([]);
   });
 }

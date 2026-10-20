@@ -11,6 +11,8 @@ import { ReportProvider } from './context';
 import { buildReportModel, type SectionModel } from './engine';
 import { IntentSection, PlanSection } from './IntentPlan';
 import { MomentsSection } from './MomentsSection';
+import { DecisionsSection } from './DecisionsSection';
+import { StakeholdersSection } from './StakeholdersSection';
 import { AnalyticsSection, MethodologySection } from './NotesSections';
 import { PeopleSection } from './PeopleSection';
 import { ProgressSection, TakeawaysSection, ThoughtSection } from './ReflectSections';
@@ -58,6 +60,7 @@ export function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUn
     case 'actions': return <ActionsSection rows={s.rows} />;
     case 'distribution': return <DistributionSection data={s.data} />;
     case 'moments': return <MomentsSection moments={s.moments} />;
+    case 'decisions': return <DecisionsSection decisions={s.decisions} variables={s.variables} />;
     case 'people': return <PeopleSection people={s.people} />;
     case 'business': return <BusinessSection data={s.data} unit={unit} periods={periods} />;
     case 'analytics': return <AnalyticsSection data={s.data} />;
@@ -66,6 +69,7 @@ export function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUn
     case 'plan': return <PlanSection items={s.items} reflection={s.reflection} checkIn={s.checkIn} extras={s.extras} />;
     case 'progress': return <ProgressSection data={s.data} />;
     case 'methodology': return <MethodologySection data={s.data} />;
+    case 'stakeholders': return <StakeholdersSection stakeholders={s.stakeholders} />;
   }
 }
 
@@ -144,7 +148,7 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
     return (
       <main className="mx-auto flex w-full max-w-(--il-report-width) flex-1 flex-col gap-4 px-8 pt-6 pb-10">
         <ReportToolbar onBack={onBack} />
-        <h1 className="m-0 text-34 font-700">{t('report.unnamed', { purpose: 'development' })}</h1>
+        <h1 className="m-0 text-34 font-600">{t('report.unnamed', { purpose: 'development' })}</h1>
         <p className="m-0 text-14 text-fg-secondary">{t('report.notReady')}</p>
       </main>
     );

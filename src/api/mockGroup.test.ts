@@ -52,7 +52,7 @@ describe('mock group report', () => {
     const g = GroupReport.parse(raw);
     expect(g.assessment!.participants).toHaveLength(18);
     expect(g.assessment!.participants[0].name).toBe('Aisha Rahman');
-    expect(g.sections[1]).toBe('verdicts');
+    expect(g.sections[0]).toBe('verdicts');
   });
 
   it('three participants: withheld', async () => {

@@ -1,0 +1,21 @@
+{
+  "stakeholders.title": "Stakeholders",
+  "stakeholders.intro": "People outside your team. They are not in the funnel, but what you do with them moves the business, your sponsor and sometimes your team.",
+  "stakeholders.role": "{role}, {kind, select, manager {your manager} peer {a peer in another team} customer {a customer} executive {an executive} board {on the board} union {from the union} partner {a partner} other {outside your team}}",
+  "stakeholders.level": "Relationship: {level, select, strained {strained} cool {cool} steady {steady} good {good} other {strong}}",
+  "stakeholders.measure": "{measure, select, trust {Trust in you} other {Satisfaction}}",
+  "stakeholders.measureAria": "{measure, select, trust {Trust in you} other {Satisfaction}} {value}{dir, select, up {, up this period} down {, down this period} other {}}",
+  "stakeholders.causes": "What moved it",
+  "stakeholders.moved": "(trust {trust}, satisfaction {satisfaction})",
+  "stakeholders.concern": "What is really on their mind:",
+  "stakeholders.asks": "{kind, select, meeting {{name} asks to meet:} other {{name} is waiting on:}}",
+  "stakeholders.due": "{n, plural, =0 {due today} one {# {unit, select, quarter {quarter} month {month} week {week} day {day} hour {hour} other {step}} left} other {# {unit, select, quarter {quarters} month {months} week {weeks} day {days} hour {hours} other {steps}} left}}",
+  "stakeholders.answer": "Answer",
+  "stakeholders.actions": "What you can do with {name}",
+  "stakeholders.engaged": "You have engaged {name} this period. They can be engaged once a period, unless they ask for a meeting.",
+  "stakeholders.none": "Nothing on offer right now.",
+  "stakeholders.cost": " · {cost}",
+  "stakeholders.type": "{kind, select, static {A decision} other {{type, select, meet {A conversation} present {A presentation} negotiate {A negotiation} other {An email you write once}}}}",
+  "stakeholders.options": "What do you ask for?",
+  "stakeholders.confirm": "Confirm"
+}

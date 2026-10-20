@@ -41,13 +41,14 @@ export const clamp = (n: number, lo = 0, hi = 100) => Math.max(lo, Math.min(hi, 
  * (and an optional extra factor, for a Strong conversation). Returns the change actually applied
  * after clamping to 0 to 100.
  */
-export function applyEffect(stats: Stats, effect: Triple, rng: Rng, opts: { trust?: number; multiplier?: { min: number; max: number }; boost?: number; scale?: number } = {}): Triple {
+export function applyEffect(stats: Stats, effect: Triple, rng: Rng, opts: { trust?: number; multiplier?: { min: number; max: number }; boost?: number; scale?: number; gains?: Triple } = {}): Triple {
   const keys = ['skill', 'morale', 'result'] as const;
   const out = keys.map((k, i) => {
     const base = effect[i] * (opts.scale ?? 1);
     if (base === 0) return 0;
     let d = base * rng.range(0.8, 1.2);
-    if (d > 0) d *= (opts.trust !== undefined ? trustMultiplier(opts.trust, opts.multiplier) : 1) * (opts.boost ?? 1);
+    // `gains`: the people dynamics' shares for positive skill, morale and result changes (D135).
+    if (d > 0) d *= (opts.trust !== undefined ? trustMultiplier(opts.trust, opts.multiplier) : 1) * (opts.boost ?? 1) * (opts.gains?.[i] ?? 1);
     const next = clamp(stats[k] + Math.round(d));
     const applied = next - stats[k];
     stats[k] = next;

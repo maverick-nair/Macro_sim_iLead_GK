@@ -1,37 +1,67 @@
 import { lazy, StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ApiContext, createDefaultApi } from './api';
+import { ApiContext, createDefaultApi, createMockApi } from './api';
 import { App } from './app/App';
 import { prefetch } from './app/prefetch';
 import { SmallScreenGate } from './app/SmallScreenGate';
 import { EngineProvider } from './engine/react';
-import { createDefaultClient } from './engine/client';
+import { createDefaultClient, createHttpClient } from './engine/client';
+import { isPreview, PREVIEW_PARTICIPANT, PREVIEW_PREFIX, readMeta, screenFor } from './components/preview/mode';
+import { previewEngineBase } from './components/preview/server';
 import { rememberedRun, rememberRun, resilientClient } from './engine/resilient';
+import { retryImport } from './lib/lazyRetry';
 import { useMediaQuery } from './lib/useMediaQuery';
+import { RootBoundary } from './app/RootBoundary';
 import { startTheme, useThemeState } from './theme/bootstrap';
+import { pickMode } from './theme/mode';
 import { appLocale, dirOf, setAppLocale } from './i18n/core';
 import { loadEngineCopy, loadLocale } from './i18n/locales';
 import './styles/global.css';
 
 // The galleries are review tools; they stay out of the participant's bundle.
-const ScreensGallery = lazy(() => import('./gallery/ScreensGallery').then(m => ({ default: m.ScreensGallery })));
-// GenieKreator's author chat prototype (D74): for authors, lazy, never in the participant's first load.
-const AuthorPage = lazy(() => import('./author/ui/AuthorPage'));
+// Each lazy page tries once more when its chunk fails to load (offline, or a deploy renamed it), D123.
+const ScreensGallery = lazy(() => retryImport(() => import('./gallery/ScreensGallery')).then(m => ({ default: m.ScreensGallery })));
+// GenieKreator's authoring tool (D74, D105): for authors, lazy, never in the participant's first load.
+const AuthorPage = lazy(() => retryImport(() => import('./author/ui/AuthorPage')));
+// GenieKreator's synthetic player calibration on its own page (D118), until /author mounts CalibrateSlot. Lazy.
+const CalibratePage = lazy(() => retryImport(() => import('./author/calibrate/ui/CalibratePage')));
 // The organization's group report (D77): not for participants, lazy, never in the participant's first load.
 // Its report is requested as soon as a small launch chunk lands, while the page's own code still loads (D78).
 const GroupPage = lazy(() => {
-  const started = import('./group/launch').then(m => m.startGroup(m.groupLaunch()));
-  return Promise.all([import('./group/GroupPage'), started]).then(([m, s]) => ({ default: () => <m.default started={s} /> }));
+  const started = retryImport(() => import('./group/launch')).then(m => m.startGroup(m.groupLaunch()));
+  return Promise.all([retryImport(() => import('./group/GroupPage')), started]).then(([m, s]) => ({ default: () => <m.default started={s} /> }));
 });
 // The report alone in its print view, for the server's PDF renderer (server/src/report/pdf.ts). Lazy.
-const PrintReport = lazy(() => import('./app/PrintReport'));
-const StatesGallery = lazy(() => import('./gallery/StatesGallery').then(m => ({ default: m.StatesGallery })));
+const PrintReport = lazy(() => retryImport(() => import('./app/PrintReport')));
+const StatesGallery = lazy(() => retryImport(() => import('./gallery/StatesGallery')).then(m => ({ default: m.StatesGallery })));
 // Dev only: `?report=1` opens the development report of a finished mock run. Production builds drop it.
 const ReportDev = import.meta.env.DEV ? lazy(() => import('./gallery/ReportDev').then(m => ({ default: m.ReportDev }))) : null;
+// The preview bar (D191): only in a preview from GenieKreator, never in a participant's load.
+const PreviewBar = lazy(() => retryImport(() => import('./components/preview/PreviewBar')));
+
+/**
+ * A preview from GenieKreator (`?preview=1`, D193): the draft plays as the participant `preview`, on the
+ * mock engine, or on the server's preview storyline (`previewId`). Nothing a participant's history, runs or
+ * reports read is written: no remembered run, no queue kept on the device, the mock API (no history, no
+ * email, no settings on the server), and what it keeps on the device goes under `ilead.preview.`.
+ */
+/** The app fills the window less the preview bar (its height is set by the bar, D191). */
+const PREVIEW_MIN_HEIGHT = 'calc(100vh - var(--il-preview-bar-height, 0px))';
+
+function previewLaunch(q: URLSearchParams) {
+  const api = createMockApi({ participant: PREVIEW_PARTICIPANT, client: q.get('client'), themeUrl: q.get('themeUrl'), history: false, storagePrefix: PREVIEW_PREFIX });
+  const previewId = q.get('previewId');
+  const base = previewEngineBase();
+  const inner = previewId && base ? createHttpClient(base, previewId) : createDefaultClient(PREVIEW_PARTICIPANT);
+  const engine = resilientClient(inner, { storage: null });
+  startTheme(() => api.getTheme());
+  return { q, api: prefetch(api, ['getSession']), engine: prefetch(engine, ['view']), preview: { meta: readMeta(), jump: q.get('jump'), previewId: previewId && base ? previewId : null } };
+}
 
 /** The participant app's clients, made from the launch link once per load. */
 function launch() {
   const q = new URLSearchParams(location.search);
+  if (isPreview(location.search)) return previewLaunch(q);
   // The launch link names the participant (LMS or GenieKreator); settings and the session are theirs.
   // Without one (a reload of a bookmark), the run this browser last played resumes (D86).
   const participant = q.get('participant') ?? rememberedRun() ?? 'local';
@@ -48,7 +78,8 @@ function launch() {
   // The first screen's reads leave now, while the app is still starting, not after its first render (D78).
   startTheme(() => api.getTheme());
   const onEngine = q.get('engine') !== 'off';
-  return { q, api: prefetch(api, ['getScenario', 'getSession']), engine: onEngine ? prefetch(engine, ['view']) : engine };
+  // The engine's screens render from its view (D199): the prototype's scenario is read only with `?engine=off`.
+  return { q, api: prefetch(api, onEngine ? ['getSession'] : ['getScenario', 'getSession']), engine: onEngine ? prefetch(engine, ['view']) : engine, preview: null };
 }
 
 /**
@@ -60,17 +91,17 @@ function launch() {
  * Laptops, desktops and tablets only (D69): on a smaller screen a notice covers the app (`app/SmallScreenGate.tsx`).
  */
 function Play({ launched }: { launched: ReturnType<typeof launch> }) {
-  const { q, api, engine } = launched;
+  const { q, api, engine, preview } = launched;
   const { theme: applied } = useThemeState();
   const systemLight = useMediaQuery('(prefers-color-scheme: light)');
-  const param = q.get('theme');
-  const preferred = applied?.mode === 'system' ? (systemLight ? 'light' : 'dark') : applied?.mode;
-  const theme = param === 'light' || param === 'dark' ? param : preferred === 'light' ? 'light' : 'dark';
+  const theme = pickMode(q.get('theme'), applied?.mode, systemLight);
   return (
     <ApiContext.Provider value={api}>
       <EngineProvider client={engine}>
+        {preview && <Suspense fallback={null}><PreviewBar meta={preview.meta} jump={preview.jump} previewId={preview.previewId} theme={theme} /></Suspense>}
         <SmallScreenGate theme={theme} clientTheme={applied}>
-          {covered => <App screen={q.get('start') === 'board' ? 'board' : q.get('start') === 'demo' ? 'demo' : undefined} engine={q.get('engine') !== 'off'} theme={theme} clientTheme={applied} held={covered} minHeight="100vh" fit />}
+          {covered => <App screen={preview ? screenFor(preview.jump) : q.get('start') === 'board' ? 'board' : q.get('start') === 'demo' ? 'demo' : undefined}
+            engine={q.get('engine') !== 'off'} report={preview?.jump === 'report'} theme={theme} clientTheme={applied} held={covered} minHeight={preview ? PREVIEW_MIN_HEIGHT : '100vh'} fit />}
         </SmallScreenGate>
       </EngineProvider>
     </ApiContext.Provider>
@@ -98,13 +129,18 @@ document.documentElement.dir = dirOf(appLocale());
 void loadEngineCopy().catch(() => undefined);
 
 const path = location.pathname.replace(/\/+$/, '');
-const play = !['/screens', '/states', '/author', '/group', '/report/print'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
+/** A SCORM package's player, or `?lms=scorm` to try package mode here (D208): its own boot, loaded on demand. */
+const packaged = new URLSearchParams(location.search).get('lms') === 'scorm' || !!document.querySelector('meta[name="ilead-package"]');
+/** /author and its workspace and library routes (D105). */
+const author = path === '/author' || path.startsWith('/author/');
+const play = !packaged && !author && !['/screens', '/states', '/group', '/report/print'].includes(path) && !(ReportDev && new URLSearchParams(location.search).get('report') === '1');
 const launched = play ? launch() : null;
 
 function Root() {
   if (path === '/screens') return <Suspense><ScreensGallery /></Suspense>;
   if (path === '/states') return <Suspense><StatesGallery /></Suspense>;
-  if (path === '/author') return <Suspense><AuthorPage /></Suspense>;
+  if (path === '/author/calibrate') return <Suspense><CalibratePage /></Suspense>;
+  if (author) return <Suspense><AuthorPage /></Suspense>;
   if (path === '/group') return <Suspense><GroupPage /></Suspense>;
   if (path === '/report/print') return <Suspense><PrintReport /></Suspense>;
   if (ReportDev && new URLSearchParams(location.search).get('report') === '1') return <Suspense><ReportDev /></Suspense>;
@@ -113,9 +149,14 @@ function Root() {
 
 const render = () => createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <Root />
+    <RootBoundary><Root /></RootBoundary>
   </StrictMode>
 );
 // English is in the first load; another language's catalog comes first (a failed load renders in English).
-if (appLocale() === 'en') render();
-else void loadLocale().catch(e => console.warn('Locale catalog failed to load, showing English', e)).then(render);
+const boot = () => {
+  if (packaged) void import('./lms/boot').then(m => m.bootPackage(document.getElementById('root')!));
+  else if (appLocale() === 'en') render();
+  else void loadLocale().catch(e => console.warn('Locale catalog failed to load, showing English', e)).then(render);
+};
+// A browser under the floor already shows the notice from index.html; nothing else loads.
+if (!(window as { __ileadUnsupported?: boolean }).__ileadUnsupported) boot();

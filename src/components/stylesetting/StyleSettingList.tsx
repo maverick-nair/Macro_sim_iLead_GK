@@ -76,12 +76,12 @@ export function StyleSettingList({ members, periodUnit, onStyle }: StyleSettingL
   const lens = useLens();
   const prefix = useId() + 'style-';
   return (
-    <div role="table" aria-label={t('stylesetting.list.aria')} className="overflow-hidden rounded-22 border border-line-default bg-surface-card backdrop-blur-12">
-      <div role="row" style={columns(lens.styles.length)} className={`${grid} border-b border-line-default px-4.5 py-3 text-12 font-700 tracking-(--il-stylesetting-list-header-tracking) text-fg-secondary uppercase`}>
+    <div role="table" aria-label={t('stylesetting.list.aria')} className="overflow-hidden rounded-4 border border-line-default bg-surface-card ">
+      <div role="row" style={columns(lens.styles.length)} className={`${grid} border-b border-line-default px-4.5 py-3 text-12 font-600 tracking-(--il-stylesetting-list-header-tracking) text-fg-secondary uppercase`}>
         <span role="columnheader">{t('stylesetting.list.member')}</span>
         <span role="columnheader">{t('stylesetting.list.stats')}</span>
         <span role="columnheader">{t('stylesetting.list.last', { unit: periodUnit })}</span>
-        {/* Five or six styles head their columns with the letter (the definitions above name them); screen readers hear the name. */}
+        {/* Five styles head their columns with the letter (the definitions above name them); screen readers hear the name. */}
         {lens.styles.map(s => (lens.styles.length > 4
           ? <span key={s.key} role="columnheader" className="text-center"><span aria-hidden="true">{s.letter}</span><span className="sr-only">{s.name}</span></span>
           : <span key={s.key} role="columnheader" className="text-center">{s.name}</span>))}

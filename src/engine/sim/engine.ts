@@ -1,7 +1,7 @@
 import type { StorylineConfig } from '../config';
 import { confirmStyles, IntentError, openConversation, planAction, submitInteraction } from './actions';
 import { heuristicEvaluator, type Evaluator } from './evaluator';
-import { chooseReward, endPeriod, startNextPeriod } from './period';
+import { chooseReward, endPeriod, holdForDecisions, startNextPeriod } from './period';
 import { createRng } from './rng';
 import type { Style } from './rules';
 import { createSim, log, member } from './sim';
@@ -10,6 +10,8 @@ import * as live from './live';
 import { buildView, type EngineView } from './view';
 import { summarizeRun, type RunSummary } from '../report/summary';
 import { msg, type Copy } from '../copy';
+import { resolveChoice } from './business';
+import { engageStakeholder, openStakeholderMessage, stakeholderEvaluation, stakeholderMessage } from './stakeholders';
 
 /**
  * The iLead engine. Authoritative: the UI sends intents and renders the returned view.
@@ -36,7 +38,13 @@ export type Intent =
   | { type: 'startNextPeriod' }
   | { type: 'submitPlan'; interactionId: string; plan: PlanFields; text: string; usedVoice?: boolean }
   | { type: 'startPractice' }
-  | { type: 'skipPractice' };
+  | { type: 'skipPractice' }
+  | { type: 'decide'; choiceId: string; option: string }
+  | { type: 'keepDefault'; choiceId: string }
+  | { type: 'engageStakeholder'; stakeholder: string; interaction: string; option?: string };
+
+/** What can still be done once End week is pressed and a decision holds the week end (D231). */
+const WHILE_ENDING = new Set<Intent['type']>(['endPeriod', 'decide', 'keepDefault', 'dismissCard', 'clearOutcome', 'openProfile']);
 
 export interface Result {
   view: EngineView;
@@ -80,6 +88,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
   const evaluator = opts.evaluator ?? heuristicEvaluator;
   const npc = opts.npc ?? live.personaNpc;
   const rubric = (actionKey: string) => config.actions.find(a => a.key === actionKey)?.live.rubric;
+  /** The rated skills as the storyline words them (D229): names, level anchors and descriptions. */
+  const skillDefs = (keys: string[]) => config.report.skills.filter(s => keys.includes(s.key)).map(s => ({ key: s.key, name: s.name, anchors: s.anchors, ...(s.description ? { description: s.description } : null) }));
 
   /** Evaluates everything the participant said, applies the band's consequences, closes the interaction. */
   async function finish(id: string, extra?: { text: string; usedVoice?: boolean }, npcReply?: string): Promise<Result> {
@@ -89,7 +99,9 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
     // A written plan is evaluated on its fields, like an email; the check in after it is conversation only (D85).
     const text = it.plan ? live.planText(it.plan) : live.participantText(it);
     if (!text.trim()) throw new IntentError('Say something first', 'empty');
-    const ev = await evaluator.evaluate({ format: it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: rubric(it.actionKey), skills: config.report.linkage[it.actionKey] ?? [], styles: config.lens.styles, ...(it.plan ? { plan: it.plan } : {}) });
+    // A stakeholder conversation (D161) is evaluated as its own format, on the skills its interaction rates.
+    const sh = it.stakeholder ? stakeholderEvaluation(sim, it) : null;
+    const ev = await evaluator.evaluate({ format: it.stakeholder?.format ?? it.format, text, usedVoice: extra?.usedVoice ?? it.turns.some(t => t.voice), rubric: sh ? sh.rubric : rubric(it.actionKey), skills: sh ? sh.skills : config.report.linkage[it.actionKey] ?? [], skillDefs: skillDefs(sh ? sh.skills : config.report.linkage[it.actionKey] ?? []), styles: config.lens.styles, ...(it.plan ? { plan: it.plan } : {}) });
     // The plan's due date is a promise to check in on it with that person (SIMULATION 5.4).
     if (it.plan?.due && !ev.flags.promise) {
       ev.flags.promise = { text: it.plan.goals.length > 60 ? `${it.plan.goals.slice(0, 57).trimEnd()}...` : it.plan.goals, dueInSubPeriods: Math.max(1, it.plan.due - sim.sub), fulfilledBy: ['f2f', 'coach', 'feedback', 'goals'] };
@@ -103,6 +115,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
   let queue = Promise.resolve();
 
   async function run(intent: Intent): Promise<Result> {
+    // While the week is ending (D231), only the decisions holding it, and reading what is on the board, remain.
+    if (sim.ending && !WHILE_ENDING.has(intent.type)) throw new IntentError('The week is ending', 'wrongPhase');
     switch (intent.type) {
       case 'confirmStyles': {
         const changes = confirmStyles(sim, rng, intent.styles, intent.notes);
@@ -119,7 +133,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         return { view: buildView(sim), changes: r.changes, interactionId: r.interactionId ?? undefined };
       }
       case 'openConversation': {
-        const id = openConversation(sim, intent.kind, intent.messageId);
+        // A stakeholder's message (D162): their meeting, or a reply in writing to them.
+        const id = intent.kind === 'reply' && stakeholderMessage(sim, intent.messageId) ? openStakeholderMessage(sim, rng, intent.messageId!) : openConversation(sim, intent.kind, intent.messageId, rng);
         await live.opening(sim, npc, id);
         return { view: buildView(sim), changes: [], interactionId: id };
       }
@@ -181,6 +196,8 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
         sim.outcome = null;
         return { view: buildView(sim), changes: [] };
       case 'endPeriod': {
+        // A decision still to come this week is shown first (D231): the result has no summary while one waits.
+        if (holdForDecisions(sim, rng)) return { view: buildView(sim), changes: [] };
         const summary = endPeriod(sim, rng);
         return { view: buildView(sim), changes: [], summary };
       }
@@ -195,6 +212,24 @@ export function createEngine(config: StorylineConfig, opts: { seed: number; eval
       case 'startNextPeriod':
         startNextPeriod(sim);
         return { view: buildView(sim), changes: [] };
+      case 'decide': {
+        // A choice event (D137): the option applies now and costs no time; the view's `choices` says what happened.
+        if (sim.phase !== 'board') throw new IntentError('Choices are made on the board', 'wrongPhase');
+        const rec = resolveChoice(sim, rng, intent.choiceId, intent.option, 'you');
+        return { view: buildView(sim), changes: rec.changes };
+      }
+      case 'keepDefault': {
+        // Decide later, at the week's end (D231): the participant lets the default stand. It applies now, recorded as theirs.
+        if (sim.phase !== 'board') throw new IntentError('Choices are made on the board', 'wrongPhase');
+        const rec = resolveChoice(sim, rng, intent.choiceId, null, 'kept');
+        return { view: buildView(sim), changes: rec.changes };
+      }
+      case 'engageStakeholder': {
+        // A stakeholder interaction (D161): a static decision resolves now; a live one opens a conversation.
+        const r = engageStakeholder(sim, rng, intent);
+        if (r.interactionId) await live.opening(sim, npc, r.interactionId);
+        return { view: buildView(sim), changes: r.changes, interactionId: r.interactionId ?? undefined };
+      }
     }
   }
 

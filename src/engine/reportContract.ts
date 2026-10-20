@@ -23,9 +23,13 @@ export const SkillVerdictKey = z.enum(['strength', 'meets', 'development']);
 export const ReviewStatus = z.enum(['assessor', 'mixed', 'ai']);
 export const ReportSection = z.enum([
   'about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution',
-  'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
+  'moments', 'decisions', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology', 'stakeholders'
 ]);
 const Kpi = z.object({ start: Num, end: Num });
+/** The gates that can hold the overall level down (D168, `src/engine/report/outcomes.ts`). */
+export const CapGate = z.enum(['fit', 'business', 'people', 'stakeholders', 'decisions', 'guard']);
+/** The run's profile (D143, `src/engine/report/evidence.ts`). */
+export const ReportProfile = z.enum(['readNoAction', 'absent', 'wordsNotChoices', 'allRound', 'numbersAtCost', 'peopleFirst', 'bothSlipped', 'mixed']);
 
 /**
  * One run, as numbers (src/engine/report/summary.ts, `summarizeRun`). Stable and serialisable: the server
@@ -46,7 +50,8 @@ export const RunSummary = z.object({
   }),
   funnel: z.array(z.object({ period: Int, stages: z.array(z.object({ stage: Id, actual: Num, ideal: Num })) })),
   skills: z.array(z.object({ key: Id, reportOnly: z.boolean(), observations: Int.min(0), score: Num.nullable(), outOf10: Num.min(0).max(10).nullable(), level: Int.min(0).nullable() })),
-  overall: z.object({ score: Num.nullable(), level: Int.min(0).nullable() }),
+  /** The overall level capped by what happened (D168): what the words alone reached, and the gates that held it lower. */
+  overall: z.object({ score: Num.nullable(), level: Int.min(0).nullable(), words: z.object({ score: Num.nullable(), level: Int.min(0).nullable() }).optional(), caps: z.array(CapGate).optional() }),
   styles: z.object({
     total: Int.min(0), fitted: Int.min(0), adaptability: Pct, preferred: z.array(StyleKey),
     perStyle: z.array(z.object({ key: StyleKey, count: Int.min(0), proportion: Pct, fitted: Int.min(0), accuracy: Pct.nullable(), needed: Int.min(0), neededShare: Pct })),
@@ -81,7 +86,8 @@ const Evidence = { recordIds: z.array(Id), quotes: z.array(Quote), review: Revie
 export const ReportView = z.object({
   available: z.boolean(),
   purpose: Purpose,
-  storyline: z.object({ name: Text, organisation: Text.nullable() }),
+  /** `unit`: the sales unit the storyline names (D227), or null for the catalog's word. */
+  storyline: z.object({ name: Text, organisation: Text.nullable(), unit: z.object({ one: Text, other: Text }).nullable().default(null) }),
   /** The lens, and the secondary lens whose skills are report only. */
   lens: LensView.extend({ secondary: z.object({ id: Id, title: Text }).nullable() }),
   periods: Int, periodUnit: PeriodUnit,
@@ -89,7 +95,22 @@ export const ReportView = z.object({
   sections: z.array(ReportSection),
   score: z.object({ total: Num, max: Num, tier: z.object({ key: Id, name: Text }) }),
   results: z.object({ revenue: Num, target: Num, share: Num, conversions: Int, kpis: z.array(z.object({ metric: MetricKey, start: Num, end: Num, series: z.array(Num) })) }),
-  summary: z.object({ level: Level.nullable(), strengths: z.array(Id), priorities: z.array(Id), business: Text, narrative: Text.nullable() }),
+  /**
+   * `narrative` is the authored line for the overall level, kept only when the run's data does not
+   * contradict it. `profile`, `headline` and `lines` read the run as evidence (D143): the shape of what
+   * happened, the headline it gives, and factual sentences with the run's numbers. `drivers` is "What
+   * drove your results" (D145): the decisions and patterns that moved the outcomes most. `level` is the overall
+   * level capped by the outcomes (D168). Defaults keep reports stored before D143 parsing.
+   */
+  summary: z.object({
+    level: Level.nullable(), strengths: z.array(Id), priorities: z.array(Id), business: Text, narrative: Text.nullable(),
+    /** When the outcomes held the overall level under what the words reached (D168): that level, the gates, and the tile's line. */
+    levelCap: z.object({ from: Level, gates: z.array(CapGate), why: Text }).nullable().default(null),
+    profile: ReportProfile.nullable().default(null),
+    headline: Text.nullable().default(null),
+    lines: z.array(Text).default([]),
+    drivers: z.array(z.object({ key: Id, tone: z.enum(['positive', 'negative']), text: Text })).default([])
+  }),
   style: z.object({
     shares: z.record(StyleKey, Int), total: Int, dominant: z.array(StyleKey), capability: Num,
     /** Rows: the four needs, in `lens.needs` order; columns: the style used, in `lens.styles` order. */
@@ -107,7 +128,10 @@ export const ReportView = z.object({
    */
   skills: z.array(z.object({
     key: Id, name: Text, reportOnly: z.boolean(), observations: Int, score: Num.nullable(), capped: z.boolean(), level: Level.nullable(), anchor: Text.nullable(), quotes: z.array(Quote),
-    outOf10: Num.nullable(), description: Text.nullable(), narrative: Text
+    outOf10: Num.nullable(), description: Text.nullable(), narrative: Text,
+    /** Capped by what the participant did (D144): the signal, its share, the level the words alone reached, and the line that says so. */
+    reconciled: z.object({ signal: z.enum(['styleFit', 'diagnosis']), pct: Num, from: Int.min(0) }).nullable().default(null),
+    reconciliation: Text.nullable().default(null)
   })),
   scale: z.array(z.object({ name: Text, min: Num })),
   moments: z.array(z.object({ id: Id, kind: z.enum(['best', 'revisit']), period: Int, memberId: Id.nullable(), title: Text, situation: Text, behaviour: Text, quote: Text.nullable(), impact: Text, intent: StyleKey.nullable() })),
@@ -120,6 +144,35 @@ export const ReportView = z.object({
   reflection: z.object({ answers: z.array(z.string()), rating: Int.nullable() }).nullable(), questions: z.array(Text),
   methodology: z.object({ lines: z.array(Text), reviewed: z.boolean(), reviewedCount: Int.default(0), conversations: Int, observations: Int }),
   badges: Int, gamificationTiers: z.array(z.object({ key: Id, name: Text, min: Num })),
+  /**
+   * "Decisions and consequences" (D137): each choice, the option taken (`option` null when nothing applied), whether
+   * the participant chose it or it was left to its default, what it changed, the events it led to and the
+   * leadership it showed (`band` is the author's read, worded on the client, never shown as a band name).
+   */
+  decisions: z.array(z.object({
+    id: Id, period: Int, title: Text, option: Text.nullable(), by: z.enum(['you', 'kept', 'default']), outcome: Text.nullable(), impact: Text,
+    variables: z.array(z.object({ key: Id, name: Text, format: z.enum(['money', 'percent', 'points']), delta: Num })), revenue: Num, sponsor: Num,
+    triggered: z.array(z.object({ key: Id, title: Text, period: Int })), read: z.array(z.object({ skill: Text, band: z.enum(['strong', 'adequate', 'weak', 'harmful']) }))
+  })).default([]),
+  /** The shown business variables at the start and the end of the run (D136). */
+  businessVariables: z.array(z.object({ key: Id, name: Text, format: z.enum(['money', 'percent', 'points']), start: Num, end: Num, higherIsBetter: z.boolean(), weight: Num })).default([]),
+  /**
+   * "Stakeholders" (D164): each relationship from the start of the run to the end and week by week, the interactions
+   * (`band` for a conversation, `option` for a decision, `type: 'ignored'` for a request left unanswered) and what
+   * moved it most. Empty without stakeholders.
+   */
+  stakeholders: z.array(z.object({
+    key: Id, name: Text, role: Text, kind: z.string(), img: z.string().nullable(),
+    start: z.object({ trust: Num, satisfaction: Num }), end: z.object({ trust: Num, satisfaction: Num }),
+    levelStart: z.enum(['strained', 'cool', 'steady', 'good', 'strong']), levelEnd: z.enum(['strained', 'cool', 'steady', 'good', 'strong']),
+    series: z.array(z.object({ period: Int, trust: Num, satisfaction: Num })),
+    interactions: z.array(z.object({
+      id: Id, period: Int, title: Text, type: z.enum(['meet', 'present', 'negotiate', 'email', 'ignored']), band: z.enum(['strong', 'adequate', 'weak', 'harmful']).nullable(),
+      option: Text.nullable(), outcome: Text.nullable(), answered: z.boolean(), trust: Num, satisfaction: Num,
+      variables: z.array(z.object({ key: Id, name: Text, delta: Num })), revenue: Num, sponsor: Num, read: z.array(z.object({ skill: Text, band: z.enum(['strong', 'adequate', 'weak', 'harmful']) }))
+    })),
+    moves: z.array(z.object({ period: Int, cause: Text, trust: Num, satisfaction: Num }))
+  })).default([]),
 
   // ---- Report 3.0 (D75, D76)
   /** Every number behind the 3.0 sections. */
@@ -127,7 +180,8 @@ export const ReportView = z.object({
   about: z.object({ lines: z.array(Text), howToRead: z.array(Text), confidentiality: Text }),
   /** Assessment only: the verdicts, each with the conversations it rests on and whether an assessor reviewed them. */
   verdict: z.object({
-    overall: z.object({ key: VerdictKey.nullable(), label: Text, bar: Text, ...Evidence }),
+    /** `why`: what held the verdict under the one the words alone would reach (D169), or null. */
+    overall: z.object({ key: VerdictKey.nullable(), label: Text, bar: Text, why: Text.nullable().default(null), ...Evidence }),
     skills: z.array(z.object({ key: Id, verdict: SkillVerdictKey.nullable(), label: Text.nullable(), ...Evidence }))
   }).nullable(),
   objectives: z.object({ narrative: Text }),

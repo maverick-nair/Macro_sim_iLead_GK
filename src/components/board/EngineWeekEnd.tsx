@@ -5,6 +5,10 @@ import { funnelNumber, funnelScale, streakNote } from '../weekend/display';
 import type { WeekEndBadge, WeekEndNews, WeekEndReport, WeekEndReward } from '../weekend/types';
 import { WeekEndFlow, type WeekEndFlowProps } from '../weekend/WeekEndFlow';
 import '../weekend/messages';
+import { DeskStatus } from '../desk/DeskStatus';
+import { moneyFormatter } from '../../engine/money';
+import { formatVariable, variableTrend } from '../business/format';
+import { unitWords } from '../../engine/units';
 
 type Summary = EngineView['periods'][number];
 const METRICS = ['skill', 'morale', 'result', 'trust'] as const;
@@ -36,13 +40,29 @@ export function engineReport({ t, number }: Pick<I18n, 't' | 'number'>, view: En
     scoreParts: [
       ...(week.styleFit.total ? [t('weekend.stars.fit', { correct: week.styleFit.correct, total: week.styleFit.total })] : []),
       t('weekend.stars.live', { count: week.live?.count ?? 0, mean: week.live?.mean ?? 0, unit }),
-      t('weekend.stars.funnel', { output: deals(week.funnel.output), ideal: deals(week.funnel.ideal) })
+      t('weekend.stars.funnel', { output: deals(week.funnel.output), ideal: deals(week.funnel.ideal), ...unitWords(t, view.money.unit) })
     ],
     streak: { count: s.streak.count, unit, note: streakNote({ t }, s.streak, g.streak, unit) },
     sponsor: { from: s.sponsor.fromLevel, to: s.sponsor.toLevel, values: { from: s.sponsor.from, to: s.sponsor.to } },
     pulse: { upbeat: view.pulse.upbeat, steady: view.pulse.steady, struggling: view.pulse.struggling, value: { from: s.pulse.from, to: s.pulse.to } },
-    checkIn: s.checkIn ? { sponsorName: first(view.sponsor.name), line: view.sponsor.checkInBelow } : null
+    checkIn: s.checkIn ? { sponsorName: first(view.sponsor.name), line: view.sponsor.checkInBelow } : null,
+    business: weekBusiness({ t, number }, view, s)
   };
+}
+
+/** The business this period (D135 to D137): variables start to end, choices and attrition; null when the storyline has none. */
+function weekBusiness({ t, number }: Pick<I18n, 't' | 'number'>, view: EngineView, s: Summary): WeekEndReport['business'] {
+  const fmts = { money: moneyFormatter(view.money), number };
+  const rows = (s.variables ?? []).flatMap(x => {
+    const v = view.variables.find(y => y.key === x.key);
+    if (!v) return [];
+    return [{ key: x.key, name: v.name, start: formatVariable(fmts, v.format, x.start), end: formatVariable(fmts, v.format, x.end), ...variableTrend(x.end, x.start, v.higherIsBetter) }];
+  });
+  const notes = [
+    ...(s.choices ?? []).map(c => t('weekend.business.choice', { by: c.by, title: c.title, option: c.label ?? '' })),
+    ...(s.attrition ?? []).map(a => t('weekend.business.attrition', { kind: a.kind, name: first(a.name) }))
+  ];
+  return rows.length || notes.length ? { rows, notes } : null;
 }
 
 /** New badges with their names and rules from the view's badge list. */
@@ -98,6 +118,8 @@ export function EngineWeekEnd({ view, busy, send, minHeight, initial, onResults 
       busy={busy}
       onChooseReward={reward => send({ type: 'chooseReward', reward })}
       onFinish={() => { if (ended) onResults(); else void send({ type: 'startNextPeriod' }); }}
+      organisation={view.storyline.organisation}
+      status={<DeskStatus value={view.money.value} target={view.money.target} score={view.score.total} />}
     />
   );
 }

@@ -37,18 +37,83 @@ const THRESHOLD = 0.0005;
  * and says when one was not needed. Every other frame stays at THRESHOLD.
  * Add an entry only with a logged decision, and keep `maxDiff` just above the measured difference.
  */
-const ACCEPTED: Record<string, { maxDiff: number; reason: string }> = {
-  p1: { maxDiff: 0.004, reason: 'D20 dynamic: the live prototype frame, its clock keeps running' },
-  z5: { maxDiff: 0.004, reason: 'D20 dynamic: random voice waveform' },
-  z14: { maxDiff: 0.004, reason: 'D20 dynamic: random voice waveform' },
-  x2: { maxDiff: 0.004, reason: 'D20 dynamic: the board blurred behind a dialog rasterizes unstably' }
-};
+// D232 moved every frame to the canvas look, so none is compared; the D20 allowances for p1, z5, z14 and
+// x2 come back with any frame that is compared again.
+const ACCEPTED: Record<string, { maxDiff: number; reason: string }> = {};
 
 /**
  * Prototype frames the app no longer renders. The design's phone frames (m1 to m7, 390 wide) were
  * retired with phone support (D69): the simulation runs on laptops, desktops and tablets only.
  */
 const RETIRED = new Set(['m1', 'm2', 'm3', 'm4', 'm5', 'm6', 'm7']);
+
+/**
+ * Frames whose layout a logged decision changed on purpose, so the prototype is no longer their
+ * reference. They are not compared; every run names them and the decision. Add one only with a
+ * decision in docs/DECISIONS.md that changes that frame's layout.
+ */
+const REDESIGNED: Record<string, string> = {
+  e1: 'D101: the end screen keeps its report actions in reach, in a bar along the bottom',
+  e2: 'D101: the report keeps its toolbar in reach, pinned to the top',
+  p1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the whole prototype: every screen it opens moves to the canvas look',
+  o1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the onboarding steps on the canvas palette and type',
+  o2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the sponsor welcome on the canvas palette and type',
+  o3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): consent on the canvas palette and type',
+  o4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): voice setup on the canvas palette and type',
+  o5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): how to play on the canvas palette and type',
+  o6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): meet your team on the canvas palette and type',
+  b1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the navy HUD, the status band and the team as canvas cards (style in words, mood shapes) replace this layout',
+  b2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the desk card names the style in words; the D, G, P, E letters stay in style setting',
+  b3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the style guide opens from style setting; the desk card has no letters',
+  b4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the action drawer on the canvas palette, square option cards',
+  b5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the action drawer on the canvas palette, square option cards',
+  b6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the action drawer on the canvas palette, square option cards',
+  b7: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the profile covers the desk with a rectangle photo, serif name and mono stats',
+  b8: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the inbox drawer is a square paper list with rules between rows',
+  b9: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b10: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b11: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b12: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): event cards put the person\'s photo down the side with a serif title, no art band',
+  b13: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the sponsor call is a square bordered strip under the band',
+  b14: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the light theme is now the canvas paper, and the default mode',
+  b15: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the client theme lands on the canvas tokens (its brand label picked for contrast)',
+  s1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): style setting under the navy bar, photo cards with the style as names, a serif question',
+  s2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the list view on the canvas palette and type',
+  s3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the summary on the canvas palette and type',
+  l1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the 1:1 keeps this frame\'s layout in the gallery under the navy header and reply area; in play the desk 1:1 splits into the portrait and the conversation',
+  l2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the navy header and the canvas reply area',
+  l3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the navy header and the canvas reply area',
+  l4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the email composer under the navy header',
+  l5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the meeting under the navy header and the canvas reply area',
+  l6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the sponsor briefing under the navy header and the canvas reply area',
+  r1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the reacting screen on the canvas palette and type',
+  r2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the outcome band is square, with a serif headline and outlined links',
+  w1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the week end banner is a navy hero, left aligned, beside the lounge photo',
+  w2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the weekly report in square tiles with small capital headings and mono numbers',
+  w3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the badge award with an outlined medal and a serif name',
+  w4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the reward cards are square with serif names',
+  w5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the news card is square with a display serif title',
+  e3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the print pages take the serif headings',
+  x1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the settings dialog title in the display serif, square controls',
+  x2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the pause dialog title in the display serif',
+  x3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the resume recap title in the display serif',
+  x4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the timed out dialog title in the display serif',
+  z1: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the loading screen on navy with the canvas logo',
+  z2: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the empty inbox in the square paper drawer',
+  z3: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the out of days desk under the navy HUD',
+  z4: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the offline desk under the navy HUD',
+  z5: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the listening state in the canvas reply area',
+  z6: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the thinking state under the navy header',
+  z7: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the slow reply under the navy header',
+  z8: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the natural close under the navy header',
+  z9: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the evaluation wait on the canvas palette',
+  z10: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the coaching tip in the canvas brief',
+  z11: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the mic denied banner in the canvas reply area',
+  z12: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): the partial transcript in the canvas reply area',
+  z13: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): mic denied in voice setup on the canvas palette',
+  z14: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): dictating into an email under the navy header',
+  z15: 'D232: the canvas look is the default theme (paper and navy, Geist and Newsreader, square shapes): offline in a conversation under the navy header'
+};
 
 const args = process.argv.slice(2);
 const refresh = args.includes('--refresh');
@@ -114,17 +179,24 @@ function diff(a: string, b: string, out: string, limit: number): { frac: number;
     }
     return false;
   };
+  // With a 1px rounding difference in size (below), the frame's outer edge row or column is half covered
+  // in one capture and not the other: that 1px edge is left out of the count.
+  const edge = A.width !== B.width || A.height !== B.height ? 1 : 0;
   let bad = 0;
   for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
     const ia = (y * A.width + x) * 4, ib = (y * B.width + x) * 4, id = (y * w + x) * 4;
-    const hit = !same(ia, ib) && !near(x, y);
+    const inEdge = edge > 0 && (y < edge || x < edge || y >= h - edge || x >= w - edge);
+    const hit = !inEdge && !same(ia, ib) && !near(x, y);
     if (hit) bad++;
     D.data[id] = hit ? 255 : B.data[ib] / 4; D.data[id + 1] = hit ? 0 : B.data[ib + 1] / 4; D.data[id + 2] = hit ? 0 : B.data[ib + 2] / 4; D.data[id + 3] = 255;
   }
-  const sizeMismatch = A.width !== B.width || A.height !== B.height;
+  // A frame whose box sits on a half pixel captures 1px taller or shorter, in either page from run to
+  // run: that is rounding, and the shared area is compared. A larger difference is a layout change.
+  const dw = Math.abs(A.width - B.width), dh = Math.abs(A.height - B.height);
+  const sizeMismatch = dw > 1 || dh > 1;
   const frac = sizeMismatch ? 1 : bad / (w * h);
   if (frac > limit) fs.writeFileSync(out, PNG.sync.write(D));
-  return { frac, size: sizeMismatch ? `size ${A.width}x${A.height} vs ${B.width}x${B.height}` : '' };
+  return { frac, size: sizeMismatch ? `size ${A.width}x${A.height} vs ${B.width}x${B.height}` : dw || dh ? `compared ${w}x${h}, 1px rounding` : '' };
 }
 
 async function main() {
@@ -160,7 +232,7 @@ async function main() {
   for (const pg of PAGES) {
     const protoDir = path.join(cache, 'proto', pg.key), appDir = path.join(cache, 'app', pg.key);
     if (refresh || !fs.existsSync(protoDir)) await shoot(page, `http://localhost:${proto.port}/${encodeURIComponent(pg.proto)}`, protoDir, null);
-    const known = fs.readdirSync(protoDir).map(f => f.replace('.png', '')).filter(id => !RETIRED.has(id));
+    const known = fs.readdirSync(protoDir).map(f => f.replace('.png', '')).filter(id => !RETIRED.has(id) && !REDESIGNED[id]);
     for (const id of known) allIds.add(id);
     const ids = only.size ? known.filter(id => only.has(id)) : known;
     if (!ids.length) continue;
@@ -179,6 +251,8 @@ async function main() {
       console.log(`${ok ? 'ok  ' : 'FAIL'} ${id.padEnd(4)} ${(r.frac * 100).toFixed(2)}% ${r.size}${note ? ` (${note})` : ''}`);
     }
   }
+  const redesigned = Object.entries(REDESIGNED).filter(([id]) => !only.size || only.has(id));
+  if (redesigned.length) console.log(`Not compared, redesigned by a decision:\n${redesigned.map(([id, why]) => `  ${id.padEnd(4)} ${why}`).join('\n')}`);
   if (used.length) console.log(`Accepted deviations (every other frame is held to ${(THRESHOLD * 100).toFixed(2)}%):\n${used.join('\n')}`);
   const stale = Object.keys(ACCEPTED).filter(id => allIds.size && !allIds.has(id));
   if (stale.length) console.log(`Allowances for frames that do not exist: ${stale.join(', ')}. Remove them from ACCEPTED.`);

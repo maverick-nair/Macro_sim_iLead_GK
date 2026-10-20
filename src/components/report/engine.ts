@@ -2,11 +2,12 @@ import type { HistoryEntry, ReportView } from '../../engine/reportContract';
 import type { I18n } from '../../i18n';
 import { checkInDate, intentTone, multipleDomain, talkRatio, verdictTone } from './display';
 import type {
-  AboutData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, ConsistencyData, DistributionData, FitRow, IntentCardData, MethodologyData,
+  AboutData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, BusinessVariableData, ConsistencyData, DecisionData, DistributionData, FitRow, IntentCardData, MethodologyData, StakeholderData,
   MomentData, ObjectivesData, PeriodUnit, PersonData, PlanExtras, PlanItemData, ProgressData, Purpose, ReportHeaderData, SkillRowData, StyleExtras,
   StyleKey, StylesData, SummaryExtras, TeamSeries, ThoughtData, VerdictData
 } from './types';
 import './messages';
+import { unitWords } from '../../engine/units';
 
 /**
  * The engine's report (`view.report`, parsed with `parseReport`) shaped into the report components' props.
@@ -42,6 +43,7 @@ export type SectionModel =
   | { key: 'actions'; rows: ActionRowData[] }
   | { key: 'distribution'; data: DistributionData }
   | { key: 'moments'; moments: MomentData[] }
+  | { key: 'decisions'; decisions: DecisionData[]; variables: BusinessVariableData[] }
   | { key: 'people'; people: PersonData[] }
   | { key: 'business'; data: BusinessData }
   | { key: 'analytics'; data: AnalyticsData }
@@ -49,7 +51,8 @@ export type SectionModel =
   | { key: 'takeaways'; lines: string[] }
   | { key: 'plan'; items: PlanItemData[]; reflection: string | null; checkIn: string; extras: PlanExtras }
   | { key: 'progress'; data: ProgressData }
-  | { key: 'methodology'; data: MethodologyData };
+  | { key: 'methodology'; data: MethodologyData }
+  | { key: 'stakeholders'; stakeholders: StakeholderData[] };
 
 export interface ReportModel {
   purpose: Purpose;
@@ -102,10 +105,10 @@ export function teamSeries(i18n: Fmt, money: MoneyFormat, r: ReportView): TeamSe
 }
 
 /** A verdict's evidence, review status and records, worded for the report. */
-function verdictData(i18n: Fmt, v: { key: string | null; label: string; recordIds: string[]; quotes: Array<{ text: string; when: string }>; review: 'assessor' | 'mixed' | 'ai'; reviewed: number; total: number }, bar: string): VerdictData {
+function verdictData(i18n: Fmt, v: { key: string | null; label: string; why?: string | null; recordIds: string[]; quotes: Array<{ text: string; when: string }>; review: 'assessor' | 'mixed' | 'ai'; reviewed: number; total: number }, bar: string): VerdictData {
   const { t } = i18n;
   return {
-    key: v.key, label: v.label, bar: t('report.verdict.bar', { bar }),
+    key: v.key, label: v.label, bar: t('report.verdict.bar', { bar }), why: v.why ?? null,
     evidence: t('report.verdict.evidence', { n: v.total }),
     review: t('report.verdict.review', { review: v.review, reviewed: v.reviewed, total: v.total }),
     records: t('report.verdict.records', { ids: v.recordIds.join(t('report.listSeparator')) }),
@@ -140,8 +143,9 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
         return { key, data: r.about };
       case 'summary':
         return { key, narrative: r.summary.narrative, extras: {
-          level: r.summary.level?.name ?? null, strengths: r.summary.strengths.map(skillName), priorities: r.summary.priorities.map(skillName), business: r.summary.business,
-          verdict: r.verdict ? verdictData(i18n, r.verdict.overall, r.verdict.overall.bar) : null
+          level: r.summary.level?.name ?? null, levelWhy: r.summary.levelCap?.why ?? null, strengths: r.summary.strengths.map(skillName), priorities: r.summary.priorities.map(skillName), business: r.summary.business,
+          verdict: r.verdict ? verdictData(i18n, r.verdict.overall, r.verdict.overall.bar) : null,
+          headline: r.summary.headline, lines: r.summary.lines, drivers: r.summary.drivers
         } };
       case 'style':
         return {
@@ -178,7 +182,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
               more: {
                 anchor: s.anchor, observations: s.observations, capped: s.capped, quotes: s.quotes.slice(1),
                 outOf10: s.outOf10 === null ? null : t('report.skills.outOf10', { score: number(s.outOf10) }),
-                description: s.description, narrative: s.narrative,
+                description: s.description, narrative: s.narrative, reconciliation: s.reconciliation,
                 verdict: v?.label ? { label: v.label, tone: verdictTone(v.verdict), review: t('report.verdict.review', { review: v.review, reviewed: v.reviewed, total: v.total }) } : null
               }
             };
@@ -188,7 +192,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       case 'objectives': {
         const o3 = r.run.objectives;
         return { key, data: {
-          revenue: o3.revenue, target: o3.target, money: money.compact, share: t('report.percent', { pct: pct(o3.share) }), conversions: o3.conversions,
+          revenue: o3.revenue, target: o3.target, money: money.compact, share: t('report.percent', { pct: pct(o3.share) }), conversions: o3.conversions, units: unitWords(t, r.storyline.unit),
           team: (['skill', 'morale', 'result'] as const).map(k => ({ key: k, label: t('report.team.metric', { metric: k }), start: o3.team[k].start, end: o3.team[k].end })),
           narrative: r.objectives.narrative
         } };
@@ -237,6 +241,33 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
             behaviour: m.behaviour, quote: m.quote, impact: m.impact, intent: m.intent ? styleName(m.intent) : null
           }))
         };
+      case 'decisions': {
+        if (!r.decisions.length && !r.businessVariables.length) return null;
+        const value = (format: 'money' | 'percent' | 'points', v: number, signed = false) => {
+          const n = format === 'money' ? money.compact(Math.abs(v)) : number(Math.abs(Math.round(v)));
+          const sign = signed ? (v > 0 ? '+' : v < 0 ? '−' : '') : v < 0 ? '−' : '';
+          return format === 'percent' ? `${sign}${n}%` : `${sign}${n}`;
+        };
+        return {
+          key,
+          variables: r.businessVariables.map(v => ({
+            key: v.key, name: v.name, start: value(v.format, v.start), end: value(v.format, v.end),
+            direction: v.end > v.start ? 'up' as const : v.end < v.start ? 'down' as const : 'flat' as const,
+            better: v.end === v.start ? null : (v.end > v.start) === v.higherIsBetter
+          })),
+          decisions: r.decisions.map(d => ({
+            key: d.id, when: t('time.period', { unit, n: d.period }), title: d.title, option: d.option, by: d.by, outcome: d.outcome,
+            changes: [
+              ...(d.impact ? [d.impact] : []),
+              ...d.variables.map(x => t('report.decisions.variable', { name: x.name, value: value(x.format, x.delta, true) })),
+              ...(d.revenue ? [t('report.decisions.revenue', { value: `${d.revenue > 0 ? '+' : '−'}${money.compact(Math.abs(d.revenue))}` })] : []),
+              ...(d.sponsor ? [t('report.decisions.sponsor', { delta: d.sponsor })] : [])
+            ],
+            led: d.triggered.map(x => t('report.decisions.led', { title: x.title, when: t('time.period', { unit, n: x.period }) })),
+            read: d.read.map(x => t('report.decisions.read', { skill: x.skill, band: x.band }))
+          }))
+        };
+      }
       case 'people':
         return {
           key,
@@ -256,6 +287,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
             funnel: b.funnel.map(f => ({ key: f.stage, name: f.name, value: f.cumulative, ideal: f.cumulativeIdeal, bottleneck: f.stage === b.bottleneck?.stage })),
             bottleneck: b.bottleneck ? { name: b.bottleneck.name, periods: b.bottleneck.periods, why: b.bottleneck.why } : null,
             conversions: b.conversions,
+            units: unitWords(t, r.storyline.unit),
             line: r.summary.business
           }
         };
@@ -298,6 +330,33 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       }
       case 'methodology':
         return { key, data: r.methodology };
+      case 'stakeholders': {
+        // "Stakeholders" (D164): only when the storyline has them.
+        if (!r.stakeholders.length) return null;
+        const signed = (n: number) => `${n > 0 ? '+' : n < 0 ? '−' : ''}${number(Math.abs(n))}`;
+        const when = (n: number) => t('time.period', { unit, n });
+        const dir = (a: number, b: number) => (b > a ? 'up' as const : b < a ? 'down' as const : 'flat' as const);
+        return {
+          key,
+          stakeholders: r.stakeholders.map(s => ({
+            key: s.key, name: s.name, role: t('report.stakeholders.role', { role: s.role, kind: s.kind }),
+            relationship: t('report.stakeholders.relationship', { from: s.levelStart, to: s.levelEnd }),
+            measures: (['trust', 'satisfaction'] as const).map(m => ({ key: m, name: t('report.stakeholders.measure', { measure: m }), start: s.start[m], end: s.end[m], direction: dir(s.start[m], s.end[m]) })),
+            interactions: s.interactions.map(x => ({
+              key: x.id, when: when(x.period), title: x.title, how: x.option ?? t('report.stakeholders.how', { type: x.type, band: x.band ?? 'none' }), outcome: x.outcome,
+              changes: [
+                t('report.stakeholders.relation', { trust: signed(x.trust), satisfaction: signed(x.satisfaction) }),
+                ...(x.answered ? [t('report.stakeholders.answered')] : []),
+                ...x.variables.map(v => t('report.decisions.variable', { name: v.name, value: signed(v.delta) })),
+                ...(x.revenue ? [t('report.decisions.revenue', { value: `${x.revenue > 0 ? '+' : '−'}${money.compact(Math.abs(x.revenue))}` })] : []),
+                ...(x.sponsor ? [t('report.decisions.sponsor', { delta: x.sponsor })] : []),
+                ...x.read.map(y => t('report.decisions.read', { skill: y.skill, band: y.band }))
+              ]
+            })),
+            moves: s.moves.map(m => t('report.stakeholders.move', { when: when(m.period), cause: m.cause, trust: signed(m.trust), satisfaction: signed(m.satisfaction) }))
+          }))
+        };
+      }
     }
   };
 

@@ -1,5 +1,6 @@
 import { parseStoryline, type Purpose, type StorylineConfig, type StorylineInput } from '../../../src/engine/config';
 import salesElevator from '../../../src/engine/storylines/sales-elevator.json';
+import clientTrust from '../../../src/engine/storylines/client-trust.json';
 import { withSixStyles } from '../../../src/engine/storylines/sixStyles';
 import type { Repository } from '../store';
 
@@ -10,14 +11,20 @@ import type { Repository } from '../store';
  */
 export const BUILT_IN: Record<string, () => StorylineInput> = {
   sales_elevator: () => structuredClone(salesElevator) as unknown as StorylineInput,
-  sales_elevator_six_styles: () => ({ ...withSixStyles(structuredClone(salesElevator) as unknown as StorylineInput), id: 'sales_elevator_six_styles' })
+  sales_elevator_six_styles: () => ({ ...withSixStyles(structuredClone(salesElevator) as unknown as StorylineInput), id: 'sales_elevator_six_styles' }),
+  /** The demo of dynamics, business variables and choice events (D141). */
+  client_trust: () => structuredClone(clientTrust) as unknown as StorylineInput
 };
 
 export class StorylineError extends Error {
   constructor(message: string, readonly code: 'unknownStoryline' | 'badStoryline') { super(message); }
 }
 
-export interface ResolvedStoryline { id: string; version: number; input: StorylineInput; config: StorylineConfig }
+export interface ResolvedStoryline { id: string; version: number; input: StorylineInput; config: StorylineConfig; preview?: boolean }
+
+/** A preview's storyline id (D195): `preview:<previewId>`, never a published storyline's (those ids take no colon prefix of this kind). */
+export const PREVIEW_STORYLINE = 'preview:';
+export const previewStorylineId = (previewId: string) => `${PREVIEW_STORYLINE}${previewId}`;
 
 /** Parses a snapshot (a run's stored input), throwing on issues. */
 export function configOf(input: unknown): StorylineConfig {
@@ -32,6 +39,13 @@ export class Storylines {
   /** The storyline to start a run with: the latest published version, else a built in sample. `purpose` overrides the storyline's. */
   async resolve(id: string | null | undefined, purpose?: Purpose | null): Promise<ResolvedStoryline> {
     const key = id || this.defaultId;
+    if (key.startsWith(PREVIEW_STORYLINE)) {
+      // A preview from GenieKreator (D195): its draft, while it lasts. Its version is the draft's.
+      const p = await this.repo.getPreview(key.slice(PREVIEW_STORYLINE.length));
+      if (!p || p.expiresAt < new Date().toISOString()) throw new StorylineError('This preview has expired. Preview again from GenieKreator.', 'unknownStoryline');
+      const input = p.config as StorylineInput;
+      return { id: key, version: p.draftVersion ?? 0, input, config: configOf(input), preview: true };
+    }
     const row = await this.repo.getStoryline(key);
     let input: StorylineInput;
     let version: number;

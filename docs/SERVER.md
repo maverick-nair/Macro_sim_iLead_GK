@@ -59,6 +59,7 @@ Every path, its schema and its roles are in `/openapi.json` (OpenAPI 3.1, genera
 | `createHttpApi` (src/api/http.ts) | `VITE_ILEAD_API_URL=/api` | `/api/profile`, `/api/theme`, `/api/history`, `/api/cohort/leaderboard`, `/api/cohort/{id}/report`, `/api/cohort/report`, `/api/report.pdf`, `/api/report/email`, `/api/scenario`, `/api/session`, `/api/session/settings` |
 | `createHttpTranscriptionClient` (src/speech/transcription.ts) | `VITE_ILEAD_SPEECH_URL=/speech` | `POST /speech/transcriptions`, `POST .../{id}/chunks?seq=n`, `POST .../{id}/end`, `DELETE .../{id}` |
 | `ServerDrafter` (src/author/drafter.ts) | `VITE_GENIE_URL=/genie` | `POST /genie/author/turn`, `POST /genie/author/draft` |
+| GenieKreator's Preview (src/author/ui/play.ts) and the preview tab (src/components/preview, `createHttpClient` at `{VITE_GENIE_URL}/preview`) | `VITE_GENIE_URL=/genie` | `POST /genie/author/preview`, `PUT /genie/author/preview/{id}`; `GET /genie/preview/sessions/{id}/view`, `POST .../intents`, `GET .../interactions/{i}/turns/{t}/stream`, `POST .../restart` (D195) |
 
 Added by the server (not called by the app today):
 
@@ -70,6 +71,7 @@ Added by the server (not called by the app today):
 | `GET /api/admin/cohorts/{id}/runs`, `PUT /api/admin/cohorts/{id}` | cohort admin (assessor reads) | Who played, status, score; a cohort's name, storyline, purpose and theme. |
 | `GET/POST /api/admin/storylines`, `GET /api/admin/storylines/{id}` | author | Storyline versions: drafts (also saved by `/genie/author/draft`) and published. Publishing checks the schema and the author copy rules. |
 | `PUT /api/admin/themes/{id}` | author, cohort admin | A client theme (`theme-config.json`). |
+| `POST /genie/calibrations`, `GET /genie/calibrations/{id}`, `GET .../playthroughs/{persona}/{index}`, `DELETE /genie/calibrations/{id}` | author | GenieKreator's "Test with synthetic players" (D117, `docs/CALIBRATION-SYNTHETIC.md`): start a calibration of a draft (honors `Idempotency-Key`), poll it, read one playthrough, cancel it. In process jobs, `CALIBRATION_CONCURRENCY` at a time. |
 | `POST /api/admin/benchmarks/refresh`, `GET /api/admin/benchmarks/{lens}` | cohort admin with `*` | Recompute the benchmarks now; read one (`X-Benchmark-Source` says stored or sample). |
 | `GET /api/privacy/export`, `DELETE /api/privacy/me` | participant | Their data as JSON; delete it all and sign out. |
 | `GET /api/admin/participants/{id}/export`, `DELETE /api/admin/participants/{id}` | cohort admin | The same for a participant in their cohorts (data subject requests). |
@@ -82,11 +84,13 @@ Notes on behaviour:
 - **Idempotency** (D100). An intent sent with `Idempotency-Key` (1 to 200 characters, else 400 `badIdempotencyKey`) is applied once: its result is stored beside the event (`intent_keys`), and the same key again on that run answers the stored result without applying anything. The app's intent queue sends the same key on every retry (D86).
 - **Demo round** (D92). The demo routes run a separate engine on the run's storyline with seed 7, held in memory per participant (dropped on `DELETE .../demo`, on restart, or when the cache of engines is full). Nothing is written to the database or the event log; only instant decisions are allowed (409 `notInDemo` otherwise).
 - **Streaming.** `sendTurn` returns the NPC's turn (its words already decided by the `NpcModel`); the stream endpoint sends those words as `StreamChunk` SSE events at `STREAM_TOKENS_PER_SEC`, then `done`. A turn that is not in the open conversation is 404. This is option 1 of `docs/AI.md` section 2; see 15 for live model streaming.
+- **Calibrations** (D117). A job plays the draft with synthetic players at four levels on the server's NPC model and evaluator (and, with AI, the `ai/` module's `createSyntheticPlayer`), `CALIBRATION_CONCURRENCY` jobs at a time and `CALIBRATION_QUEUE` waiting (more answer 503 `busy`); each playthrough gives the event loop back. The same caller and `Idempotency-Key` answer the job already started; the same key with another body is 422 `idempotencyMismatch`. Limits (D120): an author may have `CALIBRATION_PER_OWNER` jobs queued or running (more answer 429 `tooManyCalibrations`); a job is at most 250 playthroughs with the probes (200 before D149), and action probes cover the first 40 actions (more is 400 `badSettings`); a job running longer than `CALIBRATION_TIME_LIMIT_MS` is stopped and fails with `timeLimit`. Finished jobs are kept in memory an hour (the newest 50) and pruned every minute, so poll the instance that started one.
 - **Leaderboard.** Ranks each cohort member's latest attempt from stored scores (score, then conversions, then capability). The caller's own numbers come from their run, not from what the browser sends. Refused (403) in an assessment.
 - **Group report.** `GET /api/cohort/{id}/report` builds `buildGroupReport` over each participant's latest attempt (unfinished runs count in the completion rate) with the stored benchmark of the storyline's lens. Development withholds aggregates under `report.group.minimumCohort`; assessment adds verdicts and names (D77).
 - **History.** Ended earlier attempts of the same storyline, oldest first, with their stored summary and the report's headline; 404 when there are none.
 - **Benchmarks.** `summarizeBenchmark` over every stored run summary of a lens, refreshed every `BENCHMARK_REFRESH_HOURS` (and soon after start) or on demand. A lens with fewer than `BENCHMARK_MIN_RUNS` runs keeps the cached sample (`src/api/samples`).
-- **Prototype only.** `PUT /api/weeks/...`, `POST /api/interactions` and friends (the design prototype's fixed board, `?engine=off`) answer 501. `GET /api/scenario` is served because the app shell reads it on load.
+- **Prototype only.** `PUT /api/weeks/...`, `POST /api/interactions` and friends (the design prototype's fixed board, `?engine=off`) answer 501. `GET /api/scenario` is served for the prototype's screens (`?engine=off`); the engine's shell no longer reads it (D199).
+- **Previews** (D195). `POST /genie/author/preview` (author) checks a StorylineConfig as `POST /api/admin/storylines` does (schema, copy rules, id) and keeps it in `previews`, never as a storyline version, for `PREVIEW_DAYS` (7) after its last save (`PUT /genie/author/preview/{id}` replaces the draft and extends it). It answers `{ id, token, url, expiresAt }`: the token is the id, the url the participant app's preview address. The preview plays through the engine contract at `/genie/preview/sessions/{id}` as the signed in author, as the stand in participant `preview.{id}` on the storyline `preview:{id}`; `restart` starts a fresh run played forward to a point (`board:3`, `report`; `src/engine/jump.ts`). Its runs are flagged `preview`, keep no run summary, and are left out of cohort runs, group reports, the leaderboard, benchmarks and the history. An expired preview answers 404 `unknownPreview`; retention removes it with its runs and stand in participant.
 
 ## 4. Launch, sessions and roles
 
@@ -128,6 +132,7 @@ Minting in another language is three lines with any JWT library (HS256, the clai
 | `runs` | One attempt: participant, cohort, storyline id and version, lens, purpose, the storyline input snapshot, seed, attempt, engine version, status, event count, score, conversions, capability, headline. |
 | `run_events` | The event log: `(run_id, seq)` unique, intent or review, payload, the model answers it used. |
 | `intent_keys` | Idempotency keys (migration 2, D100): `(run_id, key)` unique, the event's seq and the stored result. Deleted with the run. |
+| `previews` | Preview storylines from GenieKreator (migration 3, D195): the draft config, its version and save time, who, and when it expires. Migration 3 also adds `runs.preview`. |
 | `run_summaries` | The latest `RunSummary` per run, by lens (group report, history, benchmark). |
 | `reviews` | Assessor reviews (also in the event log). |
 | `storylines` | Every version: draft or published, by whom. |
@@ -137,7 +142,7 @@ Minting in another language is three lines with any JWT library (HS256, the clai
 | `sessions` | Cookie sessions. |
 | `pdf_cache` | The report PDF per run, keyed by the run's event count. |
 
-**Privacy and retention.** A participant can export and delete their data (`/api/privacy/*`); cohort admins can for their cohorts. Deletion removes the participant, runs, events, summaries, reviews, PDFs, email log and sessions, and drops any engine in memory. `RETENTION_DAYS` deletes runs untouched that long (daily, and on demand); expired sessions are always removed. Benchmarks keep only averages and distributions, never names. Audio is never stored (section 6). Logs carry ids, codes and timings, never what a participant typed or said, and never query strings (launch tokens travel in them).
+**Privacy and retention.** A participant can export and delete their data (`/api/privacy/*`); cohort admins can for their cohorts. Deletion removes the participant, runs, events, summaries, reviews, PDFs, email log and sessions, and drops any engine in memory. `RETENTION_DAYS` deletes runs untouched that long (daily, and on demand); expired sessions and expired previews (with their runs) are always removed. Benchmarks keep only averages and distributions, never names. Audio is never stored (section 6). Logs carry ids, codes and timings, never what a participant typed or said, and never query strings (launch tokens travel in them).
 
 ## 6. AI and speech
 
@@ -179,6 +184,8 @@ Everything is environment, parsed and checked at startup (`server/src/config.ts`
 | `CORS_ORIGINS` | Only when the app is served from another origin. |
 | `TRUST_PROXY=true` | Behind a load balancer. |
 | `RETENTION_DAYS` | Your data retention policy. |
+| `CALIBRATION_CONCURRENCY`, `CALIBRATION_QUEUE` | Synthetic player calibrations at once and waiting (2 and 20). With AI each one makes many model calls. |
+| `CALIBRATION_PER_OWNER`, `CALIBRATION_TIME_LIMIT_MS` | Calibrations one author may have queued or running (2; more answer 429 `tooManyCalibrations`), and how long one may run before it is stopped and fails with `timeLimit` (600000, 10 minutes; 0 turns it off). |
 
 **The app.** A production build that talks to the server needs no code change: `npm run build:server-app` builds with `.env.server` (`VITE_ILEAD_ENGINE_URL=/engine`, `VITE_ILEAD_API_URL=/api`, `VITE_ILEAD_SPEECH_URL=/speech`, `VITE_GENIE_URL=/genie`). With relative paths the same build works on any host that serves the app and these prefixes on one origin. To call the server on another origin, build with full URLs in those variables, and set `CORS_ORIGINS` and `COOKIE_SAMESITE=None` on the server. `npm run build` still makes the mock build (`dist/`) for demos and the budget check.
 
@@ -221,6 +228,7 @@ docker compose --profile mail up                # with Mailpit as a fake SMTP in
 - Rate limits are per instance (section 13); put a shared limit at the load balancer or swap `RateLimiter` for a Redis backed one.
 - PDF rendering is the heaviest call (a Chromium page, 1 to 3 s). `PDF_CONCURRENCY` caps it per instance; PDFs are cached per run version. A separate PDF worker can take `PdfRenderer` later.
 - Model latency dominates conversation turns (`docs/AI.md` section 9); the server holds no lock across runs, only within one.
+- Calibrations are CPU work in process (about 0.1 s a playthrough offline; minutes with AI players, mostly waiting on the model). `CALIBRATION_CONCURRENCY` caps them per instance, and jobs live in that instance's memory: route `/genie/calibrations/*` by session too.
 
 ## 13. Security
 
@@ -235,7 +243,7 @@ docker compose --profile mail up                # with Mailpit as a fake SMTP in
 
 ## 14. Tests
 
-`npm run test:server` (Vitest, `server/test`): launch links (expired, forged, wrong audience, unsigned, too long, rotation, open redirects), sessions and logout, every role on its routes, bearer and admin tokens, the origin check, CORS, rate limits, security headers and validation; the engine (start, refusals change nothing, SSE chunks the app's reader parses, concurrent intents in order, exact replay with a model that never answers the same way twice, resume after a restart on the same database, attempts and history, assessor review surviving replay, launch storyline and purpose); reports (group report parsed by the app's schema, `POST /cohort/report`, leaderboard from stored scores, benchmark refresh, history); PDF caching and email with a fake SMTP server (attachment, log, cap, copy rules); the storage contract on SQLite and Postgres (pg-mem, plus a real Postgres with `TEST_DATABASE_URL`); the AI wiring (the real `ai/` module, per role mocks through the server, a batch transcriber, an HTTP speech service); speech, author, privacy, OpenAPI coverage, configuration and `.env.example` coverage; and the real Chromium renderer.
+`npm run test:server` (Vitest, `server/test`): launch links (expired, forged, wrong audience, unsigned, too long, rotation, open redirects), sessions and logout, every role on its routes, bearer and admin tokens, the origin check, CORS, rate limits, security headers and validation; the engine (start, refusals change nothing, SSE chunks the app's reader parses, concurrent intents in order, exact replay with a model that never answers the same way twice, resume after a restart on the same database, attempts and history, assessor review surviving replay, launch storyline and purpose); reports (group report parsed by the app's schema, `POST /cohort/report`, leaderboard from stored scores, benchmark refresh, history); PDF caching and email with a fake SMTP server (attachment, log, cap, copy rules); the storage contract on SQLite and Postgres (pg-mem, plus a real Postgres with `TEST_DATABASE_URL`); the AI wiring (the real `ai/` module, per role mocks through the server, a batch transcriber, an HTTP speech service); speech, author, synthetic player calibrations (a job's results and playthroughs, the idempotency key, the queue and its limit, cancelling, AI players and the server's evaluator), privacy, OpenAPI coverage, configuration and `.env.example` coverage; and the real Chromium renderer.
 
 `npm run e2e:server` (Playwright, `server/e2e`): the app built with `--mode server` and served by the server; a minted launch link, a week played through the UI (styles, a 1:1 whose replies stream over SSE from the server, the outcome, the week end), a reload and a new browser resuming week 2 from the server, the report's print view and its PDF rendered once and then cached, the group report for a cohort admin.
 
@@ -248,3 +256,4 @@ docker compose --profile mail up                # with Mailpit as a fake SMTP in
 - **In process schedules and rate limits** are per instance (section 12).
 - **LTI 1.3 and SSO** are a documented seam, not implemented (section 4).
 - **Assessor UI:** the review endpoints exist; there is no assessor screen in the app yet.
+- **Calibrations are not persisted:** a restart forgets them, and they are per instance (`docs/CALIBRATION-SYNTHETIC.md` section 9).

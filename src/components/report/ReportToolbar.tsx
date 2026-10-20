@@ -1,9 +1,10 @@
+import { useApi } from '../../api';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import './messages';
 
-const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
-const LINK = `cursor-pointer border-0 bg-transparent p-0 text-13 font-600 text-fg-secondary ${FOCUS}`;
+const FOCUS = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary';
+const LINK = `min-h-11 cursor-pointer rounded-4 border-0 bg-transparent px-1 py-0 text-14 font-500 text-fg-primary ${FOCUS}`;
 
 export interface ReportToolbarProps {
   /** Web view: back to the results (absent where there is nowhere to go back to, as in the group report). Print view: back to the web view. */
@@ -19,12 +20,14 @@ export interface ReportToolbarProps {
 /** Back to results, Email me, Download PDF. */
 export function ReportToolbar({ onBack, onEmail, onDownload, print = false }: ReportToolbarProps) {
   const { t } = useI18n();
+  // An adapter without an email service (a SCORM package, D208) leaves Email me out wherever it is offered.
+  const email = useApi().features?.email !== false;
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       {onBack && <button type="button" onClick={onBack} className={LINK}>{t('report.toolbar.back', { print: String(print) })}</button>}
       <span className="flex-1"></span>
-      {onEmail && <NoWrapButton variant="secondary" size="sm" onClick={onEmail}>{t('report.toolbar.email')}</NoWrapButton>}
-      {onDownload && <NoWrapButton variant="primary" size="sm" onClick={onDownload}>{t('report.toolbar.download', { print: String(print) })}</NoWrapButton>}
+      {onEmail && email && <NoWrapButton variant="secondary" size="md" onClick={onEmail}>{t('report.toolbar.email')}</NoWrapButton>}
+      {onDownload && <NoWrapButton variant="primary" size="md" onClick={onDownload}>{t('report.toolbar.download', { print: String(print) })}</NoWrapButton>}
     </div>
   );
 }

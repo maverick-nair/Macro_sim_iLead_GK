@@ -26,6 +26,8 @@ npm run test:server      # the server's tests;  npm run e2e:server  Playwright a
 
 CI (`.github/workflows/ci.yml`) runs on every push and pull request: token check, lint, build, the server's tests, Storybook smoke, the Playwright flows (the app's and the server's), parity and the Web Vitals budgets.
 
+**Deploying the app alone (Vercel).** `vercel.json` builds with `npm run build:app` (only `vite build`) and serves `dist` as a single page app on the mock engine; Node 22 comes from `engines`. The quality gates (tokens, lint, unit tests, types, the budget, end to end) run in CI on every push and pull request, never in the deploy, so a red test blocks the merge, not the preview.
+
 The reference server is in `server/` (D81): the engine authoritative and persisted, every endpoint the app calls, signed launch links, report PDF and email, the AI from `ai/` (D82). Setup, configuration, deploy and operations: `docs/SERVER.md`. An engineer only configures it (`.env.example`, `Dockerfile`, `docker-compose.yml`).
 
 For the server and GenieKreator teams: `docs/HANDOFF.md` (architecture, the engine contract, every endpoint, the config and report schemas, how to run, test and release, budgets, known limits).
@@ -80,7 +82,7 @@ The variables are listed in `.env.example`; copy it to `.env.local` to set them.
 
 ## Author chat prototype
 
-`/author` is GenieKreator's author chat for iLead (D70, D74), for L&D authors rather than participants. It asks 5 to 10 questions, recommends a leadership lens, previews the build, then locks the lens and drafts a storyline. "Play this draft" opens the participant app on it (`/?storyline=draft&start=onboarding`); "Download config" saves the storyline JSON. `?theme=light` and `?client=halden` theme it.
+`/author` is GenieKreator's authoring tool for iLead (D105 to D111), for L&D authors rather than participants: a co-creator chat of 5 to 10 questions (typed or by voice) with the draft filling in beside it, a lens recommendation, First draft ready, then the workspace (`/author/workspace/<tab>`: brief, story, process, team, lens, actions, events, scoring, brand, synthetic players, review and publish) with Ask Kora, and the library admin page (`/author/library`). "Play a week" opens the participant app on the draft (`/?storyline=draft`). It is light only and saves the draft in the browser.
 
 - Code: `src/author` (question policy, recommendation, lens library, mock drafter, copy guard) and `src/author/ui` (components, with stories under "Author chat"). API shapes: `src/api/author.ts`. Server prompts: `docs/genie/prompts/author-chat.md` and `docs/genie/prompts/leadership-lens.md`.
 - `VITE_GENIE_URL` points the chat at the server (`POST /author/turn`, `POST /author/draft`). Unset, or when the server answers 404 or 501, the chat drafts from templates and says so.
@@ -114,7 +116,7 @@ A client theme is GenieKreator configuration (Configuration Spec, "Brand and the
 | `colors.brand` | `{ from, to, angle? }` | `fill.brand`: the primary button, wordmark, on switch and progress. |
 | `colors.surface` | `{ solid?, card?, raised?, material? }` | The surface tokens. |
 | `logo` | `{ src?, alt?, text? }` | The brand mark beside the iLead wordmark: an image (https, a site path or a data:image URI), or a text mark. With neither, the design's placeholder names the client. |
-| `font` | allowlist | Manrope (default), Inter, IBM Plex Sans, Source Sans 3, Nunito Sans, Work Sans, Lato, Open Sans, System. Web fonts load from Google Fonts. |
+| `font` | allowlist | Left out: Geist, the canvas's face (D232). Manrope, Inter, IBM Plex Sans, Source Sans 3, Nunito Sans, Work Sans, Lato, Open Sans, System. Web fonts load from Google Fonts. |
 | `radiusScale` | 0 to 2 | Multiplies every numbered radius token; pills stay pills. |
 
 A colour is `oklch()`, `#hex` or `rgb()`, either one value or `{ "light": …, "dark": … }`. Theme text follows the copy rules (no dashes as punctuation, no emoji).

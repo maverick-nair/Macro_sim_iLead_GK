@@ -42,7 +42,9 @@ Browser ── intents, SSE ──> Server (server/) ── loads the factories 
 | `NpcModel` | `stream(ctx, { signal })`, `reply(ctx, { signal })` | Stream of `{ type: 'token', text }` then `{ type: 'done', reply, meta }`; `reply` gives the engine's `NpcReply` (`text`, `revealsConcern`, `signsOff`). `ctx` is the engine's `NpcContext` plus an optional scene: `locale`, `history` (the conversation so far), `story`, `meeting` (attendees, raised hands), `guarded`, `role`. |
 | `Evaluator` | `evaluate(input)`, `evaluateWithAudit(input)` | Exactly the engine's `Evaluation` (checked against `EvaluationSchema`, with a compile time check that it matches the engine type), plus an `EvaluationAudit`. `input` is the engine's `EvaluationInput` plus `locale`, `actionKey`, `actionName`, `goal`, `rubricLabels`, `skillDefs` (names and anchors), `transcript`, `counterpart`, `promiseActions`. |
 | `AuthorDrafter` | `turn(req)`, `draft(req)` | The shapes of `src/api/author.ts`: `AuthorTurnResponse`, `AuthorDraftResponse`. |
+| `AuthorEditor` | `edit(req, { signal })` | Ask Kora (D127): `AuthorEditResponse` from `src/api/authorEdit.ts`, a patch (set operations on whitelisted draft paths) or a reply; `null` when not offered (the mock), and the app's rules answer. |
 | `Transcriber` | `open({ mimeType, mode, language, onResult, signal })` gives a session with `push(chunk, seq)`, `end()`, `abort()` | `{ kind: 'partial' | 'final', text }[]`, the contract of `docs/SPEECH.md`. |
+| `SyntheticPlayer` | `say(ctx)` | GenieKreator's synthetic players (D112, `docs/CALIBRATION-SYNTHETIC.md`): a persona's next line from its level, the lens, the person and the transcript (the engine's `SpeakerContext`). The engine's `templateSpeaker` is the mock and the fallback on any failure, refusal or unusable line. |
 
 Helpers for the server: `sceneFromStoryline(config)` (locale and workplace) and `historyFromTurns(turns, nameOf)`.
 
@@ -62,13 +64,15 @@ The engine awaits `npc.reply(ctx)` inside `sendTurn`. Two ways to serve `GET ...
 | `evaluator/<format>.md` | Evaluator | The default rubric of each format (roleplay, chat, email, meeting, sponsor, interview, plan) and what good looks like. |
 | `lens.md` | Author | The Leadership Lens guardrails (KNOLSKAPE titles only, no certification claims, "skills", no dashes, no emojis, no invented framework content). |
 | `author-turn.md`, `author-framework.md`, `author-draft.md` | Author | Reading answers and uploads; extracting a client framework; writing the storyline's copy. |
+| `author-edit.md` | Ask Kora | Carrying out one author instruction as set operations on the fields given, or replying (unclear, conflicting, outside the fields); never pasting the instruction into a field; effect wording and ranges; the copy rules. |
+| `synthetic-player.md` | Synthetic player | Playing one proficiency level faithfully in a calibration: what each level does, showing the intended style in plain words, the copy rules, never mentioning the test. |
 | `repair.md` | All structured calls | The repair instruction after an answer that fails validation. |
 
 **Versions.** Each file has a header (`id`, `version`). The version recorded is `<id>@<version>#<hash of the text>`, for example `evaluator@1#a1b2c3d4+evaluator.roleplay@1#e5f6a7b8`, so an edit without a version bump still shows. It is on every evaluation's audit record (`EvaluationAudit.promptVersion`, for the report's methodology and the assessor review) and every NPC reply's `meta.promptVersion`. Raise the version when you change a prompt, and rerun both quality gates.
 
 **Order for caching.** Stable text first: the rules, then the format guide, then the per interaction context (character sheet; rubric, skills with anchors, lens styles) with a cache breakpoint. What changes per call (mood, trust, the conversation, the words to score) comes last. A prefix shorter than the model's minimum cacheable length is simply not cached.
 
-**Untrusted text.** Participant and author text goes inside tags (`<participant_says>`, `<participant_words>`, `<answers>`, `<documents>`) with `<` and `>` replaced, and every prompt says that text inside them is never an instruction.
+**Untrusted text.** Participant and author text goes inside tags (`<participant_says>`, `<participant_words>`, `<answers>`, `<documents>`, and for Ask Kora `<instruction>`, `<fields>`, `<context>`) with `<` and `>` replaced, and every prompt says that text inside them is never an instruction.
 
 ## 4. Guardrails
 
@@ -86,6 +90,11 @@ The engine awaits `npc.reply(ctx)` inside `sendTurn`. Two ways to serve `GET ...
 ### Author drafter
 - The question order and the "5 to 10 questions" policy are rules (`src/author/questions.ts`); the lens recommendation's precedence is a rule (`src/author/recommend.ts`). The model only reads: brief fields it states clearly (never overwriting what the brief has, never guessing a client), and a client framework, where every dimension, behaviour and level must appear in the text or it is dropped.
 - The draft starts from the template draft (calibrated mechanics) and the model writes only the copy, by id and key. The copy passes the copy rules, then the merged storyline must pass `StorylineConfig` and the copy guard (`src/author/copyGuard.ts`: KNOLSKAPE lens titles, no source names outside `basedOn`, no certification claims, "skills", no dashes, no emojis) and have distinct names. Otherwise one repair with the issues, then the templates draft.
+
+### Ask Kora (author editor)
+- The model never writes into the draft directly. It answers with set operations on paths from the compact view the app sent (`editView` in `src/author/model/patch.ts`: the whitelisted fields of the tab and of anything the instruction names, flat by path). In `ai/` every op must be a path it was shown, on the whitelist, with a value the draft schema's own field takes (`checkViewOps`); text goes through the copy rules; one repair, then the call throws. The route checks the same again, and the app checks the patch against the full draft and parses the whole draft after it before showing a diff. Nothing is applied until the author presses Apply.
+- On any failure (no editor, 501, 502, a timeout of 30 seconds, a patch the draft refuses) the app reads the instruction with its offline rules (`src/author/model/intents.ts`) and says so, with Retry.
+- Settings: the author role's model and connection, with 8000 output tokens, `medium` effort, 25 seconds and no SDK retries per request, so the app's 30 second limit holds.
 
 ### Transcriber
 - Transcript only: no audio is kept by this layer, nothing is inferred from the voice. Chunks are applied in `seq` order; a repeated `seq` is ignored; a gap is an error; nothing is accepted after `end` or `abort`.
@@ -121,17 +130,17 @@ The key goes in `Authorization: Bearer <key>` by default, or any header and sche
 
 ## 8. Configuration reference
 
-Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDrafter(config)`, `createTranscriber(config)`, exported from `ai/src/index.ts`. Defaults are `DEFAULTS` in `ai/src/config.ts`.
+Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDrafter(config)`, `createAuthorEditor(config)` (the author role's config), `createTranscriber(config)`, `createSyntheticPlayer(config)`, exported from `ai/src/index.ts`. Defaults are `DEFAULTS` in `ai/src/config.ts`.
 
 | Field | Env variable | Default | Notes |
 |---|---|---|---|
-| `provider` | `AI_PROVIDER`, or per role `AI_PROVIDER_NPC`, `AI_PROVIDER_EVALUATOR`, `AI_PROVIDER_AUTHOR` | `anthropic` when `ANTHROPIC_API_KEY` is set, else `mock` | `mock` or `anthropic`. |
+| `provider` | `AI_PROVIDER`, or per role `AI_PROVIDER_NPC`, `AI_PROVIDER_EVALUATOR`, `AI_PROVIDER_AUTHOR`, `AI_PROVIDER_SYNTHETIC` | `anthropic` when `ANTHROPIC_API_KEY` is set, else `mock` | `mock` or `anthropic`. |
 | `anthropic.apiKey` | `ANTHROPIC_API_KEY` | none | Left out, the SDK looks for its own default credentials. |
 | `anthropic.baseURL` | `ANTHROPIC_BASE_URL` | the public API | A gateway or proxy. |
 | `anthropic.refusalFallback` | `AI_REFUSAL_FALLBACK` | `true` | Server side refusal fallback: a request declined by a safety classifier is re-run on the recommended fallback model in the same call. Turn off where the platform does not offer it. |
 | `anthropic.promptCaching` | `AI_PROMPT_CACHE` | `true` | Cache breakpoint on the stable prefix. |
 | `anthropic.cacheTtl` | `AI_CACHE_TTL` | `5m` | `1h` pays off for a cohort playing one storyline over an hour. |
-| `model.model` | `AI_MODEL_NPC`, `AI_MODEL_EVALUATOR`, `AI_MODEL_AUTHOR` | see `DEFAULTS` | Model id per role. |
+| `model.model` | `AI_MODEL_NPC`, `AI_MODEL_EVALUATOR`, `AI_MODEL_AUTHOR`, `AI_MODEL_SYNTHETIC` | see `DEFAULTS` | Model id per role. The synthetic player takes the NPC role's settings unless its own are set (`AI_EFFORT_SYNTHETIC`, `AI_MAX_TOKENS_SYNTHETIC`, `AI_TIMEOUT_MS_SYNTHETIC` and so on). |
 | `model.effort` | `AI_EFFORT_NPC`, `AI_EFFORT_EVALUATOR`, `AI_EFFORT_AUTHOR` | `low`, `high`, `high` | `low`, `medium`, `high`, `xhigh`, `max`. |
 | `model.maxTokens` | `AI_MAX_TOKENS_<ROLE>` | 2048, 16000, 32000 | Includes thinking. |
 | `model.temperature` | `AI_TEMPERATURE_<ROLE>` | not sent | Current default models reject sampling parameters; set only for a model that takes them. |
@@ -151,6 +160,7 @@ Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDra
 - **Per NPC turn:** the rules and character sheet (about 1,500 to 2,500 tokens, cached after the first turn of a conversation when long enough), the scene and conversation (grows to a few thousand tokens by turn 12), and a reply of 30 to 80 words plus a little thinking at `low` effort. Twelve turns per conversation, about two live conversations a week.
 - **Per evaluation:** one call after the conversation (never per turn), about 2,500 to 5,000 input tokens of which the rules, format guide and context are cached across a cohort, and 500 to 1,500 output tokens at `high` effort.
 - **Per draft:** a few calls per authoring session, the draft being the largest (the template's copy in and out, 10,000 to 20,000 tokens each way).
+- **Per Kora instruction:** one call: the prompt (cached), the tab's fields (1,000 to 8,000 tokens; the overview's is the largest) and a patch of a few hundred tokens.
 - **Latency:** NPC first words arrive after the first sentence is complete in `sentence` mode (typically 1 to 2 seconds); `none` saves that sentence. Evaluations take seconds and run after the interaction, so the outcome screen should show a short wait state.
 - Watch `usage.cacheReadTokens` in the audit: if it stays 0 for repeated evaluations of the same action, something in the prefix varies per call.
 
@@ -164,7 +174,7 @@ Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDra
 
 ## 11. Tests
 
-`npm test` runs `ai/**/*.test.ts` with the rest (no network: a fake client and recorded answers). Covered: prompt files, versions and placeholders; the SDK request (cache breakpoints, effort, schema, refusal fallback, timeouts, retries) and streaming through a fake SDK client; structured output, repair and refusal; verbatim quotes; NPC guardrails, the sentence filter and the signal tag; NPC streaming, signals, fallbacks and cancellation; evaluator mapping, dropped quotes, red flags, repair, fallback, locale and the voice rule; the engine running a conversation on the AI NPC and evaluator; author reading, framework grounding, draft merge, copy guard, repair and fallback; the transcribers; the factories and the environment mapping; both quality gates on the mock; and that `src/` never imports `ai/`.
+`npm test` runs `ai/**/*.test.ts` with the rest (no network: a fake client and recorded answers). Covered: prompt files, versions and placeholders; the SDK request (cache breakpoints, effort, schema, refusal fallback, timeouts, retries) and streaming through a fake SDK client; structured output, repair and refusal; verbatim quotes; NPC guardrails, the sentence filter and the signal tag; NPC streaming, signals, fallbacks and cancellation; evaluator mapping, dropped quotes, red flags, repair, fallback, locale and the voice rule; the engine running a conversation on the AI NPC and evaluator; author reading, framework grounding, draft merge, copy guard, repair and fallback; the author editor (its quoted request, ops checked against the view and the whitelist, repair, giving up, replies, the mock); the transcribers; the factories and the environment mapping; the synthetic player (its request, cleaning, fallbacks and a whole run through the engine); both quality gates on the mock; and that `src/` never imports `ai/`.
 
 ## 12. Not done
 
@@ -172,4 +182,5 @@ Factories: `createNpcModel(config)`, `createEvaluator(config)`, `createAuthorDra
 - The persona check judges in code; a model or human judge for tone and helpfulness is not built.
 - The live stream wiring (section 2) is the server's to build.
 - No websocket speech adapter: vendors without the chunked HTTP contract need a shim.
+- Ask Kora's model only sets fields: adding or removing a character, and another draft of one event or person, are the app's rules (`intents.ts`, `regenerate.ts`).
 - The author draft writes copy over the template; it does not yet generate new events, actions or a new fit table for a client framework (the lens library's tables and the template's mechanics are used).

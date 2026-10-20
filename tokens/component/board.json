@@ -1,11 +1,11 @@
 {
   "board": {
     "columns": {
-      "value": "64px minmax(0, 1fr) 330px",
-      "$description": "Inbox rail, team board, actions panel"
+      "value": "minmax(0, 1fr) 330px",
+      "$description": "Team board (with the feedback and inbox feed under it, D212), actions panel"
     },
     "columns-collapsed": {
-      "value": "64px minmax(0, 1fr) calc({space.unit} * 6 + 72px)",
+      "value": "minmax(0, 1fr) 72px",
       "$description": "Narrow boards (under 1280 wide) with the actions panel folded to its 72px rail (D58)"
     },
     "scroll-fade": {

@@ -3,7 +3,12 @@ import type { Rng } from './rng';
 import { fitOf, needOf, type NeedKey } from '../lens';
 import { applyEffect, applyTrust, clamp, type Mismatch, type Style, type Triple } from './rules';
 import { runEvents, scheduleEvents } from './events';
+import { dynamicsSeed, growthShare, outputShare, trustShare } from './dynamics';
+import { choiceDueChecks, startVars } from './business';
 import { checkBadges } from './score';
+import { markRelationsStart, startStakeholders } from './stakeholderState';
+import { stakeholderDueChecks } from './stakeholders';
+import { personOutput, saturation, startRealism, teamOutput } from './realism';
 import type { ActionRecord, Change, InboxMessage, LogEntry, MemberSim, MetricKey, Reason, Sim } from './types';
 import { msg, type Copy } from '../copy';
 
@@ -20,7 +25,8 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     style: null, lastStyle: null, lastReaction: null, neededAtStart: needOf(p.start, high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: 1,
     revealed: false, concernShared: false, lastChange: 0, recognizedAt: null, reassignedInPeriod: null,
-    trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale
+    trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale,
+    moraleHistory: [], strikes: 0
   }));
   const sim: Sim = {
     config, seed, period: 1, sub: 0, spent: 0, bonusPeriod: null, absSub: 0, phase: 'style', members, departed: [],
@@ -30,10 +36,14 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     periods: [], streak: 0, streakBonus: 0, badges: [],
     sponsor: { value: config.gamification.sponsor.start, causes: [] }, pendingReward: null, promises: [], inbox: [], cards: [],
     runStart: { morale: 0, trust: 0 }, liveRecords: [], styleNotes: [], attention: {}, reflection: null, fairRecognitions: 0, hireBudget: false, freeTeamActivity: false, checkInPeriod: null,
-    events: { schedule: {}, fired: [], pending: [] }, pulseAtStart: 0,
+    events: { schedule: {}, fired: [], pending: [], delayed: [], skipped: [] }, pulseAtStart: 0,
+    vars: startVars({ config }), varCauses: {}, flags: [], counters: {}, openChoices: [], choices: [], varsAtStart: startVars({ config }), extraRevenue: 0, dynState: dynamicsSeed(seed), attrition: [],
     triggerCount: {}, log: [], outcome: null, liveCount: 0, voicePeriods: {},
     periodStart: { morale: 0, kpis: { skill: 0, morale: 0, result: 0, trust: 0 } }, seq: 0, interactions: {}, liveTaken: {}, intentGaps: {}, touched: [], touchedTeam: false, sponsorAtStart: config.gamification.sponsor.start,
-    actionRecords: [], periodStartResults: [], practice: config.practice.enabled ? 'offered' : 'skipped', milestones: []
+    actionRecords: [], periodStartResults: [], practice: config.practice.enabled ? 'offered' : 'skipped', milestones: [],
+    stakeholders: startStakeholders(config), stakeholderRequests: [], stakeholderRecords: [],
+    // Realism (D171): only with a realism block, so a storyline without one keeps the same state.
+    ...(config.realism ? { realism: startRealism(config) } : null)
   };
   sim.events.schedule = scheduleEvents(sim);
   markPeriodStart(sim);
@@ -49,6 +59,20 @@ export const runFraction = (sim: Sim) => sim.absSub / totalSubs(sim);
 export const capacity = (sim: Sim) => perPeriod(sim) + (sim.bonusPeriod === sim.period ? 1 : 0) - (sim.checkInPeriod === sim.period ? 1 : 0);
 export const capacityLeft = (sim: Sim) => Math.max(0, capacity(sim) - sim.spent);
 export const nextId = (sim: Sim, prefix: string) => `${prefix}${++sim.seq}`;
+
+/**
+ * Changes to the same subject and metric merged into one net change, largest first, without those that
+ * net to zero (D145): "Peter trust +3, Peter trust −3" says nothing; the net says what happened.
+ */
+export function netChanges(chs: Array<{ subject: string; metric: string; delta: number }>): Array<{ subject: string; metric: string; delta: number }> {
+  const out: Array<{ subject: string; metric: string; delta: number }> = [];
+  for (const ch of chs) {
+    const same = out.find(x => x.subject === ch.subject && x.metric === ch.metric);
+    if (same) same.delta += ch.delta;
+    else out.push({ subject: ch.subject, metric: ch.metric, delta: ch.delta });
+  }
+  return out.filter(x => x.delta !== 0).sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
+}
 export const present = (sim: Sim) => sim.members;
 export const available = (sim: Sim) => sim.members.filter(m => m.away === 0);
 export const member = (sim: Sim, id: string) => sim.members.find(m => m.id === id);
@@ -61,6 +85,8 @@ export const needed = (sim: Sim, m: MemberSim): NeedKey => needOf(m, sim.config.
 /** The lens's style difference for a need (SIMULATION 2, the fit table). */
 export const fit = (sim: Sim, style: Style, need: NeedKey): Mismatch => fitOf(sim.config.lens, style, need);
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
+/** Keeps a value in a range. */
+export const clampTo = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 /** Team averages count the people who are available (Configuration Spec dials); everyone, if nobody is. */
 export const teamAverage = (sim: Sim, k: MetricKey) => {
   const here = sim.members.filter(m => m.away === 0);
@@ -86,10 +112,20 @@ export function gendered(body: { he: string; she: string; they?: string }, sim: 
   return fill(p === 'she' ? body.she : p === 'they' ? body.they ?? body.he : body.he, sim, memberId);
 }
 
-/** Applies a skill, morale, result change to a member and returns the reasoned changes. */
-export function effectChanges(sim: Sim, rng: Rng, m: MemberSim, effect: Triple, reason: Reason, opts: { boost?: number; scale?: number; useTrust?: boolean } = {}): Change[] {
+/**
+ * Applies a skill, morale, result change to a member and returns the reasoned changes. `share` is the share an
+ * action's good effects land at when it is repeated (D171); `saturate` makes a result gain from an action smaller
+ * above a healthy morale (D178). Both apply to positive changes only, and only with a realism block.
+ */
+export function effectChanges(sim: Sim, rng: Rng, m: MemberSim, effect: Triple, reason: Reason, opts: { boost?: number; scale?: number; useTrust?: boolean; share?: number; saturate?: boolean } = {}): Change[] {
   const before = { skill: m.skill, morale: m.morale, result: m.result };
-  const applied = applyEffect(m, effect, rng, { trust: opts.useTrust === false ? undefined : m.trust, multiplier: sim.config.trustRules.multiplier, boost: opts.boost, scale: opts.scale });
+  // People dynamics (D135): low trust blunts what your actions do; a low rolling morale slows result gains.
+  const dyn: Triple | undefined = sim.config.dynamics ? (() => { const t = opts.useTrust === false ? 1 : trustShare(sim, m); return [t, t, t * growthShare(sim, m)] as const; })() : undefined;
+  // Realism (D171, D178): a repeated action lands at a share; a happy person's result gains less from more of it.
+  const rep = sim.config.realism ? opts.share ?? 1 : 1;
+  const sat = sim.config.realism && opts.saturate ? saturation(sim, m) : 1;
+  const gains: Triple | undefined = rep !== 1 || sat !== 1 ? [(dyn?.[0] ?? 1) * rep, (dyn?.[1] ?? 1) * rep, (dyn?.[2] ?? 1) * rep * sat] as const : dyn;
+  const applied = applyEffect(m, effect, rng, { trust: opts.useTrust === false ? undefined : m.trust, multiplier: sim.config.trustRules.multiplier, boost: opts.boost, scale: opts.scale, gains });
   const out: Change[] = [];
   (['skill', 'morale', 'result'] as const).forEach((k, i) => {
     if (applied[i] !== 0) out.push({ subject: m.id, metric: k, from: before[k], to: m[k], delta: applied[i], reason });
@@ -157,7 +193,10 @@ function markPeriodStart(sim: Sim) {
   sim.touched = [];
   sim.touchedTeam = false;
   sim.sponsorAtStart = sim.sponsor.value;
+  sim.varsAtStart = { ...sim.vars };
+  sim.attrition = [];
   sim.pulseAtStart = (sim.periodStart.kpis.morale + sim.periodStart.kpis.trust) / 2;
+  markRelationsStart(sim);
 }
 
 export { markPeriodStart };
@@ -186,9 +225,13 @@ export function runSubPeriod(sim: Sim, rng: Rng) {
   runEvents(sim, rng);
   triggersEverySub(sim, rng);
   dueChecks(sim);
+  choiceDueChecks(sim, rng);
+  // Stakeholder requests past their deadline (D162).
+  if (sim.stakeholderRequests.length) stakeholderDueChecks(sim, rng);
   for (const m of sim.members) {
     if (m.away > 0 && m.awaySetAt !== sim.absSub && --m.away === 0) m.awayReason = null;
     m.resultHistory.push(m.result);
+    m.moraleHistory.push(m.morale);
     m.lowestResult = Math.min(m.lowestResult, m.result);
   }
 }
@@ -197,9 +240,13 @@ export function runSubPeriod(sim: Sim, rng: Rng) {
 export function runFunnel(sim: Sim) {
   const { stages, money, performanceThreshold } = sim.config;
   let input = money.inputPerSubPeriod[Math.min(sim.period, money.inputPerSubPeriod.length) - 1];
+  // Realism (D172 to D174): the team's time away, fatigue, idle days and drag hold back the day's work at every stage.
+  if (sim.config.realism) input *= teamOutput(sim);
   stages.forEach((st, i) => {
     const inStage = sim.members.filter(m => m.stage === st.key);
-    const average = inStage.length ? avg(inStage.map(m => (m.away > 0 ? 0 : m.result))) : 0;
+    // People dynamics (D135): a person's result counts at the share their rolling morale allows (1 without dynamics).
+    // Realism (D174, D178): and at the share their skill, goals and the time you give them allow (1 without realism).
+    const average = inStage.length ? avg(inStage.map(m => (m.away > 0 ? 0 : (sim.config.dynamics ? m.result * outputShare(sim, m) : m.result) * (sim.config.realism ? personOutput(sim, m) : 1)))) : 0;
     // Model doc formula, normalized so a stage never beats its conversion ratio (DECISIONS D36).
     const out = Math.max(0, input * st.conversionRatio * (average + performanceThreshold) / (100 + performanceThreshold));
     sim.funnel.stageOut[i] += out;

@@ -1,5 +1,9 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+/** The team on the board: ten, or nine from week 8, opened with `period=8`: the mock's fast forward plays seven weeks with
+ * no actions, and with people dynamics (D135) Peter's morale stays so low that he resigns. */
+const team = (page: Page) => (/[?&]period=8\b/.test(page.url()) ? 9 : 10);
+
 /**
  * Every screen fits the window (D101, D102). Each state is reached once, then the window is resized
  * through every target size: laptops from 1280 by 720 to 2560 by 1440 (the owner's 1513 by 745 among
@@ -77,7 +81,7 @@ const styles = (page: Page) => page.getByRole('radiogroup', { name: /^Leadership
 const gotIt = (page: Page) => page.getByRole('button', { name: 'Got it' });
 
 async function confirmStyles(page: Page) {
-  await expect(styles(page)).toHaveCount(10, { timeout: 20_000 });
+  await expect(styles(page)).toHaveCount(team(page), { timeout: 20_000 });
   for (const g of await styles(page).all()) await g.getByRole('radio').nth(1).click();
   await page.getByRole('button', { name: 'Review and confirm' }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Confirm styles' }).click();
@@ -147,7 +151,8 @@ async function finishRun(page: Page) {
   await endWeek(page).click();
   await dismissCards(page);
   await page.getByRole('button', { name: /^See your week$/ }).click();
-  const step = page.getByRole('button', { name: /^(Continue|Nice)$/ });
+  // The last report goes straight to the results when no badge was earned.
+  const step = page.getByRole('button', { name: /^(Continue|Nice|See your results)$/ });
   const h1 = page.getByRole('heading', { level: 1, name: /^You finished at / });
   for (;;) {
     await expect(step.first().or(h1)).toBeVisible();
@@ -173,13 +178,14 @@ function both(name: string, kind: Kind, reach: (page: Page) => Promise<void>, pr
 }
 
 test.describe('onboarding and the demo', () => {
+  // The pre-game flow (D219): each screen's way on must be on screen at every size.
   const steps: [string, (page: Page) => Locator][] = [
-    ['language', page => page.getByRole('button', { name: "Let's begin" })],
-    ['sponsor', page => page.getByRole('button', { name: 'Next' })],
-    ['consent', page => page.getByRole('button', { name: 'Accept and use voice' })],
-    ['voice', page => page.getByRole('button', { name: 'Start mic test' })],
-    ['how to play', page => page.getByRole('button', { name: 'Meet your team' })],
-    ['team', page => page.getByRole('button', { name: 'Start week 1' })]
+    ['landing', page => page.getByRole('button', { name: 'Watch the video message from Paula Jacob' })],
+    ['message', page => page.getByRole('slider', { name: 'Position in the message' })],
+    ['message end', page => page.getByRole('button', { name: 'Explore products' })],
+    // The product portfolio (D221): its way on to the objectives.
+    ['products', page => page.getByRole('button', { name: 'See your objectives' })],
+    ['objectives', page => page.getByRole('button', { name: 'Start simulation' })]
   ];
   for (const [label, sizes] of [['landscape', LANDSCAPE], ['portrait', PORTRAIT]] as const) {
     test(`every onboarding step, ${label}`, async ({ page }) => {
@@ -194,16 +200,12 @@ test.describe('onboarding and the demo', () => {
           found.push(...await measure(page, 'play', [primary(page)], `onboarding ${step} at ${width}x${height}`));
         }
         await page.setViewportSize({ width: sizes[0][0], height: sizes[0][1] });
-        if (step === 'sponsor') await expect(primary(page)).toBeEnabled({ timeout: 10_000 });
-        if (step === 'voice') {
-          await primary(page).click();
-          await page.getByRole('button', { name: 'Sounds good' }).click({ timeout: 10_000 });
-        } else if (step === 'team') {
-          for (const name of ['Kent Goldberg', 'Green Bell', 'Ruth Ether']) await page.getByRole('button', { name: new RegExp(`^${name}, `) }).click();
-          await primary(page).click();
-        } else await primary(page).click();
+        if (step === 'message') await primary(page).press('End');
+        else await primary(page).click();
       }
-      // The demo offer, then the demo's first step.
+      await expect(styles(page)).toHaveCount(10, { timeout: 20_000 });
+      // The demo offer (off the default path, D219), then the demo's first step.
+      await page.goto('/?start=demo');
       await expect(page.getByRole('heading', { level: 1, name: 'Try the demo first?' })).toBeVisible();
       for (const [width, height] of sizes) {
         await page.setViewportSize({ width, height });
@@ -252,7 +254,11 @@ test.describe('style setting and the board', () => {
     if (tablet(page)) {
       await page.getByRole('button', { name: /^Kent Goldberg, / }).click();
       await drawer(page).getByRole('tab', { name: 'Profile' }).click();
-    } else await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
+    } else {
+      // The desk opens a profile from the person's actions (D232): select them first.
+      await page.getByText('Kent Goldberg', { exact: true }).click();
+      await page.getByRole('button', { name: 'Open profile for Kent Goldberg' }).click();
+    }
     await expect(page.getByRole('heading', { name: 'Your interactions' })).toBeAttached();
   }, page => [page.getByRole('heading', { name: 'Kent Goldberg' }).first()]);
 
@@ -303,7 +309,8 @@ test.describe('style setting and the board', () => {
     await expect(page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' })).toBeVisible({ timeout: 15_000 });
   }, page => [page.getByRole('button', { name: 'Take the call' })]);
 
-  both('week end', 'play', async page => {
+  /** Ends the week and waits for See your week: event cards can still arrive after the week ends, so each is dismissed as it shows. */
+  async function toWeekEnd(page: Page) {
     await toBoard(page);
     await endWeek(page).click();
     const see = page.getByRole('button', { name: /^See your week$/ });
@@ -312,13 +319,15 @@ test.describe('style setting and the board', () => {
       if (!(await gotIt(page).count())) break;
       await dismissCards(page);
     }
+    return see;
+  }
+
+  both('week end', 'play', async page => {
+    await toWeekEnd(page);
   }, page => [page.getByRole('button', { name: /^See your week$/ })]);
 
   both('week end report', 'document', async page => {
-    await toBoard(page);
-    await endWeek(page).click();
-    await dismissCards(page);
-    await page.getByRole('button', { name: /^See your week$/ }).click();
+    await (await toWeekEnd(page)).click();
   }, page => [page.getByRole('button', { name: /^(Continue|Nice|Next)$/ })]);
 });
 
@@ -421,53 +430,77 @@ test.describe('documents', () => {
   }, page => [page.getByRole('button', { name: 'Download PDF' })]);
 });
 
+/**
+ * /author (D105): laptops and tablets down to 1024 by 768 and 834 wide (no phones). The chat, the
+ * recording, the lens step, First draft ready, every workspace tab, the character editor, Add an
+ * action, the framework sheet and the library admin page. Panes scroll on their own; the page never does.
+ */
 test.describe('/author', () => {
-  const composer = (page: Page) => [page.getByRole('textbox', { name: /^Your (new )?answer$/ }), page.getByRole('button', { name: 'Send', exact: true })];
+  const LAND = [...LAPTOPS, [1024, 768], [1180, 820]] as const;
+  const UPRIGHT = [[834, 1194], [834, 1112]] as const;
+  function author(name: string, reach: (page: Page) => Promise<void>, primary: Primary) {
+    test(`${name}, landscape`, async ({ page }) => {
+      test.setTimeout(180_000);
+      await page.setViewportSize({ width: 1440, height: 900 });
+      await reach(page);
+      await across(page, LAND, 'panes', primary, name);
+    });
+    test(`${name}, portrait`, async ({ page }) => {
+      test.setTimeout(180_000);
+      await page.setViewportSize({ width: 834, height: 1194 });
+      await reach(page);
+      await across(page, UPRIGHT, 'panes', primary, name);
+    });
+  }
   const chip = (page: Page, name: string | RegExp) => page.getByRole('group', { name: 'Suggested answers' }).getByRole('button', { name });
-  async function answer(page: Page) {
-    for (const c of ['Senior leaders', 'Retail and consumer goods', 'Leading through change or transformation', 'Fictional company', '10 (default)', /^Service delivery/, /^Standard/, 'English, United Kingdom']) await chip(page, c).click();
+  const composer = (page: Page) => [page.getByRole('textbox', { name: 'Your answer' }), page.getByRole('button', { name: 'Send', exact: true })];
+  const top = (page: Page) => [page.getByRole('button', { name: 'Review and publish' }), page.getByRole('button', { name: 'Preview', exact: true })];
+  async function toLens(page: Page) {
+    await page.goto('/author');
+    await chip(page, 'First time managers').click();
+    await chip(page, 'Manufacturing').click();
+    for (const c of ['Hitting targets without burning out the team', 'Fictional company', /^10/, /^Sales Elevator funnel/, 'Standard', 'English, India', 'No framework', 'Professional']) await chip(page, c).click();
+    await expect(page.getByRole('button', { name: 'Use this lens' }).first()).toBeVisible();
+  }
+  async function workspace(page: Page, tab: string) {
+    await page.goto('/author');
+    await page.getByRole('button', { name: 'Skip to the workspace' }).click();
+    await page.goto(`/author/workspace/${tab}`);
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   }
 
-  both('author chat', 'play', async page => {
+  author('author chat', async page => {
     await page.goto('/author');
-    await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+    await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
   }, composer);
-
-  both('author client framework', 'panes', async page => {
+  author('author recording', async page => {
     await page.goto('/author');
-    await answer(page);
-    await page.getByRole('textbox', { name: 'Your answer' }).fill('## Coaching\n- Asks open questions\n- Listens before advising\n## Ownership\n- Keeps promises\n- Names the next step\n## Courage\n- Raises hard topics early\n- Says no when it matters');
-    await page.getByRole('button', { name: 'Send', exact: true }).click();
-    await chip(page, 'Direct and brisk').click();
-    await page.getByRole('radio', { name: /^Client Leadership Model/ }).check();
-    await expect(page.getByRole('heading', { name: 'Client Leadership Model' })).toBeVisible();
-    await expect(page.getByRole('table')).toBeAttached();
-  }, page => [page.getByRole('heading', { name: 'Client Leadership Model' })]);
-
-  both('author lens picker', 'panes', async page => {
-    await page.goto('/author');
-    await answer(page);
-    await chip(page, 'No framework').click();
-    await chip(page, 'Direct and brisk').click();
-    await expect(page.getByRole('radio', { name: 'Adaptive Leadership' })).toBeChecked();
-  }, page => [page.getByRole('button', { name: 'Confirm lens and preview the build' })]);
-
-  both('author preview', 'panes', async page => {
-    await page.goto('/author');
-    await answer(page);
-    await chip(page, 'No framework').click();
-    await chip(page, 'Direct and brisk').click();
-    await page.getByRole('button', { name: 'Confirm lens and preview the build' }).click();
-  }, page => [page.getByRole('button', { name: 'Confirm and lock' })]);
-
-  both('author confirmed', 'panes', async page => {
-    await page.goto('/author');
-    await answer(page);
-    await chip(page, 'No framework').click();
-    await chip(page, 'Direct and brisk').click();
-    await page.getByRole('button', { name: 'Confirm lens and preview the build' }).click();
-    await page.getByRole('button', { name: 'Confirm and lock' }).click();
-  }, page => [page.getByRole('button', { name: 'Play this draft' })]);
+    await page.getByRole('button', { name: 'Record your answer' }).click();
+  }, page => [page.getByRole('button', { name: 'Stop and review' })]);
+  author('author lens', toLens, page => [page.getByRole('button', { name: 'Use this lens' }).first(), page.getByRole('button', { name: 'Send', exact: true })]);
+  author('author first draft ready', async page => {
+    await toLens(page);
+    await page.getByRole('button', { name: 'Use this lens' }).first().click();
+  }, page => [page.getByRole('button', { name: 'Open the workspace' })]);
+  for (const tab of ['overview', 'brief', 'story', 'process', 'team', 'lens', 'actions', 'events', 'scoring', 'brand', 'calibrate', 'publish']) {
+    author(`author workspace ${tab}`, page => workspace(page, tab), tab === 'publish' ? page => [...top(page), page.getByRole('button', { name: 'Publish', exact: true })] : top);
+  }
+  author('author character editor', async page => {
+    await workspace(page, 'team');
+    await page.getByRole('button', { name: 'Edit profile' }).click();
+  }, page => [page.getByRole('button', { name: 'Save changes' }), page.getByRole('button', { name: 'Cancel' })]);
+  author('author add an action', async page => {
+    await workspace(page, 'actions');
+    await page.getByRole('button', { name: 'Add an action' }).click();
+  }, page => [page.getByRole('button', { name: 'Add to this simulation' })]);
+  author('author skills framework', async page => {
+    await workspace(page, 'scoring');
+    await page.getByRole('button', { name: 'Use your own skills framework instead' }).click();
+  }, page => [page.getByRole('button', { name: /^Confirm \d+ skills$/ })]);
+  author('author library admin', async page => {
+    await page.goto('/author/library');
+    await expect(page.getByRole('heading', { level: 1, name: 'Action library' })).toBeVisible();
+  }, page => [page.getByRole('button', { name: 'Save as beta' })]);
 });
 
 /**
@@ -477,12 +510,15 @@ test.describe('/author', () => {
 test.describe('baselines', () => {
   async function still(page: Page, name: string) {
     await page.waitForLoadState('networkidle');
+    // A status band's rank loads on demand and reads Leaderboard until the cohort answers.
+    const rank = page.locator('[data-band-rank]');
+    if (await rank.count()) await expect(rank).toHaveText(/^Rank \d+ of \d+$/);
     await page.evaluate(async () => {
       await document.fonts.ready;
       await Promise.all(Array.from(document.images).map(i => (i.complete ? null : new Promise(r => { i.onload = i.onerror = r; }))));
       await Promise.all(document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).map(a => a.finished.catch(() => undefined)));
     });
-    await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ })] });
+    await expect(page).toHaveScreenshot(`${name}.png`, { animations: 'disabled', caret: 'hide', maxDiffPixelRatio: 0.002, mask: [page.getByRole('button', { name: /^Pause/ }), page.locator('[data-session-clock]')] });
   }
   for (const [width, height] of [[1513, 745], [1366, 768]] as const) {
     test.describe(`${width}x${height}`, () => {
@@ -501,6 +537,11 @@ test.describe('baselines', () => {
       test(`board with the outcome at ${at}`, async ({ page }) => {
         await page.goto('/?start=board');
         await confirmStyles(page);
+        // The pointer stays where Confirm styles was, over a team card once the band has pushed the board down; whether
+        // that card shows its hover depends on when the browser rechecks it. Parked on the page's empty gutter instead.
+        await page.mouse.move(8, height - 8);
+        // Week 1 shows the score alone: no tier line and no rank in the status band until week 2.
+        await expect(page.locator('[data-band-rank]')).toHaveCount(0);
         await still(page, `fit-${at}-outcome`);
       });
       test(`action drawer at ${at}`, async ({ page }) => {
@@ -526,8 +567,16 @@ test.describe('baselines', () => {
       });
       test(`author at ${at}`, async ({ page }) => {
         await page.goto('/author');
-        await expect(page.getByText(/^Question 1 of about \d+$/)).toBeVisible();
+        await expect(page.getByText(/^Question 1 · (?:last one|about \d+ to go)$/)).toBeVisible();
+        await expect(page.getByText('Saved just now')).toBeVisible();
         await still(page, `fit-${at}-author`);
+      });
+      test(`author workspace at ${at}`, async ({ page }) => {
+        await page.goto('/author');
+        await page.getByRole('button', { name: 'Skip to the workspace' }).click();
+        await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
+        await expect(page.getByText('Saved just now')).toBeVisible();
+        await still(page, `fit-${at}-author-workspace`);
       });
     });
   }

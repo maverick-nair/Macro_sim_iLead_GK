@@ -118,8 +118,10 @@ describe('live interactions', () => {
   });
 
   it('opens a sponsor briefing in week 4; skipping it costs sponsor confidence', async () => {
+    // Without realism there is no update of your own (D173): a sponsor conversation needs the briefing.
+    const plain = await onBoard(3, { ...config, realism: undefined });
+    await expect(plain.dispatch({ type: 'openConversation', kind: 'sponsor' })).rejects.toMatchObject({ code: 'noBriefing' });
     const e = await onBoard(3);
-    await expect(e.dispatch({ type: 'openConversation', kind: 'sponsor' })).rejects.toMatchObject({ code: 'noBriefing' });
     await toPeriod(e, 4);
     const brief = en(e.view()).inbox.find(m => m.kind === 'sponsor' && /Briefing/.test(m.title));
     expect(brief).toBeDefined();

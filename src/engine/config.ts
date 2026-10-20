@@ -1,10 +1,11 @@
 import { z } from 'zod';
 import { sanitizeCopy } from '../i18n/copy';
-import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS } from './lens';
+import { LENS_IDS, MAX_STYLES, MIN_STYLES, NEEDS, styleLetters } from './lens';
 import { DEFAULT_LENS } from './lensLibrary';
+import { IMAGE_BUDGET_BYTES, ImageRef, imageBytes, IMAGES_BUDGET_BYTES, kb } from './assets';
 import {
-  DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_PATH,
-  DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
+  DEFAULT_ACTION_COPY, DEFAULT_ASSESSMENT, DEFAULT_CONSISTENCY_ACTIONS, DEFAULT_DEVELOPMENT, DEFAULT_EVIDENCE, DEFAULT_IMPACT, DEFAULT_LINKAGE, DEFAULT_METHODOLOGY, DEFAULT_NARRATIVES, DEFAULT_OUTCOMES, DEFAULT_PATH,
+  DEFAULT_PURPOSE_COPY, DEFAULT_RECOGNITION, DEFAULT_RECONCILE, DEFAULT_SCALE, DEFAULT_SKILL_DESCRIPTIONS, DEFAULT_SKILLS, DEFAULT_TAKEAWAYS, DEFAULT_THOUGHT
 } from './report/defaults';
 
 /**
@@ -40,7 +41,13 @@ export const Money = z.object({
   target: z.number().positive(),
   valuePerConversion: z.number().positive(),
   /** New leads entering the first stage each sub-period, one value per period. */
-  inputPerSubPeriod: z.array(z.number().nonnegative()).min(1)
+  inputPerSubPeriod: z.array(z.number().nonnegative()).min(1),
+  /**
+   * The sales unit (D227): what one conversion at the last stage is called, singular and plural ("outlet order",
+   * "outlet orders"), in the storyline's language. Participant facing copy that counts conversions uses it: the first
+   * close badge, the end screen, the week end, the products screen, the report. Left out, the catalog's own word (deal).
+   */
+  unit: z.object({ one: z.string().trim().min(1).max(40).transform(sanitizeCopy), other: z.string().trim().min(1).max(40).transform(sanitizeCopy) }).optional()
 });
 
 export const PERIOD_UNITS = ['year', 'month', 'week', 'day'] as const;
@@ -76,10 +83,42 @@ export const Stage = z.object({
   suits: Copy.optional()
 });
 
+/** A team plays with 6 to 12 people. */
+export const MIN_MEMBERS = 6;
+export const MAX_MEMBERS = 12;
+
 export const MIN_STAGES = 3;
 export const MAX_STAGES = 6;
 
 const Stats = z.object({ skill: Score, morale: Score, result: Score });
+
+/** How long an NPC's replies run (D130). */
+export const REPLY_LENGTHS = ['short', 'medium', 'long'] as const;
+const NpcText = z.string().min(1).max(4000);
+
+/**
+ * How the person plays in conversation (D130), authored in GenieKreator's character editor. Never shown to
+ * participants: the AI character reads it (ai/src/npc/prompt.ts) and the engine ignores it, so a storyline
+ * without it plays exactly as before. `reactions` is keyed by lens style key; `speech` sliders run 0 to 100.
+ */
+export const NpcPersona = z.object({
+  age: NpcText.optional(),
+  motivatedBy: NpcText.optional(),
+  /** Topics the person will not discuss; they deflect in role. */
+  avoid: NpcText.optional(),
+  /** How the person reacts when led in each style, by lens style key. */
+  reactions: z.record(z.string(), NpcText).optional(),
+  speech: z.object({
+    language: z.string().max(400).optional(),
+    accent: z.string().max(400).optional(),
+    pace: Score.default(50),
+    warmth: Score.default(50),
+    formality: Score.default(50),
+    replyLength: z.enum(REPLY_LENGTHS).default('medium')
+  }).optional(),
+  /** The author's own facts about the person (custom fields). */
+  notes: z.array(z.object({ label: z.string().min(1).max(400), value: NpcText })).max(16).optional()
+});
 
 export const Person = z.object({
   id: z.string().regex(/^[a-z][a-z0-9_]*$/),
@@ -107,8 +146,114 @@ export const Person = z.object({
   /** Default portrait. `portraits` may override it per mood. */
   portrait: z.string().optional(),
   portraits: z.record(z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']), z.string()).optional(),
-  voice: z.string().optional()
+  voice: z.string().optional(),
+  /** How the AI character plays this person (D130). Optional; the engine never reads it. */
+  npc: NpcPersona.optional()
 });
+
+/** How the onboarding's portfolio scene shows a product (D182). */
+export const PRODUCT_VIEWS = ['photo', 'model'] as const;
+/** The most named features a product shows (D221): the scene's tabs and the photo's numbered spots. */
+export const MAX_PRODUCT_FEATURES = 4;
+/** Where a feature's numbered spot sits on the product photo, in percent from the inline start and the top (D221). */
+const Percent = z.number().min(0).max(100);
+/** A named feature of a product (D221): a title, a sentence or two, and optionally its spot on the photo. */
+export const ProductFeature = z.object({
+  title: z.string().trim().min(1).max(40).transform(sanitizeCopy),
+  text: z.string().trim().min(1).max(300).transform(sanitizeCopy),
+  spot: z.object({ x: Percent, y: Percent }).optional()
+});
+
+/**
+ * The world around the team (D130), authored in GenieKreator's Story and world tab. The AI characters
+ * read it so small talk stays in the story (ai/src/npc/prompt.ts); the engine never reads it, and a
+ * storyline without it plays as before.
+ */
+export const World = z.object({
+  about: NpcText.optional(),
+  headquarters: NpcText.optional(),
+  /** The team the participant leads, in the company's words. */
+  team: NpcText.optional(),
+  product: z.object({ name: NpcText.optional(), line: NpcText.optional(), points: z.array(NpcText).max(8).optional() }).optional(),
+  customers: NpcText.optional(),
+  rivals: z.array(z.object({ name: NpcText, angle: NpcText.optional() })).max(6).optional(),
+  /** How the sponsor sounds, for the sponsor's own lines. */
+  sponsorVoice: NpcText.optional(),
+  /**
+   * The office the participant works in (D182): the image behind the player's screens (the engine player's
+   * backdrop, in place of the default one), and a description the AI characters may mention.
+   */
+  office: z.object({ image: ImageRef.optional(), description: NpcText.optional() }).optional(),
+  /** The company's logo (D182): an image, or up to three letters when there is none. Onboarding and the player show it. */
+  logo: z.object({ image: ImageRef.optional(), text: z.string().trim().min(1).max(3).optional() }).optional(),
+  /**
+   * The product portfolio for the onboarding's portfolio scene (D182): each product's name, one line, key specs
+   * and an image. `view` says how it is shown: a photo, or the library's stylised model. Left out, no scene.
+   * Each product may also carry (D221) a short code ("B10"), its kind ("Commercial"), a tagline, who it is for,
+   * a typical deal value in the storyline's money, the photo's description for screen readers, and up to four
+   * named features, each a title, a sentence or two, and where its numbered spot sits on the photo (percent from
+   * the left and the top). Every one is optional: the scene words what is left out from the name and the specs.
+   */
+  products: z.array(z.object({
+    name: Copy,
+    line: Copy.optional(),
+    specs: z.array(Copy).max(8).default([]),
+    image: ImageRef.optional(),
+    view: z.enum(PRODUCT_VIEWS).default('photo'),
+    code: z.string().trim().min(1).max(8).transform(sanitizeCopy).optional(),
+    kind: z.string().trim().min(1).max(40).transform(sanitizeCopy).optional(),
+    tagline: z.string().trim().min(1).max(120).transform(sanitizeCopy).optional(),
+    audience: z.string().trim().min(1).max(240).transform(sanitizeCopy).optional(),
+    dealValue: z.number().positive().optional(),
+    imageAlt: z.string().trim().min(1).max(200).transform(sanitizeCopy).optional(),
+    features: z.array(ProductFeature).max(MAX_PRODUCT_FEATURES).default([])
+  })).max(6).optional()
+});
+
+/** The fonts a storyline brand may name: the theme loader's allowlist (src/theme/schema.ts FONTS; a test keeps them equal). */
+export const BRAND_FONTS = ['Manrope', 'Inter', 'IBM Plex Sans', 'Source Sans 3', 'Nunito Sans', 'Work Sans', 'Lato', 'Open Sans', 'System'] as const;
+/** How the player opens: dark, light, or as the participant's device is set (they can still switch in Settings). */
+export const BRAND_MODES = ['dark', 'light', 'system'] as const;
+const HexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Use a colour as #RRGGBB');
+
+/**
+ * The client brand (D181), authored in GenieKreator's Brand and theme tab. The player turns it into a theme
+ * through the theme loader (contrast corrected, D72) when the storyline runs. A theme the server provides
+ * (`GET /theme`) wins over it. Left out, the KNOLSKAPE look.
+ */
+export const Brand = z.object({
+  /** The client's name, as people read it. Names the logo. */
+  name: z.string().trim().min(1).max(60).transform(sanitizeCopy).optional(),
+  /** Main: bars, selected state and the primary button. Second: eyebrows, links and the button's gradient end. */
+  colors: z.object({ main: HexColor, second: HexColor }).optional(),
+  logo: ImageRef.optional(),
+  font: z.enum(BRAND_FONTS).optional(),
+  mode: z.enum(BRAND_MODES).optional()
+});
+export type Brand = z.output<typeof Brand>;
+
+/** How a SCORM package or an LMS launch counts the run as complete (D184). */
+export const LMS_COMPLETION = ['finish', 'weeks'] as const;
+/** How it counts the run as passed (D184). */
+export const LMS_PASS = ['none', 'score', 'level'] as const;
+export const LMS_PACKAGES = ['scorm12', 'scorm2004'] as const;
+
+/**
+ * What the LMS records of a run (D184), authored in Review and publish. The SCORM runtime reads it; the engine
+ * never does. Completion: reaching the end screen (`finish`) or completing `periods` periods (`weeks`). Pass:
+ * none, a Leadership Score of at least `score` (scaled 0 to 100), or an overall level of at least `level`
+ * (a name on the report's rating scale). The score reported is the Leadership Score scaled 0 to 100.
+ */
+export const Lms = z.object({
+  completion: z.object({ rule: z.enum(LMS_COMPLETION).default('finish'), periods: z.number().int().min(1).max(MAX_PERIODS).optional() }).default({ rule: 'finish' }),
+  pass: z.object({ rule: z.enum(LMS_PASS).default('none'), score: Score.default(70), level: z.string().trim().min(1).optional() }).default({ rule: 'none', score: 70 }),
+  score: z.enum(['leadership']).default('leadership'),
+  package: z.enum(LMS_PACKAGES).default('scorm12'),
+  /** Connected mode: the package calls this server for the AI conversations and the report instead of running alone. */
+  connected: z.boolean().default(false)
+});
+export type Lms = z.output<typeof Lms>;
+export const DEFAULT_LMS: Lms = { completion: { rule: 'finish' }, pass: { rule: 'none', score: 70 }, score: 'leadership', package: 'scorm12', connected: false };
 
 export const Thresholds = z.object({
   high: Score.default(70),
@@ -132,8 +277,10 @@ export const Badge = z.object({
 /** Rewards offered when sponsor confidence crosses its unlock line (Configuration Spec, Unlock rewards). */
 export const UNLOCK_KINDS = ['bonus_day', 'hire_budget', 'team_activity'] as const;
 
+/** The first close badge's default description (D227: a storyline that names its sales unit says it instead). */
+export const FIRST_CLOSE_DEFAULT = 'Your team converts its first deal.';
 const DEFAULT_BADGES: Array<z.input<typeof Badge>> = [
-  { key: 'first_close', rule: 'first_close', name: 'First Close', description: 'Your team converts its first deal.' },
+  { key: 'first_close', rule: 'first_close', name: 'First Close', description: FIRST_CLOSE_DEFAULT },
   { key: 'read_the_room', rule: 'read_the_room', name: 'Read the Room', description: 'Give at least 9 in 10 people the style they need in one week.' },
   { key: 'flex_master', rule: 'flex_master', name: 'Flex Master', description: 'Use every style correctly at least twice.' },
   { key: 'concern_uncovered', rule: 'concern_uncovered', name: 'Concern Uncovered', description: 'Help five people open up about what is bothering them.' },
@@ -141,7 +288,7 @@ const DEFAULT_BADGES: Array<z.input<typeof Badge>> = [
   { key: 'fair_hand', rule: 'fair_hand', name: 'Fair Hand', description: 'Recognize people three times without anyone feeling passed over.' },
   { key: 'turnaround', rule: 'turnaround', name: 'Turnaround', description: 'Bring someone from morale below 30 to above 60.' },
   { key: 'change_champion', rule: 'change_champion', name: 'Change Champion', description: 'Explain a change really well twice.' },
-  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Finish the run without a conversation going badly.' },
+  { key: 'steady_hand', rule: 'steady_hand', name: 'Steady Hand', description: 'Hold at least three conversations and finish the run without one going badly.' },
   { key: 'target_crusher', rule: 'target_crusher', name: 'Target Crusher', description: 'Reach the revenue target.' }
 ];
 
@@ -214,16 +361,16 @@ export const Gamification = z.object({
  */
 export const REPORT_SECTIONS = [
   'about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution',
-  'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'
+  'moments', 'decisions', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology', 'stakeholders'
 ] as const;
 export type ReportSection = (typeof REPORT_SECTIONS)[number];
 /** Why the storyline runs (D75): development reports never show verdicts; assessment reports do. */
 export const PURPOSES = ['development', 'assessment'] as const;
 export type Purpose = (typeof PURPOSES)[number];
-/** The report's sections when the author leaves `report.sections` out: they differ by purpose (D76). */
+/** The report's sections when the author leaves `report.sections` out: they differ by purpose (D76). "About this report" closes the report, before the methodology appendix. */
 export const DEFAULT_SECTIONS: Record<Purpose, ReportSection[]> = {
-  development: ['about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'methodology'],
-  assessment: ['about', 'summary', 'skills', 'objectives', 'adaptability', 'styles', 'consistency', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'plan', 'progress', 'methodology']
+  development: ['summary', 'skills', 'objectives', 'adaptability', 'styles', 'style', 'consistency', 'intent', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'thought', 'takeaways', 'plan', 'progress', 'about', 'methodology'],
+  assessment: ['summary', 'skills', 'objectives', 'adaptability', 'styles', 'consistency', 'actions', 'distribution', 'moments', 'people', 'business', 'analytics', 'plan', 'progress', 'about', 'methodology']
 };
 
 const Bands3 = z.object({ low: Copy, mid: Copy, high: Copy });
@@ -276,6 +423,8 @@ export const GroupCopy = z.object({
   prompts: z.object({ skills: Prompts, business: Prompts, styles: Prompts, funnel: Prompts, actions: Prompts, attention: Prompts }),
   takeaways: z.array(z.object({ key: Key, title: Copy, questions: z.array(Copy).min(1).max(6) })).max(8)
 });
+/** A people outcome gate (D168): the falls in points (0 is off) and the people who left that trigger it, and the level it allows. */
+const PeopleGate = z.object({ moraleDrop: z.number().min(0), trustDrop: z.number().min(0), skillDrop: z.number().min(0), left: z.number().int().min(1), level: z.number().int().min(0) });
 export const Report = z.object({
   /**
    * The primary lens's scoring dimensions are the skills (D70). `reportOnly` marks a secondary lens's
@@ -295,7 +444,7 @@ export const Report = z.object({
   narratives: z.object({
     overall: z.array(Copy).min(1),
     capability: z.object({ low: Copy, mid: Copy, high: Copy }),
-    /** By dominant style, keyed by the lens's style keys. A style without a line adds none; lines for styles the lens does not have are never used. */
+    /** By dominant style, keyed by the lens's style keys. A style without a line adds none; lines for styles the lens does not have are never used. `{style}` is the style's name (D104). */
     dominant: z.record(z.string(), Copy)
   }).default(DEFAULT_NARRATIVES),
   development: z.record(Key, z.object({ practice: Copy, onTheJob: Copy })).default(DEFAULT_DEVELOPMENT),
@@ -314,6 +463,36 @@ export const Report = z.object({
   impact: z.object({ low: z.number(), moderate: z.number(), high: z.number() }).default(DEFAULT_IMPACT),
   /** Actions whose styles the consistency section compares (the 1.0 report's five). */
   consistencyActions: z.array(Key).default(DEFAULT_CONSISTENCY_ACTIONS),
+  /**
+   * Ratings reconciled with behaviour (D144): per skill key, the measured signals that cap its word based
+   * rating (`styleFit`, `diagnosis`), and the caps (under `below`% the skill is rated at most `level`).
+   * Skills not listed are rated from words alone.
+   */
+  reconcile: z.object({
+    skills: z.record(Key, z.array(z.enum(['styleFit', 'diagnosis'])).min(1)),
+    caps: z.array(z.object({ below: Score, level: z.number().int().min(0) })).max(6)
+  }).default(DEFAULT_RECONCILE),
+  /** How the report reads the run for its headline and claims (D143); thresholds in report/defaults.ts. */
+  evidence: z.object({
+    business: z.object({ strong: z.number().min(0), weak: z.number().min(0) }),
+    people: z.object({ moraleDrop: z.number().min(0), trustDrop: z.number().min(0), rise: z.number().min(0) }),
+    styleFit: z.object({ strong: Score, weak: Score }),
+    words: z.object({ strong: Score, weak: Score }),
+    activity: z.object({ strong: z.number().min(0), weak: z.number().min(0) }),
+    sponsor: z.object({ strong: z.number(), weak: z.number() }),
+    events: z.object({ weak: z.number().int().min(1) })
+  }).default(DEFAULT_EVIDENCE),
+  /**
+   * The overall level capped by what happened (D168), and the outcome gates an assessment verdict reads (D169):
+   * each gate the run triggers holds the overall level at or under its `level`. Defaults and rules in report/defaults.ts.
+   */
+  outcomes: z.object({
+    fit: z.object({ signals: z.array(z.enum(['styleFit', 'diagnosis'])), caps: z.array(z.object({ below: Score, level: z.number().int().min(0) })).max(6).optional() }).default(DEFAULT_OUTCOMES.fit),
+    business: z.object({ caps: z.array(z.object({ below: z.number().min(0), level: z.number().int().min(0) })).max(6) }).default(DEFAULT_OUTCOMES.business),
+    people: z.object({ weak: PeopleGate, collapsed: PeopleGate }).default(DEFAULT_OUTCOMES.people),
+    stakeholders: z.object({ strained: z.number().int().min(1), level: z.number().int().min(0) }).default(DEFAULT_OUTCOMES.stakeholders),
+    decisions: z.object({ defaulted: Score, min: z.number().int().min(1), level: z.number().int().min(0) }).default(DEFAULT_OUTCOMES.decisions)
+  }).default(DEFAULT_OUTCOMES),
   /** Assessment purpose: the bar (positions on the rating scale) and the verdict labels (D75). */
   assessment: z.object({
     bar: z.object({ overall: z.number().int().min(0), floor: z.number().int().min(0) }),
@@ -334,9 +513,14 @@ export const Report = z.object({
   if (r.skills.some(s => s.anchors.length !== r.scale.length)) ctx.addIssue({ code: 'custom', path: ['skills'], message: `Give one anchor per level (${r.scale.length})` });
   if (r.scale[0].min !== 0 || r.scale.some((l, i) => i > 0 && l.min <= r.scale[i - 1].min)) ctx.addIssue({ code: 'custom', path: ['scale'], message: 'Levels start at 0 and rise' });
   if (!(r.impact.low < r.impact.moderate && r.impact.moderate < r.impact.high)) ctx.addIssue({ code: 'custom', path: ['impact'], message: 'Impact bands must rise: low < moderate < high' });
+  for (const k of ['business', 'styleFit', 'words', 'activity', 'sponsor'] as const) if (r.evidence[k].weak > r.evidence[k].strong) ctx.addIssue({ code: 'custom', path: ['evidence', k], message: 'The weak threshold must be at or below the strong one' });
+  if (r.outcomes.people.collapsed.level > r.outcomes.people.weak.level) ctx.addIssue({ code: 'custom', path: ['outcomes', 'people', 'collapsed', 'level'], message: 'A collapsed people outcome caps at or below a weak one' });
   const { overall, floor } = r.assessment.bar;
   if (overall >= r.scale.length || floor > overall) ctx.addIssue({ code: 'custom', path: ['assessment', 'bar'], message: `The bar is a level from 0 to ${r.scale.length - 1}, with the floor at or below it` });
 });
+
+/** The lens's style count rule (D104), worded for the author. */
+const STYLE_COUNT = `A lens has ${MIN_STYLES} or ${MAX_STYLES} styles`;
 
 /** A lens style key: a short id such as "D" or "coach". */
 export const StyleKey = z.string().regex(/^[A-Za-z][A-Za-z0-9_]{0,15}$/, 'Use a short id: letters, digits and underscores');
@@ -359,11 +543,15 @@ export const Lens = z.object({
   basedOn: z.string().optional(),
   styles: z.array(z.object({
     key: StyleKey,
-    letter: z.string().regex(/^\S{1,2}$/, 'One or two characters'),
+    /**
+     * The style's tag (D230): one or two characters on the board, in style setting and on the style cards. Left out,
+     * the first letter of its name, unique within the lens (`styleLetters`), so renamed styles show their own initials.
+     */
+    letter: z.string().regex(/^\S{1,2}$/, 'One or two characters').optional(),
     name: Copy,
     short: Copy,
     description: Copy
-  })).min(MIN_STYLES).max(MAX_STYLES),
+  })).min(MIN_STYLES, STYLE_COUNT).max(MAX_STYLES, STYLE_COUNT),
   needs: z.object({ lowSkill_lowMorale: LensNeed, lowSkill_highMorale: LensNeed, highSkill_lowMorale: LensNeed, highSkill_highMorale: LensNeed }),
   fit: z.object({ lowSkill_lowMorale: FitRow, lowSkill_highMorale: FitRow, highSkill_lowMorale: FitRow, highSkill_highMorale: FitRow }),
   /** Adds report only skills (D70); never game mechanics. */
@@ -376,7 +564,7 @@ export const Lens = z.object({
 }).superRefine((l, ctx) => {
   const keys = l.styles.map(s => s.key);
   if (new Set(keys).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style keys must be unique' });
-  if (new Set(l.styles.map(s => s.letter.toUpperCase())).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style letters must be unique' });
+  if (new Set(styleLetters(l.styles).map(t => t.toUpperCase())).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['styles'], message: 'Style letters must be unique' });
   for (const need of NEEDS) {
     const row = l.fit[need];
     for (const k of keys) if (row[k] === undefined) ctx.addIssue({ code: 'custom', path: ['fit', need, k], message: `Give ${k} a fit for this need (0, 1 or 2)` });
@@ -385,12 +573,340 @@ export const Lens = z.object({
   }
   for (const [i, ex] of (l.examples ?? []).entries()) if (!keys.includes(ex.style)) ctx.addIssue({ code: 'custom', path: ['examples', i, 'style'], message: `No style called ${ex.style}` });
   if (l.secondary && l.secondary.id === l.id) ctx.addIssue({ code: 'custom', path: ['secondary', 'id'], message: 'The secondary lens must differ from the primary' });
+}).transform(l => {
+  const letters = styleLetters(l.styles);
+  return { ...l, styles: l.styles.map((s, i) => ({ ...s, letter: letters[i] })) };
 });
 
 /** Skill, morale and result change. */
 const Effect = z.tuple([z.number().int(), z.number().int(), z.number().int()]);
 /** Change for mismatch type 0, 1 and 2 (docs/SIMULATION.md 4.2). */
 export const EffectTable = z.object({ m0: Effect, m1: Effect, m2: Effect.optional() });
+
+// ---------------------------------------------------------------- business state (D136 to D139)
+
+/**
+ * People dynamics (D135, docs/SIMULATION.md 3.5): morale and trust act on output and attrition with a lag.
+ * Left out, none of it applies and the storyline plays exactly as before. Every number has a default.
+ */
+export const Dynamics = z.object({
+  /** Sub-periods in each person's rolling morale average: the lag between how people feel and what they deliver. */
+  window: z.number().int().min(1).max(20).default(5),
+  /** A person's result counts in the funnel in full while their rolling morale is at or above `full`, falling in a line to `floor` of it at morale 0. */
+  output: z.object({ full: Score.default(50), floor: Ratio.default(0.5) }).default({ full: 50, floor: 0.5 }),
+  /** Result gains scale the same way: someone who has felt low for a while improves more slowly. */
+  growth: z.object({ full: Score.default(50), floor: Ratio.default(0.3) }).default({ full: 50, floor: 0.3 }),
+  /** Below `full` trust, positive changes from your actions land at a share that falls in a line to `floor` at trust 0. */
+  trust: z.object({ full: Score.default(50), floor: Ratio.default(0.5) }).default({ full: 50, floor: 0.5 }),
+  /**
+   * Attrition: at each period end, someone whose rolling morale is under `below` may be off sick for `sickDays`
+   * sub-periods (probability `chance`, plus 1 point for every point under `below`); the `resignAfter`th time they resign,
+   * unless they are the last person in their stage. Drawn on the run's own dynamics stream, so it replays exactly.
+   */
+  attrition: z.object({ below: Score.default(20), chance: Ratio.default(0.2), sickDays: z.number().int().min(1).max(10).default(2), resignAfter: z.number().int().min(1).max(5).default(2) })
+    .default({ below: 20, chance: 0.2, sickDays: 2, resignAfter: 2 })
+});
+export type Dynamics = z.output<typeof Dynamics>;
+
+/** How a business variable reads: money in the storyline's currency, a percentage, or points. */
+export const VARIABLE_FORMATS = ['money', 'percent', 'points'] as const;
+/** At most this many business variables per storyline (D136). */
+export const MAX_VARIABLES = 6;
+
+/**
+ * A business variable the author names (D136): Budget, Customer satisfaction, Quality, Reputation. It starts at
+ * `start`, stays in `min` to `max`, moves by `drift` at each period end, and is changed by actions, events and
+ * choices. `shown` puts it on the participant's board; `weight` gives it a share of the Business pillar.
+ */
+export const Variable = z.object({
+  key: Key,
+  name: Copy,
+  format: z.enum(VARIABLE_FORMATS).default('points'),
+  start: z.number(),
+  min: z.number().default(0),
+  max: z.number().default(100),
+  drift: z.number().default(0),
+  shown: z.boolean().default(true),
+  /** Share of the Business pillar, 0 to 1; revenue keeps the rest. All variables' weights add up to 0.8 at most. */
+  weight: Ratio.default(0),
+  /** For the score: true when more is better (Budget, Quality); false when less is (Complaints). */
+  higherIsBetter: z.boolean().default(true),
+  /** What it means, for the board's tooltip and the report. */
+  about: Copy.optional()
+}).superRefine((v, ctx) => {
+  if (!(v.min < v.max)) ctx.addIssue({ code: 'custom', path: ['max'], message: 'The maximum must be above the minimum' });
+  if (v.start < v.min || v.start > v.max) ctx.addIssue({ code: 'custom', path: ['start'], message: 'The start must be between the minimum and the maximum' });
+});
+
+/** Days and weeks before a follow up plays (D138): `days` sub-periods plus `weeks` periods. */
+export const Delay = z.object({ days: z.number().int().min(0).max(50).default(0), weeks: z.number().int().min(0).max(10).default(0) });
+
+/**
+ * What a choice, an action or an event does to the business (D136 to D138): business variables (deltas by key),
+ * a one off change to revenue, sponsor confidence, named flags set or cleared, counters moved, and later events
+ * scheduled after a delay.
+ */
+export const Business = z.object({
+  variables: z.record(Key, z.number()).default({}),
+  revenue: z.number().default(0),
+  sponsor: z.number().int().min(-50).max(50).default(0),
+  set: z.array(Key).max(6).default([]),
+  clear: z.array(Key).max(6).default([]),
+  count: z.record(Key, z.number().int()).default({}),
+  followUps: z.array(Delay.extend({ event: Key })).max(3).default([]),
+  /** Stakeholder relationships moved (D161), by stakeholder key: trust and satisfaction, each −30 to 30. */
+  stakeholders: z.record(Key, z.object({ trust: z.number().int().min(-30).max(30).default(0), satisfaction: z.number().int().min(-30).max(30).default(0) })).optional()
+});
+export type Business = z.output<typeof Business>;
+
+/** Fit levels for an action's business effects: `always`, or only when the approach fitted (m0), partly missed (m1) or clearly missed (m2). */
+export const BusinessByFit = z.object({ always: Business.optional(), m0: Business.optional(), m1: Business.optional(), m2: Business.optional() });
+
+/**
+ * Realism (D171 to D178, docs/SIMULATION.md 3.6): what a working week costs and what neglect does. Left out, none of
+ * it applies and a storyline plays exactly as before. Every number has a default; an action can override the repeat
+ * window, the decay, fatigue, the share of the team's day it takes and whether it sets goals (`Action.realism`).
+ *
+ *   repeat       (D171) the same action with the same person (or a team wide action) within `window` days
+ *                (`teamWindow` for team wide actions) lands at a decaying share of its good effects: `decay[n]` for
+ *                the n-th earlier use still in the window (100%, 60%, 35%, 20%), recovering as earlier uses leave it
+ *   fatigue      (D171) a team wide action repeated in its window also costs everyone `morale` and that day `output`
+ *   opportunity  (D172) a team wide action takes the team off its work for `team` of each of its days: that much less output
+ *   escalation   (D173) an event left unanswered past its window costs `revenue` of a week's target (and its authored business)
+ *   sponsor      (D173) after `silence` weeks with no word to the sponsor (a briefing, a reply, an update), confidence
+ *                moves by `decay` each week end; `update` is the participant's own update (its `cost` in days, `share`
+ *                of a briefing's effect); confidence falling under `reaction.below` makes the sponsor react: a deal
+ *                moves to another team (`reaction.revenue` of a week's target), `reaction.business` and `reaction.event`
+ *   stakeholders (D173) a stakeholder nobody engaged for `weeks` weeks cools by `trust` and `satisfaction` each further week end
+ *   neglect      (D174) someone with no time of their own with you (a one to one action, a message answered) for
+ *                `weeks` weeks loses `morale` and `trust` at each further week end and delivers `output` less until you make time
+ *   drag         (D174) each neglected person with result under `below` lowers the whole team's output by `share` (at most `max`)
+ *   idle         (D174) a day left unused at the week end delivers `output` less; a week with no action, conversation or
+ *                decision counts `week` (a band score, 0 to 100) in the Leadership pillar and the week's stars
+ *   output       (D178) result gains from actions shrink above morale `healthy`, down to `saturation` at 100; output falls
+ *                below skill `skill.full`, to `skill.floor` at 0; goals set in the last `goals.weeks` weeks add `goals.boost`
+ *   score        revenue at the target is worth `atTarget` of the Business pillar and more counts with diminishing value
+ *                (`softness`, D175); the streak bonus grows a little every good week (`gradual`, D176) instead of in
+ *                steps; sponsor confidence takes `sponsor` of the Business pillar, and the People pillar rises with
+ *                diminishing value (`people`, the change that gives about two thirds of the room above 50), counting
+ *                everyone on the team (away too) and `leavers` points off for each person who left (D177)
+ */
+const NegInt = z.number().int().min(-20).max(0);
+const REALISM_SCORE = { atTarget: 85, softness: 0.5, sponsor: 0.2, people: 30, leavers: 5, streak: 'gradual' as const };
+export const Realism = z.object({
+  repeat: z.object({
+    window: z.number().int().min(1).max(40).default(5),
+    teamWindow: z.number().int().min(1).max(40).default(15),
+    decay: z.array(Ratio).min(1).max(6).default([1, 0.6, 0.35, 0.2])
+  }).default({ window: 5, teamWindow: 15, decay: [1, 0.6, 0.35, 0.2] }),
+  fatigue: z.object({ morale: NegInt.default(-2), output: Ratio.default(0.1) }).default({ morale: -2, output: 0.1 }),
+  opportunity: z.object({ team: Ratio.default(0.25) }).default({ team: 0.25 }),
+  neglect: z.object({ weeks: z.number().int().min(1).max(8).default(4), morale: NegInt.default(-3), trust: NegInt.default(-2), output: Ratio.default(0.1) })
+    .default({ weeks: 4, morale: -3, trust: -2, output: 0.1 }),
+  drag: z.object({ below: Score.default(30), share: Ratio.default(0.05), max: Ratio.default(0.15) }).default({ below: 30, share: 0.05, max: 0.15 }),
+  idle: z.object({ output: Ratio.default(0.1), week: Score.default(35) }).default({ output: 0.1, week: 35 }),
+  escalation: z.object({ revenue: Ratio.default(0.2) }).default({ revenue: 0.2 }),
+  sponsor: z.object({
+    silence: z.number().int().min(1).max(10).default(2),
+    decay: NegInt.default(-4),
+    update: z.object({ cost: z.number().min(0).max(5).default(1), share: Ratio.default(0.5) }).default({ cost: 1, share: 0.5 }),
+    reaction: z.object({ below: Score.default(30), revenue: Ratio.default(0.25), business: Business.optional(), event: Key.optional() }).default({ below: 30, revenue: 0.25 })
+  }).default({ silence: 2, decay: -4, update: { cost: 1, share: 0.5 }, reaction: { below: 30, revenue: 0.25 } }),
+  stakeholders: z.object({ weeks: z.number().int().min(1).max(8).default(2), trust: NegInt.default(-2), satisfaction: NegInt.default(-2) })
+    .default({ weeks: 2, trust: -2, satisfaction: -2 }),
+  output: z.object({
+    healthy: Score.default(75),
+    saturation: Ratio.default(0.4),
+    skill: z.object({ full: Score.default(60), floor: Ratio.default(0.6) }).default({ full: 60, floor: 0.6 }),
+    goals: z.object({ weeks: z.number().int().min(1).max(8).default(3), boost: Ratio.default(0.1) }).default({ weeks: 3, boost: 0.1 })
+  }).default({ healthy: 75, saturation: 0.4, skill: { full: 60, floor: 0.6 }, goals: { weeks: 3, boost: 0.1 } }),
+  score: z.object({
+    /** The Business pillar's revenue score at exactly the target (D175). */
+    atTarget: z.number().min(50).max(100).default(REALISM_SCORE.atTarget),
+    /** How fast revenue past the target closes the rest of the way to 100: each `softness` of the target closes about two thirds (D175). */
+    softness: z.number().min(0.1).max(3).default(REALISM_SCORE.softness),
+    /** Sponsor confidence's share of the Business pillar (D177). */
+    sponsor: Ratio.default(REALISM_SCORE.sponsor),
+    /** The People pillar's change that gives about two thirds of the room above 50 (D177). */
+    people: z.number().min(5).max(100).default(REALISM_SCORE.people),
+    /** People pillar points each person who left the team (resigned or let go) costs (D177). */
+    leavers: z.number().min(0).max(25).default(REALISM_SCORE.leavers),
+    /** The streak bonus: `gradual` grows a little every good week (D176); `steps` is the classic +25 from the third week. */
+    streak: z.enum(['gradual', 'steps']).default(REALISM_SCORE.streak)
+  }).default(REALISM_SCORE)
+});
+export type Realism = z.output<typeof Realism>;
+/** The realism defaults (D171 to D178), for /author and the docs. */
+export const REALISM_DEFAULTS: Realism = Realism.parse({});
+
+/** An action's own realism settings (D171): left out, the storyline's. */
+export const ActionRealism = z.object({
+  /** Days in which an earlier use still lowers this action's effect. */
+  window: z.number().int().min(1).max(40).optional(),
+  /** The share of its good effects each use lands at, by how many earlier uses are in the window. */
+  decay: z.array(Ratio).min(1).max(6).optional(),
+  /** A repeat in the window tires everyone (team wide actions by default). */
+  fatigue: z.boolean().optional(),
+  /** The share of the team's day it takes, each of its days (team wide actions: the storyline's `opportunity.team`). */
+  opportunity: Ratio.optional(),
+  /** It sets goals, so output gets the goals boost (by default, actions in the written plan format). */
+  goals: z.boolean().optional()
+});
+export type ActionRealism = z.output<typeof ActionRealism>;
+
+/** Metrics a condition can test (D138). Team values are the available team's means; `revenuePace` is revenue against the run's pace so far, in percent. */
+export const CONDITION_METRICS = ['teamMorale', 'teamTrust', 'teamSkill', 'teamResult', 'revenuePace', 'sponsor'] as const;
+const Compare = z.enum(['below', 'atLeast']);
+/** One clause of a condition (D138): a flag set or not, a counter, a business variable or a metric against a value. */
+export const Clause = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('flag'), flag: Key, is: z.boolean().default(true) }),
+  z.object({ kind: z.literal('counter'), counter: Key, op: Compare, value: z.number() }),
+  z.object({ kind: z.literal('variable'), variable: Key, op: Compare, value: z.number() }),
+  z.object({ kind: z.literal('metric'), metric: z.enum(CONDITION_METRICS), op: Compare, value: z.number() }),
+  /** A stakeholder's relationship (D163): their trust in you or their satisfaction, 0 to 100. */
+  z.object({ kind: z.literal('stakeholder'), stakeholder: Key, measure: z.enum(['trust', 'satisfaction']), op: Compare, value: z.number() })
+]);
+export type Clause = z.output<typeof Clause>;
+
+/** The leadership read of a choice (D137): which skills it shows, and how well, apart from its business outcome. */
+export const Read = z.array(z.object({ skill: Key, band: z.enum(['strong', 'adequate', 'weak', 'harmful']) })).max(4);
+
+/** One option of a choice event (D137). */
+export const ChoiceOption = z.object({
+  key: Key,
+  label: Copy,
+  /** One line more about it, shown under the label. */
+  detail: Copy.optional(),
+  /** What happened, shown after it is chosen and in the report. */
+  outcome: Copy,
+  /** Who the people part lands on: the event's target, the whole team, a stage (`stage:<key>`) or a member id. */
+  who: z.string().regex(/^(target|team|stage:[a-z][a-z0-9_]*|[a-z][a-z0-9_]*)$/).default('target'),
+  /** Skill, morale and result for those people. */
+  people: Effect.default([0, 0, 0]),
+  trust: z.number().int().min(-30).max(30).default(0),
+  business: Business.default(() => Business.parse({})),
+  read: Read.default([])
+});
+export type ChoiceOption = z.output<typeof ChoiceOption>;
+
+/** A choice event (D137): 2 to 4 options, a deadline in sub-periods, and what happens when nobody chooses. */
+export const Choice = z.object({
+  /** What the participant knows, a line each. */
+  known: z.array(Copy).max(4).default([]),
+  options: z.array(ChoiceOption).min(2).max(4),
+  within: z.number().int().min(1).max(10).default(2),
+  /** The option that applies when nobody chooses in time. Left out, `ignored` applies (or nothing). */
+  default: Key.optional(),
+  ignored: ChoiceOption.omit({ key: true, label: true, detail: true }).partial({ outcome: true }).optional()
+});
+
+// ---------------------------------------------------------------- stakeholders (D160 to D165)
+
+/** Who a stakeholder is to the participant (D160): the AI character and the board word it from this. */
+export const STAKEHOLDER_KINDS = ['manager', 'peer', 'customer', 'executive', 'board', 'union', 'partner', 'other'] as const;
+/** The ways to engage a stakeholder (D161). */
+export const STAKEHOLDER_INTERACTIONS = ['meet', 'present', 'negotiate', 'email'] as const;
+/** At most this many stakeholders per storyline (D160). */
+export const MAX_STAKEHOLDERS = 8;
+const RelationNeeds = z.object({ trust: Score.optional(), satisfaction: Score.optional() });
+
+/** What a stakeholder interaction, a static option or a request does (D161), before the relationship scales it. */
+const StakeholderEffectBase = z.object({
+  /** The stakeholder's trust in you and their satisfaction, each −30 to 30. */
+  trust: z.number().int().min(-30).max(30).default(0),
+  satisfaction: z.number().int().min(-30).max(30).default(0),
+  /** Business variables, revenue, sponsor confidence, flags, follow ups and other stakeholders. */
+  business: Business.default(() => Business.parse({})),
+  /** Skill, morale and result for team members (headcount won, a deadline moved): on `who`. */
+  people: Effect.default([0, 0, 0]),
+  who: z.string().regex(/^(team|stage:[a-z][a-z0-9_]*|[a-z][a-z0-9_]*)$/).default('team'),
+  /** What happened, shown after it and in the report. */
+  outcome: Copy.optional()
+});
+/**
+ * A stakeholder effect (D161). `needs`: it lands only while the stakeholder's trust and satisfaction are at least
+ * these values; otherwise `otherwise` applies (a negotiation that a strained relationship cannot carry).
+ */
+export const StakeholderEffect = StakeholderEffectBase.extend({ needs: RelationNeeds.optional(), otherwise: StakeholderEffectBase.optional() });
+export type StakeholderEffect = z.output<typeof StakeholderEffect>;
+
+/** One option of a static stakeholder decision (D161): its effect and its leadership read. */
+export const StakeholderOption = z.object({ key: Key, label: Copy, detail: Copy.optional(), effect: StakeholderEffect.default(() => StakeholderEffect.parse({})), read: Read.default([]) });
+
+/**
+ * A way to engage one stakeholder (D161): a live conversation (meet, present, negotiate, or an email written once)
+ * through the same AI character and evaluator as the team's, or a static decision with options. It costs days,
+ * never the team's live cap, and each stakeholder can be engaged once a period.
+ */
+export const StakeholderInteraction = z.object({
+  key: Key,
+  type: z.enum(STAKEHOLDER_INTERACTIONS),
+  /** The button's words. Left out, the type's ("Meet", "Present", "Negotiate", "Email"). */
+  label: Copy.optional(),
+  /** What the participant is there to do, shown before it starts. */
+  goal: Copy.optional(),
+  kind: z.enum(['live', 'static']).default('live'),
+  cost: z.number().min(0).default(1),
+  /** The first period it is offered. */
+  from: z.number().int().min(1).default(1),
+  /** Offered only while these hold (D163), for example once their trust is 60 or more. */
+  if: z.array(Clause).min(1).max(3).optional(),
+  /** The skills a live interaction rates. Left out, the type's defaults that the framework has. */
+  skills: z.array(Key).max(4).optional(),
+  rubric: z.array(z.object({ key: Key, label: Copy })).min(2).max(4).optional(),
+  turnLimit: z.number().int().min(1).max(30).default(8),
+  minutes: z.number().min(1).max(15).default(5),
+  opening: z.enum(['npc', 'participant']).default('npc'),
+  /** Live: what each band does. Left out, the defaults (`STAKEHOLDER_BANDS` in sim/stakeholders.ts). */
+  consequences: z.object({ strong: StakeholderEffect, adequate: StakeholderEffect, weak: StakeholderEffect, harmful: StakeholderEffect }).partial().optional(),
+  /** Static: the options, 2 to 4. */
+  options: z.array(StakeholderOption).min(2).max(4).optional()
+}).superRefine((x, ctx) => {
+  if (x.kind === 'static' && !x.options) ctx.addIssue({ code: 'custom', path: ['options'], message: 'A static interaction needs 2 to 4 options' });
+  if (x.kind === 'live' && x.options) ctx.addIssue({ code: 'custom', path: ['options'], message: 'A live interaction has no options: its consequences follow how the conversation went' });
+  if (x.options && new Set(x.options.map(o => o.key)).size !== x.options.length) ctx.addIssue({ code: 'custom', path: ['options'], message: 'Option keys must be unique' });
+});
+
+/**
+ * A stakeholder outside the team (D160): a manager, a peer, a customer, an executive, the board, a union, a partner.
+ * Never in the work funnel and never a result: they act on the business through variables, sponsor confidence,
+ * flags and events, and keep their own relationship with the participant (trust and satisfaction, 0 to 100).
+ */
+export const Stakeholder = z.object({
+  key: Key,
+  name: z.string().min(1),
+  /** Their job title, as the board shows it: "Chief Financial Officer". */
+  role: z.string().min(1),
+  kind: z.enum(STAKEHOLDER_KINDS),
+  pronoun: z.enum(['he', 'she', 'they']).default('they'),
+  portrait: z.string().optional(),
+  /** What the participant knows about them, on the board. */
+  about: Copy.optional(),
+  hiddenConcern: Copy.optional(),
+  concernLine: Copy.optional(),
+  /** How the AI character plays them (D130's persona fields). */
+  npc: NpcPersona.optional(),
+  start: z.object({ trust: Score.default(50), satisfaction: Score.default(50) }).default({ trust: 50, satisfaction: 50 }),
+  /** What they lose at each period end in which you did not engage them (0 by default: no drift). */
+  drift: z.object({ trust: z.number().int().min(-20).max(0).default(0), satisfaction: z.number().int().min(-20).max(0).default(0) }).default({ trust: 0, satisfaction: 0 }),
+  interactions: z.array(StakeholderInteraction).max(4).default([])
+}).superRefine((s, ctx) => {
+  if (new Set(s.interactions.map(i => i.key)).size !== s.interactions.length) ctx.addIssue({ code: 'custom', path: ['interactions'], message: 'Interaction keys must be unique' });
+});
+export type Stakeholder = z.output<typeof Stakeholder>;
+
+/**
+ * A request from a stakeholder (D162): a message to answer in writing, or a meeting they ask for, by a deadline.
+ * Answered in time, `onTime` applies; ignored, `ifIgnored` does (and the event's escalation, if any).
+ */
+export const StakeholderRequest = z.object({
+  kind: z.enum(['message', 'meeting']).default('message'),
+  /** A meeting request: the interaction of theirs that answers it. Left out, any of their interactions. */
+  interaction: Key.optional(),
+  within: z.number().int().min(1).max(10).default(2),
+  onTime: StakeholderEffect.default(() => StakeholderEffect.parse({ trust: 3, satisfaction: 3 })),
+  ifIgnored: StakeholderEffect.default(() => StakeholderEffect.parse({ trust: -6, satisfaction: -8 }))
+});
 
 /** How an action decides its mismatch type (docs/SIMULATION.md 4.3). */
 export const ACTION_RULES = ['styleOption', 'weeklyStyle', 'trend', 'training', 'swap', 'assess', 'reward', 'fire', 'hire'] as const;
@@ -415,7 +931,11 @@ export const ActionOption = z.object({
   /** The people picked must be in different stages (swap roles). */
   distinctStages: z.boolean().default(false),
   /** The participant picks a stage to move the person to (reassign role). */
-  pickStage: z.boolean().default(false)
+  pickStage: z.boolean().default(false),
+  /** What the option does to the business (D136): always, or by how well the approach fitted. */
+  business: BusinessByFit.optional(),
+  /** The share of the team's day this option takes, each of its days (D172): team building takes more than a lunch. */
+  opportunity: Ratio.optional()
 });
 
 /** Band names in engine order. Participants never see them (spec, outcome panel). */
@@ -432,8 +952,11 @@ const BandDeltas = z.object({
 export const LiveSettings = z.object({
   /** What the participant sees before starting. */
   goal: Copy.optional(),
-  /** 2 to 4 rubric dimensions; the evaluator returns a band for each. Defaults per format. */
-  rubric: z.array(z.object({ key: Key, label: Copy })).min(2).max(4).optional(),
+  /**
+   * 2 to 4 rubric dimensions; the evaluator returns a band for each. Defaults per format. `label` says what the
+   * dimension looks for; `cues` are phrases that count as evidence of it (D229), up to 12.
+   */
+  rubric: z.array(z.object({ key: Key, label: Copy, cues: z.array(z.string().trim().min(2).max(80)).max(12).optional() })).min(2).max(4).optional(),
   /** Deltas per band. Without it, 1.0's mismatch maths generates the consequences (D35). */
   consequences: z.object({ strong: BandDeltas, adequate: BandDeltas, weak: BandDeltas, harmful: BandDeltas }).optional(),
   turnLimit: z.number().int().min(1).max(30).default(12),
@@ -461,7 +984,9 @@ export const Action = z.object({
   prerequisite: Key.optional(),
   /** Live and hybrid actions: the interaction record. */
   live: LiveSettings.default({ turnLimit: 12, minutes: 5, opening: 'npc', hints: 'onRequest' }),
-  options: z.array(ActionOption).min(1)
+  options: z.array(ActionOption).min(1),
+  /** Diminishing returns, fatigue, the team's time and goals for this action (D171, D172). Left out, the storyline's. */
+  realism: ActionRealism.optional()
 });
 
 const Gendered = z.object({ he: Copy, she: Copy, they: Copy.optional() });
@@ -487,7 +1012,17 @@ export const GeneralEvent = z.object({
   window: z.object({ from: z.number().int().min(1), to: z.number().int().min(1), probability: z.number().int().min(0).max(100).default(100) }).optional(),
   /** Conditional: checked at each period start, fires the first time it holds for `periods` period ends in a row. */
   when: z.object({ condition: z.enum(EVENT_CONDITIONS), value: z.number().min(0).max(100).default(30), periods: z.number().int().min(1).max(4).default(1) }).optional(),
-  impact: Effect,
+  /**
+   * Conditions on earlier choices (D138): all of these clauses must hold. On a fixed, random or follow up event
+   * they are checked when it is due, and it is skipped when they do not hold; on an event with no other timing
+   * they are checked at every sub-period, and it plays the first time they all hold.
+   */
+  if: z.array(Clause).min(1).max(3).optional(),
+  impact: Effect.default([0, 0, 0]),
+  /** What the event does to business variables, flags and revenue when it plays (D136). */
+  business: Business.optional(),
+  /** A choice the participant must make (D137). The event's card opens the decision. */
+  choice: Choice.optional(),
   /** Sub-periods the target is away (capacity loss). */
   away: z.number().int().min(0).max(10).default(0),
   /** `team`; `member` (the engine picks); `sponsor`; `stage:<key>` for everyone in a stage; or a member id. */
@@ -503,12 +1038,28 @@ export const GeneralEvent = z.object({
    */
   response: z.object({ actions: z.array(Key).min(1), within: z.number().int().min(1).max(5).default(2), onTime: Effect.default([0, 2, 0]) }).optional(),
   /** If the response does not come in time: a follow up event, and whether it reaches the sponsor. */
-  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true) }).optional()
+  escalation: z.object({ event: Key.optional(), sponsor: z.boolean().default(true), delay: Delay.optional(),
+    /** What ignoring it costs the business (D173): revenue, variables, sponsor confidence. With realism on, a share of a week's target is lost too. */
+    business: Business.optional() }).optional(),
+  /** The stakeholder the event comes from (D162): a chat or email is their message, a card shows them. */
+  stakeholder: Key.optional(),
+  /** What the stakeholder asks for, by when (D162). Needs `stakeholder`. */
+  request: StakeholderRequest.optional()
 }).superRefine((e, ctx) => {
+  if (e.request && !e.stakeholder) ctx.addIssue({ code: 'custom', path: ['request'], message: 'A request comes from a stakeholder: name them' });
+  if (e.request && e.response) ctx.addIssue({ code: 'custom', path: ['response'], message: 'A stakeholder request is answered by answering them: leave the expected response out' });
+  if (e.request && e.choice) ctx.addIssue({ code: 'custom', path: ['request'], message: 'A decision is answered by choosing: leave the request out' });
+  if (e.choice) {
+    const keys = e.choice.options.map(o => o.key);
+    if (new Set(keys).size !== keys.length) ctx.addIssue({ code: 'custom', path: ['choice', 'options'], message: 'Option keys must be unique' });
+    if (e.choice.default && !keys.includes(e.choice.default)) ctx.addIssue({ code: 'custom', path: ['choice', 'default'], message: `No option called ${e.choice.default}` });
+    if (e.delivery !== 'modal') ctx.addIssue({ code: 'custom', path: ['delivery'], message: 'A choice arrives as a card on the board, where the participant decides' });
+    if (e.response) ctx.addIssue({ code: 'custom', path: ['response'], message: 'A choice is answered by choosing: leave the expected response out' });
+  }
   const kinds = [e.period !== undefined, !!e.window, !!e.when].filter(Boolean).length;
   if (kinds > 1) ctx.addIssue({ code: 'custom', path: ['period'], message: 'Give a fixed period, a random window or a condition, not more than one' });
   if (e.window && e.window.from > e.window.to) ctx.addIssue({ code: 'custom', path: ['window'], message: 'The window must start before it ends' });
-  if ((e.delivery === 'chat' || e.delivery === 'email') && e.target === 'team') ctx.addIssue({ code: 'custom', path: ['delivery'], message: 'A chat or email comes from one person: target a member' });
+  if ((e.delivery === 'chat' || e.delivery === 'email') && e.target === 'team' && !e.stakeholder) ctx.addIssue({ code: 'custom', path: ['delivery'], message: 'A chat or email comes from one person: target a member' });
 });
 
 export const TRIGGER_KINDS = ['casualLeave', 'medicalLeave', 'clueless', 'demoralized', 'lackOfTraining', 'moraleDrops', 'resignation', 'roleChangeRequest', 'complains', 'trainingRequest'] as const;
@@ -534,7 +1085,17 @@ export const StorylineConfig = z.object({
    */
   locale: z.string().regex(/^[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/).default('en'),
   /** The sponsor's authored welcome letter (onboarding), drafted by the author chat (D74). Left out, onboarding words one from the storyline's facts. */
-  intro: z.object({ welcome: z.array(Copy).min(1).max(4), product: z.array(Copy).min(1).max(4), targets: z.array(Copy).min(1).max(4) }).optional(),
+  intro: z.object({
+    welcome: z.array(Copy).min(1).max(4), product: z.array(Copy).min(1).max(4), targets: z.array(Copy).min(1).max(4),
+    /** Every intro screen in the author's order, with its title (D182): the welcome letter, the product, the targets, the team and any added. */
+    screens: z.array(z.object({ key: Key, title: Copy, body: z.array(Copy).max(6).default([]) })).max(10).optional()
+  }).optional(),
+  /** The client brand: colours, logo, font and light or dark (D181). Left out, the KNOLSKAPE look. */
+  brand: Brand.optional(),
+  /** What the LMS records of a run (D184). Defaults: complete at the end screen, no pass mark, SCORM 1.2, standalone. */
+  lms: Lms.default(() => structuredClone(DEFAULT_LMS)),
+  /** The company, product, market and sponsor's voice, for the AI characters (D130). */
+  world: World.optional(),
   /** The leadership lens: styles, needs and fit (D70). Readiness Based Leadership when left out. */
   lens: Lens.default(() => structuredClone(DEFAULT_LENS)),
   money: Money,
@@ -548,7 +1109,7 @@ export const StorylineConfig = z.object({
     /** The one line prompt over weekly style setting (spec). */
     styleLine: Copy.default('To each their own. Your people need different things from you this week.')
   }),
-  members: z.array(Person).min(6).max(12),
+  members: z.array(Person).min(MIN_MEMBERS).max(MAX_MEMBERS),
   candidates: z.array(Person).default([]),
   thresholds: Thresholds.default({ high: 70, amber: 50, low: 30 }),
   gamification: Gamification.default(() => Gamification.parse({})),
@@ -620,6 +1181,14 @@ export const StorylineConfig = z.object({
   maxPerStage: z.number().int().min(1).default(2),
   /** Weekly drift (Configuration Spec, Targets and KPIs): what someone loses in a period nobody acted with them. */
   drift: z.object({ morale: z.number().min(0).default(3), result: z.number().min(0).default(0) }).default({ morale: 3, result: 0 }),
+  /** People dynamics (D135): morale and trust act on output and attrition with a lag. Left out, off. */
+  dynamics: Dynamics.optional(),
+  /** Realism (D171 to D178): diminishing returns, the team's time, neglect, silence and idle days cost, and the score's curves. Left out, off. */
+  realism: Realism.optional(),
+  /** Business variables (D136), 0 to 6. */
+  variables: z.array(Variable).max(MAX_VARIABLES).default([]),
+  /** Stakeholders outside the team (D160), 0 to 8. */
+  stakeholders: z.array(Stakeholder).max(MAX_STAKEHOLDERS).default([]),
   /** Funnel buffer from the Model doc, set by calibration. */
   performanceThreshold: z.number().min(-50).max(400),
   calibrated: z.boolean().default(false)
@@ -648,7 +1217,18 @@ export const StorylineConfig = z.object({
     if (a.unlockPeriod > c.time.period.count) ctx.addIssue({ code: 'custom', path: ['actions', i, 'unlockPeriod'], message: 'Unlocks after the last period' });
   });
   c.actions.forEach((a, i) => { if (a.prerequisite && !actionKeys.has(a.prerequisite)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'prerequisite'], message: `Unknown action ${a.prerequisite}` }); });
-  const eventKeys = new Set(c.events.map(e => e.key));
+  c.actions.forEach((a, i) => {
+    const seen = new Set<string>();
+    a.options.forEach((o, j) => {
+      if (seen.has(o.key)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'key'], message: `Duplicate option ${o.key}` });
+      seen.add(o.key);
+    });
+  });
+  const eventKeys = new Set<string>();
+  c.events.forEach((e, i) => {
+    if (eventKeys.has(e.key)) ctx.addIssue({ code: 'custom', path: ['events', i, 'key'], message: `Duplicate event ${e.key}` });
+    eventKeys.add(e.key);
+  });
   const memberIds = new Set(c.members.map(m => m.id));
   c.events.forEach((e, i) => {
     const last = c.time.period.count;
@@ -665,6 +1245,11 @@ export const StorylineConfig = z.object({
   c.actions.forEach((a, i) => a.options.forEach((o, j) => {
     if (o.style !== undefined && !styleKeys.has(o.style)) ctx.addIssue({ code: 'custom', path: ['actions', i, 'options', j, 'style'], message: `No style called ${o.style} in the lens` });
   }));
+  for (const [list, people] of [['members', c.members], ['candidates', c.candidates]] as const) {
+    people.forEach((p, i) => {
+      for (const k of Object.keys(p.npc?.reactions ?? {})) if (!styleKeys.has(k)) ctx.addIssue({ code: 'custom', path: [list, i, 'npc', 'reactions', k], message: `No style called ${k} in the lens` });
+    });
+  }
   if (c.demo.with && !memberIds.has(c.demo.with)) ctx.addIssue({ code: 'custom', path: ['demo', 'with'], message: `No team member called ${c.demo.with}` });
   if (c.demo.action) {
     const a = c.actions.find(x => x.key === c.demo.action);
@@ -674,7 +1259,132 @@ export const StorylineConfig = z.object({
   if (c.practice.with && !memberIds.has(c.practice.with)) ctx.addIssue({ code: 'custom', path: ['practice', 'with'], message: `No team member called ${c.practice.with}` });
   if (!(c.thresholds.low < c.thresholds.amber && c.thresholds.amber < c.thresholds.high))
     ctx.addIssue({ code: 'custom', path: ['thresholds'], message: 'Thresholds must rise: low < amber < high' });
+
+  // Business variables, flags and follow ups (D136 to D138): every reference names something that exists.
+  const varKeys = new Set(c.variables.map(v => v.key));
+  if (varKeys.size !== c.variables.length) ctx.addIssue({ code: 'custom', path: ['variables'], message: 'Variable keys must be unique' });
+  const weights = c.variables.reduce((a, v) => a + v.weight, 0);
+  if (weights > 0.8 + 1e-9) ctx.addIssue({ code: 'custom', path: ['variables'], message: `Variables' weights in the Business pillar add up to ${Math.round(weights * 100)}%: 80% is the most, so revenue keeps a share` });
+  // With realism, sponsor confidence takes a share of the Business pillar too (D177): revenue keeps at least 10%.
+  if (c.realism && weights + c.realism.score.sponsor > 0.9 + 1e-9) ctx.addIssue({ code: 'custom', path: ['realism', 'score', 'sponsor'], message: `Variables and sponsor confidence take ${Math.round((weights + c.realism.score.sponsor) * 100)}% of the Business pillar: 90% is the most, so revenue keeps a share` });
+  if (c.realism?.sponsor.reaction.event && !eventKeys.has(c.realism.sponsor.reaction.event)) ctx.addIssue({ code: 'custom', path: ['realism', 'sponsor', 'reaction', 'event'], message: `No event called ${c.realism.sponsor.reaction.event}` });
+  const skillKeys = new Set(c.report.skills.map(s => s.key));
+  const checkBusiness = (b: Business | undefined, path: Array<string | number>) => {
+    if (!b) return;
+    for (const k of Object.keys(b.variables)) if (!varKeys.has(k)) ctx.addIssue({ code: 'custom', path: [...path, 'variables', k], message: `No variable called ${k}` });
+    b.followUps.forEach((f, i) => { if (!eventKeys.has(f.event)) ctx.addIssue({ code: 'custom', path: [...path, 'followUps', i, 'event'], message: `No event called ${f.event}` }); });
+  };
+  const checkWho = (who: string, path: Array<string | number>) => {
+    if (who.startsWith('stage:') && !stageKeys.has(who.slice(6))) ctx.addIssue({ code: 'custom', path, message: `No stage called ${who.slice(6)}` });
+    else if (!['target', 'team'].includes(who) && !who.startsWith('stage:') && !memberIds.has(who)) ctx.addIssue({ code: 'custom', path, message: `No team member called ${who}` });
+  };
+  c.actions.forEach((a, i) => a.options.forEach((o, j) => {
+    for (const k of ['always', 'm0', 'm1', 'm2'] as const) checkBusiness(o.business?.[k], ['actions', i, 'options', j, 'business', k]);
+  }));
+  checkBusiness(c.realism?.sponsor.reaction.business, ['realism', 'sponsor', 'reaction', 'business']);
+  c.events.forEach((e, i) => {
+    checkBusiness(e.business, ['events', i, 'business']);
+    checkBusiness(e.escalation?.business, ['events', i, 'escalation', 'business']);
+    e.choice?.options.forEach((o, j) => {
+      checkBusiness(o.business, ['events', i, 'choice', 'options', j, 'business']);
+      checkWho(o.who, ['events', i, 'choice', 'options', j, 'who']);
+      o.read.forEach((r, k) => { if (!skillKeys.has(r.skill)) ctx.addIssue({ code: 'custom', path: ['events', i, 'choice', 'options', j, 'read', k, 'skill'], message: `No skill called ${r.skill}` }); });
+    });
+    if (e.choice?.ignored) { checkBusiness(e.choice.ignored.business, ['events', i, 'choice', 'ignored', 'business']); if (e.choice.ignored.who) checkWho(e.choice.ignored.who, ['events', i, 'choice', 'ignored', 'who']); }
+    (e.if ?? []).forEach((cl, k) => { if (cl.kind === 'variable' && !varKeys.has(cl.variable)) ctx.addIssue({ code: 'custom', path: ['events', i, 'if', k, 'variable'], message: `No variable called ${cl.variable}` }); });
+    if (e.escalation?.event === e.key) ctx.addIssue({ code: 'custom', path: ['events', i, 'escalation', 'event'], message: 'An event cannot follow itself' });
+  });
+
+  // Stakeholders (D160 to D165): their keys are their own, and every reference to one names one that exists.
+  const shKeys = new Set(c.stakeholders.map(s => s.key));
+  if (shKeys.size !== c.stakeholders.length) ctx.addIssue({ code: 'custom', path: ['stakeholders'], message: 'Stakeholder keys must be unique' });
+  c.stakeholders.forEach((s, i) => {
+    if (ids.has(s.key) || ['team', 'member', 'sponsor', 'news', 'you', 'target'].includes(s.key)) ctx.addIssue({ code: 'custom', path: ['stakeholders', i, 'key'], message: `${s.key} is already a person or a reserved name: give the stakeholder another key` });
+    for (const k of Object.keys(s.npc?.reactions ?? {})) if (!styleKeys.has(k)) ctx.addIssue({ code: 'custom', path: ['stakeholders', i, 'npc', 'reactions', k], message: `No style called ${k} in the lens` });
+    s.interactions.forEach((x, j) => {
+      const at = ['stakeholders', i, 'interactions', j];
+      if (x.from > c.time.period.count) ctx.addIssue({ code: 'custom', path: [...at, 'from'], message: 'Offered only after the last period' });
+      if (Math.abs(x.cost / c.time.costStep - Math.round(x.cost / c.time.costStep)) > 1e-9) ctx.addIssue({ code: 'custom', path: [...at, 'cost'], message: `Cost must be a multiple of ${c.time.costStep}` });
+      for (const k of x.skills ?? []) if (!skillKeys.has(k)) ctx.addIssue({ code: 'custom', path: [...at, 'skills'], message: `No skill called ${k}` });
+      for (const [band, eff] of Object.entries(x.consequences ?? {})) checkEffect(eff, [...at, 'consequences', band]);
+      x.options?.forEach((o, k) => {
+        checkEffect(o.effect, [...at, 'options', k, 'effect']);
+        o.read.forEach((r, n) => { if (!skillKeys.has(r.skill)) ctx.addIssue({ code: 'custom', path: [...at, 'options', k, 'read', n, 'skill'], message: `No skill called ${r.skill}` }); });
+      });
+      checkClauses(x.if, [...at, 'if']);
+    });
+  });
+  function checkEffect(eff: StakeholderEffect | undefined, path: Array<string | number>) {
+    if (!eff) return;
+    for (const e of [eff, eff.otherwise]) {
+      if (!e) continue;
+      checkBusiness(e.business, [...path, 'business']);
+      if (e.who !== 'team') checkWho(e.who, [...path, 'who']);
+    }
+  }
+  function checkClauses(clauses: Clause[] | undefined, path: Array<string | number>) {
+    (clauses ?? []).forEach((cl, k) => {
+      if (cl.kind === 'variable' && !varKeys.has(cl.variable)) ctx.addIssue({ code: 'custom', path: [...path, k, 'variable'], message: `No variable called ${cl.variable}` });
+      if (cl.kind === 'stakeholder' && !shKeys.has(cl.stakeholder)) ctx.addIssue({ code: 'custom', path: [...path, k, 'stakeholder'], message: `No stakeholder called ${cl.stakeholder}` });
+    });
+  }
+  c.events.forEach((e, i) => {
+    if (e.stakeholder && !shKeys.has(e.stakeholder)) ctx.addIssue({ code: 'custom', path: ['events', i, 'stakeholder'], message: `No stakeholder called ${e.stakeholder}` });
+    (e.if ?? []).forEach((cl, k) => { if (cl.kind === 'stakeholder' && !shKeys.has(cl.stakeholder)) ctx.addIssue({ code: 'custom', path: ['events', i, 'if', k, 'stakeholder'], message: `No stakeholder called ${cl.stakeholder}` }); });
+    if (e.request) {
+      const sh = c.stakeholders.find(s => s.key === e.stakeholder);
+      if (e.request.interaction && sh && !sh.interactions.some(x => x.key === e.request!.interaction)) ctx.addIssue({ code: 'custom', path: ['events', i, 'request', 'interaction'], message: `${sh.name} has no interaction called ${e.request.interaction}` });
+      if (e.request.kind === 'meeting' && sh && !sh.interactions.length) ctx.addIssue({ code: 'custom', path: ['events', i, 'request', 'kind'], message: `${sh.name} asks to meet, but has no interaction to answer with` });
+      checkEffect(e.request.onTime, ['events', i, 'request', 'onTime']);
+      checkEffect(e.request.ifIgnored, ['events', i, 'request', 'ifIgnored']);
+    }
+  });
+  // Every business effect that moves a stakeholder names one that exists.
+  const businesses: Array<[Business | undefined, Array<string | number>]> = [];
+  c.actions.forEach((a, i) => a.options.forEach((o, j) => { for (const k of ['always', 'm0', 'm1', 'm2'] as const) businesses.push([o.business?.[k], ['actions', i, 'options', j, 'business', k]]); }));
+  c.events.forEach((e, i) => {
+    businesses.push([e.business, ['events', i, 'business']]);
+    e.choice?.options.forEach((o, j) => businesses.push([o.business, ['events', i, 'choice', 'options', j, 'business']]));
+    if (e.choice?.ignored) businesses.push([e.choice.ignored.business, ['events', i, 'choice', 'ignored', 'business']]);
+    if (e.escalation?.business) businesses.push([e.escalation.business, ['events', i, 'escalation', 'business']]);
+  });
+  if (c.realism?.sponsor.reaction.business) businesses.push([c.realism.sponsor.reaction.business, ['realism', 'sponsor', 'reaction', 'business']]);
+  c.stakeholders.forEach((s, i) => s.interactions.forEach((x, j) => {
+    for (const [band, eff] of Object.entries(x.consequences ?? {})) for (const e of [eff, eff?.otherwise]) businesses.push([e?.business, ['stakeholders', i, 'interactions', j, 'consequences', band, 'business']]);
+    x.options?.forEach((o, k) => { for (const e of [o.effect, o.effect.otherwise]) businesses.push([e?.business, ['stakeholders', i, 'interactions', j, 'options', k, 'effect', 'business']]); });
+  }));
+  for (const [b, path] of businesses) for (const k of Object.keys(b?.stakeholders ?? {})) if (!shKeys.has(k)) ctx.addIssue({ code: 'custom', path: [...path, 'stakeholders', k], message: `No stakeholder called ${k}` });
+
+  // What the LMS records (D184): a completion within the run, a pass level on the rating scale.
+  if (c.lms.completion.rule === 'weeks' && (c.lms.completion.periods ?? c.time.period.count) > c.time.period.count)
+    ctx.addIssue({ code: 'custom', path: ['lms', 'completion', 'periods'], message: `The run has ${c.time.period.count} periods: complete within them` });
+  if (c.lms.pass.rule === 'level' && !c.report.scale.some(l => l.name === c.lms.pass.level))
+    ctx.addIssue({ code: 'custom', path: ['lms', 'pass', 'level'], message: `Pick a level on the rating scale (${c.report.scale.map(l => l.name).join(', ')})` });
+  // Embedded images (D183) stay inside their budget together.
+  const images = imagesOf(c);
+  // Portraits predate the image rule and stay plain strings for back compatibility; an embedded one keeps to the budget.
+  for (const [at, src] of images) if (!at.startsWith('world.') && !at.startsWith('brand.') && imageBytes(src) > IMAGE_BUDGET_BYTES)
+    ctx.addIssue({ code: 'custom', path: at.split('.').map(k => (/^\d+$/.test(k) ? Number(k) : k)), message: `The image is ${kb(imageBytes(src))} KB, over the ${kb(IMAGE_BUDGET_BYTES)} KB an uploaded image may be` });
+  const bytes = images.reduce((a, [, src]) => a + imageBytes(src), 0);
+  if (bytes > IMAGES_BUDGET_BYTES) ctx.addIssue({ code: 'custom', path: [], message: `Uploaded images add up to ${kb(bytes)} KB, over the ${kb(IMAGES_BUDGET_BYTES)} KB a storyline may carry: use library images or smaller uploads` });
 });
+
+/** Every image a storyline shows (D183), with where it is: portraits, the sponsor, stakeholders, the office, logos and products. */
+export function imagesOf(c: { members: Array<{ portrait?: string; portraits?: Partial<Record<string, string>> }>; candidates?: Array<{ portrait?: string; portraits?: Partial<Record<string, string>> }>; sponsor: { portrait?: string }; stakeholders?: Array<{ portrait?: string }>; world?: { office?: { image?: string }; logo?: { image?: string }; products?: Array<{ image?: string }> }; brand?: { logo?: string } }): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  const add = (path: string, src: string | undefined) => { if (src) out.push([path, src]); };
+  for (const [list, people] of [['members', c.members], ['candidates', c.candidates ?? []]] as const) people.forEach((p, i) => {
+    add(`${list}.${i}.portrait`, p.portrait);
+    for (const [mood, src] of Object.entries(p.portraits ?? {})) add(`${list}.${i}.portraits.${mood}`, src);
+  });
+  add('sponsor.portrait', c.sponsor.portrait);
+  (c.stakeholders ?? []).forEach((s, i) => add(`stakeholders.${i}.portrait`, s.portrait));
+  add('world.office.image', c.world?.office?.image);
+  add('world.logo.image', c.world?.logo?.image);
+  (c.world?.products ?? []).forEach((p, i) => add(`world.products.${i}.image`, p.image));
+  add('brand.logo', c.brand?.logo);
+  return out;
+}
 
 export type StorylineConfig = z.output<typeof StorylineConfig>;
 export type StorylineInput = z.input<typeof StorylineConfig>;

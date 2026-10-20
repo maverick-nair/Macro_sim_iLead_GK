@@ -41,7 +41,7 @@ export function TrustRing({ value, placement = 'corner' }: TrustRingProps) {
         <circle cx="19" cy="19" r={RING_R} className="fill-member-ring-fill stroke-member-ring-track" strokeWidth="3" />
         <circle cx="19" cy="19" r={RING_R} fill="none" className={value < LOW_BELOW ? 'stroke-member-ring-low' : 'stroke-member-ring-ok'} strokeWidth="3" strokeLinecap="round" strokeDasharray={dash} transform="rotate(-90 19 19)" />
       </svg>
-      <span className="absolute inset-0 flex items-center justify-center text-12 font-700 text-member-on-portrait">{number(value)}</span>
+      <span className="absolute inset-0 flex items-center justify-center text-12 font-600 text-member-on-portrait">{number(value)}</span>
     </div>
   );
 }
@@ -133,13 +133,14 @@ export function MemberCard(props: MemberCardProps) {
       title={unavailable ? unavailableReason : undefined}
       data-tour="member"
       data-member-id={memberId}
-      className={`relative flex flex-col rounded-18 border-2 bg-surface-card backdrop-blur-12 outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-2 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
+      data-trace={memberId ? `members.${memberId}` : undefined}
+      className={`relative flex flex-col rounded-4 border-2 bg-surface-card outline-offset-3 [transition:var(--il-member-card-transition)] hover:-translate-y-0.75 focus-within-select:outline-3 focus-within-select:outline-accent-secondary ${selected ? 'border-accent-secondary shadow-(--il-member-card-shadow-selected)' : 'border-line-default shadow-(--il-member-card-shadow)'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'} ${tip ? 'z-20' : 'z-1'}`}
     >
       <button type="button" aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} onClick={e => { e.stopPropagation(); onSelect(); }} className="il-select sr-only" />
-      <div className={`relative h-29.5 overflow-hidden rounded-t-16 short:h-21 shorter:h-17 ${backdrop(mood, away)}`}>
-        <img src={img} alt="" className={`absolute inset-0 size-full object-cover object-(--il-member-portrait-position) mix-blend-multiply short:object-(--il-member-portrait-position-compact) ${away ? 'grayscale' : ''}`} />
+      <div className={`relative h-29.5 overflow-hidden rounded-t-4 short:h-21 shorter:h-17 ${backdrop(mood, away)}`}>
+        <img src={img} alt="" className={`absolute inset-0 size-full object-contain mix-blend-multiply ${away ? 'grayscale' : ''}`} />
         <div className="absolute inset-0 bg-(image:--il-member-portrait-overlay)" />
-        {selected && <span aria-hidden="true" className="absolute top-2 start-2 flex size-6 items-center justify-center rounded-round bg-(image:--il-fill-brand) text-brand-deep-space"><Check /></span>}
+        {selected && <span aria-hidden="true" className="absolute top-2 start-2 flex size-6 items-center justify-center rounded-round bg-(image:--il-fill-brand) text-button-on-solid"><Check /></span>}
         <div className="absolute top-2 end-2 flex gap-1">
           {unread && <span title={t('member.unread')} className={signal}><Chat /></span>}
           {promise && <span title={promise} className={signal}><Clock /></span>}
@@ -150,7 +151,7 @@ export function MemberCard(props: MemberCardProps) {
           above the pill instead of covering it, and a pill wider than the card truncates.
         */}
         <div className="absolute end-1.5 bottom-1.5 start-2 flex flex-wrap-reverse items-start gap-1">
-          <span title={pill} className="mb-0.5 flex min-h-5.5 min-w-0 items-center gap-1.25 rounded-pill bg-member-pill px-2 text-12 font-700 text-member-on-portrait">
+          <span title={pill} className="mb-0.5 flex min-h-5.5 min-w-0 items-center gap-1.25 rounded-4 bg-member-pill px-2 text-12 font-600 text-member-on-portrait">
             <span className={`size-1.75 flex-none rounded-round ${MOOD_DOT[mood]}`} />
             <span className="truncate text-large:whitespace-normal text-large:break-words">{pill}</span>
           </span>
@@ -171,14 +172,14 @@ export function MemberCard(props: MemberCardProps) {
             type="button"
             onClick={profile}
             aria-label={t('member.profile.open', { name })}
-            className="ms-auto flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
+            className="ms-auto flex size-7 flex-none cursor-pointer items-center justify-center rounded-round border border-line-default bg-surface-raised p-0 text-fg-secondary hover:text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary"
           >
             <External />
           </button>
         </div>
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {tags.map((tag, i) => <span key={i} className="flex min-h-5 items-center rounded-pill border border-line-default bg-surface-raised px-2 text-12 font-600 whitespace-nowrap">{tag}</span>)}
+            {tags.map((tag, i) => <span key={i} className="flex min-h-5 items-center rounded-4 border border-line-default bg-surface-raised px-2 text-12 font-600 whitespace-nowrap">{tag}</span>)}
           </div>
         )}
         {statsHidden ? (

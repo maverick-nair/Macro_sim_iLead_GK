@@ -56,6 +56,11 @@ export interface WeekEndReport {
   };
   /** Sponsor confidence fell below the check in line: next period has a sub period less. */
   checkIn?: { sponsorName: string; line: number } | null;
+  /**
+   * The business this period (D135 to D137): each shown variable from start to end, formatted, and lines on the
+   * choices made or left to their default and on anyone off sick or gone. Absent when the storyline has none.
+   */
+  business?: { rows: Array<{ key: string; name: string; start: string; end: string; dir: 'up' | 'down' | 'flat'; better: boolean | null }>; notes: string[] } | null;
 }
 
 export interface WeekEndBadge {

@@ -155,7 +155,7 @@ describe('buildGroupReport, development', () => {
 
   it('parses with its schema, in the development order, with no verdicts and no names', () => {
     expect(() => GroupReport.parse(g)).not.toThrow();
-    expect(g.sections).toEqual(['about', 'skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways']);
+    expect(g.sections).toEqual(['skills', 'distribution', 'completion', 'business', 'adaptability', 'styles', 'consistency', 'funnel', 'actions', 'attention', 'takeaways', 'about']);
     expect(g.assessment).toBeNull();
     expect(g.withheld).toBeNull();
     const json = JSON.stringify(g);
@@ -234,7 +234,7 @@ describe('the minimum cohort (development privacy)', () => {
     const runs = [...five().slice(0, 4), run({ completion: 30 })];
     const g = buildGroupReport({ runs, cohort: cohort('development') });
     expect(g.withheld).toEqual({ minimum: 5, message: 'Group results are withheld for now. 4 of 5 participants completed the simulation, and this report needs at least 5 to keep individual results private. The results appear once at least 5 participants have completed the simulation.' });
-    expect(g.sections).toEqual(['about', 'completion']);
+    expect(g.sections).toEqual(['completion', 'about']);
     expect(g.completion!.share).toBe(80);
     for (const k of ['skills', 'business', 'styles', 'consistency', 'funnel', 'actions', 'attention'] as const) expect(g[k]).toBeNull();
     expect(g.takeaways).toEqual([]);
@@ -264,7 +264,8 @@ describe('buildGroupReport, assessment', () => {
 
   it('adds the verdicts first and keeps every aggregate however small the cohort', () => {
     expect(() => GroupReport.parse(g)).not.toThrow();
-    expect(g.sections.slice(0, 3)).toEqual(['about', 'verdicts', 'skills']);
+    expect(g.sections.slice(0, 3)).toEqual(['verdicts', 'skills', 'distribution']);
+    expect(g.sections.at(-1)).toBe('about');
     expect(g.withheld).toBeNull();
     expect(g.about.confidentiality).toBe(DEFAULT_GROUP_COPY.confidentiality.assessment);
   });
@@ -287,17 +288,17 @@ describe('buildGroupReport, assessment', () => {
   });
 });
 
-describe('six style lens', () => {
+describe('Six Leadership Styles lens (five styles)', () => {
   const six = config({}, true);
   const keys = SIX_STYLES_LENS.styles.map(s => s.key);
-  const runs = Array.from({ length: 5 }, (_, i) => run({ styles: keys, preferred: [keys[i % 2 ? 5 : 1]], perStyle: { command: [4, 3, 4], coach: [6, 3, 2] }, total: 10 }));
+  const runs = Array.from({ length: 5 }, (_, i) => run({ styles: keys, preferred: [keys[i % 2 ? 4 : 1]], perStyle: { drive: [4, 3, 4], coach: [6, 3, 2] }, total: 10 }));
 
-  it('names six styles from the lens, with their narratives and needs', () => {
+  it('names the five styles from the lens, with their narratives and needs', () => {
     const g = buildGroupReport({ runs, cohort: cohort('development', six) });
     expect(g.cohort.lens).toEqual({ id: 'six_styles', title: 'Six Leadership Styles' });
-    expect(g.styles!.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Pace Setter', 'Commander']);
-    expect(g.styles!.preferred.map(p => p.share)).toEqual([0, 60, 0, 0, 0, 40]);
-    expect(g.styles!.perStyle.find(s => s.key === 'command')!.narrative[0]).toBe('When the group used Commander, it mostly fit what people needed.');
+    expect(g.styles!.styles.map(s => s.name)).toEqual(['Vision Setter', 'Coach', 'Harmonizer', 'Collaborator', 'Drive']);
+    expect(g.styles!.preferred.map(p => p.share)).toEqual([0, 60, 0, 0, 40]);
+    expect(g.styles!.perStyle.find(s => s.key === 'drive')!.narrative[0]).toBe('When the group used Drive, it mostly fit what people needed.');
     expect(g.styles!.perStyle.find(s => s.key === 'harmony')!.narrative[0]).toBe('The group did not use Harmonizer. It suits people who are capable but drained.');
   });
 
