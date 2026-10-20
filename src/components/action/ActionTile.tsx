@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
-import type { Intent } from '../actions/guidance';
+import type { Intent } from '../actions/intent';
 import { useDays } from './days';
 
 /** Live opens a conversation, hybrid is a decision then a conversation, static is an instant decision. */

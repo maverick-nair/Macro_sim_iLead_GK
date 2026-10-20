@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n';
 import { Heading, type HeadingLevel } from '../Heading';
 import { ActionTile, type ActionTileProps } from '../action/ActionTile';
 import { SubPeriodUnitContext, useDays, type PeriodUnit, type SubPeriodUnit } from '../action/days';
-import { INTENTS } from './guidance';
+import { INTENTS } from './intent';
 
 export interface ActionsPanelMember {
   /** First name of the selected person: "For Kent". */

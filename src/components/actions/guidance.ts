@@ -1,31 +1,17 @@
 import type { EngineView, MemberView } from '../../engine/contract';
 import type { useI18n } from '../../i18n';
 import type { PeriodUnit } from '../action/days';
+import { intentOf } from './intent';
+
+export { byIntent, intentOf, INTENTS, type Intent } from './intent';
+
+type ActionV = EngineView['actions'][number];
 
 /**
  * Guiding the action choice (D234): the Actions panel groups a person's actions by what they are for, and marks
  * at most two that suit that person now, each with a plain reason. Pure functions of the engine view, so the
  * board never computes outcomes: the hint reads only what the participant can already see.
  */
-
-/** What an action is for, in the panel's order: live conversations, growing the person, role decisions, the whole team. */
-export const INTENTS = ['talk', 'develop', 'decide', 'team'] as const;
-export type Intent = (typeof INTENTS)[number];
-
-type ActionV = EngineView['actions'][number];
-
-/** By the engine's rule; a whole team action is Team whatever its rule. */
-const BY_RULE: Record<ActionV['rule'], Intent> = {
-  styleOption: 'talk', weeklyStyle: 'talk', trend: 'talk',
-  training: 'develop', assess: 'develop', reward: 'develop',
-  swap: 'decide', fire: 'decide', hire: 'decide'
-};
-export const intentOf = (a: Pick<ActionV, 'rule' | 'scope'>): Intent => (a.scope === 'team' ? 'team' : BY_RULE[a.rule] ?? 'decide');
-
-/** Items in intent order, keeping the authored order inside each group. */
-export function byIntent<T>(items: T[], of: (item: T) => Intent): T[] {
-  return items.map((item, i) => ({ item, i, at: INTENTS.indexOf(of(item)) })).sort((a, b) => a.at - b.at || a.i - b.i).map(x => x.item);
-}
 
 /** Why an action fits now. Numbers only when the participant can see them (stats revealed, D39). */
 export type FitReason =

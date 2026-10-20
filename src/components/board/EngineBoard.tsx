@@ -22,7 +22,7 @@ import { useSession } from '../session/session';
 import { SignedOut } from '../session/SignedOut';
 import { TeamBoard, type StageColumn, type TeamBoardHint } from '../team/TeamBoard';
 import { ActionsPanel } from '../actions/ActionsPanel';
-import { byIntent, fitsNow, fitText, intentOf } from '../actions/guidance';
+import { byIntent, intentOf } from '../actions/intent';
 import { ActionDrawer, type ActionDrawerProps } from '../action/ActionDrawer';
 import type { ActionBlock, ActionTileProps } from '../action/ActionTile';
 import { useDays } from '../action/days';
@@ -194,6 +194,13 @@ export function EngineBoard(props: EngineBoardProps) {
  * window, 200% text), they keep their width and scroll sideways inside this region, which then
  * becomes a focusable, named scroll region. At the designed 1440 width nothing changes.
  */
+/** The fits now rules (D234), loaded once the board is up: they matter only after a person is chosen, so they stay out of the first load's budget. */
+function useGuidance() {
+  const [mod, setMod] = useState<typeof import('../actions/guidance') | null>(null);
+  useEffect(() => { let live = true; void import('../actions/guidance').then(m => { if (live) setMod(() => m); }, () => undefined); return () => { live = false; }; }, []);
+  return mod;
+}
+
 function TeamScroll({ stages, label, children }: { stages: number; label: string; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [scrolls, setScrolls] = useState(false);
@@ -380,10 +387,11 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const perkLine = (a: ActionV) => (hireFree(a) ? t('actions.perk.hire', { unit }) : freeActivity(a) ? t('actions.perk.activity') : undefined);
   /** What suits the selected person now (D234): none in the demo, nor once the participant turned tips off (D99). */
   const fitFor = ui.selectedIds[0] ?? null;
-  const fits = fitFor && !demo ? fitsNow(v, fitFor, { guide: !guideOff() }) : [];
+  const guidance = useGuidance();
+  const fits = fitFor && !demo && guidance ? guidance.fitsNow(v, fitFor, { guide: !guideOff() }) : [];
   const hintFor = (key: string, id: string) => {
     const h = id === fitFor ? fits.find(x => x.key === key) : undefined, m = member(id);
-    return h && m ? fitText(t, h.reason, { name: m.name, periodUnit }) : undefined;
+    return h && m && guidance ? guidance.fitText(t, h.reason, { name: m.name, periodUnit }) : undefined;
   };
   const tile = (key: string, memberId: string | null): ActionTileProps => {
     const a = action(key)!;
