@@ -212,6 +212,8 @@ export function buildView(sim: Sim) {
     // `keptBy`: the actions that keep it, for the actions panel's hint (D234).
     promises: sim.promises.map(x => ({ id: x.id, memberId: x.memberId, text: x.text, state: x.state, dueInSubPeriods: Math.max(0, x.dueAbsSub - sim.absSub), keptBy: x.fulfilledBy })),
     inbox: sim.inbox.filter(x => x.state === 'open').map(message),
+    // Every message, newest first, read or not (D242): the inbox overlay lists them all.
+    mail: sim.inbox.slice().reverse().map(x => ({ ...message(x), at: x.at ?? null })),
     cards: sim.cards,
     outcome: sim.outcome ? { ...sim.outcome, from: who(sim, sim.outcome.speaker) } : null,
     score: {

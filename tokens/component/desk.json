@@ -15,7 +15,7 @@
       }
     },
     "rows": {
-      "value": "minmax(0, max-content) minmax(max-content, 1fr)",
+      "value": "minmax(0, 1fr) auto",
       "$description": "The desk's grid (D212): the team in the first row, scrolling when it does not fit, the feedback and inbox feed right under it taking what is left, as on the canvas (D232); the actions panel spans both"
     },
     "feed": {
@@ -32,6 +32,12 @@
       "row-columns": {
         "value": "2.5rem minmax(0, 1fr) auto",
         "$description": "A menu row: the icon tile, the name with its line, the chevron"
+      }
+    },
+    "card": {
+      "max-height": {
+        "value": "15rem",
+        "$description": "How tall a desk card grows when the board has room (D242)"
       }
     }
   }

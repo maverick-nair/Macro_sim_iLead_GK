@@ -1,0 +1,30 @@
+{
+  "funnel": {
+    "max-width": {
+      "value": "80rem",
+      "$description": "The funnel pop-up over the board (D242)"
+    },
+    "columns": {
+      "value": "minmax(18rem,26rem) minmax(0,1fr)",
+      "$description": "The funnel, then every stage and its people"
+    },
+    "band-height": {
+      "value": "4.25rem"
+    },
+    "band-height-short": {
+      "value": "3.25rem"
+    },
+    "fill": {
+      "value": "color-mix(in oklab, {color.accent.default} 30%, transparent)",
+      "$description": "Output against the ideal, filling a band from the left"
+    },
+    "fill-on": {
+      "value": "color-mix(in oklab, {color.fg.on-accent} 22%, transparent)",
+      "$description": "The fill on the chosen band"
+    },
+    "band": {
+      "value": "color-mix(in oklab, {color.accent.default} var(--il-funnel-mix, 20%), {color.surface.card})",
+      "$description": "A band's fill: deeper the further down the funnel (the band sets --il-funnel-mix)"
+    }
+  }
+}

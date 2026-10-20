@@ -422,7 +422,7 @@ function scheduleBriefing(sim: Sim) {
 }
 
 export function addMessage(sim: Sim, m: { from: string; kind: InboxMessage['kind']; title: Copy; body: Copy; dueIn: number | null; urgent?: boolean }) {
-  sim.inbox.push({ id: nextId(sim, 'm'), from: m.from, kind: m.kind, title: m.title, body: m.body, atAbsSub: sim.absSub,
+  sim.inbox.push({ id: nextId(sim, 'm'), from: m.from, kind: m.kind, title: m.title, body: m.body, atAbsSub: sim.absSub, at: { period: sim.period, sub: sim.sub + 1 },
     dueAbsSub: m.dueIn === null ? null : sim.absSub + m.dueIn, urgent: !!m.urgent, state: 'open' });
 }
 

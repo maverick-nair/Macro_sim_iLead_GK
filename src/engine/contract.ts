@@ -95,6 +95,8 @@ export const Outcome = z.object({
   changed: z.array(Text).max(2)
 });
 
+export const InboxItem = z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() });
+
 export const MemberView = z.object({
   id: Id, name: Text, title: Text, pronoun: z.enum(['he', 'she', 'they']), stage: Id,
   /** Null until the profile has been opened (D39). */
@@ -349,7 +351,12 @@ export const EngineView = z.object({
   /** `keptBy`: the actions that keep the promise when taken with that person (D234's hint). */
   promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0), keptBy: z.array(Id).default([]) })),
   /** `briefing`: a scheduled sponsor briefing, opened with `openConversation` kind `sponsor`; other messages are replies. News needs no answer. */
-  inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() })),
+  inbox: z.array(InboxItem),
+  /**
+   * Every message, newest first, whatever its state (D242), with when it arrived (null in runs saved before): the
+   * inbox overlay lists them, unread first in weight. Optional so older views still parse.
+   */
+  mail: z.array(InboxItem.extend({ at: z.object({ period: z.number().int().min(1), sub: z.number().int().min(1) }).nullable() })).optional(),
   /** Event cards. `sponsorCall` rings before it shows; `messageId` is the message to answer, if any. */
   cards: z.array(z.object({ id: Id, key: Id, card: CardKind, delivery: z.enum(['modal', 'sponsorCall']), title: Text, body: Text, memberId: Id.nullable(), changes: z.array(MetricChange), label: Text.nullable(), messageId: Id.nullable(),
     /** The choice the card opens, when the event is a choice (D137). */

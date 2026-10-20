@@ -5,7 +5,7 @@ import { StageHeader } from '../team/TeamBoard';
 import { SignedOut } from '../session/SignedOut';
 import { bandModel, type BandView } from './band';
 import { DeskCard } from './DeskCard';
-import { DeskFeed, type DeskFeedProps } from './DeskFeed';
+import { MailDialog, type MailDialogProps } from '../inbox/MailDialog';
 import { DeskStatus } from './DeskStatus';
 import { StatusBand, type StatusBandProps } from './StatusBand';
 
@@ -73,20 +73,20 @@ export const FunnelHeaders: Story = {
   )
 };
 
-const FEED: DeskFeedProps = {
-  subPeriodUnit: 'day', onAll: noop,
+const MAIL: MailDialogProps = {
+  subPeriodUnit: 'day', onClose: noop, onOpen: noop, onLater: noop, sponsorName: 'Roger',
   feedback: { key: 'f', when: 'Day 2', title: 'Coaching Nalani landed.', changes: [{ label: 'Skill', dir: 'up', n: '3' }, { label: 'Morale', dir: 'up', n: '2' }], more: 0, onWhy: noop },
   milestones: [{ key: 'm', text: 'Your team has earned 25% of the revenue target.', onResults: noop, onLeaderboard: noop, onDismiss: noop }],
   messages: [
-    { id: 'a', sender: { kind: 'sponsor', initials: 'RK' }, from: 'Roger Kent', kind: 'sponsor', title: 'How is the team settling in? The honest version.', due: 'Due in 2 days', urgent: true, cta: 'reply', onOpen: noop, onLater: noop },
-    { id: 'b', sender: { kind: 'member', img: '/assets/npc/kent.png' }, from: 'Kent Goldberg', kind: 'chat', title: 'Can we talk about the Halden proposal before Friday?', due: null, urgent: false, cta: 'reply', onOpen: noop, onLater: noop },
-    { id: 'c', sender: { kind: 'news' }, from: '', kind: 'news', title: 'Recession strikes', due: null, urgent: false, cta: 'read', onOpen: noop }
+    { id: 'a', sender: { kind: 'sponsor', initials: 'RK' }, from: 'Roger Kent', tag: 'Roger, sponsor note', when: 'Week 1, Day 2', title: 'How is the team settling in? The honest version.', body: 'Give me the real picture before Friday.', due: 'Due in 2 days', urgent: true, unread: true, status: null, snoozed: false, cta: 'reply', later: true },
+    { id: 'b', sender: { kind: 'member', img: '/assets/npc/kent.png' }, from: 'Kent Goldberg', tag: 'Chat from Kent', when: 'Week 1, Day 1', title: 'Can we talk about the Halden proposal before Friday?', body: 'I have a few ideas.', due: null, urgent: false, unread: false, status: 'answered', snoozed: false, cta: null, later: false },
+    { id: 'c', sender: { kind: 'news' }, from: '', tag: 'News', when: 'Week 1, Day 1', title: 'Recession strikes', body: 'Budgets are tight across the region.', due: null, urgent: false, unread: true, status: null, snoozed: false, cta: 'read', later: false }
   ]
 };
-/** Feedback, a milestone and three messages: the row scrolls sideways when it is full. */
-export const Feed: Story = { decorators: [wide(1100)], render: () => <DeskFeed {...FEED} /> };
+/** The inbox overlay (D242): folders, the messages with unread in bold, and the open message. */
+export const Mail: Story = { render: () => <MailDialog {...MAIL} /> };
 /** Nothing yet. */
-export const FeedEmpty: Story = { decorators: [wide(1100)], render: () => <DeskFeed {...FEED} feedback={null} milestones={[]} messages={[]} /> };
+export const MailEmpty: Story = { render: () => <MailDialog {...MAIL} feedback={null} milestones={[]} messages={[]} /> };
 
 /** Signed out with no return address (D213): where the run stands and the way back. */
 export const SignedOutScreen: Story = {

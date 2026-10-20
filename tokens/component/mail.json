@@ -1,0 +1,35 @@
+{
+  "mail": {
+    "max-width": {
+      "value": "76rem",
+      "$description": "The inbox overlay (D242), a mail client over the board"
+    },
+    "max-height": {
+      "value": "48rem"
+    },
+    "columns": {
+      "value": "minmax(11rem,13rem) minmax(18rem,26rem) minmax(0,1fr)",
+      "$description": "Folders, the message list, the open message"
+    },
+    "shadow": {
+      "value": "0 24px 64px {color.elevation.drawer}"
+    },
+    "enter": {
+      "value": "ilIn {duration.base} ease"
+    },
+    "badge": {
+      "enter": {
+        "value": "ilPulse {duration.slow} ease 2",
+        "$description": "The unread badge pulses twice when it appears"
+      }
+    },
+    "rows": {
+      "value": "auto minmax(0,1fr) auto",
+      "$description": "Title bar, folders and messages, footer"
+    },
+    "row-columns": {
+      "value": "auto minmax(0,1fr)",
+      "$description": "A message row: the sender's face, then the lines"
+    }
+  }
+}

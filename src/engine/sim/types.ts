@@ -263,6 +263,8 @@ export interface InboxMessage {
   dueAbsSub: number | null;
   urgent: boolean;
   state: 'open' | 'answered' | 'expired' | 'read';
+  /** When it arrived (D242), for the inbox's date column; absent in runs saved before. */
+  at?: { period: number; sub: number };
   /** A scheduled sponsor briefing (Design doc: weeks 4 and 8). */
   briefing?: boolean;
 }

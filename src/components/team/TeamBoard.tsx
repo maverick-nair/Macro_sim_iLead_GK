@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import type { PeriodUnit } from '../action/days';
 import { Heading, type HeadingLevel } from '../Heading';
@@ -48,6 +48,8 @@ export interface TeamBoardProps {
    * desk cards. The design frames keep the member cards and the legend.
    */
   desk?: boolean;
+  /** On the desk, the button that opens the funnel pop-up (D242), which holds what the stage headers used to. */
+  funnel?: ReactNode;
 }
 
 /** Tailwind needs whole class names in the source; storylines have 3 to 6 stages. */
@@ -146,6 +148,19 @@ function FunnelHeader({ name, count, ideal, bottleneck, periodUnit, about, suits
   );
 }
 
+/** The column's label on the desk (D242): the stage's name and headcount, and "Bottleneck" in words on that stage. */
+function StageLabel({ name, count, bottleneck }: { name: string; count: number; bottleneck: boolean }) {
+  const { t } = useI18n();
+  return (
+    <div data-tour="stage" data-bottleneck={bottleneck ? '' : undefined}
+      className={`flex min-h-8 items-center gap-2 border-b-2 px-1 text-13 ${bottleneck ? 'border-status-attention text-status-attention' : 'border-fg-primary'}`}>
+      <h3 className="m-0 min-w-0 flex-1 truncate text-13 font-600 text-large:whitespace-normal">{name}</h3>
+      {bottleneck && <b className="text-12 font-600 whitespace-nowrap">{t('desk.stage.bottleneck')}</b>}
+      <span className={`text-12 whitespace-nowrap ${bottleneck ? '' : 'text-fg-body'}`}>{t('desk.stage.people', { n: count })}</span>
+    </div>
+  );
+}
+
 /**
  * A stage header: name, headcount, then the ideal or, on the bottleneck, a warning. With stage info from
  * the storyline (D97), an info button opens what the stage does and which skills suit it; Escape or the
@@ -191,7 +206,7 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
  * "Your team": the heading with what a click does now, the style legend, and one column of member
  * cards per funnel stage. The grid has as many equal columns as the storyline has stages.
  */
-export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2, onOverview, desk = false }: TeamBoardProps) {
+export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2, onOverview, desk = false, funnel }: TeamBoardProps) {
   const { t } = useI18n();
   const lens = useLens();
   const legendId = useId();
@@ -201,17 +216,19 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
   const hintText = t('team.hint', { kind: hint.kind, name: hint.kind === 'selected' ? hint.name : '' });
 
   if (desk) return (
-    <section aria-label={t('team.title')} className="flex min-w-0 flex-col gap-1.5">
+    <section aria-label={t('team.title')} className="flex min-w-0 flex-1 flex-col gap-1.5">
       <div className="flex items-baseline justify-between gap-3 text-large:flex-wrap">
         <Heading level={headingLevel} className="m-0 text-12 font-600 whitespace-nowrap uppercase tracking-(--il-desk-band-eyebrow-tracking) text-fg-body">{t('team.title')}</Heading>
-        <span className="text-end text-12 text-fg-body">{t('desk.funnel.note', { unit: periodUnit })}</span>
+        {funnel ?? <span className="text-end text-12 text-fg-body">{t('desk.funnel.note', { unit: periodUnit })}</span>}
         <span aria-live="polite" className="sr-only">{hintText}</span>
       </div>
-      <div className={`grid gap-2 ${GRID_COLS[columns.length] ?? 'grid-cols-6'}`}>
+      <div className={`grid flex-1 gap-2 ${GRID_COLS[columns.length] ?? 'grid-cols-6'}`}>
         {columns.map(({ key, cards, ...col }, i) => (
-          <div key={key} className="flex min-w-0 flex-col gap-1.5">
-            <StageHeader {...col} periodUnit={periodUnit} alignEnd={i >= columns.length / 2} />
-            {cards.map(({ id, desk: info, ...card }) => <DeskCard key={id} memberId={id} {...card} desk={info ?? { style: null, flag: null, time: null }} />)}
+          // With the feed and the outcome off the board (D242) the cards share the height, up to a comfortable size.
+          <div key={key} className={`flex min-w-0 flex-col gap-1.5 ${funnel ? '[&>[data-member-card]]:flex-1 [&>[data-member-card]]:max-h-(--il-desk-card-max-height) [&>[data-member-card]]:min-h-0' : ''}`}>
+            {/* With the funnel in its pop-up (D242) the column keeps a one line label: the stage, and the bottleneck in words. */}
+            {funnel ? <StageLabel name={col.name} count={col.count} bottleneck={col.bottleneck} /> : <StageHeader {...col} periodUnit={periodUnit} alignEnd={i >= columns.length / 2} />}
+            {cards.map(({ id, desk: info, ...card }) => <DeskCard key={id} memberId={id} {...card} grow={!!funnel} desk={info ?? { style: null, flag: null, time: null }} />)}
           </div>
         ))}
       </div>

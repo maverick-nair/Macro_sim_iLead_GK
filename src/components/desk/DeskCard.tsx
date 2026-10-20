@@ -24,7 +24,7 @@ export interface DeskCardInfo {
 export function StatGrid({ stats, hidden = false }: { stats: Record<MetricKey, number>; hidden?: boolean }) {
   const { t, number } = useI18n();
   return (
-    <span aria-hidden={hidden || undefined} className="grid grid-cols-4 gap-1 border-t border-line-default pt-1.25">
+    <span aria-hidden={hidden || undefined} className="grid grid-cols-4 gap-0.5 border-t border-line-default pt-1.25">
       {STATS.map(k => (
         <span key={k} className="flex min-w-0 flex-col">
           <span className="truncate text-11 text-fg-secondary">{t('metric.name', { metric: k })}</span>
@@ -65,8 +65,8 @@ function MoodMark({ mood }: { mood: MoodKey }) {
  * whole card is one button that selects them (pressed while selected or picked); their profile opens from the actions
  * panel. While an action is being planned, someone who cannot take part is dimmed and says why.
  */
-export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
-  const { name, title, img, mood, away = false, skill, morale, result, trust, statsHidden = false, selected = false, unavailableReason, onSelect, memberId, desk } = props;
+export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo; grow?: boolean }) {
+  const { name, title, img, mood, away = false, skill, morale, result, trust, statsHidden = false, selected = false, unavailableReason, onSelect, memberId, desk, grow = false } = props;
   const { t } = useI18n();
   const stats = { skill, morale, result, trust };
   const unavailable = unavailableReason !== undefined && unavailableReason !== '';
@@ -77,10 +77,18 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
     <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
       data-tour="member" data-member-card="" data-member-id={memberId} data-trace={memberId ? `members.${memberId}` : undefined}
       className={`flex min-h-35 min-w-0 flex-col gap-1.25 bg-surface-card px-2.25 py-2 text-start text-fg-primary short:min-h-32 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${selected ? 'border-3 border-accent-default px-1.75 py-1.5' : 'border border-line-strong hover:border-line-control'} ${unavailable ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'}`}>
-      <span className="flex min-w-0 items-center gap-2">
-        <span className={`size-9 flex-none overflow-hidden rounded-round short:size-8 ${backdrop(mood, away)}`}>
-          <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
+      {/* With room on the board (D242) the photo spans the card and takes what height there is, at least a face's worth. */}
+      {grow && (
+        <span className={`relative -mx-2.25 -mt-2 mb-0.5 block min-h-14 flex-1 overflow-hidden ${selected ? '-mx-1.75 -mt-1.5' : ''} ${backdrop(mood, away)}`}>
+          <img src={img} alt="" className={`absolute inset-0 size-full object-contain object-bottom mix-blend-multiply ${away ? 'grayscale' : ''}`} />
         </span>
+      )}
+      <span className="flex min-w-0 items-center gap-2">
+        {!grow && (
+          <span className={`size-9 flex-none overflow-hidden rounded-round short:size-8 ${backdrop(mood, away)}`}>
+            <img src={img} alt="" className={`size-full object-cover object-top mix-blend-multiply ${away ? 'grayscale' : ''}`} />
+          </span>
+        )}
         <span className="flex min-w-0 flex-col">
           <b className="truncate text-14 font-600 text-large:overflow-visible text-large:whitespace-normal text-large:wrap-anywhere">{name}</b>
           <span className="truncate text-12 text-fg-body text-large:whitespace-normal">{desk.style ? t('desk.card.style', { style: desk.style }) : t('desk.card.noStyle')}</span>

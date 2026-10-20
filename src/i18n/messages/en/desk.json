@@ -90,5 +90,20 @@
   "leaderboard.streakWeight": "+{n}",
   "leaderboard.streakLine": "Up to {cap} points for {length} {unit, select, year {years} month {months} week {weeks} day {days} other {periods}} in a row at {stars, plural, one {# star} other {# stars}} or more",
   "leaderboard.privacy": "Privacy.",
-  "leaderboard.privacyBody": "{anonymous, select, yes {Nobody's name is shown: everyone else reads as a colleague.} other {Names show as your programme sets them.}} Only your {scope, select, unit {business unit} global {programme} other {cohort}} sees this board, and your programme can turn it off."
+  "leaderboard.privacyBody": "{anonymous, select, yes {Nobody's name is shown: everyone else reads as a colleague.} other {Names show as your programme sets them.}} Only your {scope, select, unit {business unit} global {programme} other {cohort}} sees this board, and your programme can turn it off.",
+  "funnel.title": "Your funnel",
+  "funnel.close": "Close the funnel",
+  "funnel.money": "{label}: {value} of {target}",
+  "funnel.open": "Funnel",
+  "funnel.openBottleneck": "· {stage} is the bottleneck",
+  "funnel.stages": "Stages, top to bottom",
+  "funnel.table": "Every stage with its output and its people",
+  "funnel.col.stage": "Stage",
+  "funnel.col.output": "Output",
+  "funnel.col.people": "People and their stats",
+  "funnel.headcount": "{n, plural, one {# person} other {# people}}, ideal {ideal}",
+  "funnel.empty": "Nobody in this stage",
+  "funnel.person": "{name}: select on the board",
+  "funnel.stats": "Skill {skill}, Morale {morale}, Result {result}, Trust {trust}",
+  "funnel.stat": "{metric, select, skill {S} morale {M} result {R} trust {T} other {}}"
 }

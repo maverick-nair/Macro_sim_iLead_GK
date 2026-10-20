@@ -12,5 +12,14 @@
   "inbox.cta": "{cta, select, impact {See impact} read {Mark as read} other {Reply now}}",
   "inbox.footer": "Replying costs no {unit, select, quarter {quarters} month {months} week {weeks} hour {hours} other {days}}, and still counts with that person.",
   "inbox.tag": "{type, select, chat {Chat from {name}} sponsor {{name}, sponsor note} news {News} other {Email from {name}}}",
-  "inbox.dueNow": "Due {unit, select, quarter {this quarter} month {this month} week {this week} hour {this hour} other {today}}"
+  "inbox.dueNow": "Due {unit, select, quarter {this quarter} month {this month} week {this week} hour {this hour} other {today}}",
+  "mail.folders": "Folders",
+  "mail.folder": "{folder, select, updates {Updates} other {Inbox}}",
+  "mail.list": "Messages, newest first",
+  "mail.item.aria": "{unread, select, true {Unread. } other {}}{from}: {title}",
+  "mail.snoozed": "Set aside until later",
+  "mail.status": "{status, select, answered {Answered} expired {Missed} other {Read}}",
+  "mail.statusLine": "{status, select, answered {You answered this.} expired {This went unanswered past its deadline.} other {You read this.}}",
+  "mail.none": "Choose a message to read it",
+  "mail.when": "{period}, {sub}"
 }

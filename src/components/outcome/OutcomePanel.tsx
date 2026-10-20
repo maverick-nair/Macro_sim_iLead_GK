@@ -72,6 +72,8 @@ export interface OutcomePanelProps {
    * the band sits directly under the page heading, pass 2.
    */
   headingLevel?: HeadingLevel;
+  /** In the pop-up (D242): no margins of its own, and no inner scroll on a short window, since the dialog scrolls. */
+  inDialog?: boolean;
 }
 
 const Arrow = ({ to }: { to: 'prev' | 'next' }) => (
@@ -122,9 +124,13 @@ export function OutcomePanel(p: OutcomePanelProps) {
   ) : null;
 
   return (
-    <section aria-label={t('outcome.region')} data-tour="outcome" className="mx-8 mt-3 mb-0 grid flex-none animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 border border-fg-primary bg-surface-card px-5 py-4 short:mt-2 short:max-h-(--il-outcome-band-max-height-short) short:gap-4 short:overflow-y-auto short:overscroll-contain short:py-2.5 tablet:mx-5">
-      <div className="size-18 overflow-hidden bg-portrait-calm short:size-14">
-        <img src={p.person.img} alt={p.person.name} className="size-full object-cover object-top mix-blend-multiply" />
+    <section aria-label={t('outcome.region')} data-tour="outcome" className={`grid flex-none animate-(--il-outcome-band-enter) grid-cols-(--il-outcome-band-columns) items-start gap-6 border border-fg-primary bg-surface-card short:gap-4 ${p.inDialog ? 'px-6 py-5 short:py-4' : 'px-5 py-4 short:py-2.5 mx-8 mt-3 mb-0 short:mt-2 short:max-h-(--il-outcome-band-max-height-short) short:overflow-y-auto short:overscroll-contain tablet:mx-5'}`}>
+      {/* The portrait follows the reply on show, so stepping through replies shows whose it is. */}
+      <div className="flex w-18 flex-col items-center gap-1 short:w-14">
+        <div key={(current?.person ?? p.person).id} className="size-18 animate-(--il-outcome-band-enter) overflow-hidden bg-portrait-calm short:size-14">
+          <img src={(current?.person ?? p.person).img} alt={(current?.person ?? p.person).name} className="size-full object-cover object-top mix-blend-multiply" />
+        </div>
+        {current && <b data-outcome-who="" className="text-center text-12 leading-tight">{current.person.name}</b>}
       </div>
       <div className="flex min-w-0 flex-col gap-2">
         <span className={eyebrow}>{p.context ? t('outcome.eyebrowContext', { context: p.context }) : t('outcome.eyebrow')}</span>
