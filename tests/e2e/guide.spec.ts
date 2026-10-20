@@ -139,6 +139,15 @@ test.describe('hints on the actions (D234)', () => {
     await openFromMenu(page, 'Guided tour');
     await page.getByRole('button', { name: 'Do not show tips again' }).click();
     await expect(mine.locator('[data-fits-now]')).toHaveCount(0);
+
+    // Settings shows the same choice and turns the hints back on.
+    await openFromMenu(page, 'Settings');
+    const tips = page.getByRole('switch', { name: 'Show tips and action hints' });
+    await expect(tips).not.toBeChecked();
+    await tips.click();
+    await expect(tips).toBeChecked();
+    await page.getByRole('button', { name: 'Close settings' }).click();
+    await expect(mine.locator('[data-fits-now]').first()).toBeVisible();
   });
 });
 

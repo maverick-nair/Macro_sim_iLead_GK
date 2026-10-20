@@ -41,5 +41,10 @@ export function markGuideSeen(key: string, s: Store | null = storage()) {
 
 /** "Do not show tours and tips again": every tour stops offering itself; they still replay from the menu. */
 export function turnGuideOff(s: Store | null = storage()) {
-  write({ ...read(s), never: true }, s);
+  setGuideOff(true, s);
+}
+
+/** Settings' Show tips switch (D234): off as the tour's "Do not show again" is, and on again; what was seen stays seen. */
+export function setGuideOff(off: boolean, s: Store | null = storage()) {
+  write({ ...read(s), never: off }, s);
 }
