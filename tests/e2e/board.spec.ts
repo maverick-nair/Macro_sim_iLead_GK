@@ -79,7 +79,7 @@ async function setStyles(page: Page, index = 1) {
 
 test('a week on the engine, from styles to the next week', async ({ page }) => {
   await page.goto('/?start=board');
-  await expect(page.getByText('Stats show once you open their profile on the board').first()).toBeVisible();
+  await expect(page.getByText('Open each profile to see their skill, morale, result and trust before you choose.')).toBeVisible();
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Set your leadership styles for week 1');
   await setStyles(page);
@@ -171,6 +171,29 @@ test('style summary: focus is trapped, the page behind is inert, Go back returns
   await expect(summary).toHaveCount(0);
   await expect(review).toBeFocused();
   expect(await review.evaluate(b => !!b.closest('[inert]'))).toBe(false);
+});
+
+test('style setting opens a profile before you choose: the stats, who they are, then back to their styles (D240)', async ({ page }) => {
+  await page.goto('/?start=board');
+  const kent = page.getByRole('group', { name: /^Kent Goldberg,/ });
+  await expect(kent.getByText(/^Skill \d+ · Morale/)).toHaveCount(0, { timeout: 20000 });
+  const open = kent.getByRole('button', { name: 'View profile, Kent Goldberg' });
+  await open.click();
+  const profile = page.getByRole('dialog', { name: 'Profile for Kent Goldberg' });
+  await expect(profile).toBeVisible();
+  for (const metric of ['Skill', 'Morale', 'Result', 'Trust']) await expect(profile.getByText(metric, { exact: true })).toBeVisible();
+  await expect(profile.getByText('Experience', { exact: true })).toBeVisible();
+  await expect(profile.getByRole('heading', { name: 'Your interactions' })).toBeVisible();
+  await expect(profile.getByRole('heading', { name: 'Take an action' })).toHaveCount(0);
+  expect(await axe(page)).toEqual([]);
+  await page.keyboard.press('Escape');
+  await expect(profile).toHaveCount(0);
+  await expect(open).toBeFocused();
+  // Read once, the card keeps the stats; the list view opens the same profile.
+  await expect(kent.getByText(/^Skill \d+ · Morale \d+ · Trust \d+$/)).toBeVisible();
+  await page.getByRole('radio', { name: 'List' }).click();
+  await page.getByRole('button', { name: 'View profile, Peter Higgins' }).click();
+  await expect(page.getByRole('dialog', { name: 'Profile for Peter Higgins' })).toBeVisible();
 });
 
 test('toasts hide on time, even when the board changes underneath', async ({ page }) => {

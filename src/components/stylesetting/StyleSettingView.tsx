@@ -51,6 +51,8 @@ export interface StyleSettingViewProps {
   /** Open style tooltip on the cards. Controlled when passed; otherwise each control keeps its own. */
   tooltip?: StyleSettingTooltip | null;
   onTooltipChange?: (tooltip: StyleSettingTooltip | null) => void;
+  /** Opens a member's profile over the screen (D240). Left out, no View profile buttons show. */
+  onOpenProfile?: (id: string) => void;
   /** Voice note seam: a node per member beside the reason field (a mic button, later). */
   rationaleAddon?: (id: string) => ReactNode;
   /** The app shell's frame height, so the screen fills it. */
@@ -175,7 +177,7 @@ export function StyleSettingView(p: StyleSettingViewProps) {
             </span>
           </div>
           {/* Said once for the team rather than on every card (D232). */}
-          {layout === 'cards' && members.some(statsHidden) && <p className="m-0 text-13 text-fg-body">{t('stylesetting.stats.hidden')}</p>}
+          {layout === 'cards' && members.some(statsHidden) && <p className="m-0 text-13 text-fg-body">{t(p.onOpenProfile ? 'stylesetting.stats.open' : 'stylesetting.stats.hidden')}</p>}
           {/* The team scrolls inside the screen when it does not fit the window (D101); the header and Review stay put. */}
           <ScrollArea label={t('stylesetting.team.aria')} className="-mx-2 px-2 pb-1">
             {layout === 'cards' && (
@@ -184,11 +186,11 @@ export function StyleSettingView(p: StyleSettingViewProps) {
                   <StyleSettingCard key={m.id} member={m} periodUnit={periodUnit}
                     onStyle={k => p.onStyle(m.id, k)} onRationale={text => p.onRationale(m.id, text)}
                     tooltip={tipFor(m.id)} onTooltipChange={p.onTooltipChange && (k => p.onTooltipChange!(k ? { id: m.id, style: k } : null))}
-                    rationaleAddon={p.rationaleAddon?.(m.id)} />
+                    rationaleAddon={p.rationaleAddon?.(m.id)} onOpenProfile={p.onOpenProfile && (() => p.onOpenProfile!(m.id))} />
                 ))}
               </div>
             )}
-            {layout === 'list' && <StyleSettingList members={members} periodUnit={periodUnit} onStyle={p.onStyle} />}
+            {layout === 'list' && <StyleSettingList members={members} periodUnit={periodUnit} onStyle={p.onStyle} onOpenProfile={p.onOpenProfile} />}
           </ScrollArea>
         </div>
         <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-s border-line-default ps-7 tablet:ps-5 tablet-portrait:-order-1 tablet-portrait:border-s-0 tablet-portrait:ps-0">

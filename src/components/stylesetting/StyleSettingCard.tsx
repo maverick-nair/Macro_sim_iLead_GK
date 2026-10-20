@@ -22,6 +22,19 @@ export interface StyleSettingCardProps {
   onTooltipChange?: (style: StyleKey | null) => void;
   /** Voice note seam: rendered beside the reason field when present, for a mic button later. */
   rationaleAddon?: ReactNode;
+  /** Opens the member's profile over the screen (D240); the engine reveals their stats on the first open. */
+  onOpenProfile?: () => void;
+}
+
+/** The button that opens a member's profile from style setting (D240): "View profile", named for the person. */
+export function ProfileButton({ member, onOpen }: { member: StyleSettingMember; onOpen: () => void }) {
+  const { t } = useI18n();
+  return (
+    <button type="button" onClick={onOpen} aria-label={t('stylesetting.profile.aria', { name: member.name })}
+      className={`inline-flex min-h-6 w-fit cursor-pointer items-center gap-1 border-0 bg-transparent p-0 text-12 font-600 text-accent-secondary underline-offset-2 hover:underline ${focus}`}>
+      {t('stylesetting.profile')}
+    </button>
+  );
 }
 
 /** "Skill 35 · Morale 9 · Trust 30", numbers bold; or the hidden stats line. */
@@ -50,9 +63,9 @@ const Plus = () => <svg className="size-3 flex-none" viewBox="0 0 24 24" fill="n
  * One member on the style setting screen, as the approved canvas draws it (D232): the photo across the column, the
  * name, their stage and mood, last period's style and how it landed when there was one, the stats once revealed, the
  * styles as named buttons two to a row, and an optional reason behind a dashed button. Away, a line says when the
- * style applies. Not boxed: the columns stand on the page.
+ * style applies. With `onOpenProfile`, a View profile button opens who they are before you choose (D240). Not boxed: the columns stand on the page.
  */
-export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, tooltip, onTooltipChange, rationaleAddon }: StyleSettingCardProps) {
+export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, tooltip, onTooltipChange, rationaleAddon, onOpenProfile }: StyleSettingCardProps) {
   const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const opener = useRef<HTMLButtonElement>(null);
@@ -76,6 +89,7 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
       </div>
       {m.lastStyle !== null && <LastPeriodTag periodUnit={periodUnit} style={m.lastStyle} reaction={m.lastReaction} />}
       {!statsHidden(m) && <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>}
+      {onOpenProfile && <ProfileButton member={m} onOpen={onOpenProfile} />}
       <div data-tour="style-control"><StyleControl variant="names" size="md" value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} /></div>
       {m.away && <span className="text-12 text-pretty text-fg-secondary">{note.text}</span>}
       {editing ? (

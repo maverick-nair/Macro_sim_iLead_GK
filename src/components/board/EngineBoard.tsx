@@ -31,6 +31,7 @@ import { OutcomePanel, type OutcomePerson } from '../outcome/OutcomePanel';
 import type { PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
+import { ProfileDialog } from '../profile/ProfileDialog';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView } from '../stylesetting/StyleSettingView';
 import { ReactingScreen } from '../liveshell/ReactingScreen';
@@ -507,11 +508,16 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     }))
   }));
 
+  const [styleProfile, setStyleProfile] = useState(false);
+  /** Opens the profile, and the engine reveals the stats on the first open. Style setting opens it alone (D240). */
+  const showProfile = (id: string) => {
+    ui.openPanel('profile', id);
+    if (!member(id)?.statsRevealed) void send({ type: 'openProfile', memberId: id });
+  };
   const openProfile = (id: string) => {
     setFlow(null);
     if (selected !== id) ui.toggleMember(id);
-    ui.openPanel('profile', id);
-    if (!member(id)?.statsRevealed) void send({ type: 'openProfile', memberId: id });
+    showProfile(id);
   };
 
   // ---- profile: everything the engine logged with this person, newest first ----
@@ -969,11 +975,14 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
           lastStyle: m.lastStyle, lastReaction: m.lastReaction, style: draft[m.id] ?? null, rationale: notes[m.id] ?? ''
         }))}
         onStyle={styles.setStyle}
+        onOpenProfile={id => { setStyleProfile(true); showProfile(id); }}
         onRationale={styles.setRationale}
         onConfirm={styles.confirm}
         onBack={styles.closeSummary}
         confirmDisabled={busy || chosen < v.members.length}
       />
+      {/* Only a profile opened here: one left open on the board last period stays shut (D240). */}
+      {profile && styleProfile && <ProfileDialog {...profile} onClose={() => { setStyleProfile(false); profile.onClose(); }} />}
       </>
     );
   } else {
