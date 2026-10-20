@@ -4,6 +4,7 @@ import { purposeOf } from '../config';
 import { buildReport } from '../report/build';
 import { finalScore, holdingChoices } from './period';
 import { pulse as pulseOf, roundHalfUp } from './score';
+import { fullCycle, targets } from './fullCycle';
 import { capacity, capacityLeft, fill, idealThroughput, perPeriod, person, teamAverage } from './sim';
 import { bestStyle, lensView, NEEDS } from '../lens';
 import type { InboxMessage, MemberSim, Mood, Sim, SponsorLevel } from './types';
@@ -119,6 +120,8 @@ export function buildView(sim: Sim) {
   const bottleneck = sim.sub > 0 ? ratios.indexOf(Math.min(...ratios)) : -1;
   const message = (x: InboxMessage) => ({ id: x.id, from: x.from, kind: x.kind, title: x.title, body: x.body, urgent: x.urgent, state: x.state, briefing: !!x.briefing,
     dueInSubPeriods: x.dueAbsSub === null ? null : Math.max(0, x.dueAbsSub - sim.absSub) });
+  const full = fullCycle(sim);
+  const goals = full ? targets(sim) : {};
   const member = (m: MemberSim) => {
     const p = person(sim, m.id);
     const mood = moodOf(m, sim);
@@ -134,6 +137,8 @@ export function buildView(sim: Sim) {
       promise: sim.promises.find(x => x.memberId === m.id && x.state === 'open')?.text ?? null,
       // The optional authored rows (D97) are sent only when the storyline has them.
       profile: p.profile,
+      // The full cycle model (D243): their own target and what they have closed so far.
+      ...(full ? { target: Math.round(goals[m.id] ?? 0), closed: Math.round(sim.funnel.byMember?.[m.id] ?? 0) } : null),
       // Realism (D174): weeks with no time of their own with you, so the board can say so. Only with realism.
       ...(realism ? { unattended: unattendedWeeks(sim, m.id), neglected: unattendedWeeks(sim, m.id) >= realism.neglect.weeks } : null)
     };
@@ -184,6 +189,7 @@ export function buildView(sim: Sim) {
         upbeat: moods.filter(x => x === 'happy').length, steady: moods.filter(x => x === 'neutral' || x === 'thinking').length, struggling: moods.filter(x => x === 'concerned' || x === 'frustrated').length };
     })(),
     maxPerStage: c.maxPerStage,
+    salesModel: c.salesModel,
     funnel: c.stages.map((st, i) => ({ key: st.key, name: st.name, members: sim.members.filter(m => m.stage === st.key).length, ideal: st.ideal,
       throughput: Math.round(sim.funnel.stageOutPeriod[i] * 10) / 10, idealThroughput: Math.round(ideal[i] * 10) / 10, bottleneck: i === bottleneck,
       // What the stage does and which skills suit it (D97), when authored.
@@ -199,7 +205,7 @@ export function buildView(sim: Sim) {
       cooldown: a.cooldownDays, unlockPeriod: a.unlockPeriod,
       options: a.options.map(o => ({ key: o.key, label: o.label, cost: a.rule === 'hire' && sim.hireBudget ? 0 : o.cost ?? a.cost, away: o.away, cooldown: o.cooldownDays ?? a.cooldownDays,
         // Stages a move can go to, with a reason where the stage has no room (role coverage).
-        stages: o.pickStage ? c.stages.map(st => ({ key: st.key, blocked: a.rule === 'swap' && sim.members.filter(m => m.stage === st.key).length >= c.maxPerStage ? { reason: 'stageFull' as const, stage: st.key } : null })) : null, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
+        stages: o.pickStage ? c.stages.map(st => ({ key: st.key, blocked: a.rule === 'swap' && !fullCycle(sim) && sim.members.filter(m => m.stage === st.key).length >= c.maxPerStage ? { reason: 'stageFull' as const, stage: st.key } : null })) : null, targets: o.targets ?? null, distinctStages: o.distinctStages, pickStage: o.pickStage, blocked: a.scope === 'team' ? blockedReason(sim, a, null, o.key) : null })),
       blocked: a.scope === 'team' ? blockedReason(sim, a, null) : null,
       blockedFor: a.scope === 'member' ? Object.fromEntries(sim.members.map(m => [m.id, blockedReason(sim, a, m.id)])) : {},
       // Realism (D171, D172): a repeat lands at less (for the team, or by person), and the share of the team's day it takes.

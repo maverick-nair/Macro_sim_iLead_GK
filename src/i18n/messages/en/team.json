@@ -13,5 +13,6 @@
   "team.stage.bottleneck": "Bottleneck this {unit, select, year {year} month {month} week {week} day {day} other {period}}",
   "team.stage.info": "About {stage}",
   "team.stage.suits": "Suits:",
-  "team.overview": "Results and stages"
+  "team.overview": "Results and stages",
+  "team.people": "Your sellers"
 }

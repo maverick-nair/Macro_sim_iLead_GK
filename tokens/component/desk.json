@@ -39,6 +39,10 @@
         "value": "15rem",
         "$description": "How tall a desk card grows when the board has room (D242)"
       }
+    },
+    "people-rows": {
+      "value": "minmax(0, var(--il-desk-card-max-height))",
+      "$description": "The people grid's rows (D243): they share the height, up to a comfortable card"
     }
   }
 }

@@ -50,7 +50,15 @@ export interface TeamBoardProps {
   desk?: boolean;
   /** On the desk, the button that opens the funnel pop-up (D242), which holds what the stage headers used to. */
   funnel?: ReactNode;
+  /**
+   * Everyone sells end to end (D243): the team as one grid of people, not columns by stage. Each card carries what
+   * they have closed against their own target; the stages live in the funnel pop-up.
+   */
+  people?: boolean;
 }
+
+/** The people grid's columns (D243): five to a row up to ten people, six beyond. */
+const PEOPLE_COLS = (n: number) => (n > 10 ? 'grid-cols-6' : 'grid-cols-5');
 
 /** Tailwind needs whole class names in the source; storylines have 3 to 6 stages. */
 const GRID_COLS: Record<number, string> = { 1: 'grid-cols-1', 2: 'grid-cols-2', 3: 'grid-cols-3', 4: 'grid-cols-4', 5: 'grid-cols-5', 6: 'grid-cols-6' };
@@ -206,7 +214,7 @@ export function StageHeader({ name, count, ideal, bottleneck, periodUnit, about,
  * "Your team": the heading with what a click does now, the style legend, and one column of member
  * cards per funnel stage. The grid has as many equal columns as the storyline has stages.
  */
-export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2, onOverview, desk = false, funnel }: TeamBoardProps) {
+export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, columns, headingLevel = 2, onOverview, desk = false, funnel, people = false }: TeamBoardProps) {
   const { t } = useI18n();
   const lens = useLens();
   const legendId = useId();
@@ -222,6 +230,14 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
         {funnel ?? <span className="text-end text-12 text-fg-body">{t('desk.funnel.note', { unit: periodUnit })}</span>}
         <span aria-live="polite" className="sr-only">{hintText}</span>
       </div>
+      {people ? (
+        // Five to a row (six with a larger team): rows share the height, up to a comfortable card.
+        <ul aria-label={t('team.people')} className={`m-0 grid flex-1 list-none auto-rows-(--il-desk-people-rows) gap-2 p-0 ${PEOPLE_COLS(columns.reduce((n, c) => n + c.cards.length, 0))}`}>
+          {columns.flatMap(c => c.cards).map(({ id, desk: info, ...card }) => (
+            <li key={id} className="flex min-h-0 [&>[data-member-card]]:flex-1"><DeskCard memberId={id} {...card} grow desk={info ?? { style: null, flag: null, time: null }} /></li>
+          ))}
+        </ul>
+      ) : (
       <div className={`grid flex-1 gap-2 ${GRID_COLS[columns.length] ?? 'grid-cols-6'}`}>
         {columns.map(({ key, cards, ...col }, i) => (
           // With the feed and the outcome off the board (D242) the cards share the height, up to a comfortable size.
@@ -232,6 +248,7 @@ export function TeamBoard({ hint, legendOpen, onToggleLegend, periodUnit, column
           </div>
         ))}
       </div>
+      )}
     </section>
   );
   return (

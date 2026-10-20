@@ -1,3 +1,4 @@
+import { fullCycle } from './fullCycle';
 import { blank, UNTAGGED } from './live';
 import { IntentError } from './errors';
 import type { StorylineConfig } from '../config';
@@ -195,7 +196,8 @@ function validate(sim: Sim, a: Action, memberIds: string[], optionKey?: string, 
     }
   }
   if (o.pickStage && stage && a.rule === 'swap') {
-    if (sim.members.filter(m => m.stage === stage).length >= sim.config.maxPerStage) throw new IntentError('That stage is full', 'stageFull');
+    // In the full cycle model (D243) a stage is a focus, not a seat: any number can focus on it.
+    if (!fullCycle(sim) && sim.members.filter(m => m.stage === stage).length >= sim.config.maxPerStage) throw new IntentError('That stage is full', 'stageFull');
     if (picked.some(m => sim.members.filter(x => x.stage === m.stage).length <= 1)) throw new IntentError('Someone has to stay in every stage', 'lastInStage');
   }
   for (const id of memberIds.length ? memberIds : [null]) {
@@ -335,6 +337,13 @@ function hybridDecision(sim: Sim, rng: Rng, a: Action, targets: MemberSim[], sta
   if (a.rule === 'swap') {
     const moves: Array<[MemberSim, string]> = targets.length === 2 ? [[targets[0], targets[1].stage], [targets[1], targets[0].stage]] : [[targets[0], stage ?? targets[0].stage]];
     for (const [m, to] of moves) {
+      if (fullCycle(sim)) {
+        // Full cycle (D243): they still sell end to end; the stage becomes their focus, where they run stronger. Their
+        // numbers stay theirs. Asked to focus on a part of the job no one has looked at with them, they lose some heart.
+        if (!m.assessedStages.includes(to)) changes.push(...effectChanges(sim, rng, m, [0, -3, 0], { label: msg('engine.unassessed.label'), cause: msg('engine.unassessed.cause', { name: firstName(sim, m.id), pronoun: pr(sim, m.id), stage: stageName(sim, to) }), rule: msg('engine.unassessed.rule', { n: 3 }), evidence: [] }, { useTrust: false }));
+        m.stage = to; m.stageSincePeriod = sim.period; m.reassignedInPeriod = sim.period; m.roleChangeRequestedPeriod = null;
+        continue;
+      }
       const base = person(sim, m.id).byStage[to];
       const before = { skill: m.skill, morale: m.morale, result: m.result };
       const j = () => Math.round(rng.range(-6, 6));
@@ -502,7 +511,7 @@ export function submitInteraction(sim: Sim, rng: Rng, interactionId: string, ev:
     // The participant chose after interviewing (Design doc, Hire member). How the interviews went
     // sets the new hire's first trust in you.
     const cid = it.memberIds[0];
-    const room = cid ? sim.members.filter(m => m.stage === person(sim, cid).homeStage).length < sim.config.maxPerStage + (it.budget ? 1 : 0) : false;
+    const room = cid ? fullCycle(sim) || sim.members.filter(m => m.stage === person(sim, cid).homeStage).length < sim.config.maxPerStage + (it.budget ? 1 : 0) : false;
     // SIMULATION 4.3: a Weak interview lands the candidate half the time, a Harmful one never.
     const accepts = ev.band === 'strong' || ev.band === 'adequate' || (ev.band === 'weak' && rng.chance(0.5));
     if (cid && room && !accepts) {
@@ -607,7 +616,7 @@ function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[]
 
 export function interviewees(sim: Sim): string[] {
   // Extra hire budget (an unlock) allows one seat past a full stage.
-  const room = (stage: string) => sim.members.filter(m => m.stage === stage).length < sim.config.maxPerStage + (sim.hireBudget ? 1 : 0);
+  const room = (stage: string) => fullCycle(sim) || sim.members.filter(m => m.stage === stage).length < sim.config.maxPerStage + (sim.hireBudget ? 1 : 0);
   return sim.candidates.filter(id => room(person(sim, id).homeStage)).slice(0, 2);
 }
 

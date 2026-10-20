@@ -939,6 +939,14 @@
         ]
       }
     },
+    "salesModel": {
+      "default": "stages",
+      "type": "string",
+      "enum": [
+        "stages",
+        "fullCycle"
+      ]
+    },
     "sponsor": {
       "type": "object",
       "properties": {
@@ -1000,6 +1008,10 @@
           },
           "homeStage": {
             "type": "string"
+          },
+          "target": {
+            "type": "number",
+            "exclusiveMinimum": 0
           },
           "start": {
             "type": "object",
@@ -1280,6 +1292,10 @@
           },
           "homeStage": {
             "type": "string"
+          },
+          "target": {
+            "type": "number",
+            "exclusiveMinimum": 0
           },
           "start": {
             "type": "object",

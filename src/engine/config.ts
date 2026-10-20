@@ -126,6 +126,11 @@ export const Person = z.object({
   title: z.string().min(1),
   pronoun: z.enum(['he', 'she', 'they']),
   homeStage: z.string(),
+  /**
+   * Their own revenue target in the full cycle model (D243), in the money's major unit. Left out, the team target is
+   * shared by experience: the rest of it in proportion to each person's starting skill plus 50.
+   */
+  target: z.number().positive().optional(),
   /** Trust is optional: it defaults to `trustRules.start` (50), lower for wary archetypes (Configuration Spec). */
   start: Stats.extend({ trust: Score.optional() }),
   /** Values in every stage, used by swap and assess (docs/SIMULATION.md 4.3). */
@@ -1101,6 +1106,12 @@ export const StorylineConfig = z.object({
   money: Money,
   time: Time,
   stages: z.array(Stage).min(MIN_STAGES).max(MAX_STAGES),
+  /**
+   * How the team sells (D243). `stages`: each person works one stage of a shared funnel (the board's columns).
+   * `fullCycle`: each person is an experienced seller who works their own deals through every stage, at their own
+   * strength in each (`byStage` against their home stage), against their own target; the funnel is the team's sum.
+   */
+  salesModel: z.enum(['stages', 'fullCycle']).default('stages'),
   /** The participant's sponsor: sends notes, takes briefings, holds confidence. */
   sponsor: z.object({
     name: z.string().min(1), title: z.string().min(1), portrait: z.string().optional(),

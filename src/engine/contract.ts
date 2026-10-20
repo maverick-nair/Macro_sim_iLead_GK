@@ -122,7 +122,10 @@ export const MemberView = z.object({
    * and whether that is past the neglect window (they are losing heart and delivering less).
    */
   unattended: z.number().int().min(0).optional(),
-  neglected: z.boolean().optional()
+  neglected: z.boolean().optional(),
+  /** The full cycle model (D243): their own target, and what they have closed so far, in the money's major unit. */
+  target: z.number().min(0).optional(),
+  closed: z.number().min(0).optional()
 });
 
 export const Clock = z.object({
@@ -344,6 +347,8 @@ export const EngineView = z.object({
   pulse: z.object({ value: Num, start: Num, trend: z.enum(['up', 'down', 'flat']), upbeat: z.number().int(), steady: z.number().int(), struggling: z.number().int() }),
   /** Role coverage: at most this many people per stage. */
   maxPerStage: z.number().int().min(1),
+  /** How the team sells (D243): one stage each, or everyone end to end against their own target. Optional so older views parse. */
+  salesModel: z.enum(['stages', 'fullCycle']).optional(),
   funnel: z.array(z.object({ key: Id, name: Text, members: z.number().int(), ideal: z.number().int(), throughput: Num, idealThroughput: Num, bottleneck: z.boolean(),
     /** What the stage does and which skills suit it, when authored (D97). */
     about: Text.nullable().default(null), suits: Text.nullable().default(null) })),

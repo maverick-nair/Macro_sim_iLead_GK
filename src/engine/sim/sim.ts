@@ -9,6 +9,7 @@ import { checkBadges } from './score';
 import { markRelationsStart, startStakeholders } from './stakeholderState';
 import { stakeholderDueChecks } from './stakeholders';
 import { personOutput, saturation, startRealism, teamOutput } from './realism';
+import { fullCycle, runFullCycle } from './fullCycle';
 import type { ActionRecord, Change, InboxMessage, LiveRecord, LogEntry, MemberSim, MetricKey, Reason, Sim, Turn } from './types';
 import { msg, type Copy } from '../copy';
 
@@ -250,11 +251,21 @@ export function runFunnel(sim: Sim) {
   let input = money.inputPerSubPeriod[Math.min(sim.period, money.inputPerSubPeriod.length) - 1];
   // Realism (D172 to D174): the team's time away, fatigue, idle days and drag hold back the day's work at every stage.
   if (sim.config.realism) input *= teamOutput(sim);
+  // People dynamics (D135): a person's result counts at the share their rolling morale allows (1 without dynamics).
+  // Realism (D174, D178): and at the share their skill, goals and the time you give them allow (1 without realism).
+  const effective = (m: MemberSim) => (sim.config.dynamics ? m.result * outputShare(sim, m) : m.result) * (sim.config.realism ? personOutput(sim, m) : 1);
+  if (fullCycle(sim)) {
+    // Everyone sells end to end (D243).
+    const closed = runFullCycle(sim, input, effective);
+    sim.funnel.conversions += closed;
+    const v = closed * money.valuePerConversion;
+    sim.funnel.value += v;
+    sim.funnel.periodValue += v;
+    return;
+  }
   stages.forEach((st, i) => {
     const inStage = sim.members.filter(m => m.stage === st.key);
-    // People dynamics (D135): a person's result counts at the share their rolling morale allows (1 without dynamics).
-    // Realism (D174, D178): and at the share their skill, goals and the time you give them allow (1 without realism).
-    const average = inStage.length ? avg(inStage.map(m => (m.away > 0 ? 0 : (sim.config.dynamics ? m.result * outputShare(sim, m) : m.result) * (sim.config.realism ? personOutput(sim, m) : 1)))) : 0;
+    const average = inStage.length ? avg(inStage.map(m => (m.away > 0 ? 0 : effective(m)))) : 0;
     // Model doc formula, normalized so a stage never beats its conversion ratio (DECISIONS D36).
     const out = Math.max(0, input * st.conversionRatio * (average + performanceThreshold) / (100 + performanceThreshold));
     sim.funnel.stageOut[i] += out;

@@ -9,7 +9,7 @@
     "target": 240000,
     "valuePerConversion": 30000,
     "inputPerSubPeriod": [
-      34
+      40
     ]
   },
   "time": {
@@ -61,6 +61,7 @@
       "suits": "Follow through, relationship building and closing skills."
     }
   ],
+  "salesModel": "fullCycle",
   "sponsor": {
     "name": "Paul Jacob",
     "title": "CEO",
@@ -70,7 +71,11 @@
     "src": "/assets/video/ceo-welcome.webm",
     "poster": "/assets/video/ceo-welcome.jpg",
     "captions": "/assets/video/ceo-welcome.vtt",
-    "chapters": [0, 3, 5],
+    "chapters": [
+      0,
+      3,
+      5
+    ],
     "transcript": [
       "Welcome to Innov8 Elevators. I'm Paul Jacob, and I'm glad you're here.",
       "Starting today, you lead our regional sales team. Ten people, across five stages, from the first call to the signed contract.",
@@ -2668,6 +2673,6 @@
   ],
   "dynamics": {},
   "realism": {},
-  "performanceThreshold": 116,
+  "performanceThreshold": 142,
   "calibrated": true
 }

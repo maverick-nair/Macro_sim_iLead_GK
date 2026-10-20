@@ -35,7 +35,11 @@ const DEFAULT_BANDS: Record<Policy, [number, number]> = { passive: [0.4, 0.65], 
  * (half the time well), while passive play leaves each to its default and meets every later event those defaults
  * bring. So random play sits higher above passive than in a storyline without choices: its band runs to 75%.
  */
-const STORYLINE_BANDS: Record<string, Partial<Record<Policy, [number, number]>>> = { 'client-trust': { random: [0.35, 0.75] } };
+const STORYLINE_BANDS: Record<string, Partial<Record<Policy, [number, number]>>> = {
+  'client-trust': { random: [0.35, 0.75] },
+  // Full cycle (D243): a random change of focus no longer resets anyone's numbers, so random play loses less.
+  'sales-elevator': { random: [0.35, 0.7] }
+};
 const BANDS: Record<Policy, [number, number]> = { ...DEFAULT_BANDS, ...STORYLINE_BANDS[id] };
 const GOOD_AIM = 1.1;
 const RATIO_AIM = 0.5;

@@ -18,6 +18,8 @@ export interface DeskCardInfo {
   noTime?: boolean;
   /** How they are delivering (D241): "Below par ▼4". Null while their stats are hidden. */
   performance?: Performance | null;
+  /** The full cycle model (D243): what they have closed against their own target. */
+  goal?: { closed: string; target: string; share: number } | null;
 }
 
 /** The four stats in a row, label over number, a low one in the attention colour as on the profile (D241). */
@@ -72,7 +74,8 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo; grow?: b
   const unavailable = unavailableReason !== undefined && unavailableReason !== '';
   const moodName = away ? t('member.mood.away') : t('member.mood', { mood });
   const card = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
-  const aria = desk.performance && !statsHidden ? t('desk.card.aria', { card, performance: desk.performance.text }) : card;
+  const withPerf = desk.performance && !statsHidden ? t('desk.card.aria', { card, performance: desk.performance.text }) : card;
+  const aria = desk.goal ? `${withPerf} ${t('desk.card.goalAria', { closed: desk.goal.closed, target: desk.goal.target })}` : withPerf;
   return (
     <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
       data-tour="member" data-member-card="" data-member-id={memberId} data-trace={memberId ? `members.${memberId}` : undefined}
@@ -98,6 +101,15 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo; grow?: b
       {/* The button's name says the stats; the grid is for the eye. */}
       {!statsHidden && <StatGrid stats={stats} hidden />}
       {desk.performance && !statsHidden && <PerformanceLine performance={desk.performance} hidden />}
+      {desk.goal && (
+        <span aria-hidden="true" data-goal="" className="flex flex-col gap-1">
+          <span className="flex items-baseline justify-between gap-2 text-12 text-fg-body">
+            <span>{t('desk.card.goal')}</span>
+            <span><b className="font-mono font-500 text-fg-primary">{desk.goal.closed}</b> {t('desk.card.goalOf', { target: desk.goal.target })}</span>
+          </span>
+          <span className="block h-1.25 bg-track"><span className="block h-full bg-accent-default" style={{ width: `${Math.round(Math.max(0, Math.min(1, desk.goal.share)) * 100)}%` }} /></span>
+        </span>
+      )}
       {desk.flag && <span className="text-12 leading-(--il-canvas-leading-snug) text-status-attention">{desk.flag}</span>}
       {(desk.time || desk.noTime) && <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body text-large:overflow-visible text-large:whitespace-normal ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>}
     </button>

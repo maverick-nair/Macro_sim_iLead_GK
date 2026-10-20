@@ -486,6 +486,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     return {
       style: st ? styleName(st) : null, flag,
       performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
+      // Everyone sells end to end (D243): what they have closed against their own target.
+      goal: m.target !== undefined ? { closed: moneyFormatter(v.money).compact(m.closed ?? 0), target: moneyFormatter(v.money).compact(m.target), share: m.target > 0 ? (m.closed ?? 0) / m.target : 0 } : null,
       time: last ? t('desk.card.time', { unit: periodUnit, action: act?.name ?? last.title, sub: t('time.subPeriod', { unit, n: Math.min(last.sub + 1, v.clock.capacity) }) }) : null,
       noTime
     };
@@ -1084,7 +1086,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
             <div className={`relative grid min-h-0 flex-1 grid-rows-(--il-desk-rows) gap-x-4.5 gap-y-2.5 px-8 pt-3 pb-3.5 short:gap-y-2 short:pt-2.5 short:pb-2.5 tablet:gap-x-3 tablet:px-5 ${folded ? 'grid-cols-(--il-board-columns-collapsed)' : 'grid-cols-(--il-board-columns)'}`}>
               {/* Tab order follows the spec: HUD, team board, actions, then the feedback and inbox feed. The grid places the feed under the team (D212). */}
               <TeamScroll stages={columns.length} label={t('board.teamScroll')}>
-                <TeamBoard desk hint={hint} legendOpen={legend} onToggleLegend={toggleLegend} periodUnit={periodUnit} columns={columns}
+                <TeamBoard desk people={v.salesModel === 'fullCycle'} hint={hint} legendOpen={legend} onToggleLegend={toggleLegend} periodUnit={periodUnit} columns={columns}
                   funnel={<FunnelButton bottleneck={bottleneckStage} onOpen={() => { ui.openPanel('none'); setFunnelOpen(true); }} />} />
               </TeamScroll>
               {/*

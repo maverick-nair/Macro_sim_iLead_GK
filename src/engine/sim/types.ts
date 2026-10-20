@@ -451,7 +451,8 @@ export interface Sim {
   candidates: string[];
   /** Absolute sub-period when an action (or action:option, action:member) is available again. */
   availableAt: Record<string, number>;
-  funnel: { conversions: number; value: number; periodValue: number; stageOut: number[]; stageOutPeriod: number[] };
+  /** `byMember`: what each person has closed, in the full cycle model only (D243). */
+  funnel: { conversions: number; value: number; periodValue: number; stageOut: number[]; stageOutPeriod: number[]; byMember?: Record<string, number> };
   decisions: { period: Decision[]; run: Decision[] };
   styleUses: Record<Style, number>;
   periods: PeriodSummary[];

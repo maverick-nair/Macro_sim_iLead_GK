@@ -453,6 +453,7 @@ export const tokens = {
     "desk.menu.width",
     "desk.menu.row-columns",
     "desk.card.max-height",
+    "desk.people-rows",
     "end.glow.fill",
     "end.logo.tracking",
     "end.max-width",

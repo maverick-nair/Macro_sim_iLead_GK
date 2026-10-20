@@ -487,6 +487,7 @@
   --il-desk-menu-width: 420px;
   --il-desk-menu-row-columns: 2.5rem minmax(0, 1fr) auto;
   --il-desk-card-max-height: 15rem;
+  --il-desk-people-rows: minmax(0, var(--il-desk-card-max-height));
   --il-end-glow-fill: none;
   --il-end-logo-tracking: -0.03em;
   --il-end-max-width: 1600px;

@@ -2,7 +2,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { wordAll as en } from '../../i18n/engineCopy';
 import { msg } from '../copy';
 import { parseStoryline, type StorylineConfig } from '../config';
-import salesElevator from '../storylines/sales-elevator.json';
+// The stage model's rules and recorded outcomes (D243).
+import { salesElevatorStages as salesElevator } from '../storylines/salesElevatorStages';
 import { playStrategy, STRATEGIES, type Strategy } from '../sim/strategies';
 import { createSim } from '../sim/sim';
 import type { Band, Sim } from '../sim/types';
