@@ -33,7 +33,7 @@ const ENGINE: OnboardingFlowProps = {
   teamSize: 10, periods: { unit: 'week', count: 8 }, subPeriodUnit: 'day', capacity: 5,
   languages: [],
   sponsor: {
-    name: 'Paula Jacob', role: 'Regional Sales Director, Innov8 Elevators', initials: 'PJ', img: null, video: null,
+    name: 'Paul Jacob', role: 'CEO, Innov8 Elevators', initials: 'PJ', img: null, video: null,
     letter: {
       welcome: ['Welcome to Innov8 Elevators. I am glad you are here.', 'You are taking over a team of ten across our sales funnel, from first call to signed deal. Some are thriving, some are new, and one or two are struggling.', 'I care about two things: the number, and whether the team is stronger when you leave than when you arrived.'],
       product: ['Deals move through five stages: Leads, Qualify, Proposal, Negotiation, and Conversion. Each stage hands its deals to the next, so one weak stage slows everything after it.', 'Every stage needs someone in it, and at most two people can work a stage at once.'],

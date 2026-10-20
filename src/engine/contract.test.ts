@@ -47,8 +47,8 @@ describe('engine contract', () => {
     const e = createEngine(config, { seed: 1 });
     expect(EngineView.safeParse(e.view()).error?.issues ?? []).toEqual([]);
     const storyline = EngineView.parse(e.view()).storyline;
-    expect({ ...storyline, products: storyline.products.map(p => p.code) }).toEqual({ locale: 'en', name: 'Sales Elevator, Innov8 Elevators', organisation: 'Innov8 Elevators', video: null, brand: null, logo: null, office: null, products: ['B10', 'H4', 'P20', 'C30'], screens: [] });
-    expect(EngineView.parse(e.view()).sponsor).toMatchObject({ name: 'Paula Jacob', title: 'Regional Sales Director' });
+    expect({ ...storyline, products: storyline.products.map(p => p.code) }).toEqual({ locale: 'en', name: 'Sales Elevator, Innov8 Elevators', organisation: 'Innov8 Elevators', video: expect.objectContaining({ src: '/assets/video/ceo-welcome.webm', captions: '/assets/video/ceo-welcome.vtt', chapters: [0, 3, 5] }), brand: null, logo: null, office: null, products: ['B10', 'H4', 'P20', 'C30'], screens: [] });
+    expect(EngineView.parse(e.view()).sponsor).toMatchObject({ name: 'Paul Jacob', title: 'CEO' });
     const styles = await neededStyles(e);
     expect(IntentResult.safeParse(await e.dispatch({ type: 'confirmStyles', styles })).error?.issues ?? []).toEqual([]);
     const a = await e.dispatch({ type: 'planAction', action: 'f2f', memberIds: ['kent'] });

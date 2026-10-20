@@ -62,9 +62,27 @@
     }
   ],
   "sponsor": {
-    "name": "Paula Jacob",
-    "title": "Regional Sales Director",
+    "name": "Paul Jacob",
+    "title": "CEO",
     "styleLine": "To each their own. Your people need different things from you this week."
+  },
+  "video": {
+    "src": "/assets/video/ceo-welcome.webm",
+    "poster": "/assets/video/ceo-welcome.jpg",
+    "captions": "/assets/video/ceo-welcome.vtt",
+    "chapters": [0, 3, 5],
+    "transcript": [
+      "Welcome to Innov8 Elevators. I'm Paul Jacob, and I'm glad you're here.",
+      "Starting today, you lead our regional sales team. Ten people, across five stages, from the first call to the signed contract.",
+      "Some of them are thriving. Some are new. And one or two are struggling, and haven't told anyone yet.",
+      "We sell four Levo lifts, for offices, homes, shopping centres and hospitals. Every lift starts as a lead, and moves through your team one stage at a time.",
+      "If one stage gets stuck, everything after it waits. So watch where the work piles up, and who is standing there.",
+      "Here's what I need. Two hundred and forty thousand dollars in signed business, in eight weeks.",
+      "And here's what matters just as much. When those eight weeks are over, I want a team that's stronger than the one you found. A burned out team won't hold the number next quarter.",
+      "Your people need different things from you. Some need clear steps. Some need room to run. Get to know them, talk to them, and lead each one the way they need.",
+      "Keep me in the loop. I notice when I don't hear from you.",
+      "Your first week starts now. Make it count."
+    ]
   },
   "world": {
     "products": [
@@ -2450,10 +2468,10 @@
     },
     {
       "key": "team_morale_alarm",
-      "title": "Paula has heard the team is struggling",
+      "title": "Paul has heard the team is struggling",
       "body": {
-        "he": "Paula calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it.",
-        "she": "Paula calls. Word has reached her that your team is worn out, and she wants to know what you are doing about it."
+        "he": "Paul calls. Word has reached him that your team is worn out, and he wants to know what you are doing about it.",
+        "she": "Paul calls. Word has reached him that your team is worn out, and he wants to know what you are doing about it."
       },
       "card": "crisis",
       "when": {

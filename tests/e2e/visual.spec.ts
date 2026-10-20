@@ -242,7 +242,7 @@ for (const [theme, q] of Object.entries(THEMES)) {
           await confirmStyles(page);
           await dismissCards(page);
           await spendThreeDays(page, w);
-          const call = page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' });
+          const call = page.getByRole('alert').filter({ hasText: 'Paul Jacob is calling' });
           await expect(call).toHaveCSS('opacity', '1', { timeout: 15_000 });
           // The board behind it is held mid week; the call is what matters, the toast that may sit beside it is not.
           await still(page, `${theme}-${w}-sponsor-call`, [page.getByRole('status')]);

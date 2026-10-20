@@ -83,7 +83,7 @@ export const EventSignalWithPortrait: StoryObj = { render: () => <EventCard busy
 export const SponsorCallRinging: StoryObj = {
   render: () => (
     <div style={{ width: 1440 }}>
-      <SponsorCall name="Paula Jacob" initials="PJ" line="Regional Sales Director. Recession strikes" laterLabel="Call back within 2 days" onAnswer={noop} onLater={noop} />
+      <SponsorCall name="Paul Jacob" initials="PJ" line="CEO. Recession strikes" laterLabel="Call back within 2 days" onAnswer={noop} onLater={noop} />
     </div>
   )
 };
@@ -91,12 +91,12 @@ export const SponsorCallRinging: StoryObj = {
 export const SponsorCallDueNow: StoryObj = {
   render: () => (
     <div style={{ width: 1024 }}>
-      <SponsorCall name="Paula Jacob" initials="PJ" line="Regional Sales Director. Paula has heard the team is struggling" laterLabel="Later" onAnswer={noop} onLater={noop} />
+      <SponsorCall name="Paul Jacob" initials="PJ" line="CEO. Paul has heard the team is struggling" laterLabel="Later" onAnswer={noop} onLater={noop} />
     </div>
   )
 };
 
-/** The sponsor call on the playable board: week 3, on day 3 Paula rings about the recession. */
+/** The sponsor call on the playable board: week 3, on day 3 Paul rings about the recession. */
 export const SponsorCallOnBoard: StoryObj = {
   render: () => (
     <EngineProvider client={createMockClient({ seed: 1, startPeriod: 3 })}>

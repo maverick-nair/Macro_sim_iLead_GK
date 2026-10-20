@@ -113,7 +113,7 @@ export const PulseValueFalling: Story = { ...sized(), args: { ...base, pulse: { 
 /** At 1024 the number stays on one line. */
 export const PulseValueAt1024: Story = { decorators: [S => <div style={{ width: 1024 }}><S /></div>], args: { ...base, pulse: { upbeat: 4, steady: 5, struggling: 1, value: 62, trend: 'flat', periodUnit: 'week' } } };
 
-const meter = { value: 72, unlockAt: 70, checkInBelow: 30, sponsorName: 'Paula', subPeriodUnit: 'day' as const };
+const meter = { value: 72, unlockAt: 70, checkInBelow: 30, sponsorName: 'Paul', subPeriodUnit: 'day' as const };
 
 /** The meter's value beside the level ("Confident, 72"), and what its two lines mean in the popover. */
 export const SponsorValueOpen: Story = { ...sized(320), args: { ...base, sponsor: sponsor({ level: 'confident', open: true, meter }) } };

@@ -60,7 +60,7 @@ const RECAP: Omit<ResumeRecapProps, 'onBack'> = {
   period: 3, periodUnit: 'week', sub: 2, subPeriodUnit: 'day', left: '3½ days left',
   headline: '1:1 with Kent went well',
   inbox: [
-    { id: 'm1', from: 'Paula, sponsor note', title: 'Where are we on conversions?', urgent: true, due: 'Due today' },
+    { id: 'm1', from: 'Paul, sponsor note', title: 'Where are we on conversions?', urgent: true, due: 'Due today' },
     { id: 'm2', from: 'Chat from Beth', title: 'Can we talk about the Ashcroft lead?', urgent: false, due: 'Due in 2 days' },
     { id: 'm3', from: 'News', title: 'A competitor cut prices', urgent: false, due: null }
   ],

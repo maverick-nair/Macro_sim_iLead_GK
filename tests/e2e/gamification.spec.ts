@@ -124,27 +124,27 @@ test('the status band: team health, the money against pace, the tier, the stars 
   await expect(band.getByText(/^(Behind pace by|Ahead of pace by|On pace)/)).toBeVisible();
   await expect(band.getByText(/^\d+ to (Silver|Gold|Platinum)$|^Top tier$/)).toBeVisible();
   await expect(band.getByRole('img', { name: /^\d of 3 stars in Week 2$/ })).toBeVisible();
-  await expect(band.getByRole('img', { name: /^Paula's confidence \d+ of 100\. Reward at 70, check in below 30\.$/ })).toBeVisible();
-  const sponsor = band.getByRole('button', { name: /^Paula \d+, your sponsor's confidence/ });
+  await expect(band.getByRole('img', { name: /^Paul's confidence \d+ of 100\. Reward at 70, check in below 30\.$/ })).toBeVisible();
+  const sponsor = band.getByRole('button', { name: /^Paul \d+, your sponsor's confidence/ });
   await sponsor.click();
-  await expect(page.getByText('Rise to 70 and Paula offers you a reward.')).toBeVisible();
+  await expect(page.getByText('Rise to 70 and Paul offers you a reward.')).toBeVisible();
   await expect(page.getByText('Drop below 30 and the CEO asks for a check in. It takes a day of your time.')).toBeVisible();
   expect(await axe(page)).toEqual([]);
 });
 
 test('a sponsor call: Take the call opens the conversation', async ({ page }) => {
   await board(page, 'period=3');
-  await expect(page.getByText('Paula Jacob is calling')).toHaveCount(0);
+  await expect(page.getByText('Paul Jacob is calling')).toHaveCount(0);
   await spendThreeDays(page);
-  const call = page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' });
+  const call = page.getByRole('alert').filter({ hasText: 'Paul Jacob is calling' });
   await expect(call).toBeVisible();
   // Let it finish sliding in, so contrast is checked at full opacity.
   await expect(call).toHaveCSS('opacity', '1');
-  await expect(call).toContainText('Regional Sales Director. Recession strikes');
+  await expect(call).toContainText('CEO. Recession strikes');
   await expect(call.getByRole('button', { name: 'Call back within 2 days' })).toBeVisible();
   expect(await axe(page)).toEqual([]);
   await call.getByRole('button', { name: 'Take the call' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Paula');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Paul');
   await expect(page.getByRole('textbox', { name: 'Your reply' })).toBeVisible();
   await expect(call).toHaveCount(0);
 });
@@ -152,10 +152,10 @@ test('a sponsor call: Take the call opens the conversation', async ({ page }) =>
 test('a sponsor call: Later leaves it in the inbox, pinned with its due', async ({ page }) => {
   await board(page, 'period=3');
   await spendThreeDays(page);
-  const call = page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' });
+  const call = page.getByRole('alert').filter({ hasText: 'Paul Jacob is calling' });
   await call.getByRole('button', { name: 'Call back within 2 days' }).click();
   await expect(call).toHaveCount(0);
-  await expect(page.getByRole('status').filter({ hasText: "Paula's call is waiting in your inbox" })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: "Paul's call is waiting in your inbox" })).toBeVisible();
   await page.getByRole('button', { name: /^Inbox/ }).click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
   const item = inbox.locator('[data-inbox-item]').filter({ hasText: 'Recession strikes' });
@@ -178,7 +178,7 @@ for (const [theme, q] of [['light', 'theme=light'], ['client', 'client=halden']]
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog', { name: 'Badges' })).toHaveCount(0);
     await spendThreeDays(page);
-    await expect(page.getByRole('alert').filter({ hasText: 'Paula Jacob is calling' })).toHaveCSS('opacity', '1');
+    await expect(page.getByRole('alert').filter({ hasText: 'Paul Jacob is calling' })).toHaveCSS('opacity', '1');
     expect(await axe(page)).toEqual([]);
   });
 }

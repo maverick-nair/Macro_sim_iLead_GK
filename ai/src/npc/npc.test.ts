@@ -45,7 +45,7 @@ describe('NPC prompt assembly', () => {
 
   it('writes the sheet in the run language, the sponsor without a persona, the meeting floor and an opening', () => {
     expect(characterSheet(kentTurn({ locale: 'es-MX' }))).toMatch(/Spanish \(Mexico\)/);
-    const sponsor = kentTurn({ format: 'sponsor', speaker: { id: 'sponsor', name: 'Paula Jacob', persona: null, mood: 'neutral', trust: 50 } });
+    const sponsor = kentTurn({ format: 'sponsor', speaker: { id: 'sponsor', name: 'Paul Jacob', persona: null, mood: 'neutral', trust: 50 } });
     expect(characterSheet(sponsor)).toMatch(/Role: Regional Sales Director/);
     const meeting = buildNpcRequest(kentTurn({ format: 'meeting', said: null, meeting: { attendees: [{ id: 'kent', name: 'Kent Goldberg' }, { id: 'beth', name: 'Beth Killiney' }], hands: ['beth'] } }), settingsFor('npc'));
     expect(meeting.messages[0].content).toMatch(/Hands raised: Beth Killiney/);
@@ -90,7 +90,7 @@ describe('NPC prompt assembly', () => {
     expect(kent).toMatch(/Selling points: Fast installs/);
     expect(kent).toMatch(/Rivals: Beta \(cheaper\)/);
     expect(kent).not.toMatch(/Brisk and dry/);
-    const sponsor = kentTurn({ format: 'sponsor', speaker: { id: 'sponsor', name: 'Paula Jacob', persona: null, mood: 'neutral', trust: 50 }, story: { organisation: 'Innov8', world } });
+    const sponsor = kentTurn({ format: 'sponsor', speaker: { id: 'sponsor', name: 'Paul Jacob', persona: null, mood: 'neutral', trust: 50 }, story: { organisation: 'Innov8', world } });
     expect(characterSheet(sponsor)).toMatch(/How you sound: Brisk and dry/);
   });
 

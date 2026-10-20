@@ -44,28 +44,30 @@ for (const theme of ['dark', 'light'] as const) {
     await expect(page.getByText(/^You are the new leader of a team of ten at Innov8 Elevators\./)).toBeVisible();
     await expect(page.getByRole('list', { name: 'What to expect' }).getByRole('listitem')).toHaveCount(3);
     await expect(page.getByRole('banner').getByRole('button')).toHaveText(['Log out']);
-    const watch = page.getByRole('button', { name: 'Watch the video message from Paula Jacob' });
+    const watch = page.getByRole('button', { name: 'Watch the video message from Paul Jacob' });
     await expect(watch).toHaveCount(0);
     await expect(watch).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole('status').filter({ hasText: 'New video message' })).toContainText('Paula Jacob, Regional Sales Director');
+    await expect(page.getByRole('status').filter({ hasText: 'New video message' })).toContainText('Paul Jacob, CEO');
     await axe(page, 'landing');
     await press(page, watch);
 
     // 2. The message: Mute in the header, captions on and read out, CC, three chapters, play and position.
-    await expect(page.getByRole('heading', { level: 1, name: 'A message from Paula Jacob' })).toBeAttached();
+    await expect(page.getByRole('heading', { level: 1, name: 'A message from Paul Jacob' })).toBeAttached();
     const mute = page.getByRole('button', { name: 'Mute video' });
     await expect(mute).toHaveAttribute('aria-pressed', 'false');
     await press(page, mute);
     await expect(mute).toHaveAttribute('aria-pressed', 'true');
     const captions = page.getByRole('region', { name: 'Captions' });
-    await expect(captions.locator('[aria-live="polite"]')).toHaveText('Welcome to Innov8 Elevators. I am glad you are here.');
+    await expect(captions.locator('[aria-live="polite"]')).toHaveText("Welcome to Innov8 Elevators. I'm Paul Jacob, and I'm glad you're here.");
     const cc = page.getByRole('button', { name: 'Captions', exact: true });
     await expect(cc).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('list').filter({ hasText: 'The challenge' }).getByRole('button')).toHaveCount(3);
     await expect(page.getByRole('button', { name: /^Part 3, Your goal, from / })).toBeVisible();
+    // The chapters start where the captions file's cues say (D237, D239), not at even shares of the video.
+    await expect(page.getByRole('button', { name: 'Part 2, What I expect, from 0:18' })).toBeVisible();
     await axe(page, 'message');
     await press(page, page.getByRole('button', { name: /^Part 2, What I expect/ }));
-    await expect(captions.locator('[aria-live="polite"]')).toHaveText(/^Deals move through five stages/);
+    await expect(captions.locator('[aria-live="polite"]')).toHaveText(/^We sell four Levo lifts/);
     await press(page, cc);
     await expect(cc).toHaveAttribute('aria-pressed', 'false');
     await press(page, page.getByRole('slider', { name: 'Position in the message' }), 'End');

@@ -136,7 +136,7 @@
     "sponsor": {
       "counterpart": "sponsor",
       "samples": [
-        { "id": "sponsor-strong-1", "band": "strong", "text": "Paula, honestly we are behind: we are at 62 percent of the target with three weeks left. The biggest risk is the negotiation stage, where two deals have stalled. I own that.\nI will coach Peter on both deals this week, and I need your support with one pricing exception by Friday." },
+        { "id": "sponsor-strong-1", "band": "strong", "text": "Paul, honestly we are behind: we are at 62 percent of the target with three weeks left. The biggest risk is the negotiation stage, where two deals have stalled. I own that.\nI will coach Peter on both deals this week, and I need your support with one pricing exception by Friday." },
         { "id": "sponsor-strong-2", "band": "strong", "text": "The truth is we missed last week's number by 40,000. That is on me. The issue is a slow handover from qualification.\nHere is the plan: we will fix routing by Wednesday, and I will report progress every Monday. What I need from you is one more headcount." },
         { "id": "sponsor-adequate-1", "band": "adequate", "text": "We are doing okay overall, though we are a bit below target. I will keep pushing the team this week." },
         { "id": "sponsor-adequate-2", "band": "adequate", "text": "We closed 4 deals this month. There is some risk in negotiation, and we will work on it." },

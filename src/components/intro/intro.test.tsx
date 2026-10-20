@@ -27,6 +27,15 @@ describe('the pre-game flow (D219)', () => {
     expect(m.chapters.map(c => c.start)).toEqual([0, 2, 4]);
   });
 
+  it('starts the chapters where the storyline says, when they fit its transcript in order (D239)', () => {
+    const lines = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+    const at = (chapters: [0, number, number]) => introMessage(view({ video: { src: '/v.mp4', transcript: lines, chapters } }), LETTER).chapters.map(c => c.start);
+    expect(at([0, 3, 5])).toEqual([0, 3, 5]);
+    // Out of order or past the transcript: even thirds.
+    expect(at([0, 5, 3])).toEqual([0, 3, 7]);
+    expect(at([0, 3, 10])).toEqual([0, 3, 7]);
+  });
+
   it('times the captions by the captions file when it has a cue per line, else shares the length evenly (D237)', () => {
     const starts = [0, 5, 13, 21];
     expect([0, 4.9, 5, 12, 13, 20.9, 21, 60].map(at => captionAt(at, 4, 75, starts))).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);

@@ -43,7 +43,7 @@ describe('onboarding on the engine', () => {
   });
 
   it('makes initials for a sponsor without a portrait', () => {
-    expect(initials('Paula Jacob')).toBe('PJ');
+    expect(initials('Paul Jacob')).toBe('PJ');
     expect(initials('Cher')).toBe('C');
     expect(initials(' Ana  María  López ')).toBe('AL');
   });

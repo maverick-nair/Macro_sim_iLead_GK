@@ -64,8 +64,17 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
     else v.pause();
   }, [playing, ended]);
   useEffect(() => { if (ended) endHeading.current?.focus({ preventScroll: true }); }, [ended]);
-  // Hidden, the track still loads its cues but the browser draws no second set of captions under ours.
-  useEffect(() => { if (track.current) track.current.track.mode = 'hidden'; }, [message.video?.track]);
+  // Hidden, the track still loads its cues but the browser draws no second set of captions under ours. React has no
+  // onLoad for <track>, so its load event is listened to here; cues already loaded are read at once.
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    el.track.mode = 'hidden';
+    const read = () => { const c = el.track.cues; if (c?.length) setCueStarts(Array.from(c, x => x.startTime)); };
+    read();
+    el.addEventListener('load', read);
+    return () => el.removeEventListener('load', read);
+  }, [message.video?.track]);
 
   const seek = (s: number) => {
     const to = Math.max(0, Math.min(duration, s));
@@ -85,7 +94,7 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
             <video ref={video} src={message.video.src} poster={message.video.poster ?? undefined} muted={muted} playsInline preload="metadata" aria-hidden="true"
               onLoadedMetadata={e => { const d = e.currentTarget.duration; if (Number.isFinite(d) && d > 0) setVideoLength(d); }}
               onTimeUpdate={e => setAt(e.currentTarget.currentTime)} onEnded={() => setAt(duration)} className="absolute inset-0 size-full object-cover">
-              {message.video.track && <track ref={track} kind="captions" src={message.video.track} onLoad={e => { const c = e.currentTarget.track.cues; if (c) setCueStarts(Array.from(c, x => x.startTime)); }} />}
+              {message.video.track && <track ref={track} kind="captions" src={message.video.track} />}
             </video>
           ) : sponsor.img
             ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-(--il-canvas-video-position)" />

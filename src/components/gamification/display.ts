@@ -49,5 +49,5 @@ export function shelfOrder<B extends ShelfBadge>(badges: B[]): B[] {
   return [...earned, ...badges.filter(b => !b.earned)];
 }
 
-/** Two letters for a name without a portrait: "Paula Jacob" is PJ. */
+/** Two letters for a name without a portrait: "Paul Jacob" is PJ. */
 export const initials = (name: string) => name.split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
