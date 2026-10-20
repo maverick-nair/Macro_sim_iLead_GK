@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 /**
@@ -44,6 +45,18 @@ async function changeStored(page: Page, change: string) {
   }, [KEY, change] as const);
   await page.reload();
 }
+/** The publishing walkthrough (D244): every page in order, each confirmed after Kora's check of it, back to Review and publish. */
+async function walkThrough(page: Page) {
+  await page.getByRole('button', { name: /^(Start the walkthrough|Continue: )/ }).click();
+  const walk = page.getByRole('region', { name: 'Publishing walkthrough' });
+  for (let n = 1; n <= 10; n++) {
+    await expect(walk).toContainText(`page ${n} of 10`);
+    await walk.getByRole('button', { name: /^(Confirm this page|Still good, continue)/ }).click();
+  }
+  await expect(page.getByRole('heading', { level: 1, name: 'Review and publish' })).toBeVisible();
+  await expect(page.getByText('Every page confirmed')).toBeVisible();
+}
+
 const FINISHED = "d.brief.challenge = 'Deals stall at negotiation and new reps burn out.'; d.story.product.dealValue = 42000; for (const s of d.scoring.samples) s.call = s.scored;";
 
 const MERGER = 'Newly appointed VPs at a regional healthcare system that has just merged with a rival hospital group. They must integrate clinical and administrative functions across both organizations, keep the board and physician leaders aligned, negotiate with the nurses\' unions and decide where to cut a 12 million budget.';
@@ -116,7 +129,7 @@ test('a degenerate draft cannot publish: the reason shows, and Fix opens the tab
   await expect(checks.getByRole('listitem').filter({ hasText: 'Everything required is filled in' })).toContainText('Participants is empty');
   const publish = page.getByRole('button', { name: 'Publish', exact: true });
   await expect(publish).toBeDisabled();
-  await expect(publish).toHaveAccessibleDescription(/^4 issues block publishing\. Fix the first one:/);
+  await expect(publish).toHaveAccessibleDescription(/^Confirm every page before you publish: 0 of 10 confirmed\. Go to Brief 4 issues block publishing\. Fix the first one:/);
   await page.getByRole('button', { name: 'Fix: Participants is empty' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Brief' })).toBeVisible();
   await page.getByRole('textbox', { name: 'Participants' }).fill('First time managers');
@@ -136,8 +149,11 @@ test('a failed synthetic test stays blocking after an edit, until a full run pas
   await expect(publish).toBeDisabled();
   await expect(page.getByRole('banner')).toContainText('1 to fix');
   await page.getByRole('checkbox', { name: 'Publish without testing' }).check();
-  await expect(publish).toBeEnabled();
   await expect(page.getByRole('banner').getByText('Ready to publish')).toBeVisible();
+  // Nothing blocks, but every page still has to be confirmed (D244).
+  await expect(publish).toBeDisabled();
+  await walkThrough(page);
+  await expect(publish).toBeEnabled();
 
   // Break the target, run the test: it fails.
   await openTab(page, 'Work process');
@@ -161,4 +177,76 @@ test('a failed synthetic test stays blocking after an edit, until a full run pas
   await expect(publish).toBeDisabled();
   await expect(page.getByRole('checkbox', { name: 'Publish without testing' })).toHaveCount(0);
   await expect(page.getByRole('banner')).toContainText('1 to fix');
+});
+
+test('publishing walks through every page: Kora explains what stops the simulation, proposes a fix, and each page is confirmed (D244)', async ({ page }) => {
+  test.setTimeout(90_000);
+  await workspace(page);
+  await changeStored(page, `${FINISHED}
+    d.brief.participants = '';
+    const coach = d.actions.find(a => a.key === 'coach'); coach.core = false; coach.enabled = false;
+    d.publish.skipTest = true;`);
+  await page.goto('/author/workspace/publish');
+  const pages = page.getByRole('list', { name: 'Pages to confirm' });
+  await expect(pages.getByRole('listitem')).toHaveCount(10);
+  await expect(pages.getByRole('listitem').filter({ hasText: 'Brief' })).toContainText('1 to fix');
+  await page.getByRole('button', { name: 'Start the walkthrough' }).click();
+
+  // Brief: Kora says what is wrong, why it matters and how to fix it; the page cannot be confirmed yet.
+  await expect(page.getByRole('heading', { level: 1, name: 'Brief' })).toBeVisible();
+  const walk = page.getByRole('region', { name: 'Publishing walkthrough' });
+  await expect(walk).toContainText('page 1 of 10: Brief');
+  const issue = walk.getByRole('listitem').filter({ hasText: 'Participants is empty' });
+  await expect(issue).toContainText('Stops publishing');
+  await expect(issue).toContainText('What is wrong');
+  await expect(issue).toContainText('Why it matters');
+  await expect(issue).toContainText('the run could not start');
+  await expect(issue).toContainText('How to fix it');
+  const confirm = walk.getByRole('button', { name: /^Confirm this page/ });
+  await expect(confirm).toBeDisabled();
+  // The walkthrough and Kora's explanations are WCAG 2.2 AA, as the rest of GenieKreator.
+  const axe = async () => (await new AxeBuilder({ page: page as never }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).include('[data-walk]').analyze()).violations.map(v => `${v.id}: ${v.nodes.map(n => n.target.join(' ')).join(', ')}`);
+  expect(await axe()).toEqual([]);
+  await expect(confirm).toHaveAccessibleDescription(/Fix what stops publishing first/);
+  await page.getByRole('textbox', { name: 'Participants' }).fill('First time managers');
+  await expect(walk).toContainText('nothing here stops the simulation from running');
+  await confirm.click();
+
+  // Story, Work process, Team and Leadership lens have nothing to fix: confirmed one by one.
+  for (const [n, name] of [[2, 'Story and world'], [3, 'Work process'], [4, 'Team'], [5, 'Leadership lens']] as const) {
+    await expect(walk).toContainText(`page ${n} of 10: ${name}`);
+    await walk.getByRole('button', { name: /^Confirm this page/ }).click();
+  }
+
+  // Actions: a core action is switched off. Kora proposes switching it back on; nothing changes until it is applied.
+  await expect(walk).toContainText('page 6 of 10: Actions and conversations');
+  const core = walk.getByRole('listitem').filter({ hasText: /The core action ".+" is not in use/ });
+  await expect(core).toContainText('Why it matters');
+  await core.getByRole('button', { name: 'Kora can fix this' }).click();
+  const proposal = core.getByRole('region', { name: "Kora's proposed fix" });
+  await expect(proposal).toContainText(/Kora proposes: Switch ".+" back on/);
+  expect(await axe()).toEqual([]);
+  await proposal.getByRole('button', { name: 'Apply' }).click();
+  await expect(walk.getByRole('listitem').filter({ hasText: /The core action ".+" is not in use/ })).toHaveCount(0);
+  await expect(walk.getByRole('button', { name: /^Confirm this page/ })).toBeEnabled();
+  await walk.getByRole('button', { name: /^Confirm this page/ }).click();
+
+  for (let n = 7; n <= 10; n++) {
+    await expect(walk).toContainText(`page ${n} of 10`);
+    await walk.getByRole('button', { name: /^Confirm this page/ }).click();
+  }
+  await expect(page.getByRole('heading', { level: 1, name: 'Review and publish' })).toBeVisible();
+  await expect(page.getByText('Every page confirmed')).toBeVisible();
+
+  // A change after confirming asks for that page again.
+  await openTab(page, 'Brief');
+  await page.getByRole('textbox', { name: 'Participants' }).fill('New managers');
+  await openTab(page, 'Review and publish');
+  await expect(pages.getByRole('listitem').filter({ hasText: 'Brief' })).toContainText('Changed since you confirmed it');
+  await expect(page.getByRole('button', { name: 'Publish', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Continue: Brief' }).click();
+  await walk.getByRole('button', { name: /^Confirm this page/ }).click();
+  await openTab(page, 'Review and publish');
+  await page.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(page.getByText('Version 1 published')).toBeVisible();
 });

@@ -6,8 +6,11 @@ import { sampleAgreement, SCORING_AGREEMENT, validateDraft, validationOf, type I
 import { BUTTON, CARD, FOCUS, Field, Icon, TextArea, TextInput } from '../../kit';
 import { download, playDraft } from '../../play';
 import { navigate } from '../../route';
+import { labelOf } from '../../sections';
 import { TabBody, TabHead } from '../Workspace';
 import { ScormPackage } from './ScormPackage';
+import { isWalkPage, walkOf, WALK_PAGES } from '../../../model/walkthrough';
+import { KoraIssue, openPage, pageStateText } from '../WalkPanel';
 
 export interface Check { id: string; title: string; detail: ReactNode; state: 'passed' | 'failed' | 'advisory'; blocking: boolean; go?: Tab }
 
@@ -52,7 +55,8 @@ export function checksOf(d: AuthorDraft, v: Validation = validationOf(d)): Check
   ];
 }
 
-const open = (tab: Tab) => navigate({ page: 'workspace', tab });
+/** Opens where an issue is fixed: a page of the walkthrough opens with Kora's explanation of it (D244). */
+const open = (tab: Tab) => (isWalkPage(tab) ? openPage(tab) : navigate({ page: 'workspace', tab }));
 
 /**
  * Review and publish (docs/design/genie/Publish, D105, D131): every check, run on the draft as it is now, then
@@ -82,10 +86,40 @@ export default function Publish() {
   const failing = checks.filter(c => c.state === 'failed').length;
   const version = d.publish.version + 1;
   const syn = v.synthetic;
+  const walk = useMemo(() => walkOf(d, v), [d, v]);
+  const walkId = useId();
   return (
     <TabBody label="Review and publish" head={<TabHead title="Review and publish" actions={<button type="button" className={BUTTON.secondary} onClick={() => setRan(r => r + 1)}>Run checks again</button>}>
       GenieKreator ran every check on this draft. {passed} passed{failing ? `, ${failing} to fix` : ''}{advisory ? `, ${advisory} advisory` : ''}.
     </TabHead>}>
+      <section aria-labelledby={`${walkId}-title`} className={`${CARD} mb-4 flex flex-col gap-3 p-5`}>
+        <div className="flex flex-wrap items-center gap-3">
+          <span aria-hidden="true" className="flex size-9 flex-none items-center justify-center rounded-round bg-author-kora text-15 font-800 text-author-on-primary">K</span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <h2 id={`${walkId}-title`} className="m-0 text-18 font-800">Walk through every page with Kora</h2>
+            <span className="text-13 text-author-body">Before you publish, go through each page in order. Kora checks it, explains anything that would stop the simulation from running and how to fix it, and you confirm the page. {walk.confirmed} of {WALK_PAGES.length} confirmed.</span>
+          </span>
+          {walk.next
+            ? <button type="button" className={BUTTON.primary} onClick={() => openPage(walk.next!)}>{walk.confirmed ? `Continue: ${labelOf(walk.next)}` : 'Start the walkthrough'}</button>
+            : <span className="text-14 font-800 text-author-gain">Every page confirmed</span>}
+        </div>
+        <ol aria-label="Pages to confirm" className="m-0 grid list-none grid-cols-2 gap-x-6 p-0 max-[900px]:grid-cols-1">
+          {walk.pages.map((r, k) => (
+            <li key={r.page} className="flex min-h-11 items-center gap-3 border-b border-solid border-author-rule py-1.5">
+              <span aria-hidden="true" className={`flex size-6 shrink-0 items-center justify-center rounded-round text-12 font-800 ${r.state === 'confirmed' ? 'bg-author-gain-soft text-author-gain' : r.state === 'blocked' ? 'bg-author-need-badge text-author-need' : 'bg-author-track text-author-body'}`}>{r.state === 'confirmed' ? Icon.check(12) : k + 1}</span>
+              <span className="min-w-0 flex-1 text-14 font-700">{labelOf(r.page)}</span>
+              <span className={`text-13 ${r.state === 'confirmed' ? 'text-author-gain' : r.state === 'blocked' ? 'font-700 text-author-need' : 'text-author-body'}`}>{pageStateText(r)}</span>
+              <button type="button" className={`${BUTTON.link} text-13`} onClick={() => openPage(r.page)}>Open<span className="sr-only"> {labelOf(r.page)}</span></button>
+            </li>
+          ))}
+        </ol>
+        {walk.general.length > 0 && (
+          <div className="flex flex-col gap-2">
+            <b className="text-14">About the simulation as a whole</b>
+            <ul aria-label="What Kora found about the whole simulation" className="m-0 flex list-none flex-col gap-2 p-0">{walk.general.map(i => <KoraIssue key={i.id} issue={i} d={d} open={false} linked={i.tab !== 'publish'} />)}</ul>
+          </div>
+        )}
+      </section>
       <div className="grid grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-4 max-[1180px]:grid-cols-1">
         <section aria-label="Checks" className={`${CARD} p-5`}>
           <ul className="m-0 flex list-none flex-col p-0">
@@ -128,6 +162,11 @@ export default function Publish() {
           )}
           {done !== null && <p role="status" className="m-0 rounded-12 bg-author-gain-soft p-3 text-14 font-700 text-author-gain">Version {done} published. Download the configuration for your LMS or the server.</p>}
           <span className="flex-1" />
+          {walk.next && (
+            <p id={`${walkId}-gate`} className="m-0 text-14 font-700 text-author-need">
+              Confirm every page before you publish: {walk.confirmed} of {WALK_PAGES.length} confirmed. <button type="button" className={`${BUTTON.link} text-14`} onClick={() => openPage(walk.next!)}>Go to {labelOf(walk.next)}</button>
+            </p>
+          )}
           {blocking.length > 0 && (
             <div id={blockedId} className="flex flex-col gap-1.5">
               <p className="m-0 text-14 font-700 text-author-need">{plural(blocking.length, 'issue')} {blocking.length === 1 ? 'blocks' : 'block'} publishing. Fix the first one:</p>
@@ -143,7 +182,7 @@ export default function Publish() {
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            <button type="button" className={`${BUTTON.big} flex-1`} disabled={blocking.length > 0} aria-describedby={blocking.length ? blockedId : undefined}
+            <button type="button" className={`${BUTTON.big} flex-1`} disabled={!walk.ready} aria-describedby={[walk.next ? `${walkId}-gate` : '', blocking.length ? blockedId : ''].filter(Boolean).join(' ') || undefined}
               onClick={() => { edit(x => { x.publish.version = version; x.publish.skipTest = false; }); setDone(version); }}>
               Publish
             </button>

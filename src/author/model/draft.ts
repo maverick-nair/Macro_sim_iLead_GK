@@ -571,8 +571,10 @@ export const AuthorDraft = z.object({
   /**
    * `skipTest`: the author ticked "Publish without testing" for this version (D132): a synthetic test that has
    * not run, or not run fully, on this version is then advisory. It never covers a failed test, and it resets on publish.
+   * `reviewed` (D244): the pages the author confirmed in the publishing walkthrough, each with the page as it was
+   * then (its hash, model/walkthrough.ts). A page changed since asks to be confirmed again.
    */
-  publish: z.object({ cohort: Short, notes: Text, version: z.number().int().min(0), played: z.boolean(), skipTest: z.boolean().default(false) }),
+  publish: z.object({ cohort: Short, notes: Text, version: z.number().int().min(0), played: z.boolean(), skipTest: z.boolean().default(false), reviewed: z.record(z.string(), z.string()).default({}) }),
   marks: z.record(z.string(), z.enum(MARKS)),
   suggestions: z.array(z.object({ id: z.string(), tab: z.enum(TABS), text: Text, action: Short, done: z.boolean() })),
   /**

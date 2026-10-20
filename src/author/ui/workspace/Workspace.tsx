@@ -13,6 +13,9 @@ import { AuthorBoundary } from '../safety/Boundary';
 import { UndoControls } from '../safety/UndoControls';
 import { KoraPanel } from './KoraPanel';
 import { UpdatePrompt } from './UpdatePrompt';
+import { isWalkPage } from '../../model/walkthrough';
+import { useWalk } from './walk';
+import { WalkPanel } from './WalkPanel';
 
 /**
  * Each tab is its own chunk. A chunk that fails to load is tried once more (retryImport); when it still
@@ -96,6 +99,7 @@ export function Workspace({ tab }: { tab: Tab }) {
   const Page = Tabs[tab];
   const retryTab = () => { Tabs[tab] = lazyTab(tab); setAttempt(n => n + 1); };
   const showKora = WITH_KORA.includes(tab);
+  const walking = useWalk(w => w.active);
   useEffect(() => { if (draft.stage !== 'workspace') edit(d => { d.stage = 'workspace'; }); }, [draft.stage, edit]);
   useEffect(() => { document.title = `${NAV.find(n => n.tab === tab)!.label}, ${draft.title}: GenieKreator`; }, [tab, draft.title]);
 
@@ -152,6 +156,7 @@ export function Workspace({ tab }: { tab: Tab }) {
         {nav}
         <main className="flex min-h-0 min-w-0 flex-col bg-author-canvas">
           <UpdatePrompt />
+          {walking && isWalkPage(tab) && <WalkPanel key={`walk-${tab}`} page={tab} />}
           <AuthorBoundary key={tab} retry={retryTab}>
             <Suspense fallback={<p className="m-0 p-7 text-14 text-author-muted">Loading.</p>}>
               <Page />

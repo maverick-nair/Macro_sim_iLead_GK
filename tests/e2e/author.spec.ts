@@ -33,6 +33,18 @@ async function workspace(page: Page, tab = 'overview') {
   await expect(page.getByRole('heading', { level: 1, name: 'Overview' })).toBeVisible();
   if (tab !== 'overview') await openTab(page, tab);
 }
+/** The publishing walkthrough (D244): every page in order, each confirmed after Kora's check of it, back to Review and publish. */
+async function walkThrough(page: Page) {
+  await page.getByRole('button', { name: /^(Start the walkthrough|Continue: )/ }).click();
+  const walk = page.getByRole('region', { name: 'Publishing walkthrough' });
+  for (let n = 1; n <= 10; n++) {
+    await expect(walk).toContainText(`page ${n} of 10`);
+    await walk.getByRole('button', { name: /^(Confirm this page|Still good, continue)/ }).click();
+  }
+  await expect(page.getByRole('heading', { level: 1, name: 'Review and publish' })).toBeVisible();
+  await expect(page.getByText('Every page confirmed')).toBeVisible();
+}
+
 async function openTab(page: Page, name: string) {
   await page.getByRole('navigation', { name: 'Sections' }).getByRole('link', { name: new RegExp(name, 'i') }).click();
 }
@@ -226,6 +238,7 @@ test('renamed and added styles flow into actions and the played storyline; edits
   await expect(page.getByRole('button', { name: 'Publish', exact: true })).toBeDisabled();
   await page.getByRole('checkbox', { name: 'Publish without testing' }).check();
   await expect(page.getByRole('banner').getByText('Ready to publish')).toBeVisible();
+  await walkThrough(page);
   await page.getByRole('button', { name: 'Publish', exact: true }).click();
   await expect(page.getByText('Version 1 published')).toBeVisible();
 
