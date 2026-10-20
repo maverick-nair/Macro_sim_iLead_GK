@@ -320,7 +320,7 @@ export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): Au
     },
     brand: { from: 'knolskape', name: ctx.company, logo: '', ...DEFAULT_BRAND_COLORS, font: 'Manrope', look: 'light', preview: 'board' },
     lms: { ...DEFAULT_LMS_DRAFT },
-    publish: { cohort: '', notes: '', version: 0, played: false, skipTest: false },
+    publish: { cohort: '', notes: '', version: 0, played: false, skipTest: false, reviewed: {} },
     marks: {},
     suggestions: [],
     calibration: null
