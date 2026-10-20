@@ -2,6 +2,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useId, useState, type ReactNode } from 'react';
 import { useI18n } from '../../i18n';
 import type { SubPeriodUnit } from '../action/days';
+import { MailIcon } from './MailButton';
 import { SENDER_TONE, SenderFace, type InboxSender } from './sender';
 
 /** One message in the mailbox, read or not. */
@@ -78,9 +79,6 @@ const focus = 'focus-visible:outline-3 focus-visible:outline-offset-2 focus-visi
 const pill = `inline-flex min-h-10 cursor-pointer items-center rounded-4 px-4 text-14 font-600 ${focus}`;
 const link = `inline-flex min-h-6 cursor-pointer items-center rounded-4 border-0 bg-transparent p-0 text-13 font-600 text-fg-link hover:text-fg-link-hover hover:underline ${focus}`;
 
-const MailIcon = () => (
-  <svg className="size-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m3 7 9 6 9-6" /></svg>
-);
 const SparkIcon = () => (
   <svg className="size-4.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6" /></svg>
 );
@@ -90,24 +88,6 @@ function Face({ sender, size = 'md' }: { sender: InboxSender; size?: 'md' | 'lg'
     <span className={`flex flex-none items-center justify-center overflow-hidden rounded-round font-600 text-button-on-solid ${size === 'lg' ? 'size-12 text-14' : 'size-9 text-11'} ${SENDER_TONE[sender.kind]}`}>
       <SenderFace sender={sender} />
     </span>
-  );
-}
-
-/** The envelope in the top bar (D242), with the unread count as a badge. */
-export function MailButton({ unread, open, onOpen }: { unread: number; open: boolean; onOpen: () => void }) {
-  const { t, number } = useI18n();
-  return (
-    <button type="button" onClick={onOpen} aria-haspopup="dialog" aria-expanded={open} aria-label={t('inbox.open', { count: unread })} data-tour="inbox" data-mail-button=""
-      className={`relative flex size-11 flex-none cursor-pointer items-center justify-center rounded-4 border border-line-strong bg-transparent p-0 text-fg-primary hover:bg-surface-raised ${focus}`}>
-      <MailIcon />
-      {unread > 0 && (
-        // Keyed by the count, so the badge pulses again each time a message arrives.
-        <span key={unread} aria-hidden="true" data-mail-badge=""
-          className="absolute -top-1.5 -end-1.5 flex h-5 min-w-5 animate-(--il-mail-badge-enter) text-large:h-auto items-center justify-center rounded-round bg-status-attention px-1 font-mono text-11 font-600 text-fg-on-accent">
-          {number(unread)}
-        </span>
-      )}
-    </button>
   );
 }
 
