@@ -5,6 +5,7 @@ import { EngineError, parse, type EngineClient } from './client';
 import { loadEngineCopy } from '../i18n/locales';
 import type { Evaluator } from './sim/evaluator';
 import { createEngine, IntentError } from './sim/engine';
+import { salesElevatorStages } from './storylines/salesElevatorStages';
 import salesElevator from './storylines/sales-elevator.json';
 import clientTrust from './storylines/client-trust.json';
 import { withSixStyles } from './storylines/sixStyles';
@@ -63,7 +64,8 @@ export function defaultStoryline(lens?: string | null): StorylineConfig {
   }
   const q = new URLSearchParams(globalThis.location?.search ?? '');
   // `?storyline=client-trust` plays the Client Trust demo (D141): dynamics, business variables and choice events.
-  const sample = (q.get('storyline') === 'client-trust' ? clientTrust : salesElevator) as unknown as StorylineInput;
+  // `?model=stages` plays Sales Elevator one stage each, as before the full cycle model (D243), for the stage model's tests.
+  const sample = (q.get('storyline') === 'client-trust' ? clientTrust : q.get('model') === 'stages' ? salesElevatorStages : salesElevator) as unknown as StorylineInput;
   // `?lens=six_styles` plays it with the Six Leadership Styles test lens (D70), for demos and tests.
   const base = lens === 'six_styles' ? withSixStyles(sample) : sample;
   // `?purpose=assessment` plays it as an assessment, so the report carries verdicts (D75).

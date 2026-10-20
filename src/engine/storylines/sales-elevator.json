@@ -1539,8 +1539,8 @@
     },
     {
       "key": "swap",
-      "name": "Swap roles",
-      "description": "Move people between stages, then explain the decision to them.",
+      "name": "Change focus",
+      "description": "Point someone's selling at the stage where it counts most, or trade focus between two people, then talk it through.",
       "scope": "member",
       "kind": "hybrid",
       "format": "roleplay",
@@ -1554,7 +1554,7 @@
       "options": [
         {
           "key": "reassign",
-          "label": "Reassign role",
+          "label": "Change focus",
           "effects": {
             "m0": [
               0,
@@ -1580,7 +1580,7 @@
         },
         {
           "key": "swap",
-          "label": "Swap role",
+          "label": "Swap focus",
           "effects": {
             "m0": [
               0,

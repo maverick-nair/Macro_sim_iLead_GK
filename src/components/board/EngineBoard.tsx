@@ -593,7 +593,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const listNames = (xs: string[]) => (xs.length > 1 ? t('action.list.pair', { rest: xs.slice(0, -1).join(', '), last: xs[xs.length - 1] }) : xs[0] ?? '');
     const list = listNames(f.picks.map(id => first(member(id)?.name ?? '')));
     const cost = hireFree(fa) ? 0 : choice?.option.cost ?? fa.cost;
-    const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
+    // Selling end to end (D243), a move is a change of focus.
+    const label = (c: Choice) => (c.stage ? t(fa.rule === 'assess' ? 'board.option.assessFor' : v.salesModel === 'fullCycle' ? 'board.option.focusOn' : 'board.option.moveTo', { stage: stageName(c.stage) }) : c.option.label);
     const detail = (c: Choice) => [
       c.stageBlocked ? blockLine(c.stageBlocked) : '',
       c.option.blocked ? blockLine(c.option.blocked) : '',
