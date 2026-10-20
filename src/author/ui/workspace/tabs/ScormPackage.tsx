@@ -85,7 +85,7 @@ export function ScormPackage({ d }: { d: AuthorDraft }) {
   return (
     <section aria-labelledby="scorm-title" className={`${CARD} mt-4 flex flex-col gap-4 p-6`}>
       <div className="flex flex-col gap-1">
-        <h2 id="scorm-title" className="m-0 text-22 font-800">{t('lms.scorm.title')}</h2>
+        <h2 id="scorm-title" className="m-0 font-serif text-26 leading-(--il-canvas-leading-title) font-400">{t('lms.scorm.title')}</h2>
         <p className="m-0 text-14 text-author-body">{t('lms.scorm.intro')}</p>
         <p className="m-0 text-13 text-author-muted">{t('lms.scorm.from', { version, title: d.title })}</p>
       </div>

@@ -30,7 +30,7 @@ export function DraftReady() {
         <main className="mx-auto grid w-full max-w-260 grid-cols-2 gap-6 px-6 py-8 max-[1000px]:grid-cols-1 short:py-5">
           <section aria-labelledby="ready-title" className={`${CARD} flex flex-col gap-5 p-8 max-[1000px]:p-6`}>
             <span className={`${EYEBROW} text-author-kora`}>First draft ready</span>
-            <h1 id="ready-title" ref={heading} tabIndex={-1} className="m-0 text-36 leading-[1.1] font-800 outline-none short:text-30">
+            <h1 id="ready-title" ref={heading} tabIndex={-1} className="m-0 font-display text-40 leading-(--il-canvas-leading-heading) font-400 outline-none short:text-34">
               Your simulation is playable. {needs.length ? `${words[needs.length] ?? needs.length} thing${needs.length === 1 ? '' : 's'} need${needs.length === 1 ? 's' : ''} you before you publish.` : 'Nothing needs you before you publish.'}
             </h1>
             <p className="m-0 text-16 leading-[1.5] text-author-body">I built it from your {draft.chat.asked.length} answers{draft.chat.brief.documents.length ? ' and the documents you shared' : ''}. Everything is editable, and you can regenerate any section without starting over.</p>
@@ -57,7 +57,7 @@ export function DraftReady() {
             <p className="m-0 text-13 text-author-muted">The draft is already playable. A preview lets you feel the story and the team before you refine them; it uses placeholders for the items that need you and saves no scores.</p>
           </section>
           <section aria-labelledby="built" className={`${CARD} flex flex-col gap-1 p-7`}>
-            <h2 id="built" className="m-0 mb-2 text-18 font-800">What I built</h2>
+            <h2 id="built" className="m-0 mb-2 font-serif text-22 leading-(--il-canvas-leading-title) font-400">What I built</h2>
             <ol className="m-0 flex list-none flex-col p-0">
               {NAV.filter(n => n.n && n.n <= 9).map(n => {
                 const st = statusOf(draft, n.tab);

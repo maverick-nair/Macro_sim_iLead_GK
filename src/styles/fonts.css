@@ -9,7 +9,7 @@
 @font-face{font-family:'Geist Mono';src:url('/fonts/GeistMono-SemiBold.woff2') format('woff2');font-weight:600 700;font-style:normal;font-display:swap}
 @font-face{font-family:'Newsreader Display';src:url('/fonts/Newsreader-Display.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:'Newsreader';src:url('/fonts/Newsreader-Text.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
-/* Manrope, the Genie typeface: GenieKreator's own, and a font a client theme may name (src/theme/schema.ts). */
+/* Manrope, the Genie typeface: a font a client theme may name (src/theme/schema.ts). GenieKreator's own chrome is Geist (D236). */
 @font-face{font-family:'Manrope';src:url('/fonts/Manrope-ExtraLight.woff2') format('woff2');font-weight:200;font-style:normal;font-display:swap}
 @font-face{font-family:'Manrope';src:url('/fonts/Manrope-Light.woff2') format('woff2');font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:'Manrope';src:url('/fonts/Manrope-Regular.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}

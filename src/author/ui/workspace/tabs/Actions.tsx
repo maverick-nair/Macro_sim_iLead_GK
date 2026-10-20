@@ -81,8 +81,8 @@ export default function Actions() {
         {a && (
           <section aria-labelledby="action-title" className={`${CARD} flex flex-col gap-4 p-5`}>
             <div className="flex flex-wrap items-start gap-3">
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
-                <h2 id="action-title" className="m-0 text-22 font-800">{a.name}</h2>
+              <div className="flex min-w-48 flex-1 flex-col gap-1">
+                <h2 id="action-title" className="m-0 font-serif text-26 leading-(--il-canvas-leading-title) font-400">{a.name}</h2>
                 <span className="text-13 text-author-body">{a.origin === 'yours' ? 'Added for this story' : 'From the action library'} &middot; {a.plays === 'static' ? 'options' : 'goal and scoring'} written for this story by Kora</span>
               </div>
               {a.core ? <Badge kind="core">Core action &middot; always included</Badge> : <span className="flex items-center gap-2 text-14 font-700"><Toggle label={`Use ${a.name}`} checked={a.enabled} onChange={v => set({ enabled: v })} />Optional &middot; in this simulation</span>}

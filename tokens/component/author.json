@@ -1,0 +1,25 @@
+{
+  "$description": "GenieKreator's type and shape in the canvas look (D236). src/author/author.css folds the author's weight and radius steps onto these inside .il-genie, so its classes keep their names.",
+  "author": {
+    "weight": {
+      "strong": {
+        "value": "{font.weight.600}",
+        "$description": "Where the author's classes say 700 or 800: Geist reads heavier than Manrope did, and the canvas sets its emphasis at 600"
+      }
+    },
+    "radius": {
+      "card": {
+        "value": "0px",
+        "$description": "Cards, panels and dialogs (the author's 14px and up): square, as the canvas's cards"
+      },
+      "control": {
+        "value": "{radius.4}",
+        "$description": "Buttons, fields, segments, rows and insets (the author's 6px to 12px): the canvas's 4px controls"
+      },
+      "pill": {
+        "value": "{radius.4}",
+        "$description": "Chips, badges, bars and switches the author drew as pills"
+      }
+    }
+  }
+}
