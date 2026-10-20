@@ -10,7 +10,7 @@ import { checkBadges } from './score';
 import { finishStakeholder } from './stakeholders';
 import { attend, noteRepeat, noteUse, onAction, realismOf, repeatOf, sponsorContact, type Repeat } from './realism';
 import {
-  addEffects, addMessage, capacityLeft, effectChanges, firstName, fit, misread, keepPromises, log, member, needed, netChanges, nextId, person, record, spend, sponsorChange,
+  addEffects, addMessage, capacityLeft, effectChanges, exchangeOf, firstName, fit, misread, keepPromises, log, member, needed, netChanges, nextId, person, record, spend, sponsorChange,
   styleName, stageName, trustChange, YOU
 } from './sim';
 import { msg, type Copy, type Msg } from '../copy';
@@ -596,6 +596,7 @@ function liveRecord(sim: Sim, it: Interaction, ev: Evaluation, changes: Change[]
     styleShown: tagged ? ev.styleUsed : null,
     skills: ev.skills ?? [],
     quotes: mine.map(t => String(t.text)),
+    exchange: exchangeOf(it.turns),
     talk: { you: words(said), npc: theirs.reduce((n, t) => n + (typeof t.text === 'string' ? words(t.text) : 0), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition, spoken: mine.some(t => t.voice) },
     concern: !!ev.flags.concernSurfaced,
     impact: [...people.values()].reduce((a, b) => a + b, 0),

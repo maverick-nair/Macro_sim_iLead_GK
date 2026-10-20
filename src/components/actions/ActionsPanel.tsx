@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n';
 import { Heading, type HeadingLevel } from '../Heading';
 import { ActionTile, type ActionTileProps } from '../action/ActionTile';
 import { SubPeriodUnitContext, useDays, type PeriodUnit, type SubPeriodUnit } from '../action/days';
+import { INTENTS } from './intent';
 
 export interface ActionsPanelMember {
   /** First name of the selected person: "For Kent". */
@@ -12,6 +13,7 @@ export interface ActionsPanelMember {
   img?: string;
   /** Opens their profile, from the panel's header as the canvas has it. */
   onProfile?: () => void;
+  /** Their actions. Tiles that carry an `intent` are grouped by it, Talk, Develop then Decide (D234). */
   tiles: ActionTileProps[];
 }
 
@@ -146,7 +148,17 @@ export function ActionsPanel({ capacityLeft, capacity, subPeriodUnit, periodUnit
               )}
               {member ? (
                 <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-                  <ul aria-label={t('actions.member', { name: member.firstName })} className="m-0 list-none p-0">{member.tiles.map(subRow)}</ul>
+                  {member.tiles.some(a => a.intent) ? (
+                    // Grouped by what each action is for (D234), in reading order, so Tab walks Talk, Develop, Decide.
+                    <ul aria-label={t('actions.member', { name: member.firstName })} className="m-0 list-none p-0">
+                      {INTENTS.map(intent => ({ intent, tiles: member.tiles.filter(a => (a.intent ?? 'decide') === intent) })).filter(g => g.tiles.length).map(g => (
+                        <li key={g.intent} data-intent={g.intent}>
+                          <span aria-hidden="true" className={`block px-3.5 pt-2.5 pb-0.5 ${section}`}>{t('actions.group', { intent: g.intent })}</span>
+                          <ul aria-label={t('actions.group', { intent: g.intent })} className="m-0 list-none p-0">{g.tiles.map(subRow)}</ul>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <ul aria-label={t('actions.member', { name: member.firstName })} className="m-0 list-none p-0">{member.tiles.map(subRow)}</ul>}
                 </div>
               ) : (
                 // Nothing to press here: when the outcome band leaves the panel short, the words scroll, and the

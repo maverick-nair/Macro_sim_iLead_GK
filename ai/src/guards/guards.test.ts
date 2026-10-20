@@ -57,6 +57,12 @@ describe('NPC reply checks', () => {
     expect(splitSignals('Fine. [[signals reveal=yes end=no]]')).toEqual({ text: 'Fine.', signals: { reveal: true, end: false }, tagged: true });
     expect(splitSignals('Fine.')).toEqual({ text: 'Fine.', signals: { reveal: false, end: false }, tagged: false });
   });
+
+  it('reads the stance from the tag, and only a known one (D233)', () => {
+    expect(splitSignals('Okay. [[signals reveal=no end=no stance=Opening]]').signals).toStrictEqual({ reveal: false, end: false, stance: 'opening' });
+    expect(splitSignals('Okay. [[signals reveal=no end=no stance=furious]]').signals).toStrictEqual({ reveal: false, end: false });
+    expect(splitSignals('Okay. [[signals reveal=no end=no]]').signals).toStrictEqual({ reveal: false, end: false });
+  });
 });
 
 describe('the reply filter', () => {

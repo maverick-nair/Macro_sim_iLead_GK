@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import { useI18n } from '../../i18n';
+import type { Intent } from '../actions/intent';
 import { useDays } from './days';
 
 /** Live opens a conversation, hybrid is a decision then a conversation, static is an instant decision. */
@@ -35,6 +36,26 @@ export interface ActionTileProps {
   layout?: 'row' | 'panel' | 'compact';
   /** The engine's action key, on the tile as `data-action` for the demo's tips (D92). */
   actionKey?: string;
+  /** What the action is for: the Actions panel groups by it (D234). */
+  intent?: Intent;
+  /** Why it suits this person now, worded (D234). Only on an action that can be taken. */
+  hint?: string;
+}
+
+/**
+ * The "Fits now" mark and its reason (D234). Shown hidden from the accessible name, so every tile keeps its name; the
+ * tile reads the reason as its description from the hidden line `id`.
+ */
+export function FitHint({ id, hint }: { id: string; hint: string }) {
+  const { t } = useI18n();
+  return (
+    <>
+      <span aria-hidden="true" data-fits-now="" className="flex items-baseline gap-1.5 text-12 text-pretty text-fg-primary">
+        <b className="flex-none rounded-4 bg-accent-soft px-1.5 text-11 font-600">{t('actions.fit')}</b>{hint}
+      </span>
+      <span id={id} hidden>{t('actions.fit.line', { reason: hint })}</span>
+    </>
+  );
 }
 
 const MicIcon = () => (
@@ -68,11 +89,14 @@ export function actionSub(t: ReturnType<typeof useI18n>['t'], fmt: (n: number) =
   return t('action.sub', { kind });
 }
 
-export function ActionTile({ name, kind, days, duration, block, perk, onPick, layout = 'panel', actionKey }: ActionTileProps) {
+export function ActionTile({ name, kind, days, duration, block, perk, onPick, layout = 'panel', actionKey, hint }: ActionTileProps) {
   const { t } = useI18n();
   const fmt = useDays();
   const reasonId = useId();
+  const hintId = useId();
   const disabled = !!block;
+  // A hint never sits on a blocked action (D234); the row is the only layout that shows one.
+  const fit = layout === 'row' && !disabled && hint ? hint : undefined;
   const sub = actionSub(t, fmt, { kind, duration, block, perk });
   // "Planned today" is its own explanation; the other reasons are repeated as a tooltip.
   const tooltip = block && block.reason !== 'planned' ? sub : undefined;
@@ -94,11 +118,12 @@ export function ActionTile({ name, kind, days, duration, block, perk, onPick, la
 
   if (layout === 'row') {
     return (
-      <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : undefined} title={tooltip} data-action={actionKey} data-trace={actionKey ? `actions.${actionKey}` : undefined}
-        className={`flex min-h-11 w-full items-center gap-2.5 border-0 border-b border-solid border-line-default bg-transparent px-3.5 py-0.25 text-start ${tone} ${disabled ? '' : 'hover:bg-surface-raised'} ${focus}`}>
+      <button type="button" onClick={pick} aria-disabled={disabled || undefined} aria-describedby={disabled ? reasonId : fit ? hintId : undefined} title={tooltip} data-action={actionKey} data-trace={actionKey ? `actions.${actionKey}` : undefined}
+        className={`flex min-h-11 w-full items-center gap-2.5 border-0 border-b border-solid border-line-default bg-transparent px-3.5 text-start ${fit ? 'py-1.5' : 'py-0.25'} ${tone} ${disabled ? '' : 'hover:bg-surface-raised'} ${focus}`}>
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="text-14 font-500">{name}</span>
           <span id={reasonId} className={`truncate text-12 ${perk && !block ? 'font-600 text-status-gain' : 'text-fg-body'}`}>{sub}</span>
+          {fit && <FitHint id={hintId} hint={fit} />}
         </span>
         <span data-tour="action-cost" className="font-mono text-12 whitespace-nowrap text-fg-body">{fmt(days)}</span>
       </button>

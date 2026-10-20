@@ -107,7 +107,7 @@ export default function Publish() {
           </ul>
         </section>
         <section aria-labelledby="publish-title" className={`${CARD} flex flex-col gap-4 p-6`}>
-          <h2 id="publish-title" className="m-0 text-22 font-800">Publish version {version}</h2>
+          <h2 id="publish-title" className="m-0 font-serif text-26 leading-(--il-canvas-leading-title) font-400">Publish version {version}</h2>
           <Field label="First cohort" optional>{id => <TextInput id={id} value={d.publish.cohort} placeholder={`${d.story.company.name}, new managers`} onChange={e => edit(x => { x.publish.cohort = e.target.value; })} />}</Field>
           <Field label="What changed in this version" optional>{id => <TextArea id={id} rows={3} value={d.publish.notes} placeholder="First release." onChange={e => edit(x => { x.publish.notes = e.target.value; })} />}</Field>
           <div className="flex flex-col gap-1 rounded-12 bg-author-track p-4">

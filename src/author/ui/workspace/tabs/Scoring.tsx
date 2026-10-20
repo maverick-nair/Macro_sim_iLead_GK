@@ -139,7 +139,7 @@ export default function Scoring() {
       <div className="flex flex-col gap-4">
         <div className="grid grid-cols-2 gap-4 max-[1180px]:grid-cols-1">
           <section className={`${CARD} flex flex-col gap-3 p-5`} aria-labelledby="purpose">
-            <CardHead id="purpose" title={<>Purpose <span className="text-13 font-700 text-author-decline">Required</span></>}><MarkOf path="brief.purpose" /></CardHead>
+            <CardHead id="purpose" title={<>Purpose <span className="font-sans text-12 font-700 text-author-decline">Required</span></>}><MarkOf path="brief.purpose" /></CardHead>
             <Segmented label="Purpose" value={d.brief.purpose} onChange={v => edit(x => { x.brief.purpose = v; }, 'brief.purpose')} options={[{ value: 'development', label: 'Development' }, { value: 'assessment', label: 'Assessment' }]} />
             <p className="m-0 text-14 text-author-body">Development reports frame findings as next steps. Assessment adds verdicts against a bar.</p>
           </section>
@@ -153,7 +153,7 @@ export default function Scoring() {
         </div>
         <section aria-labelledby="samples" className={`flex flex-col gap-3 rounded-16 border border-solid p-5 ${answered.length < s.samples.length ? 'border-author-need-line bg-author-need-field' : 'border-author-line bg-author-surface'}`}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 id="samples" className={`m-0 text-17 font-800 ${answered.length < s.samples.length ? 'text-author-need' : ''}`}>{answered.length < s.samples.length ? `Needs you: check ${s.samples.length} sample answers` : 'Sample answers checked'}</h2>
+            <h2 id="samples" className={`m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400 ${answered.length < s.samples.length ? 'text-author-need' : ''}`}>{answered.length < s.samples.length ? `Needs you: check ${s.samples.length} sample answers` : 'Sample answers checked'}</h2>
             <span className="text-14 text-author-body">So scoring matches your judgment. {agreed} of {s.samples.length} agreed{reasoned ? `, ${reasoned} disagreed with your reason` : ''}.</span>
           </div>
           <table className="w-full border-collapse text-14">

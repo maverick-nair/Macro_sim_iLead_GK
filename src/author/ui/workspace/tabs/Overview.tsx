@@ -49,7 +49,7 @@ export default function Overview() {
         {needs.length > 0 && (
           <section aria-labelledby="needs-title" className="flex flex-col gap-3 rounded-16 border border-solid border-author-need-line bg-author-need-field p-5">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <h2 id="needs-title" className="m-0 text-18 font-800 text-author-need">Needs you &middot; {needs.length}</h2>
+              <h2 id="needs-title" className="m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400 text-author-need">Needs you &middot; {needs.length}</h2>
               <span className="text-13 text-author-need">Required before publishing</span>
             </div>
             <div className="grid grid-cols-2 gap-3 max-[1180px]:grid-cols-1">

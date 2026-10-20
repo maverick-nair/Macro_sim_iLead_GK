@@ -42,6 +42,17 @@
     { "fg": "color.report.chart.reference", "bg": ["color.surface.card", "color.surface.solid", "color.report.chart.cell"], "min": 3, "why": "Report chart, targets, ideal markers and axes, on the web card, the white print page and the used vs needed grid cells" },
     { "fg": "color.report.chart.attention", "bg": ["color.surface.card", "color.surface.solid", "color.report.chart.cell"], "min": 3, "why": "Report chart, the hatched bottleneck stage, on the web card, the white print page and the used vs needed grid cells" },
     { "fg": "color.fg.primary", "bg": ["color.surface.solid", "color.report.chart.cell"], "min": 4.5, "why": "Report chart labels and table text on the print page and in grid cells" },
-    { "fg": "color.fg.secondary", "bg": ["color.surface.solid", "color.report.chart.cell"], "min": 4.5, "why": "Report chart labels and table text on the print page and in grid cells" }
+    { "fg": "color.fg.secondary", "bg": ["color.surface.solid", "color.report.chart.cell"], "min": 4.5, "why": "Report chart labels and table text on the print page and in grid cells" },
+
+    { "fg": "color.author.line-control", "bg": ["color.author.surface", "color.author.canvas"], "min": 3, "why": "GenieKreator in the canvas look (D236): field, button and chip borders, the switch when off" },
+    { "fg": "color.author.primary", "bg": ["color.author.surface", "color.author.canvas", "color.author.track", "color.author.primary-faint"], "min": 3, "why": "GenieKreator: focus rings, the selected card's border, the switch when on (D236)" },
+    { "fg": "color.author.kora", "bg": ["color.author.surface", "color.author.ai-field"], "min": 3, "why": "GenieKreator: Kora's panel borders and the dashed Suggestion outline (D236)" },
+    { "fg": "color.author.surface", "bg": ["color.author.line-control", "color.author.primary"], "min": 3, "why": "GenieKreator: the switch's knob, off and on (D236)" },
+    { "fg": "color.author.on-primary", "bg": ["color.author.primary-hover"], "min": 4.5, "why": "GenieKreator: a primary button's label while hovered (D236)" },
+    { "fg": "color.author.ink", "bg": ["color.author.you-badge", "color.author.gain-soft", "color.author.need-badge", "color.author.decline-soft", "color.author.yours-soft"], "min": 4.5, "why": "GenieKreator: values inside status fills (D236)" },
+    { "fg": "color.author.body", "bg": ["color.author.ai-field", "color.author.need-field", "color.author.primary-soft", "color.author.primary-faint"], "min": 4.5, "why": "GenieKreator: running text inside Kora's, Needs you and selected blocks (D236)" },
+    { "fg": "color.author.label", "bg": ["color.author.ai-field", "color.author.need-field", "color.author.primary-soft", "color.author.primary-faint"], "min": 4.5, "why": "GenieKreator: field labels inside Kora's, Needs you and selected blocks (D236)" },
+    { "fg": "color.author.muted", "bg": ["color.author.need-field", "color.author.primary-soft", "color.author.primary-faint", "color.author.you-badge"], "min": 4.5, "why": "GenieKreator: hints and metadata inside Needs you and selected blocks (D236)" },
+    { "fg": "color.author.ai", "bg": ["color.author.track"], "min": 4.5, "why": "GenieKreator: Kora's words on a quiet row (D236)" }
   ]
 }

@@ -72,6 +72,15 @@ export const PAIRS: ContrastPair[] = [
  },
  {
   "min": 4.5,
+  "fg": "color.author.kora",
+  "bg": [
+   "color.author.surface",
+   "color.author.canvas",
+   "color.author.ai-field"
+  ]
+ },
+ {
+  "min": 4.5,
   "fg": "color.author.ai",
   "bg": [
    "color.author.surface",
@@ -482,6 +491,105 @@ export const PAIRS: ContrastPair[] = [
   ],
   "min": 4.5,
   "why": "Report chart labels and table text on the print page and in grid cells"
+ },
+ {
+  "fg": "color.author.line-control",
+  "bg": [
+   "color.author.surface",
+   "color.author.canvas"
+  ],
+  "min": 3,
+  "why": "GenieKreator in the canvas look (D236): field, button and chip borders, the switch when off"
+ },
+ {
+  "fg": "color.author.primary",
+  "bg": [
+   "color.author.surface",
+   "color.author.canvas",
+   "color.author.track",
+   "color.author.primary-faint"
+  ],
+  "min": 3,
+  "why": "GenieKreator: focus rings, the selected card's border, the switch when on (D236)"
+ },
+ {
+  "fg": "color.author.kora",
+  "bg": [
+   "color.author.surface",
+   "color.author.ai-field"
+  ],
+  "min": 3,
+  "why": "GenieKreator: Kora's panel borders and the dashed Suggestion outline (D236)"
+ },
+ {
+  "fg": "color.author.surface",
+  "bg": [
+   "color.author.line-control",
+   "color.author.primary"
+  ],
+  "min": 3,
+  "why": "GenieKreator: the switch's knob, off and on (D236)"
+ },
+ {
+  "fg": "color.author.on-primary",
+  "bg": [
+   "color.author.primary-hover"
+  ],
+  "min": 4.5,
+  "why": "GenieKreator: a primary button's label while hovered (D236)"
+ },
+ {
+  "fg": "color.author.ink",
+  "bg": [
+   "color.author.you-badge",
+   "color.author.gain-soft",
+   "color.author.need-badge",
+   "color.author.decline-soft",
+   "color.author.yours-soft"
+  ],
+  "min": 4.5,
+  "why": "GenieKreator: values inside status fills (D236)"
+ },
+ {
+  "fg": "color.author.body",
+  "bg": [
+   "color.author.ai-field",
+   "color.author.need-field",
+   "color.author.primary-soft",
+   "color.author.primary-faint"
+  ],
+  "min": 4.5,
+  "why": "GenieKreator: running text inside Kora's, Needs you and selected blocks (D236)"
+ },
+ {
+  "fg": "color.author.label",
+  "bg": [
+   "color.author.ai-field",
+   "color.author.need-field",
+   "color.author.primary-soft",
+   "color.author.primary-faint"
+  ],
+  "min": 4.5,
+  "why": "GenieKreator: field labels inside Kora's, Needs you and selected blocks (D236)"
+ },
+ {
+  "fg": "color.author.muted",
+  "bg": [
+   "color.author.need-field",
+   "color.author.primary-soft",
+   "color.author.primary-faint",
+   "color.author.you-badge"
+  ],
+  "min": 4.5,
+  "why": "GenieKreator: hints and metadata inside Needs you and selected blocks (D236)"
+ },
+ {
+  "fg": "color.author.ai",
+  "bg": [
+   "color.author.track"
+  ],
+  "min": 4.5,
+  "why": "GenieKreator: Kora's words on a quiet row (D236)"
  }
 ];
 
@@ -518,24 +626,24 @@ export const NODES: Record<string, TokenNode> = {
   "themable": true
  },
  "color.author.ai": {
-  "light": "{color.gk.teal-700}",
-  "dark": "{color.gk.teal-700}"
+  "light": "{color.gk.mint-700}",
+  "dark": "{color.gk.mint-700}"
  },
  "color.author.ai-badge": {
-  "light": "{color.gk.teal-100}",
-  "dark": "{color.gk.teal-100}"
+  "light": "{color.canvas.mint-light}",
+  "dark": "{color.canvas.mint-light}"
  },
  "color.author.ai-field": {
-  "light": "{color.gk.teal-50}",
-  "dark": "{color.gk.teal-50}"
+  "light": "{color.gk.mint-50}",
+  "dark": "{color.gk.mint-50}"
  },
  "color.author.body": {
-  "light": "{color.gk.slate-600}",
-  "dark": "{color.gk.slate-600}"
+  "light": "{color.canvas.slate-700}",
+  "dark": "{color.canvas.slate-700}"
  },
  "color.author.canvas": {
-  "light": "{color.gk.canvas}",
-  "dark": "{color.gk.canvas}"
+  "light": "{color.canvas.paper}",
+  "dark": "{color.canvas.paper}"
  },
  "color.author.decline": {
   "light": "{color.gk.red-700}",
@@ -546,68 +654,76 @@ export const NODES: Record<string, TokenNode> = {
   "dark": "{color.gk.red-50}"
  },
  "color.author.gain": {
-  "light": "{color.gk.green-700}",
-  "dark": "{color.gk.green-700}"
+  "light": "{color.canvas.green-800}",
+  "dark": "{color.canvas.green-800}"
  },
  "color.author.gain-soft": {
-  "light": "{color.gk.green-50}",
-  "dark": "{color.gk.green-50}"
+  "light": "{color.canvas.green-100}",
+  "dark": "{color.canvas.green-100}"
  },
  "color.author.ink": {
-  "light": "{color.gk.ink}",
-  "dark": "{color.gk.ink}"
+  "light": "{color.canvas.ink}",
+  "dark": "{color.canvas.ink}"
  },
  "color.author.kora": {
-  "light": "{color.gk.teal-600}",
-  "dark": "{color.gk.teal-600}"
+  "light": "{color.gk.mint-600}",
+  "dark": "{color.gk.mint-600}"
  },
  "color.author.label": {
-  "light": "{color.gk.slate-700}",
-  "dark": "{color.gk.slate-700}"
+  "light": "{color.canvas.slate-700}",
+  "dark": "{color.canvas.slate-700}"
+ },
+ "color.author.line-control": {
+  "light": "{color.canvas.sand-600}",
+  "dark": "{color.canvas.sand-600}"
  },
  "color.author.muted": {
-  "light": "{color.gk.slate-500}",
-  "dark": "{color.gk.slate-500}"
+  "light": "{color.canvas.slate-600}",
+  "dark": "{color.canvas.slate-600}"
  },
  "color.author.need": {
-  "light": "{color.gk.amber-800}",
-  "dark": "{color.gk.amber-800}"
+  "light": "{color.canvas.orange-800}",
+  "dark": "{color.canvas.orange-800}"
  },
  "color.author.need-badge": {
-  "light": "{color.gk.amber-200}",
-  "dark": "{color.gk.amber-200}"
+  "light": "{color.gk.orange-100}",
+  "dark": "{color.gk.orange-100}"
  },
  "color.author.need-field": {
-  "light": "{color.gk.amber-50}",
-  "dark": "{color.gk.amber-50}"
+  "light": "{color.canvas.orange-50}",
+  "dark": "{color.canvas.orange-50}"
  },
  "color.author.on-primary": {
-  "light": "{color.gk.white}",
-  "dark": "{color.gk.white}"
+  "light": "{color.white}",
+  "dark": "{color.white}"
  },
  "color.author.primary": {
-  "light": "{color.gk.blue-600}",
-  "dark": "{color.gk.blue-600}"
+  "light": "{color.canvas.button}",
+  "dark": "{color.canvas.button}"
  },
  "color.author.primary-faint": {
-  "light": "{color.gk.blue-25}",
-  "dark": "{color.gk.blue-25}"
+  "light": "{color.gk.sky-50}",
+  "dark": "{color.gk.sky-50}"
+ },
+ "color.author.primary-hover": {
+  "light": "{color.canvas.button-hover}",
+  "dark": "{color.canvas.button-hover}"
  },
  "color.author.primary-soft": {
-  "light": "{color.gk.blue-50}",
-  "dark": "{color.gk.blue-50}"
+  "light": "{color.canvas.sky-100}",
+  "dark": "{color.canvas.sky-100}"
  },
  "color.author.surface": {
-  "light": "{color.gk.white}",
-  "dark": "{color.gk.white}"
+  "light": "{color.white}",
+  "dark": "{color.white}"
  },
  "color.author.track": {
-  "light": "{color.gk.mist}",
-  "dark": "{color.gk.mist}"
+  "light": "{color.canvas.sand-200}",
+  "dark": "{color.canvas.sand-200}"
  },
  "color.author.you-badge": {
-  "light": "{color.gk.mist-2}",
-  "dark": "{color.gk.mist-2}"
+  "light": "{color.canvas.sand-200}",
+  "dark": "{color.canvas.sand-200}"
  },
  "color.author.yours": {
   "light": "{color.gk.purple-700}",
@@ -641,6 +757,9 @@ export const NODES: Record<string, TokenNode> = {
  },
  "color.canvas.button": {
   "$value": "oklch(0.32 0.0661 257.5)"
+ },
+ "color.canvas.button-hover": {
+  "$value": "#0F2038"
  },
  "color.canvas.charcoal-600": {
   "$value": "#6B7689"
@@ -773,41 +892,17 @@ export const NODES: Record<string, TokenNode> = {
   "light": "{color.canvas.slate-600}",
   "dark": "{color.canvas.mist}"
  },
- "color.gk.amber-200": {
-  "$value": "#FCEBC8"
+ "color.gk.mint-50": {
+  "$value": "#EFFAF7"
  },
- "color.gk.amber-50": {
-  "$value": "#FFF8EB"
+ "color.gk.mint-600": {
+  "$value": "#226B5D"
  },
- "color.gk.amber-800": {
-  "$value": "#7A5300"
+ "color.gk.mint-700": {
+  "$value": "#126052"
  },
- "color.gk.blue-25": {
-  "$value": "#F5F8FF"
- },
- "color.gk.blue-50": {
-  "$value": "#EEF2FD"
- },
- "color.gk.blue-600": {
-  "$value": "#1F4FD1"
- },
- "color.gk.canvas": {
-  "$value": "#F6F7FB"
- },
- "color.gk.green-50": {
-  "$value": "#E2F3E8"
- },
- "color.gk.green-700": {
-  "$value": "#1E6B3E"
- },
- "color.gk.ink": {
-  "$value": "#141A2E"
- },
- "color.gk.mist": {
-  "$value": "#F0F2F8"
- },
- "color.gk.mist-2": {
-  "$value": "#EEF0F6"
+ "color.gk.orange-100": {
+  "$value": "#FBE2D2"
  },
  "color.gk.purple-50": {
   "$value": "#F3E8FB"
@@ -821,29 +916,8 @@ export const NODES: Record<string, TokenNode> = {
  "color.gk.red-700": {
   "$value": "#B42318"
  },
- "color.gk.slate-500": {
-  "$value": "#5F6784"
- },
- "color.gk.slate-600": {
-  "$value": "#4B5470"
- },
- "color.gk.slate-700": {
-  "$value": "#3E4763"
- },
- "color.gk.teal-100": {
-  "$value": "#DDF1F3"
- },
- "color.gk.teal-50": {
-  "$value": "#EEF8F9"
- },
- "color.gk.teal-600": {
-  "$value": "#0D7F8B"
- },
- "color.gk.teal-700": {
-  "$value": "#0B6670"
- },
- "color.gk.white": {
-  "$value": "#FFFFFF"
+ "color.gk.sky-50": {
+  "$value": "#F1F6FC"
  },
  "color.line.control": {
   "light": "{color.canvas.sand-600}",

@@ -316,7 +316,8 @@ export function reflections(sim: Sim, e: Evidence, profile: Profile, authored: {
     : gained && gained.d >= 5 ? msg('engine.report.takeaway.repeat', { name: nameOf(sim, gained.id), delta: gained.d }) : null;
   const own = [msg('engine.report.takeaway.profile', { profile, which: 'a' }), msg('engine.report.takeaway.profile', { profile, which: 'b' }), ...(person ? [person] : [])];
   const takeaways = [...own, ...authored.takeaways].slice(0, Math.max(6, own.length));
-  return { thought, takeaways };
+  // The first page's things to do (D235): the takeaway about a person, then the profile's practical one.
+  return { thought, takeaways, toDo: { person, practical: own[1] } };
 }
 
 /** Everything the report's narrative needs, from the run. */

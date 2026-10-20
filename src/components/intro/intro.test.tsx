@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import type { EngineView } from '../../engine/contract';
 import { I18nProvider } from '../../i18n';
-import { chapterAt, introLogo, introMessage, introProducts, introScreen } from './intro';
+import { captionAt, captionStart, chapterAt, introLogo, introMessage, introProducts, introScreen } from './intro';
 import { Products } from './Products';
 
 const LETTER = { welcome: ['Welcome.', 'The team is new.'], product: ['Five stages.'], targets: ['Reach the target.', 'Keep them healthy.'] };
@@ -25,6 +25,17 @@ describe('the pre-game flow (D219)', () => {
     const m = introMessage(view({ video: { src: '/v.webm', captions: '/v.vtt', transcript: ['A', 'B', 'C', 'D', 'E', 'F'] } }), LETTER);
     expect(m.video).toEqual({ src: '/v.webm', poster: null, track: '/v.vtt' });
     expect(m.chapters.map(c => c.start)).toEqual([0, 2, 4]);
+  });
+
+  it('times the captions by the captions file when it has a cue per line, else shares the length evenly (D237)', () => {
+    const starts = [0, 5, 13, 21];
+    expect([0, 4.9, 5, 12, 13, 20.9, 21, 60].map(at => captionAt(at, 4, 75, starts))).toEqual([0, 0, 1, 1, 2, 2, 3, 3]);
+    // A file whose cues do not match the lines one to one falls back to even shares.
+    expect([0, 18.7, 18.75, 74].map(at => captionAt(at, 4, 75, [0, 9]))).toEqual([0, 0, 1, 3]);
+    expect([0, 10, 74].map(at => captionAt(at, 4, 75, null))).toEqual([0, 0, 3]);
+    expect(captionAt(5, 0, 75, null)).toBe(0);
+    expect([0, 2, 3].map(i => captionStart(i, 4, 75, starts))).toEqual([0, 13, 21]);
+    expect(captionStart(2, 4, 75, null)).toBe(37.5);
   });
 
   it('takes the portfolio, logo and screens from the storyline contract when it has them, and none otherwise', () => {

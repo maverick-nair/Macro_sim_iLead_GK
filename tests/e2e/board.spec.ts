@@ -131,6 +131,28 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Set your leadership styles for week 2' })).toBeFocused();
 });
 
+test('a person\'s actions are grouped by intent, the team\'s last; no hint with tips off (D234)', async ({ page }) => {
+  await page.goto('/?start=board');
+  await setStyles(page);
+  await dismissOutcome(page);
+  await dismissEvents(page);
+  await page.getByText('Kent Goldberg', { exact: true }).click();
+  const mine = page.getByRole('list', { name: 'For Kent' });
+  await expect(mine.locator('[data-intent]')).toHaveCount(3);
+  expect(await mine.locator('[data-intent]').evaluateAll(els => els.map(e => e.getAttribute('data-intent')))).toEqual(['talk', 'develop', 'decide']);
+  await expect(mine.getByRole('list', { name: 'Talk' }).getByRole('button')).toHaveText([/^Send email/, /^Meet face to face/, /^Set goals/, /^Coach member/, /^Give feedback/]);
+  await expect(mine.getByRole('list', { name: 'Develop' }).getByRole('button')).toHaveText([/^Send for training/, /^Assess member/, /^Reward member/]);
+  await expect(mine.getByRole('list', { name: 'Decide' }).getByRole('button')).toHaveText([/^Swap roles/, /^Let go/]);
+  await expect(page.getByRole('list', { name: 'Actions for the whole team' }).getByRole('button')).toHaveText([/^Meet the team/, /^Energize the team/, /^Hire member/]);
+  // Keyboard order follows the groups: Tab from the last Talk action lands on the first Develop one.
+  await mine.getByRole('button', { name: /^Give feedback/ }).focus();
+  await page.keyboard.press('Tab');
+  await expect(mine.getByRole('button', { name: /^Send for training/ })).toBeFocused();
+  // Every flow here runs with tours and tips off, so no action is hinted.
+  await expect(page.locator('[data-fits-now]')).toHaveCount(0);
+  expect(await axe(page)).toEqual([]);
+});
+
 test('style summary: focus is trapped, the page behind is inert, Go back returns to Review', async ({ page }) => {
   await page.goto('/?start=board');
   await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });

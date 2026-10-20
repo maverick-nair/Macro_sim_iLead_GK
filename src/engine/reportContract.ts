@@ -134,7 +134,9 @@ export const ReportView = z.object({
     reconciliation: Text.nullable().default(null)
   })),
   scale: z.array(z.object({ name: Text, min: Num })),
-  moments: z.array(z.object({ id: Id, kind: z.enum(['best', 'revisit']), period: Int, memberId: Id.nullable(), title: Text, situation: Text, behaviour: Text, quote: Text.nullable(), impact: Text, intent: StyleKey.nullable() })),
+  /** `replay`: the participant's first turn and the reply to it, verbatim, when the run kept them (D235); `name` is who replied. */
+  moments: z.array(z.object({ id: Id, kind: z.enum(['best', 'revisit']), period: Int, memberId: Id.nullable(), title: Text, situation: Text, behaviour: Text, quote: Text.nullable(), impact: Text, intent: StyleKey.nullable(),
+    replay: z.array(z.object({ you: z.boolean(), name: Text.nullable(), text: Text })).max(2).default([]) })),
   people: z.array(z.object({ memberId: Id, name: Text, img: z.string().nullable(), left: z.boolean(), start: z.object({ morale: Num, trust: Num, result: Num }),
     series: z.array(z.object({ period: Int, morale: Num, trust: Num, result: Num })), actions: Int, days: Num, resultChange: Num })),
   business: z.object({ revenue: z.array(z.object({ period: Int, value: Num, pace: Num })), funnel: z.array(z.object({ stage: Id, name: Text, cumulative: Num, cumulativeIdeal: Num })),
@@ -195,7 +197,17 @@ export const ReportView = z.object({
   path: z.object({ day30: Text, day60: Text, day90: Text }).nullable(),
   checkIns: z.array(Int.min(1)),
   /** Assessment: the development needs, worded neutrally against the bar. */
-  needs: z.array(z.object({ key: Id, name: Text, level: Text.nullable(), bar: Text, anchor: Text.nullable() }))
+  needs: z.array(z.object({ key: Id, name: Text, level: Text.nullable(), bar: Text, anchor: Text.nullable() })),
+  /**
+   * The first page (D235, `src/engine/report/brief.ts`): three findings, three things to do on Monday (assessment:
+   * up to three development needs, for the assessor; `skill` names the skill an action builds) and the two moments
+   * that mattered most, as indices in `moments`. Null in reports stored before D235: the summary opens them alone.
+   */
+  brief: z.object({
+    findings: z.array(z.object({ key: Id, tone: z.enum(['positive', 'negative', 'neutral']), text: Text })).max(3),
+    actions: z.array(z.object({ key: Id, text: Text, skill: Text.nullable() })).max(3),
+    moments: z.array(Int.min(0)).max(2)
+  }).nullable().default(null)
 });
 
 /**

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { EngineView } from '../../engine/contract';
 import { moneyFormatter } from '../../engine/money';
 import { History, parseReport, type HistoryEntry } from '../../engine/reportContract';
@@ -12,6 +12,8 @@ import { buildReportModel, type SectionModel } from './engine';
 import { IntentSection, PlanSection } from './IntentPlan';
 import { MomentsSection } from './MomentsSection';
 import { DecisionsSection } from './DecisionsSection';
+import { BriefMomentsSection, FindingsSection, FullReportNav, LeftOutNote, MondaySection } from './FirstPage';
+import { sectionTitle } from './fullReport';
 import { StakeholdersSection } from './StakeholdersSection';
 import { AnalyticsSection, MethodologySection } from './NotesSections';
 import { PeopleSection } from './PeopleSection';
@@ -74,10 +76,15 @@ export function sectionNode(s: SectionModel, unit: EngineView['clock']['periodUn
 }
 
 
+/** A section of the full report, reachable by its anchor (`#report-skills`) from the contents and from a deep link. */
+const anchored = (key: string, node: ReactNode) => <div id={`report-${key}`} tabIndex={-1} className="scroll-mt-20 outline-0">{node}</div>;
+
 /**
  * The report from the engine (`view.report`, D64, D75), web and print, in the storyline's purpose:
- * development or assessment. It is the page's main landmark, so the caller renders it in place of the
- * end screen, not inside another `main`. Download PDF opens the print view (letter pages, a new page
+ * development or assessment. It opens on a first page that stands alone (D235): the headline and overall
+ * level, three findings, three things to do on Monday and the two moments that mattered most; the full
+ * report opens below it on demand, and print and the PDF carry both. It is the page's main landmark, so
+ * the caller renders it in place of the end screen, not inside another `main`. Download PDF opens the print view (letter pages, a new page
  * per section) and the browser's print dialog, where the participant saves a PDF. Load it lazily: it
  * carries visx and the report's schema, which stay out of the first load.
  */
@@ -88,6 +95,11 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
   const [printing, setPrinting] = useState(false);
   const [date] = useState(() => dateProp ?? new Date());
   const [history, setHistory] = useState<HistoryEntry[] | null>(null);
+  // The full report under the first page (D235), and the section a link or a deep link asked for.
+  const [full, setFull] = useState(false);
+  const target = useRef<string | null>(null);
+  const [asked, setAsked] = useState(0);
+  const goTo = (key: string) => { target.current = key; setFull(true); setAsked(n => n + 1); };
   const toolbar = useRef<HTMLDivElement>(null);
   const moved = useRef(false);
   const money = useMemo(() => moneyFormatter(view.money), [view.money]);
@@ -95,6 +107,27 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
   const r = useMemo(() => (view.report ? parseReport(view.report) : null), [view.report]);
   const model = useMemo(() => (r ? buildReportModel(i18n, money, r, { participantName, date: dateProp ?? date, subPeriodUnit: view.clock.subPeriodUnit, history }) : null),
     [i18n, money, r, participantName, dateProp, date, view.clock.subPeriodUnit, history]);
+
+  // The full report's anchors: its sections, the team over the run and the summary's rest.
+  const anchors = useMemo(() => (model ? [...model.sections.map(s => s.key), 'team'] : []).join(' '), [model]);
+  // A deep link to a section of the full report opens it there, on load and when the hash changes.
+  useEffect(() => {
+    const follow = () => {
+      const key = location.hash.startsWith('#report-') ? decodeURIComponent(location.hash.slice('#report-'.length)) : '';
+      if (key && anchors.split(' ').includes(key)) goTo(key);
+    };
+    follow();
+    window.addEventListener('hashchange', follow);
+    return () => window.removeEventListener('hashchange', follow);
+  }, [anchors]);
+  // Once the full report has rendered, go to the section asked for and move focus there.
+  useEffect(() => {
+    if (!full || !target.current) return;
+    const el = document.getElementById(`report-${target.current}`);
+    target.current = null;
+    el?.scrollIntoView({ block: 'start' });
+    el?.focus({ preventScroll: true });
+  }, [full, asked]);
 
   // Earlier attempts, for the progress section. None, or a failed request: the section stays hidden.
   useEffect(() => {
@@ -154,15 +187,36 @@ export function EngineReport({ view, onBack, print: printProp = false, participa
     );
   }
 
-  // Web: a card per section. Print: a new page per section (D75). The first section shares the header's
-  // card and page, and the team over the run follows the summary.
+  // The first page (D235) shares the header's card and page: the summary's verdict, headline and level, then
+  // the findings, the things to do and the moments. A report stored before D235 has no brief: its whole
+  // summary opens it. Then the full report: web, a card per section, on demand; print, a new page per
+  // section (D75), always. The team over the run follows the summary's rest, in its card and page.
+  const brief = model.brief;
+  const summary = model.sections.find(s => s.key === 'summary');
   const blocks: ReportBlock[] = [{ key: 'header', card: true, node: <ReportHeader {...model.header} /> }];
-  const team: ReportBlock = { key: 'team', node: <TeamOverRun periods={model.periods} unit={model.unit} series={model.team} /> };
-  if (!model.sections.some(s => s.key === 'summary') && model.team.length) blocks.push(team);
+  if (summary?.key === 'summary') blocks.push({ key: 'summary-first', node: <SummarySection narrative={summary.narrative} extras={summary.extras} part={brief ? 'first' : 'all'} /> });
+  if (brief?.findings.length) blocks.push({ key: 'findings', node: <FindingsSection findings={brief.findings} /> });
+  if (brief?.actions.length) blocks.push({ key: 'monday', node: <MondaySection actions={brief.actions} /> });
+  if (brief?.moments.length) blocks.push({ key: 'moments-first', node: <BriefMomentsSection moments={brief.moments} /> });
+
+  const titled = { purpose: model.purpose, unit: model.unit, periods: model.periods };
+  const rest: Array<{ key: string; title: string; node: ReactNode; joined?: boolean }> = [];
+  const team = model.team.length ? { key: 'team', title: sectionTitle(t, 'team', titled), node: <TeamOverRun periods={model.periods} unit={model.unit} series={model.team} /> } : null;
+  if (!summary && team) rest.push(team);
   for (const s of model.sections) {
-    const joined = blocks.length === 1;
-    blocks.push({ key: s.key, card: !joined, pageBreak: !joined, node: sectionNode(s, model.unit, model.periods) });
-    if (s.key === 'summary' && model.team.length) blocks.push(team);
+    if (s.key !== 'summary') rest.push({ key: s.key, title: sectionTitle(t, s.key, titled), node: sectionNode(s, model.unit, model.periods) });
+    else {
+      if (brief) rest.push({ key: 'summary', title: t('report.summary.rest'), node: <SummarySection narrative={s.narrative} extras={s.extras} part="rest" /> });
+      if (team) rest.push({ ...team, joined: !!brief });
+    }
+  }
+  if (!print && rest.length) {
+    blocks.push({ key: 'contents', node: <FullReportNav open={full} onToggle={() => setFull(v => !v)} onGo={goTo}
+      contents={rest.map(x => ({ key: x.key, title: x.title }))} controls={`report-${rest[0].key}`} /> });
+  }
+  if (print || full) {
+    for (const x of rest) blocks.push({ key: x.key, card: !x.joined, pageBreak: !x.joined, node: anchored(x.key, x.node) });
+    if (model.leftOut.length) blocks.push({ key: 'left-out', node: <LeftOutNote names={model.leftOut} /> });
   }
 
   return (

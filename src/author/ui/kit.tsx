@@ -6,8 +6,8 @@ export { SHORT_MAX, TEXT_MAX };
 import { useAuthor } from '../model/store';
 
 /**
- * The authoring tool's parts, in the canvas's design language (docs/design/genie, D105): light cards on
- * a pale canvas, blue for the author's actions, teal for Kora, amber for what needs the author.
+ * The authoring tool's parts, in the participant canvas's look (D236, after D105): white cards on
+ * paper, navy for the author's actions, a deep mint for Kora, orange for what needs the author.
  * Provenance shows by words and marks as well as color (AI, You, Edited, Needs you, Suggestion).
  */
 
@@ -82,7 +82,7 @@ export function MarkOf({ path, need = false }: { path: string; need?: boolean })
   return m ? <Badge kind={m} /> : null;
 }
 
-/** The fill a field takes from its mark: Kora's words tinted teal, what needs the author amber. */
+/** The fill a field takes from its mark: Kora's words tinted mint, what needs the author orange. */
 export function toneOf(mark: Mark | undefined, need = false): string {
   if (need) return 'border-author-need-line bg-author-need-field';
   if (mark === 'ai') return 'border-author-ai-line bg-author-ai-field';
@@ -172,7 +172,7 @@ export function CardHead({ title, children, level = 2, id }: { title: ReactNode;
   const H = level === 2 ? 'h2' : 'h3';
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <H id={id} className="m-0 text-17 font-800 text-author-ink">{title}</H>
+      <H id={id} className="m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400 text-author-ink">{title}</H>
       {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
     </div>
   );
@@ -191,7 +191,7 @@ export function Modal({ open, onOpenChange, title, description, children, footer
           <div className="flex flex-none items-start gap-4 border-b border-solid border-author-line px-6 pt-5 pb-4">
             {head}
             <div className="flex min-w-0 flex-1 flex-col gap-1">
-              <Dialog.Title className="m-0 text-24 font-800">{title}</Dialog.Title>
+              <Dialog.Title className="m-0 font-display text-30 leading-(--il-canvas-leading-heading) font-400">{title}</Dialog.Title>
               {description ? <Dialog.Description className="m-0 text-14 text-author-body">{description}</Dialog.Description> : <Dialog.Description className="sr-only">{typeof title === 'string' ? title : 'Dialog'}</Dialog.Description>}
             </div>
             <Dialog.Close className={`${BUTTON.secondary} size-10 px-0`} aria-label="Close">{Icon.close()}</Dialog.Close>

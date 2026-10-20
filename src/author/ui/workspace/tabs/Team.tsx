@@ -93,8 +93,8 @@ export default function Team() {
           <section aria-labelledby="char-name" className={`${CARD} flex flex-col gap-4 p-5`}>
             <div className="flex flex-wrap items-center gap-4">
               <Avatar src={c.photo} name={c.first} size={64} />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <h2 id="char-name" className="m-0 text-22 font-800">{c.first} {c.last}</h2>
+              <div className="flex min-w-48 flex-1 flex-col">
+                <h2 id="char-name" className="m-0 font-serif text-26 leading-(--il-canvas-leading-title) font-400">{c.first} {c.last}</h2>
                 <span className="text-13 text-author-body">{c.title} &middot; {markOf(c.id) === 'ai' ? 'generated from your challenge' : 'edited by you'}</span>
               </div>
               <button type="button" className={BUTTON.secondary} onClick={() => setEditing(c.id)}>{Icon.pencil(14)} Edit profile</button>

@@ -11,6 +11,7 @@
   "settings.captions": "Captions on every NPC voice line",
   "settings.reduced": "Reduce motion and celebrations",
   "settings.clock": "Show the session clock",
+  "settings.tips": "Show tips and action hints",
   "settings.note": "Changes save automatically. Voice is never required. You can finish every interaction in text.",
   "settings.paused.title": "You are paused",
   "settings.paused.body": "The clock has stopped and your team will wait. Everything is saved, so you can also close this tab and resume on any device.",

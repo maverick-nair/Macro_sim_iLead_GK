@@ -123,6 +123,8 @@ for (const width of [1440, 1024]) {
 
     await page.getByRole('button', { name: 'View my report' }).click();
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible({ timeout: 20000 });
+    // The first page, then the full report under it (D235), so every section is checked.
+    await page.getByRole('button', { name: 'See the full report' }).click();
     await expect(page.getByRole('heading', { level: 2 }).nth(5)).toBeVisible({ timeout: 20000 });
     await check(page, `report-${width}`);
   });

@@ -104,7 +104,7 @@ export function ActionAdd({ open, onOpenChange, onAdded }: { open: boolean; onOp
     <Modal open={open} onOpenChange={onOpenChange} width="max-w-290" title="Add an action" description="Pick a ready made action from the library, or describe a new one and Kora sets it up.">
       <div className="grid min-h-0 flex-1 grid-cols-2 max-[900px]:grid-cols-1">
         <section aria-labelledby="lib-title" className="flex min-h-0 flex-col gap-3 border-e border-solid border-author-line px-6 py-4">
-          <h3 id="lib-title" className="m-0 text-17 font-800">From the KNOLSKAPE library</h3>
+          <h3 id="lib-title" className="m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400">From the KNOLSKAPE library</h3>
           <TextInput aria-label="Search actions" placeholder={`Search ${library.length} actions`} value={q} onChange={e => setQ(e.target.value)} />
           <div className="flex flex-wrap gap-2" role="group" aria-label="Filter">
             {([['all', 'All'], ['live', PLAYS_LABEL.live], ['static', PLAYS_LABEL.static], ['hybrid', PLAYS_LABEL.hybrid], ['lens', 'Suggested for your lens']] as Array<[Filter, string]>).map(([v, l]) => <Chip key={v} pressed={filter === v} onClick={() => setFilter(v)}>{l}</Chip>)}
@@ -123,7 +123,7 @@ export function ActionAdd({ open, onOpenChange, onAdded }: { open: boolean; onOp
           <p className="m-0 text-12 text-author-muted">Library actions arrive with tested rules. You can change any field after adding.</p>
         </section>
         <section aria-labelledby="own-title" className="flex min-h-0 flex-col gap-3 bg-author-canvas px-6 py-4">
-          <h3 id="own-title" className="m-0 text-17 font-800">Describe your own</h3>
+          <h3 id="own-title" className="m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400">Describe your own</h3>
           <form className="flex flex-col gap-2 rounded-14 border border-solid border-author-primary bg-author-surface p-3" onSubmit={e => { e.preventDefault(); if (text.trim()) { setKora(describeAction(text, skills)); setSaved(false); } }}>
             <label htmlFor="describe" className="text-13 font-700 text-author-label">What should the participant be able to do?</label>
             <TextArea id="describe" rows={3} className="border-0 px-0" placeholder="For example: approve or refuse a discount a rep asks for, then explain the decision" value={text} onChange={e => setText(e.target.value)} />

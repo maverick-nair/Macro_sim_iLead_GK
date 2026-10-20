@@ -1,3 +1,4 @@
+import { STANCES, type Stance } from '../../../src/engine/sim/types';
 import { sanitizeCopy } from '../../../src/i18n/copy';
 
 /**
@@ -10,7 +11,7 @@ import { sanitizeCopy } from '../../../src/i18n/copy';
  *   below the floor where nobody would open up.
  *
  * Replies also pass the copy rules (no dashes, no emoji, "skills"). The signal tag the model ends with
- * (`[[signals reveal=yes|no end=yes|no]]`) is never released.
+ * (`[[signals reveal=yes|no end=yes|no stance=...]]`) is never released.
  */
 
 export type NpcGuard = 'outOfRole' | 'scoring' | 'leak' | 'empty' | 'refusal' | 'error';
@@ -63,17 +64,21 @@ export function checkReply(text: string, g: GuardContext): NpcGuard[] {
   return out;
 }
 
-export interface Signals { reveal: boolean; end: boolean }
+/** `stance`: where the character says they stand after the reply (D233); absent when the tag leaves it out or names no known stance. */
+export interface Signals { reveal: boolean; end: boolean; stance?: Stance }
 const TAG = /\[\[\s*signals?\b([^\]]*)\]\]?/i;
 const TAG_START = '[[';
 
-/** Splits the trailing signal tag off a reply. Missing or malformed tag: no reveal, no sign off. */
+/** Splits the trailing signal tag off a reply. Missing or malformed tag: no reveal, no sign off, no stance. */
 export function splitSignals(raw: string): { text: string; signals: Signals; tagged: boolean } {
   const i = raw.indexOf(TAG_START);
   const text = (i >= 0 ? raw.slice(0, i) : raw).trim();
   const m = i >= 0 ? raw.slice(i).match(TAG) : null;
   const yes = (k: string) => !!m && new RegExp(`\\b${k}\\s*=\\s*(?:yes|true|1)\\b`, 'i').test(m[1]);
-  return { text, signals: { reveal: yes('reveal'), end: yes('end') }, tagged: !!m };
+  const stance = m?.[1].match(/\bstance\s*=\s*([a-z]+)/i)?.[1].toLowerCase() as Stance | undefined;
+  const signals: Signals = { reveal: yes('reveal'), end: yes('end') };
+  if (stance && STANCES.includes(stance)) signals.stance = stance;
+  return { text, signals, tagged: !!m };
 }
 
 const SENTENCE_END = /[.!?…。！？](?:["'”’)\]]*)\s+/g;

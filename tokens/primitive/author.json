@@ -1,34 +1,13 @@
 {
-  "$description": "GenieKreator authoring palette (/author, D105): the exact values of the approved canvas in docs/design/genie. Light only; the authoring tool is not themed by a client.",
+  "$description": "GenieKreator's own colours (/author, D105), only those the canvas palette lacks (D236): the AI accent's shades for text and fills on paper, derived from the canvas's mint (hue 177.5); a faint sky for the selected card; a badge between the canvas's orange-50 and orange-300; the red for Required and recording; the purple for Yours; the event kinds. Everything else in the author's semantic layer is the canvas's (tokens/primitive/canvas.json). Light only; the authoring tool is not themed by a client.",
   "color": {
     "gk": {
-      "canvas": { "$value": "#F6F7FB", "$description": "Page background" },
-      "white": { "$value": "#FFFFFF" },
-      "mist": { "$value": "#F0F2F8", "$description": "Segmented control track, quiet rows" },
-      "mist-2": { "$value": "#EEF0F6", "$description": "Row rules" },
-      "line": { "$value": "#E3E7F0", "$description": "Card borders" },
-      "line-control": { "$value": "#D9DEEA", "$description": "Field and button borders" },
-      "ink": { "$value": "#141A2E", "$description": "Text" },
-      "ink-scrim": { "$value": "oklch(0.21 0.04 272)", "$description": "Ink as OKLCH, for the modal scrim" },
-      "slate-700": { "$value": "#3E4763", "$description": "Labels" },
-      "slate-600": { "$value": "#4B5470", "$description": "Body text, secondary" },
-      "slate-500": { "$value": "#5F6784", "$description": "Muted text, darkened from the canvas's #6B7390 so it reads 4.5:1 on the page background" },
-      "blue-600": { "$value": "#1F4FD1", "$description": "Primary actions, links, selection" },
-      "blue-700": { "$value": "#163C9E", "$description": "Hover" },
-      "blue-50": { "$value": "#EEF2FD", "$description": "Selected chip and nav row" },
-      "blue-25": { "$value": "#F5F8FF", "$description": "Selected card" },
-      "teal-600": { "$value": "#0D7F8B", "$description": "Kora's actions and the AI accent" },
-      "teal-700": { "$value": "#0B6670", "$description": "AI text and badges" },
-      "teal-100": { "$value": "#DDF1F3", "$description": "AI badge" },
-      "teal-200": { "$value": "#CDE9EC", "$description": "AI field border" },
-      "teal-50": { "$value": "#EEF8F9", "$description": "AI field" },
-      "teal-300": { "$value": "#9BD3D9", "$description": "AI field border, strong" },
-      "amber-800": { "$value": "#7A5300", "$description": "Needs you text" },
-      "amber-200": { "$value": "#FCEBC8", "$description": "Needs you badge" },
-      "amber-50": { "$value": "#FFF8EB", "$description": "Needs you field" },
-      "amber-400": { "$value": "#E7B65A", "$description": "Needs you border" },
-      "green-700": { "$value": "#1E6B3E", "$description": "Passed, gains, best fit" },
-      "green-50": { "$value": "#E2F3E8", "$description": "Passed and best fit fill" },
+      "mint-700": { "$value": "#126052", "$description": "oklch(0.44 0.075 177.5). AI text and badges on paper" },
+      "mint-600": { "$value": "#226B5D", "$description": "oklch(0.48 0.075 177.5). Kora's buttons and the AI accent: white on it, and it on paper, pass 4.5:1" },
+      "mint-300": { "$value": "#B9E2D7", "$description": "oklch(0.88 0.045 177.5). A field Kora wrote, border" },
+      "mint-50": { "$value": "#EFFAF7", "$description": "oklch(0.975 0.012 177.5). A field Kora wrote" },
+      "sky-50": { "$value": "#F1F6FC", "$description": "Selected card, a step lighter than the canvas's sky-100" },
+      "orange-100": { "$value": "#FBE2D2", "$description": "Needs you badge, between the canvas's orange-50 and orange-300" },
       "red-700": { "$value": "#B42318", "$description": "Required, recording, losses, wrong fit" },
       "red-50": { "$value": "#FDECEA", "$description": "Recording fill" },
       "purple-700": { "$value": "#6B2C91", "$description": "Yours: an action added for this story" },
@@ -36,9 +15,7 @@
       "coral-500": { "$value": "#E26A5A", "$description": "Event kind: impact" },
       "green-500": { "$value": "#3BAA6A", "$description": "Event kind: opportunity" },
       "sky-500": { "$value": "#5B8DEF", "$description": "Event kind: people" },
-      "orange-500": { "$value": "#E7A23B", "$description": "Event kind: sponsor" },
-      "night": { "$value": "#0B1220", "$description": "Participant preview frames" },
-      "night-2": { "$value": "#16203A", "$description": "Participant preview tiles" }
+      "orange-500": { "$value": "#E7A23B", "$description": "Event kind: sponsor" }
     }
   }
 }

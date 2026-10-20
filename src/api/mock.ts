@@ -1,4 +1,3 @@
-import { DEFAULT_SCENARIO } from '../data/scenario';
 import type { Scenario } from '../data/types';
 import type { Settings } from '../app/types';
 import type { MockGroupOptions } from './mockGroup';
@@ -56,13 +55,14 @@ async function mockTheme({ client, themeUrl }: MockThemeOptions): Promise<unknow
 
 export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; participant?: string; name?: string | null; exit?: string | null } & MockThemeOptions = {}): IleadApi {
   const participant = opts.participant ?? 'local';
-  const scenario = opts.scenario ?? DEFAULT_SCENARIO;
+  // The prototype's scenario loads on first use: the participant's play runs on the engine and never asks for it.
+  const scenario = async () => opts.scenario ?? (await import('../data/scenario')).DEFAULT_SCENARIO;
   const latency = opts.latencyMs ?? 250;
   const wait = <T>(value: T, ms = latency) => new Promise<T>(resolve => setTimeout(() => resolve(value), ms));
   const clone = <T>(v: T): T => structuredClone(v);
 
   return {
-    getScenario: () => wait(clone(scenario)),
+    getScenario: async () => wait(clone(await scenario())),
     getSession: () => {
       const settings = loadSettings(participant, opts.storagePrefix);
       return wait(settings ? { week: 2, day: 3, capacity: 2.5, secs: 2292, styles: {}, settings } : null);
@@ -71,7 +71,7 @@ export function createMockApi(opts: { scenario?: Scenario; latencyMs?: number; p
     setStyle: () => wait(undefined, 0),
     planAction: () => wait(undefined, 0),
     // The prototype's "team is reacting" beat runs about 3 seconds while evaluation happens.
-    submitInteraction: () => wait(clone(scenario.outcome), latency),
+    submitInteraction: async () => wait(clone((await scenario()).outcome), latency),
     endWeek: () => wait(undefined, 0),
     emailReport: () => wait(undefined),
     // No PDF service in the mock: the app opens the print view and the browser saves the PDF.

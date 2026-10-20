@@ -93,6 +93,10 @@
   --color-liveshell-mood-frustrated: var(--il-color-liveshell-mood-frustrated);
   --color-liveshell-mood-guarded: var(--il-color-liveshell-mood-guarded);
   --color-liveshell-mood-open: var(--il-color-liveshell-mood-open);
+  --color-liveshell-stance-closing: var(--il-color-liveshell-stance-closing);
+  --color-liveshell-stance-guarded: var(--il-color-liveshell-stance-guarded);
+  --color-liveshell-stance-opening: var(--il-color-liveshell-stance-opening);
+  --color-liveshell-stance-engaged: var(--il-color-liveshell-stance-engaged);
   --color-liveshell-speaking: var(--il-color-liveshell-speaking);
   --color-liveshell-speaking-glow: var(--il-color-liveshell-speaking-glow);
   --color-liveshell-on-signal: var(--il-color-liveshell-on-signal);

@@ -50,6 +50,8 @@ export const LensView = z.object({
   examples: z.array(z.object({ need: NeedKey, style: StyleKey, person: Text, why: Text })).default([])
 });
 export const Mood = z.enum(['happy', 'neutral', 'thinking', 'concerned', 'frustrated']);
+/** Where the person in a conversation stands after their turn (D233), closing down to engaged. */
+export const Stance = z.enum(['closing', 'guarded', 'opening', 'engaged']);
 export const Score = z.number().min(0).max(100);
 export const PeriodUnit = z.enum(['year', 'month', 'week', 'day']);
 export const SubPeriodUnit = z.enum(['quarter', 'month', 'week', 'day', 'hour']);
@@ -152,8 +154,8 @@ export const LiveView = z.object({
   oneShot: z.boolean(),
   people: z.array(Who), speaker: Who, raisedHands: z.array(Id),
   brief: z.object({ goal: Text.nullable(), known: z.array(Text), mood: Mood.nullable(), promises: z.array(Text), declaredStyle: StyleKey.nullable() }),
-  /** `aiGenerated` marks NPC turns for the AI label (brief, rule 7). */
-  turns: z.array(z.object({ id: Id, by: Id, text: Text, voice: z.boolean(), interrupted: z.boolean(), aiGenerated: z.boolean() })),
+  /** `aiGenerated` marks NPC turns for the AI label (brief, rule 7). `stance`: the speaker's stance after an NPC turn (D233); optional, so older runs parse. */
+  turns: z.array(z.object({ id: Id, by: Id, text: Text, voice: z.boolean(), interrupted: z.boolean(), aiGenerated: z.boolean(), stance: Stance.optional() })),
   turnLimit: z.number().int().min(1), turnsLeft: z.number().int().min(0), minutes: Num,
   closed: z.boolean(),
   hint: z.object({ mode: z.enum(['off', 'onRequest']), text: Text.nullable() }),
@@ -323,6 +325,8 @@ export type StorylineLook = z.output<typeof StorylineLook>;
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
+  /** The storyline's purpose (D75). An assessment run gives no hints on which action fits (D234). */
+  purpose: z.enum(['development', 'assessment']).default('development'),
   /** The storyline's name, the organisation the participant joins and the authored welcome letter, for onboarding. */
   storyline: z.object({ name: Text, organisation: Text.nullable(), locale: z.string().default('en'), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish(),
     /** The welcome video, replayable from Tutorial and video (D90): its file, poster, captions track and transcript. */
@@ -342,7 +346,8 @@ export const EngineView = z.object({
     /** What the stage does and which skills suit it, when authored (D97). */
     about: Text.nullable().default(null), suits: Text.nullable().default(null) })),
   actions: z.array(ActionView),
-  promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0) })),
+  /** `keptBy`: the actions that keep the promise when taken with that person (D234's hint). */
+  promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0), keptBy: z.array(Id).default([]) })),
   /** `briefing`: a scheduled sponsor briefing, opened with `openConversation` kind `sponsor`; other messages are replies. News needs no answer. */
   inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() })),
   /** Event cards. `sponsorCall` rings before it shows; `messageId` is the message to answer, if any. */
@@ -486,6 +491,7 @@ export type MetricKey = z.output<typeof MetricKey>;
 export type StyleKey = z.output<typeof StyleKey>;
 export type LensView = z.output<typeof LensView>;
 export type Mood = z.output<typeof Mood>;
+export type Stance = z.output<typeof Stance>;
 export type VariableView = z.output<typeof VariableView>;
 export type OpenChoice = z.output<typeof OpenChoice>;
 export type ChoiceView = z.output<typeof ChoiceView>;

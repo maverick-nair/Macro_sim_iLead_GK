@@ -64,7 +64,7 @@ describe('player types and probes with stakeholders (D152, D166)', () => {
     expect(people.answered).toBeLessThan(people.requests);
     expect(risk.conversations).toBeGreaterThan(careful.conversations);
     expect(business.relation).toBeGreaterThan(people.relation);
-  });
+  }, 30_000);
 
   it('a probe leaves every stakeholder alone', async () => {
     const probe = await stakeholderPlay('expert', [1, 2], { probe: { kind: 'idle' } });

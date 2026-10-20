@@ -153,7 +153,7 @@ export interface ActionSheetProps {
   left: string;
   /** A message from this person that is due (in sub periods, 0 is now), with a way to answer it. */
   due?: { title: string; in: number; onReply: () => void };
-  /** The actions of the open tab, as large radio rows. Choosing one starts its flow. */
+  /** The actions of the open tab, as large radio rows in intent order (D234). Choosing one starts its flow. */
   rows: ActionSheetRow[];
   /** The action being planned (its key), or null. */
   chosen: string | null;
@@ -253,7 +253,9 @@ export function ActionSheet(p: ActionSheetProps) {
                     {p.rows.length === 0
                       ? <p className="m-0 text-13 text-fg-secondary">{t('tablet.sheet.empty', { name: first })}</p>
                       : <OptionCards size="lg" label={t('tablet.sheet.choose')} value={value < 0 ? null : value} onChange={i => p.rows[i].tile.onPick()}
-                          options={p.rows.map(r => ({ name: r.tile.name, detail: actionSub(t, fmt, r.tile), disabled: !!r.tile.block, aside: fmt(r.tile.days) }))} />}
+                          options={p.rows.map(r => ({ name: r.tile.name, detail: actionSub(t, fmt, r.tile), disabled: !!r.tile.block, aside: fmt(r.tile.days),
+                            // A person's actions under Talk, Develop and Decide (D234); the team's tab is one group already.
+                            group: r.tile.intent && r.tile.intent !== 'team' ? t('actions.group', { intent: r.tile.intent }) : undefined, hint: r.tile.hint }))} />}
                   </div>
                   {p.flow
                     ? <TabletFlow {...p.flow} onPickOnBoard={p.onPickOnBoard} />

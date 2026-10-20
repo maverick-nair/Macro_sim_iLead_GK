@@ -1,7 +1,8 @@
-import { useId } from 'react';
+import { useId, useState } from 'react';
 import { Switch } from '../../ds/Switch';
 import { useI18n } from '../../i18n';
 import { onRovingKey } from '../roving';
+import { guideOff, setGuideOff } from '../tour/guideStore';
 import { AppDialog, DialogDescription, DialogTitle } from './AppDialog';
 
 export type InputMode = 'text' | 'ptt' | 'open';
@@ -72,6 +73,8 @@ function ChoiceRow<V extends string | number>({ label, hint, options, value, onP
  */
 export function SettingsDialog({ values, onChange, onClose, voiceConsent = false, frozen, returnFocus }: SettingsDialogProps) {
   const { t } = useI18n();
+  // Tips live in the guide store, beside the tour's "Do not show again", not in the settings values.
+  const [tips, setTips] = useState(() => !guideOff());
   return (
     <AppDialog onDismiss={onClose} frozen={frozen} returnFocus={returnFocus} described
       className="flex max-h-full w-140 flex-col gap-5.5 overflow-x-hidden overflow-y-auto p-7">
@@ -89,6 +92,7 @@ export function SettingsDialog({ values, onChange, onClose, voiceConsent = false
         <Switch label={t('settings.captions')} checked={values.captions} onChange={v => onChange({ captions: v })} />
         <Switch label={t('settings.reduced')} checked={values.reduced} onChange={v => onChange({ reduced: v })} />
         <Switch label={t('settings.clock')} checked={values.clock} onChange={v => onChange({ clock: v })} />
+        <Switch label={t('settings.tips')} checked={tips} onChange={v => { setTips(v); setGuideOff(!v); }} />
       </div>
       <DialogDescription className="m-0 text-12 text-fg-secondary">{t('settings.note')}</DialogDescription>
     </AppDialog>

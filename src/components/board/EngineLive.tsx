@@ -13,7 +13,7 @@ import { LiveShell } from '../liveshell/LiveShell';
 import { MeetingStage } from '../liveshell/MeetingStage';
 import { RolePlayPortrait, RolePlayStage } from '../liveshell/RolePlayStage';
 import { SponsorStage, type SponsorNote } from '../liveshell/SponsorStage';
-import type { LiveBrief, LiveConversation, LiveFormat, LiveMode, LiveMood, LivePerson, LiveTurn } from '../liveshell/types';
+import type { LiveBrief, LiveConversation, LiveFormat, LiveMode, LiveMood, LivePace, LivePerson, LiveStance, LiveTurn } from '../liveshell/types';
 import { ChatStage } from '../liveformats/ChatStage';
 import { CompareView } from '../liveformats/CompareView';
 import { InterviewStage, type Candidate } from '../liveformats/InterviewStage';
@@ -64,6 +64,8 @@ const WARN_SECONDS = 120;
 const OWN_KEYS = 'input, textarea, select, button, a[href], [contenteditable="true"], [role="radio"], [role="checkbox"], [role="button"], [role="switch"], [role="tab"], [role="option"], [role="menuitem"]';
 
 const moodRing = (m: LiveView['brief']['mood']): LiveMood => (m === 'frustrated' || m === 'concerned' ? (m === 'frustrated' ? 'frustrated' : 'guarded') : 'open');
+/** Once the engine has a read of the person (D233), the ring follows it instead of the mood they came in with. */
+const STANCE_RING: Record<LiveStance, LiveMood> = { closing: 'frustrated', guarded: 'guarded', opening: 'open', engaged: 'open' };
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = true, suspended = false, held = false, onPause, onFinish, onDone, onError, layout = 'desk' }: EngineLiveProps) {
@@ -294,6 +296,11 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
     void onFinish({ type: 'chooseCandidate', interactionId: lv.id, candidateId: id }, reactingPeople);
   };
 
+  // The engine's live read of the person after their latest line (D233), and where the conversation is.
+  const stance = [...lv.turns].reverse().find(x => x.by === lv.speaker.id && x.stance)?.stance ?? null;
+  const ring = stance ? STANCE_RING[stance] : moodRing(lv.brief.mood);
+  const pace: LivePace = { turnsLeft: lv.turnsLeft, turnLimit: lv.turnLimit, closed: lv.closed };
+
   const brief: LiveBrief = {
     goal: lv.brief.goal ?? lv.actionName ?? t('board.live.goal.reply'),
     known: lv.brief.known.length ? lv.brief.known : undefined,
@@ -435,7 +442,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
           />
         );
       default:
-        return <RolePlayStage person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation} caption={caption} turns={turns} onReplay={replay} layout={layout === 'tablet' ? 'tablet' : 'split'}
+        return <RolePlayStage person={speaker} mood={ring} conversation={conversation} caption={caption} turns={turns} onReplay={replay} layout={layout === 'tablet' ? 'tablet' : 'split'}
+          stance={stance} pace={pace} goal={brief.goal}
           aside={layout === 'tablet' ? <LiveBriefCard layout="tablet" bare format="roleplay" brief={brief} pronoun={speaker.pronoun} tip={lv.hint.text} open={briefOpen} onToggle={() => setBriefOpen(o => !o)} periodUnit={v.clock.periodUnit} /> : undefined} />;
     }
   })();
@@ -482,8 +490,8 @@ export function EngineLive({ view: v, live: lv, voiceConsent, input, captions = 
         layout={layout}
         briefInStage={shellFormat === 'roleplay'}
         portrait={shellFormat === 'roleplay' && layout !== 'tablet' ? (
-          <RolePlayPortrait person={speaker} mood={moodRing(lv.brief.mood)} conversation={conversation}
-            brief={<LiveBriefCard layout="overlay" format="roleplay" brief={brief} pronoun={speaker.pronoun} tip={lv.hint.text} open={briefOpen} onToggle={() => setBriefOpen(o => !o)} />} />
+          <RolePlayPortrait person={speaker} mood={ring} conversation={conversation} stance={stance}
+            brief={<LiveBriefCard layout="overlay" format="roleplay" brief={brief} pronoun={speaker.pronoun} tip={lv.hint.text} open={briefOpen} onToggle={() => setBriefOpen(o => !o)} goalElsewhere />} />
         ) : undefined}
       >
         <div role="status" className={notice ? 'border border-status-attention bg-status-attention-soft px-3.5 py-2.5 text-13' : 'sr-only'}>{notice}</div>

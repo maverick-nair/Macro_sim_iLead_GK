@@ -19,7 +19,7 @@ function Failed({ error, retry, whole }: { error: unknown; retry?: () => void; w
   const chunk = isChunkError(error);
   return (
     <div role="alert" className={`flex flex-col items-start gap-3 ${whole ? 'm-auto max-w-140 p-8' : 'p-7'}`}>
-      <h1 className="m-0 text-24 font-800">{chunk ? (whole ? 'This page could not load' : 'This section could not load') : 'Something went wrong'}</h1>
+      <h1 className="m-0 font-display text-30 leading-(--il-canvas-leading-heading) font-400">{chunk ? (whole ? 'This page could not load' : 'This section could not load') : 'Something went wrong'}</h1>
       <p className="m-0 text-15 text-author-body">
         {chunk ? 'You may be offline, or GenieKreator was just updated. ' : ''}
         Your draft is saved in this browser{chunk ? '' : ', and nothing you did is lost'}. {retry ? 'Try again, or reload the page.' : 'Reload the page to carry on.'}

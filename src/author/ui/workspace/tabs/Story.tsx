@@ -165,7 +165,7 @@ export default function Story() {
         {sub === 'sponsor' && current && (
           <div className="grid grid-cols-[17rem_minmax(0,1fr)] gap-4 max-[1180px]:grid-cols-1">
             <section className={`${CARD} flex flex-col gap-2 p-5`} aria-labelledby="screens">
-              <h2 id="screens" className="m-0 text-16 font-800">Intro screens, in order</h2>
+              <h2 id="screens" className="m-0 font-serif text-22 leading-(--il-canvas-leading-title) font-400">Intro screens, in order</h2>
               <ol className="m-0 flex list-none flex-col gap-2 p-0">
                 {d.story.screens.map((s, i) => (
                   <li key={s.key} className="flex items-center gap-1">

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { demoStep, demoTarget, DEMO_STEPS } from '../demo/demoSteps';
 import { dueAlerts, dueTips, newMilestones } from '../board/notices';
 import { placeTip } from './Coachmark';
-import { guideOff, guideSeen, markGuideSeen, turnGuideOff } from './guideStore';
+import { guideOff, guideSeen, markGuideSeen, setGuideOff, turnGuideOff } from './guideStore';
 import { findTarget, TOURS } from './steps';
 
 /** A storage stand in, as local storage behaves. */
@@ -48,6 +48,10 @@ describe('guided tour (D94)', () => {
     expect(guideOff(s)).toBe(false);
     turnGuideOff(s);
     expect(guideOff(s)).toBe(true);
+    expect(guideSeen('tour:board', s)).toBe(true);
+    // Settings turns tips back on; what was seen stays seen.
+    setGuideOff(false, s);
+    expect(guideOff(s)).toBe(false);
     expect(guideSeen('tour:board', s)).toBe(true);
     // Blocked storage: nothing is remembered and nothing throws.
     const blocked = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };

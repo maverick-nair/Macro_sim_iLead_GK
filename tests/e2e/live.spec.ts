@@ -80,13 +80,46 @@ test('1:1: the NPC opens, streams labelled AI replies, opens up when asked, and 
   await quiet(page);
   const a11y = await new AxeBuilder({ page: page as never }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze();
   expect(a11y.violations.map(v => `${v.id}: ${v.nodes.length}`)).toEqual([]);
+  // The live read of Kent from the engine, and where the conversation is (D233).
+  const stance = page.getByTestId('live-stance');
+  await expect(stance).toHaveAttribute('data-stance', 'guarded');
+  await expect(stance).toContainText('Guarded');
+  await expect(page.getByText('Seems frustrated')).toHaveCount(0);
+  await expect(page.getByText('About 12 more exchanges')).toBeVisible();
+  await expect(page.getByTestId('live-pace').getByText(/^Your goal: /)).toBeVisible();
   await say(page, 'I am sorry it has been rough. What is on your mind?');
   await expect(page.getByText(/not what I was promised/).first()).toBeVisible({ timeout: 15000 });
+  await expect(stance).toHaveAttribute('data-stance', 'opening');
+  await expect(stance).toContainText('Opening up');
+  await expect(page.locator('[aria-live="polite"]').filter({ hasText: 'Kent is opening up' })).toHaveCount(1);
+  await expect(page.getByText('About 11 more exchanges')).toBeVisible();
+  // Typing keeps the goal in view, and Show brief still opens the rest of the brief.
+  await page.getByRole('textbox', { name: 'Your reply' }).fill('Tell me more');
+  await expect(page.getByTestId('live-pace').getByText(/^Your goal: /)).toBeInViewport();
+  await page.getByRole('button', { name: 'Show brief' }).click();
+  await expect(page.getByRole('button', { name: 'Hide', exact: true })).toHaveAttribute('aria-expanded', 'true');
+  await page.getByRole('textbox', { name: 'Your reply' }).fill('');
   await page.getByRole('button', { name: 'Ask for a hint' }).click();
   await expect(page.getByText(/open question/).first()).toBeVisible();
   await end(page);
   await expect(page.getByRole('region', { name: 'Outcome' }).getByRole('heading', { level: 2 })).toBeFocused();
   await expect(page.getByText(/not what I was promised/).first()).toBeVisible();
+});
+
+test('pacing: the track counts the exchanges down, then says it is time to agree next steps (D233)', async ({ page }) => {
+  // The Week 0 practice has four exchanges, so the end comes quickly.
+  await page.goto('/?start=board&practice=1');
+  await page.getByRole('region', { name: 'Practice before week 1' }).getByRole('button', { name: /^Practice with / }).click({ timeout: 20000 });
+  await quiet(page);
+  const pace = page.getByTestId('live-pace');
+  await expect(pace).toContainText('About 4 more exchanges');
+  await say(page, 'How is the week going for you?');
+  await expect(pace).toContainText('About 3 more exchanges');
+  await say(page, 'What would help most right now?');
+  await expect(pace).toContainText('About 2 more exchanges');
+  await say(page, 'Thanks, I appreciate you telling me.');
+  await expect(pace).toContainText('Time to agree next steps');
+  await expect(page.getByTestId('live-stance')).toBeVisible();
 });
 
 test('the header names the action, and Replay streams an NPC line again', async ({ page }) => {

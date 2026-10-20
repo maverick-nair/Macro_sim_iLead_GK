@@ -11,6 +11,7 @@
   "settings.captions": "Subtítulos en cada frase hablada",
   "settings.reduced": "Reducir el movimiento y las celebraciones",
   "settings.clock": "Mostrar el reloj de la sesión",
+  "settings.tips": "Mostrar consejos y sugerencias de acciones",
   "settings.note": "Los cambios se guardan solos. La voz nunca es obligatoria: puedes terminar cada interacción por texto.",
   "settings.paused.title": "Estás en pausa",
   "settings.paused.body": "El reloj se ha detenido y tu equipo esperará. Todo está guardado, así que también puedes cerrar esta pestaña y seguir en cualquier dispositivo.",

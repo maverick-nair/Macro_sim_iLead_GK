@@ -29,7 +29,7 @@ function Bubble({ from, children }: { from: 'kora' | 'author'; children: ReactNo
 export function Header({ subtitle, children }: { subtitle: ReactNode; children?: ReactNode }) {
   return (
     <header className="flex min-h-16 flex-none flex-wrap items-center gap-x-4 gap-y-2 border-b border-solid border-author-line bg-author-surface px-7 py-2.5 max-[1100px]:px-4">
-      <span className="text-20 font-800 text-author-ink">Genie<span className="text-author-kora">Kreator</span></span>
+      <span className="font-display text-24 font-400 text-author-ink">Genie<span className="text-author-kora">Kreator</span></span>
       <span className="text-14 text-author-body">{subtitle}</span>
       <span className="flex-1" />
       {children}
@@ -253,7 +253,7 @@ export function JourneyPage({ drafters }: { drafters?: Drafter[] }) {
         {wide && (
           <aside aria-labelledby="so-far" className="flex min-h-0 flex-col gap-3 border-s border-solid border-author-line bg-author-surface px-6 pt-6 pb-4">
             <div className="flex flex-none items-baseline justify-between gap-2">
-              <h2 id="so-far" className="m-0 text-20 font-800">Your simulation so far</h2>
+              <h2 id="so-far" className="m-0 font-serif text-26 leading-(--il-canvas-leading-title) font-400">Your simulation so far</h2>
               <span className="text-13 text-author-muted">Updates as you answer</span>
             </div>
             <Scroll label="Your simulation so far" className="-mx-1 flex-1 px-1 pb-2">{panel}</Scroll>
