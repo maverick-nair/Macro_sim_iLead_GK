@@ -124,7 +124,7 @@ export function buildView(sim: Sim) {
     const mood = moodOf(m, sim);
     return {
       id: m.id, name: p.name, title: p.title, pronoun: p.pronoun, stage: m.stage,
-      // Stats stay hidden until the profile is first opened (spec, D39): the engine never sends them early.
+      // Stats show from the start since D241; `revealed` stays so a saved run from before reads as it did (D39).
       skill: m.revealed ? m.skill : null, morale: m.revealed ? m.morale : null, result: m.revealed ? m.result : null, trust: m.revealed ? m.trust : null,
       style: m.style, lastStyle: m.lastStyle, lastReaction: m.lastReaction,
       mood, img: p.portraits?.[mood] ?? p.portrait ?? null, away: m.away, awayReason: m.awayReason,

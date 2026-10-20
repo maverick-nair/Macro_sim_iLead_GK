@@ -119,9 +119,9 @@ describe('engine', () => {
     expect(await mean('good')).toBeGreaterThan((await mean('passive')) * 1.3);
   });
 
-  it('sends no stats before the profile is opened, and never names the needed style', async () => {
+  it('sends every stat from the start (D241), and never names the needed style', async () => {
     const e = createEngine(config, { seed: 12 });
-    expect(en(e.view()).members.every(m => m.skill === null && m.trust === null)).toBe(true);
+    expect(en(e.view()).members.every(m => m.statsRevealed && m.skill !== null && m.morale !== null && m.result !== null && m.trust !== null)).toBe(true);
     const r = await e.dispatch({ type: 'confirmStyles', styles: Object.fromEntries(en(e.view()).members.map(m => [m.id, 'G'])) as Record<string, Style> });
     const words = r.changes.map(c => c.reason.cause).join(' ');
     expect(words).not.toMatch(/needed (Directing|Guiding|Partnering|Entrusting)/);

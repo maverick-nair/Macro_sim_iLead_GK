@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { ClientLogo } from '../../theme/brand';
@@ -80,6 +80,11 @@ export interface HudProps {
   streak?: number;
   /** The streak in words, with the next bonus ("2 weeks in a row. 1 more week for a +25 bonus."). Defaults to "3 week streak". */
   streakLabel?: string;
+  /**
+   * Team morale and how this period's play has moved it (D241), so every action's effect on the team shows at the
+   * top: up or down this period, and a short "+3" or "−2" when it changes. Left out on the design frames.
+   */
+  morale?: { value: number; delta: number };
   onPalette: () => void;
   onSettings: () => void;
   /** Left out where the period cannot be ended from the HUD (the demo, D92). */
@@ -130,6 +135,51 @@ const Sliders = () => (
     <path d="M20 7h-9" /><path d="M14 17H5" /><circle cx="17" cy="17" r="3" /><circle cx="7" cy="7" r="3" />
   </svg>
 );
+
+const Heart = () => (
+  <svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.3 2.4h2c.7-1.3 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z" /></svg>
+);
+
+/** How long the "+3" stays after morale moves; it floats up and fades (`il-morale-pop`), or simply shows where motion is off. */
+const POP_MS = 2400;
+
+/**
+ * Team morale in the top bar (D241): the heart, the number, whether this period's play has it rising, falling or
+ * holding, and a short "+3" or "−2" each time it moves. Read as one image with its words for screen readers.
+ */
+export function MoraleMeter({ value, delta, unit }: { value: number; delta: number; unit: PeriodUnit }) {
+  const { t, number } = useI18n();
+  const [seen, setSeen] = useState(value);
+  const [pop, setPop] = useState<{ n: number; key: number } | null>(null);
+  if (value !== seen) {
+    setSeen(value);
+    const n = Math.round(value - seen);
+    if (n !== 0) setPop(p => ({ n, key: (p?.key ?? 0) + 1 }));
+  }
+  useEffect(() => {
+    if (!pop) return;
+    const id = window.setTimeout(() => setPop(null), POP_MS);
+    return () => window.clearTimeout(id);
+  }, [pop]);
+  const dir = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+  const tone = dir === 'up' ? 'text-status-gain' : dir === 'down' ? 'text-status-decline' : 'text-fg-secondary';
+  const label = t('hud.morale.aria', { value: number(value), dir, n: number(Math.abs(delta)), unit });
+  return (
+    <span role="img" aria-label={label} title={label} data-tour="morale" data-morale={dir}
+      className="relative flex flex-none items-center gap-2 rounded-4 border border-line-strong px-2.5 py-1 text-13">
+      <span className={tone}><Heart /></span>
+      <span className="text-fg-secondary tablet:hidden">{t('hud.morale.label')}</span>
+      <b className="font-mono text-15 font-500 text-fg-primary">{number(value)}</b>
+      <span className={`font-600 whitespace-nowrap ${tone}`}>{t('hud.morale.trend', { dir, n: number(Math.abs(delta)) })}</span>
+      {pop && (
+        <span key={pop.key} aria-hidden="true" data-morale-pop=""
+          className={`il-morale-pop pointer-events-none absolute -top-1 end-1 font-mono text-13 font-600 ${pop.n > 0 ? 'text-status-gain' : 'text-status-decline'}`}>
+          {t('hud.morale.pop', { dir: pop.n > 0 ? 'up' : 'down', n: number(Math.abs(pop.n)) })}
+        </span>
+      )}
+    </span>
+  );
+}
 
 const PILLARS = ['business', 'people', 'leadership'] as const;
 
@@ -198,6 +248,7 @@ export function Hud(p: HudProps) {
         </div>
         <span className="text-13 text-fg-secondary">{around(t('time.left', { amount: MARK }), v => <span>{v}</span>, amount)}</span>
       </div>
+      {p.morale && <span className="flex-none tablet-portrait:-order-2"><MoraleMeter value={p.morale.value} delta={p.morale.delta} unit={clock.periodUnit} /></span>}
       <div className="min-w-0 flex-1 tablet-portrait:-order-1" />
       {/* The session group (D213): the session clock, Pause and Save. One tour stop. */}
       {(pause || p.onSave) && (

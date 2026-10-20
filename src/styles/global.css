@@ -82,6 +82,9 @@
 @keyframes il-wait-bar { from { width: 0; } to { width: 100%; } }
 @keyframes il-slide-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
 .il-slide-in { animation: il-slide-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+/* Team morale's "+3" in the top bar (D241): rises out of the meter and fades. */
+@keyframes il-morale-pop { 0% { opacity: 0; transform: translateY(6px); } 15% { opacity: 1; transform: none; } 75% { opacity: 1; transform: translateY(-8px); } 100% { opacity: 0; transform: translateY(-14px); } }
+.il-morale-pop { animation: il-morale-pop 2.4s ease-out both; }
 
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

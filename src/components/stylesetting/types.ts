@@ -1,4 +1,5 @@
 import type { MoodKey, StyleKey } from '../../data/types';
+import type { Performance } from '../desk/performance';
 
 export type { PeriodUnit } from '../action/days';
 
@@ -6,6 +7,8 @@ export type { PeriodUnit } from '../action/days';
 export interface StyleSettingStats {
   skill: number;
   morale: number;
+  /** With a result the card shows all four in a grid, as the desk does (D241). */
+  result?: number;
   trust: number;
 }
 
@@ -33,6 +36,8 @@ export interface StyleSettingMember {
   lastReaction: 'pos' | 'neg' | null;
   /** This period's style. Null until the participant picks one. */
   style: StyleKey | null;
+  /** How they are delivering (D241): "Below par ▼4". */
+  performance?: Performance | null;
   /** Optional one line reason ("Kent is new and unsure"). Empty when none. */
   rationale: string;
 }

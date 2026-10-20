@@ -22,5 +22,9 @@
   "hud.settings.aria": "Settings",
   "hud.menu.button": "Menu",
   "hud.menu.aria": "Game menu",
-  "hud.menu.item": "{key, select, objectives {Objectives} tutorial {Tutorial and video} history {History} overview {Results and stages} leaderboard {Leaderboard} actions {About these actions} tour {Guided tour} settings {Settings} fullscreen {Full screen} exitFullscreen {Leave full screen} exit {Exit} other {}}"
+  "hud.menu.item": "{key, select, objectives {Objectives} tutorial {Tutorial and video} history {History} overview {Results and stages} leaderboard {Leaderboard} actions {About these actions} tour {Guided tour} settings {Settings} fullscreen {Full screen} exitFullscreen {Leave full screen} exit {Exit} other {}}",
+  "hud.morale.label": "Team morale",
+  "hud.morale.trend": "{dir, select, up {▲ {n} rising} down {▼ {n} falling} other {holding}}",
+  "hud.morale.pop": "{dir, select, up {+{n}} other {−{n}}}",
+  "hud.morale.aria": "Team morale {value}, {dir, select, up {up {n}} down {down {n}} other {no change}} this {unit, select, year {year} month {month} week {week} day {day} other {period}}"
 }

@@ -1,6 +1,10 @@
 import type { MoodKey } from '../../data/types';
+import type { MetricKey } from '../../engine/contract';
 import { useI18n } from '../../i18n';
+import { LOW_BELOW } from '../metric/MetricBar';
 import { backdrop, type MemberCardProps } from '../member/MemberCard';
+import { STATS } from '../profile/ProfilePanel';
+import type { Performance } from './performance';
 
 /** What the desk card adds to a member card (D232): the period's style by name, a flag, and the time spent with them. */
 export interface DeskCardInfo {
@@ -12,6 +16,35 @@ export interface DeskCardInfo {
   time: string | null;
   /** Say "No time with you yet" when there is no time line; the board turns it on from period 2, and not beside the neglect line. */
   noTime?: boolean;
+  /** How they are delivering (D241): "Below par ▼4". Null while their stats are hidden. */
+  performance?: Performance | null;
+}
+
+/** The four stats in a row, label over number, a low one in the attention colour as on the profile (D241). */
+export function StatGrid({ stats, hidden = false }: { stats: Record<MetricKey, number>; hidden?: boolean }) {
+  const { t, number } = useI18n();
+  return (
+    <span aria-hidden={hidden || undefined} className="grid grid-cols-4 gap-1 border-t border-line-default pt-1.25">
+      {STATS.map(k => (
+        <span key={k} className="flex min-w-0 flex-col">
+          <span className="truncate text-11 text-fg-secondary">{t('metric.name', { metric: k })}</span>
+          <b className={`font-mono text-14 leading-tight font-500 ${stats[k] < LOW_BELOW ? 'text-status-attention' : 'text-fg-primary'}`}>{number(stats[k])}</b>
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** "Below par ▼4": the band, then this period's move in its colour, as an arrow and a number (D241). */
+export function PerformanceLine({ performance: p, hidden = false }: { performance: Performance; hidden?: boolean }) {
+  return (
+    <span aria-hidden={hidden || undefined} className="flex min-w-0 items-baseline gap-1.5 text-12 text-fg-body">
+      {/* The arrow says the move to the eye; screen readers hear it in words. */}
+      <span aria-hidden="true" className="truncate">{p.band}</span>
+      {p.dir !== 'flat' && <b aria-hidden="true" className={`font-mono font-600 ${p.dir === 'up' ? 'text-status-gain' : 'text-status-decline'}`}>{p.move}</b>}
+      {!hidden && <span className="sr-only">{p.text}</span>}
+    </span>
+  );
 }
 
 /** Mood is a word with a shape, never colour alone, as the canvas draws it: a triangle up, a circle steady, a diamond under pressure. */
@@ -27,16 +60,19 @@ function MoodMark({ mood }: { mood: MoodKey }) {
 
 /**
  * A person on the desk, as the approved canvas draws them (D232): their face, name and this period's style, their mood
- * as a word and a shape, a flag when something needs you, and whether you have spent time with them this period. The
+ * as a word and a shape, their four stats and how they are delivering (D241), a flag when something needs you, and
+ * whether you have spent time with them this period. The
  * whole card is one button that selects them (pressed while selected or picked); their profile opens from the actions
  * panel. While an action is being planned, someone who cannot take part is dimmed and says why.
  */
 export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
   const { name, title, img, mood, away = false, skill, morale, result, trust, statsHidden = false, selected = false, unavailableReason, onSelect, memberId, desk } = props;
   const { t } = useI18n();
+  const stats = { skill, morale, result, trust };
   const unavailable = unavailableReason !== undefined && unavailableReason !== '';
   const moodName = away ? t('member.mood.away') : t('member.mood', { mood });
-  const aria = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
+  const card = t('member.card.aria', { name, title, mood: moodName, skill, morale, result, trust, hidden: String(statsHidden), available: String(!unavailable), reason: unavailableReason ?? '' });
+  const aria = desk.performance && !statsHidden ? t('desk.card.aria', { card, performance: desk.performance.text }) : card;
   return (
     <button type="button" onClick={onSelect} aria-pressed={selected} aria-label={aria} aria-disabled={unavailable || undefined} title={unavailable ? unavailableReason : undefined}
       data-tour="member" data-member-card="" data-member-id={memberId} data-trace={memberId ? `members.${memberId}` : undefined}
@@ -51,6 +87,9 @@ export function DeskCard(props: MemberCardProps & { desk: DeskCardInfo }) {
         </span>
       </span>
       <span className="flex min-w-0 items-center gap-1.5 text-13 text-fg-body text-large:flex-wrap"><MoodMark mood={away ? 'neutral' : mood} /><span className="truncate text-large:overflow-visible text-large:whitespace-normal">{moodName}</span></span>
+      {/* The button's name says the stats; the grid is for the eye. */}
+      {!statsHidden && <StatGrid stats={stats} hidden />}
+      {desk.performance && !statsHidden && <PerformanceLine performance={desk.performance} hidden />}
       {desk.flag && <span className="text-12 leading-(--il-canvas-leading-snug) text-status-attention">{desk.flag}</span>}
       {(desk.time || desk.noTime) && <span className={`mt-auto truncate border-t border-line-default pt-1.25 text-12 text-fg-body text-large:overflow-visible text-large:whitespace-normal ${desk.time ? 'font-400' : 'font-600'}`}>{desk.time ?? t('desk.card.noTime')}</span>}
     </button>

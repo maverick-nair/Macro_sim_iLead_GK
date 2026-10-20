@@ -32,6 +32,7 @@ import type { PaletteResult } from '../palette/CommandPalette';
 import { Toast } from '../feedback/Toast';
 import type { MetricKey } from '../../engine/contract';
 import { ProfileDialog } from '../profile/ProfileDialog';
+import { performance } from '../desk/performance';
 import { ProfilePanel, type ProfilePanelProps } from '../profile/ProfilePanel';
 import { StyleSettingView } from '../stylesetting/StyleSettingView';
 import { ReactingScreen } from '../liveshell/ReactingScreen';
@@ -482,6 +483,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     const noTime = v.clock.period >= 2 && !m.neglected;
     return {
       style: st ? styleName(st) : null, flag,
+      performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
       time: last ? t('desk.card.time', { unit: periodUnit, action: act?.name ?? last.title, sub: t('time.subPeriod', { unit, n: Math.min(last.sub + 1, v.clock.capacity) }) }) : null,
       noTime
     };
@@ -705,6 +707,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       rank={v.gamification.leaderboard.enabled && v.clock.period >= 2 ? <Suspense fallback={null}><CohortRank view={v} /></Suspense> : undefined}
     />
   );
+  // Team morale in the top bar (D241): where it stands and how this period's play has moved it.
+  const moraleKpi = v.kpis.find(k => k.metric === 'morale');
   const hud: HudProps = {
     organisation: v.storyline.organisation,
     menu,
@@ -718,6 +722,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
     score: tablet ? { total: v.score.total, business: v.score.business, people: v.score.people, leadership: v.score.leadership } : undefined,
     breakdown, scoreOpen, onScoreOpenChange: setScoreOpen,
     streak: tablet ? v.streak : undefined, streakLabel: streak, onPalette: openPalette, onSettings: app.onSettings,
+    morale: moraleKpi ? { value: moraleKpi.value, delta: Math.round(moraleKpi.value - moraleKpi.start) } : undefined,
     onEndPeriod: demo ? undefined : () => { if (!styling && !ended && !busy) void send({ type: 'endPeriod' }); },
     endEmphasis: f || styling || ended ? 'secondary' : 'primary'
   };
@@ -971,7 +976,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
         members={v.members.map(m => ({
           id: m.id, name: m.name, title: v.funnel.find(st => st.key === m.stage)?.name ?? m.title, img: img(m), mood: m.mood,
           away: m.away > 0, awayReason: m.awayReason ?? undefined, pronoun: m.pronoun,
-          stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, trust: m.trust } : null,
+          stats: m.skill !== null && m.morale !== null && m.trust !== null ? { skill: m.skill, morale: m.morale, result: m.result ?? undefined, trust: m.trust } : null,
+          performance: m.result !== null ? performance(t, m.result, v.trends[m.id], periodUnit) : null,
           lastStyle: m.lastStyle, lastReaction: m.lastReaction, style: draft[m.id] ?? null, rationale: notes[m.id] ?? ''
         }))}
         onStyle={styles.setStyle}

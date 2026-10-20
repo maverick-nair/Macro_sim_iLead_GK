@@ -85,7 +85,7 @@ export function StyleSettingList({ members, periodUnit, onStyle, onOpenProfile }
     <div role="table" aria-label={t('stylesetting.list.aria')} className="overflow-hidden rounded-4 border border-line-default bg-surface-card ">
       <div role="row" style={columns(lens.styles.length)} className={`${grid} border-b border-line-default px-4.5 py-3 text-12 font-600 tracking-(--il-stylesetting-list-header-tracking) text-fg-secondary uppercase`}>
         <span role="columnheader">{t('stylesetting.list.member')}</span>
-        <span role="columnheader">{t('stylesetting.list.stats')}</span>
+        <span role="columnheader">{t('stylesetting.list.stats', { result: members.some(m => m.stats?.result !== undefined) ? 'yes' : 'no' })}</span>
         <span role="columnheader">{t('stylesetting.list.last', { unit: periodUnit })}</span>
         {/* Five styles head their columns with the letter (the definitions above name them); screen readers hear the name. */}
         {lens.styles.map(s => (lens.styles.length > 4

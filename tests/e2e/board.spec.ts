@@ -79,11 +79,17 @@ async function setStyles(page: Page, index = 1) {
 
 test('a week on the engine, from styles to the next week', async ({ page }) => {
   await page.goto('/?start=board');
-  await expect(page.getByText('Open each profile to see their skill, morale, result and trust before you choose.')).toBeVisible();
+  // Every card shows the four stats and how the person is delivering from the start (D241).
+  const kentStyles = page.getByRole('group', { name: /^Kent Goldberg,/ });
+  for (const metric of ['Skill', 'Morale', 'Result', 'Trust']) await expect(kentStyles.getByText(metric, { exact: true })).toBeVisible();
+  await expect(kentStyles.getByText('Below par', { exact: true }).first()).toBeVisible();
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Set your leadership styles for week 1');
   await setStyles(page);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your team board, week 1');
+  // The top bar shows team morale and how this week's play moved it; each card says how its person is delivering (D241).
+  await expect(page.getByRole('img', { name: /^Team morale \d+, (up \d+|down \d+|no change) this week$/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Kent Goldberg, Lead.*Skill \d+, Morale \d+, Result \d+, Trust \d+\. (Strong delivery|Steady delivery|Below par|Struggling)/ })).toBeVisible();
 
   // Actions open once styles are set; costs read in days.
   // Keyboard selection: the card's toggle is visually hidden, the card draws its focus ring.
@@ -176,8 +182,8 @@ test('style summary: focus is trapped, the page behind is inert, Go back returns
 test('style setting opens a profile before you choose: the stats, who they are, then back to their styles (D240)', async ({ page }) => {
   await page.goto('/?start=board');
   const kent = page.getByRole('group', { name: /^Kent Goldberg,/ });
-  await expect(kent.getByText(/^Skill \d+ · Morale/)).toHaveCount(0, { timeout: 20000 });
   const open = kent.getByRole('button', { name: 'View profile, Kent Goldberg' });
+  await expect(open).toBeVisible({ timeout: 20000 });
   await open.click();
   const profile = page.getByRole('dialog', { name: 'Profile for Kent Goldberg' });
   await expect(profile).toBeVisible();
@@ -189,9 +195,12 @@ test('style setting opens a profile before you choose: the stats, who they are, 
   await page.keyboard.press('Escape');
   await expect(profile).toHaveCount(0);
   await expect(open).toBeFocused();
-  // Read once, the card keeps the stats; the list view opens the same profile.
-  await expect(kent.getByText(/^Skill \d+ · Morale \d+ · Trust \d+$/)).toBeVisible();
+  // The photo opens it too, for a pointer; the list view opens the same profile.
+  await kent.locator('[data-profile-photo]').click();
+  await expect(profile).toBeVisible();
+  await page.keyboard.press('Escape');
   await page.getByRole('radio', { name: 'List' }).click();
+  await expect(page.getByRole('columnheader', { name: 'Skill · Morale · Result · Trust' })).toBeVisible();
   await page.getByRole('button', { name: 'View profile, Peter Higgins' }).click();
   await expect(page.getByRole('dialog', { name: 'Profile for Peter Higgins' })).toBeVisible();
 });

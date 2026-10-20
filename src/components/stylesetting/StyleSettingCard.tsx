@@ -3,6 +3,7 @@ import type { StyleKey } from '../../data/types';
 import { useI18n } from '../../i18n';
 import { StyleControl } from '../style/StyleControl';
 import { styleOf, useLens } from '../style/lens';
+import { PerformanceLine, StatGrid } from '../desk/DeskCard';
 import { LastPeriodTag } from './LastPeriodTag';
 import { mark, rich } from './rich';
 import { portraitBackdrop, statsHidden, type PeriodUnit, type StyleSettingMember } from './types';
@@ -42,7 +43,9 @@ export function StatsLine({ member, short = false }: { member: StyleSettingMembe
   const { t, number } = useI18n();
   if (statsHidden(member) || !member.stats) return <>{t('stylesetting.stats.hidden')}</>;
   const { skill, morale, trust } = member.stats;
-  if (short) return <>{t('stylesetting.stats.short', { skill: number(skill), morale: number(morale), trust: number(trust) })}</>;
+  const result = member.stats.result;
+  if (short) return <>{result === undefined ? t('stylesetting.stats.short', { skill: number(skill), morale: number(morale), trust: number(trust) })
+    : t('stylesetting.stats.shortResult', { skill: number(skill), morale: number(morale), result: number(result), trust: number(trust) })}</>;
   const b = (v: number, k: string) => <b key={k} className="font-mono font-500 text-fg-primary">{number(v)}</b>;
   return <>{rich(t('stylesetting.stats', { skill: mark(0), morale: mark(1), trust: mark(2) }), [b(skill, 's'), b(morale, 'm'), b(trust, 't')])}</>;
 }
@@ -80,15 +83,26 @@ export function StyleSettingCard({ member: m, periodUnit, onStyle, onRationale, 
   return (
     <div role="group" aria-label={t('stylesetting.member.aria', { name: m.name, title: m.title, mood })} data-member-id={m.id}
       className="flex min-w-0 flex-col gap-2">
-      <div className={`relative h-32 overflow-hidden short:h-28 shorter:h-20 ${portraitBackdrop(m.away)}`}>
-        <img src={m.img} alt="" className={`size-full object-contain mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
-      </div>
+      {onOpenProfile ? (
+        // The photo opens the profile for a pointer too (D240); the keyboard and screen readers use View profile below.
+        <button type="button" tabIndex={-1} aria-hidden="true" onClick={onOpenProfile} data-profile-photo=""
+          className={`relative block h-32 w-full cursor-pointer overflow-hidden border-0 p-0 short:h-28 shorter:h-20 ${portraitBackdrop(m.away)}`}>
+          <img src={m.img} alt="" className={`size-full object-contain mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
+        </button>
+      ) : (
+        <div className={`relative h-32 overflow-hidden short:h-28 shorter:h-20 ${portraitBackdrop(m.away)}`}>
+          <img src={m.img} alt="" className={`size-full object-contain mix-blend-multiply ${m.away ? 'grayscale' : ''}`} />
+        </div>
+      )}
       <div className="flex min-w-0 flex-col">
         <b className="truncate text-14 font-600 text-large:whitespace-normal">{m.name}</b>
         <span className="text-12 text-fg-secondary">{t('stylesetting.member.line', { title: m.title, mood: m.away ? t('member.mood.away') : mood })}</span>
       </div>
       {m.lastStyle !== null && <LastPeriodTag periodUnit={periodUnit} style={m.lastStyle} reaction={m.lastReaction} />}
-      {!statsHidden(m) && <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>}
+      {!statsHidden(m) && m.stats && (m.stats.result !== undefined
+        ? <StatGrid stats={{ ...m.stats, result: m.stats.result }} />
+        : <span className="text-12 text-fg-secondary"><StatsLine member={m} /></span>)}
+      {!statsHidden(m) && m.performance && <PerformanceLine performance={m.performance} />}
       {onOpenProfile && <ProfileButton member={m} onOpen={onOpenProfile} />}
       <div data-tour="style-control"><StyleControl variant="names" size="md" value={m.style} onChange={onStyle} memberName={m.name} tooltip={tooltip} onTooltipChange={onTooltipChange} /></div>
       {m.away && <span className="text-12 text-pretty text-fg-secondary">{note.text}</span>}

@@ -32,14 +32,11 @@ describe('onboarding on the engine', () => {
     expect(all.flatMap(p => copyViolations(p))).toEqual([]);
   });
 
-  it('keeps stats hidden until the engine reveals them, and names stages from the funnel', async () => {
-    const before = engineMembers(i18n, view);
-    expect(before.find(m => m.id === 'kent')).toMatchObject({ name: 'Kent Goldberg', stage: 'Leads', stats: null, read: false });
-    await engine.dispatch({ type: 'openProfile', memberId: 'kent' });
-    const after = engineMembers(i18n, EngineView.parse(engine.view()));
-    expect(after.find(m => m.id === 'kent')).toMatchObject({ read: true, stats: { skill: 30, morale: 22, result: 49 } });
+  it('shows stats from the start (D241), and names stages from the funnel', () => {
+    const kent = engineMembers(i18n, view).find(m => m.id === 'kent');
+    expect(kent).toMatchObject({ name: 'Kent Goldberg', stage: 'Leads', read: true, stats: { skill: 30, morale: 22, result: 49 } });
     // Empty profile facts read as unknown rather than blank.
-    expect(after.find(m => m.id === 'kent')?.facts.previous).toBe('Not known yet');
+    expect(kent?.facts.previous).toBe('Not known yet');
   });
 
   it('makes initials for a sponsor without a portrait', () => {
