@@ -325,6 +325,8 @@ export type StorylineLook = z.output<typeof StorylineLook>;
 /** Everything the participant may see. Never includes a member's needed style. */
 export const EngineView = z.object({
   phase: z.enum(['style', 'board', 'periodEnd', 'ended']),
+  /** The storyline's purpose (D75). An assessment run gives no hints on which action fits (D234). */
+  purpose: z.enum(['development', 'assessment']).default('development'),
   /** The storyline's name, the organisation the participant joins and the authored welcome letter, for onboarding. */
   storyline: z.object({ name: Text, organisation: Text.nullable(), locale: z.string().default('en'), intro: z.object({ welcome: z.array(Text), product: z.array(Text), targets: z.array(Text) }).nullish(),
     /** The welcome video, replayable from Tutorial and video (D90): its file, poster, captions track and transcript. */
@@ -344,7 +346,8 @@ export const EngineView = z.object({
     /** What the stage does and which skills suit it, when authored (D97). */
     about: Text.nullable().default(null), suits: Text.nullable().default(null) })),
   actions: z.array(ActionView),
-  promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0) })),
+  /** `keptBy`: the actions that keep the promise when taken with that person (D234's hint). */
+  promises: z.array(z.object({ id: Id, memberId: Id, text: Text, state: z.enum(['open', 'kept', 'broken']), dueInSubPeriods: z.number().int().min(0), keptBy: z.array(Id).default([]) })),
   /** `briefing`: a scheduled sponsor briefing, opened with `openConversation` kind `sponsor`; other messages are replies. News needs no answer. */
   inbox: z.array(z.object({ id: Id, from: Id, kind: z.enum(['chat', 'email', 'sponsor', 'news']), title: Text, body: Text, urgent: z.boolean(), state: z.string(), briefing: z.boolean(), dueInSubPeriods: z.number().int().nullable() })),
   /** Event cards. `sponsorCall` rings before it shows; `messageId` is the message to answer, if any. */

@@ -89,6 +89,13 @@ for (const [theme, q] of [['dark', ''], ['light', '&theme=light'], ['client', '&
     await expect(drawer(page)).toHaveAccessibleName('Actions for Kent Goldberg');
     await expect(drawer(page).getByRole('tab', { name: 'For Kent' })).toHaveAttribute('aria-selected', 'true');
     await expect.poll(() => page.evaluate(() => !!document.activeElement?.closest('[role="dialog"]'))).toBe(true);
+    // Their actions by intent (D234), one radio group still: Talk, Develop, Decide.
+    const choose = drawer(page).getByRole('radiogroup', { name: 'Choose an action' });
+    await expect(choose.getByRole('group')).toHaveText([/^Talk/, /^Develop/, /^Decide/]);
+    await expect(choose.getByRole('group', { name: 'Talk' }).getByRole('radio', { name: /Meet face to face/ })).toHaveCount(1);
+    await expect(choose.getByRole('group', { name: 'Decide' }).getByRole('radio', { name: /Swap roles/ })).toHaveCount(1);
+    // Tours and tips are off in these flows: no hint.
+    await expect(drawer(page).getByText('Fits now')).toHaveCount(0);
     await check(page);
     expect(await tooSmall(page)).toEqual([]);
     // Escape closes it and focus goes back to Kent's card.

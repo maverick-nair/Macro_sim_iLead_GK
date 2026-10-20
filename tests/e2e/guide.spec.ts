@@ -104,6 +104,44 @@ test.describe('a first run', () => {
   });
 });
 
+test.describe('hints on the actions (D234)', () => {
+  // No storage: the guide is on, as for a new participant.
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test('the actions panel marks what fits a person now, as a description, and stops once tips are off', async ({ page }) => {
+    await page.goto('/?start=board');
+    const styleTip = page.getByRole('dialog', { name: 'Your leadership styles' });
+    await expect(styleTip).toBeVisible({ timeout: 10_000 });
+    await page.keyboard.press('Escape');
+    await setStyles(page);
+    const tour = page.getByRole('dialog', { name: 'Objectives and Tutorial' });
+    await expect(tour).toBeVisible({ timeout: 10_000 });
+    await tour.getByRole('button', { name: 'Skip tour' }).click();
+    await expect(tour).toHaveCount(0);
+    await page.getByRole('button', { name: 'Dismiss outcome' }).click();
+    await dismissCards(page);
+
+    await page.getByText('Kent Goldberg', { exact: true }).click();
+    const mine = page.getByRole('list', { name: 'For Kent' });
+    // Nobody is assessed in week 1: Assess member fits. The reason is its description; its name is unchanged.
+    const assess = mine.getByRole('list', { name: 'Develop' }).getByRole('button', { name: /^Assess member/ });
+    await expect(assess).toContainText('Fits now');
+    await expect(assess).toHaveAccessibleDescription('Fits now: Not assessed yet: assess before you coach or move Kent');
+    await expect(assess).toHaveAccessibleName(/^Assess member Instant 1 day$/);
+    const hinted = mine.locator('[data-fits-now]');
+    expect(await hinted.count()).toBeGreaterThanOrEqual(1);
+    expect(await hinted.count()).toBeLessThanOrEqual(2);
+    // Never on an action that cannot be taken.
+    expect(await mine.locator('button[aria-disabled="true"] [data-fits-now]').count()).toBe(0);
+    await axe(page, 'actions with a hint');
+
+    // Do not show tips again: the hints go with the tours and tips.
+    await openFromMenu(page, 'Guided tour');
+    await page.getByRole('button', { name: 'Do not show tips again' }).click();
+    await expect(mine.locator('[data-fits-now]')).toHaveCount(0);
+  });
+});
+
 test.describe('the demo round', () => {
   test('played through from onboarding: guided steps, the impact, then the real run as it was', async ({ page }) => {
     await page.goto('/?start=demo');

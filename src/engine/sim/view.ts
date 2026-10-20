@@ -148,6 +148,8 @@ export function buildView(sim: Sim) {
   const score = finalScore(sim);
   return {
     phase: sim.phase,
+    /** Development or assessment (D75): an assessment run shows no hints on the actions (D234). */
+    purpose: purposeOf(c),
     /**
      * Read only storyline identity, for onboarding, and what the player renders from the storyline's look and world
      * (D181 to D183): the client brand, the company logo, the office image, the product portfolio and the intro screens.
@@ -207,7 +209,8 @@ export function buildView(sim: Sim) {
         teamTime: a.scope === 'team' ? opportunityOf(realism, a, a.options[0]) : 0
       } : null)
     })),
-    promises: sim.promises.map(x => ({ id: x.id, memberId: x.memberId, text: x.text, state: x.state, dueInSubPeriods: Math.max(0, x.dueAbsSub - sim.absSub) })),
+    // `keptBy`: the actions that keep it, for the actions panel's hint (D234).
+    promises: sim.promises.map(x => ({ id: x.id, memberId: x.memberId, text: x.text, state: x.state, dueInSubPeriods: Math.max(0, x.dueAbsSub - sim.absSub), keptBy: x.fulfilledBy })),
     inbox: sim.inbox.filter(x => x.state === 'open').map(message),
     cards: sim.cards,
     outcome: sim.outcome ? { ...sim.outcome, from: who(sim, sim.outcome.speaker) } : null,
