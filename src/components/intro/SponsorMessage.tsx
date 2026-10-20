@@ -2,7 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { clockText } from '../../app/sessionClock';
 import { useI18n } from '../../i18n';
 import { Arrow, DISPLAY, EYEBROW, FOCUS, LINK, PRIMARY } from './IntroHeader';
-import { chapterAt, type IntroMessage } from './intro';
+import { captionAt, captionStart, chapterAt, type IntroMessage } from './intro';
 
 export interface SponsorMessageProps {
   message: IntroMessage;
@@ -33,15 +33,17 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
   const { t } = useI18n();
   const video = useRef<HTMLVideoElement>(null);
   const endHeading = useRef<HTMLHeadingElement>(null);
+  const track = useRef<HTMLTrackElement>(null);
   const [videoLength, setVideoLength] = useState<number | null>(null);
+  // The captions file's cue starts, once loaded: the lines follow the speech, not an even share (D237).
+  const [cueStarts, setCueStarts] = useState<number[] | null>(null);
   const duration = Math.max(1, Math.round(videoLength ?? message.captions.length * secondsPerCaption));
   const [at, setAt] = useState(0);
   const [playing, setPlaying] = useState(autoPlay);
   const [cc, setCc] = useState(true);
   const chaptersId = useId();
   const ended = at >= duration;
-  const per = duration / Math.max(1, message.captions.length);
-  const line = Math.min(message.captions.length - 1, Math.floor(at / per));
+  const line = captionAt(at, message.captions.length, duration, cueStarts);
   const chapter = chapterAt(message.chapters, line);
 
   // Without a video the message keeps its own time, a second at a time.
@@ -62,6 +64,8 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
     else v.pause();
   }, [playing, ended]);
   useEffect(() => { if (ended) endHeading.current?.focus({ preventScroll: true }); }, [ended]);
+  // Hidden, the track still loads its cues but the browser draws no second set of captions under ours.
+  useEffect(() => { if (track.current) track.current.track.mode = 'hidden'; }, [message.video?.track]);
 
   const seek = (s: number) => {
     const to = Math.max(0, Math.min(duration, s));
@@ -76,12 +80,12 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
       <section aria-label={t('intro.message.title', { name: sponsor.name })} className="relative flex min-h-110 flex-col overflow-hidden rounded-4 bg-black">
         <div className="relative flex min-h-0 flex-1 items-center justify-center">
           {message.video ? (
-            // The captions show over the video from the transcript (aria-live below); the storyline's track, when it has one, goes along.
+            // The captions show over the video from the transcript (aria-live below); the storyline's track, when it has one, times them.
             // eslint-disable-next-line jsx-a11y/media-has-caption
             <video ref={video} src={message.video.src} poster={message.video.poster ?? undefined} muted={muted} playsInline preload="metadata" aria-hidden="true"
               onLoadedMetadata={e => { const d = e.currentTarget.duration; if (Number.isFinite(d) && d > 0) setVideoLength(d); }}
               onTimeUpdate={e => setAt(e.currentTarget.currentTime)} onEnded={() => setAt(duration)} className="absolute inset-0 size-full object-cover">
-              {message.video.track && <track kind="captions" src={message.video.track} default />}
+              {message.video.track && <track ref={track} kind="captions" src={message.video.track} onLoad={e => { const c = e.currentTarget.track.cues; if (c) setCueStarts(Array.from(c, x => x.startTime)); }} />}
             </video>
           ) : sponsor.img
             ? <img src={sponsor.img} alt="" className="absolute inset-0 size-full object-cover object-(--il-canvas-video-position)" />
@@ -121,7 +125,7 @@ export function SponsorMessage({ message, sponsor, muted, hasProducts, onNext, s
         <ol className="m-0 flex list-none flex-col gap-2 p-0">
           {message.chapters.map((c, i) => {
             const title = t('intro.message.chapter', { key: c.key });
-            const start = Math.round(c.start * per);
+            const start = Math.round(captionStart(c.start, message.captions.length, duration, cueStarts));
             const on = i === chapter && !ended;
             return (
               <li key={c.key}>

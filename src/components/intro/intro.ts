@@ -113,5 +113,20 @@ export function introMessage(view: Pick<EngineView, 'storyline'>, letter: { welc
   };
 }
 
+/**
+ * The caption on screen at `at` seconds (D237): from the captions file's cue start times when there is one cue per
+ * line, so a long line stays as long as it is spoken; else the lines share the length evenly.
+ */
+export function captionAt(at: number, count: number, duration: number, starts: number[] | null): number {
+  if (count < 1) return 0;
+  if (starts && starts.length === count) return Math.max(0, starts.findLastIndex(s => s <= at));
+  return Math.min(count - 1, Math.floor(at / (Math.max(1, duration) / count)));
+}
+
+/** When caption `i` starts, by the same rule as `captionAt`: where a chapter button jumps to. */
+export function captionStart(i: number, count: number, duration: number, starts: number[] | null): number {
+  return starts && starts.length === count ? starts[i] ?? 0 : i * (Math.max(1, duration) / Math.max(1, count));
+}
+
 /** The chapter a caption belongs to. */
 export const chapterAt = (chapters: MessageChapter[], caption: number) => chapters.reduce((at, c, i) => (caption >= c.start ? i : at), 0);
