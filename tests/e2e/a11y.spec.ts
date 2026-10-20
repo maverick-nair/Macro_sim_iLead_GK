@@ -600,7 +600,7 @@ test.describe('keyboard only', () => {
     await cardsByKeyboard(page);
 
     // Pick Kent by keyboard, then the action, its option, confirm.
-    const kent = page.getByRole('button', { name: /^Kent Goldberg, Lead/ });
+    const kent = page.getByRole('button', { name: /^Kent Goldberg, Account Executive/ });
     await press(page, kent);
     await expect(kent).toHaveAttribute('aria-pressed', 'true');
     await press(page, page.getByRole('button', { name: /Meet face to face/ }));

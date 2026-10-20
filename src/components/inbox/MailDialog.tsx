@@ -133,6 +133,8 @@ export function MailDialog(p: MailDialogProps) {
     <Dialog.Root open onOpenChange={o => { if (!o) p.onClose(); }}>
       <Dialog.Overlay className="fixed inset-0 z-46 flex items-center justify-center bg-surface-scrim p-6 short:p-3">
         <Dialog.Content aria-describedby={undefined} aria-modal="true" data-mail=""
+          // Back to the envelope in the top bar, unless a conversation opened from the inbox has taken focus.
+          onCloseAutoFocus={e => { e.preventDefault(); if (document.activeElement === document.body || !document.activeElement) document.querySelector<HTMLElement>('[data-mail-button]')?.focus({ preventScroll: true }); }}
           className="grid h-full max-h-(--il-mail-max-height) w-full max-w-(--il-mail-max-width) animate-(--il-mail-enter) grid-cols-(--il-mail-columns) grid-rows-(--il-mail-rows) overflow-hidden rounded-4 border border-line-strong bg-surface-page text-fg-primary shadow-(--il-mail-shadow) outline-0">
           <div className="col-span-3 flex items-center gap-3 border-b border-line-strong bg-surface-card px-5 py-3">
             <Dialog.Title className="m-0 flex-1 font-display text-28 leading-tight font-400">{t('inbox.title')}</Dialog.Title>

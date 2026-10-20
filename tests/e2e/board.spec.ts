@@ -86,16 +86,19 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   await expect(page.getByRole('main')).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Set your leadership styles for week 1');
   await setStyles(page);
+  // How it landed is a pop-up over the board (D242): the board behind is inert until it is dismissed.
+  await dismissOutcome(page);
+  await dismissEvents(page);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your team board, week 1');
   // The top bar shows team morale and how this week's play moved it; each card says how its person is delivering (D241).
   await expect(page.getByRole('img', { name: /^Team morale \d+, (up \d+|down \d+|no change) this week$/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: /^Kent Goldberg, Lead.*Skill \d+, Morale \d+, Result \d+, Trust \d+\. (Strong delivery|Steady delivery|Below par|Struggling)/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Kent Goldberg, Account Executive.*Skill \d+, Morale \d+, Result \d+, Trust \d+\. (Strong delivery|Steady delivery|Below par|Struggling)/ })).toBeVisible();
 
   // Actions open once styles are set; costs read in days.
   // Keyboard selection: the card's toggle is visually hidden, the card draws its focus ring.
-  await page.getByRole('button', { name: /^Kent Goldberg, Lead/ }).focus();
+  await page.getByRole('button', { name: /^Kent Goldberg, Account Executive/ }).focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('button', { name: /^Kent Goldberg, Lead/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: /^Kent Goldberg, Account Executive/ })).toHaveAttribute('aria-pressed', 'true');
   await page.getByRole('button', { name: /Meet face to face/ }).click();
   await expect(page.getByRole('heading', { name: 'Meet face to face' })).toBeFocused();
   await page.getByText('Energize the person').click();
@@ -112,7 +115,7 @@ test('a week on the engine, from styles to the next week', async ({ page }) => {
   // The board owns "The team is reacting" and holds the outcome behind it.
   await expect(page.getByText('The team is reacting')).toBeVisible();
   await expect(page.getByText('How it landed')).toBeVisible({ timeout: 10000 });
-  await expect(page.getByRole('region', { name: 'Outcome' }).getByRole('heading', { level: 2 })).toBeFocused();
+  await expect(page.getByRole('dialog', { name: 'Outcome' }).getByRole('heading', { level: 2 })).toBeFocused();
   await expect(page.getByText(/Kent (skill|morale|result|trust) (up|down)/).first()).toBeVisible();
   await expect(page.getByText(/4 days left/).first()).toBeVisible();
   await dismissOutcome(page);
@@ -233,7 +236,7 @@ test('a static decision shows its outcome with reasons; a double click sends it 
   const headline = page.getByRole('heading', { name: 'Energize the team: Team Lunch' });
   await expect(headline).toBeFocused();
   await expect(page.getByText(/4 days left/).first()).toBeVisible();
-  const outcome = page.getByRole('region', { name: /How it landed|Outcome/i });
+  const outcome = page.getByRole('dialog', { name: 'Outcome' });
   await expect(outcome.getByText(/people morale (up|down)|morale (up|down)/).first()).toBeVisible();
   await outcome.getByRole('button', { name: 'See why' }).click();
   await expect(outcome.getByText('The rule').first()).toBeVisible();
@@ -263,29 +266,32 @@ test('inbox: focus moves in, Later sets the briefing aside until the next day, E
   // nothing can take focus back from the inbox (this test was flaky under load).
   await dismissOutcome(page);
   await dismissEvents(page);
-  const rail = page.getByRole('button', { name: /^Inbox/ });
-  await rail.click();
+  // The inbox opens from the envelope in the top bar (D242), as an overlay with every message.
+  const envelope = page.getByRole('button', { name: /^Inbox, \d+ unread$/ });
+  await envelope.click();
   const inbox = page.getByRole('dialog', { name: 'Inbox' });
-  await expect(inbox).toBeFocused({ timeout: 10_000 });
-  // Other messages (news such as the CEO check in) can sit in the inbox too: set the briefing aside.
-  await inbox.locator('div').filter({ has: page.getByText('Briefing with Paul', { exact: true }) }).filter({ has: page.getByRole('button', { name: 'Later' }) }).last().getByRole('button', { name: 'Later' }).click();
-  await expect(page.getByText('Briefing with Paul')).toHaveCount(0);
-  await expect(inbox).toBeFocused();
+  await expect(inbox).toBeVisible({ timeout: 10_000 });
+  expect(await inbox.evaluate(d => d.contains(document.activeElement))).toBe(true);
+  // Open the briefing and set it aside: it stays in the list, marked as set aside.
+  const briefing = inbox.getByRole('button', { name: /^Unread\. Paul Jacob: Briefing with Paul/ });
+  await briefing.click();
+  await inbox.getByRole('article').getByRole('button', { name: 'Later' }).click();
+  await expect(briefing).toContainText('Set aside until later');
   await page.keyboard.press('Escape');
   await expect(inbox).toHaveCount(0);
-  await expect(rail).toBeFocused();
-  // A day passes: the briefing is back.
-  // (A CEO check in, when the sponsor's confidence fell, takes a day of this week, so read the days left first.)
+  await expect(envelope).toBeFocused();
+  // A day passes: the briefing is back with a Reply now.
   const left = page.getByText(/^\d+ days? left$/).first();
   const before = (await left.textContent()) ?? '';
   await page.getByRole('button', { name: /Energize the team/ }).click();
   await page.getByRole('radio', { name: 'Team Lunch' }).click();
   await page.getByRole('button', { name: /^Confirm/ }).click();
-  // Sponsor confidence fell below the check in line in week 3 of this run: the CEO check in took a day of week 4.
   await expect(left).not.toHaveText(before);
-  await expect(page.getByText('The CEO check in took a day this week')).toBeVisible();
-  // Back in the feedback and inbox feed (D212).
-  await expect(page.getByRole('button', { name: /^Reply now\W+Briefing with Paul/ })).toBeVisible();
+  await dismissOutcome(page);
+  await envelope.click();
+  await inbox.getByRole('button', { name: /^Unread\. Paul Jacob: Briefing with Paul/ }).click();
+  await expect(inbox.getByRole('article').getByRole('button', { name: 'Reply now' })).toBeVisible();
+  await expect(inbox.getByRole('article').getByRole('button', { name: 'Later' })).toBeVisible();
 });
 
 test('palette: Ctrl K on the plain board only', async ({ page }) => {
@@ -293,6 +299,8 @@ test('palette: Ctrl K on the plain board only', async ({ page }) => {
   await expect(page.getByRole('radiogroup', { name: /^Leadership style for/ })).toHaveCount(10, { timeout: 20000 });
   await page.keyboard.press('Control+k');
   await setStyles(page);
+  await dismissOutcome(page);
+  await dismissEvents(page);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.keyboard.press('Control+k');
   await expect(page.getByRole('dialog')).toHaveCount(1);
@@ -308,6 +316,8 @@ test('palette: Ctrl K on the plain board only', async ({ page }) => {
 test('the end of the run: the last week end, the end screen, then the board read only and back', async ({ page }) => {
   await page.goto('/?start=board&period=8');
   await setStyles(page);
+  await dismissOutcome(page);
+  await dismissEvents(page);
   await page.getByRole('button', { name: /End week/ }).click();
   await dismissEvents(page);
   await expect(page.getByText('End of week 8')).toBeVisible();

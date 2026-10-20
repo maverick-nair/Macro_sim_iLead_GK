@@ -34,7 +34,8 @@ export function useFocusRescue() {
     const dialog = lastDialog.current;
     if (dialog?.isConnected) { dialog.focus({ preventScroll: true }); return; }
     // A modal that just closed puts focus back itself (Radix), unless it hands that to us (`closing`).
-    if (!closing && dialog?.getAttribute('aria-modal') === 'true') return;
+    // How it landed (D242) hands focus back to the board as the band did: to the heading.
+    if (!closing && dialog?.getAttribute('aria-modal') === 'true' && !dialog.hasAttribute('data-focus-handoff')) return;
     const hinted = focusHintRef.current?.();
     focusHintRef.current = null;
     (hinted ?? headlineIn(outcomeRef.current) ?? h1Ref.current)?.focus({ preventScroll: true });
