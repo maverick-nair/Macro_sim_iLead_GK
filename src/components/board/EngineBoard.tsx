@@ -22,6 +22,7 @@ import { useSession } from '../session/session';
 import { SignedOut } from '../session/SignedOut';
 import { TeamBoard, type StageColumn, type TeamBoardHint } from '../team/TeamBoard';
 import { ActionsPanel } from '../actions/ActionsPanel';
+import { byIntent, fitsNow, fitText, intentOf } from '../actions/guidance';
 import { ActionDrawer, type ActionDrawerProps } from '../action/ActionDrawer';
 import type { ActionBlock, ActionTileProps } from '../action/ActionTile';
 import { useDays } from '../action/days';
@@ -80,6 +81,7 @@ const Tour = lazy(() => import('../tour/Tour'));
 import { useFocusRescue, useOutcomeFocus } from './hooks/useFocus';
 import { useFullscreen } from './hooks/useFullscreen';
 import { useNotices, useTour } from './hooks/useGuide';
+import { guideOff } from '../tour/guideStore';
 import { useInbox } from './hooks/useInbox';
 import { useLiveReacting } from './hooks/useLiveReacting';
 import { usePanels } from './hooks/usePanels';
@@ -376,6 +378,13 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
   const hireFree = (a: ActionV) => a.perk === 'hireBudget';
   const freeActivity = (a: ActionV) => a.perk === 'noCooldown';
   const perkLine = (a: ActionV) => (hireFree(a) ? t('actions.perk.hire', { unit }) : freeActivity(a) ? t('actions.perk.activity') : undefined);
+  /** What suits the selected person now (D234): none in the demo, nor once the participant turned tips off (D99). */
+  const fitFor = ui.selectedIds[0] ?? null;
+  const fits = fitFor && !demo ? fitsNow(v, fitFor, { guide: !guideOff() }) : [];
+  const hintFor = (key: string, id: string) => {
+    const h = id === fitFor ? fits.find(x => x.key === key) : undefined, m = member(id);
+    return h && m ? fitText(t, h.reason, { name: m.name, periodUnit }) : undefined;
+  };
   const tile = (key: string, memberId: string | null): ActionTileProps => {
     const a = action(key)!;
     const b = ended ? { reason: 'locked' as const, text: t('board.ended.locked') }
@@ -383,7 +392,8 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
       // In the demo, conversations are left to the Week 0 practice (D92).
       : demo && a.kind !== 'static' ? { reason: 'locked' as const, text: t('board.demo.live') }
       : block(memberId ? a.blockedFor[memberId] ?? null : a.blocked);
-    return { name: a.name, kind: a.kind, days: hireFree(a) ? 0 : a.cost, block: b, perk: b ? undefined : perkLine(a), actionKey: a.key, onPick: () => { if (!b) pick(key, memberId); } };
+    return { name: a.name, kind: a.kind, days: hireFree(a) ? 0 : a.cost, block: b, perk: b ? undefined : perkLine(a), actionKey: a.key, intent: intentOf(a),
+      hint: !b && memberId ? hintFor(key, memberId) : undefined, onPick: () => { if (!b) pick(key, memberId); } };
   };
 
   const f = flow, fa = f ? action(f.key) : undefined;
@@ -1009,7 +1019,7 @@ function Board({ view: v, ...app }: EngineBoardProps & { view: EngineView }) {
                 person: sm ? { name: sm.name, img: img(sm), mood: sm.mood, away: sm.away > 0, stage: stageName(sm.stage), trust: sm.statsRevealed ? sm.trust : null } : null,
                 tab, onTab: sheetTab, left,
                 due: due ? { title: due.title, in: due.dueInSubPeriods!, onReply: () => { closeSheet(); void openMessage(due.id); } } : undefined,
-                rows: tab === 'profile' ? [] : v.actions.filter(a => a.scope === (tab === 'member' ? 'member' : 'team')).map(a => ({ key: a.key, tile: tile(a.key, tab === 'member' ? sm!.id : null) })),
+                rows: tab === 'profile' ? [] : byIntent(v.actions.filter(a => a.scope === (tab === 'member' ? 'member' : 'team')), intentOf).map(a => ({ key: a.key, tile: tile(a.key, tab === 'member' ? sm!.id : null) })),
                 chosen: f?.key ?? null, flow: drawer, profile, subPeriodUnit: unit,
                 onClose: closeSheet, onPickOnBoard: () => setLowered(true),
                 opener: () => mainRef.current?.querySelector<HTMLElement>(sm ? '[data-member-card][aria-pressed="true"]' : '[data-dock="actions"]')

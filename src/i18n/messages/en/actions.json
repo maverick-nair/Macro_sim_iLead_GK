@@ -24,5 +24,16 @@
   "actions.perk.drawer": "{perk, select, hire {Extra hire budget from your sponsor: no {unit, select, quarter {quarters} month {months} week {weeks} hour {hours} other {days}}, and one seat past a full team.} other {A reward from your sponsor: no cooldown after this one.}}",
   "actions.note.checkIn": "The CEO check in took a {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} this {period, select, year {year} month {month} day {day} other {week}}",
   "actions.note.bonusDay": "Bonus {unit, select, quarter {quarter} month {month} week {week} hour {hour} other {day}} added this {period, select, year {year} month {month} day {day} other {week}}",
-  "actions.about": "About these actions"
+  "actions.about": "About these actions",
+  "actions.group": "{intent, select, talk {Talk} develop {Develop} decide {Decide} other {Whole team}}",
+  "actions.fit": "Fits now",
+  "actions.fit.line": "Fits now: {reason}",
+  "actions.fit.promise": "You owe {name} a follow up: this keeps your promise",
+  "actions.fit.morale": "Morale is {n}: a conversation helps more than training",
+  "actions.fit.mood": "{mood, select, frustrated {Looks frustrated} other {Looks concerned}}: a conversation helps more than training",
+  "actions.fit.neglect": "No time alone with you for {n, plural, one {# {unit, select, year {year} month {month} day {day} other {week}}} other {# {unit, select, year {years} month {months} day {days} other {weeks}}}}: meet before {name} loses heart",
+  "actions.fit.missed": "Your last approach did not land: talk it through",
+  "actions.fit.assess": "Not assessed yet: assess before you coach or move {name}",
+  "actions.fit.skill": "Skill is {n} and morale holds: training pays off now",
+  "actions.fit.result": "Result is {n}: recognize it while it is fresh"
 }

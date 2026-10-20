@@ -1,9 +1,9 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
+import { Fragment, useEffect, useId, useRef, type KeyboardEvent, type ReactNode } from 'react';
 import { ScrollArea } from '../shell/ScrollArea';
 import { Button, NoWrapButton } from '../../ds/Button';
 import { useI18n } from '../../i18n';
 import { Heading, type HeadingLevel } from '../Heading';
-import type { ActionKind } from './ActionTile';
+import { FitHint, type ActionKind } from './ActionTile';
 import { useDays } from './days';
 
 export interface ActionOption {
@@ -13,6 +13,10 @@ export interface ActionOption {
   disabled?: boolean;
   /** A short value at the end of the row, such as the cost (the tablet drawer's action rows). */
   aside?: string;
+  /** The tablet drawer's action rows: the group the row starts or continues (D234), labelled where it starts. */
+  group?: string;
+  /** Why this action suits the person now (D234), under its detail. */
+  hint?: string;
 }
 
 export interface OptionCardsProps {
@@ -33,6 +37,7 @@ export interface OptionCardsProps {
 export function OptionCards({ options, value, onChange, label, size = 'md' }: OptionCardsProps) {
   const { t } = useI18n();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
+  const hintIds = useId();
   const enabled = options.map((o, i) => (o.disabled ? -1 : i)).filter(i => i >= 0);
   const tabStop = value ?? enabled[0] ?? 0;
   const onKeyDown = (e: KeyboardEvent<HTMLButtonElement>, i: number) => {
@@ -48,24 +53,39 @@ export function OptionCards({ options, value, onChange, label, size = 'md' }: Op
     onChange(next);
     refs.current[next]?.focus();
   };
+  const card = (o: ActionOption, i: number) => {
+    const on = value === i;
+    const ring = on ? 'border-accent-secondary' : 'border-line-default';
+    const lg = size === 'lg';
+    const fit = o.hint && !o.disabled ? o.hint : undefined;
+    return (
+      <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
+        aria-disabled={o.disabled || undefined} aria-describedby={fit ? `${hintIds}-${i}` : undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
+        className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-4 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-4 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
+        <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
+          <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col"><b className={lg ? 'text-15' : 'text-13'}>{o.name}</b><span className="text-12 text-fg-secondary">{o.detail}</span>
+          {fit && <FitHint id={`${hintIds}-${i}`} hint={fit} />}</span>
+        {o.aside && <span className="flex-none text-13 text-fg-secondary">{o.aside}</span>}
+      </button>
+    );
+  };
+  // Rows with a group are set out under its name, in their order (D234): one radio group still, one tab stop.
+  const groups: Array<{ name: string | undefined; rows: ReactNode[] }> = [];
+  options.forEach((o, i) => {
+    const last = groups[groups.length - 1];
+    if (last && last.name === o.group) last.rows.push(card(o, i));
+    else groups.push({ name: o.group, rows: [card(o, i)] });
+  });
   return (
     <div role="radiogroup" aria-label={label ?? t('action.drawer.options')} className="flex flex-col gap-2">
-      {options.map((o, i) => {
-        const on = value === i;
-        const ring = on ? 'border-accent-secondary' : 'border-line-default';
-        const lg = size === 'lg';
-        return (
-          <button key={i} ref={el => { refs.current[i] = el; }} type="button" role="radio" aria-checked={on} tabIndex={i === tabStop ? 0 : -1}
-            aria-disabled={o.disabled || undefined} onClick={() => { if (!o.disabled) onChange(i); }} onKeyDown={e => onKeyDown(e, i)}
-            className={`flex ${lg ? 'min-h-16 items-center gap-3 rounded-4 px-3.5 py-2.5' : 'items-start gap-2.5 rounded-4 p-3'} ${o.disabled ? 'cursor-not-allowed border-dashed' : 'cursor-pointer border-solid'} border-(length:--il-action-option-border-width) text-start text-fg-primary focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent-secondary ${ring} ${on ? 'bg-accent-soft' : lg ? 'bg-transparent' : 'bg-surface-raised'}`}>
-            <span aria-hidden="true" className={`${lg ? 'size-5' : 'mt-0.25 size-4.5'} flex flex-none items-center justify-center rounded-round border-2 border-solid ${ring}`}>
-              <span className={`size-2 rounded-round ${on ? 'bg-accent-secondary' : 'bg-transparent'}`} />
-            </span>
-            <span className="flex min-w-0 flex-1 flex-col"><b className={lg ? 'text-15' : 'text-13'}>{o.name}</b><span className="text-12 text-fg-secondary">{o.detail}</span></span>
-            {o.aside && <span className="flex-none text-13 text-fg-secondary">{o.aside}</span>}
-          </button>
-        );
-      })}
+      {groups.map((g, gi) => g.name === undefined ? <Fragment key={`g${gi}`}>{g.rows}</Fragment> : (
+        <div key={`g${gi}`} role="group" aria-label={g.name} data-intent-group="" className="flex flex-col gap-2">
+          <span aria-hidden="true" className="pt-1 text-12 font-600 tracking-(--il-action-section-tracking) text-fg-secondary uppercase">{g.name}</span>
+          {g.rows}
+        </div>
+      ))}
     </div>
   );
 }
