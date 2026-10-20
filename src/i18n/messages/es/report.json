@@ -2,5 +2,20 @@
   "report.decisions.by": "{by, select, you {Tu decisión} kept {Dejaste la opción por defecto} other {Quedó en la opción por defecto}}",
   "report.business.conversions": "{n, plural, =0 {Sin {unitMany}} one {# {unitOne}} other {# {unitMany}}}",
   "report.objectives.conversions": "{custom, select, yes {{n, plural, =0 {Sin {unitMany}} one {# {unitOne}} other {# {unitMany}}}} other {{n, plural, =0 {Ninguna conversión} one {# conversión} other {# conversiones}}}}",
-  "report.objectives.revenueNote": "Los ingresos salen de lo que el equipo cerró: {unitMany}."
+  "report.objectives.revenueNote": "Los ingresos salen de lo que el equipo cerró: {unitMany}.",
+  "report.brief.findings": "Tres hallazgos",
+  "report.brief.findingsIntro": "{purpose, select, assessment {Lo que la simulación mostró con más claridad, según la evidencia de este informe.} other {Lo que tu simulación mostró con más claridad, según la evidencia de este informe.}}",
+  "report.brief.actions": "{purpose, select, assessment {Necesidades de desarrollo frente al nivel exigido} other {Tres cosas que hacer el lunes}}",
+  "report.brief.actionsIntro": "{purpose, select, assessment {Para quien evalúa: las habilidades más alejadas del nivel exigido, de menor a mayor.} other {Cada una sale de lo que pasó en tu simulación y de tu plan.}}",
+  "report.brief.builds": "Desarrolla {skill}",
+  "report.brief.moments": "{n, plural, one {El momento que más importó} other {Los dos momentos que más importaron}}",
+  "report.brief.replay": "Lo que se dijo",
+  "report.brief.you": "Tú",
+  "report.brief.speaker": "{who}:",
+  "report.summary.rest": "Resumen en detalle",
+  "report.full.title": "El informe completo",
+  "report.full.intro": "{n, plural, one {Una sección más} other {# secciones más}}, con cada gráfico y la evidencia de cada hallazgo.",
+  "report.full.toggle": "{open, select, true {Ocultar el informe completo} other {Ver el informe completo}}",
+  "report.full.contents": "Contenido del informe completo",
+  "report.leftOut": "Aún no hay evidencia suficiente para: {list}. Quedan fuera del informe hasta que una simulación las muestre."
 }

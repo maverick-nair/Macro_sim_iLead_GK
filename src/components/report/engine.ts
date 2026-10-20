@@ -1,8 +1,9 @@
 import type { HistoryEntry, ReportView } from '../../engine/reportContract';
 import type { I18n } from '../../i18n';
 import { checkInDate, intentTone, multipleDomain, talkRatio, verdictTone } from './display';
+import { sectionTitle, withEvidence } from './fullReport';
 import type {
-  AboutData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, BusinessVariableData, ConsistencyData, DecisionData, DistributionData, FitRow, IntentCardData, MethodologyData, StakeholderData,
+  AboutData, BriefData, ActionRowData, AdaptabilityData, AnalyticsData, BusinessData, BusinessVariableData, ConsistencyData, DecisionData, DistributionData, FitRow, IntentCardData, MethodologyData, StakeholderData,
   MomentData, ObjectivesData, PeriodUnit, PersonData, PlanExtras, PlanItemData, ProgressData, Purpose, ReportHeaderData, SkillRowData, StyleExtras,
   StyleKey, StylesData, SummaryExtras, TeamSeries, ThoughtData, VerdictData
 } from './types';
@@ -56,11 +57,15 @@ export type SectionModel =
 
 export interface ReportModel {
   purpose: Purpose;
+  /** The first page's findings, actions and moments (D235); null for a report stored before them. */
+  brief: BriefData | null;
+  /** What the full report left out for want of evidence, by name (D235). */
+  leftOut: string[];
   header: ReportHeaderData;
   unit: PeriodUnit;
   periods: number;
   team: TeamSeries[];
-  /** In the author's order; the team over the run follows the summary, or the header when the summary is off. */
+  /** In the author's order, without what has nothing to say (D235); the team over the run follows the summary. */
   sections: SectionModel[];
 }
 
@@ -136,6 +141,11 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
     tier: r.score.tier.name,
     score: number(r.score.total)
   };
+
+  const moment = (m: ReportView['moments'][number], i: number): MomentData => ({
+    key: `${m.id}-${i}`, kind: m.kind, when: t('time.period', { unit, n: m.period }), title: m.title, situation: m.situation,
+    behaviour: m.behaviour, quote: m.quote, impact: m.impact, intent: m.intent ? styleName(m.intent) : null
+  });
 
   const section = (key: ReportView['sections'][number]): SectionModel | null => {
     switch (key) {
@@ -236,10 +246,7 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
       case 'moments':
         return {
           key,
-          moments: r.moments.map((m, i) => ({
-            key: `${m.id}-${i}`, kind: m.kind, when: t('time.period', { unit, n: m.period }), title: m.title, situation: m.situation,
-            behaviour: m.behaviour, quote: m.quote, impact: m.impact, intent: m.intent ? styleName(m.intent) : null
-          }))
+          moments: r.moments.map(moment)
         };
       case 'decisions': {
         if (!r.decisions.length && !r.businessVariables.length) return null;
@@ -360,8 +367,20 @@ export function buildReportModel(i18n: Fmt, money: MoneyFormat, r: ReportView, o
     }
   };
 
+  // The moments' replay: what was said and the reply, or the quote alone in a report stored before D235.
+  const replay = (m: ReportView['moments'][number]): BriefData['moments'][number]['replay'] => {
+    const lines = m.replay.length ? m.replay : m.quote ? [{ you: true, name: null, text: m.quote }] : [];
+    return lines.map((l, i) => ({ key: `${i}`, you: l.you, who: l.you ? t('report.brief.you') : l.name ?? '', text: l.text }));
+  };
+  const brief: BriefData | null = r.brief ? {
+    findings: r.brief.findings,
+    actions: r.brief.actions,
+    moments: r.brief.moments.filter(i => r.moments[i]).map(i => ({ ...moment(r.moments[i], i), replay: replay(r.moments[i]) }))
+  } : null;
+
+  const { sections, leftOut } = withEvidence([...new Set(r.sections)].map(section).filter((s): s is SectionModel => s !== null));
   return {
-    purpose, header, unit, periods: r.periods, team: teamSeries(i18n, money, r),
-    sections: [...new Set(r.sections)].map(section).filter((s): s is SectionModel => s !== null)
+    purpose, header, unit, periods: r.periods, team: teamSeries(i18n, money, r), brief, sections,
+    leftOut: leftOut.map(x => (x.kind === 'skill' ? x.name : sectionTitle(t, x.key, { purpose, unit, periods: r.periods })))
   };
 }

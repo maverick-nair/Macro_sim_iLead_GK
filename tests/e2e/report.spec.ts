@@ -4,7 +4,8 @@ import { expect, test, type Page } from '@playwright/test';
 /**
  * M6: the development report from a real ended run on the mock engine (`/?report=1`, dev only: the good
  * player plays all eight weeks, then the report opens). Chart to table by keyboard, the print view and
- * window.print, with axe in dark, light and print.
+ * window.print, with axe in dark, light and print. D235: the first page stands alone, the full report opens
+ * on demand, its contents and deep links reach every section, and print carries both.
  */
 
 const errors: string[] = [];
@@ -39,9 +40,14 @@ async function tabTo(page: Page, rx: RegExp) {
   throw new Error(`Tab never reached ${rx}`);
 }
 
-async function open(page: Page, query = '') {
-  await page.goto(`/?report=1${query}`);
+async function open(page: Page, query = '', hash = '') {
+  await page.goto(`/?report=1${query}${hash}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Jordan Lee' })).toBeVisible({ timeout: 30000 });
+}
+/** Opens the full report under the first page (D235). */
+async function seeAll(page: Page) {
+  await page.getByRole('button', { name: 'See the full report' }).click();
+  await expect(page.getByRole('button', { name: 'Hide the full report' })).toHaveAttribute('aria-expanded', 'true');
 }
 
 test('report from an ended run: sections, chart to table by keyboard, print view, axe in dark', async ({ page }) => {
@@ -50,6 +56,7 @@ test('report from an ended run: sections, chart to table by keyboard, print view
   await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
   await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
   await expect(page.getByRole('main')).toHaveCount(1);
+  await seeAll(page);
   for (const h of ['Your team over eight weeks', 'Style fit, week by week', 'Intent and action', 'Your leadership skills', 'Key moments', 'Your people over the run', 'Business results', 'How you talked', 'Your plan for next week', 'How this report was made']) {
     await expect(page.getByRole('heading', { level: 2, name: h })).toBeVisible();
   }
@@ -102,18 +109,74 @@ test('report in the light theme, and its print view, pass axe', async ({ page })
   expect(await axe(page)).toEqual([]);
 });
 
-test('a passive run has no overall level, shows every skill without enough evidence, and is axe clean in the client theme', async ({ page }) => {
+test('a passive run has no overall level, leaves out what has no evidence and names it once, and is axe clean in the client theme', async ({ page }) => {
   await open(page, '&policy=passive&seed=2&client=halden');
   await expect(page.getByText('Not enough evidence for an overall level')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 2, name: 'Your leadership skills' })).toBeVisible();
-  await expect(page.getByRole('img', { name: /: not enough evidence for a level$/ })).toHaveCount(8);
+  await seeAll(page);
+  // No skill has a level: the section is left out, not eight "Not enough evidence" rows (D235).
+  await expect(page.getByRole('heading', { level: 2, name: 'Your leadership skills' })).toHaveCount(0);
+  await expect(page.getByRole('img', { name: /: not enough evidence for a level$/ })).toHaveCount(0);
+  await expect(page.getByText(/^Not enough evidence yet for: .*Your leadership skills/)).toHaveCount(1);
+  await expect(page.getByRole('link', { name: 'Your leadership skills' })).toHaveCount(0);
   expect(await axe(page)).toEqual([]);
+});
+
+test('the first page stands alone: findings, things to do on Monday, the moments that mattered, then the full report on demand', async ({ page }) => {
+  await open(page);
+  for (const h of ['Three findings', 'Three things to do on Monday', 'The two moments that mattered most', 'The full report']) {
+    await expect(page.getByRole('heading', { level: 2, name: h })).toBeVisible();
+  }
+  await expect(page.getByRole('region', { name: 'Three findings' }).getByRole('listitem')).toHaveCount(3);
+  await expect(page.getByRole('region', { name: 'Three things to do on Monday' }).getByRole('listitem')).toHaveCount(3);
+  await expect(page.getByText(/^Builds /).first()).toBeVisible();
+  // Each moment replays what was said: the participant's words at least.
+  await expect(page.getByText('What was said', { exact: true })).toHaveCount(2);
+  await expect(page.getByText('You:', { exact: true }).first()).toBeVisible();
+  // The full report is closed: none of its sections show, its contents list each of them.
+  const toggle = page.getByRole('button', { name: 'See the full report' });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('heading', { level: 2, name: 'Key moments' })).toHaveCount(0);
+  const contents = page.getByRole('list', { name: 'Contents of the full report' }).getByRole('link');
+  const titles = await contents.allInnerTexts();
+  expect(titles).toEqual(expect.arrayContaining(['Summary in detail', 'Your team over eight weeks', 'Your leadership skills', 'Key moments', 'Your plan for next week', 'About this report', 'How this report was made']));
+  expect(await axe(page)).toEqual([]);
+
+  // A link opens the full report at its section and moves focus there.
+  await contents.filter({ hasText: 'Key moments' }).click();
+  await expect(page.locator('#report-moments')).toBeFocused();
+  await expect(page.getByRole('heading', { level: 2, name: 'Key moments' })).toBeInViewport();
+  // Every link reaches its section.
+  for (const title of titles) {
+    await contents.filter({ hasText: new RegExp(`^${title}$`) }).click();
+    await expect(page.getByRole('heading', { level: 2, name: title, exact: true }).first()).toBeInViewport();
+  }
+  // What had too little evidence is named once, at the end.
+  await expect(page.getByText(/^Not enough evidence yet for: /)).toHaveCount(1);
+  expect(await axe(page)).toEqual([]);
+  await page.getByRole('button', { name: 'Hide the full report' }).click();
+  await expect(page.getByRole('heading', { level: 2, name: 'Key moments' })).toHaveCount(0);
+});
+
+test('a deep link opens the full report at its section, and print carries the first page then every section', async ({ page }) => {
+  await open(page, '', '#report-methodology');
+  await expect(page.getByRole('button', { name: 'Hide the full report' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'How this report was made' })).toBeInViewport();
+  await open(page, '&print=1');
+  await expect(page.getByText(/^Page 1 of \d+$/)).toBeVisible();
+  await expect(page.getByRole('button', { name: /See the full report/ })).toHaveCount(0);
+  const first = page.getByRole('article', { name: 'Development report, page 1' });
+  await expect(first.getByRole('heading', { level: 2, name: 'Three findings' })).toBeVisible();
+  for (const h of ['Three things to do on Monday', 'Summary in detail', 'Your leadership skills', 'Key moments', 'Your plan for next week', 'How this report was made']) {
+    await expect(page.getByRole('heading', { level: 2, name: h })).toHaveCount(1);
+  }
+  await expect(page.getByText(/^Not enough evidence yet for: /)).toHaveCount(1);
 });
 
 const SECTIONS_3 = ['About this report', 'Your leadership skills', 'Objectives', 'Overall leadership adaptability', 'Leadership styles summary', 'Consistency in styles', 'Summary of actions'];
 
 test('report 3.0 in development: every section, no verdict words, the matrix as a table, progress with history, axe', async ({ page }) => {
   await open(page, '&history=1');
+  await seeAll(page);
   for (const h of [...SECTIONS_3, 'Actions across your team', 'Food for thought', 'Key takeaways', 'Your plan for next week', 'Progress over time']) {
     await expect(page.getByRole('heading', { level: 2, name: h })).toBeVisible();
   }
@@ -144,8 +207,13 @@ test('report 3.0 in development: every section, no verdict words, the matrix as 
 test('report 3.0 in assessment: the verdict first, skill verdicts, development needs, print and axe', async ({ page }) => {
   await open(page, '&purpose=assessment&policy=random&seed=5');
   await expect(page.getByText('Assessment report', { exact: true })).toBeVisible();
+  // The first page words its findings neutrally, and in place of things to do lists the needs for the assessor (D235).
+  await expect(page.getByRole('heading', { level: 2, name: 'Three findings' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Development needs against the bar' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: 'Three things to do on Monday' })).toHaveCount(0);
+  await seeAll(page);
   for (const h of [...SECTIONS_3, 'Actions across the team', 'Development needs']) {
-    await expect(page.getByRole('heading', { level: 2, name: h })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: h, exact: true })).toBeVisible();
   }
   await expect(page.getByRole('heading', { level: 2, name: 'Food for thought' })).toHaveCount(0);
   // The overall verdict comes before the summary's narrative, with its bar, evidence and review status.
@@ -173,6 +241,7 @@ test('report 3.0 in assessment: the verdict first, skill verdicts, development n
 test('report 3.0 with Six Leadership Styles at 834 and in the light theme passes axe', async ({ page }) => {
   await page.setViewportSize({ width: 834, height: 1194 });
   await open(page, '&lens=six_styles&theme=light');
+  await seeAll(page);
   await expect(page.getByRole('heading', { level: 2, name: 'Leadership styles summary' })).toBeVisible();
   await expect(page.getByRole('heading', { level: 3, name: 'Drive', exact: true })).toBeVisible();
   // Nothing scrolls sideways at tablet width.

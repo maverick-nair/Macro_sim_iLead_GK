@@ -990,6 +990,36 @@
                 "type": "null"
               }
             ]
+          },
+          "replay": {
+            "maxItems": 2,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "you": {
+                  "type": "boolean"
+                },
+                "name": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/$defs/Text"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "text": {
+                  "$ref": "#/$defs/Text"
+                }
+              },
+              "required": [
+                "you",
+                "name",
+                "text"
+              ]
+            }
           }
         },
         "required": [
@@ -3317,6 +3347,92 @@
           "anchor"
         ]
       }
+    },
+    "brief": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "findings": {
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "tone": {
+                    "type": "string",
+                    "enum": [
+                      "positive",
+                      "negative",
+                      "neutral"
+                    ]
+                  },
+                  "text": {
+                    "$ref": "#/$defs/Text"
+                  }
+                },
+                "required": [
+                  "key",
+                  "tone",
+                  "text"
+                ]
+              }
+            },
+            "actions": {
+              "maxItems": 3,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "text": {
+                    "$ref": "#/$defs/Text"
+                  },
+                  "skill": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Text"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "key",
+                  "text",
+                  "skill"
+                ]
+              }
+            },
+            "moments": {
+              "maxItems": 2,
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              }
+            }
+          },
+          "required": [
+            "findings",
+            "actions",
+            "moments"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   },
   "required": [

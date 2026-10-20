@@ -4,7 +4,7 @@ import type { Rng } from './rng';
 import { IntentError } from './errors';
 import { applyBusiness, conditionsHold, type Applied } from './business';
 import { blank } from './live';
-import { addMessage, capacityLeft, effectChanges, log, nextId, perPeriod, spend, sponsorChange, YOU } from './sim';
+import { addMessage, capacityLeft, effectChanges, exchangeOf, log, nextId, perPeriod, spend, sponsorChange, YOU } from './sim';
 import { checkBadges } from './score';
 import { isStakeholder, moveRelation, relationScale, stakeholderConfig } from './stakeholderState';
 import { msg, type Copy } from '../copy';
@@ -304,7 +304,7 @@ export function finishStakeholder(sim: Sim, rng: Rng, interactionId: string, ev:
   const said = mine.map(t => String(t.text)).join(' ');
   const rec: LiveRecord = {
     id: nextId(sim, 'r'), period: sim.period, sub: sim.sub, actionKey: it.actionKey, format: it.format, band: ev.band, memberIds: [], title, stakeholder: s.key,
-    styleShown: null, skills: ev.skills ?? [], quotes: mine.map(t => String(t.text)),
+    styleShown: null, skills: ev.skills ?? [], quotes: mine.map(t => String(t.text)), exchange: exchangeOf(it.turns),
     talk: { you: words(said), npc: it.turns.filter(t => t.by !== 'you').reduce((n, t) => n + (typeof t.text === 'string' ? words(t.text) : 0), 0), openQuestions: (said.match(/\b(?:what|how|why|tell me|describe|walk me through)\b[^?]*\?/gi) ?? []).length, recognition: 0, spoken: mine.some(t => t.voice) },
     concern: !!ev.flags.concernSurfaced, impact: l.changes.filter(c => c.subject !== 'sponsor').reduce((a, c) => a + Math.abs(c.delta), 0),
     changes: l.changes.filter(c => c.subject !== 'sponsor').slice(0, 4).map(c => ({ subject: c.subject, metric: c.metric, delta: c.delta }))
