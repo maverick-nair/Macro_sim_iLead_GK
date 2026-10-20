@@ -4,6 +4,7 @@ import { ApiContext, createDefaultApi, createMockApi } from './api';
 import { App } from './app/App';
 import { prefetch } from './app/prefetch';
 import { SmallScreenGate } from './app/SmallScreenGate';
+import { siteOf, siteRedirect } from './app/site';
 import { EngineProvider } from './engine/react';
 import { createDefaultClient, createHttpClient } from './engine/client';
 import { isPreview, PREVIEW_PARTICIPANT, PREVIEW_PREFIX, readMeta, screenFor } from './components/preview/mode';
@@ -128,6 +129,9 @@ document.documentElement.dir = dirOf(appLocale());
 // The engine's copy loads now, beside the first view (D83).
 void loadEngineCopy().catch(() => undefined);
 
+// One product per link (D238): the build's site setting may send a first address elsewhere before routing reads it.
+const moved = siteRedirect(siteOf(import.meta.env.VITE_SITE as string | undefined), location.pathname, location.search);
+if (moved) history.replaceState(null, '', moved);
 const path = location.pathname.replace(/\/+$/, '');
 /** A SCORM package's player, or `?lms=scorm` to try package mode here (D208): its own boot, loaded on demand. */
 const packaged = new URLSearchParams(location.search).get('lms') === 'scorm' || !!document.querySelector('meta[name="ilead-package"]');
