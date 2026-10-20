@@ -47,9 +47,11 @@ describe('seeded replay', () => {
     // Re-recorded when Steady Hand came to need three conversations and the key moments came to keep a best one:
     // hashed without the badges (the run's and each period's) and the moments, all six runs matched the earlier code.
     // Re-recorded when the sponsor became Paul Jacob (D239): with the old name's text put back, all six matched.
+    // Re-recorded when stats came to show from the start (D241): passive and random never open a profile, so their
+    // views now carry the numbers; hashed without each member's stats, all six matched the earlier code.
     expect(out).toEqual({
-      'passive 1': 'f116dd219e6aec68', 'passive 2': 'd36ee8cc37076166',
-      'random 1': '56a0a038f2e1ef02', 'random 2': '0123c1e02538fed4',
+      'passive 1': 'a14bf5580d5dd986', 'passive 2': 'ff53dec671031651',
+      'random 1': '056447387dd10580', 'random 2': 'db108b962216bd10',
       'good 1': 'e240413f205c9be4', 'good 2': '818dc50ff923c277'
     });
   });

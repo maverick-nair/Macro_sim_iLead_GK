@@ -49,9 +49,9 @@ describe('the view for the in play panels', () => {
     expect(six.lens.examples.every(x => six.lens.styles.some(s => s.key === x.style))).toBe(true);
   });
 
-  it('sends result trends only for people whose profile is open, one point per period start and one for now', async () => {
+  it('sends each person\'s result trend from the start (D241), one point per period start and one for now', async () => {
     const e = createEngine(config(), { seed: 1 });
-    expect(e.view().trends).toEqual({});
+    expect(Object.keys(e.view().trends)).toHaveLength(e.view().members.length);
     await e.dispatch({ type: 'confirmStyles', styles: await neededStyles(e) });
     await e.dispatch({ type: 'endPeriod' });
     if (e.view().pendingReward) await e.dispatch({ type: 'chooseReward', reward: e.view().pendingReward![0] });

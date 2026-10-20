@@ -24,7 +24,8 @@ export function createSim(config: StorylineConfig, seed: number): Sim {
     id: p.id, stage: p.homeStage, ...p.start, trust: p.start.trust ?? config.trustRules.start, trustCap: config.trustRules.capPerSubPeriod, trustMovedThisSub: 0,
     style: null, lastStyle: null, lastReaction: null, neededAtStart: needOf(p.start, high),
     away: 0, awayReason: null, resultHistory: [], periodEnds: [], stageSincePeriod: 1,
-    revealed: false, concernShared: false, lastChange: 0, recognizedAt: null, reassignedInPeriod: null,
+    // Stats show from the start (D241): the participant reads them before choosing a style.
+    revealed: true, concernShared: false, lastChange: 0, recognizedAt: null, reassignedInPeriod: null,
     trainedInPeriod: null, assessedStages: [], assessments: {}, neededPrevStart: null, awaySetAt: -1, trainingRequestedPeriod: null, roleChangeRequestedPeriod: null, lowestResult: p.start.result, lowestMorale: p.start.morale,
     moraleHistory: [], strikes: 0
   }));
