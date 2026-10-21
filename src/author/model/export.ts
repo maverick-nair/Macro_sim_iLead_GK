@@ -394,7 +394,9 @@ export function toStoryline(d: AuthorDraft): Exported {
         ...src.profile, previous: c.shown.previousCompany ? c.previousCompany : '', tenure: c.shown.tenure ? c.tenure : '', experience: c.shown.experience ? c.experience : '',
         remarks: c.persona || src.profile.remarks,
         relations: c.relationships.map(r => `${r.kind} ${d.team.find(o => o.id === r.with)?.first ?? r.with}`.trim()).join('; '),
-        ...(c.commStyles.length ? { attitude: c.commStyles.join(', ') } : null)
+        ...(c.commStyles.length ? { attitude: c.commStyles.join(', ') } : null),
+        ...(c.awareness.trim() ? { awareness: c.awareness.trim() } : { awareness: undefined }),
+        ...(c.responsibilities.trim() ? { responsibilities: c.responsibilities.trim() } : { responsibilities: undefined })
       },
       ...(c.hiddenConcern ? { hiddenConcern: c.hiddenConcern, concernLine: c.concernLine || src.concernLine || c.hiddenConcern } : { hiddenConcern: undefined, concernLine: undefined }),
       ...(c.shown.careerGoal && c.careerGoal ? { careerGoal: c.careerGoal } : { careerGoal: undefined }),

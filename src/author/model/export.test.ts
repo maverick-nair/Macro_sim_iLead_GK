@@ -189,11 +189,14 @@ const WIRED: Array<[string, (d: AuthorDraft) => void, string]> = [
   ['team[].bestStage', d => { member(d).bestStage = d.process.stages.find(s => s.key !== member(d).stage)!.key; }, `${M}.byStage`],
   ['team[].experience', d => { member(d).experience = '11 years'; }, `${M}.profile.experience`],
   ['team[].tenure', d => { member(d).tenure = '2 months'; }, `${M}.profile.tenure`],
-  ['team[].previousCompany', d => { member(d).previousCompany = 'Beta Lifts'; }, `${M}.npc.notes`],
+  // Drafted and shown since D245: the participant reads it in the profile.
+  ['team[].previousCompany', d => { member(d).previousCompany = 'Beta Lifts'; }, `${M}.profile.previous`],
   ['team[].careerGoal', d => { member(d).careerGoal = 'Run the region.'; }, `${M}.careerGoal`],
   ['team[].shown.experience', d => { member(d).shown.experience = false; }, `${M}.profile.experience`],
   ['team[].shown.tenure', d => { member(d).shown.tenure = false; }, `${M}.profile.tenure`],
-  ['team[].shown.previousCompany', d => { member(d).shown.previousCompany = true; member(d).previousCompany ||= 'Beta Lifts'; }, `${M}.profile.previous`],
+  ['team[].shown.previousCompany', d => { member(d).shown.previousCompany = false; member(d).previousCompany ||= 'Beta Lifts'; }, `${M}.profile.previous`],
+  ['team[].awareness', d => { member(d).awareness = 'Knows the numbers, not yet the people.'; }, `${M}.profile.awareness`],
+  ['team[].responsibilities', d => { member(d).responsibilities = 'Owns the northern accounts.'; }, `${M}.profile.responsibilities`],
   ['team[].shown.careerGoal', d => { member(d).shown.careerGoal = false; }, `${M}.careerGoal`],
   ['team[].custom', d => { member(d).custom.push({ label: 'Hobby', value: 'Cycling' }); }, `${M}.npc.notes`],
   // Hire candidates (D228).

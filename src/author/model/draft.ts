@@ -152,6 +152,12 @@ export const Character = z.object({
   tenure: Short,
   previousCompany: Short,
   careerGoal: Text,
+  /**
+   * Profile rows the participant reads (D245): how far they see their own strengths and gaps, and what they own in
+   * the work. Drafted by Kora with the rest of the person; empty rows are left out of the profile.
+   */
+  awareness: Text.default(''),
+  responsibilities: Text.default(''),
   shown: z.object({ experience: z.boolean(), tenure: z.boolean(), previousCompany: z.boolean(), careerGoal: z.boolean() }),
   custom: z.array(z.object({ label: Short, value: Text }))
 });

@@ -45,7 +45,7 @@ export function textFields(d: AuthorDraft): TextField[] {
   for (const c of d.team) {
     const who = fullName(c) || c.id;
     f(`team.${c.id}.title`, `${who}, job title`, 'team', c, 'title');
-    for (const [k, label] of [['persona', 'persona'], ['hiddenConcern', 'hidden concern'], ['concernLine', 'what they say about it'], ['motivatedBy', 'motivation'], ['careerGoal', 'career goal'], ['noTopics', 'topics they avoid']] as const) f(`team.${c.id}.${k}`, `${who}, ${label}`, 'team', c, k);
+    for (const [k, label] of [['persona', 'persona'], ['hiddenConcern', 'hidden concern'], ['concernLine', 'what they say about it'], ['motivatedBy', 'motivation'], ['careerGoal', 'career goal'], ['awareness', 'self awareness'], ['responsibilities', 'responsibilities'], ['noTopics', 'topics they avoid']] as const) f(`team.${c.id}.${k}`, `${who}, ${label}`, 'team', c, k);
     for (const k of Object.keys(c.reactions)) f(`team.${c.id}.reactions.${k}`, `${who}, reaction to a style`, 'team', c.reactions, k);
     c.custom.forEach((x, i) => f(`team.${c.id}.custom.${i}`, `${who}, ${x.label || 'a custom field'}`, 'team', x, 'value'));
   }
