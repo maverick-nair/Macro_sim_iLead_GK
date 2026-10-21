@@ -185,6 +185,28 @@ const REMARKS: Record<NeedKey, string> = {
   highSkill_lowMorale: '{First} knows the work well but has gone quiet in meetings lately.',
   highSkill_highMorale: '{First} is one of the strongest on the team and likes to run {pos} own {work}s.'
 };
+/** How far each person sees their own strengths and gaps (D245), by where they start. */
+const AWARENESS: Record<NeedKey, string> = {
+  lowSkill_lowMorale: '{First} knows {pron} is struggling with the harder {work}s, but puts it down to the process more than to {pos} own gaps.',
+  lowSkill_highMorale: '{First} thinks {pron} is further along than the numbers say, and does not yet see where {pron} needs help.',
+  highSkill_lowMorale: '{First} knows {pron} is good at the work and can tell something is off, but has not said what.',
+  highSkill_highMorale: '{First} sees {pos} own strengths clearly, and is less aware of how {pos} pace lands with the rest of the team.'
+};
+/** What each person owns beyond their stage (D245), one by one around the team. */
+const DUTIES = [
+  'keeps the pipeline numbers up to date', 'helps new joiners find their feet', 'handles the escalations that come with it',
+  'is the go to person for the larger accounts', 'reports progress to you each Friday', 'keeps the playbook for it current'
+];
+/** Earlier roles, with BACKGROUNDS for where (D245). */
+const PREVIOUS_ROLES = ['Account manager', 'Inside sales lead', 'Customer success manager', 'Sales executive', 'Business development associate', 'Key account manager'];
+/** Experience and time on this team, from least to most experienced (D245): time on the team is never longer than experience. */
+const CAREERS: Array<[string, string]> = [
+  ['2 years', '8 months'], ['3 years', '1 year'], ['4 years', '2 years'], ['5 years', '18 months'], ['6 years', '2 years'],
+  ['8 years', '3 years'], ['9 years', '5 years'], ['11 years', '4 years'], ['12 years', '7 years'], ['14 years', '6 years']
+];
+/** How two people get along (D245), when neither is far ahead of the other. */
+const PEERS = ['Works closely with', 'Often clashes with', 'Covers for', 'Shares accounts with'];
+
 const CONCERNS: Record<NeedKey, [string, string]> = {
   lowSkill_lowMorale: ['{Pron} feels the role is not what {pron} was promised when {pron} joined.', 'Honestly? This role is not what I was promised. I expected a lot more support when I joined.'],
   lowSkill_highMorale: ['{Pron} wants to move to another stage and worries nobody will ask.', 'I really want a shot at another part of the process. I just did not know who to ask.'],
@@ -241,10 +263,34 @@ function draftPeople(ctx: DraftContext, lib: LibraryLens, seed: number, region =
     return {
       id, name, title: titleFor(stage, ctx), pronoun, homeStage: stage.key,
       start, byStage: { ...remapStages(src, ctx, stage.key), [stage.key]: start },
-      profile: { previous: '', tenure: src.profile.tenure, experience: src.profile.experience, skills: ctx.stages.slice(homeIndex(src, ctx), homeIndex(src, ctx) + 2).map(s => s.name).join(', '), remarks: fill(REMARKS[need], words) + persona, relations: '' },
+      profile: {
+        previous: `${PREVIOUS_ROLES[(seed + i) % PREVIOUS_ROLES.length]}, ${BACKGROUNDS[(seed + i * 5) % BACKGROUNDS.length]}`,
+        tenure: src.profile.tenure, experience: src.profile.experience,
+        skills: ctx.stages.slice(homeIndex(src, ctx), homeIndex(src, ctx) + 2).map(s => s.name).join(', '), remarks: fill(REMARKS[need], words) + persona, relations: '',
+        awareness: fill(AWARENESS[need], words),
+        responsibilities: `Owns the ${stage.name.toLowerCase()} stage for the team, and ${DUTIES[(seed + i) % DUTIES.length]}.`
+      },
       ...(concern ? { hiddenConcern: fill(CONCERNS[need][0], words), concernLine: fill(CONCERNS[need][1], words) } : null),
       portrait: src.portrait
     };
+  });
+  // Experience follows skill (D245): the most skilled have the longest careers, and time on the team never exceeds it.
+  const bySkill = [...members].sort((a, b) => a.start.skill - b.start.skill || a.id.localeCompare(b.id));
+  bySkill.forEach((m, r) => {
+    const [experience, tenure] = CAREERS[Math.min(CAREERS.length - 1, Math.round((r * (CAREERS.length - 1)) / Math.max(1, bySkill.length - 1)))];
+    m.profile.experience = experience;
+    m.profile.tenure = tenure;
+  });
+  // Everyone works with someone (D245): a mentor or the mentored when one is well ahead, a peer otherwise; a third have a second tie.
+  const firstOf = (m: (typeof members)[number]) => m.name.split(' ')[0];
+  const tie = (m: (typeof members)[number], o: (typeof members)[number], k: number) => {
+    const gap = m.start.skill - o.start.skill;
+    return `${gap >= 15 ? 'Mentors' : gap <= -15 ? 'Learned the ropes from' : PEERS[(seed + k) % PEERS.length]} ${firstOf(o)}`;
+  };
+  if (members.length > 1) members.forEach((m, i) => {
+    const ties = [tie(m, members[(i + 1) % members.length], i)];
+    if (i % 3 === 0 && members.length > 3) ties.push(`Works closely with ${firstOf(members[(i + 3) % members.length])}`);
+    m.profile.relations = ties.join('; ');
   });
   // Hire candidates (D228): drafted from the brief and the region like the team, never naming a rival, and editable in Team.
   const pool = CANDIDATE_NAMES[region];

@@ -117,7 +117,12 @@ function templateView(s: StorylineInput, req: AuthorDraftRequest) {
       name: s.name, organisation: s.organisation, sponsor: s.sponsor, intro: s.intro,
       styles: (s.lens?.styles ?? []).map(st => ({ key: st.key, name: st.name, short: st.short, description: st.description })),
       stages: s.stages.map(st => ({ key: st.key, name: st.name })),
-      members: s.members.map((m: Member) => ({ id: m.id, pronoun: m.pronoun, stage: m.homeStage, name: m.name, title: m.title, remarks: m.profile.remarks, hiddenConcern: m.hiddenConcern ?? null, concernLine: m.concernLine ?? null })),
+      members: s.members.map((m: Member) => ({
+        id: m.id, pronoun: m.pronoun, stage: m.homeStage, name: m.name, title: m.title, remarks: m.profile.remarks, hiddenConcern: m.hiddenConcern ?? null, concernLine: m.concernLine ?? null,
+        // Where they start and the drafted profile (D245): experience follows skill, and the details stay consistent with the numbers.
+        start: m.start, previous: m.profile.previous, experience: m.profile.experience, tenure: m.profile.tenure,
+        awareness: m.profile.awareness ?? null, responsibilities: m.profile.responsibilities ?? null, relations: m.profile.relations
+      })),
       events: (s.events ?? []).map(e => ({ key: e.key, title: e.title, he: e.body.he, she: e.body.she, card: e.card,
         // A decision (D153): what is known and each option's words; its effects stay as they are.
         ...(e.choice ? { choice: { known: e.choice.known, options: e.choice.options.map(o => ({ key: o.key, label: o.label, outcome: o.outcome })) } } : null) }))
@@ -142,10 +147,21 @@ export function mergeCopy(template: StorylineInput, c: DraftCopy): StorylineInpu
       return { ...st, name: clean(n.name), short: clean(n.short), description: clean(n.description), letter: undefined };
     });
   }
+  // The final first names, for the relationships' words ("Mentors Beth"), after the model's renames.
+  const firstName = new Map(s.members.map((m: Member) => [m.id, (c.members.find(x => x.id === m.id)?.name ?? m.name).trim().split(/\s+/)[0]]));
   s.members = s.members.map((m: Member) => {
     const n = c.members.find(x => x.id === m.id);
     if (!n) return m;
-    const out: Member = { ...m, name: clean(n.name), title: clean(n.title), profile: { ...m.profile, remarks: clean(n.remarks) } };
+    const relations = n.relations?.filter(r => r.with !== m.id && firstName.has(r.with)).map(r => `${clean(r.kind)} ${clean(firstName.get(r.with)!)}`);
+    const out: Member = {
+      ...m, name: clean(n.name), title: clean(n.title),
+      profile: {
+        ...m.profile, remarks: clean(n.remarks),
+        ...(n.previous ? { previous: clean(n.previous) } : null), ...(n.experience ? { experience: clean(n.experience) } : null), ...(n.tenure ? { tenure: clean(n.tenure) } : null),
+        ...(n.awareness ? { awareness: clean(n.awareness) } : null), ...(n.responsibilities ? { responsibilities: clean(n.responsibilities) } : null),
+        ...(relations?.length ? { relations: relations.join('; ') } : null)
+      }
+    };
     if (m.hiddenConcern && n.hiddenConcern && n.concernLine) {
       out.hiddenConcern = clean(n.hiddenConcern);
       out.concernLine = clean(n.concernLine);

@@ -56,7 +56,7 @@ interface Rule {
 const sh = StakeholderDraft.shape;
 const SH_MARK: Record<string, string> = { name: 'identity', role: 'identity', about: 'personality', persona: 'personality', motivatedBy: 'personality', noTopics: 'personality', hiddenConcern: 'personality', concernLine: 'personality', start: 'relationship', drift: 'relationship', voice: 'voice', interactions: 'interactions' };
 const TYPE = '(meet|present|negotiate|email)';
-const TEAM_MARK: Record<string, string> = { first: 'identity', last: 'identity', title: 'identity', persona: 'persona', hiddenConcern: 'hiddenConcern', concernLine: 'hiddenConcern', motivatedBy: 'personality', careerGoal: 'stats', stats: 'stats' };
+const TEAM_MARK: Record<string, string> = { first: 'identity', last: 'identity', title: 'identity', persona: 'persona', hiddenConcern: 'hiddenConcern', concernLine: 'hiddenConcern', motivatedBy: 'personality', careerGoal: 'stats', awareness: 'stats', responsibilities: 'stats', stats: 'stats' };
 const same = (m: RegExpMatchArray) => m[0];
 
 /** Every field Kora may set. A path that matches none of these is refused. */
@@ -81,7 +81,7 @@ const RULES: Rule[] = [
   { re: new RegExp(`^process\\.stages\\.${KEY}\\.passesOn$`), schema: stage.passesOn, mark: () => 'process.stages' },
   { re: new RegExp(`^process\\.stages\\.${KEY}\\.people$`), schema: stage.people, mark: () => 'process.stages' },
   { re: new RegExp(`^team\\.${KEY}\\.(first|last|title)$`), schema: ch.first, mark: m => `team.${m[1]}.${TEAM_MARK[m[2]]}` },
-  { re: new RegExp(`^team\\.${KEY}\\.(persona|hiddenConcern|concernLine|motivatedBy|careerGoal)$`), schema: ch.persona, mark: m => `team.${m[1]}.${TEAM_MARK[m[2]]}` },
+  { re: new RegExp(`^team\\.${KEY}\\.(persona|hiddenConcern|concernLine|motivatedBy|careerGoal|awareness|responsibilities)$`), schema: ch.persona, mark: m => `team.${m[1]}.${TEAM_MARK[m[2]]}` },
   { re: new RegExp(`^team\\.${KEY}\\.stats\\.(skill|morale|result|trust)$`), schema: ch.stats.shape.skill, mark: m => `team.${m[1]}.stats` },
   { re: new RegExp(`^events\\.${KEY}\\.title$`), schema: ev.title, mark: m => `events.${m[1]}` },
   { re: new RegExp(`^events\\.${KEY}\\.body$`), schema: ev.body, mark: m => `events.${m[1]}` },
@@ -148,7 +148,7 @@ const EVENT_FIELD: Record<string, string> = {
   'ifIgnored.afterDays': 'If ignored, days before the follow up', conditions: 'Plays only if'
 };
 const OPTION_FIELD: Record<string, string> = { skill: 'skill', morale: 'morale', result: 'result', trust: 'trust', sponsor: 'sponsor confidence', revenue: 'revenue', set: 'sets flags', clear: 'clears flags', followUp: 'then this event follows', label: 'label', outcome: 'what happened' };
-const TEAM_FIELD: Record<string, string> = { first: 'First name', last: 'Last name', title: 'Job title', persona: 'Persona', hiddenConcern: 'Hidden concern', concernLine: 'What they say when it comes out', motivatedBy: 'Motivated by', careerGoal: 'Career goal', skill: 'Starting skill', morale: 'Starting morale', result: 'Starting result', trust: 'Starting trust' };
+const TEAM_FIELD: Record<string, string> = { first: 'First name', last: 'Last name', title: 'Job title', persona: 'Persona', hiddenConcern: 'Hidden concern', concernLine: 'What they say when it comes out', motivatedBy: 'Motivated by', careerGoal: 'Career goal', awareness: 'Self awareness', responsibilities: 'Responsibilities', skill: 'Starting skill', morale: 'Starting morale', result: 'Starting result', trust: 'Starting trust' };
 const PLAIN: Record<string, string> = {
   title: 'Simulation title', 'brief.participants': 'Participants', 'brief.challenge': 'Business challenge', 'brief.run': 'Run length', 'brief.tones': 'Tone',
   'story.company.name': 'Company name', 'story.company.hq': 'Headquarters', 'story.company.team': 'Your team', 'story.company.office': 'Office image', 'story.company.about': 'What the company does',
@@ -471,7 +471,7 @@ function put(out: Record<string, EditView['fields'][string]>, path: string, v: u
 }
 
 function characterFields(out: Record<string, EditView['fields'][string]>, c: Character) {
-  for (const f of ['first', 'last', 'title', 'persona', 'hiddenConcern', 'concernLine', 'motivatedBy', 'careerGoal'] as const) put(out, `team.${c.id}.${f}`, c[f]);
+  for (const f of ['first', 'last', 'title', 'persona', 'hiddenConcern', 'concernLine', 'motivatedBy', 'careerGoal', 'awareness', 'responsibilities'] as const) put(out, `team.${c.id}.${f}`, c[f]);
   for (const f of ['skill', 'morale', 'result', 'trust'] as const) put(out, `team.${c.id}.stats.${f}`, c.stats[f]);
 }
 function eventFields(out: Record<string, EditView['fields'][string]>, e: EventDraft) {

@@ -113,7 +113,7 @@ function characterFrom(x: Ctx, c: Character, f: Character) {
   group('persona', 'Persona', ['persona']);
   group('hiddenConcern', 'Hidden concern', ['hiddenConcern', 'concernLine']);
   group('personality', 'Personality', ['commStyles', 'motivatedBy', 'reactions', 'relationships', 'noTopics']);
-  group('stats', 'Starting stats', ['stats', 'bestStage', 'experience', 'tenure', 'previousCompany', 'careerGoal', 'shown', 'custom']);
+  group('stats', 'Starting stats', ['stats', 'bestStage', 'experience', 'tenure', 'previousCompany', 'careerGoal', 'awareness', 'responsibilities', 'shown', 'custom']);
 }
 
 function eventFrom(x: Ctx, e: EventDraft) {

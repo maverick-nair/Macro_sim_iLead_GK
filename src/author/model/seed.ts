@@ -1,4 +1,4 @@
-import { Brief, type QuestionId } from '../../api/author';
+import { Brief, type AuthorDraftRequest, type QuestionId } from '../../api/author';
 import type { StorylineInput } from '../../engine/config';
 import { needOf, NEEDS, styleLetters, type NeedKey } from '../../engine/lens';
 import { DEFAULT_SCALE } from '../../engine/report/defaults';
@@ -118,6 +118,21 @@ function genderOf(p: Member['pronoun']): Character['gender'] {
 }
 export const pronounsOf = (g: Character['gender']) => (g === 'man' ? 'he, him' : g === 'woman' ? 'she, her' : 'they, them');
 
+/**
+ * The relationships a drafted profile names ("Mentors Beth; Often clashes with Kent", D245), as links to the people
+ * they name: the last word of each is a team member's first name. One that names nobody on the team is left out.
+ */
+export function relationsOf(text: string, self: Member, members: Member[]): Character['relationships'] {
+  const out: Character['relationships'] = [];
+  for (const part of text.split(';').map(x => x.trim()).filter(Boolean)) {
+    const words = part.split(/\s+/);
+    const name = words.pop()!.replace(/[.,]$/, '');
+    const other = members.find(o => o.id !== self.id && o.name.split(' ')[0].toLowerCase() === name.toLowerCase());
+    if (other && words.length && !out.some(r => r.with === other.id)) out.push({ with: other.id, kind: words.join(' ') });
+  }
+  return out;
+}
+
 function character(m: Member, i: number, sl: SL, seed: number): Character {
   const [first, ...rest] = m.name.split(' ');
   const gender = genderOf(m.pronoun);
@@ -126,15 +141,18 @@ function character(m: Member, i: number, sl: SL, seed: number): Character {
   const need = needOf(m.start);
   const reactions = Object.fromEntries(sl.lens!.styles.map(s => [s.key, REACT[sl.lens!.fit[need][s.key] ?? 2]]));
   const others = sl.members.filter(o => o.id !== m.id);
+  const related = relationsOf(m.profile.relations ?? '', m, sl.members);
   return {
     id: m.id, first, last: rest.join(' '), gender, pronouns: pronounsOf(gender), ageRange: AGES[(seed + i) % AGES.length], title: m.title, stage: m.homeStage, photo: m.portrait ?? PORTRAITS[i % PORTRAITS.length],
     voice: { id: v.id, language: 'English', accent: v.accent, pace: v.pace, warmth: v.warmth, formality: v.formality, replyLength: i % 3 === 0 ? 'short' : 'medium' },
     persona: m.profile.remarks, hiddenConcern: m.hiddenConcern ?? '', concernLine: m.concernLine ?? '',
     commStyles: [COMM[(seed + i) % COMM.length], COMM[(seed + i + 3) % COMM.length]], motivatedBy: MOTIVES[need], reactions,
-    relationships: i % 3 === 0 && others.length ? [{ with: others[(i + 1) % others.length].id, kind: 'Works closely with' }] : [],
+    // The drafted relationships (D245); a profile without any keeps the old one in three, so no draft is unconnected.
+    relationships: related.length ? related : i % 3 === 0 && others.length ? [{ with: others[(i + 1) % others.length].id, kind: 'Works closely with' }] : [],
     noTopics: '', stats: { skill: m.start.skill, morale: m.start.morale, result: m.start.result, trust: m.start.trust ?? 50 },
-    bestStage: '', experience: m.profile.experience, tenure: m.profile.tenure, previousCompany: m.profile.previous, careerGoal: GOALS[need],
-    shown: { experience: true, tenure: true, previousCompany: false, careerGoal: true }, custom: []
+    bestStage: '', experience: m.profile.experience, tenure: m.profile.tenure, previousCompany: m.profile.previous, careerGoal: m.careerGoal ?? GOALS[need],
+    awareness: m.profile.awareness ?? '', responsibilities: m.profile.responsibilities ?? '',
+    shown: { experience: true, tenure: true, previousCompany: !!m.profile.previous?.trim(), careerGoal: true }, custom: []
   };
 }
 
@@ -243,11 +261,31 @@ export function emptyChat(): Chat {
 }
 
 /** The draft from the chat: everything the workspace shows, filled in. */
-export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready'): AuthorDraft {
-  const brief = chat.brief;
+/**
+ * The people Kora's server drafted for a draft seeded from templates (D245), or null when they add nothing (a server
+ * team that is not the template's, or the same people).
+ */
+export function draftedTeam(chat: Chat, seeded: AuthorDraft, storyline: SL): AuthorDraft['team'] | null {
+  const team = seedDraft(chat, seeded.stage, storyline).team;
+  return JSON.stringify(team) === JSON.stringify(seeded.team) ? null : team;
+}
+
+/** What the drafter is asked for (D245): the brief and the lens module the chat settled on. */
+export function draftRequestOf(chat: Chat): AuthorDraftRequest {
   const primary = chat.primary ?? chat.recommendation?.id ?? 'readiness_based';
-  const module = buildModule(brief, { primary, secondary: chat.secondary, clientDimensions: chat.clientDimensions }, true);
-  const sl = draftStoryline(brief, module);
+  return { brief: chat.brief, leadership_lens: buildModule(chat.brief, { primary, secondary: chat.secondary, clientDimensions: chat.clientDimensions }, true) };
+}
+
+/**
+ * The draft from the chat. `drafted`: a storyline the drafter wrote on the same template (D245), whose people (names,
+ * personas, concerns, careers, awareness, responsibilities, relationships) replace the template's; one whose team
+ * is not the template's (other ids) is ignored.
+ */
+export function seedDraft(chat: Chat, stage: AuthorDraft['stage'] = 'ready', drafted?: SL): AuthorDraft {
+  const brief = chat.brief;
+  const module = draftRequestOf(chat).leadership_lens;
+  const template = draftStoryline(brief, module);
+  const sl = drafted && drafted.members.map(m => m.id).join() === template.members.map(m => m.id).join() ? { ...template, members: drafted.members } : template;
   const ctx = draftContext(brief);
   const ind = industryOf(brief.industry);
   const seed = hash(`${ctx.company}|${ind.id}`);

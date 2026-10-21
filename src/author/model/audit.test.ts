@@ -36,11 +36,11 @@ describe('the export audit (D228)', () => {
     expect(Object.keys(STANDARD_WORDING).sort()).toEqual(['candidates[].profile.tenure', 'events[].impactText', 'events[].label', 'members[].profile.skills', 'money.display', 'report', 'sponsor.styleLine', 'triggers[]']);
   });
 
-  it('flags text no field owns: an optional profile row from a template, a field the registry does not know', () => {
+  it('flags text no field owns: a stage line from a template, a field the registry does not know', () => {
     const sl = toStoryline(draftFor(...DRAFTS[0])).storyline;
-    const leftover = { ...sl, members: sl.members.map((m, i) => (i === 2 ? { ...m, profile: { ...m.profile, awareness: 'Knows the Urban Basket buyers well.' } } : m)), mystery: 'A line from the sample storyline.' };
+    const leftover = { ...sl, stages: sl.stages.map((s, i) => (i === 2 ? { ...s, suits: 'Patient, careful listeners.' } : s)), mystery: 'A line from the sample storyline.' };
     expect(auditStoryline(leftover).ownerless).toEqual([
-      { path: 'members.2.profile.awareness', pattern: 'members[].profile.awareness', text: 'Knows the Urban Basket buyers well.' },
+      { path: 'stages.2.suits', pattern: 'stages[].suits', text: 'Patient, careful listeners.' },
       { path: 'mystery', pattern: 'mystery', text: 'A line from the sample storyline.' }
     ]);
   });

@@ -151,6 +151,22 @@ describe('the author draft', () => {
     expect(transport.requests[0].system[1].text).toMatch(/write the storyline's copy/);
   });
 
+  it('drafts the profile a participant reads (D245): previous role, career, awareness, responsibilities and relationships by the new names', async () => {
+    const { d } = drafter([await copy(c => {
+      const [a, b] = c.members;
+      Object.assign(a, { previous: 'Branch sales lead, a cooperative bank', experience: '9 years', tenure: '3 years', awareness: 'Sees the gaps in others more readily than in herself.', responsibilities: 'Owns the SME renewals book.', relations: [{ with: b.id, kind: 'Mentors' }, { with: a.id, kind: 'Ignored' }, { with: 'nobody', kind: 'Ignored' }] });
+    })]);
+    const s = (await d.draft(req)).storyline as unknown as StorylineInput;
+    const p = s.members[0].profile;
+    expect(p).toMatchObject({ previous: 'Branch sales lead, a cooperative bank', experience: '9 years', tenure: '3 years', awareness: 'Sees the gaps in others more readily than in herself.', responsibilities: 'Owns the SME renewals book.' });
+    // The relationship names the other person by the name the model gave them; ties to oneself or to nobody are dropped.
+    expect(p.relations).toBe('Mentors Person');
+    expect(StorylineConfig.safeParse(s).success).toBe(true);
+    // A member the model left without details keeps the template's drafted ones.
+    const t = await template();
+    expect(s.members[1].profile.awareness).toBe(t.members[1].profile.awareness);
+  });
+
   it('applies the copy rules itself: dashes, emojis and "competency"', async () => {
     const { d, transport } = drafter([await copy(c => { c.intro.welcome = ['Welcome—we are glad you are here 🎉. Your core competency is people.']; })]);
     const s = (await d.draft(req)).storyline as unknown as StorylineInput;

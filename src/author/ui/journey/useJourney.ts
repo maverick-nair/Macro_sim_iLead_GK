@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Brief, type QuestionId } from '../../../api/author';
+import type { StorylineInput } from '../../../engine/config';
 import type { LensId } from '../../../engine/lens';
 import { DEFAULT_PROCESS } from '../../context';
 import { createDrafters, failureText, firstAnswer, MockDrafter, type Drafter } from '../../drafter';
@@ -7,7 +8,7 @@ import { fitAccepted, fitCheck, fitMessage, FIT_TEXT, SENIOR_NOTE, type FitKind 
 import { LENS_BY_ID } from '../../lenses';
 import { changeSummary } from '../../model/deps';
 import type { Chat } from '../../model/draft';
-import { pressureOf, seedDraft } from '../../model/seed';
+import { draftedTeam, draftRequestOf, pressureOf, seedDraft } from '../../model/seed';
 import { useAuthor } from '../../model/store';
 import { applyAnswer, questionFor, readDocument } from '../../questions';
 import { frameworkOf, tookLabel, type TookItem } from '../../read';
@@ -87,6 +88,8 @@ export function useJourney(drafters?: Drafter[]) {
   const [failure, setFailure] = useState<{ message: string; turn: Turn } | null>(null);
   const [offline, setOffline] = useState(false);
   const running = useRef<AbortController | null>(null);
+  /** Kora drafting the people after the templates (D245). */
+  const peopleDraft = useRef<AbortController | null>(null);
   const started = useRef(false);
 
   const setChat = useCallback((f: (c: Chat) => void) => edit(d => f(d.chat)), [edit]);
@@ -248,13 +251,30 @@ export function useJourney(drafters?: Drafter[]) {
     edit(d => { d.chat.primary = primary; d.chat.secondary = secondary === primary ? null : secondary; });
   }
 
-  /** Drafts the whole simulation from the chat and shows "First draft ready". */
+  /**
+   * Drafts the whole simulation from the chat and shows "First draft ready", at once from the templates. With Kora's
+   * server (and not offline), Kora then drafts the people (D245): their names, personas, concerns, careers, awareness,
+   * responsibilities and relationships, applied as one step of undo while the team is still as drafted. An author's
+   * edit is never overwritten, and a server that fails or is slow leaves the template's people, complete as they are.
+   */
   function draftNow(primary?: LensId) {
     running.current?.abort();
     const c = structuredClone(chat);
     if (primary) c.primary = primary;
     c.primary ??= c.recommendation?.id ?? 'readiness_based';
-    replace(seedDraft(c, 'ready'));
+    const seeded = seedDraft(c, 'ready');
+    replace(seeded);
+    const server = offline ? undefined : ds.find(d => d.source === 'server');
+    if (!server) return;
+    peopleDraft.current?.abort();
+    const controller = new AbortController();
+    peopleDraft.current = controller;
+    void server.draft(draftRequestOf(c), { signal: controller.signal }).then(r => {
+      if (!r || controller.signal.aborted) return;
+      const team = draftedTeam(c, seeded, r.storyline as unknown as StorylineInput);
+      if (!team) return;
+      edit(d => { if (JSON.stringify(d.team) === JSON.stringify(seeded.team)) d.team = team; }, { label: 'Kora drafted the team', by: 'ai', restorePoint: false });
+    }, () => { /* The templates' people stand: they are complete. */ });
   }
 
   return {

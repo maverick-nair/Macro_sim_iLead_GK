@@ -46,7 +46,7 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
   const changedFields = (): string[] => {
     const groups: Record<string, Array<keyof Character>> = {
       identity: ['first', 'last', 'gender', 'pronouns', 'ageRange', 'title', 'stage', 'photo'], voice: ['voice'], persona: ['persona'], hiddenConcern: ['hiddenConcern', 'concernLine'],
-      personality: ['commStyles', 'motivatedBy', 'reactions', 'relationships', 'noTopics'], stats: ['stats', 'bestStage', 'experience', 'tenure', 'previousCompany', 'careerGoal', 'shown', 'custom']
+      personality: ['commStyles', 'motivatedBy', 'reactions', 'relationships', 'noTopics'], stats: ['stats', 'bestStage', 'experience', 'tenure', 'previousCompany', 'careerGoal', 'awareness', 'responsibilities', 'shown', 'custom']
     };
     return Object.entries(groups).filter(([, ks]) => ks.some(k => JSON.stringify(c[k]) !== JSON.stringify(character[k]))).map(([g]) => `team.${c.id}.${g}`);
   };
@@ -191,6 +191,8 @@ export function CharacterEditor({ draft, character, open, onOpenChange, onSave }
               </div>
               <Field label="Previous company" optional>{id => <TextInput id={id} value={c.previousCompany} onChange={e => set('previousCompany', e.target.value)} />}</Field>
               <Field label="Career goal">{id => <TextArea id={id} rows={2} tone={mark('stats')} value={c.careerGoal} onChange={e => set('careerGoal', e.target.value)} />}</Field>
+              <Field label="Responsibilities" optional hint="Shown in their profile">{id => <TextArea id={id} rows={2} maxLength={TEXT_MAX} tone={mark('stats')} value={c.responsibilities} onChange={e => set('responsibilities', e.target.value)} />}</Field>
+              <Field label="Self awareness" optional hint="How far they see their own strengths and gaps; shown in their profile">{id => <TextArea id={id} rows={2} maxLength={TEXT_MAX} tone={mark('stats')} value={c.awareness} onChange={e => set('awareness', e.target.value)} />}</Field>
               <fieldset className="m-0 flex flex-col gap-1.5 border-0 p-0">
                 <legend className="mb-1 text-13 font-700 text-author-label">Shown to the participant</legend>
                 {([['experience', 'Experience'], ['tenure', 'Time on team'], ['previousCompany', 'Previous company'], ['careerGoal', 'Career goal, after a good 1:1']] as const).map(([k, l]) => (

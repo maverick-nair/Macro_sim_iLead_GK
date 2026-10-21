@@ -48,7 +48,11 @@ export const DraftCopy = z.object({
   styles: z.array(z.object({ key: z.string(), name: z.string().min(1), short: z.string().min(1), description: z.string().min(1) })),
   members: z.array(z.object({
     id: z.string(), name: z.string().min(1), title: z.string().min(1), remarks: z.string(),
-    hiddenConcern: z.string().nullable(), concernLine: z.string().nullable(), careerGoal: z.string().nullable()
+    hiddenConcern: z.string().nullable(), concernLine: z.string().nullable(), careerGoal: z.string().nullable(),
+    /** Profile details (version 4, D245): optional so a version 3 answer still reads; the template's stand where missing. */
+    previous: z.string().min(1).optional(), experience: z.string().min(1).optional(), tenure: z.string().min(1).optional(),
+    awareness: z.string().min(1).optional(), responsibilities: z.string().min(1).optional(),
+    relations: z.array(z.object({ with: z.string(), kind: z.string().min(1) })).optional()
   })),
   events: z.array(z.object({ key: z.string(), title: z.string().min(1), he: z.string().min(1), she: z.string().min(1), they: z.string().nullable() })),
   sampleEvent: z.object({ title: z.string().min(1), body: z.string().min(1) }),
@@ -64,7 +68,11 @@ export function draftCopyJsonSchema(o: { members: string[]; styles: string[]; ev
     sponsor: js.obj({ name: s, title: s, styleLine: s }),
     intro: js.obj({ welcome: js.arr(s), product: js.arr(s), targets: js.arr(s) }),
     styles: js.arr(js.obj({ key: js.enum(o.styles), name: s, short: s, description: s })),
-    members: js.arr(js.obj({ id: js.enum(o.members), name: s, title: s, remarks: s, hiddenConcern: js.nullable(s), concernLine: js.nullable(s), careerGoal: js.nullable(s) })),
+    members: js.arr(js.obj({
+      id: js.enum(o.members), name: s, title: s, remarks: s, hiddenConcern: js.nullable(s), concernLine: js.nullable(s), careerGoal: js.nullable(s),
+      previous: s, experience: s, tenure: s, awareness: s, responsibilities: s,
+      relations: js.arr(js.obj({ with: js.enum(o.members), kind: s }))
+    })),
     events: js.arr(js.obj({ key: js.enum(o.events), title: s, he: s, she: s, they: js.nullable(s) })),
     sampleEvent: js.obj({ title: s, body: s }),
     // Only when the template has decisions: their options' words (D153).
