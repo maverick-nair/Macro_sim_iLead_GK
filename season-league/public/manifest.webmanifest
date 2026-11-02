@@ -1,9 +1,0 @@
-{
-  "name": "The Client Majlis: Season League",
-  "short_name": "Season League",
-  "display": "fullscreen",
-  "orientation": "landscape",
-  "background_color": "#0B1430",
-  "theme_color": "#0B1430",
-  "start_url": "/"
-}

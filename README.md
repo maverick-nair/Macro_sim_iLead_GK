@@ -18,7 +18,3 @@ Status: M1 (config model and iLead default) complete and awaiting review. See th
 - `@gk/sim-cli`: `pnpm sim validate seed:ilead`.
 
 Commands are in [CLAUDE.md](CLAUDE.md#commands).
-
-## Season League (separate product)
-
-`season-league/` holds v1 of The Client Majlis: Season League, a self-running squad game built from its own PRD. It is a standalone npm project and does not use the `@gk/*` packages. See [season-league/README.md](season-league/README.md).
