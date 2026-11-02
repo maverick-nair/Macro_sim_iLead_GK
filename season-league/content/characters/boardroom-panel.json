@@ -1,0 +1,9 @@
+{
+  "id": "boardroom-panel",
+  "name": "Boardroom panel",
+  "role": "Executive panel",
+  "organisation": "The bank",
+  "location": "",
+  "briefLoaded": false,
+  "note": "brief not loaded"
+}

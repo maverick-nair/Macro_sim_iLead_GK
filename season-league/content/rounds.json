@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "source": "seed",
+    "note": "Seed content from the Season League PRD. Only Round 2 is loaded. Run npm run import-content with content/Simulation_Workbook.xlsx to replace it with workbook v1.1."
+  },
+  "rounds": [
+    {
+      "round": 1,
+      "matchday": 1,
+      "title": "Sales handover",
+      "leads": ["Connectivity lead", "KAM"],
+      "planMinutes": 12,
+      "character": "khalid",
+      "loaded": false
+    },
+    {
+      "round": 2,
+      "matchday": 1,
+      "title": "Implementation crisis",
+      "leads": ["Connectivity lead", "CSM"],
+      "planMinutes": 12,
+      "onAirMinutes": 6,
+      "character": "nadia",
+      "loaded": true,
+      "scenario": "Host-to-host test files rejected; the authorization workflow is incomplete; the client expects the first payment run, payroll, in five days.",
+      "evidence": [
+        {
+          "id": "r2-e1",
+          "kind": "log",
+          "title": "Test log",
+          "text": "Three files rejected (field length, character set).",
+          "highlight": "3",
+          "highlightLabel": "files rejected"
+        },
+        {
+          "id": "r2-e2",
+          "kind": "system",
+          "title": "HSBCnet set-up",
+          "text": "Ready for UAT, 2 of 4 signatories registered.",
+          "highlight": "2 of 4",
+          "highlightLabel": "signatories registered"
+        },
+        {
+          "id": "r2-e3",
+          "kind": "email",
+          "title": "Email from Priya, Chennai",
+          "text": "Payroll file ready for the 28th, please confirm cut-off and channel.",
+          "highlight": "28th",
+          "highlightLabel": "payroll run"
+        }
+      ],
+      "evidenceByPriorChoice": {},
+      "deliverable": "Game plan: safe interim option, root-cause workstream, testing and sign-off gates, communication timetable, with owners and dates, plus the message to the client.",
+      "prompt": "How does payroll run safely on the 28th, and who tells the client what?",
+      "planHeadings": [
+        "Safe interim option",
+        "Root-cause workstream",
+        "Testing and sign-off gates",
+        "Communication timetable"
+      ],
+      "dueOptions": ["23rd", "24th", "25th", "26th", "27th", "28th"],
+      "inject": {
+        "headline": "Incoming call from Dubai",
+        "text": "Nadia, Group Treasurer, is on the line about the payroll run on the 28th.",
+        "seed": true
+      },
+      "options": [
+        {
+          "id": "A",
+          "label": "Controlled interim",
+          "text": "Controlled interim via HSBCnet upload with dual authorization; H2H stays in test.",
+          "effects": { "points": 10, "implementationSurvey": 1 },
+          "keyMoment": "Payroll moves through a controlled interim channel with dual authorization while host-to-host stays in test."
+        },
+        {
+          "id": "B",
+          "label": "Go live untested",
+          "text": "Go live on host-to-host without full testing.",
+          "effects": {
+            "points": 0,
+            "implementationSurvey": 0.5,
+            "sixMonthSurvey": -1,
+            "zeroPlan": true,
+            "tickets": [{ "id": "T-009", "status": "critical", "round": 5 }]
+          },
+          "keyMoment": "Host-to-host went live without full testing. The plan score is set to zero and the risk will come back.",
+          "breaking": {
+            "round": 5,
+            "headline": "Ticket T-009 turns critical",
+            "text": "The untested host-to-host go-live from Round 2 has come back as a critical ticket."
+          }
+        },
+        {
+          "id": "C",
+          "label": "Payroll waits",
+          "text": "Tell the client payroll waits until H2H is fixed.",
+          "effects": { "points": 5 },
+          "keyMoment": "Payroll waits for host-to-host. Safe for the bank, hard on the client."
+        }
+      ],
+      "seedValues": true
+    },
+    {
+      "round": 3,
+      "matchday": 1,
+      "title": "Immediate implementation survey",
+      "leads": ["KAM", "CSM"],
+      "planMinutes": 10,
+      "character": "khalid",
+      "loaded": false
+    },
+    {
+      "round": 4,
+      "matchday": 2,
+      "title": "Servicing handover",
+      "leads": ["CSM", "Connectivity lead"],
+      "planMinutes": 10,
+      "character": "nadia",
+      "loaded": false
+    },
+    {
+      "round": 5,
+      "matchday": 2,
+      "title": "Live servicing incident",
+      "leads": ["CSM"],
+      "planMinutes": 8,
+      "character": "department-head",
+      "loaded": false
+    },
+    {
+      "round": 6,
+      "matchday": 2,
+      "title": "KAM and servicing ticket review",
+      "leads": ["CSM", "KAM"],
+      "planMinutes": 12,
+      "character": "nadia",
+      "loaded": false
+    },
+    {
+      "round": 7,
+      "matchday": 3,
+      "title": "Sales and KAM revenue review",
+      "leads": ["SAM", "KAM"],
+      "planMinutes": 12,
+      "character": "faisal",
+      "loaded": false
+    },
+    {
+      "round": 8,
+      "matchday": 3,
+      "title": "Six-month client survey",
+      "leads": ["KAM"],
+      "planMinutes": 12,
+      "character": "khalid",
+      "loaded": false
+    },
+    {
+      "round": 9,
+      "matchday": 3,
+      "title": "Executive client review",
+      "leads": ["Captain"],
+      "planMinutes": 5,
+      "character": "boardroom-panel",
+      "loaded": false
+    }
+  ]
+}

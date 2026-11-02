@@ -1,0 +1,9 @@
+{
+  "meta": { "source": "seed", "note": "Consequence model rules from the PRD (workbook v1.1 summary)." },
+  "start": { "implementationSurvey": 6.0, "sixMonthSurvey": 6.0, "revenuePct": 80 },
+  "caps": { "surveyMin": 0, "surveyMax": 10, "revenueMin": 0, "revenueMax": 100 },
+  "revenueCommitment": { "currency": "SAR", "amountMillions": 2.0 },
+  "pointsPerRound": { "plan": 20, "decision": 10 },
+  "leadershipBeforeRound1": 50,
+  "decisionDisplay": { "10": "+5", "5": "0", "0": "minus 5" }
+}

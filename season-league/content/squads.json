@@ -1,0 +1,17 @@
+{
+  "meta": { "source": "demo", "note": "Demo squads. Setup replaces this file before launch." },
+  "roles": ["KAM", "SAM", "CSM", "Connectivity lead", "Fifth member"],
+  "squads": [
+    { "id": "squad-1", "name": "Squad 1", "code": "BOT1", "colour": "amber", "bot": true },
+    { "id": "squad-2", "name": "Squad 2", "code": "BOT2", "colour": "sky", "bot": true },
+    { "id": "squad-3", "name": "Squad 3", "code": "DEMO3", "colour": "coral", "bot": false },
+    { "id": "squad-4", "name": "Squad 4", "code": "BOT4", "colour": "mint", "bot": true },
+    { "id": "squad-5", "name": "Squad 5", "code": "BOT5", "colour": "lilac", "bot": true }
+  ],
+  "botResults": {
+    "squad-1": { "2": { "decisionPoints": 10, "planScore": 14, "trust": 7.2 } },
+    "squad-2": { "2": { "decisionPoints": 5, "planScore": 12, "trust": 6.4 } },
+    "squad-4": { "2": { "decisionPoints": 10, "planScore": 16, "trust": 6.8 } },
+    "squad-5": { "2": { "decisionPoints": 0, "planScore": 0, "trust": 5.1 } }
+  }
+}

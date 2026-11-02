@@ -96,3 +96,7 @@ A-30 to A-41 in `docs/decisions.md`: role fit derivation and misfit for moved me
 ## Next: M2. Engine
 
 `@gk/engine`: the pure deterministic turn loop for static and live paths, state maths, events, gamification and report metrics, with the report fixture (Directing 29%, Guiding 13%, Partnering 36%, Entrusting 22%, capability 69%) and the Leadership Score example (425, Bronze); `@gk/sim-cli run` for full 8 week runs.
+
+## Season League v1 (2026-11-02)
+
+Not part of the iLead milestones. `season-league/` is a separate, standalone product built from the Season League PRD. Its own progress and assumptions live in `season-league/docs/`. Root ESLint ignores it and CI runs it as its own job, so `pnpm check` for GenieKreator is unchanged.

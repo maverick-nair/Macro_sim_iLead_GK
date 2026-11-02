@@ -1,0 +1,21 @@
+{
+  "meta": {
+    "source": "seed",
+    "timezone": "Asia/Riyadh",
+    "note": "Proposed session dates from v3.1 (open question 5)."
+  },
+  "matchdays": [
+    { "matchday": 1, "title": "Win and deliver", "unlockAt": "2026-11-22T09:00:00+03:00" },
+    { "matchday": 2, "title": "Service and retain", "unlockAt": "2026-11-22T14:00:00+03:00" },
+    { "matchday": 3, "title": "Grow and defend", "unlockAt": "2026-11-23T09:00:00+03:00" }
+  ],
+  "gapWeek": { "title": "Trust Challenge", "loaded": false },
+  "final": { "title": "League final", "loaded": false },
+  "timers": {
+    "autoKickOffSeconds": 90,
+    "lockedInSeconds": 2,
+    "injectSeconds": 8,
+    "fullTimeSeconds": 120,
+    "leagueSeconds": 30
+  }
+}

@@ -3,3 +3,5 @@ pnpm-lock.yaml
 packages/schema/generated
 packages/db/prisma/migrations
 *.md
+season-league/server/data
+season-league/package-lock.json

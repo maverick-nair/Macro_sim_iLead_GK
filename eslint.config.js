@@ -19,6 +19,8 @@ export default tseslint.config(
       "**/coverage/**",
       "packages/schema/generated/**",
       "docs/source/**",
+      // Season League is a separate npm project with its own toolchain (see season-league/README.md).
+      "season-league/**",
     ],
   },
   js.configs.recommended,

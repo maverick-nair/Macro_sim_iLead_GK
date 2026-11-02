@@ -1,0 +1,20 @@
+{
+  "meta": {
+    "source": "seed",
+    "version": "rubric-v1",
+    "note": "Four rubric lines from v3.1 as listed in the PRD."
+  },
+  "lines": [
+    { "id": "evidence", "label": "Evidence and diagnosis" },
+    { "id": "practicality", "label": "Practicality and controls" },
+    { "id": "ownership", "label": "Ownership and milestones" },
+    { "id": "communication", "label": "Client communication" }
+  ],
+  "lineMax": 5,
+  "tieBreakGap": 2,
+  "controlBypassZero": {
+    "rule": "Score the plan 0 if it releases a payment without the registered authorizers.",
+    "rounds": [2],
+    "todo": "Open question 10: every round, or only Round 2 as the workbook does. Set rounds to \"all\" to apply everywhere."
+  }
+}
