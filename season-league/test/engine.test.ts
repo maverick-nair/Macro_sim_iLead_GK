@@ -36,6 +36,7 @@ function play(content = syntheticSeason(), choices: Record<number, OptionId>, pl
       transcript: [],
       autoSubmitted: false,
       challenge: null,
+      momentResults: [],
       captain: "Test",
       completedAt: "2026-11-22T09:00:00+03:00",
     };

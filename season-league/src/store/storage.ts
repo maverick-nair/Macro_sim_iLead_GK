@@ -2,6 +2,7 @@
  * Squad state storage. localStorage today, behind an interface so a server store can replace it.
  * Every access is wrapped: private windows and blocked storage must not stop the game.
  */
+import { migrateSeason } from "../engine/season.ts";
 import type { SeasonState } from "../engine/types.ts";
 
 export interface SquadStorage {
@@ -36,10 +37,7 @@ function write(key: string, value: unknown) {
 }
 
 export const localStore: SquadStorage = {
-  load: (id) => {
-    const s = read<SeasonState | null>(`squad:${id}`, null);
-    return s && s.version === 1 ? s : null;
-  },
+  load: (id) => migrateSeason(read<unknown>(`squad:${id}`, null)),
   save: (state) => write(`squad:${state.squadId}`, state),
   currentSquad: () => read<string | null>("current", null),
   setCurrentSquad: (id) => write("current", id),

@@ -1,4 +1,5 @@
 import type { OptionId } from "../../shared/content-schema.ts";
+import { InputCards } from "../components/InputCards.tsx";
 import { useGame } from "../store/game.ts";
 
 const MAX_ACTIONS = 5;
@@ -153,6 +154,7 @@ export function GamePlan() {
             : "No play is picked for you. Time out locks whatever is on the board."}
         </p>
       </section>
+      <InputCards cards={round.inputCards} showAt="plan" />
     </div>
   );
 }

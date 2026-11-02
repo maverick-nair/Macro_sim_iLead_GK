@@ -8,7 +8,7 @@ import type { Member, SeasonState } from "./types.ts";
 
 export function newSeason(squadId: string, content: Content): SeasonState {
   return {
-    version: 1,
+    version: 2,
     squadId,
     roster: [],
     checkins: {},
@@ -21,7 +21,61 @@ export function newSeason(squadId: string, content: Content): SeasonState {
     flags: { revenueDisputed: false, mandateLabel: null, feeds: {} },
     live: null,
     audit: [],
+    trustChallenge: { sittings: {}, activeSitting: null },
+    kudosGiven: {},
+    kudosClosed: [],
+    finalSeen: false,
+    revision: 0,
   };
+}
+
+/**
+ * Brings a saved season up to the current version. Returns null for anything unrecognisable.
+ * v1 to v2: adds Trust Challenge, kudos, final and revision fields; live rounds and records gain moment fields.
+ */
+export function migrateSeason(raw: unknown): SeasonState | null {
+  if (!raw || typeof raw !== "object") return null;
+  const s = raw as Record<string, unknown> & { version?: number };
+  if (s.version === 2) return s as unknown as SeasonState;
+  if (s.version !== 1) return null;
+  const v1 = s as unknown as Omit<SeasonState, "version"> & { version: 1 };
+  const records: SeasonState["records"] = {};
+  for (const [k, r] of Object.entries(v1.records ?? {}))
+    records[k] = { ...r, momentResults: r.momentResults ?? [] };
+  return {
+    ...v1,
+    version: 2,
+    records,
+    live: v1.live
+      ? { ...v1.live, moment: v1.live.moment ?? null, momentResults: v1.live.momentResults ?? [] }
+      : null,
+    trustChallenge: { sittings: {}, activeSitting: null },
+    kudosGiven: {},
+    kudosClosed: [],
+    finalSeen: false,
+    revision: 0,
+  };
+}
+
+/** Gap week: the Trust Challenge is open from its unlock time (or the override) and stays open after. */
+export function gapWeekOpen(content: Content, ctx: FixtureContext, gapUnlockAt: number | undefined): boolean {
+  if (!content.schedule.gapWeek.loaded) return false;
+  if (ctx.unlockOverride) return true;
+  return gapUnlockAt !== undefined && ctx.now >= gapUnlockAt;
+}
+
+/** The final opens at its unlock time (or the override) once every loaded round is played. */
+export function finalOpen(
+  content: Content,
+  state: SeasonState,
+  ctx: FixtureContext,
+  finalUnlockAt: number | undefined,
+): boolean {
+  if (!content.schedule.final.loaded) return false;
+  const allPlayed = content.rounds.rounds.every((r) => !r.loaded || state.records[String(r.round)]);
+  if (!allPlayed || state.live) return false;
+  if (ctx.unlockOverride) return true;
+  return finalUnlockAt !== undefined && ctx.now >= finalUnlockAt;
 }
 
 /** The captain rotates every round in roster order. */

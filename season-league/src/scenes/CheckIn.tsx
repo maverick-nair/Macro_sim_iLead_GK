@@ -22,9 +22,12 @@ export function CodeEntry() {
   const checkIn = useGame((s) => s.checkIn);
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const submit = (e: FormEvent) => {
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
-    setError(checkIn(code));
+    setBusy(true);
+    setError(await checkIn(code));
+    setBusy(false);
   };
   return (
     <div className="checkin">
@@ -33,7 +36,7 @@ export function CodeEntry() {
         <h1 className="display huge">Season League</h1>
         <p className="lede">One squad, one tablet, nine rounds with Gulf Horizon Trading.</p>
       </div>
-      <form className="code-card" onSubmit={submit}>
+      <form className="code-card" onSubmit={(e) => void submit(e)}>
         <label htmlFor="code" className="display h3">
           Squad code
         </label>
@@ -53,7 +56,7 @@ export function CodeEntry() {
             {error}
           </p>
         )}
-        <button type="submit" className="btn-primary big" disabled={code.trim().length < 3}>
+        <button type="submit" className="btn-primary big" disabled={code.trim().length < 3 || busy}>
           Enter the stadium
         </button>
         {demo && <p className="muted small">Demo squad code: DEMO3</p>}

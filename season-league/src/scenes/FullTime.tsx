@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { CountUp } from "../components/CountUp.tsx";
+import { MomentResults } from "../components/MomentResults.tsx";
+import { TranscriptReviewButton } from "../components/TranscriptReview.tsx";
 import { mmss } from "../components/ScoreBug.tsx";
 import { decisionDisplay, leadershipScore } from "../engine/consequences.ts";
 import { useGame } from "../store/game.ts";
@@ -80,6 +82,8 @@ export function FullTime() {
         </div>
       </section>
 
+      <MomentResults record={rec} />
+
       <section className="key-moment" aria-label="Key moment">
         <span className="fact-label">Key moment</span>
         <p className="display h3">{keyMoment}</p>
@@ -141,6 +145,7 @@ export function FullTime() {
       </section>
 
       <div className="ft-actions">
+        <TranscriptReviewButton record={rec} />
         {rec.challenge ? (
           <p className="challenge-result">
             Challenge settled: {rec.challenge.target === "plan" ? "plan quality" : "Trust Meter"}{" "}

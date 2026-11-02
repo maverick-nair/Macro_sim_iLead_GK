@@ -18,6 +18,8 @@ export interface SquadResults {
   rounds: Record<string, SquadRoundResult>;
   /** Categories outside the rounds, each 0..1 once known (imported missions, boardroom, kudos and so on). */
   extra?: Partial<Record<LeagueCategoryId, number>>;
+  /** Replay Trust Meter minus kick-off Trust Meter, once both are played (Most Improved award). */
+  mostImproved?: number | null;
   demo?: boolean;
 }
 

@@ -26,18 +26,19 @@ const client = mode === "live" ? new Anthropic({ apiKey, timeout: 30_000, maxRet
 
 const effortFor = (v: string | undefined, fallback: Effort): Effort | null =>
   v === "none" ? null : ((v as Effort | undefined) ?? fallback);
-const CHAT_EFFORT = effortFor(process.env.AI_EFFORT_CHAT, "low");
-const SCORE_EFFORT = effortFor(process.env.AI_EFFORT_SCORE, "medium");
+export const CHAT_EFFORT = effortFor(process.env.AI_EFFORT_CHAT, "low");
+export const SCORE_EFFORT = effortFor(process.env.AI_EFFORT_SCORE, "medium");
 
 const PROMPTS = fileURLToPath(new URL("../prompts/", import.meta.url));
-const prompt = (task: string, version = "v1") => readFileSync(`${PROMPTS}${task}/${version}.md`, "utf8");
-const fill = (tpl: string, vars: Record<string, string>) =>
+export const prompt = (task: string, version = "v1") =>
+  readFileSync(`${PROMPTS}${task}/${version}.md`, "utf8");
+export const fill = (tpl: string, vars: Record<string, string>) =>
   tpl.replace(/\{\{(\w+)\}\}/g, (_, k: string) => vars[k] ?? "");
 
-const listPromises = (ps: { action: string; owner: string; due: string }[]) =>
+export const listPromises = (ps: { action: string; owner: string; due: string }[]) =>
   ps.length ? ps.map((p) => `- ${p.action} (owner: ${p.owner}, due: ${p.due})`).join("\n") : "- None yet.";
 
-async function complete(
+export async function complete(
   system: string,
   messages: Anthropic.MessageParam[],
   effort: Effort | null,
@@ -60,7 +61,7 @@ async function complete(
 }
 
 /** Calls the model for strict JSON, validates, retries once with the validation error. */
-async function structured<T>(system: string, user: string, schema: z.ZodType<T>): Promise<T> {
+export async function structured<T>(system: string, user: string, schema: z.ZodType<T>): Promise<T> {
   const messages: Anthropic.MessageParam[] = [{ role: "user", content: user }];
   let lastError = "";
   for (let attempt = 0; attempt < 2; attempt++) {

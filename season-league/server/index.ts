@@ -1,38 +1,29 @@
 /**
- * Season League server: proxies AI calls (keys stay here), holds squad results for the league and the
- * shared screen, and logs every turn and score in KSA time. In production it also serves the built game.
+ * Season League server: proxies AI calls (keys stay here), serves content, holds squad state and results,
+ * and logs every turn, score, challenge and reveal in KSA time. In production it also serves the built game.
+ *
+ * Each feature registers its own routes from server/routes/*.ts.
  */
 import "dotenv/config";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import type { ChatRequest, PlanScoreRequest, TrustScoreRequest } from "../shared/ai-contract.ts";
 import { chat, mode, scorePlan, scoreTrust } from "./ai.ts";
+import { registerContent } from "./content.ts";
+import { kudosValues, registerKudos } from "./routes/kudos.ts";
+import { registerMoments } from "./routes/moments.ts";
+import { registerObserver } from "./routes/observer.ts";
+import { missionValues, registerReports } from "./routes/reports.ts";
+import { registerSetup } from "./routes/setup.ts";
+import { registerState } from "./routes/state.ts";
+import { registerTrustChallenge } from "./routes/trust-challenge.ts";
+import { audit } from "./audit.ts";
+import { getFeed, getResults, ksaNow, putFeed, putResults } from "./state-store.ts";
 
-const app = express();
-app.use(express.json({ limit: "1mb" }));
+export const app = express();
+app.use(express.json({ limit: "5mb" }));
 
-const DATA = fileURLToPath(new URL("./data/", import.meta.url));
-mkdirSync(DATA, { recursive: true });
-const RESULTS = `${DATA}results.json`;
 const demo = process.env.DEMO_MODE !== "false";
-
-/** ISO time in KSA (UTC+3), for the audit log. */
-export function ksaNow(ms = Date.now()): string {
-  return new Date(ms + 3 * 3600_000).toISOString().replace("Z", "+03:00");
-}
-const log = (kind: string, body: unknown) =>
-  appendFileSync(`${DATA}audit.log`, `${JSON.stringify({ at: ksaNow(), kind, body })}\n`);
-
-type ResultsStore = Record<string, unknown>;
-let results: ResultsStore = existsSync(RESULTS)
-  ? (JSON.parse(readFileSync(RESULTS, "utf8")) as ResultsStore)
-  : {};
-let feed: { breaking: unknown; trust: unknown; updatedAt: string | null } = {
-  breaking: null,
-  trust: null,
-  updatedAt: null,
-};
 
 app.get("/api/health", (_req, res) => {
   res.json({ mode, demo });
@@ -41,7 +32,7 @@ app.get("/api/health", (_req, res) => {
 app.post("/api/chat", async (req, res) => {
   const body = req.body as ChatRequest;
   const out = await chat(body);
-  log("turn", {
+  audit("turn", {
     character: body.character?.id,
     round: body.round?.number,
     last: body.transcript?.at(-1),
@@ -53,18 +44,22 @@ app.post("/api/chat", async (req, res) => {
 
 app.post("/api/score/plan", async (req, res) => {
   const out = await scorePlan(req.body as PlanScoreRequest);
-  log("plan-score", out);
+  audit("plan-score", out);
   res.json(out);
 });
 
 app.post("/api/score/trust", async (req, res) => {
   const out = await scoreTrust(req.body as TrustScoreRequest);
-  log("trust-score", out);
+  audit("trust-score", out);
   res.json(out);
 });
 
 app.get("/api/results", (_req, res) => {
-  res.json({ results, feed });
+  // extras: league categories computed on the server (kudos received, imported missions), each 0 to 1.
+  const extras: Record<string, Record<string, number>> = {};
+  for (const [id, v] of Object.entries(kudosValues())) extras[id] = { ...extras[id], kudos: v };
+  for (const [id, v] of Object.entries(missionValues())) extras[id] = { ...extras[id], missions: v };
+  res.json({ results: getResults(), feed: getFeed(), extras });
 });
 
 app.post("/api/results", (req, res) => {
@@ -73,13 +68,27 @@ app.post("/api/results", (req, res) => {
     res.status(400).json({ error: "squadId is required" });
     return;
   }
-  results = { ...results, [body.squadId]: body.results };
-  writeFileSync(RESULTS, JSON.stringify(results, null, 2));
-  if (body.breaking || body.trust)
-    feed = { breaking: body.breaking ?? feed.breaking, trust: body.trust ?? feed.trust, updatedAt: ksaNow() };
-  log("results", body);
+  putResults(body.squadId, body.results);
+  if (body.breaking || body.trust) {
+    const feed = getFeed();
+    putFeed({
+      breaking: body.breaking ?? feed.breaking,
+      trust: body.trust ?? feed.trust,
+      updatedAt: ksaNow(),
+    });
+  }
+  audit("results", body);
   res.json({ ok: true });
 });
+
+registerContent(app);
+registerState(app);
+registerTrustChallenge(app);
+registerMoments(app);
+registerKudos(app);
+registerReports(app);
+registerSetup(app);
+registerObserver(app);
 
 if (process.env.NODE_ENV === "production") {
   const dist = fileURLToPath(new URL("../dist/", import.meta.url));
@@ -87,9 +96,11 @@ if (process.env.NODE_ENV === "production") {
   app.get(/^\/(?!api\/).*/, (_req, res) => res.sendFile(`${dist}index.html`));
 }
 
-const port = Number(process.env.PORT ?? 8787);
-app.listen(port, () => {
-  console.log(
-    `Season League server on http://localhost:${port} (AI: ${mode === "live" ? "live" : "Demo AI, mock mode"}, demo mode: ${demo})`,
-  );
-});
+if (process.env.SEASON_LEAGUE_NO_LISTEN !== "1") {
+  const port = Number(process.env.PORT ?? 8787);
+  app.listen(port, () => {
+    console.log(
+      `Season League server on http://localhost:${port} (AI: ${mode === "live" ? "live" : "Demo AI, mock mode"}, demo mode: ${demo})`,
+    );
+  });
+}

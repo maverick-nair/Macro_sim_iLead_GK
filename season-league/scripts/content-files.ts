@@ -2,6 +2,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { CONTENT_FILES } from "../shared/content-schema.ts";
 
 export const CONTENT_DIR = process.env.CONTENT_DIR
   ? `${process.env.CONTENT_DIR.replace(/\/$/, "")}/`
@@ -9,15 +10,9 @@ export const CONTENT_DIR = process.env.CONTENT_DIR
 
 export function readContentFiles() {
   const read = (f: string) => JSON.parse(readFileSync(join(CONTENT_DIR, f), "utf8")) as unknown;
-  const raw: Record<string, unknown> = {
-    rounds: read("rounds.json"),
-    consequence: read("consequence.json"),
-    league: read("league.json"),
-    trustMeter: read("trust-meter.json"),
-    rubric: read("rubric.json"),
-    schedule: read("schedule.json"),
-    squads: read("squads.json"),
-  };
+  const raw: Record<string, unknown> = {};
+  for (const [key, file] of Object.entries(CONTENT_FILES))
+    raw[key] = existsSync(join(CONTENT_DIR, file)) ? read(file) : undefined;
   const characters: Record<string, unknown> = {};
   const dir = join(CONTENT_DIR, "characters");
   if (existsSync(dir))

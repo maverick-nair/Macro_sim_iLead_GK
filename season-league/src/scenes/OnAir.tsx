@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useRef, useState } from "react";
 import { captainFor } from "../engine/season.ts";
+import { InputCards } from "../components/InputCards.tsx";
 import { promisesFrom, useGame } from "../store/game.ts";
 
 type SpeechRecognitionLike = {
@@ -169,6 +170,7 @@ export function OnAir() {
           End the call
         </button>
       </section>
+      <InputCards cards={round.inputCards} showAt="onair" />
     </div>
   );
 }

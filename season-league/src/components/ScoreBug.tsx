@@ -20,6 +20,8 @@ export function ScoreBug({ round }: { round?: number }) {
   const reducedMotion = useGame((s) => s.reducedMotion);
   const setMuted = useGame((s) => s.setMuted);
   const setReducedMotion = useGame((s) => s.setReducedMotion);
+  const voice = useGame((s) => s.voice);
+  const setVoice = useGame((s) => s.setVoice);
   const standings = useGame((s) => s.standings)();
   const clock = useClock();
   const ctx = useGame((s) => s.fixtureContext)();
@@ -87,6 +89,9 @@ export function ScoreBug({ round }: { round?: number }) {
       <div className="bug-toggles">
         <button type="button" className="toggle" aria-pressed={!muted} onClick={() => setMuted(!muted)}>
           {muted ? "Sound off" : "Sound on"}
+        </button>
+        <button type="button" className="toggle" aria-pressed={voice} onClick={() => setVoice(!voice)}>
+          {voice ? "Voice on" : "Voice off"}
         </button>
         <button
           type="button"

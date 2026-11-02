@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { GapWeekColumn } from "../components/GapWeekColumn.tsx";
 import { mmss } from "../components/ScoreBug.tsx";
 import { captainFor, fixtureStatus, matchdayUnlocked, nextPlayableRound } from "../engine/season.ts";
 import { decisionDisplay } from "../engine/consequences.ts";
@@ -70,19 +71,7 @@ export function Lobby() {
             </div>
           </div>
         ))}
-        <div className="matchday-col slim">
-          <h2 className="md-title">
-            <span className="display">Gap week</span>
-          </h2>
-          <div className="tile tile-not-loaded">
-            <span className="tile-title">{content.schedule.gapWeek.title}</span>
-            <span className="tile-status">Content not loaded</span>
-          </div>
-          <div className="tile tile-not-loaded">
-            <span className="tile-title">{content.schedule.final.title}</span>
-            <span className="tile-status">Content not loaded</span>
-          </div>
-        </div>
+        <GapWeekColumn />
       </section>
 
       <section className="hero" aria-label="Next fixture">

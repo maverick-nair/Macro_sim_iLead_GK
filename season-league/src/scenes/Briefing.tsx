@@ -1,4 +1,5 @@
 import { evidenceFor, ticketsInRound } from "../engine/consequences.ts";
+import { InputCards } from "../components/InputCards.tsx";
 import { useGame } from "../store/game.ts";
 
 /** Scouting report: the round's evidence with the big numbers pulled out. The plan clock is running. */
@@ -45,6 +46,7 @@ export function Briefing() {
           Open the plan board
         </button>
       </div>
+      <InputCards cards={round.inputCards} showAt="briefing" />
     </div>
   );
 }

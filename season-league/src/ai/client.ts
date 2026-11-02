@@ -74,6 +74,7 @@ export async function scoreTrust(
 export async function fetchResults(): Promise<{
   results: Record<string, unknown>;
   feed: { breaking: unknown; trust: unknown };
+  extras?: Record<string, Record<string, number>>;
 } | null> {
   try {
     const res = await fetch("/api/results");

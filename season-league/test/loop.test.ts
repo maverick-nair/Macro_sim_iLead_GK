@@ -21,14 +21,29 @@ import {
 import { seedContent } from "./fixtures.ts";
 
 const seed = seedContent();
-const ctx: MachineContext = { timers: seed.schedule.timers, onAirMinutes: 6 };
+const ctx: MachineContext = {
+  timers: seed.schedule.timers,
+  planMinutes: 12,
+  onAirMinutes: 6,
+  onAir: true,
+  moments: [],
+};
 const MIN = 60_000;
+
+/** A live round past the kick-off countdown, in the briefing with the plan clock running. */
+const briefing = (now = 0) =>
+  step(startRound(2, now), { type: "TICK", now: now + seed.schedule.timers.countdownSeconds * 1000 }, ctx)!;
 
 describe("round state machine", () => {
   it("runs from briefing to the lobby with timeouts only, no human action", () => {
     let t = 0;
-    let live = startRound(2, 12, t);
+    let live = startRound(2, t);
+    expect(live.phase).toBe("COUNTDOWN");
+    expect(clockSeconds(live, t)).toBeNull(); // the plan clock starts after the countdown
+    t += seed.schedule.timers.countdownSeconds * 1000;
+    live = step(live, { type: "TICK", now: t }, ctx)!;
     expect(live.phase).toBe("BRIEFING");
+    expect(clockSeconds(live, t)).toBe(720);
     expect(live.plan.decision).toBeNull(); // nothing preselected
     const advance = (ms: number) => {
       t += ms;
@@ -55,8 +70,8 @@ describe("round state machine", () => {
   });
 
   it("only locks the play once a play card is chosen", () => {
-    let live = startRound(2, 12, 0);
-    live = step(live, { type: "OPEN_PLAN", now: 1 }, ctx)!;
+    let live = briefing();
+    live = step(live, { type: "OPEN_PLAN", now: 4000 }, ctx)!;
     expect(step(live, { type: "LOCK_PLAY", now: 2 }, ctx)!.phase).toBe("PLANNING");
     live = step(live, { type: "UPDATE_PLAN", plan: { ...emptyPlan(), decision: "A" } }, ctx)!;
     const locked = step(live, { type: "LOCK_PLAY", now: 3 }, ctx)!;
@@ -65,14 +80,82 @@ describe("round state machine", () => {
   });
 
   it("ignores plan edits after the play is locked", () => {
-    let live = step(
-      startRound(2, 12, 0),
-      { type: "UPDATE_PLAN", plan: { ...emptyPlan(), decision: "C" } },
-      ctx,
-    )!;
+    let live = step(briefing(), { type: "UPDATE_PLAN", plan: { ...emptyPlan(), decision: "C" } }, ctx)!;
     live = step(live, { type: "LOCK_PLAY", now: 1 }, ctx)!;
     live = step(live, { type: "UPDATE_PLAN", plan: { ...emptyPlan(), decision: "A" } }, ctx)!;
     expect(live.plan.decision).toBe("C");
+  });
+});
+
+describe("round moments in the state machine", () => {
+  const withMoments: MachineContext = {
+    ...ctx,
+    moments: [
+      { id: "lift", minutes: 4 },
+      { id: "boardroom", minutes: 10 },
+    ],
+  };
+  const atInject = () => {
+    let live = step(
+      briefing(),
+      { type: "UPDATE_PLAN", plan: { ...emptyPlan(), decision: "A" } },
+      withMoments,
+    )!;
+    live = step(live, { type: "LOCK_PLAY", now: 5000 }, withMoments)!;
+    return step(
+      live,
+      { type: "TICK", now: 5000 + seed.schedule.timers.lockedInSeconds * 1000 },
+      withMoments,
+    )!;
+  };
+
+  it("runs each moment after the call, in order, then scores", () => {
+    let live = step(atInject(), { type: "TAKE_CALL", now: 10_000 }, withMoments)!;
+    expect(live.phase).toBe("ON_AIR");
+    live = step(live, { type: "END_CALL", now: 20_000 }, withMoments)!;
+    expect(live.phase).toBe("MOMENT");
+    expect(live.moment?.momentId).toBe("lift");
+    expect(clockSeconds(live, 20_000)).toBe(240);
+    live = step(live, { type: "MOMENT_UPDATE", patch: { questionsAsked: 1 } }, withMoments)!;
+    expect(live.moment?.questionsAsked).toBe(1);
+    // Time out turns the moment to scoring; the store then scores it.
+    live = step(live, { type: "TICK", now: 20_000 + 4 * MIN }, withMoments)!;
+    expect(live.moment?.status).toBe("scoring");
+    expect(clockSeconds(live, 20_000 + 4 * MIN)).toBeNull();
+    const lift = { type: "lift" as const, momentId: "lift", briefs: [], scorer: "t" };
+    live = step(live, { type: "MOMENT_SCORED", result: lift, now: 30_000 + 4 * MIN }, withMoments)!;
+    expect(live.phase).toBe("MOMENT");
+    expect(live.moment?.momentId).toBe("boardroom");
+    expect(live.momentResults).toHaveLength(1);
+    live = step(live, { type: "END_MOMENT", now: 40_000 + 4 * MIN }, withMoments)!;
+    expect(live.moment?.status).toBe("scoring");
+    const board = {
+      type: "boardroom" as const,
+      momentId: "boardroom",
+      criteria: [],
+      presenters: [],
+      total: 0,
+      transcript: [],
+      scorer: "t",
+    };
+    live = step(live, { type: "MOMENT_SCORED", result: board, now: 50_000 + 4 * MIN }, withMoments)!;
+    expect(live.phase).toBe("SCORING");
+    expect(live.moment).toBeNull();
+    expect(live.momentResults.map((r) => r.momentId)).toEqual(["lift", "boardroom"]);
+  });
+
+  it("ignores a score for a moment that is not the current one", () => {
+    let live = step(atInject(), { type: "TAKE_CALL", now: 10_000 }, withMoments)!;
+    live = step(live, { type: "END_CALL", now: 20_000 }, withMoments)!;
+    const wrong = { type: "lift" as const, momentId: "boardroom", briefs: [], scorer: "t" };
+    expect(step(live, { type: "MOMENT_SCORED", result: wrong, now: 21_000 }, withMoments)).toBe(live);
+  });
+
+  it("goes straight from the inject to the moments when the round has no main conversation", () => {
+    const noCall = { ...withMoments, onAir: false };
+    const live = step(atInject(), { type: "TAKE_CALL", now: 10_000 }, noCall)!;
+    expect(live.phase).toBe("MOMENT");
+    expect(live.moment?.momentId).toBe("lift");
   });
 });
 
@@ -192,6 +275,8 @@ describe("content file", () => {
         rubric: seed.rubric,
         schedule: seed.schedule,
         squads: seed.squads,
+        trustChallenge: seed.trustChallenge,
+        kudos: seed.kudos,
       },
       seed.characters,
     );

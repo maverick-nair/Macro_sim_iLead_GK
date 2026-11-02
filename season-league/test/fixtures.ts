@@ -15,6 +15,8 @@ import {
   ScheduleFile,
   SquadsFile,
   TrustMeterFile,
+  TrustChallengeFile,
+  KudosFile,
   Character,
 } from "../shared/content-schema.ts";
 
@@ -33,6 +35,8 @@ export function seedContent(): Content {
     rubric: RubricFile.parse(read("rubric.json")),
     schedule: ScheduleFile.parse(read("schedule.json")),
     squads: SquadsFile.parse(read("squads.json")),
+    trustChallenge: TrustChallengeFile.parse(read("trust-challenge.json")),
+    kudos: KudosFile.parse(read("kudos.json")),
     characters,
   };
 }
@@ -66,6 +70,9 @@ function syntheticRound(
     planHeadings: ["One", "Two", "Three", "Four"],
     dueOptions: ["Day 1"],
     inject: { headline: "Inject", text: "Inject text" },
+    onAir: true,
+    moments: [],
+    inputCards: [],
     options: (["A", "B", "C"] as const).map((id) => ({
       id,
       label: id,

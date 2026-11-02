@@ -14,9 +14,15 @@ import {
   revealsDue,
 } from "../engine/consequences.ts";
 import { computeLeague, type SquadResults, type Standing } from "../engine/league.ts";
-import { clockSeconds, type RoundEvent, startRound, step } from "../engine/round-machine.ts";
+import { clockSeconds, machineContext, type RoundEvent, startRound, step } from "../engine/round-machine.ts";
 import { combinePasses, needsTieBreak } from "../engine/rubric.ts";
 import { captainFor, type FixtureContext, newSeason, nextPlayableRound } from "../engine/season.ts";
+import { boardroomValue, challengesValue, mostImproved } from "../engine/moments.ts";
+import { trustChallengeValue } from "../engine/trust-challenge.ts";
+import { speak } from "../components/voice.ts";
+import * as sync from "./sync.ts";
+import { onLiveChange } from "./moments.ts";
+import { trustChallengeResume, trustChallengeTick } from "./trust-challenge.ts";
 import type { Member, PlanDraft, Reveal, RoundRecord, SeasonState, TrustResult } from "../engine/types.ts";
 import { localStore, type SquadStorage } from "./storage.ts";
 import { cue } from "../components/sound.ts";
@@ -27,9 +33,12 @@ export function ksaTime(ms: number): string {
   return new Date(ms + 3 * 3600_000).toISOString().replace(/\.\d+Z$/, "+03:00");
 }
 
-interface GameState {
+export interface GameState {
   content: Content;
   unlockAt: Record<number, number>;
+  /** Gap week (Trust Challenge) and final unlock times, in milliseconds. */
+  gapUnlockAt: number | undefined;
+  finalUnlockAt: number | undefined;
   storage: SquadStorage;
   aiMode: "live" | "mock";
   demo: boolean;
@@ -39,21 +48,35 @@ interface GameState {
   unlockOverride: boolean;
   muted: boolean;
   reducedMotion: boolean;
+  /** Read character lines aloud (F20). Off by default. */
+  voice: boolean;
+  /** Set by the sync module when another device has taken this squad over (F1). */
+  movedAway: boolean;
   thinking: boolean;
   scoringStatus: string | null;
   challengeBusy: boolean;
   remoteResults: Record<string, SquadResults>;
+  /** League categories computed on the server per squad (kudos received, imported missions), 0 to 1. */
+  remoteExtras: Record<string, Partial<Record<string, number>>>;
   previousOrder: string[];
   breaking: Reveal | null;
 
   init(): Promise<void>;
   tick(): void;
-  checkIn(code: string): string | null;
+  checkIn(code: string): Promise<string | null>;
   signOut(): void;
   confirmRoster(members: Member[], matchday: number): void;
   setUnlockOverride(v: boolean): void;
   setMuted(v: boolean): void;
   setReducedMotion(v: boolean): void;
+  setVoice(v: boolean): void;
+  /** Saves a new season state (bumps the revision, stores locally, queues for the server). */
+  save(season: SeasonState): void;
+  /** Appends an audit entry in KSA time and saves. */
+  audit(kind: string, detail: string): void;
+  /** Re-reads league results and server extras. */
+  refreshRemote(): Promise<void>;
+  syncResults(extra?: { breaking?: unknown; trust?: unknown }): Promise<void>;
   kickOff(): void;
   dispatch(event: RoundEvent): void;
   updatePlan(plan: PlanDraft): void;
@@ -74,17 +97,33 @@ export function promisesFrom(plan: PlanDraft): PromiseItem[] {
   return plan.actions.filter((a) => a.action.trim());
 }
 
-function squadResultsFor(squad: Squad, season: SeasonState): SquadResults {
+export function squadResultsFor(squad: Squad, season: SeasonState, content: Content): SquadResults {
   const rounds: SquadResults["rounds"] = {};
   for (const [k, r] of Object.entries(season.records))
     rounds[k] = { decisionPoints: r.decisionPoints, planScore: r.planScore, trust: r.trust?.average ?? 0 };
-  return { squadId: squad.id, name: squad.name, colour: squad.colour, rounds };
+  const extra: NonNullable<SquadResults["extra"]> = {};
+  const tc = trustChallengeValue(season, content);
+  const ch = challengesValue(season);
+  const br = boardroomValue(season);
+  if (tc !== undefined) extra.trustChallenge = tc;
+  if (ch !== undefined) extra.challenges = ch;
+  if (br !== undefined) extra.boardroom = br;
+  return {
+    squadId: squad.id,
+    name: squad.name,
+    colour: squad.colour,
+    rounds,
+    extra,
+    mostImproved: mostImproved(season, content),
+  };
 }
 
 export const useGame = create<GameState>()((set, get) => {
   const save = (season: SeasonState) => {
-    get().storage.save(season);
-    set({ season });
+    const next = { ...season, revision: (season.revision ?? 0) + 1 };
+    get().storage.save(next);
+    set({ season: next });
+    sync.push(next);
   };
 
   const history = (season: SeasonState, content: Content): string[] =>
@@ -122,6 +161,7 @@ export const useGame = create<GameState>()((set, get) => {
     set({ thinking: true });
     const out = await ai.chat(chatRequest(round, season, []));
     set({ thinking: false });
+    speak(out.reply, get().voice && !get().muted);
     const now = Date.now();
     get().dispatch({
       type: "ADD_TURN",
@@ -132,7 +172,7 @@ export const useGame = create<GameState>()((set, get) => {
   const syncResults = async (extra?: { breaking?: unknown; trust?: unknown }) => {
     const { squad, season, storage } = get();
     if (!squad || !season) return;
-    const body = { squadId: squad.id, results: squadResultsFor(squad, season), ...extra };
+    const body = { squadId: squad.id, results: squadResultsFor(squad, season, get().content), ...extra };
     const queue = [...storage.getQueue(), body];
     const remaining: unknown[] = [];
     for (const item of queue) if (!(await ai.pushResults(item))) remaining.push(item);
@@ -146,7 +186,7 @@ export const useGame = create<GameState>()((set, get) => {
     const remote: Record<string, SquadResults> = {};
     for (const [id, r] of Object.entries(data.results))
       if (r && typeof r === "object") remote[id] = r as SquadResults;
-    set({ remoteResults: remote });
+    set({ remoteResults: remote, remoteExtras: data.extras ?? {} });
   };
 
   const runScoring = async () => {
@@ -230,6 +270,7 @@ export const useGame = create<GameState>()((set, get) => {
       transcript: live.transcript,
       autoSubmitted: live.autoSubmitted,
       challenge: null,
+      momentResults: live.momentResults,
       captain: captainFor(latest.roster, round.round)?.name ?? "",
       completedAt: ksaTime(now),
     };
@@ -274,6 +315,8 @@ export const useGame = create<GameState>()((set, get) => {
   return {
     content: undefined as unknown as Content,
     unlockAt: {},
+    gapUnlockAt: undefined,
+    finalUnlockAt: undefined,
     storage: localStore,
     aiMode: "mock",
     demo: true,
@@ -283,10 +326,13 @@ export const useGame = create<GameState>()((set, get) => {
     unlockOverride: false,
     muted: true,
     reducedMotion: false,
+    voice: false,
+    movedAway: false,
     thinking: false,
     scoringStatus: null,
     challengeBusy: false,
     remoteResults: {},
+    remoteExtras: {},
     previousOrder: [],
     breaking: null,
 
@@ -295,13 +341,20 @@ export const useGame = create<GameState>()((set, get) => {
       set({
         muted: storage.getSetting("muted", true),
         reducedMotion: storage.getSetting("reducedMotion", false),
+        voice: storage.getSetting("voice", false),
         unlockOverride: storage.getSetting("unlockOverride", false),
       });
       const current = storage.currentSquad();
       if (current) {
         const squad = get().content.squads.squads.find((s) => s.id === current) ?? null;
-        const season = squad ? storage.load(squad.id) : null;
-        if (squad && season) set({ squad, season });
+        const local = squad ? storage.load(squad.id) : null;
+        if (squad && local) set({ squad, season: local });
+        // Bind this device and pick up newer server state (another device may have played on).
+        const season = squad ? await sync.claim(squad.id, local) : null;
+        if (squad && season) {
+          storage.save(season);
+          set({ squad, season });
+        }
       }
       const h = await ai.health();
       set({ aiMode: h.mode, demo: h.demo, unlockOverride: h.demo ? get().unlockOverride : false });
@@ -310,6 +363,8 @@ export const useGame = create<GameState>()((set, get) => {
       const s = get().season;
       if (s?.live?.phase === "SCORING") void runScoring();
       if (s?.live?.phase === "ON_AIR" && s.live.transcript.length === 0) void characterOpens();
+      if (s?.live) onLiveChange(null, s.live);
+      trustChallengeResume();
     },
 
     tick() {
@@ -317,22 +372,26 @@ export const useGame = create<GameState>()((set, get) => {
       set({ now });
       const { season } = get();
       if (season?.live) get().dispatch({ type: "TICK", now });
+      trustChallengeTick(now);
+      if (Math.floor(now / 1000) % 5 === 0) void sync.flush();
       if (Math.floor(now / 1000) % 15 === 0) {
         if (get().storage.getQueue().length) void syncResults();
         else void refreshRemote();
       }
     },
 
-    checkIn(code) {
+    async checkIn(code) {
       const { content, storage } = get();
       const squad = content.squads.squads.find(
         (s) => s.code.toUpperCase() === code.trim().toUpperCase() && !s.bot,
       );
       if (!squad) return "That squad code is not recognised. Check the card and try again.";
-      const season = storage.load(squad.id) ?? newSeason(squad.id, content);
+      const local = storage.load(squad.id);
+      const season = (await sync.claim(squad.id, local)) ?? newSeason(squad.id, content);
       storage.setCurrentSquad(squad.id);
       storage.save(season);
-      set({ squad, season });
+      set({ squad, season, movedAway: false });
+      void refreshRemote();
       return null;
     },
 
@@ -368,6 +427,19 @@ export const useGame = create<GameState>()((set, get) => {
       get().storage.setSetting("reducedMotion", v);
       set({ reducedMotion: v });
     },
+    setVoice(v) {
+      get().storage.setSetting("voice", v);
+      set({ voice: v });
+    },
+    save(season) {
+      save(season);
+    },
+    audit(kind, detail) {
+      const s = get().season;
+      if (s) save(audit(s, Date.now(), kind, detail));
+    },
+    refreshRemote,
+    syncResults,
 
     kickOff() {
       const { season, content } = get();
@@ -375,7 +447,7 @@ export const useGame = create<GameState>()((set, get) => {
       const r = nextPlayableRound(content, season, get().fixtureContext());
       if (!r || !r.loaded) return;
       const now = Date.now();
-      let next: SeasonState = { ...season, live: startRound(r.round, r.planMinutes, now) };
+      let next: SeasonState = { ...season, live: startRound(r.round, now) };
       next = audit(next, now, "kick-off", `Round ${r.round}: ${r.title}`);
       const due = revealsDue(next, r.round);
       if (due.length) {
@@ -391,12 +463,14 @@ export const useGame = create<GameState>()((set, get) => {
       const { season, content } = get();
       if (!season?.live) return;
       const round = content.rounds.rounds[season.live.round - 1];
-      const ctx = { timers: content.schedule.timers, onAirMinutes: round?.loaded ? round.onAirMinutes : 6 };
+      const ctx = machineContext(content.schedule.timers, round);
+      const beforeLive = season.live;
       const before = season.live.phase;
       const live = step(season.live, event, ctx);
       if (live === season.live) return;
       save({ ...season, live });
       if (live && live.phase !== before) onEnter(live.phase);
+      onLiveChange(beforeLive, live);
       if (!live) void refreshRemote();
     },
 
@@ -417,6 +491,7 @@ export const useGame = create<GameState>()((set, get) => {
       set({ thinking: true });
       const out = await ai.chat(chatRequest(round, after, after.live!.transcript));
       set({ thinking: false });
+      speak(out.reply, get().voice && !get().muted);
       get().dispatch({
         type: "ADD_TURN",
         turn: { who: "character", speaker: round.character, text: out.reply, at: ksaTime(Date.now()) },
@@ -506,7 +581,7 @@ export const useGame = create<GameState>()((set, get) => {
 
     standings() {
       const { content, squad, season, remoteResults, previousOrder } = get();
-      const mine = squad && season ? squadResultsFor(squad, season) : null;
+      const mine = squad && season ? squadResultsFor(squad, season, content) : null;
       const all: Record<string, SquadResults> = { ...remoteResults };
       if (mine) all[mine.squadId] = mine;
       const playedRounds = new Set(Object.values(all).flatMap((r) => Object.keys(r.rounds)));
@@ -516,7 +591,9 @@ export const useGame = create<GameState>()((set, get) => {
           const rounds = Object.fromEntries(Object.entries(fixed).filter(([k]) => playedRounds.has(k)));
           return { squadId: s.id, name: s.name, colour: s.colour, rounds, demo: true };
         }
-        return all[s.id] ?? { squadId: s.id, name: s.name, colour: s.colour, rounds: {} };
+        const base = all[s.id] ?? { squadId: s.id, name: s.name, colour: s.colour, rounds: {} };
+        const server = get().remoteExtras[s.id] ?? {};
+        return { ...base, extra: { ...(base.extra ?? {}), ...server } };
       });
       return computeLeague(content.league, rows, previousOrder.length ? previousOrder : undefined);
     },

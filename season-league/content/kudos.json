@@ -1,0 +1,8 @@
+{
+  "meta": {
+    "source": "seed",
+    "note": "Kudos rules are not set in the PRD. Seed values: three kudos per matchday, at most two to any one squad."
+  },
+  "perMatchday": 3,
+  "maxPerSquad": 2
+}
